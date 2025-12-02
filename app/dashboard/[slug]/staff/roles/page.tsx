@@ -1,0 +1,452 @@
+"use client"
+
+import { useEffect, useState } from "react"
+import { useRouter } from "next/navigation"
+import Link from "next/link"
+import { Button } from "@/components/ui/button"
+import { Input } from "@/components/ui/input"
+import { Label } from "@/components/ui/label"
+import { Textarea } from "@/components/ui/textarea"
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card"
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog"
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from "@/components/ui/alert-dialog"
+import { Alert, AlertDescription } from "@/components/ui/alert"
+import { Badge } from "@/components/ui/badge"
+
+interface Role {
+  id: string
+  name: string
+  responsibilities: string | null
+  color: string | null
+  permissions: any
+  _count?: {
+    memberships: number
+  }
+}
+
+export default function RolesPage({
+  params,
+}: {
+  params: Promise<{ slug: string }>
+}) {
+  const router = useRouter()
+  const [slug, setSlug] = useState<string>("")
+  const [roles, setRoles] = useState<Role[]>([])
+  const [isLoading, setIsLoading] = useState(true)
+  const [error, setError] = useState("")
+
+  // Form state
+  const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false)
+  const [isEditDialogOpen, setIsEditDialogOpen] = useState(false)
+  const [editingRole, setEditingRole] = useState<Role | null>(null)
+  const [formData, setFormData] = useState({
+    name: "",
+    responsibilities: "",
+  })
+  const [formError, setFormError] = useState("")
+  const [isSubmitting, setIsSubmitting] = useState(false)
+
+  // Unwrap params
+  useEffect(() => {
+    params.then((p) => setSlug(p.slug))
+  }, [params])
+
+  // Fetch roles
+  useEffect(() => {
+    if (!slug) return
+
+    const fetchRoles = async () => {
+      try {
+        setIsLoading(true)
+        setError("")
+
+        // Get venue ID
+        const venueResponse = await fetch(`/api/venues?slug=${slug}`)
+        if (!venueResponse.ok) throw new Error("Failed to fetch venue")
+
+        const venues = await venueResponse.json()
+        const venue = venues.find((v: any) => v.slug === slug)
+        if (!venue) throw new Error("Venue not found")
+
+        // Get roles
+        const rolesResponse = await fetch(`/api/venues/${venue.id}/roles`)
+        if (!rolesResponse.ok) throw new Error("Failed to fetch roles")
+
+        const rolesData = await rolesResponse.json()
+        setRoles(rolesData)
+      } catch (err: any) {
+        setError(err.message || "Failed to load roles")
+      } finally {
+        setIsLoading(false)
+      }
+    }
+
+    fetchRoles()
+  }, [slug])
+
+  const handleCreateRole = async () => {
+    if (!formData.name.trim()) {
+      setFormError("Role name is required")
+      return
+    }
+
+    setIsSubmitting(true)
+    setFormError("")
+
+    try {
+      // Get venue ID
+      const venueResponse = await fetch(`/api/venues?slug=${slug}`)
+      const venues = await venueResponse.json()
+      const venue = venues.find((v: any) => v.slug === slug)
+
+      const response = await fetch(`/api/venues/${venue.id}/roles`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(formData),
+      })
+
+      if (!response.ok) {
+        const data = await response.json()
+        throw new Error(data.error || "Failed to create role")
+      }
+
+      const newRole = await response.json()
+      setRoles([newRole, ...roles])
+      setIsCreateDialogOpen(false)
+      setFormData({ name: "", responsibilities: "" })
+    } catch (err: any) {
+      setFormError(err.message || "Failed to create role")
+    } finally {
+      setIsSubmitting(false)
+    }
+  }
+
+  const handleEditRole = async () => {
+    if (!editingRole || !formData.name.trim()) {
+      setFormError("Role name is required")
+      return
+    }
+
+    setIsSubmitting(true)
+    setFormError("")
+
+    try {
+      // Get venue ID
+      const venueResponse = await fetch(`/api/venues?slug=${slug}`)
+      const venues = await venueResponse.json()
+      const venue = venues.find((v: any) => v.slug === slug)
+
+      const response = await fetch(
+        `/api/venues/${venue.id}/roles/${editingRole.id}`,
+        {
+          method: "PUT",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(formData),
+        }
+      )
+
+      if (!response.ok) {
+        const data = await response.json()
+        throw new Error(data.error || "Failed to update role")
+      }
+
+      const updatedRole = await response.json()
+      setRoles(roles.map((r) => (r.id === updatedRole.id ? updatedRole : r)))
+      setIsEditDialogOpen(false)
+      setEditingRole(null)
+      setFormData({ name: "", responsibilities: "" })
+    } catch (err: any) {
+      setFormError(err.message || "Failed to update role")
+    } finally {
+      setIsSubmitting(false)
+    }
+  }
+
+  const handleDeleteRole = async (role: Role) => {
+    try {
+      // Get venue ID
+      const venueResponse = await fetch(`/api/venues?slug=${slug}`)
+      const venues = await venueResponse.json()
+      const venue = venues.find((v: any) => v.slug === slug)
+
+      const response = await fetch(`/api/venues/${venue.id}/roles/${role.id}`, {
+        method: "DELETE",
+      })
+
+      if (!response.ok) {
+        const data = await response.json()
+        throw new Error(data.error || "Failed to delete role")
+      }
+
+      setRoles(roles.filter((r) => r.id !== role.id))
+    } catch (err: any) {
+      alert(err.message || "Failed to delete role")
+    }
+  }
+
+  const openEditDialog = (role: Role) => {
+    setEditingRole(role)
+    setFormData({
+      name: role.name,
+      responsibilities: role.responsibilities || "",
+    })
+    setFormError("")
+    setIsEditDialogOpen(true)
+  }
+
+  const openCreateDialog = () => {
+    setFormData({ name: "", responsibilities: "" })
+    setFormError("")
+    setIsCreateDialogOpen(true)
+  }
+
+  if (!slug) {
+    return <div className="container mx-auto p-8">Loading...</div>
+  }
+
+  return (
+    <div className="container mx-auto p-8">
+      {/* Header */}
+      <div className="flex justify-between items-center mb-8">
+        <div>
+          <h1 className="text-4xl font-bold">Custom Roles</h1>
+          <p className="text-muted-foreground mt-2">
+            Create and manage custom roles for your staff
+          </p>
+        </div>
+        <div className="flex gap-4">
+          <Button variant="outline" asChild>
+            <Link href={`/dashboard/${slug}/staff`}>← Back to Staff</Link>
+          </Button>
+          <Button onClick={openCreateDialog}>Create Role</Button>
+        </div>
+      </div>
+
+      {/* Error Message */}
+      {error && (
+        <Alert className="mb-6 bg-red-50 border-red-200">
+          <AlertDescription className="text-red-800">{error}</AlertDescription>
+        </Alert>
+      )}
+
+      {/* Roles List */}
+      {isLoading ? (
+        <div className="text-center py-12">
+          <p className="text-muted-foreground">Loading roles...</p>
+        </div>
+      ) : roles.length === 0 ? (
+        <Card className="text-center py-12">
+          <CardContent>
+            <p className="text-muted-foreground mb-4">
+              No custom roles yet. Create one to organize your staff!
+            </p>
+            <Button onClick={openCreateDialog}>Create Your First Role</Button>
+          </CardContent>
+        </Card>
+      ) : (
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          {roles.map((role) => (
+            <Card key={role.id}>
+              <CardHeader>
+                <div className="flex justify-between items-start">
+                  <div className="flex-1">
+                    <CardTitle>{role.name}</CardTitle>
+                    <CardDescription className="mt-2">
+                      {role.responsibilities || "No responsibilities specified"}
+                    </CardDescription>
+                  </div>
+                  <Badge variant="outline">
+                    {role._count?.memberships || 0}{" "}
+                    {(role._count?.memberships || 0) === 1 ? "member" : "members"}
+                  </Badge>
+                </div>
+              </CardHeader>
+              <CardContent>
+                <div className="flex gap-2">
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => openEditDialog(role)}
+                  >
+                    Edit
+                  </Button>
+                  <AlertDialog>
+                    <AlertDialogTrigger asChild>
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        disabled={(role._count?.memberships || 0) > 0}
+                      >
+                        Delete
+                      </Button>
+                    </AlertDialogTrigger>
+                    <AlertDialogContent>
+                      <AlertDialogHeader>
+                        <AlertDialogTitle>Delete Role?</AlertDialogTitle>
+                        <AlertDialogDescription>
+                          Are you sure you want to delete "{role.name}"? This
+                          action cannot be undone.
+                        </AlertDialogDescription>
+                      </AlertDialogHeader>
+                      <AlertDialogFooter>
+                        <AlertDialogCancel>Cancel</AlertDialogCancel>
+                        <AlertDialogAction
+                          onClick={() => handleDeleteRole(role)}
+                        >
+                          Delete
+                        </AlertDialogAction>
+                      </AlertDialogFooter>
+                    </AlertDialogContent>
+                  </AlertDialog>
+                </div>
+                {(role._count?.memberships || 0) > 0 && (
+                  <p className="text-xs text-muted-foreground mt-2">
+                    Cannot delete: Role is assigned to staff
+                  </p>
+                )}
+              </CardContent>
+            </Card>
+          ))}
+        </div>
+      )}
+
+      {/* Create Role Dialog */}
+      <Dialog open={isCreateDialogOpen} onOpenChange={setIsCreateDialogOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Create Custom Role</DialogTitle>
+            <DialogDescription>
+              Add a new custom role for your staff members
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-4">
+            {formError && (
+              <Alert className="bg-red-50 border-red-200">
+                <AlertDescription className="text-red-800">
+                  {formError}
+                </AlertDescription>
+              </Alert>
+            )}
+            <div className="space-y-2">
+              <Label htmlFor="create-name">Role Name</Label>
+              <Input
+                id="create-name"
+                placeholder="e.g., Bartender, DJ, Security"
+                value={formData.name}
+                onChange={(e) =>
+                  setFormData({ ...formData, name: e.target.value })
+                }
+                disabled={isSubmitting}
+              />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="create-responsibilities">Responsibilities (Optional)</Label>
+              <Textarea
+                id="create-responsibilities"
+                placeholder="What does this role do?"
+                value={formData.responsibilities}
+                onChange={(e) =>
+                  setFormData({ ...formData, responsibilities: e.target.value })
+                }
+                disabled={isSubmitting}
+                rows={3}
+              />
+            </div>
+          </div>
+          <DialogFooter>
+            <Button
+              variant="outline"
+              onClick={() => setIsCreateDialogOpen(false)}
+              disabled={isSubmitting}
+            >
+              Cancel
+            </Button>
+            <Button onClick={handleCreateRole} disabled={isSubmitting}>
+              {isSubmitting ? "Creating..." : "Create Role"}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Edit Role Dialog */}
+      <Dialog open={isEditDialogOpen} onOpenChange={setIsEditDialogOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Edit Role</DialogTitle>
+            <DialogDescription>
+              Update the role name and description
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-4">
+            {formError && (
+              <Alert className="bg-red-50 border-red-200">
+                <AlertDescription className="text-red-800">
+                  {formError}
+                </AlertDescription>
+              </Alert>
+            )}
+            <div className="space-y-2">
+              <Label htmlFor="edit-name">Role Name</Label>
+              <Input
+                id="edit-name"
+                value={formData.name}
+                onChange={(e) =>
+                  setFormData({ ...formData, name: e.target.value })
+                }
+                disabled={isSubmitting}
+              />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="edit-responsibilities">Responsibilities (Optional)</Label>
+              <Textarea
+                id="edit-responsibilities"
+                value={formData.responsibilities}
+                onChange={(e) =>
+                  setFormData({ ...formData, responsibilities: e.target.value })
+                }
+                disabled={isSubmitting}
+                rows={3}
+              />
+            </div>
+          </div>
+          <DialogFooter>
+            <Button
+              variant="outline"
+              onClick={() => setIsEditDialogOpen(false)}
+              disabled={isSubmitting}
+            >
+              Cancel
+            </Button>
+            <Button onClick={handleEditRole} disabled={isSubmitting}>
+              {isSubmitting ? "Saving..." : "Save Changes"}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+    </div>
+  )
+}

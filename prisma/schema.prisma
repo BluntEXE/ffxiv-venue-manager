@@ -1,0 +1,476 @@
+// Prisma Schema for FFXIV Venue Manager
+// Multi-tenant SaaS platform for managing FFXIV RP venues
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url       = env("DATABASE_URL")
+  directUrl = env("DIRECT_URL")
+}
+
+// ============================================
+// USER & AUTHENTICATION
+// ============================================
+
+model User {
+  id            String    @id @default(cuid())
+  email         String?   @unique
+  emailVerified DateTime?
+  name          String?
+  image         String?
+  discordId     String?   @unique
+  displayName   String?
+  isAdmin       Boolean   @default(false)
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+
+  // Relations
+  accounts    Account[]
+  sessions    Session[]
+  memberships Membership[]
+  createdEvents Event[]    @relation("EventCreator")
+  assignedTasks Task[]     @relation("AssignedTasks")
+  completedTasks Task[]    @relation("TaskCompleter")
+  transactions Transaction[]
+  paidPayrollEntries PayrollEntry[] @relation("PayrollPaidBy")
+  feedback    Feedback[]
+  reviewedFeedback Feedback[] @relation("FeedbackReviewer")
+
+  @@map("users")
+}
+
+model Account {
+  id                String  @id @default(cuid())
+  userId            String
+  type              String
+  provider          String
+  providerAccountId String
+  refresh_token     String? @db.Text
+  access_token      String? @db.Text
+  expires_at        Int?
+  token_type        String?
+  scope             String?
+  id_token          String? @db.Text
+  session_state     String?
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([provider, providerAccountId])
+  @@map("accounts")
+}
+
+model Session {
+  id           String   @id @default(cuid())
+  sessionToken String   @unique
+  userId       String
+  expires      DateTime
+  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("sessions")
+}
+
+model VerificationToken {
+  identifier String
+  token      String   @unique
+  expires    DateTime
+
+  @@unique([identifier, token])
+  @@map("verification_tokens")
+}
+
+// ============================================
+// VENUES (Multi-tenant core entity)
+// ============================================
+
+model Venue {
+  id          String   @id @default(cuid())
+  name        String
+  slug        String   @unique
+  description String?  @db.Text
+  logoUrl     String?
+  bannerUrl   String?
+
+  // FFXIV Location
+  dataCenter  String
+  world       String
+  location    String?  @db.Text
+
+  // Settings
+  timezone    String   @default("UTC")
+  currencyName String  @default("Gil")
+  settings    Json     @default("{\"taskVisibility\":\"all\",\"salesVisibility\":\"all\",\"revenueVisibility\":\"all\",\"eventVisibility\":\"all\",\"webhooks\":{\"taskCreated\":false,\"taskCompleted\":false,\"eventCreated\":false,\"eventStartingSoon\":false,\"saleLogged\":false,\"dailySalesSummary\":false,\"staffJoined\":false},\"discordWebhooks\":{\"staff\":\"\",\"events\":\"\",\"revenue\":\"\"}}")
+
+  // Discord Integration (deprecated - kept for migration)
+  discordWebhookUrl String?
+  discordServerId   String?
+
+  // Metadata
+  ownerId     String
+  isActive    Boolean  @default(true)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  // Relations
+  memberships  Membership[]
+  events       Event[]
+  roles        Role[]
+  services     Service[]
+  transactions Transaction[]
+  tasks        Task[]
+  webhooks     Webhook[]
+  payrollEntries PayrollEntry[]
+
+  @@map("venues")
+}
+
+// ============================================
+// MEMBERSHIPS & ROLES
+// ============================================
+
+enum MembershipRole {
+  OWNER
+  MANAGER
+  STAFF
+}
+
+model Membership {
+  id        String         @id @default(cuid())
+  userId    String?        // Nullable until invite is accepted
+  venueId   String
+  role      MembershipRole @default(STAFF)
+  roleId    String?        // Custom role assignment
+  hireDate  DateTime       @default(now())
+  status    String         @default("pending") // pending, active, inactive
+
+  // Invite system
+  inviteToken     String?   @unique
+  inviteExpiresAt DateTime?
+  invitedBy       String?   // User ID who created the invite
+  invitedEmail    String?   // Email for display purposes only (not used for auth)
+  invitedName     String?   // Name placeholder for invited staff
+
+  // Temporary role system (for deputizing staff)
+  temporaryRole          MembershipRole? // Elevated role while deputized
+  temporaryRoleExpiresAt DateTime?       // When temporary role expires
+  permanentRole          MembershipRole? // Original role to revert back to
+
+  createdAt DateTime       @default(now())
+  updatedAt DateTime       @updatedAt
+
+  user       User?   @relation(fields: [userId], references: [id], onDelete: Cascade)
+  venue      Venue   @relation(fields: [venueId], references: [id], onDelete: Cascade)
+  customRole Role?   @relation(fields: [roleId], references: [id])
+  payrollEntries PayrollEntry[]
+
+  @@index([venueId, userId])
+  @@index([venueId, role])
+  @@index([inviteToken])
+  @@map("memberships")
+}
+
+model Role {
+  id               String   @id @default(cuid())
+  venueId          String
+  name             String
+  color            String?  @default("#6366f1")
+  responsibilities String?  @db.Text
+  permissions      Json     @default("{}")
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  venue       Venue        @relation(fields: [venueId], references: [id], onDelete: Cascade)
+  memberships Membership[]
+  services     Service[]    // Services this role can provide
+  assignedTasks Task[] @relation("RoleTasks")  // Tasks assigned to this role
+
+  @@unique([venueId, name])
+  @@map("roles")
+}
+
+// ============================================
+// EVENTS & CALENDAR
+// ============================================
+
+enum EventType {
+  PERFORMANCE
+  GAME_NIGHT
+  SPECIAL
+  SOCIAL
+  PRIVATE
+  OTHER
+}
+
+enum EventStatus {
+  DRAFT
+  PUBLISHED
+  ACTIVE
+  COMPLETED
+  CANCELLED
+}
+
+model Event {
+  id          String      @id @default(cuid())
+  venueId     String
+  title       String
+  description String?     @db.Text
+  eventType   EventType   @default(OTHER)
+  status      EventStatus @default(DRAFT)
+
+  // Scheduling
+  startTime DateTime
+  endTime   DateTime
+  timezone  String      @default("UTC")
+
+  // Recurrence (future feature)
+  recurrenceRule String? // iCal RRULE format
+  parentEventId  String? // For recurring event instances
+
+  // Tracking
+  attendanceCount Int?
+  revenue         Decimal? @db.Decimal(10, 2)
+
+  // Metadata
+  createdById String
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  venue        Venue         @relation(fields: [venueId], references: [id], onDelete: Cascade)
+  createdBy    User          @relation("EventCreator", fields: [createdById], references: [id])
+  parentEvent  Event?        @relation("EventRecurrence", fields: [parentEventId], references: [id])
+  childEvents  Event[]       @relation("EventRecurrence")
+  transactions Transaction[]
+
+  @@index([venueId, startTime])
+  @@index([venueId, status])
+  @@index([createdById])
+  @@map("events")
+}
+
+// ============================================
+// SERVICES & TRANSACTIONS
+// ============================================
+
+model Service {
+  id          String  @id @default(cuid())
+  venueId     String
+  name        String
+  description String? @db.Text
+  price       Decimal @db.Decimal(10, 2)
+  category    String?
+  isActive    Boolean @default(true)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  venue        Venue         @relation(fields: [venueId], references: [id], onDelete: Cascade)
+  transactions Transaction[]
+  roles        Role[]        // Roles that can provide this service
+
+  @@map("services")
+}
+
+model Transaction {
+  id           String   @id @default(cuid())
+  venueId      String
+  eventId      String?
+  serviceId    String?
+  staffId      String?
+
+  // Transaction details
+  amount       Decimal  @db.Decimal(10, 2)
+  customerName String?
+  notes        String?  @db.Text
+
+  createdAt DateTime @default(now())
+
+  venue   Venue    @relation(fields: [venueId], references: [id], onDelete: Cascade)
+  event   Event?   @relation(fields: [eventId], references: [id])
+  service Service? @relation(fields: [serviceId], references: [id])
+  staff   User?    @relation(fields: [staffId], references: [id])
+
+  @@index([venueId, createdAt])
+  @@index([venueId, serviceId])
+  @@index([staffId])
+  @@map("transactions")
+}
+
+// ============================================
+// TASKS & ASSIGNMENTS
+// ============================================
+
+enum TaskStatus {
+  PENDING
+  IN_PROGRESS
+  COMPLETED
+  CANCELLED
+}
+
+enum TaskPriority {
+  LOW
+  MEDIUM
+  HIGH
+  URGENT
+}
+
+model Task {
+  id          String       @id @default(cuid())
+  venueId     String
+  assignedTo  String?
+  assignedRoleId String?     // Role assigned to complete this task (alternative to assignedTo)
+
+  // Task details
+  title       String
+  description String?      @db.Text
+  status      TaskStatus   @default(PENDING)
+  priority    TaskPriority @default(MEDIUM)
+  category    String?      // setup, cleanup, promotional, etc.
+
+  // Scheduling
+  dueDate     DateTime?
+  completedAt DateTime?
+  completedBy String?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  venue      Venue  @relation(fields: [venueId], references: [id], onDelete: Cascade)
+  assignee   User?  @relation("AssignedTasks", fields: [assignedTo], references: [id])
+  assignedRole   Role?  @relation("RoleTasks", fields: [assignedRoleId], references: [id])
+  completer  User?  @relation("TaskCompleter", fields: [completedBy], references: [id])
+
+  @@index([venueId, status, priority])
+  @@index([assignedTo])
+  @@index([assignedRoleId])
+  @@map("tasks")
+}
+
+// ============================================
+// PAYROLL & COMPENSATION
+// ============================================
+
+enum PaymentType {
+  FIXED_SALARY   // Set pay per period
+  HOURLY         // Pay per hour worked
+}
+
+model PayrollEntry {
+  id           String      @id @default(cuid())
+  venueId      String
+  membershipId String      // Staff member being paid
+
+  // Payment configuration
+  paymentType  PaymentType
+  baseRate     Decimal     @db.Decimal(10, 2) // Fixed salary or hourly rate
+  hoursWorked  Decimal?    @db.Decimal(6, 2)  // For hourly payments
+  bonusAmount  Decimal?    @db.Decimal(10, 2) // Optional bonus
+  totalAmount  Decimal     @db.Decimal(10, 2) // Calculated total
+
+  // Payment period
+  periodStart  DateTime
+  periodEnd    DateTime
+
+  // Payment status
+  isPaid       Boolean     @default(false)
+  paidAt       DateTime?
+  paidBy       String?     // User ID who marked as paid
+
+  // Additional details
+  notes        String?     @db.Text
+
+  createdAt    DateTime    @default(now())
+  updatedAt    DateTime    @updatedAt
+
+  venue        Venue       @relation(fields: [venueId], references: [id], onDelete: Cascade)
+  membership   Membership  @relation(fields: [membershipId], references: [id], onDelete: Cascade)
+  paidByUser   User?       @relation("PayrollPaidBy", fields: [paidBy], references: [id])
+
+  @@index([venueId, periodEnd])
+  @@index([membershipId, isPaid])
+  @@index([venueId, isPaid])
+  @@map("payroll_entries")
+}
+
+// ============================================
+// WEBHOOKS & INTEGRATIONS
+// ============================================
+
+enum WebhookEvent {
+  TASK_COMPLETED
+  EVENT_CREATED
+  EVENT_REMINDER
+  SALES_DAILY_SUMMARY
+  STAFF_JOINED
+}
+
+model Webhook {
+  id          String   @id @default(cuid())
+  venueId     String
+  name        String
+  url         String
+  events      WebhookEvent[]
+  isActive    Boolean  @default(true)
+
+  // Template customization
+  template    Json?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  venue Venue @relation(fields: [venueId], references: [id], onDelete: Cascade)
+
+  @@map("webhooks")
+}
+
+// ============================================
+// USER FEEDBACK & SUPPORT
+// ============================================
+
+enum FeedbackCategory {
+  BUG_REPORT
+  FEATURE_REQUEST
+  IMPROVEMENT
+  GENERAL
+}
+
+enum FeedbackStatus {
+  NEW
+  UNDER_REVIEW
+  PLANNED
+  IN_PROGRESS
+  COMPLETED
+  WONT_FIX
+}
+
+model Feedback {
+  id          String            @id @default(cuid())
+  userId      String
+  category    FeedbackCategory
+  status      FeedbackStatus    @default(NEW)
+  subject     String
+  description String            @db.Text
+
+  // Optional context
+  url         String?           // Page where feedback was submitted
+  userAgent   String?           // Browser/device info
+  screenshot  String?           // Optional screenshot URL
+
+  // Admin notes
+  adminNotes  String?           @db.Text
+  reviewedBy  String?
+  reviewedAt  DateTime?
+
+  createdAt   DateTime          @default(now())
+  updatedAt   DateTime          @updatedAt
+
+  user        User              @relation(fields: [userId], references: [id], onDelete: Cascade)
+  reviewer    User?             @relation("FeedbackReviewer", fields: [reviewedBy], references: [id])
+
+  @@index([userId])
+  @@index([status, createdAt])
+  @@index([category])
+  @@map("feedback")
+}

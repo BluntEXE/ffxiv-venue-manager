@@ -1,0 +1,250 @@
+import { NextRequest, NextResponse } from "next/server"
+import { getServerSession } from "next-auth"
+import { authOptions } from "@/lib/auth"
+import { prisma } from "@/lib/prisma"
+import { z } from "zod"
+import {
+  sendDiscordWebhook,
+  formatSaleLoggedEmbed,
+  getWebhookUrlForType,
+  type VenueWebhookConfig,
+} from "@/lib/discord-webhook"
+import { withRateLimit } from "@/lib/middleware/with-rate-limit"
+
+const createTransactionSchema = z.object({
+  serviceId: z.string().optional(),
+  eventId: z.string().optional(),
+  amount: z.number().min(0, "Amount must be positive"),
+  customerName: z.string().optional(),
+  notes: z.string().optional(),
+})
+
+export const GET = withRateLimit<{ params: Promise<{ venueId: string }> }>(
+  async (request, context) => {
+    if (!context?.params) {
+      return NextResponse.json({ error: "Invalid request" }, { status: 400 })
+    }
+
+    try {
+      const session = await getServerSession(authOptions)
+      if (!session?.user?.id) {
+        return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
+      }
+
+      const { params } = context
+      const { venueId } = await params
+    const { searchParams } = new URL(request.url)
+    const eventId = searchParams.get("eventId")
+    const serviceId = searchParams.get("serviceId")
+    const startDate = searchParams.get("startDate")
+    const endDate = searchParams.get("endDate")
+
+    // Check if user has access to this venue
+    const membership = await prisma.membership.findFirst({
+      where: {
+        userId: session.user.id,
+        venueId,
+      },
+    })
+
+    if (!membership) {
+      return NextResponse.json(
+        { error: "You don't have access to this venue" },
+        { status: 403 }
+      )
+    }
+
+    // Get venue settings
+    const venue = await prisma.venue.findUnique({
+      where: { id: venueId },
+      select: { settings: true },
+    })
+
+    const venueSettings = venue?.settings as any
+
+    // Check sales visibility for STAFF members
+    if (membership.role === "STAFF" && venueSettings?.salesVisibility) {
+      const salesVisibility = venueSettings.salesVisibility
+
+      if (salesVisibility === "none") {
+        // Staff have no access to sales page at all
+        return NextResponse.json(
+          { error: "You don't have permission to view sales data" },
+          { status: 403 }
+        )
+      }
+    }
+
+    // Build where clause
+    const where: any = { venueId }
+    if (eventId) where.eventId = eventId
+    if (serviceId) where.serviceId = serviceId
+    if (startDate || endDate) {
+      where.createdAt = {}
+      if (startDate) where.createdAt.gte = new Date(startDate)
+      if (endDate) where.createdAt.lte = new Date(endDate)
+    }
+
+    // Apply sales visibility settings for STAFF members
+    if (membership.role === "STAFF" && venueSettings?.salesVisibility === "own") {
+      // Staff only see transactions they created
+      where.staffId = session.user.id
+    }
+
+    // Get all transactions
+    const transactions = await prisma.transaction.findMany({
+      where,
+      include: {
+        service: {
+          select: {
+            id: true,
+            name: true,
+            price: true,
+          },
+        },
+        event: {
+          select: {
+            id: true,
+            title: true,
+          },
+        },
+        staff: {
+          select: {
+            id: true,
+            name: true,
+          },
+        },
+      },
+      orderBy: {
+        createdAt: "desc",
+      },
+    })
+
+      return NextResponse.json(transactions)
+    } catch (error) {
+      console.error("Error fetching transactions:", error)
+      return NextResponse.json(
+        { error: "Internal server error" },
+        { status: 500 }
+      )
+    }
+  },
+  { requests: 60, window: "1 m" }
+)
+
+export const POST = withRateLimit<{ params: Promise<{ venueId: string }> }>(
+  async (request, context) => {
+    if (!context?.params) {
+      return NextResponse.json({ error: "Invalid request" }, { status: 400 })
+    }
+
+    try {
+      const session = await getServerSession(authOptions)
+      if (!session?.user?.id) {
+        return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
+      }
+
+      const { params } = context
+      const { venueId } = await params
+
+    // Check if user has access to this venue
+    const membership = await prisma.membership.findFirst({
+      where: {
+        userId: session.user.id,
+        venueId,
+      },
+    })
+
+    if (!membership) {
+      return NextResponse.json(
+        { error: "You don't have access to this venue" },
+        { status: 403 }
+      )
+    }
+
+    const body = await request.json()
+    const validatedData = createTransactionSchema.parse(body)
+
+    const newTransaction = await prisma.transaction.create({
+      data: {
+        venueId,
+        serviceId: validatedData.serviceId,
+        eventId: validatedData.eventId,
+        staffId: session.user.id, // Log who created the transaction
+        amount: validatedData.amount,
+        customerName: validatedData.customerName,
+        notes: validatedData.notes,
+      },
+      include: {
+        service: {
+          select: {
+            id: true,
+            name: true,
+            price: true,
+          },
+        },
+        event: {
+          select: {
+            id: true,
+            title: true,
+          },
+        },
+        staff: {
+          select: {
+            id: true,
+            name: true,
+          },
+        },
+      },
+    })
+
+    // Send Discord webhook notification if enabled
+    const venue = await prisma.venue.findUnique({
+      where: { id: venueId },
+      select: {
+        discordWebhookUrl: true,
+        settings: true,
+      },
+    })
+
+    if (venue) {
+      const webhookConfig: VenueWebhookConfig = {
+        discordWebhooks: (venue.settings as any)?.discordWebhooks,
+        webhooks: (venue.settings as any)?.webhooks,
+        discordWebhookUrl: venue.discordWebhookUrl,
+      }
+
+      const webhookUrl = getWebhookUrlForType(webhookConfig, "saleLogged")
+      if (webhookUrl) {
+        const embed = formatSaleLoggedEmbed({
+          amount: Number(newTransaction.amount),
+          service: newTransaction.service,
+          customerName: newTransaction.customerName,
+          staff: newTransaction.staff,
+        })
+
+        // Send webhook asynchronously (don't wait for response)
+        sendDiscordWebhook(webhookUrl, { embeds: [embed] }).catch(
+          (error) => console.error("Failed to send Discord webhook:", error)
+        )
+      }
+    }
+
+      return NextResponse.json(newTransaction, { status: 201 })
+    } catch (error) {
+      if (error instanceof z.ZodError) {
+        return NextResponse.json(
+          { error: "Validation error", details: error.issues },
+          { status: 400 }
+        )
+      }
+
+      console.error("Error creating transaction:", error)
+      return NextResponse.json(
+        { error: "Internal server error" },
+        { status: 500 }
+      )
+    }
+  },
+  { requests: 10, window: "1 m" }
+)

@@ -1,0 +1,291 @@
+"use client"
+
+import { useEffect, useState } from "react"
+import { useRouter, useParams } from "next/navigation"
+import { Button } from "@/components/ui/button"
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
+import { Input } from "@/components/ui/input"
+import { Label } from "@/components/ui/label"
+import { Textarea } from "@/components/ui/textarea"
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
+import { DateTimePicker } from "@/components/ui/date-time-picker"
+
+const EVENT_TYPES = [
+  { value: "PERFORMANCE", label: "Performance" },
+  { value: "GAME_NIGHT", label: "Game Night" },
+  { value: "SPECIAL", label: "Special Event" },
+  { value: "SOCIAL", label: "Social Gathering" },
+  { value: "PRIVATE", label: "Private Event" },
+  { value: "OTHER", label: "Other" },
+]
+
+const EVENT_STATUSES = [
+  { value: "DRAFT", label: "Draft" },
+  { value: "PUBLISHED", label: "Published" },
+  { value: "ACTIVE", label: "Active" },
+  { value: "COMPLETED", label: "Completed" },
+  { value: "CANCELLED", label: "Cancelled" },
+]
+
+interface Event {
+  id: string
+  title: string
+  description?: string
+  eventType: string
+  status: string
+  startTime: string
+  endTime: string
+  attendanceCount?: number
+  revenue?: number
+}
+
+export default function EditEventPage() {
+  const router = useRouter()
+  const params = useParams()
+  const slug = params.slug as string
+  const eventId = params.eventId as string
+
+  const [event, setEvent] = useState<Event | null>(null)
+  const [isLoading, setIsLoading] = useState(true)
+  const [isSubmitting, setIsSubmitting] = useState(false)
+  const [error, setError] = useState("")
+  const [startTime, setStartTime] = useState<Date>()
+  const [endTime, setEndTime] = useState<Date>()
+
+  useEffect(() => {
+    const fetchEvent = async () => {
+      try {
+        // Get venue first
+        const venueResponse = await fetch(`/api/venues?slug=${slug}`)
+        const venues = await venueResponse.json()
+        const venue = venues.find((v: any) => v.slug === slug)
+
+        if (!venue) throw new Error("Venue not found")
+
+        // Get event
+        const eventResponse = await fetch(`/api/venues/${venue.id}/events/${eventId}`)
+        if (!eventResponse.ok) throw new Error("Failed to fetch event")
+
+        const eventData = await eventResponse.json()
+        setEvent(eventData)
+        setStartTime(new Date(eventData.startTime))
+        setEndTime(new Date(eventData.endTime))
+      } catch (err) {
+        setError("Failed to load event")
+        console.error(err)
+      } finally {
+        setIsLoading(false)
+      }
+    }
+
+    fetchEvent()
+  }, [slug, eventId])
+
+  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
+    e.preventDefault()
+    setIsSubmitting(true)
+    setError("")
+
+    if (!startTime || !endTime) {
+      setError("Please select both start and end times")
+      setIsSubmitting(false)
+      return
+    }
+
+    if (endTime <= startTime) {
+      setError("End time must be after start time")
+      setIsSubmitting(false)
+      return
+    }
+
+    const formData = new FormData(e.currentTarget)
+    const data = {
+      title: formData.get("title"),
+      description: formData.get("description"),
+      eventType: formData.get("eventType"),
+      status: formData.get("status"),
+      startTime: startTime.toISOString(),
+      endTime: endTime.toISOString(),
+      attendanceCount: formData.get("attendanceCount") ? parseInt(formData.get("attendanceCount") as string) : undefined,
+      revenue: formData.get("revenue") ? parseFloat(formData.get("revenue") as string) : undefined,
+    }
+
+    try {
+      const venueResponse = await fetch(`/api/venues?slug=${slug}`)
+      const venues = await venueResponse.json()
+      const venue = venues.find((v: any) => v.slug === slug)
+
+      if (!venue) throw new Error("Venue not found")
+
+      const response = await fetch(`/api/venues/${venue.id}/events/${eventId}`, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(data),
+      })
+
+      if (!response.ok) {
+        const error = await response.json()
+        throw new Error(error.message || "Failed to update event")
+      }
+
+      router.push(`/dashboard/${slug}/events/${eventId}`)
+      router.refresh()
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Something went wrong")
+    } finally {
+      setIsSubmitting(false)
+    }
+  }
+
+  if (isLoading) {
+    return (
+      <div className="container mx-auto p-8 text-center">
+        <p>Loading event...</p>
+      </div>
+    )
+  }
+
+  if (!event) {
+    return (
+      <div className="container mx-auto p-8 text-center">
+        <p className="text-destructive">Event not found</p>
+      </div>
+    )
+  }
+
+  return (
+    <div className="container mx-auto p-8 max-w-3xl">
+      <Card>
+        <CardHeader>
+          <CardTitle>Edit Event</CardTitle>
+          <CardDescription>
+            Update event details and settings
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
+          <form onSubmit={handleSubmit} className="space-y-6">
+            {/* Event Title */}
+            <div className="space-y-2">
+              <Label htmlFor="title">Event Title *</Label>
+              <Input
+                id="title"
+                name="title"
+                defaultValue={event.title}
+                required
+              />
+            </div>
+
+            {/* Event Type */}
+            <div className="space-y-2">
+              <Label htmlFor="eventType">Event Type *</Label>
+              <Select name="eventType" defaultValue={event.eventType} required>
+                <SelectTrigger>
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  {EVENT_TYPES.map((type) => (
+                    <SelectItem key={type.value} value={type.value}>
+                      {type.label}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+
+            {/* Description */}
+            <div className="space-y-2">
+              <Label htmlFor="description">Description</Label>
+              <Textarea
+                id="description"
+                name="description"
+                defaultValue={event.description || ""}
+                rows={4}
+              />
+            </div>
+
+            {/* Start Time */}
+            <div className="space-y-2">
+              <Label>Start Time *</Label>
+              <DateTimePicker
+                date={startTime}
+                onDateChange={setStartTime}
+              />
+            </div>
+
+            {/* End Time */}
+            <div className="space-y-2">
+              <Label>End Time *</Label>
+              <DateTimePicker
+                date={endTime}
+                onDateChange={setEndTime}
+              />
+            </div>
+
+            {/* Status */}
+            <div className="space-y-2">
+              <Label htmlFor="status">Status *</Label>
+              <Select name="status" defaultValue={event.status} required>
+                <SelectTrigger>
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  {EVENT_STATUSES.map((status) => (
+                    <SelectItem key={status.value} value={status.value}>
+                      {status.label}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+
+            {/* Metrics */}
+            <div className="grid grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <Label htmlFor="attendanceCount">Attendance Count</Label>
+                <Input
+                  id="attendanceCount"
+                  name="attendanceCount"
+                  type="number"
+                  defaultValue={event.attendanceCount}
+                  min="0"
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="revenue">Revenue (Gil)</Label>
+                <Input
+                  id="revenue"
+                  name="revenue"
+                  type="number"
+                  step="0.01"
+                  defaultValue={event.revenue?.toString()}
+                  min="0"
+                />
+              </div>
+            </div>
+
+            {/* Error Message */}
+            {error && (
+              <div className="p-3 text-sm text-destructive bg-destructive/10 rounded-md">
+                {error}
+              </div>
+            )}
+
+            {/* Submit Buttons */}
+            <div className="flex gap-4">
+              <Button type="submit" disabled={isSubmitting} className="flex-1">
+                {isSubmitting ? "Saving..." : "Save Changes"}
+              </Button>
+              <Button
+                type="button"
+                variant="outline"
+                onClick={() => router.back()}
+              >
+                Cancel
+              </Button>
+            </div>
+          </form>
+        </CardContent>
+      </Card>
+    </div>
+  )
+}
