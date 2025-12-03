@@ -22,6 +22,8 @@ export const cacheTTL = {
   venueSettings: 600, // 10 minutes
   membership: 300, // 5 minutes
   user: 300, // 5 minutes
+  services: 600, // 10 minutes (services don't change often)
+  transactions: 180, // 3 minutes (more dynamic)
 }
 
 /**
@@ -33,6 +35,8 @@ export const cacheKeys = {
   venueBySlug: (slug: string) => `venue:slug:${slug}`,
   membership: (userId: string, venueId: string) => `membership:${userId}:${venueId}`,
   userVenues: (userId: string) => `user:${userId}:venues`,
+  venueServices: (venueId: string) => `venue:${venueId}:services`,
+  venueTransactions: (venueId: string, params: string) => `venue:${venueId}:transactions:${params}`,
 }
 
 /**

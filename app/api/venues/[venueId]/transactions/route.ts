@@ -11,6 +11,7 @@ import {
 } from "@/lib/discord-webhook"
 import { withRateLimit } from "@/lib/middleware/with-rate-limit"
 import { validators, sanitizeDiscordContent } from "@/lib/validation"
+import { invalidateCache } from "@/lib/redis-cache"
 
 const createTransactionSchema = z.object({
   serviceId: z.string().optional(),
@@ -280,6 +281,10 @@ export const POST = withRateLimit<{ params: Promise<{ venueId: string }> }>(
         )
       }
     }
+
+    // Invalidate relevant caches (transactions affect service stats)
+    await invalidateCache(`venue:${venueId}:services`)
+    await invalidateCache(`venue:${venueId}:transactions:*`)
 
       return NextResponse.json(newTransaction, { status: 201 })
     } catch (error) {

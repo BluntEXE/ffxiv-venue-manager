@@ -5,6 +5,7 @@ import { prisma } from "@/lib/prisma"
 import { z } from "zod"
 import { withRateLimit } from "@/lib/middleware/with-rate-limit"
 import { validators } from "@/lib/validation"
+import { getOrSet, cacheKeys, cacheTTL, invalidateCache } from "@/lib/redis-cache"
 
 const venueSchema = z.object({
   name: validators.venueName,
@@ -66,6 +67,9 @@ export const POST = withRateLimit(
         },
       })
 
+      // Invalidate user's venue cache
+      await invalidateCache(cacheKeys.userVenues(session.user.id))
+
       return NextResponse.json(venue, { status: 201 })
     } catch (error) {
       if (error instanceof z.ZodError) {
@@ -96,23 +100,31 @@ export const GET = withRateLimit(
         )
       }
 
-      // Get all venues for the current user
-      const venues = await prisma.venue.findMany({
-        where: {
-          memberships: {
-            some: {
-              userId: session.user.id,
-            },
-          },
-        },
-        include: {
-          memberships: {
+      // Cache venues per user (5 minute TTL)
+      const cacheKey = cacheKeys.userVenues(session.user.id)
+      const venues = await getOrSet(
+        cacheKey,
+        async () => {
+          // Get all venues for the current user
+          return await prisma.venue.findMany({
             where: {
-              userId: session.user.id,
+              memberships: {
+                some: {
+                  userId: session.user.id,
+                },
+              },
             },
-          },
+            include: {
+              memberships: {
+                where: {
+                  userId: session.user.id,
+                },
+              },
+            },
+          })
         },
-      })
+        cacheTTL.venue
+      )
 
       return NextResponse.json(venues)
     } catch (error) {

@@ -3,6 +3,7 @@ import { getServerSession } from "next-auth"
 import { authOptions } from "@/lib/auth"
 import { prisma } from "@/lib/prisma"
 import { withRateLimit } from "@/lib/middleware/with-rate-limit"
+import { invalidateCache, cacheKeys } from "@/lib/redis-cache"
 
 export const DELETE = withRateLimit(
   async (
@@ -50,6 +51,14 @@ export const DELETE = withRateLimit(
       await prisma.venue.delete({
         where: { id: venueId },
       })
+
+      // Invalidate all related caches
+      await Promise.all([
+        invalidateCache(cacheKeys.userVenues(session.user.id)),
+        invalidateCache(cacheKeys.venue(venueId)),
+        invalidateCache(cacheKeys.venueBySlug(venue.slug)),
+        invalidateCache(`venue:${venueId}:*`), // All venue-related caches
+      ])
 
       return NextResponse.json(
         { message: "Venue deleted successfully" },

@@ -4,6 +4,7 @@ import { authOptions } from "@/lib/auth"
 import { prisma } from "@/lib/prisma"
 import { z } from "zod"
 import { withRateLimit } from "@/lib/middleware/with-rate-limit"
+import { getOrSet, invalidateCache, cacheKeys, cacheTTL } from "@/lib/redis-cache"
 
 const createServiceSchema = z.object({
   name: z.string().min(1, "Service name is required").max(100),
@@ -43,27 +44,35 @@ export const GET = withRateLimit<{ params: Promise<{ venueId: string }> }>(
       )
     }
 
-    // Get all services for this venue
-    const services = await prisma.service.findMany({
-      where: { venueId },
-      include: {
-        roles: {
-          select: {
-            id: true,
-            name: true,
-            color: true,
+    // Cache services list (10 minute TTL)
+    const cacheKey = cacheKeys.venueServices(venueId)
+    const services = await getOrSet(
+      cacheKey,
+      async () => {
+        // Get all services for this venue
+        return await prisma.service.findMany({
+          where: { venueId },
+          include: {
+            roles: {
+              select: {
+                id: true,
+                name: true,
+                color: true,
+              },
+            },
+            _count: {
+              select: {
+                transactions: true,
+              },
+            },
           },
-        },
-        _count: {
-          select: {
-            transactions: true,
+          orderBy: {
+            createdAt: "desc",
           },
-        },
+        })
       },
-      orderBy: {
-        createdAt: "desc",
-      },
-    })
+      cacheTTL.services
+    )
 
       return NextResponse.json(services)
     } catch (error) {
@@ -131,6 +140,9 @@ export const POST = withRateLimit<{ params: Promise<{ venueId: string }> }>(
         },
       },
     })
+
+    // Invalidate services cache
+    await invalidateCache(cacheKeys.venueServices(venueId))
 
       return NextResponse.json(newService, { status: 201 })
     } catch (error) {

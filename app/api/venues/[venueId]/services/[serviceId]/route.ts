@@ -4,6 +4,7 @@ import { authOptions } from "@/lib/auth"
 import { prisma } from "@/lib/prisma"
 import { z } from "zod"
 import { withRateLimit } from "@/lib/middleware/with-rate-limit"
+import { invalidateCache, cacheKeys } from "@/lib/redis-cache"
 
 const updateServiceSchema = z.object({
   name: z.string().min(1).max(100).optional(),
@@ -131,6 +132,9 @@ export const PUT = withRateLimit<{ params: Promise<{ venueId: string; serviceId:
       },
     })
 
+    // Invalidate services cache
+    await invalidateCache(cacheKeys.venueServices(venueId))
+
       return NextResponse.json(updatedService)
     } catch (error) {
       if (error instanceof z.ZodError) {
@@ -188,6 +192,9 @@ export const DELETE = withRateLimit<{ params: Promise<{ venueId: string; service
     await prisma.service.delete({
       where: { id: serviceId, venueId },
     })
+
+    // Invalidate services cache
+    await invalidateCache(cacheKeys.venueServices(venueId))
 
       return NextResponse.json({ success: true })
     } catch (error) {
