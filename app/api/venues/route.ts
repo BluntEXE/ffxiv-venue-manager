@@ -4,14 +4,15 @@ import { authOptions } from "@/lib/auth"
 import { prisma } from "@/lib/prisma"
 import { z } from "zod"
 import { withRateLimit } from "@/lib/middleware/with-rate-limit"
+import { validators } from "@/lib/validation"
 
 const venueSchema = z.object({
-  name: z.string().min(1, "Venue name is required"),
-  slug: z.string().min(1, "Slug is required").regex(/^[a-z0-9-]+$/, "Slug can only contain lowercase letters, numbers, and hyphens"),
-  description: z.string().optional(),
-  dataCenter: z.string().min(1, "Data center is required"),
-  world: z.string().min(1, "World is required"),
-  location: z.string().optional(),
+  name: validators.venueName,
+  slug: validators.slug,
+  description: validators.venueDescription,
+  dataCenter: z.string().min(1, "Data center is required").max(50, "Data center name too long"),
+  world: z.string().min(1, "World is required").max(50, "World name too long"),
+  location: validators.venueLocation,
 })
 
 export const POST = withRateLimit(

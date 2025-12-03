@@ -10,13 +10,14 @@ import {
   type VenueWebhookConfig,
 } from "@/lib/discord-webhook"
 import { withRateLimit } from "@/lib/middleware/with-rate-limit"
+import { validators, sanitizeDiscordContent } from "@/lib/validation"
 
 const createTransactionSchema = z.object({
   serviceId: z.string().optional(),
   eventId: z.string().optional(),
-  amount: z.number().min(0, "Amount must be positive"),
-  customerName: z.string().optional(),
-  notes: z.string().optional(),
+  amount: validators.amount,
+  customerName: validators.customerName,
+  notes: validators.transactionNotes,
 })
 
 export const GET = withRateLimit<{ params: Promise<{ venueId: string }> }>(
@@ -36,10 +37,38 @@ export const GET = withRateLimit<{ params: Promise<{ venueId: string }> }>(
     const { searchParams } = new URL(request.url)
     const eventId = searchParams.get("eventId")
     const serviceId = searchParams.get("serviceId")
-    const startDate = searchParams.get("startDate")
-    const endDate = searchParams.get("endDate")
+    const startDateParam = searchParams.get("startDate")
+    const endDateParam = searchParams.get("endDate")
     const cursor = searchParams.get("cursor") // For pagination
     const limit = Math.min(parseInt(searchParams.get("limit") || "50"), 100) // Max 100 items per page
+
+    // Validate dates if provided
+    let startDate: Date | undefined
+    let endDate: Date | undefined
+
+    if (startDateParam) {
+      const parsed = Date.parse(startDateParam)
+      if (isNaN(parsed)) {
+        return NextResponse.json({ error: "Invalid start date format" }, { status: 400 })
+      }
+      startDate = new Date(parsed)
+    }
+
+    if (endDateParam) {
+      const parsed = Date.parse(endDateParam)
+      if (isNaN(parsed)) {
+        return NextResponse.json({ error: "Invalid end date format" }, { status: 400 })
+      }
+      endDate = new Date(parsed)
+    }
+
+    // Ensure start date is before end date
+    if (startDate && endDate && startDate >= endDate) {
+      return NextResponse.json(
+        { error: "Start date must be before end date" },
+        { status: 400 }
+      )
+    }
 
     // Check if user has access to this venue
     const membership = await prisma.membership.findFirst({
@@ -83,8 +112,8 @@ export const GET = withRateLimit<{ params: Promise<{ venueId: string }> }>(
     if (serviceId) where.serviceId = serviceId
     if (startDate || endDate) {
       where.createdAt = {}
-      if (startDate) where.createdAt.gte = new Date(startDate)
-      if (endDate) where.createdAt.lte = new Date(endDate)
+      if (startDate) where.createdAt.gte = startDate
+      if (endDate) where.createdAt.lte = endDate
     }
 
     // Apply sales visibility settings for STAFF members
@@ -237,7 +266,11 @@ export const POST = withRateLimit<{ params: Promise<{ venueId: string }> }>(
         const embed = formatSaleLoggedEmbed({
           amount: Number(newTransaction.amount),
           service: newTransaction.service,
-          customerName: newTransaction.customerName,
+          // Sanitize customer name to prevent @everyone/@here mentions
+          customerName: sanitizeDiscordContent(newTransaction.customerName, {
+            maxLength: 100,
+            stripUrls: true,
+          }),
           staff: newTransaction.staff,
         })
 
