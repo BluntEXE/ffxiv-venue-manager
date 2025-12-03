@@ -174,7 +174,8 @@
 @layer utilities {
   /* Prevent text overflow on mobile */
   .break-words-mobile {
-    @apply break-words overflow-wrap-anywhere;
+    @apply break-words;
+    overflow-wrap: anywhere;
   }
 
   /* Truncate long text with ellipsis */
@@ -189,13 +190,13 @@
 
   /* Force word breaking for URLs and long strings */
   .break-all-mobile {
-    word-break: break-all;
+    @apply break-all;
     overflow-wrap: break-word;
   }
 
   /* Responsive text that wraps properly */
   .text-wrap-mobile {
-    white-space: normal;
+    @apply whitespace-normal;
     word-wrap: break-word;
     overflow-wrap: break-word;
     hyphens: auto;
