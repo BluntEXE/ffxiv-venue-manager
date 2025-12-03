@@ -273,7 +273,6 @@ export default function AnalyticsPage() {
             <CardContent>
               <ResponsiveContainer width="100%" height={300}>
                 <LineChart data={revenueData}>
-                  <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
                   <XAxis
                     dataKey="date"
                     className="text-xs"
@@ -321,7 +320,6 @@ export default function AnalyticsPage() {
             <CardContent>
               <ResponsiveContainer width="100%" height={250}>
                 <BarChart data={patronData}>
-                  <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
                   <XAxis
                     dataKey="date"
                     className="text-xs"
@@ -330,7 +328,7 @@ export default function AnalyticsPage() {
                   <YAxis
                     className="text-xs"
                     tick={{ fill: "#6b7280" }}
-                    domain={[0, (dataMax: number) => Math.ceil(dataMax * 1.1)]}
+                    domain={[0, (dataMax: number) => Math.ceil(dataMax * 1.25)]}
                   />
                   <Tooltip
                     contentStyle={{

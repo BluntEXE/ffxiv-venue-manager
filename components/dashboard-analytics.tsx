@@ -128,7 +128,6 @@ export function DashboardAnalytics({ venueId }: DashboardAnalyticsProps) {
         <CardContent>
           <ResponsiveContainer width="100%" height={200}>
             <LineChart data={revenueData}>
-              <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
               <XAxis
                 dataKey="date"
                 className="text-xs"
@@ -181,7 +180,6 @@ export function DashboardAnalytics({ venueId }: DashboardAnalyticsProps) {
                 { name: "Pending", value: taskStats?.pending || 0, fill: "#6366f1" },
               ]}
             >
-              <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
               <XAxis
                 dataKey="name"
                 className="text-xs"
@@ -190,7 +188,7 @@ export function DashboardAnalytics({ venueId }: DashboardAnalyticsProps) {
               <YAxis
                 className="text-xs"
                 tick={{ fill: "#6b7280" }}
-                domain={[0, (dataMax: number) => Math.ceil(dataMax * 1.1)]}
+                domain={[0, (dataMax: number) => Math.ceil(dataMax * 1.25)]}
               />
               <Tooltip
                 contentStyle={{
