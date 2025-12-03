@@ -13,10 +13,10 @@ import { withRateLimit } from "@/lib/middleware/with-rate-limit"
 
 const updateTaskSchema = z.object({
   title: z.string().min(1).max(200).optional(),
-  description: z.string().optional(),
+  description: z.string().nullable().optional(),
   status: z.enum(["PENDING", "IN_PROGRESS", "COMPLETED", "CANCELLED"]).optional(),
   priority: z.enum(["LOW", "MEDIUM", "HIGH", "URGENT"]).optional(),
-  category: z.string().optional(),
+  category: z.string().nullable().optional(),
   assignedRoleId: z.string().nullable().optional(), // Role-based assignment
   dueDate: z.string().nullable().optional(),
 })
