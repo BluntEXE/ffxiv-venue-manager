@@ -45,6 +45,11 @@ export function VenueSidebar({
       icon: "🏠",
     },
     {
+      href: `/dashboard/${venueSlug}/analytics`,
+      label: "Analytics",
+      icon: "📊",
+    },
+    {
       href: `/dashboard/${venueSlug}/events`,
       label: "Events",
       icon: "📅",
