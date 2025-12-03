@@ -777,9 +777,9 @@ export default function TasksPage({
               <div className="space-y-2">
                 <Label htmlFor="edit-category">Category (optional)</Label>
                 <Select
-                  value={formData.category}
+                  value={formData.category || "none"}
                   onValueChange={(value) =>
-                    setFormData({ ...formData, category: value })
+                    setFormData({ ...formData, category: value === "none" ? "" : value })
                   }
                   disabled={isSubmitting}
                 >
@@ -787,7 +787,7 @@ export default function TasksPage({
                     <SelectValue placeholder="Select category" />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="">None</SelectItem>
+                    <SelectItem value="none">No category</SelectItem>
                     {TASK_CATEGORIES.map((cat) => (
                       <SelectItem key={cat} value={cat}>
                         {cat}
@@ -800,9 +800,9 @@ export default function TasksPage({
             <div className="space-y-2">
               <Label htmlFor="edit-role">Assign to Role (optional)</Label>
               <Select
-                value={formData.selectedRoleId}
+                value={formData.selectedRoleId || "unassigned"}
                 onValueChange={(value) =>
-                  setFormData({ ...formData, selectedRoleId: value })
+                  setFormData({ ...formData, selectedRoleId: value === "unassigned" ? "" : value })
                 }
                 disabled={isSubmitting}
               >
@@ -810,7 +810,7 @@ export default function TasksPage({
                   <SelectValue placeholder="Select role" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="">None</SelectItem>
+                  <SelectItem value="unassigned">Unassigned</SelectItem>
                   {roles.map((role) => (
                     <SelectItem key={role.id} value={role.id}>
                       {role.name}
