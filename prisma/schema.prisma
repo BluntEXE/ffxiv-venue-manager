@@ -38,6 +38,7 @@ model User {
   paidPayrollEntries PayrollEntry[] @relation("PayrollPaidBy")
   feedback    Feedback[]
   reviewedFeedback Feedback[] @relation("FeedbackReviewer")
+  patronLogs  PatronLog[] @relation("PatronLogger")
 
   @@map("users")
 }
@@ -122,6 +123,7 @@ model Venue {
   tasks        Task[]
   webhooks     Webhook[]
   payrollEntries PayrollEntry[]
+  patronLogs   PatronLog[]
 
   @@map("venues")
 }
@@ -243,11 +245,39 @@ model Event {
   parentEvent  Event?        @relation("EventRecurrence", fields: [parentEventId], references: [id])
   childEvents  Event[]       @relation("EventRecurrence")
   transactions Transaction[]
+  patronLogs   PatronLog[]
 
   @@index([venueId, startTime])
   @@index([venueId, status])
   @@index([createdById])
   @@map("events")
+}
+
+// ============================================
+// PATRON TRACKING
+// ============================================
+
+enum PatronAction {
+  ENTER
+  EXIT
+}
+
+model PatronLog {
+  id          String       @id @default(cuid())
+  venueId     String
+  eventId     String?      // Optional: associate with specific event
+  action      PatronAction
+  countChange Int          // +1 for ENTER, -1 for EXIT
+  loggedBy    String?      // Staff member who logged this
+  timestamp   DateTime     @default(now())
+
+  venue    Venue  @relation(fields: [venueId], references: [id], onDelete: Cascade)
+  event    Event? @relation(fields: [eventId], references: [id], onDelete: Cascade)
+  staff    User?  @relation("PatronLogger", fields: [loggedBy], references: [id])
+
+  @@index([venueId, timestamp])
+  @@index([eventId, timestamp])
+  @@map("patron_logs")
 }
 
 // ============================================

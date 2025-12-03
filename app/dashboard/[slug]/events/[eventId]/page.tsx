@@ -8,6 +8,7 @@ import { Badge } from "@/components/ui/badge"
 import { prisma } from "@/lib/prisma"
 import { format } from "date-fns"
 import { DeleteEventButton } from "@/components/delete-event-button"
+import { PatronTracking } from "@/components/patron-tracking"
 
 const statusColors = {
   DRAFT: "bg-gray-500",
@@ -151,6 +152,11 @@ export default async function EventDetailsPage({
               </div>
             </CardContent>
           </Card>
+
+          {/* Patron Tracking - Show only during active events */}
+          {event.status === "ACTIVE" && (
+            <PatronTracking venueId={venue.id} eventId={eventId} />
+          )}
         </div>
 
         {/* Sidebar */}
