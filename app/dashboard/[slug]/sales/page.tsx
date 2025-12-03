@@ -92,7 +92,7 @@ export default async function SalesPage({ params }: PageProps) {
   }
 
   // Fetch data in parallel
-  const [transactionsData, services] = await Promise.all([
+  const [transactionsData, services, activeEvents] = await Promise.all([
     // Get first 50 transactions
     prisma.transaction.findMany({
       where,
@@ -136,6 +136,25 @@ export default async function SalesPage({ params }: PageProps) {
         isActive: true,
       },
     }),
+    // Get active/published events
+    prisma.event.findMany({
+      where: {
+        venueId: venue.id,
+        status: {
+          in: ["PUBLISHED", "ACTIVE"],
+        },
+      },
+      select: {
+        id: true,
+        title: true,
+        startTime: true,
+        status: true,
+      },
+      orderBy: {
+        startTime: "desc",
+      },
+      take: 10,
+    }),
   ])
 
   const hasMore = transactionsData.length > 50
@@ -175,7 +194,7 @@ export default async function SalesPage({ params }: PageProps) {
               Log sales and track revenue
             </p>
           </div>
-          <SalesLogDialog venueId={venue.id} services={servicesWithNumberPrices} />
+          <SalesLogDialog venueId={venue.id} services={servicesWithNumberPrices} events={activeEvents} />
         </div>
 
         {/* Stats */}
@@ -223,7 +242,7 @@ export default async function SalesPage({ params }: PageProps) {
               <p className="text-muted-foreground mb-4">
                 No transactions yet. Log your first sale!
               </p>
-              <SalesLogDialog venueId={venue.id} services={servicesWithNumberPrices} />
+              <SalesLogDialog venueId={venue.id} services={servicesWithNumberPrices} events={activeEvents} />
             </CardContent>
           </Card>
         ) : (

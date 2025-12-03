@@ -31,16 +31,25 @@ interface Service {
   isActive: boolean
 }
 
+interface Event {
+  id: string
+  title: string
+  startTime: Date
+  status: string
+}
+
 interface SalesLogDialogProps {
   venueId: string
   services: Service[]
+  events: Event[]
 }
 
-export function SalesLogDialog({ venueId, services }: SalesLogDialogProps) {
+export function SalesLogDialog({ venueId, services, events }: SalesLogDialogProps) {
   const router = useRouter()
   const [isOpen, setIsOpen] = useState(false)
   const [formData, setFormData] = useState({
     serviceId: "",
+    eventId: "",
     amount: "",
     customerName: "",
     notes: "",
@@ -78,6 +87,7 @@ export function SalesLogDialog({ venueId, services }: SalesLogDialogProps) {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           serviceId: formData.serviceId || undefined,
+          eventId: formData.eventId || undefined,
           amount: parseFloat(formData.amount),
           customerName: formData.customerName || undefined,
           notes: formData.notes || undefined,
@@ -90,7 +100,7 @@ export function SalesLogDialog({ venueId, services }: SalesLogDialogProps) {
       }
 
       setIsOpen(false)
-      setFormData({ serviceId: "", amount: "", customerName: "", notes: "" })
+      setFormData({ serviceId: "", eventId: "", amount: "", customerName: "", notes: "" })
       router.refresh() // Trigger server-side data refresh
     } catch (err: any) {
       setFormError(err.message || "Failed to log sale")
@@ -100,7 +110,7 @@ export function SalesLogDialog({ venueId, services }: SalesLogDialogProps) {
   }
 
   const openDialog = () => {
-    setFormData({ serviceId: "", amount: "", customerName: "", notes: "" })
+    setFormData({ serviceId: "", eventId: "", amount: "", customerName: "", notes: "" })
     setFormError("")
     setIsOpen(true)
   }
@@ -139,6 +149,28 @@ export function SalesLogDialog({ venueId, services }: SalesLogDialogProps) {
                   {services.map((service) => (
                     <SelectItem key={service.id} value={service.id}>
                       {service.name} - {service.price} gil
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="event">Event (Optional)</Label>
+              <Select
+                value={formData.eventId || "none"}
+                onValueChange={(value) =>
+                  setFormData({ ...formData, eventId: value === "none" ? "" : value })
+                }
+                disabled={isSubmitting}
+              >
+                <SelectTrigger>
+                  <SelectValue placeholder="Select an event or leave blank" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="none">No Event</SelectItem>
+                  {events.map((event) => (
+                    <SelectItem key={event.id} value={event.id}>
+                      {event.title} ({event.status === "ACTIVE" ? "Active" : "Published"})
                     </SelectItem>
                   ))}
                 </SelectContent>
