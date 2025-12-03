@@ -7,6 +7,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { prisma } from "@/lib/prisma"
 import { VenueLayout } from "@/components/venue-layout"
 import { Breadcrumb } from "@/components/breadcrumb"
+import { DashboardAnalytics } from "@/components/dashboard-analytics"
 
 export default async function VenueDashboardPage({
   params,
@@ -140,20 +141,11 @@ export default async function VenueDashboardPage({
           </Link>
         </div>
 
-        {/* Recent Activity (placeholder for future) */}
-        <Card className="mt-6 md:mt-8">
-          <CardHeader>
-            <CardTitle>Recent Activity</CardTitle>
-            <CardDescription>
-              Activity feed coming soon...
-            </CardDescription>
-          </CardHeader>
-          <CardContent>
-            <p className="text-sm text-muted-foreground">
-              This section will show recent events, task completions, and staff updates.
-            </p>
-          </CardContent>
-        </Card>
+        {/* Analytics Dashboard */}
+        <div className="mt-6 md:mt-8">
+          <h2 className="text-xl font-semibold mb-4">Analytics Overview</h2>
+          <DashboardAnalytics venueId={venue.id} />
+        </div>
       </div>
     </VenueLayout>
   )
