@@ -169,3 +169,78 @@
     @apply bg-background text-foreground;
   }
 }
+
+/* Mobile Responsive Utilities */
+@layer utilities {
+  /* Prevent text overflow on mobile */
+  .break-words-mobile {
+    @apply break-words overflow-wrap-anywhere;
+  }
+
+  /* Truncate long text with ellipsis */
+  .truncate-mobile {
+    @apply truncate;
+  }
+
+  /* Ensure containers don't overflow on mobile */
+  .container-mobile {
+    @apply max-w-full overflow-x-hidden px-4;
+  }
+
+  /* Force word breaking for URLs and long strings */
+  .break-all-mobile {
+    word-break: break-all;
+    overflow-wrap: break-word;
+  }
+
+  /* Responsive text that wraps properly */
+  .text-wrap-mobile {
+    white-space: normal;
+    word-wrap: break-word;
+    overflow-wrap: break-word;
+    hyphens: auto;
+  }
+}
+
+/* Global mobile fixes */
+@media (max-width: 768px) {
+  /* Prevent horizontal scroll */
+  html, body {
+    overflow-x: hidden;
+    max-width: 100vw;
+  }
+
+  /* Fix long URLs and text in all inputs and textareas */
+  input, textarea, pre, code {
+    max-width: 100%;
+    word-wrap: break-word;
+    overflow-wrap: break-word;
+  }
+
+  /* Fix card content overflow */
+  .card, [class*="card"] {
+    max-width: 100%;
+    overflow-x: auto;
+  }
+
+  /* Fix table overflow */
+  table {
+    display: block;
+    max-width: 100%;
+    overflow-x: auto;
+    white-space: nowrap;
+  }
+
+  /* Fix long text in divs */
+  p, div, span {
+    word-wrap: break-word;
+    overflow-wrap: break-word;
+  }
+
+  /* Fix badges and labels */
+  .badge, [class*="badge"] {
+    max-width: 100%;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+}
