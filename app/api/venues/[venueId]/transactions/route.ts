@@ -38,6 +38,8 @@ export const GET = withRateLimit<{ params: Promise<{ venueId: string }> }>(
     const serviceId = searchParams.get("serviceId")
     const startDate = searchParams.get("startDate")
     const endDate = searchParams.get("endDate")
+    const cursor = searchParams.get("cursor") // For pagination
+    const limit = Math.min(parseInt(searchParams.get("limit") || "50"), 100) // Max 100 items per page
 
     // Check if user has access to this venue
     const membership = await prisma.membership.findFirst({
@@ -91,7 +93,7 @@ export const GET = withRateLimit<{ params: Promise<{ venueId: string }> }>(
       where.staffId = session.user.id
     }
 
-    // Get all transactions
+    // Get transactions with pagination
     const transactions = await prisma.transaction.findMany({
       where,
       include: {
@@ -118,9 +120,25 @@ export const GET = withRateLimit<{ params: Promise<{ venueId: string }> }>(
       orderBy: {
         createdAt: "desc",
       },
+      take: limit + 1, // Fetch one extra to determine if there are more results
+      ...(cursor && {
+        cursor: {
+          id: cursor,
+        },
+        skip: 1, // Skip the cursor item itself
+      }),
     })
 
-      return NextResponse.json(transactions)
+    // Check if there are more results
+    const hasMore = transactions.length > limit
+    const paginatedTransactions = hasMore ? transactions.slice(0, limit) : transactions
+    const nextCursor = hasMore ? paginatedTransactions[paginatedTransactions.length - 1]?.id : null
+
+      return NextResponse.json({
+        transactions: paginatedTransactions,
+        nextCursor,
+        hasMore,
+      })
     } catch (error) {
       console.error("Error fetching transactions:", error)
       return NextResponse.json(

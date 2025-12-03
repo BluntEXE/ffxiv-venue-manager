@@ -82,6 +82,9 @@ export default function SalesPage({
   })
   const [formError, setFormError] = useState("")
   const [isSubmitting, setIsSubmitting] = useState(false)
+  const [nextCursor, setNextCursor] = useState<string | null>(null)
+  const [hasMore, setHasMore] = useState(false)
+  const [isLoadingMore, setIsLoadingMore] = useState(false)
 
   // Unwrap params
   useEffect(() => {
@@ -105,11 +108,13 @@ export default function SalesPage({
         const venue = venues.find((v: any) => v.slug === slug)
         if (!venue) throw new Error("Venue not found")
 
-        // Get transactions
-        const transactionsResponse = await fetch(`/api/venues/${venue.id}/transactions`)
+        // Get transactions (first page, limit 50)
+        const transactionsResponse = await fetch(`/api/venues/${venue.id}/transactions?limit=50`)
         if (transactionsResponse.ok) {
           const transactionsData = await transactionsResponse.json()
-          setTransactions(transactionsData)
+          setTransactions(transactionsData.transactions)
+          setNextCursor(transactionsData.nextCursor)
+          setHasMore(transactionsData.hasMore)
         }
 
         // Get active services
@@ -188,6 +193,35 @@ export default function SalesPage({
           amount: service.price.toString(),
         })
       }
+    }
+  }
+
+  const loadMoreTransactions = async () => {
+    if (!nextCursor || isLoadingMore) return
+
+    setIsLoadingMore(true)
+    try {
+      // Get venue ID
+      const venueResponse = await fetch(`/api/venues?slug=${slug}`)
+      const venues = await venueResponse.json()
+      const venue = venues.find((v: any) => v.slug === slug)
+
+      if (!venue) return
+
+      const response = await fetch(
+        `/api/venues/${venue.id}/transactions?limit=50&cursor=${nextCursor}`
+      )
+
+      if (response.ok) {
+        const data = await response.json()
+        setTransactions([...transactions, ...data.transactions])
+        setNextCursor(data.nextCursor)
+        setHasMore(data.hasMore)
+      }
+    } catch (err) {
+      console.error("Failed to load more transactions:", err)
+    } finally {
+      setIsLoadingMore(false)
     }
   }
 
@@ -330,6 +364,22 @@ export default function SalesPage({
                 </div>
               ))}
             </div>
+            {/* Load More Button */}
+            {hasMore && (
+              <div className="mt-6 text-center">
+                <Button
+                  variant="outline"
+                  onClick={loadMoreTransactions}
+                  disabled={isLoadingMore}
+                  className="w-full sm:w-auto"
+                >
+                  {isLoadingMore ? "Loading..." : "Load More Transactions"}
+                </Button>
+                <p className="text-xs text-muted-foreground mt-2">
+                  Showing {transactions.length} of many transactions
+                </p>
+              </div>
+            )}
           </CardContent>
         </Card>
       )}
