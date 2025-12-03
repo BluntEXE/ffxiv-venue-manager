@@ -787,6 +787,7 @@ export default function TasksPage({
                     <SelectValue placeholder="Select category" />
                   </SelectTrigger>
                   <SelectContent>
+                    <SelectItem value="">None</SelectItem>
                     {TASK_CATEGORIES.map((cat) => (
                       <SelectItem key={cat} value={cat}>
                         {cat}
