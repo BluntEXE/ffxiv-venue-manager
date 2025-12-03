@@ -3,14 +3,6 @@
     {
       "path": "/api/cron/update-event-statuses",
       "schedule": "*/5 * * * *"
-    },
-    {
-      "path": "/api/cron/event-reminders",
-      "schedule": "*/15 * * * *"
-    },
-    {
-      "path": "/api/cron/daily-sales-summary",
-      "schedule": "0 0 * * *"
     }
   ]
 }
