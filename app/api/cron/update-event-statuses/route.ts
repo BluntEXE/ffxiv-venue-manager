@@ -94,19 +94,35 @@ export async function GET(request: Request) {
       },
     })
 
-    // Update events to COMPLETED
+    // Update events to COMPLETED with auto-aggregated metrics
     const completedCount = eventsToComplete.length
     if (completedCount > 0) {
-      await prisma.event.updateMany({
-        where: {
-          id: {
-            in: eventsToComplete.map((e) => e.id),
+      // Process each event individually to calculate metrics
+      for (const event of eventsToComplete) {
+        // Calculate final patron count from logs
+        const patronLogs = await prisma.patronLog.findMany({
+          where: { eventId: event.id },
+          select: { countChange: true },
+        })
+        const finalPatronCount = patronLogs.reduce((sum, log) => sum + log.countChange, 0)
+
+        // Calculate total revenue from transactions
+        const transactions = await prisma.transaction.findMany({
+          where: { eventId: event.id },
+          select: { amount: true },
+        })
+        const totalRevenue = transactions.reduce((sum, t) => sum + Number(t.amount), 0)
+
+        // Update event with status and metrics
+        await prisma.event.update({
+          where: { id: event.id },
+          data: {
+            status: "COMPLETED",
+            attendanceCount: finalPatronCount > 0 ? Math.max(0, finalPatronCount) : undefined,
+            revenue: totalRevenue > 0 ? totalRevenue : undefined,
           },
-        },
-        data: {
-          status: "COMPLETED",
-        },
-      })
+        })
+      }
     }
 
     // Log the results for monitoring

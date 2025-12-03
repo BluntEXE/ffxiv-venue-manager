@@ -330,6 +330,7 @@ export default function AnalyticsPage() {
                   <YAxis
                     className="text-xs"
                     tick={{ fill: "#6b7280" }}
+                    domain={[0, (dataMax: number) => Math.ceil(dataMax * 1.1)]}
                   />
                   <Tooltip
                     contentStyle={{
@@ -341,8 +342,9 @@ export default function AnalyticsPage() {
                       value,
                       props.payload.eventTitle || "Peak Patrons"
                     ]}
+                    cursor={{ fill: "rgba(16, 185, 129, 0.1)" }}
                   />
-                  <Bar dataKey="patrons" fill="#10b981" radius={[4, 4, 0, 0]} />
+                  <Bar dataKey="patrons" fill="#10b981" radius={[4, 4, 0, 0]} style={{ pointerEvents: "none" }} />
                 </BarChart>
               </ResponsiveContainer>
             </CardContent>
@@ -360,18 +362,15 @@ export default function AnalyticsPage() {
               </CardDescription>
             </CardHeader>
             <CardContent>
-              <ResponsiveContainer width="100%" height={250}>
+              <ResponsiveContainer width="100%" height={280}>
                 <PieChart>
                   <Pie
                     data={serviceRevenue}
                     cx="50%"
-                    cy="50%"
-                    labelLine={false}
-                    label={({ name, percent }) =>
-                      `${name}: ${((percent || 0) * 100).toFixed(0)}%`
-                    }
-                    outerRadius={80}
+                    cy="45%"
+                    outerRadius={70}
                     dataKey="value"
+                    style={{ pointerEvents: "none" }}
                   >
                     {serviceRevenue.map((entry, index) => (
                       <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
@@ -384,6 +383,14 @@ export default function AnalyticsPage() {
                       borderRadius: "6px",
                     }}
                     formatter={(value: number) => `${value.toLocaleString()} gil`}
+                  />
+                  <Legend
+                    verticalAlign="bottom"
+                    height={36}
+                    formatter={(value: string, entry: any) => {
+                      const percent = ((entry.payload.value / serviceRevenue.reduce((sum, s) => sum + s.value, 0)) * 100).toFixed(0)
+                      return `${value} (${percent}%)`
+                    }}
                   />
                 </PieChart>
               </ResponsiveContainer>

@@ -190,6 +190,7 @@ export function DashboardAnalytics({ venueId }: DashboardAnalyticsProps) {
               <YAxis
                 className="text-xs"
                 tick={{ fill: "#6b7280" }}
+                domain={[0, (dataMax: number) => Math.ceil(dataMax * 1.1)]}
               />
               <Tooltip
                 contentStyle={{
@@ -197,8 +198,9 @@ export function DashboardAnalytics({ venueId }: DashboardAnalyticsProps) {
                   border: "1px solid #e5e7eb",
                   borderRadius: "6px",
                 }}
+                cursor={{ fill: "rgba(0, 0, 0, 0.05)" }}
               />
-              <Bar dataKey="value" radius={[4, 4, 0, 0]} />
+              <Bar dataKey="value" radius={[4, 4, 0, 0]} style={{ pointerEvents: "none" }} />
             </BarChart>
           </ResponsiveContainer>
         </CardContent>
