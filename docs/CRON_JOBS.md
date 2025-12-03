@@ -6,14 +6,137 @@ This document explains the automated background jobs (cron jobs) for Discord web
 
 ## Overview
 
-The application has **2 automated cron jobs** that send Discord notifications:
+The application has **3 automated cron jobs**:
 
-1. **Event Reminders** - Sends notifications 1 hour before events start
-2. **Daily Sales Summary** - Sends end-of-day sales reports
+1. **Event Status Auto-Updater** - Automatically transitions event statuses (PUBLISHED → ACTIVE → COMPLETED)
+2. **Event Reminders** - Sends notifications 1 hour before events start
+3. **Daily Sales Summary** - Sends end-of-day sales reports
 
 ---
 
-## 1. Event Starting Soon Reminders ⏰
+## 1. Event Status Auto-Updater 🔄
+
+**Endpoint**: `/api/cron/update-event-statuses`
+**Schedule**: Every 5 minutes (`*/5 * * * *`)
+**Purpose**: Automatically transitions event statuses based on start/end times
+
+### How It Works
+
+1. **PUBLISHED → ACTIVE**: When event's start time has passed
+   - Finds all PUBLISHED events where `startTime <= now` and `endTime >= now`
+   - Updates them to ACTIVE status
+
+2. **ACTIVE → COMPLETED**: When event's end time has passed
+   - Finds all ACTIVE events where `endTime <= now`
+   - Updates them to COMPLETED status
+
+### Security
+
+This endpoint requires authentication via the `CRON_SECRET` environment variable:
+
+```bash
+Authorization: Bearer YOUR_CRON_SECRET
+```
+
+**Generate a secret**:
+```bash
+openssl rand -base64 32
+```
+
+Add to your environment variables (Vercel, .env.local, etc.):
+```env
+CRON_SECRET=your-generated-secret-here
+```
+
+### Response Format
+
+```json
+{
+  "success": true,
+  "timestamp": "2025-12-03T10:00:00.000Z",
+  "results": {
+    "activated": {
+      "count": 2,
+      "events": [
+        {
+          "id": "event-id-1",
+          "title": "Grand Opening Night",
+          "venue": "The Crystal Lounge",
+          "startTime": "2025-12-03T09:55:00.000Z"
+        }
+      ]
+    },
+    "completed": {
+      "count": 1,
+      "events": [
+        {
+          "id": "event-id-2",
+          "title": "Jazz Night",
+          "venue": "The Siren's Call",
+          "endTime": "2025-12-03T09:50:00.000Z"
+        }
+      ]
+    }
+  }
+}
+```
+
+### Testing Locally
+
+**Manual API Call** (requires CRON_SECRET):
+```bash
+# Using curl with authorization
+curl -H "Authorization: Bearer your-cron-secret-here" \
+  http://localhost:3000/api/cron/update-event-statuses
+
+# Expected response
+{
+  "success": true,
+  "timestamp": "...",
+  "results": {
+    "activated": { "count": 0, "events": [] },
+    "completed": { "count": 0, "events": [] }
+  }
+}
+```
+
+**Testing with Real Events**:
+1. Create an event with `startTime` = 1 minute ago, `endTime` = 1 hour from now
+2. Set status to PUBLISHED
+3. Call the endpoint manually
+4. Event should now be ACTIVE
+
+### Logs
+
+The cron job logs all status changes:
+
+```
+[Event Status Update] 2025-12-03T10:00:00.000Z
+  Activated: 2 events
+  Completed: 1 events
+  Activated events:
+    - "Grand Opening Night" at The Crystal Lounge
+    - "Weekly Trivia" at The Moogle's Den
+  Completed events:
+    - "Jazz Night" at The Siren's Call
+```
+
+### Error Handling
+
+- **401 Unauthorized**: CRON_SECRET missing or incorrect
+- **500 Server Error**: Database connection issues
+  - Check Vercel logs for details
+  - Verify Prisma connection
+
+### Performance
+
+- Efficient indexed queries on `status`, `startTime`, `endTime`
+- Batch updates with `updateMany`
+- Typical execution: 50-200ms for up to 100 events
+
+---
+
+## 2. Event Starting Soon Reminders ⏰
 
 **Endpoint**: `/api/cron/event-reminders`
 **Schedule**: Every 15 minutes (`*/15 * * * *`)
@@ -73,7 +196,7 @@ curl http://localhost:3000/api/cron/event-reminders
 
 ---
 
-## 2. Daily Sales Summary 📊
+## 3. Daily Sales Summary 📊
 
 **Endpoint**: `/api/cron/daily-sales-summary`
 **Schedule**: Daily at midnight UTC (`0 0 * * *`)
@@ -151,6 +274,10 @@ The cron jobs are configured in `vercel.json`:
 ```json
 {
   "crons": [
+    {
+      "path": "/api/cron/update-event-statuses",
+      "schedule": "*/5 * * * *"
+    },
     {
       "path": "/api/cron/event-reminders",
       "schedule": "*/15 * * * *"
