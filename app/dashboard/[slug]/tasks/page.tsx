@@ -312,21 +312,26 @@ export default function TasksPage({
       const venues = await venueResponse.json()
       const venue = venues.find((v: any) => v.slug === slug)
 
+      const requestBody = {
+        title: formData.title,
+        description: formData.description || null,
+        priority: formData.priority,
+        category: formData.category === "none" ? null : formData.category,
+        assignedRoleId: formData.selectedRoleId === "unassigned" ? null : formData.selectedRoleId,
+        dueDate: formData.dueDate || null,
+      }
+
+      console.log("Sending task update:", requestBody)
+
       const response = await fetch(`/api/venues/${venue.id}/tasks/${editingTask.id}`, {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          title: formData.title,
-          description: formData.description || null,
-          priority: formData.priority,
-          category: formData.category === "none" ? null : formData.category,
-          assignedRoleId: formData.selectedRoleId === "unassigned" ? null : formData.selectedRoleId,
-          dueDate: formData.dueDate || null,
-        }),
+        body: JSON.stringify(requestBody),
       })
 
       if (!response.ok) {
         const data = await response.json()
+        console.error("Task update failed:", data)
         throw new Error(data.error || "Failed to update task")
       }
 
