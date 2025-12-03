@@ -109,6 +109,8 @@ export default function TasksPage({
 
   // Form state
   const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false)
+  const [isEditDialogOpen, setIsEditDialogOpen] = useState(false)
+  const [editingTask, setEditingTask] = useState<Task | null>(null)
   const [formData, setFormData] = useState({
     title: "",
     description: "",
@@ -277,6 +279,66 @@ export default function TasksPage({
     })
     setFormError("")
     setIsCreateDialogOpen(true)
+  }
+
+  const openEditDialog = (task: Task) => {
+    setEditingTask(task)
+    setFormData({
+      title: task.title,
+      description: task.description || "",
+      priority: task.priority,
+      category: task.category || "",
+      selectedRoleId: task.assignedRole?.id || "",
+      dueDate: task.dueDate ? new Date(task.dueDate).toISOString().split("T")[0] : "",
+    })
+    setFormError("")
+    setIsEditDialogOpen(true)
+  }
+
+  const handleEditTask = async () => {
+    if (!editingTask) return
+
+    try {
+      setIsSubmitting(true)
+      setFormError("")
+
+      if (!formData.title.trim()) {
+        setFormError("Task title is required")
+        return
+      }
+
+      // Get venue ID
+      const venueResponse = await fetch(`/api/venues?slug=${slug}`)
+      const venues = await venueResponse.json()
+      const venue = venues.find((v: any) => v.slug === slug)
+
+      const response = await fetch(`/api/venues/${venue.id}/tasks/${editingTask.id}`, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          title: formData.title,
+          description: formData.description || null,
+          priority: formData.priority,
+          category: formData.category || null,
+          assignedRoleId: formData.selectedRoleId || null,
+          dueDate: formData.dueDate || null,
+        }),
+      })
+
+      if (!response.ok) {
+        const data = await response.json()
+        throw new Error(data.error || "Failed to update task")
+      }
+
+      const updatedTask = await response.json()
+      setTasks(tasks.map((t) => (t.id === updatedTask.id ? updatedTask : t)))
+      setIsEditDialogOpen(false)
+      setEditingTask(null)
+    } catch (err: any) {
+      setFormError(err.message || "Failed to update task")
+    } finally {
+      setIsSubmitting(false)
+    }
   }
 
   if (!slug) {
@@ -483,6 +545,13 @@ export default function TasksPage({
                             Reopen
                           </Button>
                         )}
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          onClick={() => openEditDialog(task)}
+                        >
+                          Edit
+                        </Button>
                         <AlertDialog>
                           <AlertDialogTrigger asChild>
                             <Button size="sm" variant="outline">
@@ -644,6 +713,134 @@ export default function TasksPage({
             </Button>
             <Button onClick={handleCreateTask} disabled={isSubmitting}>
               {isSubmitting ? "Creating..." : "Create Task"}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Edit Task Dialog */}
+      <Dialog open={isEditDialogOpen} onOpenChange={setIsEditDialogOpen}>
+        <DialogContent className="max-w-xl">
+          <DialogHeader>
+            <DialogTitle>Edit Task</DialogTitle>
+            <DialogDescription>Update task details</DialogDescription>
+          </DialogHeader>
+          <div className="space-y-4">
+            {formError && (
+              <Alert className="bg-red-50 border-red-200">
+                <AlertDescription className="text-red-800">{formError}</AlertDescription>
+              </Alert>
+            )}
+            <div className="space-y-2">
+              <Label htmlFor="edit-title">Task Title *</Label>
+              <Input
+                id="edit-title"
+                placeholder="e.g., Set up stage for performance"
+                value={formData.title}
+                onChange={(e) => setFormData({ ...formData, title: e.target.value })}
+                disabled={isSubmitting}
+              />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="edit-description">Description</Label>
+              <Textarea
+                id="edit-description"
+                placeholder="Task details..."
+                value={formData.description}
+                onChange={(e) =>
+                  setFormData({ ...formData, description: e.target.value })
+                }
+                disabled={isSubmitting}
+              />
+            </div>
+            <div className="grid grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <Label htmlFor="edit-priority">Priority</Label>
+                <Select
+                  value={formData.priority}
+                  onValueChange={(value: any) =>
+                    setFormData({ ...formData, priority: value })
+                  }
+                  disabled={isSubmitting}
+                >
+                  <SelectTrigger id="edit-priority">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="LOW">Low</SelectItem>
+                    <SelectItem value="MEDIUM">Medium</SelectItem>
+                    <SelectItem value="HIGH">High</SelectItem>
+                    <SelectItem value="URGENT">Urgent</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="edit-category">Category (optional)</Label>
+                <Select
+                  value={formData.category}
+                  onValueChange={(value) =>
+                    setFormData({ ...formData, category: value })
+                  }
+                  disabled={isSubmitting}
+                >
+                  <SelectTrigger id="edit-category">
+                    <SelectValue placeholder="Select category" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {TASK_CATEGORIES.map((cat) => (
+                      <SelectItem key={cat} value={cat}>
+                        {cat}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="edit-role">Assign to Role (optional)</Label>
+              <Select
+                value={formData.selectedRoleId}
+                onValueChange={(value) =>
+                  setFormData({ ...formData, selectedRoleId: value })
+                }
+                disabled={isSubmitting}
+              >
+                <SelectTrigger id="edit-role">
+                  <SelectValue placeholder="Select role" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="">None</SelectItem>
+                  {roles.map((role) => (
+                    <SelectItem key={role.id} value={role.id}>
+                      {role.name}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="edit-due-date">Due Date (optional)</Label>
+              <Input
+                id="edit-due-date"
+                type="date"
+                value={formData.dueDate}
+                onChange={(e) =>
+                  setFormData({ ...formData, dueDate: e.target.value })
+                }
+                disabled={isSubmitting}
+              />
+            </div>
+          </div>
+          <DialogFooter>
+            <Button
+              variant="outline"
+              onClick={() => setIsEditDialogOpen(false)}
+              disabled={isSubmitting}
+            >
+              Cancel
+            </Button>
+            <Button onClick={handleEditTask} disabled={isSubmitting}>
+              {isSubmitting ? "Saving..." : "Save Changes"}
             </Button>
           </DialogFooter>
         </DialogContent>
