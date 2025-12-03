@@ -195,6 +195,7 @@ export const POST = withRateLimit<{ params: Promise<{ venueId: string }> }>(
     const venue = await prisma.venue.findUnique({
       where: { id: venueId },
       select: {
+        name: true,
         discordWebhookUrl: true,
         settings: true,
       },
@@ -207,7 +208,18 @@ export const POST = withRateLimit<{ params: Promise<{ venueId: string }> }>(
         discordWebhookUrl: venue.discordWebhookUrl,
       }
 
+      console.log(`[Task Created] Venue: ${venue.name}`)
+      console.log(`[Task Created] Webhook Config:`, JSON.stringify({
+        hasDiscordWebhooks: !!webhookConfig.discordWebhooks,
+        staffWebhookUrl: webhookConfig.discordWebhooks?.staff?.substring(0, 50) + "...",
+        hasWebhooksSettings: !!webhookConfig.webhooks,
+        taskCreatedEnabled: webhookConfig.webhooks?.taskCreated,
+        legacyWebhookUrl: webhookConfig.discordWebhookUrl?.substring(0, 50) + "...",
+      }, null, 2))
+
       const webhookUrl = getWebhookUrlForType(webhookConfig, "taskCreated")
+      console.log(`[Task Created] Resolved webhook URL: ${webhookUrl ? webhookUrl.substring(0, 50) + "..." : "null"}`)
+
       if (webhookUrl) {
         const embed = formatTaskCreatedEmbed({
           title: newTask.title,
@@ -217,10 +229,21 @@ export const POST = withRateLimit<{ params: Promise<{ venueId: string }> }>(
           assignee: newTask.assignee,
         })
 
+        console.log(`[Task Created] Sending webhook for task: "${newTask.title}"`)
         // Send webhook asynchronously (don't wait for response)
-        sendDiscordWebhook(webhookUrl, { embeds: [embed] }).catch(
-          (error) => console.error("Failed to send Discord webhook:", error)
-        )
+        sendDiscordWebhook(webhookUrl, { embeds: [embed] })
+          .then((success) => {
+            if (success) {
+              console.log(`[Task Created] ✅ Webhook sent successfully`)
+            } else {
+              console.error(`[Task Created] ❌ Webhook failed (returned false)`)
+            }
+          })
+          .catch((error) => {
+            console.error(`[Task Created] ❌ Webhook error:`, error)
+          })
+      } else {
+        console.log(`[Task Created] ⚠️  No webhook URL found - webhook not sent`)
       }
     }
 
