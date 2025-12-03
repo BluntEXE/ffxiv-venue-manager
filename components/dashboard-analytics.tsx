@@ -128,20 +128,20 @@ export function DashboardAnalytics({ venueId }: DashboardAnalyticsProps) {
         <CardContent>
           <ResponsiveContainer width="100%" height={200}>
             <LineChart data={revenueData}>
-              <CartesianGrid strokeDasharray="3 3" className="stroke-muted" />
+              <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
               <XAxis
                 dataKey="date"
                 className="text-xs"
-                tick={{ fill: "hsl(var(--muted-foreground))" }}
+                tick={{ fill: "#6b7280" }}
               />
               <YAxis
                 className="text-xs"
-                tick={{ fill: "hsl(var(--muted-foreground))" }}
+                tick={{ fill: "#6b7280" }}
               />
               <Tooltip
                 contentStyle={{
-                  backgroundColor: "hsl(var(--background))",
-                  border: "1px solid hsl(var(--border))",
+                  backgroundColor: "#ffffff",
+                  border: "1px solid #e5e7eb",
                   borderRadius: "6px",
                 }}
                 formatter={(value: number, name: string, props: any) => [
@@ -152,9 +152,9 @@ export function DashboardAnalytics({ venueId }: DashboardAnalyticsProps) {
               <Line
                 type="monotone"
                 dataKey="amount"
-                stroke="hsl(var(--primary))"
+                stroke="#8b5cf6"
                 strokeWidth={2}
-                dot={{ fill: "hsl(var(--primary))" }}
+                dot={{ fill: "#8b5cf6" }}
               />
             </LineChart>
           </ResponsiveContainer>
@@ -176,29 +176,29 @@ export function DashboardAnalytics({ venueId }: DashboardAnalyticsProps) {
           <ResponsiveContainer width="100%" height={200}>
             <BarChart
               data={[
-                { name: "Completed", value: taskStats?.completed || 0, fill: "hsl(var(--chart-2))" },
-                { name: "In Progress", value: taskStats?.inProgress || 0, fill: "hsl(var(--chart-3))" },
-                { name: "Pending", value: taskStats?.pending || 0, fill: "hsl(var(--chart-4))" },
+                { name: "Completed", value: taskStats?.completed || 0, fill: "#10b981" },
+                { name: "In Progress", value: taskStats?.inProgress || 0, fill: "#f59e0b" },
+                { name: "Pending", value: taskStats?.pending || 0, fill: "#6366f1" },
               ]}
             >
-              <CartesianGrid strokeDasharray="3 3" className="stroke-muted" />
+              <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
               <XAxis
                 dataKey="name"
                 className="text-xs"
-                tick={{ fill: "hsl(var(--muted-foreground))" }}
+                tick={{ fill: "#6b7280" }}
               />
               <YAxis
                 className="text-xs"
-                tick={{ fill: "hsl(var(--muted-foreground))" }}
+                tick={{ fill: "#6b7280" }}
               />
               <Tooltip
                 contentStyle={{
-                  backgroundColor: "hsl(var(--background))",
-                  border: "1px solid hsl(var(--border))",
+                  backgroundColor: "#ffffff",
+                  border: "1px solid #e5e7eb",
                   borderRadius: "6px",
                 }}
               />
-              <Bar dataKey="value" fill="fill" radius={[4, 4, 0, 0]} />
+              <Bar dataKey="value" radius={[4, 4, 0, 0]} />
             </BarChart>
           </ResponsiveContainer>
         </CardContent>

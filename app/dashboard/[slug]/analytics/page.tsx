@@ -165,11 +165,11 @@ export default function AnalyticsPage() {
   const totalPatrons = patronData.reduce((sum, day) => sum + day.patrons, 0)
 
   const COLORS = [
-    "hsl(var(--chart-1))",
-    "hsl(var(--chart-2))",
-    "hsl(var(--chart-3))",
-    "hsl(var(--chart-4))",
-    "hsl(var(--chart-5))",
+    "#8b5cf6", // Purple
+    "#10b981", // Green
+    "#f59e0b", // Orange
+    "#3b82f6", // Blue
+    "#ec4899", // Pink
   ]
 
   return (
@@ -273,20 +273,20 @@ export default function AnalyticsPage() {
             <CardContent>
               <ResponsiveContainer width="100%" height={300}>
                 <LineChart data={revenueData}>
-                  <CartesianGrid strokeDasharray="3 3" className="stroke-muted" />
+                  <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
                   <XAxis
                     dataKey="date"
                     className="text-xs"
-                    tick={{ fill: "hsl(var(--muted-foreground))" }}
+                    tick={{ fill: "#6b7280" }}
                   />
                   <YAxis
                     className="text-xs"
-                    tick={{ fill: "hsl(var(--muted-foreground))" }}
+                    tick={{ fill: "#6b7280" }}
                   />
                   <Tooltip
                     contentStyle={{
-                      backgroundColor: "hsl(var(--background))",
-                      border: "1px solid hsl(var(--border))",
+                      backgroundColor: "#ffffff",
+                      border: "1px solid #e5e7eb",
                       borderRadius: "6px",
                     }}
                     formatter={(value: number, name: string, props: any) => [
@@ -297,9 +297,9 @@ export default function AnalyticsPage() {
                   <Line
                     type="monotone"
                     dataKey="revenue"
-                    stroke="hsl(var(--primary))"
-                    strokeWidth={2}
-                    dot={false}
+                    stroke="#8b5cf6"
+                    strokeWidth={3}
+                    dot={{ fill: "#8b5cf6", r: 4 }}
                     activeDot={{ r: 6 }}
                   />
                 </LineChart>
@@ -321,20 +321,20 @@ export default function AnalyticsPage() {
             <CardContent>
               <ResponsiveContainer width="100%" height={250}>
                 <BarChart data={patronData}>
-                  <CartesianGrid strokeDasharray="3 3" className="stroke-muted" />
+                  <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
                   <XAxis
                     dataKey="date"
                     className="text-xs"
-                    tick={{ fill: "hsl(var(--muted-foreground))" }}
+                    tick={{ fill: "#6b7280" }}
                   />
                   <YAxis
                     className="text-xs"
-                    tick={{ fill: "hsl(var(--muted-foreground))" }}
+                    tick={{ fill: "#6b7280" }}
                   />
                   <Tooltip
                     contentStyle={{
-                      backgroundColor: "hsl(var(--background))",
-                      border: "1px solid hsl(var(--border))",
+                      backgroundColor: "#ffffff",
+                      border: "1px solid #e5e7eb",
                       borderRadius: "6px",
                     }}
                     formatter={(value: number, name: string, props: any) => [
@@ -342,7 +342,7 @@ export default function AnalyticsPage() {
                       props.payload.eventTitle || "Peak Patrons"
                     ]}
                   />
-                  <Bar dataKey="patrons" fill="hsl(var(--chart-2))" radius={[4, 4, 0, 0]} />
+                  <Bar dataKey="patrons" fill="#10b981" radius={[4, 4, 0, 0]} />
                 </BarChart>
               </ResponsiveContainer>
             </CardContent>
@@ -371,7 +371,6 @@ export default function AnalyticsPage() {
                       `${name}: ${((percent || 0) * 100).toFixed(0)}%`
                     }
                     outerRadius={80}
-                    fill="hsl(var(--chart-1))"
                     dataKey="value"
                   >
                     {serviceRevenue.map((entry, index) => (
@@ -380,8 +379,8 @@ export default function AnalyticsPage() {
                   </Pie>
                   <Tooltip
                     contentStyle={{
-                      backgroundColor: "hsl(var(--background))",
-                      border: "1px solid hsl(var(--border))",
+                      backgroundColor: "#ffffff",
+                      border: "1px solid #e5e7eb",
                       borderRadius: "6px",
                     }}
                     formatter={(value: number) => `${value.toLocaleString()} gil`}
