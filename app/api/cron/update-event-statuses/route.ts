@@ -11,7 +11,7 @@ import { prisma } from "@/lib/prisma"
  *
  * QStash Configuration:
  * - URL: https://xivvenuemanager.com/api/cron/update-event-statuses
- * - Schedule: */5 * * * * (every 5 minutes)
+ * - Schedule: Every 5 minutes (cron: star-slash-5 star star star star)
  * - Method: GET
  * - Headers: { "authorization": "Bearer YOUR_CRON_SECRET" }
  */
