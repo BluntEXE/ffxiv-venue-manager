@@ -241,7 +241,7 @@ export default function PayrollPage() {
       total += parseFloat(bonusAmount) || 0
     }
 
-    return total.toFixed(2)
+    return Math.round(total).toLocaleString()
   }
 
   if (loading) {
@@ -431,7 +431,7 @@ export default function PayrollPage() {
             <XCircle className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">{unpaidTotal.toFixed(2)} Gil</div>
+            <div className="text-2xl font-bold">{Math.round(unpaidTotal).toLocaleString()} Gil</div>
             <p className="text-xs text-muted-foreground">
               {payrollEntries.filter((e) => !e.isPaid).length} entries
             </p>
@@ -444,7 +444,7 @@ export default function PayrollPage() {
             <CheckCircle2 className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">{paidTotal.toFixed(2)} Gil</div>
+            <div className="text-2xl font-bold">{Math.round(paidTotal).toLocaleString()} Gil</div>
             <p className="text-xs text-muted-foreground">
               {payrollEntries.filter((e) => e.isPaid).length} entries
             </p>
@@ -458,7 +458,7 @@ export default function PayrollPage() {
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">
-              {(unpaidTotal + paidTotal).toFixed(2)} Gil
+              {Math.round(unpaidTotal + paidTotal).toLocaleString()} Gil
             </div>
             <p className="text-xs text-muted-foreground">
               {payrollEntries.length} entries

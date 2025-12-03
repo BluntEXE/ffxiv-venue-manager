@@ -29,10 +29,12 @@ export async function GET(request: Request) {
 
     const authHeader = request.headers.get("authorization")
     if (authHeader !== `Bearer ${cronSecret}`) {
+      console.log("Unauthorized cron access attempt - invalid token")
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
     }
 
     const now = new Date()
+    console.log(`[Cron] Event status update starting at ${now.toISOString()}`)
 
     // 1. Find PUBLISHED events that should be ACTIVE (startTime has passed)
     const eventsToActivate = await prisma.event.findMany({
@@ -74,6 +76,7 @@ export async function GET(request: Request) {
     }
 
     // 2. Find ACTIVE events that should be COMPLETED (endTime has passed)
+    console.log(`[Cron] Looking for ACTIVE events with endTime <= ${now.toISOString()}`)
     const eventsToComplete = await prisma.event.findMany({
       where: {
         status: "ACTIVE",
@@ -93,6 +96,7 @@ export async function GET(request: Request) {
         },
       },
     })
+    console.log(`[Cron] Found ${eventsToComplete.length} events to complete`)
 
     // Update events to COMPLETED with auto-aggregated metrics
     const completedCount = eventsToComplete.length
