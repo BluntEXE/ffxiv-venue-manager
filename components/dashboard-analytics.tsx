@@ -41,29 +41,30 @@ export function DashboardAnalytics({ venueId }: DashboardAnalyticsProps) {
 
   const fetchAnalytics = async () => {
     try {
-      // Fetch last 7 days of revenue
-      const last7Days = Array.from({ length: 7 }, (_, i) => {
-        const date = subDays(new Date(), 6 - i)
-        return startOfDay(date)
-      })
+      // Fetch all events to get the last 7 with data
+      const eventsResponse = await fetch(`/api/venues/${venueId}/events`)
+      const allEvents = await eventsResponse.json()
 
-      const revenuePromises = last7Days.map(async (date) => {
-        const nextDay = new Date(date)
-        nextDay.setDate(nextDay.getDate() + 1)
+      // Filter to completed/active events and sort by start time (most recent first)
+      const relevantEvents = allEvents
+        .filter((e: any) => e.status === "COMPLETED" || e.status === "ACTIVE")
+        .sort((a: any, b: any) => new Date(b.startTime).getTime() - new Date(a.startTime).getTime())
+        .slice(0, 7) // Last 7 events
+        .reverse() // Oldest to newest for chart
 
-        const response = await fetch(
-          `/api/venues/${venueId}/transactions?` +
-            new URLSearchParams({
-              startDate: date.toISOString(),
-              endDate: nextDay.toISOString(),
-            })
-        )
+      // Fetch revenue for each event
+      const revenuePromises = relevantEvents.map(async (event: any) => {
+        const response = await fetch(`/api/venues/${venueId}/transactions`)
         const data = await response.json()
         const transactions = data.transactions || []
-        const total = transactions.reduce((sum: number, t: any) => sum + Number(t.amount), 0)
+
+        // Filter transactions for this event
+        const eventTransactions = transactions.filter((t: any) => t.eventId === event.id)
+        const total = eventTransactions.reduce((sum: number, t: any) => sum + Number(t.amount), 0)
 
         return {
-          date: format(date, "MMM dd"),
+          date: format(new Date(event.startTime), "MMM dd"),
+          eventTitle: event.title,
           amount: total,
         }
       })
@@ -82,11 +83,8 @@ export function DashboardAnalytics({ venueId }: DashboardAnalyticsProps) {
         inProgress: tasks.filter((t: any) => t.status === "IN_PROGRESS").length,
       })
 
-      // Fetch upcoming events
-      const eventsResponse = await fetch(`/api/venues/${venueId}/events`)
-      const events = await eventsResponse.json()
-
-      const upcoming = events
+      // Get upcoming events (using already-fetched events)
+      const upcoming = allEvents
         .filter((e: any) => new Date(e.startTime) > new Date())
         .sort((a: any, b: any) => new Date(a.startTime).getTime() - new Date(b.startTime).getTime())
         .slice(0, 5)
@@ -121,7 +119,7 @@ export function DashboardAnalytics({ venueId }: DashboardAnalyticsProps) {
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
             <TrendingUp className="h-5 w-5" />
-            Revenue Trend (7 Days)
+            Revenue by Event (Last 7)
           </CardTitle>
           <CardDescription>
             Total: {totalRevenue.toLocaleString()} gil
@@ -146,7 +144,10 @@ export function DashboardAnalytics({ venueId }: DashboardAnalyticsProps) {
                   border: "1px solid hsl(var(--border))",
                   borderRadius: "6px",
                 }}
-                formatter={(value: number) => [`${value.toLocaleString()} gil`, "Revenue"]}
+                formatter={(value: number, name: string, props: any) => [
+                  `${value.toLocaleString()} gil`,
+                  props.payload.eventTitle || "Revenue"
+                ]}
               />
               <Line
                 type="monotone"
