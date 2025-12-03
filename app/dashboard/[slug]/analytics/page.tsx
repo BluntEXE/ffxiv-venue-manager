@@ -8,6 +8,8 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import {
   LineChart,
   Line,
+  ScatterChart,
+  Scatter,
   BarChart,
   Bar,
   PieChart,
@@ -172,6 +174,35 @@ export default function AnalyticsPage() {
     "#ec4899", // Pink
   ]
 
+  // Calculate linear regression for trendline
+  const calculateTrendline = (data: any[]) => {
+    if (data.length === 0) return []
+
+    const n = data.length
+    const sumX = data.reduce((sum, _, i) => sum + i, 0)
+    const sumY = data.reduce((sum, d) => sum + d.revenue, 0)
+    const sumXY = data.reduce((sum, d, i) => sum + i * d.revenue, 0)
+    const sumX2 = data.reduce((sum, _, i) => sum + i * i, 0)
+
+    const slope = (n * sumXY - sumX * sumY) / (n * sumX2 - sumX * sumX)
+    const intercept = (sumY - slope * sumX) / n
+
+    return data.map((d, i) => ({
+      date: d.date,
+      x: i,
+      trend: slope * i + intercept,
+    }))
+  }
+
+  const trendlineData = calculateTrendline(revenueData)
+
+  // Prepare scatter data with x-index for proper spacing
+  const scatterData = revenueData.map((d, i) => ({
+    ...d,
+    x: i,
+    y: d.revenue,
+  }))
+
   return (
     <VenueLayoutClient slug={slug}>
       <div className="container mx-auto p-4 md:p-6 lg:p-8">
@@ -272,13 +303,18 @@ export default function AnalyticsPage() {
             </CardHeader>
             <CardContent>
               <ResponsiveContainer width="100%" height={300}>
-                <LineChart data={revenueData}>
+                <ScatterChart>
                   <XAxis
-                    dataKey="date"
+                    type="number"
+                    dataKey="x"
+                    domain={[0, scatterData.length - 1]}
+                    ticks={scatterData.map((_, i) => i)}
+                    tickFormatter={(value) => revenueData[value]?.date || ""}
                     className="text-xs"
                     tick={{ fill: "#6b7280" }}
                   />
                   <YAxis
+                    type="number"
                     className="text-xs"
                     tick={{ fill: "#6b7280" }}
                   />
@@ -288,20 +324,31 @@ export default function AnalyticsPage() {
                       border: "1px solid #e5e7eb",
                       borderRadius: "6px",
                     }}
-                    formatter={(value: number, name: string, props: any) => [
-                      `${value.toLocaleString()} gil`,
-                      props.payload.eventTitle || "Revenue"
-                    ]}
+                    formatter={(value: number, name: string, props: any) => {
+                      if (name === "y") {
+                        return [`${value.toLocaleString()} gil`, props.payload.eventTitle || "Revenue"]
+                      }
+                      return null
+                    }}
+                    labelFormatter={(value) => revenueData[value]?.date || ""}
+                  />
+                  <Scatter
+                    data={scatterData}
+                    fill="#8b5cf6"
+                    shape="circle"
+                    style={{ pointerEvents: "none" }}
                   />
                   <Line
                     type="monotone"
-                    dataKey="revenue"
-                    stroke="#8b5cf6"
-                    strokeWidth={3}
-                    dot={{ fill: "#8b5cf6", r: 4 }}
-                    activeDot={{ r: 6 }}
+                    data={trendlineData}
+                    dataKey="trend"
+                    stroke="#a78bfa"
+                    strokeWidth={2}
+                    strokeDasharray="5 5"
+                    dot={false}
+                    style={{ pointerEvents: "none" }}
                   />
-                </LineChart>
+                </ScatterChart>
               </ResponsiveContainer>
             </CardContent>
           </Card>

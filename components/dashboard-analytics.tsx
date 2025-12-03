@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
-import { LineChart, Line, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from "recharts"
+import { ScatterChart, Scatter, LineChart, Line, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from "recharts"
 import { format, subDays, startOfDay } from "date-fns"
 import { TrendingUp, CheckCircle2, Calendar } from "lucide-react"
 
@@ -112,6 +112,35 @@ export function DashboardAnalytics({ venueId }: DashboardAnalyticsProps) {
   const totalRevenue = revenueData.reduce((sum, day) => sum + day.amount, 0)
   const completionRate = taskStats ? Math.round((taskStats.completed / taskStats.total) * 100) : 0
 
+  // Calculate linear regression for trendline
+  const calculateTrendline = (data: any[]) => {
+    if (data.length === 0) return []
+
+    const n = data.length
+    const sumX = data.reduce((sum, _, i) => sum + i, 0)
+    const sumY = data.reduce((sum, d) => sum + d.amount, 0)
+    const sumXY = data.reduce((sum, d, i) => sum + i * d.amount, 0)
+    const sumX2 = data.reduce((sum, _, i) => sum + i * i, 0)
+
+    const slope = (n * sumXY - sumX * sumY) / (n * sumX2 - sumX * sumX)
+    const intercept = (sumY - slope * sumX) / n
+
+    return data.map((d, i) => ({
+      date: d.date,
+      x: i,
+      trend: slope * i + intercept,
+    }))
+  }
+
+  const trendlineData = calculateTrendline(revenueData)
+
+  // Prepare scatter data with x-index for proper spacing
+  const scatterData = revenueData.map((d, i) => ({
+    ...d,
+    x: i,
+    y: d.amount,
+  }))
+
   return (
     <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
       {/* Revenue Trend */}
@@ -127,13 +156,18 @@ export function DashboardAnalytics({ venueId }: DashboardAnalyticsProps) {
         </CardHeader>
         <CardContent>
           <ResponsiveContainer width="100%" height={200}>
-            <LineChart data={revenueData}>
+            <ScatterChart>
               <XAxis
-                dataKey="date"
+                type="number"
+                dataKey="x"
+                domain={[0, scatterData.length - 1]}
+                ticks={scatterData.map((_, i) => i)}
+                tickFormatter={(value) => revenueData[value]?.date || ""}
                 className="text-xs"
                 tick={{ fill: "#6b7280" }}
               />
               <YAxis
+                type="number"
                 className="text-xs"
                 tick={{ fill: "#6b7280" }}
               />
@@ -143,19 +177,31 @@ export function DashboardAnalytics({ venueId }: DashboardAnalyticsProps) {
                   border: "1px solid #e5e7eb",
                   borderRadius: "6px",
                 }}
-                formatter={(value: number, name: string, props: any) => [
-                  `${value.toLocaleString()} gil`,
-                  props.payload.eventTitle || "Revenue"
-                ]}
+                formatter={(value: number, name: string, props: any) => {
+                  if (name === "y") {
+                    return [`${value.toLocaleString()} gil`, props.payload.eventTitle || "Revenue"]
+                  }
+                  return null
+                }}
+                labelFormatter={(value) => revenueData[value]?.date || ""}
+              />
+              <Scatter
+                data={scatterData}
+                fill="#8b5cf6"
+                shape="circle"
+                style={{ pointerEvents: "none" }}
               />
               <Line
                 type="monotone"
-                dataKey="amount"
-                stroke="#8b5cf6"
+                data={trendlineData}
+                dataKey="trend"
+                stroke="#a78bfa"
                 strokeWidth={2}
-                dot={{ fill: "#8b5cf6" }}
+                strokeDasharray="5 5"
+                dot={false}
+                style={{ pointerEvents: "none" }}
               />
-            </LineChart>
+            </ScatterChart>
           </ResponsiveContainer>
         </CardContent>
       </Card>
