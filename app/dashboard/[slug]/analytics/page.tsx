@@ -64,12 +64,13 @@ export default function AnalyticsPage() {
         const response = await fetch(
           `/api/venues/${venue.id}/transactions?` +
             new URLSearchParams({
-              from: date.toISOString(),
-              to: nextDay.toISOString(),
+              startDate: date.toISOString(),
+              endDate: nextDay.toISOString(),
             })
         )
         const data = await response.json()
-        const total = data.reduce((sum: number, t: any) => sum + Number(t.amount), 0)
+        const transactions = data.transactions || []
+        const total = transactions.reduce((sum: number, t: any) => sum + Number(t.amount), 0)
 
         return {
           date: format(date, "MMM dd"),

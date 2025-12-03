@@ -51,15 +51,16 @@ export function DashboardAnalytics({ venueId }: DashboardAnalyticsProps) {
         const nextDay = new Date(date)
         nextDay.setDate(nextDay.getDate() + 1)
 
-        const transactions = await fetch(
+        const response = await fetch(
           `/api/venues/${venueId}/transactions?` +
             new URLSearchParams({
-              from: date.toISOString(),
-              to: nextDay.toISOString(),
+              startDate: date.toISOString(),
+              endDate: nextDay.toISOString(),
             })
         )
-        const data = await transactions.json()
-        const total = data.reduce((sum: number, t: any) => sum + Number(t.amount), 0)
+        const data = await response.json()
+        const transactions = data.transactions || []
+        const total = transactions.reduce((sum: number, t: any) => sum + Number(t.amount), 0)
 
         return {
           date: format(date, "MMM dd"),

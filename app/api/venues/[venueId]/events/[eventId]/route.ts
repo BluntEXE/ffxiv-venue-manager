@@ -102,6 +102,31 @@ export const PUT = withRateLimit<{ params: Promise<{ venueId: string; eventId: s
     const body = await request.json()
     const validatedData = eventUpdateSchema.parse(body)
 
+    // If marking event as COMPLETED, auto-calculate attendance and revenue
+    if (validatedData.status === "COMPLETED") {
+      // Calculate final patron count from logs
+      const patronLogs = await prisma.patronLog.findMany({
+        where: { eventId },
+        select: { countChange: true },
+      })
+      const finalPatronCount = patronLogs.reduce((sum, log) => sum + log.countChange, 0)
+
+      // Calculate total revenue from transactions
+      const transactions = await prisma.transaction.findMany({
+        where: { eventId },
+        select: { amount: true },
+      })
+      const totalRevenue = transactions.reduce((sum, t) => sum + Number(t.amount), 0)
+
+      // Only set if not manually provided
+      if (validatedData.attendanceCount === undefined && finalPatronCount > 0) {
+        validatedData.attendanceCount = Math.max(0, finalPatronCount)
+      }
+      if (validatedData.revenue === undefined && totalRevenue > 0) {
+        validatedData.revenue = totalRevenue
+      }
+    }
+
     const event = await prisma.event.update({
       where: { id: eventId, venueId },
       data: validatedData,
