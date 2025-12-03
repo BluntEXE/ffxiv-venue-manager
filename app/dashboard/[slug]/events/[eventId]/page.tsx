@@ -136,12 +136,16 @@ export default async function EventDetailsPage({
           <Card>
             <CardHeader>
               <CardTitle>Event Metrics</CardTitle>
+              <CardDescription>Final totals after event completion</CardDescription>
             </CardHeader>
             <CardContent className="grid grid-cols-2 gap-4">
               <div>
-                <p className="text-sm text-muted-foreground">Attendance</p>
+                <p className="text-sm text-muted-foreground">Final Attendance</p>
                 <p className="text-2xl font-bold">
                   {event.attendanceCount || "—"}
+                </p>
+                <p className="text-xs text-muted-foreground mt-1">
+                  Manual entry
                 </p>
               </div>
               <div>
@@ -149,12 +153,15 @@ export default async function EventDetailsPage({
                 <p className="text-2xl font-bold">
                   {event.revenue ? `${event.revenue} Gil` : "—"}
                 </p>
+                <p className="text-xs text-muted-foreground mt-1">
+                  From transactions
+                </p>
               </div>
             </CardContent>
           </Card>
 
-          {/* Patron Tracking - Show only during active events */}
-          {event.status === "ACTIVE" && (
+          {/* Patron Tracking - Show for published and active events */}
+          {(event.status === "PUBLISHED" || event.status === "ACTIVE") && (
             <PatronTracking venueId={venue.id} eventId={eventId} />
           )}
         </div>
