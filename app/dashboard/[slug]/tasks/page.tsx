@@ -287,8 +287,8 @@ export default function TasksPage({
       title: task.title,
       description: task.description || "",
       priority: task.priority,
-      category: task.category || "",
-      selectedRoleId: task.assignedRole?.id || "",
+      category: task.category || "none",
+      selectedRoleId: task.assignedRole?.id || "unassigned",
       dueDate: task.dueDate ? new Date(task.dueDate).toISOString().split("T")[0] : "",
     })
     setFormError("")
@@ -319,8 +319,8 @@ export default function TasksPage({
           title: formData.title,
           description: formData.description || null,
           priority: formData.priority,
-          category: formData.category || null,
-          assignedRoleId: formData.selectedRoleId || null,
+          category: formData.category === "none" ? null : formData.category,
+          assignedRoleId: formData.selectedRoleId === "unassigned" ? null : formData.selectedRoleId,
           dueDate: formData.dueDate || null,
         }),
       })
@@ -777,9 +777,9 @@ export default function TasksPage({
               <div className="space-y-2">
                 <Label htmlFor="edit-category">Category (optional)</Label>
                 <Select
-                  value={formData.category || "none"}
+                  value={formData.category}
                   onValueChange={(value) =>
-                    setFormData({ ...formData, category: value === "none" ? "" : value })
+                    setFormData({ ...formData, category: value })
                   }
                   disabled={isSubmitting}
                 >
@@ -800,9 +800,9 @@ export default function TasksPage({
             <div className="space-y-2">
               <Label htmlFor="edit-role">Assign to Role (optional)</Label>
               <Select
-                value={formData.selectedRoleId || "unassigned"}
+                value={formData.selectedRoleId}
                 onValueChange={(value) =>
-                  setFormData({ ...formData, selectedRoleId: value === "unassigned" ? "" : value })
+                  setFormData({ ...formData, selectedRoleId: value })
                 }
                 disabled={isSubmitting}
               >
