@@ -142,6 +142,12 @@ export default async function SalesPage({ params }: PageProps) {
   const transactions = hasMore ? transactionsData.slice(0, 50) : transactionsData
   const nextCursor = hasMore ? transactions[transactions.length - 1]?.id : null
 
+  // Convert Prisma Decimal to number for services
+  const servicesWithNumberPrices = services.map((service) => ({
+    ...service,
+    price: Number(service.price),
+  }))
+
   // Calculate totals
   const totalRevenue = transactions.reduce((sum, t) => sum + Number(t.amount), 0)
   const todayTransactions = transactions.filter(
@@ -169,7 +175,7 @@ export default async function SalesPage({ params }: PageProps) {
               Log sales and track revenue
             </p>
           </div>
-          <SalesLogDialog venueId={venue.id} services={services} />
+          <SalesLogDialog venueId={venue.id} services={servicesWithNumberPrices} />
         </div>
 
         {/* Stats */}
@@ -217,7 +223,7 @@ export default async function SalesPage({ params }: PageProps) {
               <p className="text-muted-foreground mb-4">
                 No transactions yet. Log your first sale!
               </p>
-              <SalesLogDialog venueId={venue.id} services={services} />
+              <SalesLogDialog venueId={venue.id} services={servicesWithNumberPrices} />
             </CardContent>
           </Card>
         ) : (
