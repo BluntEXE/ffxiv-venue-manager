@@ -20,41 +20,50 @@ export const GET = withRateLimit<{ params: Promise<{ venueId: string }> }>(
       }
 
       const { params } = context
-      const { venueId } = await params
+      const { venueId: slugOrId } = await params
 
-    // Check if user has access to this venue
-    const membership = await prisma.membership.findFirst({
-      where: {
-        userId: session.user.id,
-        venueId,
-      },
-    })
+      // Look up venue by slug
+      const venue = await prisma.venue.findUnique({
+        where: { slug: slugOrId },
+      })
 
-    if (!membership) {
-      return NextResponse.json(
-        { error: "You don't have access to this venue" },
-        { status: 403 }
-      )
-    }
+      if (!venue) {
+        return NextResponse.json({ error: "Venue not found" }, { status: 404 })
+      }
 
-    // Get all staff members
-    const staff = await prisma.membership.findMany({
-      where: { venueId },
-      include: {
-        user: {
-          select: {
-            id: true,
-            name: true,
-            image: true,
-            discordId: true,
-          },
+      // Check if user has access to this venue
+      const membership = await prisma.membership.findFirst({
+        where: {
+          userId: session.user.id,
+          venueId: venue.id,
         },
-        customRole: true,
-      },
-      orderBy: {
-        createdAt: "asc",
-      },
-    })
+      })
+
+      if (!membership) {
+        return NextResponse.json(
+          { error: "You don't have access to this venue" },
+          { status: 403 }
+        )
+      }
+
+      // Get all staff members
+      const staff = await prisma.membership.findMany({
+        where: { venueId: venue.id },
+        include: {
+          user: {
+            select: {
+              id: true,
+              name: true,
+              image: true,
+              discordId: true,
+            },
+          },
+          customRole: true,
+        },
+        orderBy: {
+          createdAt: "asc",
+        },
+      })
 
       return NextResponse.json(staff)
     } catch (error) {
