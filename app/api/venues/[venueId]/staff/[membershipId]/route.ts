@@ -163,6 +163,24 @@ export const DELETE = withRateLimit<{ params: Promise<{ venueId: string; members
       )
     }
 
+    // If trying to delete an owner, ensure at least 1 owner will remain
+    if (targetMembership.role === "OWNER") {
+      const ownerCount = await prisma.membership.count({
+        where: {
+          venueId,
+          role: "OWNER",
+          status: "active",
+        },
+      })
+
+      if (ownerCount <= 1) {
+        return NextResponse.json(
+          { error: "Cannot remove the last owner. Promote another member to owner first." },
+          { status: 400 }
+        )
+      }
+    }
+
     await prisma.membership.delete({
       where: { id: membershipId, venueId },
     })

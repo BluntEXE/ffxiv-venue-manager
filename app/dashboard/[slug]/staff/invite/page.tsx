@@ -32,17 +32,39 @@ export default function InviteStaffPage({
   const router = useRouter()
   const [name, setName] = useState("")
   const [email, setEmail] = useState("")
-  const [role, setRole] = useState<"STAFF" | "MANAGER">("STAFF")
+  const [role, setRole] = useState<"STAFF" | "MANAGER" | "OWNER">("STAFF")
   const [isLoading, setIsLoading] = useState(false)
   const [error, setError] = useState("")
   const [inviteUrl, setInviteUrl] = useState("")
   const [copied, setCopied] = useState(false)
   const [canShare, setCanShare] = useState(false)
+  const [currentUserRole, setCurrentUserRole] = useState<string>("")
 
   // Check if Web Share API is available
   useEffect(() => {
     setCanShare(typeof navigator !== 'undefined' && !!navigator.share)
   }, [])
+
+  // Fetch user's role for the venue
+  useEffect(() => {
+    const fetchUserRole = async () => {
+      try {
+        const venueResponse = await fetch(`/api/venues?slug=${slug}`)
+        if (!venueResponse.ok) return
+
+        const venues = await venueResponse.json()
+        const venue = venues.find((v: any) => v.slug === slug)
+
+        if (venue?.membership?.role) {
+          setCurrentUserRole(venue.membership.role)
+        }
+      } catch (err) {
+        console.error("Failed to fetch user role:", err)
+      }
+    }
+
+    fetchUserRole()
+  }, [slug])
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -320,6 +342,9 @@ export default function InviteStaffPage({
                 <SelectContent>
                   <SelectItem value="STAFF">Staff</SelectItem>
                   <SelectItem value="MANAGER">Manager</SelectItem>
+                  {currentUserRole === "OWNER" && (
+                    <SelectItem value="OWNER">Owner</SelectItem>
+                  )}
                 </SelectContent>
               </Select>
               <div className="text-sm text-muted-foreground space-y-1">
@@ -329,6 +354,11 @@ export default function InviteStaffPage({
                 <p>
                   <strong>Manager:</strong> Can create/edit events, manage tasks, view reports
                 </p>
+                {currentUserRole === "OWNER" && (
+                  <p>
+                    <strong>Owner:</strong> Full access - can manage all settings, staff, and remove other owners
+                  </p>
+                )}
               </div>
             </div>
 

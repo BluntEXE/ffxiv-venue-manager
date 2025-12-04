@@ -23,7 +23,7 @@ export const POST = withRateLimit<{ params: Promise<{ venueId: string }> }>(
     const { role, roleId, invitedName, invitedEmail } = body
 
     // Validate role
-    if (!["STAFF", "MANAGER"].includes(role)) {
+    if (!["STAFF", "MANAGER", "OWNER"].includes(role)) {
       return NextResponse.json({ error: "Invalid role" }, { status: 400 })
     }
 
@@ -45,6 +45,14 @@ export const POST = withRateLimit<{ params: Promise<{ venueId: string }> }>(
     if (!membership || !["OWNER", "MANAGER"].includes(membership.role)) {
       return NextResponse.json(
         { error: "You don't have permission to invite staff" },
+        { status: 403 }
+      )
+    }
+
+    // Only owners can invite other owners
+    if (role === "OWNER" && membership.role !== "OWNER") {
+      return NextResponse.json(
+        { error: "Only owners can invite other owners" },
         { status: 403 }
       )
     }
