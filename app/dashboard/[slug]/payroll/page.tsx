@@ -99,6 +99,8 @@ export default function PayrollPage() {
   const [loading, setLoading] = useState(true)
   const [isDialogOpen, setIsDialogOpen] = useState(false)
   const [filter, setFilter] = useState<"all" | "paid" | "unpaid">("all")
+  const [isCreating, setIsCreating] = useState(false)
+  const [updatingId, setUpdatingId] = useState<string | null>(null)
 
   // Form state
   const [selectedStaff, setSelectedStaff] = useState("")
@@ -165,6 +167,7 @@ export default function PayrollPage() {
   }
 
   const handleCreatePayroll = async () => {
+    setIsCreating(true)
     try {
       const response = await fetch(`/api/venues/${slug}/payroll`, {
         method: "POST",
@@ -203,10 +206,13 @@ export default function PayrollPage() {
     } catch (error) {
       console.error("Error creating payroll entry:", error)
       alert("Failed to create payroll entry")
+    } finally {
+      setIsCreating(false)
     }
   }
 
   const handleMarkAsPaid = async (payrollId: string, currentStatus: boolean) => {
+    setUpdatingId(payrollId)
     try {
       const response = await fetch(`/api/venues/${slug}/payroll/${payrollId}`, {
         method: "PATCH",
@@ -227,6 +233,8 @@ export default function PayrollPage() {
     } catch (error) {
       console.error("Error updating payroll entry:", error)
       alert("Failed to update payroll entry")
+    } finally {
+      setUpdatingId(null)
     }
   }
 
@@ -409,14 +417,14 @@ export default function PayrollPage() {
             </div>
 
             <DialogFooter>
-              <Button variant="outline" onClick={() => setIsDialogOpen(false)}>
+              <Button variant="outline" onClick={() => setIsDialogOpen(false)} disabled={isCreating}>
                 Cancel
               </Button>
               <Button
                 onClick={handleCreatePayroll}
-                disabled={!selectedStaff || !baseRate || !periodStart || !periodEnd}
+                disabled={!selectedStaff || !baseRate || !periodStart || !periodEnd || isCreating}
               >
-                Create Entry
+                {isCreating ? "Creating..." : "Create Entry"}
               </Button>
             </DialogFooter>
           </DialogContent>
@@ -567,8 +575,11 @@ export default function PayrollPage() {
                       variant={entry.isPaid ? "outline" : "default"}
                       size="sm"
                       onClick={() => handleMarkAsPaid(entry.id, entry.isPaid)}
+                      disabled={updatingId === entry.id}
                     >
-                      {entry.isPaid ? (
+                      {updatingId === entry.id ? (
+                        "Updating..."
+                      ) : entry.isPaid ? (
                         <>
                           <XCircle className="mr-2 h-4 w-4" />
                           Mark Unpaid
