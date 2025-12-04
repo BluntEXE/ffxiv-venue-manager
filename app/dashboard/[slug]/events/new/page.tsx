@@ -1,6 +1,6 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { useRouter, useParams } from "next/navigation"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
@@ -9,6 +9,16 @@ import { Label } from "@/components/ui/label"
 import { Textarea } from "@/components/ui/textarea"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { DateTimePicker } from "@/components/ui/date-time-picker"
+
+interface EventTemplate {
+  id: string
+  name: string
+  title: string
+  description: string | null
+  eventType: string
+  timezone: string
+  durationMinutes: number
+}
 
 const EVENT_TYPES = [
   { value: "PERFORMANCE", label: "Performance" },
@@ -33,6 +43,65 @@ export default function NewEventPage() {
   const [error, setError] = useState("")
   const [startTime, setStartTime] = useState<Date>()
   const [endTime, setEndTime] = useState<Date>()
+  const [templates, setTemplates] = useState<EventTemplate[]>([])
+  const [selectedTemplate, setSelectedTemplate] = useState<string>("")
+  const [formValues, setFormValues] = useState({
+    title: "",
+    description: "",
+    eventType: "OTHER",
+  })
+
+  // Fetch templates on mount
+  useEffect(() => {
+    const fetchTemplates = async () => {
+      try {
+        const response = await fetch(`/api/venues/${slug}/event-templates`)
+        if (response.ok) {
+          const data = await response.json()
+          setTemplates(data)
+        }
+      } catch (error) {
+        console.error("Error fetching templates:", error)
+      }
+    }
+    fetchTemplates()
+  }, [slug])
+
+  // Handle template selection
+  const handleTemplateSelect = (templateId: string) => {
+    setSelectedTemplate(templateId)
+    if (!templateId) {
+      // Clear form when "None" is selected
+      setFormValues({ title: "", description: "", eventType: "OTHER" })
+      return
+    }
+
+    const template = templates.find((t) => t.id === templateId)
+    if (template) {
+      setFormValues({
+        title: template.title,
+        description: template.description || "",
+        eventType: template.eventType,
+      })
+
+      // If start time is set, auto-calculate end time based on duration
+      if (startTime) {
+        const end = new Date(startTime.getTime() + template.durationMinutes * 60000)
+        setEndTime(end)
+      }
+    }
+  }
+
+  // Auto-calculate end time when start time changes and template is selected
+  useEffect(() => {
+    if (startTime && selectedTemplate) {
+      const template = templates.find((t) => t.id === selectedTemplate)
+      if (template) {
+        const end = new Date(startTime.getTime() + template.durationMinutes * 60000)
+        setEndTime(end)
+      }
+    }
+  }, [startTime, selectedTemplate, templates])
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault()
@@ -53,9 +122,9 @@ export default function NewEventPage() {
 
     const formData = new FormData(e.currentTarget)
     const data = {
-      title: formData.get("title"),
-      description: formData.get("description"),
-      eventType: formData.get("eventType"),
+      title: formValues.title,
+      description: formValues.description,
+      eventType: formValues.eventType,
       status: formData.get("status"),
       startTime: startTime.toISOString(),
       endTime: endTime.toISOString(),
@@ -104,6 +173,29 @@ export default function NewEventPage() {
         </CardHeader>
         <CardContent>
           <form onSubmit={handleSubmit} className="space-y-6">
+            {/* Create from Template */}
+            {templates.length > 0 && (
+              <div className="space-y-2 p-4 bg-muted rounded-lg">
+                <Label htmlFor="template">Create from Template (Optional)</Label>
+                <Select value={selectedTemplate} onValueChange={handleTemplateSelect}>
+                  <SelectTrigger>
+                    <SelectValue placeholder="Select a template or create from scratch" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="">None - Create from scratch</SelectItem>
+                    {templates.map((template) => (
+                      <SelectItem key={template.id} value={template.id}>
+                        {template.name}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+                <p className="text-xs text-muted-foreground">
+                  Templates will pre-fill event details and auto-calculate end time
+                </p>
+              </div>
+            )}
+
             {/* Event Title */}
             <div className="space-y-2">
               <Label htmlFor="title">Event Title *</Label>
@@ -111,6 +203,8 @@ export default function NewEventPage() {
                 id="title"
                 name="title"
                 placeholder="Live Music Night"
+                value={formValues.title}
+                onChange={(e) => setFormValues({ ...formValues, title: e.target.value })}
                 required
               />
             </div>
@@ -118,7 +212,12 @@ export default function NewEventPage() {
             {/* Event Type */}
             <div className="space-y-2">
               <Label htmlFor="eventType">Event Type *</Label>
-              <Select name="eventType" required>
+              <Select
+                name="eventType"
+                value={formValues.eventType}
+                onValueChange={(value) => setFormValues({ ...formValues, eventType: value })}
+                required
+              >
                 <SelectTrigger>
                   <SelectValue placeholder="Select event type" />
                 </SelectTrigger>
@@ -139,6 +238,8 @@ export default function NewEventPage() {
                 id="description"
                 name="description"
                 placeholder="Join us for an evening of live music and entertainment..."
+                value={formValues.description}
+                onChange={(e) => setFormValues({ ...formValues, description: e.target.value })}
                 rows={4}
               />
             </div>

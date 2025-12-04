@@ -55,6 +55,12 @@ export function VenueSidebar({
       icon: "📅",
     },
     {
+      href: `/dashboard/${venueSlug}/event-templates`,
+      label: "Event Templates",
+      icon: "📋",
+      roles: ["OWNER", "MANAGER"],
+    },
+    {
       href: `/dashboard/${venueSlug}/staff`,
       label: "Staff",
       icon: "👥",

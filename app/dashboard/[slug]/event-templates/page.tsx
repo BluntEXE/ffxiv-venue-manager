@@ -1,0 +1,482 @@
+"use client"
+
+import { useEffect, useState } from "react"
+import { useParams, useRouter } from "next/navigation"
+import { useSession } from "next-auth/react"
+import { Button } from "@/components/ui/button"
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
+import { Badge } from "@/components/ui/badge"
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog"
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog"
+import { Input } from "@/components/ui/input"
+import { Label } from "@/components/ui/label"
+import { Textarea } from "@/components/ui/textarea"
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select"
+import { Alert, AlertDescription } from "@/components/ui/alert"
+import { Clock, Trash2, Edit, Plus } from "lucide-react"
+
+interface EventTemplate {
+  id: string
+  name: string
+  title: string
+  description: string | null
+  eventType: string
+  timezone: string
+  durationMinutes: number
+  createdAt: string
+  createdBy: {
+    id: string
+    name: string | null
+    displayName: string | null
+  }
+}
+
+const eventTypeLabels: Record<string, string> = {
+  PERFORMANCE: "Performance",
+  GAME_NIGHT: "Game Night",
+  SPECIAL: "Special Event",
+  SOCIAL: "Social",
+  PRIVATE: "Private",
+  OTHER: "Other",
+}
+
+export default function EventTemplatesPage() {
+  const { data: session, status } = useSession()
+  const params = useParams()
+  const router = useRouter()
+  const slug = params?.slug as string
+
+  const [templates, setTemplates] = useState<EventTemplate[]>([])
+  const [loading, setLoading] = useState(true)
+  const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false)
+  const [editingTemplate, setEditingTemplate] = useState<EventTemplate | null>(null)
+  const [deletingTemplate, setDeletingTemplate] = useState<EventTemplate | null>(null)
+  const [isSubmitting, setIsSubmitting] = useState(false)
+  const [error, setError] = useState("")
+
+  // Form state
+  const [formData, setFormData] = useState({
+    name: "",
+    title: "",
+    description: "",
+    eventType: "OTHER",
+    timezone: "UTC",
+    durationMinutes: "120",
+  })
+
+  useEffect(() => {
+    if (status === "unauthenticated") {
+      router.push("/auth/signin")
+    }
+  }, [status, router])
+
+  useEffect(() => {
+    if (session && slug) {
+      fetchTemplates()
+    }
+  }, [session, slug])
+
+  const fetchTemplates = async () => {
+    try {
+      const response = await fetch(`/api/venues/${slug}/event-templates`)
+      if (response.ok) {
+        const data = await response.json()
+        setTemplates(data)
+      }
+    } catch (error) {
+      console.error("Error fetching templates:", error)
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  const handleCreate = async () => {
+    setIsSubmitting(true)
+    setError("")
+
+    try {
+      const response = await fetch(`/api/venues/${slug}/event-templates`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          ...formData,
+          durationMinutes: parseInt(formData.durationMinutes),
+        }),
+      })
+
+      if (!response.ok) {
+        const data = await response.json()
+        throw new Error(data.error || "Failed to create template")
+      }
+
+      setIsCreateDialogOpen(false)
+      resetForm()
+      fetchTemplates()
+    } catch (err: any) {
+      setError(err.message || "Failed to create template")
+    } finally {
+      setIsSubmitting(false)
+    }
+  }
+
+  const handleUpdate = async () => {
+    if (!editingTemplate) return
+
+    setIsSubmitting(true)
+    setError("")
+
+    try {
+      const response = await fetch(`/api/venues/${slug}/event-templates/${editingTemplate.id}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          ...formData,
+          durationMinutes: parseInt(formData.durationMinutes),
+        }),
+      })
+
+      if (!response.ok) {
+        const data = await response.json()
+        throw new Error(data.error || "Failed to update template")
+      }
+
+      setEditingTemplate(null)
+      resetForm()
+      fetchTemplates()
+    } catch (err: any) {
+      setError(err.message || "Failed to update template")
+    } finally {
+      setIsSubmitting(false)
+    }
+  }
+
+  const handleDelete = async () => {
+    if (!deletingTemplate) return
+
+    try {
+      const response = await fetch(`/api/venues/${slug}/event-templates/${deletingTemplate.id}`, {
+        method: "DELETE",
+      })
+
+      if (!response.ok) {
+        throw new Error("Failed to delete template")
+      }
+
+      setDeletingTemplate(null)
+      fetchTemplates()
+    } catch (err: any) {
+      alert(err.message || "Failed to delete template")
+    }
+  }
+
+  const openCreateDialog = () => {
+    resetForm()
+    setIsCreateDialogOpen(true)
+  }
+
+  const openEditDialog = (template: EventTemplate) => {
+    setFormData({
+      name: template.name,
+      title: template.title,
+      description: template.description || "",
+      eventType: template.eventType,
+      timezone: template.timezone,
+      durationMinutes: template.durationMinutes.toString(),
+    })
+    setEditingTemplate(template)
+  }
+
+  const resetForm = () => {
+    setFormData({
+      name: "",
+      title: "",
+      description: "",
+      eventType: "OTHER",
+      timezone: "UTC",
+      durationMinutes: "120",
+    })
+    setError("")
+  }
+
+  const formatDuration = (minutes: number) => {
+    const hours = Math.floor(minutes / 60)
+    const mins = minutes % 60
+    if (hours > 0 && mins > 0) {
+      return `${hours}h ${mins}m`
+    } else if (hours > 0) {
+      return `${hours}h`
+    } else {
+      return `${mins}m`
+    }
+  }
+
+  if (loading) {
+    return (
+      <div className="container mx-auto p-6">
+        <div className="animate-pulse">Loading templates...</div>
+      </div>
+    )
+  }
+
+  return (
+    <div className="container mx-auto p-4 md:p-6 lg:p-8">
+      {/* Header */}
+      <div className="flex flex-col sm:flex-row sm:justify-between sm:items-start gap-4 mb-6">
+        <div>
+          <h1 className="text-2xl md:text-3xl lg:text-4xl font-bold">Event Templates</h1>
+          <p className="text-sm md:text-base text-muted-foreground mt-1 md:mt-2">
+            Create templates for recurring events
+          </p>
+        </div>
+        <Button onClick={openCreateDialog}>
+          <Plus className="mr-2 h-4 w-4" />
+          New Template
+        </Button>
+      </div>
+
+      {/* Templates Grid */}
+      {templates.length === 0 ? (
+        <Card className="text-center py-12">
+          <CardContent>
+            <p className="text-muted-foreground mb-4">
+              No templates yet. Create your first template for recurring events!
+            </p>
+            <Button onClick={openCreateDialog}>
+              <Plus className="mr-2 h-4 w-4" />
+              Create Template
+            </Button>
+          </CardContent>
+        </Card>
+      ) : (
+        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+          {templates.map((template) => (
+            <Card key={template.id} className="hover:shadow-lg transition-shadow">
+              <CardHeader>
+                <div className="flex items-start justify-between">
+                  <div className="flex-1">
+                    <CardTitle className="text-lg">{template.name}</CardTitle>
+                    <CardDescription className="mt-1">{template.title}</CardDescription>
+                  </div>
+                  <div className="flex gap-2">
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => openEditDialog(template)}
+                    >
+                      <Edit className="h-4 w-4" />
+                    </Button>
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => setDeletingTemplate(template)}
+                    >
+                      <Trash2 className="h-4 w-4 text-red-500" />
+                    </Button>
+                  </div>
+                </div>
+              </CardHeader>
+              <CardContent>
+                <div className="space-y-2">
+                  <div className="flex items-center gap-2">
+                    <Badge variant="outline">{eventTypeLabels[template.eventType]}</Badge>
+                    <div className="flex items-center text-sm text-muted-foreground">
+                      <Clock className="mr-1 h-3 w-3" />
+                      {formatDuration(template.durationMinutes)}
+                    </div>
+                  </div>
+                  {template.description && (
+                    <p className="text-sm text-muted-foreground line-clamp-2">
+                      {template.description}
+                    </p>
+                  )}
+                  <p className="text-xs text-muted-foreground mt-2">
+                    Created by {template.createdBy.displayName || template.createdBy.name}
+                  </p>
+                </div>
+              </CardContent>
+            </Card>
+          ))}
+        </div>
+      )}
+
+      {/* Create/Edit Dialog */}
+      <Dialog
+        open={isCreateDialogOpen || editingTemplate !== null}
+        onOpenChange={(open) => {
+          if (!open) {
+            setIsCreateDialogOpen(false)
+            setEditingTemplate(null)
+            resetForm()
+          }
+        }}
+      >
+        <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle>{editingTemplate ? "Edit Template" : "Create Template"}</DialogTitle>
+            <DialogDescription>
+              Save time by creating reusable templates for recurring events
+            </DialogDescription>
+          </DialogHeader>
+
+          <div className="space-y-4 py-4">
+            {error && (
+              <Alert className="bg-red-50 border-red-200">
+                <AlertDescription className="text-red-800">{error}</AlertDescription>
+              </Alert>
+            )}
+
+            <div className="space-y-2">
+              <Label htmlFor="name">Template Name *</Label>
+              <Input
+                id="name"
+                placeholder="e.g., Weekly Trivia Night"
+                value={formData.name}
+                onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+                disabled={isSubmitting}
+              />
+              <p className="text-xs text-muted-foreground">
+                Internal name to identify this template
+              </p>
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="title">Event Title *</Label>
+              <Input
+                id="title"
+                placeholder="e.g., Trivia Night at The Golden Saucer"
+                value={formData.title}
+                onChange={(e) => setFormData({ ...formData, title: e.target.value })}
+                disabled={isSubmitting}
+              />
+              <p className="text-xs text-muted-foreground">
+                This will be the event title when creating from template
+              </p>
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="description">Description</Label>
+              <Textarea
+                id="description"
+                placeholder="Event description..."
+                value={formData.description}
+                onChange={(e) => setFormData({ ...formData, description: e.target.value })}
+                disabled={isSubmitting}
+                rows={3}
+              />
+            </div>
+
+            <div className="grid grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <Label htmlFor="eventType">Event Type *</Label>
+                <Select
+                  value={formData.eventType}
+                  onValueChange={(value) => setFormData({ ...formData, eventType: value })}
+                  disabled={isSubmitting}
+                >
+                  <SelectTrigger>
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="PERFORMANCE">Performance</SelectItem>
+                    <SelectItem value="GAME_NIGHT">Game Night</SelectItem>
+                    <SelectItem value="SPECIAL">Special Event</SelectItem>
+                    <SelectItem value="SOCIAL">Social</SelectItem>
+                    <SelectItem value="PRIVATE">Private</SelectItem>
+                    <SelectItem value="OTHER">Other</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="duration">Duration (minutes) *</Label>
+                <Input
+                  id="duration"
+                  type="number"
+                  min="15"
+                  step="15"
+                  value={formData.durationMinutes}
+                  onChange={(e) =>
+                    setFormData({ ...formData, durationMinutes: e.target.value })
+                  }
+                  disabled={isSubmitting}
+                />
+              </div>
+            </div>
+          </div>
+
+          <DialogFooter>
+            <Button
+              variant="outline"
+              onClick={() => {
+                setIsCreateDialogOpen(false)
+                setEditingTemplate(null)
+                resetForm()
+              }}
+              disabled={isSubmitting}
+            >
+              Cancel
+            </Button>
+            <Button
+              onClick={editingTemplate ? handleUpdate : handleCreate}
+              disabled={
+                isSubmitting || !formData.name || !formData.title || !formData.durationMinutes
+              }
+            >
+              {isSubmitting
+                ? editingTemplate
+                  ? "Updating..."
+                  : "Creating..."
+                : editingTemplate
+                ? "Update Template"
+                : "Create Template"}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Delete Confirmation Dialog */}
+      <AlertDialog
+        open={deletingTemplate !== null}
+        onOpenChange={(open) => !open && setDeletingTemplate(null)}
+      >
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Delete Template</AlertDialogTitle>
+            <AlertDialogDescription>
+              Are you sure you want to delete "{deletingTemplate?.name}"? This action cannot be
+              undone.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction onClick={handleDelete} className="bg-red-600 hover:bg-red-700">
+              Delete
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+    </div>
+  )
+}
