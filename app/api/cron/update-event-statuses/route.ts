@@ -45,6 +45,7 @@ export async function GET(request: Request) {
     console.log(`[Cron] Event status update starting at ${now.toISOString()}`)
 
     // 1. Find PUBLISHED events that should be ACTIVE (startTime has passed)
+    console.log(`[Cron] Looking for PUBLISHED events with startTime <= ${now.toISOString()} and endTime >= ${now.toISOString()}`)
     const eventsToActivate = await prisma.event.findMany({
       where: {
         status: "PUBLISHED",
@@ -67,6 +68,7 @@ export async function GET(request: Request) {
         },
       },
     })
+    console.log(`[Cron] Found ${eventsToActivate.length} events to activate`)
 
     // Update events to ACTIVE
     const activatedCount = eventsToActivate.length
