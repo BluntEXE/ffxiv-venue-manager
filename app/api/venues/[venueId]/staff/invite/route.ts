@@ -2,7 +2,7 @@ import { NextResponse } from "next/server"
 import { getServerSession } from "next-auth"
 import { authOptions } from "@/lib/auth"
 import { prisma } from "@/lib/prisma"
-import { nanoid } from "nanoid"
+import crypto from "crypto"
 import { withRateLimit } from "@/lib/middleware/with-rate-limit"
 
 export const POST = withRateLimit<{ params: Promise<{ venueId: string }> }>(
@@ -57,8 +57,8 @@ export const POST = withRateLimit<{ params: Promise<{ venueId: string }> }>(
       )
     }
 
-    // Generate unique invite token (URL-safe)
-    const inviteToken = nanoid(32)
+    // Generate cryptographically secure invite token (URL-safe)
+    const inviteToken = crypto.randomBytes(32).toString("base64url")
 
     // Set expiration to 7 days from now
     const inviteExpiresAt = new Date()
