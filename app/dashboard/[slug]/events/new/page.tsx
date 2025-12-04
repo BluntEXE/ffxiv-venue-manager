@@ -93,7 +93,12 @@ export default function NewEventPage() {
       const [endHours, endMinutes] = template.defaultEndTime.split(':').map(Number)
 
       const start = new Date(today.getFullYear(), today.getMonth(), today.getDate(), startHours, startMinutes)
-      const end = new Date(today.getFullYear(), today.getMonth(), today.getDate(), endHours, endMinutes)
+      let end = new Date(today.getFullYear(), today.getMonth(), today.getDate(), endHours, endMinutes)
+
+      // Handle midnight crossover - if end time appears before start time, add one day to end
+      if (end <= start) {
+        end = new Date(end.getTime() + 86400000) // Add 24 hours in milliseconds
+      }
 
       setStartTime(start)
       setEndTime(end)
@@ -110,7 +115,13 @@ export default function NewEventPage() {
         const [endHours, endMinutes] = template.defaultEndTime.split(':').map(Number)
 
         const templateStartMinutes = startHours * 60 + startMinutes
-        const templateEndMinutes = endHours * 60 + endMinutes
+        let templateEndMinutes = endHours * 60 + endMinutes
+
+        // Handle midnight crossover (e.g., event runs from 19:00 to 00:00 next day)
+        if (templateEndMinutes <= templateStartMinutes) {
+          templateEndMinutes += 1440 // Add 24 hours in minutes
+        }
+
         const durationMinutes = templateEndMinutes - templateStartMinutes
 
         // Apply duration to the new start time

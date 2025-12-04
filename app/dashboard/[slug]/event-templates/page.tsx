@@ -4,6 +4,8 @@ import { useEffect, useState } from "react"
 import { useParams, useRouter } from "next/navigation"
 import { useSession } from "next-auth/react"
 import { Button } from "@/components/ui/button"
+import { VenueLayoutClient } from "@/components/venue-layout-client"
+import { Breadcrumb } from "@/components/breadcrumb"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import {
@@ -224,14 +226,23 @@ export default function EventTemplatesPage() {
 
   if (loading) {
     return (
-      <div className="container mx-auto p-6">
-        <div className="animate-pulse">Loading templates...</div>
-      </div>
+      <VenueLayoutClient slug={slug}>
+        <div className="container mx-auto p-6">
+          <div className="animate-pulse">Loading templates...</div>
+        </div>
+      </VenueLayoutClient>
     )
   }
 
   return (
-    <div className="container mx-auto p-4 md:p-6 lg:p-8">
+    <VenueLayoutClient slug={slug}>
+      <Breadcrumb
+        items={[
+          { label: "Dashboard", href: `/dashboard/${slug}` },
+          { label: "Event Templates", href: `/dashboard/${slug}/event-templates` },
+        ]}
+      />
+      <div className="container mx-auto p-4 md:p-6 lg:p-8">
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:justify-between sm:items-start gap-4 mb-6">
         <div>
@@ -485,5 +496,6 @@ export default function EventTemplatesPage() {
         </AlertDialogContent>
       </AlertDialog>
     </div>
+    </VenueLayoutClient>
   )
 }

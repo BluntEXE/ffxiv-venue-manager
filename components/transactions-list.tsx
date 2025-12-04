@@ -3,6 +3,12 @@
 import { useState } from "react"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
+import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog"
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog"
+import { Input } from "@/components/ui/input"
+import { Label } from "@/components/ui/label"
+import { Textarea } from "@/components/ui/textarea"
+import { Edit, Trash2 } from "lucide-react"
 import { format } from "date-fns"
 
 interface Transaction {
@@ -43,6 +49,14 @@ export function TransactionsList({
   const [nextCursor, setNextCursor] = useState(initialNextCursor)
   const [hasMore, setHasMore] = useState(initialHasMore)
   const [isLoadingMore, setIsLoadingMore] = useState(false)
+  const [editingTransaction, setEditingTransaction] = useState<Transaction | null>(null)
+  const [deletingTransaction, setDeletingTransaction] = useState<Transaction | null>(null)
+  const [isSubmitting, setIsSubmitting] = useState(false)
+  const [editFormData, setEditFormData] = useState({
+    amount: "",
+    customerName: "",
+    notes: "",
+  })
 
   const loadMoreTransactions = async () => {
     if (!nextCursor || isLoadingMore) return
@@ -98,6 +112,82 @@ export function TransactionsList({
     document.body.appendChild(link)
     link.click()
     document.body.removeChild(link)
+  }
+
+  const openEditDialog = (transaction: Transaction) => {
+    setEditingTransaction(transaction)
+    setEditFormData({
+      amount: transaction.amount.toString(),
+      customerName: transaction.customerName || "",
+      notes: transaction.notes || "",
+    })
+  }
+
+  const handleEditSubmit = async () => {
+    if (!editingTransaction) return
+
+    setIsSubmitting(true)
+    try {
+      const response = await fetch(
+        `/api/venues/${venueId}/transactions/${editingTransaction.id}`,
+        {
+          method: "PATCH",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            amount: parseFloat(editFormData.amount),
+            customerName: editFormData.customerName || null,
+            notes: editFormData.notes || null,
+          }),
+        }
+      )
+
+      if (!response.ok) {
+        throw new Error("Failed to update transaction")
+      }
+
+      const updated = await response.json()
+
+      // Update local state
+      setTransactions(
+        transactions.map((t) =>
+          t.id === editingTransaction.id ? updated : t
+        )
+      )
+
+      setEditingTransaction(null)
+    } catch (error) {
+      console.error("Error updating transaction:", error)
+      alert("Failed to update transaction")
+    } finally {
+      setIsSubmitting(false)
+    }
+  }
+
+  const handleDelete = async () => {
+    if (!deletingTransaction) return
+
+    try {
+      const response = await fetch(
+        `/api/venues/${venueId}/transactions/${deletingTransaction.id}`,
+        {
+          method: "DELETE",
+        }
+      )
+
+      if (!response.ok) {
+        throw new Error("Failed to delete transaction")
+      }
+
+      // Remove from local state
+      setTransactions(
+        transactions.filter((t) => t.id !== deletingTransaction.id)
+      )
+
+      setDeletingTransaction(null)
+    } catch (error) {
+      console.error("Error deleting transaction:", error)
+      alert("Failed to delete transaction")
+    }
   }
 
   return (
@@ -159,10 +249,26 @@ export function TransactionsList({
                 {transaction.staff && <span>• by {transaction.staff.name}</span>}
               </div>
             </div>
-            <div className="text-right">
+            <div className="text-right flex items-center gap-4">
               <p className="text-2xl font-bold">
                 {parseFloat(transaction.amount.toString()).toLocaleString()} gil
               </p>
+              <div className="flex gap-2">
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => openEditDialog(transaction)}
+                >
+                  <Edit className="h-4 w-4" />
+                </Button>
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => setDeletingTransaction(transaction)}
+                >
+                  <Trash2 className="h-4 w-4 text-red-500" />
+                </Button>
+              </div>
             </div>
           </div>
         ))}
@@ -184,6 +290,98 @@ export function TransactionsList({
           </p>
         </div>
       )}
+
+      {/* Edit Dialog */}
+      <Dialog open={editingTransaction !== null} onOpenChange={(open) => !open && setEditingTransaction(null)}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Edit Transaction</DialogTitle>
+            <DialogDescription>
+              Update the details of this transaction
+            </DialogDescription>
+          </DialogHeader>
+
+          <div className="space-y-4 py-4">
+            {/* Amount */}
+            <div className="space-y-2">
+              <Label htmlFor="edit-amount">Amount (Gil) *</Label>
+              <Input
+                id="edit-amount"
+                type="number"
+                step="1"
+                placeholder="0"
+                value={editFormData.amount}
+                onChange={(e) => setEditFormData({ ...editFormData, amount: e.target.value })}
+                disabled={isSubmitting}
+              />
+            </div>
+
+            {/* Customer Name */}
+            <div className="space-y-2">
+              <Label htmlFor="edit-customer">Customer Name</Label>
+              <Input
+                id="edit-customer"
+                placeholder="Optional"
+                value={editFormData.customerName}
+                onChange={(e) => setEditFormData({ ...editFormData, customerName: e.target.value })}
+                disabled={isSubmitting}
+              />
+            </div>
+
+            {/* Notes */}
+            <div className="space-y-2">
+              <Label htmlFor="edit-notes">Notes</Label>
+              <Textarea
+                id="edit-notes"
+                placeholder="Optional"
+                value={editFormData.notes}
+                onChange={(e) => setEditFormData({ ...editFormData, notes: e.target.value })}
+                disabled={isSubmitting}
+                rows={3}
+              />
+            </div>
+          </div>
+
+          <DialogFooter>
+            <Button
+              variant="outline"
+              onClick={() => setEditingTransaction(null)}
+              disabled={isSubmitting}
+            >
+              Cancel
+            </Button>
+            <Button
+              onClick={handleEditSubmit}
+              disabled={isSubmitting || !editFormData.amount}
+            >
+              {isSubmitting ? "Saving..." : "Save Changes"}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Delete Confirmation Dialog */}
+      <AlertDialog
+        open={deletingTransaction !== null}
+        onOpenChange={(open) => !open && setDeletingTransaction(null)}
+      >
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Delete Transaction</AlertDialogTitle>
+            <AlertDialogDescription>
+              Are you sure you want to delete this transaction for{" "}
+              <strong>{deletingTransaction?.amount.toLocaleString()} gil</strong>?
+              This action cannot be undone.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction onClick={handleDelete} className="bg-red-600 hover:bg-red-700">
+              Delete
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </>
   )
 }
