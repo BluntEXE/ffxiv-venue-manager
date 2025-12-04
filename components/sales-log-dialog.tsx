@@ -57,6 +57,9 @@ export function SalesLogDialog({ venueId, services, events }: SalesLogDialogProp
   const [formError, setFormError] = useState("")
   const [isSubmitting, setIsSubmitting] = useState(false)
 
+  // Find active event to auto-select
+  const activeEvent = events.find((event) => event.status === "ACTIVE")
+
   const handleServiceSelect = (serviceId: string) => {
     if (serviceId === "manual") {
       setFormData({ ...formData, serviceId: "", amount: "" })
@@ -110,7 +113,14 @@ export function SalesLogDialog({ venueId, services, events }: SalesLogDialogProp
   }
 
   const openDialog = () => {
-    setFormData({ serviceId: "", eventId: "", amount: "", customerName: "", notes: "" })
+    // Auto-select active event if one exists
+    setFormData({
+      serviceId: "",
+      eventId: activeEvent ? activeEvent.id : "",
+      amount: "",
+      customerName: "",
+      notes: "",
+    })
     setFormError("")
     setIsOpen(true)
   }
@@ -155,7 +165,9 @@ export function SalesLogDialog({ venueId, services, events }: SalesLogDialogProp
               </Select>
             </div>
             <div className="space-y-2">
-              <Label htmlFor="event">Event (Optional)</Label>
+              <Label htmlFor="event">
+                Event {activeEvent && <span className="text-xs text-green-600">(Auto-selected active event)</span>}
+              </Label>
               <Select
                 value={formData.eventId || "none"}
                 onValueChange={(value) =>
@@ -170,7 +182,8 @@ export function SalesLogDialog({ venueId, services, events }: SalesLogDialogProp
                   <SelectItem value="none">No Event</SelectItem>
                   {events.map((event) => (
                     <SelectItem key={event.id} value={event.id}>
-                      {event.title} ({event.status === "ACTIVE" ? "Active" : "Published"})
+                      {event.title} {event.status === "ACTIVE" && "🟢 Active"}
+                      {event.status === "PUBLISHED" && "(Published)"}
                     </SelectItem>
                   ))}
                 </SelectContent>
