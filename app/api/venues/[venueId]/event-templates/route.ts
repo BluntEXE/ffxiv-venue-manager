@@ -11,7 +11,8 @@ const createTemplateSchema = z.object({
   description: z.string().optional(),
   eventType: z.enum(["PERFORMANCE", "GAME_NIGHT", "SPECIAL", "SOCIAL", "PRIVATE", "OTHER"]),
   timezone: z.string().default("UTC"),
-  durationMinutes: z.number().int().min(15).default(120),
+  defaultStartTime: z.string().regex(/^([01]\d|2[0-3]):([0-5]\d)$/, "Invalid time format. Use HH:MM").default("19:00"),
+  defaultEndTime: z.string().regex(/^([01]\d|2[0-3]):([0-5]\d)$/, "Invalid time format. Use HH:MM").default("22:00"),
 })
 
 // GET - List all event templates for a venue
@@ -136,7 +137,8 @@ export const POST = withRateLimit<{ params: Promise<{ venueId: string }> }>(
           description: validatedData.description,
           eventType: validatedData.eventType,
           timezone: validatedData.timezone,
-          durationMinutes: validatedData.durationMinutes,
+          defaultStartTime: validatedData.defaultStartTime,
+          defaultEndTime: validatedData.defaultEndTime,
           createdById: session.user.id,
         },
         include: {

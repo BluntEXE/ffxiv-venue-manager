@@ -44,7 +44,8 @@ interface EventTemplate {
   description: string | null
   eventType: string
   timezone: string
-  durationMinutes: number
+  defaultStartTime: string
+  defaultEndTime: string
   createdAt: string
   createdBy: {
     id: string
@@ -83,7 +84,8 @@ export default function EventTemplatesPage() {
     description: "",
     eventType: "OTHER",
     timezone: "UTC",
-    durationMinutes: "120",
+    defaultStartTime: "19:00",
+    defaultEndTime: "22:00",
   })
 
   useEffect(() => {
@@ -120,10 +122,7 @@ export default function EventTemplatesPage() {
       const response = await fetch(`/api/venues/${slug}/event-templates`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          ...formData,
-          durationMinutes: parseInt(formData.durationMinutes),
-        }),
+        body: JSON.stringify(formData),
       })
 
       if (!response.ok) {
@@ -151,10 +150,7 @@ export default function EventTemplatesPage() {
       const response = await fetch(`/api/venues/${slug}/event-templates/${editingTemplate.id}`, {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          ...formData,
-          durationMinutes: parseInt(formData.durationMinutes),
-        }),
+        body: JSON.stringify(formData),
       })
 
       if (!response.ok) {
@@ -203,7 +199,8 @@ export default function EventTemplatesPage() {
       description: template.description || "",
       eventType: template.eventType,
       timezone: template.timezone,
-      durationMinutes: template.durationMinutes.toString(),
+      defaultStartTime: template.defaultStartTime,
+      defaultEndTime: template.defaultEndTime,
     })
     setEditingTemplate(template)
   }
@@ -215,21 +212,14 @@ export default function EventTemplatesPage() {
       description: "",
       eventType: "OTHER",
       timezone: "UTC",
-      durationMinutes: "120",
+      defaultStartTime: "19:00",
+      defaultEndTime: "22:00",
     })
     setError("")
   }
 
-  const formatDuration = (minutes: number) => {
-    const hours = Math.floor(minutes / 60)
-    const mins = minutes % 60
-    if (hours > 0 && mins > 0) {
-      return `${hours}h ${mins}m`
-    } else if (hours > 0) {
-      return `${hours}h`
-    } else {
-      return `${mins}m`
-    }
+  const formatTimeRange = (startTime: string, endTime: string) => {
+    return `${startTime} - ${endTime}`
   }
 
   if (loading) {
@@ -303,7 +293,7 @@ export default function EventTemplatesPage() {
                     <Badge variant="outline">{eventTypeLabels[template.eventType]}</Badge>
                     <div className="flex items-center text-sm text-muted-foreground">
                       <Clock className="mr-1 h-3 w-3" />
-                      {formatDuration(template.durationMinutes)}
+                      {formatTimeRange(template.defaultStartTime, template.defaultEndTime)}
                     </div>
                   </div>
                   {template.description && (
@@ -387,41 +377,58 @@ export default function EventTemplatesPage() {
               />
             </div>
 
+            <div className="space-y-2">
+              <Label htmlFor="eventType">Event Type *</Label>
+              <Select
+                value={formData.eventType}
+                onValueChange={(value) => setFormData({ ...formData, eventType: value })}
+                disabled={isSubmitting}
+              >
+                <SelectTrigger>
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="PERFORMANCE">Performance</SelectItem>
+                  <SelectItem value="GAME_NIGHT">Game Night</SelectItem>
+                  <SelectItem value="SPECIAL">Special Event</SelectItem>
+                  <SelectItem value="SOCIAL">Social</SelectItem>
+                  <SelectItem value="PRIVATE">Private</SelectItem>
+                  <SelectItem value="OTHER">Other</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+
             <div className="grid grid-cols-2 gap-4">
               <div className="space-y-2">
-                <Label htmlFor="eventType">Event Type *</Label>
-                <Select
-                  value={formData.eventType}
-                  onValueChange={(value) => setFormData({ ...formData, eventType: value })}
-                  disabled={isSubmitting}
-                >
-                  <SelectTrigger>
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="PERFORMANCE">Performance</SelectItem>
-                    <SelectItem value="GAME_NIGHT">Game Night</SelectItem>
-                    <SelectItem value="SPECIAL">Special Event</SelectItem>
-                    <SelectItem value="SOCIAL">Social</SelectItem>
-                    <SelectItem value="PRIVATE">Private</SelectItem>
-                    <SelectItem value="OTHER">Other</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-
-              <div className="space-y-2">
-                <Label htmlFor="duration">Duration (minutes) *</Label>
+                <Label htmlFor="startTime">Default Start Time *</Label>
                 <Input
-                  id="duration"
-                  type="number"
-                  min="15"
-                  step="15"
-                  value={formData.durationMinutes}
+                  id="startTime"
+                  type="time"
+                  value={formData.defaultStartTime}
                   onChange={(e) =>
-                    setFormData({ ...formData, durationMinutes: e.target.value })
+                    setFormData({ ...formData, defaultStartTime: e.target.value })
                   }
                   disabled={isSubmitting}
                 />
+                <p className="text-xs text-muted-foreground">
+                  Time in 24-hour format (e.g., 19:00)
+                </p>
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="endTime">Default End Time *</Label>
+                <Input
+                  id="endTime"
+                  type="time"
+                  value={formData.defaultEndTime}
+                  onChange={(e) =>
+                    setFormData({ ...formData, defaultEndTime: e.target.value })
+                  }
+                  disabled={isSubmitting}
+                />
+                <p className="text-xs text-muted-foreground">
+                  Time in 24-hour format (e.g., 22:00)
+                </p>
               </div>
             </div>
           </div>
@@ -441,7 +448,7 @@ export default function EventTemplatesPage() {
             <Button
               onClick={editingTemplate ? handleUpdate : handleCreate}
               disabled={
-                isSubmitting || !formData.name || !formData.title || !formData.durationMinutes
+                isSubmitting || !formData.name || !formData.title || !formData.defaultStartTime || !formData.defaultEndTime
               }
             >
               {isSubmitting

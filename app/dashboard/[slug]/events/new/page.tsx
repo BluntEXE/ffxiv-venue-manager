@@ -17,7 +17,8 @@ interface EventTemplate {
   description: string | null
   eventType: string
   timezone: string
-  durationMinutes: number
+  defaultStartTime: string
+  defaultEndTime: string
 }
 
 const EVENT_TYPES = [
@@ -70,9 +71,11 @@ export default function NewEventPage() {
   // Handle template selection
   const handleTemplateSelect = (templateId: string) => {
     setSelectedTemplate(templateId)
-    if (!templateId) {
+    if (templateId === "none") {
       // Clear form when "None" is selected
       setFormValues({ title: "", description: "", eventType: "OTHER" })
+      setStartTime(undefined)
+      setEndTime(undefined)
       return
     }
 
@@ -84,20 +87,34 @@ export default function NewEventPage() {
         eventType: template.eventType,
       })
 
-      // If start time is set, auto-calculate end time based on duration
-      if (startTime) {
-        const end = new Date(startTime.getTime() + template.durationMinutes * 60000)
-        setEndTime(end)
-      }
+      // Set start and end times from template default times (using today's date)
+      const today = new Date()
+      const [startHours, startMinutes] = template.defaultStartTime.split(':').map(Number)
+      const [endHours, endMinutes] = template.defaultEndTime.split(':').map(Number)
+
+      const start = new Date(today.getFullYear(), today.getMonth(), today.getDate(), startHours, startMinutes)
+      const end = new Date(today.getFullYear(), today.getMonth(), today.getDate(), endHours, endMinutes)
+
+      setStartTime(start)
+      setEndTime(end)
     }
   }
 
   // Auto-calculate end time when start time changes and template is selected
   useEffect(() => {
-    if (startTime && selectedTemplate) {
+    if (startTime && selectedTemplate && selectedTemplate !== "none") {
       const template = templates.find((t) => t.id === selectedTemplate)
       if (template) {
-        const end = new Date(startTime.getTime() + template.durationMinutes * 60000)
+        // Calculate duration from template times
+        const [startHours, startMinutes] = template.defaultStartTime.split(':').map(Number)
+        const [endHours, endMinutes] = template.defaultEndTime.split(':').map(Number)
+
+        const templateStartMinutes = startHours * 60 + startMinutes
+        const templateEndMinutes = endHours * 60 + endMinutes
+        const durationMinutes = templateEndMinutes - templateStartMinutes
+
+        // Apply duration to the new start time
+        const end = new Date(startTime.getTime() + durationMinutes * 60000)
         setEndTime(end)
       }
     }
@@ -177,12 +194,12 @@ export default function NewEventPage() {
             {templates.length > 0 && (
               <div className="space-y-2 p-4 bg-muted rounded-lg">
                 <Label htmlFor="template">Create from Template (Optional)</Label>
-                <Select value={selectedTemplate} onValueChange={handleTemplateSelect}>
+                <Select value={selectedTemplate || "none"} onValueChange={handleTemplateSelect}>
                   <SelectTrigger>
                     <SelectValue placeholder="Select a template or create from scratch" />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="">None - Create from scratch</SelectItem>
+                    <SelectItem value="none">None - Create from scratch</SelectItem>
                     {templates.map((template) => (
                       <SelectItem key={template.id} value={template.id}>
                         {template.name}
@@ -191,7 +208,7 @@ export default function NewEventPage() {
                   </SelectContent>
                 </Select>
                 <p className="text-xs text-muted-foreground">
-                  Templates will pre-fill event details and auto-calculate end time
+                  Templates will pre-fill event details and set default times
                 </p>
               </div>
             )}

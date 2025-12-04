@@ -264,8 +264,9 @@ model EventTemplate {
   eventType   EventType @default(OTHER)
   timezone    String    @default("UTC")
 
-  // Duration in minutes (to auto-calculate end time from start time)
-  durationMinutes Int @default(120)
+  // Store default times as "HH:MM" format (e.g., "19:00", "22:00")
+  defaultStartTime String @default("19:00") // 7:00 PM
+  defaultEndTime   String @default("22:00") // 10:00 PM
 
   // Metadata
   createdById String

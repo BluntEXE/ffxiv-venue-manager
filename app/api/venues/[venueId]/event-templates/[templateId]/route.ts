@@ -11,7 +11,8 @@ const updateTemplateSchema = z.object({
   description: z.string().optional(),
   eventType: z.enum(["PERFORMANCE", "GAME_NIGHT", "SPECIAL", "SOCIAL", "PRIVATE", "OTHER"]).optional(),
   timezone: z.string().optional(),
-  durationMinutes: z.number().int().min(15).optional(),
+  defaultStartTime: z.string().regex(/^([01]\d|2[0-3]):([0-5]\d)$/, "Invalid time format. Use HH:MM").optional(),
+  defaultEndTime: z.string().regex(/^([01]\d|2[0-3]):([0-5]\d)$/, "Invalid time format. Use HH:MM").optional(),
 })
 
 // PATCH - Update an event template
