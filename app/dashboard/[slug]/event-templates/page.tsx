@@ -236,266 +236,268 @@ export default function EventTemplatesPage() {
 
   return (
     <VenueLayoutClient slug={slug}>
-      <Breadcrumb
-        items={[
-          { label: "Dashboard", href: `/dashboard/${slug}` },
-          { label: "Event Templates", href: `/dashboard/${slug}/event-templates` },
-        ]}
-      />
       <div className="container mx-auto p-4 md:p-6 lg:p-8">
-      {/* Header */}
-      <div className="flex flex-col sm:flex-row sm:justify-between sm:items-start gap-4 mb-6">
-        <div>
-          <h1 className="text-2xl md:text-3xl lg:text-4xl font-bold">Event Templates</h1>
-          <p className="text-sm md:text-base text-muted-foreground mt-1 md:mt-2">
-            Create templates for recurring events
-          </p>
-        </div>
-        <Button onClick={openCreateDialog}>
-          <Plus className="mr-2 h-4 w-4" />
-          New Template
-        </Button>
-      </div>
+        {/* Breadcrumb */}
+        <Breadcrumb
+          items={[
+            { label: "Dashboard", href: `/dashboard/${slug}` },
+            { label: "Event Templates", href: `/dashboard/${slug}/event-templates` },
+          ]}
+        />
 
-      {/* Templates Grid */}
-      {templates.length === 0 ? (
-        <Card className="text-center py-12">
-          <CardContent>
-            <p className="text-muted-foreground mb-4">
-              No templates yet. Create your first template for recurring events!
+        {/* Header */}
+        <div className="flex flex-col sm:flex-row sm:justify-between sm:items-start gap-4 mb-6">
+          <div>
+            <h1 className="text-2xl md:text-3xl lg:text-4xl font-bold">Event Templates</h1>
+            <p className="text-sm md:text-base text-muted-foreground mt-1 md:mt-2">
+              Create templates for recurring events
             </p>
-            <Button onClick={openCreateDialog}>
-              <Plus className="mr-2 h-4 w-4" />
-              Create Template
-            </Button>
-          </CardContent>
-        </Card>
-      ) : (
-        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-          {templates.map((template) => (
-            <Card key={template.id} className="hover:shadow-lg transition-shadow">
-              <CardHeader>
-                <div className="flex items-start justify-between">
-                  <div className="flex-1">
-                    <CardTitle className="text-lg">{template.name}</CardTitle>
-                    <CardDescription className="mt-1">{template.title}</CardDescription>
-                  </div>
-                  <div className="flex gap-2">
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      onClick={() => openEditDialog(template)}
-                    >
-                      <Edit className="h-4 w-4" />
-                    </Button>
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      onClick={() => setDeletingTemplate(template)}
-                    >
-                      <Trash2 className="h-4 w-4 text-red-500" />
-                    </Button>
-                  </div>
-                </div>
-              </CardHeader>
-              <CardContent>
-                <div className="space-y-2">
-                  <div className="flex items-center gap-2">
-                    <Badge variant="outline">{eventTypeLabels[template.eventType]}</Badge>
-                    <div className="flex items-center text-sm text-muted-foreground">
-                      <Clock className="mr-1 h-3 w-3" />
-                      {formatTimeRange(template.defaultStartTime, template.defaultEndTime)}
+          </div>
+          <Button onClick={openCreateDialog}>
+            <Plus className="mr-2 h-4 w-4" />
+            New Template
+          </Button>
+        </div>
+
+        {/* Templates Grid */}
+        {templates.length === 0 ? (
+          <Card className="text-center py-12">
+            <CardContent>
+              <p className="text-muted-foreground mb-4">
+                No templates yet. Create your first template for recurring events!
+              </p>
+              <Button onClick={openCreateDialog}>
+                <Plus className="mr-2 h-4 w-4" />
+                Create Template
+              </Button>
+            </CardContent>
+          </Card>
+        ) : (
+          <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+            {templates.map((template) => (
+              <Card key={template.id} className="hover:shadow-lg transition-shadow">
+                <CardHeader>
+                  <div className="flex items-start justify-between">
+                    <div className="flex-1">
+                      <CardTitle className="text-lg">{template.name}</CardTitle>
+                      <CardDescription className="mt-1">{template.title}</CardDescription>
+                    </div>
+                    <div className="flex gap-2">
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => openEditDialog(template)}
+                      >
+                        <Edit className="h-4 w-4" />
+                      </Button>
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => setDeletingTemplate(template)}
+                      >
+                        <Trash2 className="h-4 w-4 text-red-500" />
+                      </Button>
                     </div>
                   </div>
-                  {template.description && (
-                    <p className="text-sm text-muted-foreground line-clamp-2">
-                      {template.description}
+                </CardHeader>
+                <CardContent>
+                  <div className="space-y-2">
+                    <div className="flex items-center gap-2">
+                      <Badge variant="outline">{eventTypeLabels[template.eventType]}</Badge>
+                      <div className="flex items-center text-sm text-muted-foreground">
+                        <Clock className="mr-1 h-3 w-3" />
+                        {formatTimeRange(template.defaultStartTime, template.defaultEndTime)}
+                      </div>
+                    </div>
+                    {template.description && (
+                      <p className="text-sm text-muted-foreground line-clamp-2">
+                        {template.description}
+                      </p>
+                    )}
+                    <p className="text-xs text-muted-foreground mt-2">
+                      Created by {template.createdBy.displayName || template.createdBy.name}
                     </p>
-                  )}
-                  <p className="text-xs text-muted-foreground mt-2">
-                    Created by {template.createdBy.displayName || template.createdBy.name}
+                  </div>
+                </CardContent>
+              </Card>
+            ))}
+          </div>
+        )}
+
+        {/* Create/Edit Dialog */}
+        <Dialog
+          open={isCreateDialogOpen || editingTemplate !== null}
+          onOpenChange={(open) => {
+            if (!open) {
+              setIsCreateDialogOpen(false)
+              setEditingTemplate(null)
+              resetForm()
+            }
+          }}
+        >
+          <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
+            <DialogHeader>
+              <DialogTitle>{editingTemplate ? "Edit Template" : "Create Template"}</DialogTitle>
+              <DialogDescription>
+                Save time by creating reusable templates for recurring events
+              </DialogDescription>
+            </DialogHeader>
+
+            <div className="space-y-4 py-4">
+              {error && (
+                <Alert className="bg-red-50 border-red-200">
+                  <AlertDescription className="text-red-800">{error}</AlertDescription>
+                </Alert>
+              )}
+
+              <div className="space-y-2">
+                <Label htmlFor="name">Template Name *</Label>
+                <Input
+                  id="name"
+                  placeholder="e.g., Weekly Trivia Night"
+                  value={formData.name}
+                  onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+                  disabled={isSubmitting}
+                />
+                <p className="text-xs text-muted-foreground">
+                  Internal name to identify this template
+                </p>
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="title">Event Title *</Label>
+                <Input
+                  id="title"
+                  placeholder="e.g., Trivia Night at The Golden Saucer"
+                  value={formData.title}
+                  onChange={(e) => setFormData({ ...formData, title: e.target.value })}
+                  disabled={isSubmitting}
+                />
+                <p className="text-xs text-muted-foreground">
+                  This will be the event title when creating from template
+                </p>
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="description">Description</Label>
+                <Textarea
+                  id="description"
+                  placeholder="Event description..."
+                  value={formData.description}
+                  onChange={(e) => setFormData({ ...formData, description: e.target.value })}
+                  disabled={isSubmitting}
+                  rows={3}
+                />
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="eventType">Event Type *</Label>
+                <Select
+                  value={formData.eventType}
+                  onValueChange={(value) => setFormData({ ...formData, eventType: value })}
+                  disabled={isSubmitting}
+                >
+                  <SelectTrigger>
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="PERFORMANCE">Performance</SelectItem>
+                    <SelectItem value="GAME_NIGHT">Game Night</SelectItem>
+                    <SelectItem value="SPECIAL">Special Event</SelectItem>
+                    <SelectItem value="SOCIAL">Social</SelectItem>
+                    <SelectItem value="PRIVATE">Private</SelectItem>
+                    <SelectItem value="OTHER">Other</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+
+              <div className="grid grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <Label htmlFor="startTime">Default Start Time *</Label>
+                  <Input
+                    id="startTime"
+                    type="time"
+                    value={formData.defaultStartTime}
+                    onChange={(e) =>
+                      setFormData({ ...formData, defaultStartTime: e.target.value })
+                    }
+                    disabled={isSubmitting}
+                  />
+                  <p className="text-xs text-muted-foreground">
+                    Time in 24-hour format (e.g., 19:00)
                   </p>
                 </div>
-              </CardContent>
-            </Card>
-          ))}
-        </div>
-      )}
 
-      {/* Create/Edit Dialog */}
-      <Dialog
-        open={isCreateDialogOpen || editingTemplate !== null}
-        onOpenChange={(open) => {
-          if (!open) {
-            setIsCreateDialogOpen(false)
-            setEditingTemplate(null)
-            resetForm()
-          }
-        }}
-      >
-        <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
-          <DialogHeader>
-            <DialogTitle>{editingTemplate ? "Edit Template" : "Create Template"}</DialogTitle>
-            <DialogDescription>
-              Save time by creating reusable templates for recurring events
-            </DialogDescription>
-          </DialogHeader>
-
-          <div className="space-y-4 py-4">
-            {error && (
-              <Alert className="bg-red-50 border-red-200">
-                <AlertDescription className="text-red-800">{error}</AlertDescription>
-              </Alert>
-            )}
-
-            <div className="space-y-2">
-              <Label htmlFor="name">Template Name *</Label>
-              <Input
-                id="name"
-                placeholder="e.g., Weekly Trivia Night"
-                value={formData.name}
-                onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                disabled={isSubmitting}
-              />
-              <p className="text-xs text-muted-foreground">
-                Internal name to identify this template
-              </p>
+                <div className="space-y-2">
+                  <Label htmlFor="endTime">Default End Time *</Label>
+                  <Input
+                    id="endTime"
+                    type="time"
+                    value={formData.defaultEndTime}
+                    onChange={(e) =>
+                      setFormData({ ...formData, defaultEndTime: e.target.value })
+                    }
+                    disabled={isSubmitting}
+                  />
+                  <p className="text-xs text-muted-foreground">
+                    Time in 24-hour format (e.g., 22:00)
+                  </p>
+                </div>
+              </div>
             </div>
 
-            <div className="space-y-2">
-              <Label htmlFor="title">Event Title *</Label>
-              <Input
-                id="title"
-                placeholder="e.g., Trivia Night at The Golden Saucer"
-                value={formData.title}
-                onChange={(e) => setFormData({ ...formData, title: e.target.value })}
-                disabled={isSubmitting}
-              />
-              <p className="text-xs text-muted-foreground">
-                This will be the event title when creating from template
-              </p>
-            </div>
-
-            <div className="space-y-2">
-              <Label htmlFor="description">Description</Label>
-              <Textarea
-                id="description"
-                placeholder="Event description..."
-                value={formData.description}
-                onChange={(e) => setFormData({ ...formData, description: e.target.value })}
-                disabled={isSubmitting}
-                rows={3}
-              />
-            </div>
-
-            <div className="space-y-2">
-              <Label htmlFor="eventType">Event Type *</Label>
-              <Select
-                value={formData.eventType}
-                onValueChange={(value) => setFormData({ ...formData, eventType: value })}
+            <DialogFooter>
+              <Button
+                variant="outline"
+                onClick={() => {
+                  setIsCreateDialogOpen(false)
+                  setEditingTemplate(null)
+                  resetForm()
+                }}
                 disabled={isSubmitting}
               >
-                <SelectTrigger>
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="PERFORMANCE">Performance</SelectItem>
-                  <SelectItem value="GAME_NIGHT">Game Night</SelectItem>
-                  <SelectItem value="SPECIAL">Special Event</SelectItem>
-                  <SelectItem value="SOCIAL">Social</SelectItem>
-                  <SelectItem value="PRIVATE">Private</SelectItem>
-                  <SelectItem value="OTHER">Other</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
+                Cancel
+              </Button>
+              <Button
+                onClick={editingTemplate ? handleUpdate : handleCreate}
+                disabled={
+                  isSubmitting || !formData.name || !formData.title || !formData.defaultStartTime || !formData.defaultEndTime
+                }
+              >
+                {isSubmitting
+                  ? editingTemplate
+                    ? "Updating..."
+                    : "Creating..."
+                  : editingTemplate
+                  ? "Update Template"
+                  : "Create Template"}
+              </Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
 
-            <div className="grid grid-cols-2 gap-4">
-              <div className="space-y-2">
-                <Label htmlFor="startTime">Default Start Time *</Label>
-                <Input
-                  id="startTime"
-                  type="time"
-                  value={formData.defaultStartTime}
-                  onChange={(e) =>
-                    setFormData({ ...formData, defaultStartTime: e.target.value })
-                  }
-                  disabled={isSubmitting}
-                />
-                <p className="text-xs text-muted-foreground">
-                  Time in 24-hour format (e.g., 19:00)
-                </p>
-              </div>
-
-              <div className="space-y-2">
-                <Label htmlFor="endTime">Default End Time *</Label>
-                <Input
-                  id="endTime"
-                  type="time"
-                  value={formData.defaultEndTime}
-                  onChange={(e) =>
-                    setFormData({ ...formData, defaultEndTime: e.target.value })
-                  }
-                  disabled={isSubmitting}
-                />
-                <p className="text-xs text-muted-foreground">
-                  Time in 24-hour format (e.g., 22:00)
-                </p>
-              </div>
-            </div>
-          </div>
-
-          <DialogFooter>
-            <Button
-              variant="outline"
-              onClick={() => {
-                setIsCreateDialogOpen(false)
-                setEditingTemplate(null)
-                resetForm()
-              }}
-              disabled={isSubmitting}
-            >
-              Cancel
-            </Button>
-            <Button
-              onClick={editingTemplate ? handleUpdate : handleCreate}
-              disabled={
-                isSubmitting || !formData.name || !formData.title || !formData.defaultStartTime || !formData.defaultEndTime
-              }
-            >
-              {isSubmitting
-                ? editingTemplate
-                  ? "Updating..."
-                  : "Creating..."
-                : editingTemplate
-                ? "Update Template"
-                : "Create Template"}
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
-
-      {/* Delete Confirmation Dialog */}
-      <AlertDialog
-        open={deletingTemplate !== null}
-        onOpenChange={(open) => !open && setDeletingTemplate(null)}
-      >
-        <AlertDialogContent>
-          <AlertDialogHeader>
-            <AlertDialogTitle>Delete Template</AlertDialogTitle>
-            <AlertDialogDescription>
-              Are you sure you want to delete "{deletingTemplate?.name}"? This action cannot be
-              undone.
-            </AlertDialogDescription>
-          </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogCancel>Cancel</AlertDialogCancel>
-            <AlertDialogAction onClick={handleDelete} className="bg-red-600 hover:bg-red-700">
-              Delete
-            </AlertDialogAction>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
-    </div>
+        {/* Delete Confirmation Dialog */}
+        <AlertDialog
+          open={deletingTemplate !== null}
+          onOpenChange={(open) => !open && setDeletingTemplate(null)}
+        >
+          <AlertDialogContent>
+            <AlertDialogHeader>
+              <AlertDialogTitle>Delete Template</AlertDialogTitle>
+              <AlertDialogDescription>
+                Are you sure you want to delete "{deletingTemplate?.name}"? This action cannot be
+                undone.
+              </AlertDialogDescription>
+            </AlertDialogHeader>
+            <AlertDialogFooter>
+              <AlertDialogCancel>Cancel</AlertDialogCancel>
+              <AlertDialogAction onClick={handleDelete} className="bg-red-600 hover:bg-red-700">
+                Delete
+              </AlertDialogAction>
+            </AlertDialogFooter>
+          </AlertDialogContent>
+        </AlertDialog>
+      </div>
     </VenueLayoutClient>
   )
 }
