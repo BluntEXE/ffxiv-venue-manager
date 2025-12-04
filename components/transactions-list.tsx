@@ -68,16 +68,16 @@ export function TransactionsList({
 
   const exportToCSV = () => {
     // CSV Headers
-    const headers = ["Date", "Service", "Amount (gil)", "Event"]
+    const headers = ["Date", "Event", "Service", "Amount (gil)"]
 
     // CSV Rows
     const rows = transactions.map((transaction) => {
       const date = format(new Date(transaction.createdAt), "yyyy-MM-dd HH:mm:ss")
+      const event = transaction.event?.title || ""
       const service = transaction.service?.name || "Manual Sale"
       const amount = parseFloat(transaction.amount.toString())
-      const event = transaction.event?.title || ""
 
-      return [date, service, amount, event]
+      return [date, event, service, amount]
     })
 
     // Combine headers and rows
