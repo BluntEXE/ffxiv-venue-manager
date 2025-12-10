@@ -4,6 +4,7 @@ import { authOptions } from "@/lib/auth"
 import { prisma } from "@/lib/prisma"
 import { z } from "zod"
 import { withRateLimit } from "@/lib/middleware/with-rate-limit"
+import { VenueSettings, parseVenueSettings } from "@/lib/types/venue-settings"
 
 const webhookSettingsSchema = z.object({
   taskCreated: z.boolean().optional(),
@@ -76,7 +77,7 @@ export const GET = withRateLimit<{ params: Promise<{ venueId: string }> }>(
     }
 
       return NextResponse.json({
-        ...(venue.settings as object),
+        ...parseVenueSettings(venue.settings),
         discordWebhookUrl: venue.discordWebhookUrl,
       })
     } catch (error) {
@@ -136,9 +137,9 @@ export const PUT = withRateLimit<{ params: Promise<{ venueId: string }> }>(
     // Extract Discord webhook URL from validated data
     const { discordWebhookUrl, ...settingsData } = validatedData
 
-    // Merge new settings with existing settings
-    const currentSettings = venue.settings as any
-    const newSettings = {
+    // Merge new settings with existing settings (type-safe)
+    const currentSettings = parseVenueSettings(venue.settings)
+    const newSettings: VenueSettings = {
       ...currentSettings,
       ...settingsData,
     }
@@ -159,7 +160,7 @@ export const PUT = withRateLimit<{ params: Promise<{ venueId: string }> }>(
     })
 
       return NextResponse.json({
-        ...(updatedVenue.settings as object),
+        ...parseVenueSettings(updatedVenue.settings),
         discordWebhookUrl: updatedVenue.discordWebhookUrl,
       })
     } catch (error) {

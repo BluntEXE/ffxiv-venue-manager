@@ -22,135 +22,94 @@ import {
   ResponsiveContainer,
   Legend
 } from "recharts"
-import { format, subDays, startOfDay, eachDayOfInterval } from "date-fns"
-import { TrendingUp, DollarSign, Users, Calendar, Clock, Target } from "lucide-react"
+import { format } from "date-fns"
+import { TrendingUp, DollarSign, Users, Calendar, Target } from "lucide-react"
+
+interface AnalyticsData {
+  venueId: string
+  venueName: string
+  summary: {
+    totalRevenue: number
+    avgRevenuePerEvent: number
+    totalPatrons: number
+    total: number
+    upcoming: number
+    completed: number
+    recentCount: number
+  }
+  revenueByEvent: Array<{
+    eventId: string
+    eventTitle: string
+    startTime: string
+    revenue: number
+  }>
+  serviceRevenue: Array<{
+    name: string
+    revenue: number
+  }>
+  patronByEvent: Array<{
+    eventId: string
+    eventTitle: string
+    startTime: string
+    peakPatrons: number
+  }>
+}
 
 export default function AnalyticsPage() {
   const params = useParams()
   const slug = params?.slug as string
 
-  const [venueId, setVenueId] = useState<string>("")
-  const [revenueData, setRevenueData] = useState<any[]>([])
-  const [serviceRevenue, setServiceRevenue] = useState<any[]>([])
-  const [patronData, setPatronData] = useState<any[]>([])
-  const [eventStats, setEventStats] = useState<any>(null)
+  const [analyticsData, setAnalyticsData] = useState<AnalyticsData | null>(null)
   const [isLoading, setIsLoading] = useState(true)
+  const [error, setError] = useState<string | null>(null)
 
   useEffect(() => {
     if (slug) {
-      fetchVenueAndAnalytics()
+      fetchAnalytics()
     }
   }, [slug])
 
-  const fetchVenueAndAnalytics = async () => {
+  const fetchAnalytics = async () => {
     try {
-      // Get venue ID
-      const venueResponse = await fetch(`/api/venues?slug=${slug}`)
-      const venues = await venueResponse.json()
-      const venue = venues.find((v: any) => v.slug === slug)
+      setError(null)
+      // Single API call to get all analytics data
+      const response = await fetch(`/api/venues/${slug}/analytics`)
 
-      if (!venue) return
-
-      setVenueId(venue.id)
-
-      // Fetch all events
-      const eventsResponse = await fetch(`/api/venues/${venue.id}/events`)
-      const allEvents = await eventsResponse.json()
-
-      // Filter to completed/active events and sort by start time (most recent first)
-      const relevantEvents = allEvents
-        .filter((e: any) => e.status === "COMPLETED" || e.status === "ACTIVE")
-        .sort((a: any, b: any) => new Date(b.startTime).getTime() - new Date(a.startTime).getTime())
-        .slice(0, 10) // Last 10 events for main chart
-        .reverse() // Oldest to newest for chart
-
-      // Fetch revenue for each event
-      const transactionsResponse = await fetch(`/api/venues/${venue.id}/transactions`)
-      const allTransactionsData = await transactionsResponse.json()
-      const allTransactions = allTransactionsData.transactions || []
-
-      const revenuePromises = relevantEvents.map(async (event: any) => {
-        // Filter transactions for this event
-        const eventTransactions = allTransactions.filter((t: any) => t.eventId === event.id)
-        const total = eventTransactions.reduce((sum: number, t: any) => sum + Number(t.amount), 0)
-
-        return {
-          date: format(new Date(event.startTime), "MMM dd"),
-          fullDate: new Date(event.startTime),
-          eventTitle: event.title,
-          revenue: total,
-        }
-      })
-
-      const revenue = await Promise.all(revenuePromises)
-      setRevenueData(revenue)
-
-      // Fetch revenue by service (using already-fetched transactions)
-      const serviceMap = new Map<string, number>()
-      allTransactions.forEach((t: any) => {
-        if (t.service) {
-          const current = serviceMap.get(t.service.name) || 0
-          serviceMap.set(t.service.name, current + Number(t.amount))
-        }
-      })
-
-      const serviceData = Array.from(serviceMap.entries())
-        .map(([name, value]) => ({ name, value }))
-        .sort((a, b) => b.value - a.value)
-        .slice(0, 5) // Top 5 services
-
-      setServiceRevenue(serviceData)
-
-      // Fetch patron tracking data (last 7 events)
-      const last7Events = allEvents
-        .filter((e: any) => e.status === "COMPLETED" || e.status === "ACTIVE")
-        .sort((a: any, b: any) => new Date(b.startTime).getTime() - new Date(a.startTime).getTime())
-        .slice(0, 7)
-        .reverse()
-
-      const patronPromises = last7Events.map(async (event: any) => {
-        const response = await fetch(`/api/venues/${venue.id}/patron-tracking`)
+      if (!response.ok) {
         const data = await response.json()
+        throw new Error(data.error || "Failed to fetch analytics")
+      }
 
-        // Filter logs for this event
-        const eventLogs = data.logs?.filter((log: any) => log.eventId === event.id) || []
-
-        // Calculate peak patron count for this event
-        let currentCount = 0
-        let maxCount = 0
-        eventLogs.forEach((log: any) => {
-          currentCount += log.countChange
-          maxCount = Math.max(maxCount, currentCount)
-        })
-
-        return {
-          date: format(new Date(event.startTime), "MMM dd"),
-          eventTitle: event.title,
-          patrons: Math.max(maxCount, 0),
-        }
-      })
-
-      const patronStats = await Promise.all(patronPromises)
-      setPatronData(patronStats)
-
-      // Calculate event statistics (using already-fetched events)
-      const now = new Date()
-      const past30Days = subDays(now, 30)
-
-      const recentEvents = allEvents.filter((e: any) => new Date(e.startTime) >= past30Days)
-
-      setEventStats({
-        total: allEvents.length,
-        upcoming: allEvents.filter((e: any) => new Date(e.startTime) > now).length,
-        completed: allEvents.filter((e: any) => e.status === "COMPLETED").length,
-        recentCount: recentEvents.length,
-      })
-    } catch (error) {
-      console.error("Failed to fetch analytics:", error)
+      const data: AnalyticsData = await response.json()
+      setAnalyticsData(data)
+    } catch (err) {
+      console.error("Failed to fetch analytics:", err)
+      setError(err instanceof Error ? err.message : "Failed to load analytics")
     } finally {
       setIsLoading(false)
     }
   }
+
+  // Transform data for charts
+  const revenueData = analyticsData?.revenueByEvent.map((e) => ({
+    date: format(new Date(e.startTime), "MMM dd"),
+    fullDate: new Date(e.startTime),
+    eventTitle: e.eventTitle,
+    revenue: e.revenue,
+  })) || []
+
+  const serviceRevenue = analyticsData?.serviceRevenue.map((s) => ({
+    name: s.name,
+    value: s.revenue,
+  })) || []
+
+  const patronData = analyticsData?.patronByEvent.map((e) => ({
+    date: format(new Date(e.startTime), "MMM dd"),
+    eventTitle: e.eventTitle,
+    patrons: e.peakPatrons,
+  })) || []
+
+  const eventStats = analyticsData?.summary
 
   if (isLoading) {
     return (
@@ -162,9 +121,28 @@ export default function AnalyticsPage() {
     )
   }
 
-  const totalRevenue = revenueData.reduce((sum, day) => sum + day.revenue, 0)
-  const avgDailyRevenue = Math.round(totalRevenue / revenueData.length)
-  const totalPatrons = patronData.reduce((sum, day) => sum + day.patrons, 0)
+  if (error) {
+    return (
+      <VenueLayoutClient slug={slug}>
+        <div className="container mx-auto p-8">
+          <div className="text-center text-red-500">
+            <p>Error loading analytics: {error}</p>
+            <button
+              onClick={fetchAnalytics}
+              className="mt-4 px-4 py-2 bg-primary text-primary-foreground rounded-md hover:bg-primary/90"
+            >
+              Retry
+            </button>
+          </div>
+        </div>
+      </VenueLayoutClient>
+    )
+  }
+
+  // Use pre-calculated values from API
+  const totalRevenue = eventStats?.totalRevenue || 0
+  const avgDailyRevenue = eventStats?.avgRevenuePerEvent || 0
+  const totalPatrons = eventStats?.totalPatrons || 0
 
   const COLORS = [
     "#8b5cf6", // Purple

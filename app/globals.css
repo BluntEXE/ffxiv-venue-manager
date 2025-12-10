@@ -98,7 +98,7 @@
   --secondary-foreground: var(--ctp-text);
 
   --muted: var(--ctp-surface0);
-  --muted-foreground: var(--ctp-overlay1);
+  --muted-foreground: var(--ctp-overlay2); /* Improved contrast for WCAG AA (5.17:1 vs 4.44:1) */
 
   --accent: var(--ctp-surface1);
   --accent-foreground: var(--ctp-text);

@@ -3,6 +3,43 @@
  * Sends formatted messages to Discord channels via webhooks
  */
 
+/**
+ * Sanitize user input before sending to Discord
+ * Prevents webhook injection attacks by escaping special characters
+ * and limiting string length
+ */
+function sanitizeForDiscord(input: string | null | undefined, maxLength: number = 1024): string {
+  if (!input) return ""
+
+  // Trim whitespace and limit length
+  let sanitized = input.trim().slice(0, maxLength)
+
+  // Escape Discord markdown characters that could be abused
+  // This prevents formatting injection while preserving readability
+  sanitized = sanitized
+    .replace(/[@]/g, "@\u200B") // Zero-width space after @ to prevent mentions
+    .replace(/[<>]/g, "") // Remove angle brackets to prevent custom emoji/channel injection
+
+  return sanitized
+}
+
+/**
+ * Sanitize a URL to ensure it's a valid Discord webhook URL
+ */
+function isValidDiscordWebhookUrl(url: string | null | undefined): boolean {
+  if (!url) return false
+  try {
+    const parsed = new URL(url)
+    return (
+      parsed.protocol === "https:" &&
+      (parsed.hostname === "discord.com" || parsed.hostname === "discordapp.com") &&
+      parsed.pathname.startsWith("/api/webhooks/")
+    )
+  } catch {
+    return false
+  }
+}
+
 export interface DiscordEmbed {
   title: string
   description: string
@@ -93,6 +130,12 @@ export async function sendDiscordWebhook(
     return false
   }
 
+  // Validate webhook URL to prevent SSRF attacks
+  if (!isValidDiscordWebhookUrl(webhookUrl)) {
+    console.error("Invalid Discord webhook URL - must be a valid discord.com/api/webhooks URL")
+    return false
+  }
+
   try {
     const response = await fetch(webhookUrl, {
       method: "POST",
@@ -155,12 +198,17 @@ export function formatTaskCreatedEmbed(task: {
     LOW: DiscordColors.Low,
   }
 
+  // Sanitize user inputs
+  const safeTitle = sanitizeForDiscord(task.title, 256)
+  const safeDescription = sanitizeForDiscord(task.description, 1024)
+  const safeAssigneeName = sanitizeForDiscord(task.assignee?.name, 256)
+
   const fields = []
 
   if (task.assignee) {
     fields.push({
       name: "Assigned To",
-      value: task.assignee.name || "Unknown",
+      value: safeAssigneeName || "Unknown",
       inline: true,
     })
   }
@@ -181,7 +229,7 @@ export function formatTaskCreatedEmbed(task: {
 
   return {
     title: "📋 New Task Created",
-    description: `**${task.title}**${task.description ? `\n${task.description}` : ""}`,
+    description: `**${safeTitle}**${safeDescription ? `\n${safeDescription}` : ""}`,
     color: priorityColors[task.priority] || DiscordColors.Info,
     fields,
     timestamp: new Date().toISOString(),
@@ -196,19 +244,23 @@ export function formatTaskCompletedEmbed(task: {
   priority: string
   completer?: { name: string | null } | null
 }): DiscordEmbed {
+  // Sanitize user inputs
+  const safeTitle = sanitizeForDiscord(task.title, 256)
+  const safeCompleterName = sanitizeForDiscord(task.completer?.name, 256)
+
   const fields = []
 
   if (task.completer) {
     fields.push({
       name: "Completed By",
-      value: task.completer.name || "Unknown",
+      value: safeCompleterName || "Unknown",
       inline: true,
     })
   }
 
   return {
     title: "✅ Task Completed",
-    description: `**${task.title}**`,
+    description: `**${safeTitle}**`,
     color: DiscordColors.Success,
     fields,
     timestamp: new Date().toISOString(),
@@ -225,9 +277,13 @@ export function formatEventCreatedEmbed(event: {
   startTime: Date
   endTime: Date
 }): DiscordEmbed {
+  // Sanitize user inputs
+  const safeTitle = sanitizeForDiscord(event.title, 256)
+  const safeDescription = sanitizeForDiscord(event.description, 1024)
+
   return {
     title: "📅 New Event Created",
-    description: `**${event.title}**${event.description ? `\n${event.description}` : ""}`,
+    description: `**${safeTitle}**${safeDescription ? `\n${safeDescription}` : ""}`,
     color: DiscordColors.Blurple,
     fields: [
       {
@@ -257,9 +313,12 @@ export function formatEventStartingSoonEmbed(event: {
   title: string
   startTime: Date
 }): DiscordEmbed {
+  // Sanitize user inputs
+  const safeTitle = sanitizeForDiscord(event.title, 256)
+
   return {
     title: "⏰ Event Starting Soon!",
-    description: `**${event.title}** starts in less than 1 hour!`,
+    description: `**${safeTitle}** starts in less than 1 hour!`,
     color: DiscordColors.Warning,
     fields: [
       {
@@ -281,12 +340,17 @@ export function formatSaleLoggedEmbed(transaction: {
   customerName?: string | null
   staff?: { name: string | null } | null
 }): DiscordEmbed {
+  // Sanitize user inputs
+  const safeServiceName = sanitizeForDiscord(transaction.service?.name, 256)
+  const safeCustomerName = sanitizeForDiscord(transaction.customerName, 256)
+  const safeStaffName = sanitizeForDiscord(transaction.staff?.name, 256)
+
   const fields = []
 
   if (transaction.service) {
     fields.push({
       name: "Service",
-      value: transaction.service.name,
+      value: safeServiceName || "Unknown",
       inline: true,
     })
   }
@@ -294,7 +358,7 @@ export function formatSaleLoggedEmbed(transaction: {
   if (transaction.customerName) {
     fields.push({
       name: "Customer",
-      value: transaction.customerName,
+      value: safeCustomerName,
       inline: true,
     })
   }
@@ -302,7 +366,7 @@ export function formatSaleLoggedEmbed(transaction: {
   if (transaction.staff) {
     fields.push({
       name: "Logged By",
-      value: transaction.staff.name || "Unknown",
+      value: safeStaffName || "Unknown",
       inline: true,
     })
   }
@@ -325,6 +389,9 @@ export function formatDailySalesSummaryEmbed(summary: {
   totalRevenue: number
   topService?: { name: string; sales: number } | null
 }): DiscordEmbed {
+  // Sanitize user inputs
+  const safeTopServiceName = sanitizeForDiscord(summary.topService?.name, 256)
+
   const fields = [
     {
       name: "Total Sales",
@@ -341,7 +408,7 @@ export function formatDailySalesSummaryEmbed(summary: {
   if (summary.topService) {
     fields.push({
       name: "Top Service",
-      value: `${summary.topService.name} (${summary.topService.sales} sales)`,
+      value: `${safeTopServiceName} (${summary.topService.sales} sales)`,
       inline: false,
     })
   }
@@ -362,9 +429,12 @@ export function formatStaffJoinedEmbed(staff: {
   name: string | null
   role: string
 }): DiscordEmbed {
+  // Sanitize user inputs
+  const safeName = sanitizeForDiscord(staff.name, 256)
+
   return {
     title: "👥 New Staff Member Joined",
-    description: `**${staff.name || "Unknown"}** has joined the venue as **${staff.role}**`,
+    description: `**${safeName || "Unknown"}** has joined the venue as **${staff.role}**`,
     color: DiscordColors.Success,
     timestamp: new Date().toISOString(),
   }

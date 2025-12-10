@@ -258,6 +258,7 @@ export function TransactionsList({
                   variant="ghost"
                   size="sm"
                   onClick={() => openEditDialog(transaction)}
+                  aria-label="Edit transaction"
                 >
                   <Edit className="h-4 w-4" />
                 </Button>
@@ -265,6 +266,7 @@ export function TransactionsList({
                   variant="ghost"
                   size="sm"
                   onClick={() => setDeletingTransaction(transaction)}
+                  aria-label="Delete transaction"
                 >
                   <Trash2 className="h-4 w-4 text-red-500" />
                 </Button>

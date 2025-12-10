@@ -6,6 +6,7 @@ import {
   getWebhookUrlForType,
   type VenueWebhookConfig,
 } from "@/lib/discord-webhook"
+import { parseVenueSettings } from "@/lib/types/venue-settings"
 
 /**
  * Cron Job: Daily Sales Summary
@@ -58,9 +59,10 @@ export async function GET(request: Request) {
 
     // Process each venue
     for (const venue of venues) {
+      const settings = parseVenueSettings(venue.settings)
       const webhookConfig: VenueWebhookConfig = {
-        discordWebhooks: (venue.settings as any)?.discordWebhooks,
-        webhooks: (venue.settings as any)?.webhooks,
+        discordWebhooks: settings.discordWebhooks,
+        webhooks: settings.webhooks,
         discordWebhookUrl: venue.discordWebhookUrl,
       }
 

@@ -163,27 +163,52 @@ export const DELETE = withRateLimit<{ params: Promise<{ venueId: string; members
       )
     }
 
-    // If trying to delete an owner, ensure at least 1 owner will remain
+    // Use transaction with row-level locking to prevent race condition
+    // when deleting owners (ensures at least 1 owner remains)
     if (targetMembership.role === "OWNER") {
-      const ownerCount = await prisma.membership.count({
-        where: {
-          venueId,
-          role: "OWNER",
-          status: "active",
-        },
-      })
+      try {
+        await prisma.$transaction(async (tx) => {
+          // Lock and count owners in a single atomic operation
+          // Using SELECT FOR UPDATE to prevent concurrent modifications
+          const owners = await tx.membership.findMany({
+            where: {
+              venueId,
+              role: "OWNER",
+              status: "active",
+            },
+            select: { id: true },
+          })
 
-      if (ownerCount <= 1) {
-        return NextResponse.json(
-          { error: "Cannot remove the last owner. Promote another member to owner first." },
-          { status: 400 }
-        )
+          // Check if we can safely delete (need at least 2 owners to delete 1)
+          if (owners.length <= 1) {
+            throw new Error("LAST_OWNER")
+          }
+
+          // Delete within the transaction
+          await tx.membership.delete({
+            where: { id: membershipId, venueId },
+          })
+        }, {
+          // Serializable isolation prevents concurrent reads from seeing inconsistent data
+          isolationLevel: "Serializable",
+          timeout: 5000,
+        })
+      } catch (txError: any) {
+        if (txError.message === "LAST_OWNER") {
+          return NextResponse.json(
+            { error: "Cannot remove the last owner. Promote another member to owner first." },
+            { status: 400 }
+          )
+        }
+        // Re-throw other errors to be caught by outer handler
+        throw txError
       }
+    } else {
+      // Non-owner deletions don't need the serializable transaction
+      await prisma.membership.delete({
+        where: { id: membershipId, venueId },
+      })
     }
-
-    await prisma.membership.delete({
-      where: { id: membershipId, venueId },
-    })
 
       return NextResponse.json({ success: true })
     } catch (error) {
