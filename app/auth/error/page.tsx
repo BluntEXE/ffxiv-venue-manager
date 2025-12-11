@@ -12,9 +12,13 @@ function AuthErrorContent() {
   const error = searchParams.get("error")
 
   const errorMessages: Record<string, string> = {
-    Configuration: "There is a problem with the server configuration.",
+    Configuration: "There is a problem with the server configuration. Please check NEXTAUTH_URL and other environment variables.",
     AccessDenied: "You denied access to your account.",
     Verification: "The verification token has expired or has already been used.",
+    Callback: "There was a problem with the OAuth callback. This usually means the Discord redirect URI doesn't match, or there's a session/cookie issue. Please try clearing your cookies and signing in again.",
+    OAuthCallback: "OAuth callback error. Please verify your Discord app's redirect URI is set to the correct URL.",
+    OAuthSignin: "Error starting the OAuth sign-in flow.",
+    OAuthAccountNotLinked: "This email is already associated with another account.",
     Default: "An error occurred during authentication.",
   }
 

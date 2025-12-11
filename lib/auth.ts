@@ -16,9 +16,26 @@ export const authOptions: NextAuthOptions = {
     }),
   ],
   callbacks: {
+    async signIn({ user, account, profile }) {
+      // Allow sign in if user exists or can be created
+      if (!user?.email && !account?.providerAccountId) {
+        console.error("SignIn callback: No user email or provider account ID")
+        return false
+      }
+      return true
+    },
     async jwt({ token, user, account }) {
+      // Initial sign in - user object is only available on first call
       if (user) {
         token.id = user.id
+        token.email = user.email
+        token.name = user.name
+        token.picture = user.image
+      }
+      // Persist the OAuth access_token to the token right after signin
+      if (account) {
+        token.accessToken = account.access_token
+        token.provider = account.provider
       }
       return token
     },
@@ -33,7 +50,11 @@ export const authOptions: NextAuthOptions = {
       // Allow relative URLs
       if (url.startsWith("/")) return `${baseUrl}${url}`
       // Allow same origin URLs
-      else if (new URL(url).origin === baseUrl) return url
+      try {
+        if (new URL(url).origin === baseUrl) return url
+      } catch {
+        // Invalid URL, return baseUrl
+      }
       // Default to base URL for external redirects
       return baseUrl
     },
@@ -83,5 +104,26 @@ export const authOptions: NextAuthOptions = {
       },
     },
   },
-  debug: process.env.NODE_ENV === "development", // Only enable debug mode in development
+  // Enable debug mode if NEXTAUTH_DEBUG is set, or in development
+  debug: process.env.NEXTAUTH_DEBUG === "true" || process.env.NODE_ENV === "development",
+  events: {
+    async signIn(message) {
+      console.log("NextAuth signIn event:", JSON.stringify(message, null, 2))
+    },
+    async signOut(message) {
+      console.log("NextAuth signOut event")
+    },
+    async createUser(message) {
+      console.log("NextAuth createUser event:", message.user?.id)
+    },
+    async linkAccount(message) {
+      console.log("NextAuth linkAccount event:", message.account?.provider)
+    },
+    async session(message) {
+      // Don't log session events in production to reduce noise
+      if (process.env.NODE_ENV === "development") {
+        console.log("NextAuth session event")
+      }
+    },
+  },
 }
