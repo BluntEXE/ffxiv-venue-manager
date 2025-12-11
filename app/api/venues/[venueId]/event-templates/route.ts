@@ -29,11 +29,11 @@ export const GET = withRateLimit<{ params: Promise<{ venueId: string }> }>(
       }
 
       const { params } = context
-      const { venueId: slugOrId } = await params
+      const { venueId } = await params
 
-      // Look up venue by slug
+      // Look up venue by ID
       const venue = await prisma.venue.findUnique({
-        where: { slug: slugOrId },
+        where: { id: venueId },
       })
 
       if (!venue) {
@@ -100,11 +100,11 @@ export const POST = withRateLimit<{ params: Promise<{ venueId: string }> }>(
       }
 
       const { params } = context
-      const { venueId: slugOrId } = await params
+      const { venueId } = await params
 
-      // Look up venue by slug
+      // Look up venue by ID
       const venue = await prisma.venue.findUnique({
-        where: { slug: slugOrId },
+        where: { id: venueId },
       })
 
       if (!venue) {

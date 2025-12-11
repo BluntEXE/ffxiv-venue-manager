@@ -21,11 +21,11 @@ export const GET = withRateLimit<{ params: Promise<{ venueId: string }> }>(
         return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
       }
 
-      const { venueId: slugOrId } = await params
+      const { venueId } = await params
 
-      // Look up venue by slug (since frontend passes slug, not venueId)
+      // Look up venue by ID (standard ID lookup)
       const venue = await prisma.venue.findUnique({
-        where: { slug: slugOrId },
+        where: { id: venueId },
       })
 
       if (!venue) {
@@ -121,11 +121,11 @@ export const POST = withRateLimit<{ params: Promise<{ venueId: string }> }>(
         return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
       }
 
-      const { venueId: slugOrId } = await params
+      const { venueId } = await params
 
-      // Look up venue by slug (since frontend passes slug, not venueId)
+      // Look up venue by ID (standard ID lookup)
       const venue = await prisma.venue.findUnique({
-        where: { slug: slugOrId },
+        where: { id: venueId },
       })
 
       if (!venue) {

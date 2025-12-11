@@ -29,11 +29,11 @@ export const PATCH = withRateLimit<{ params: Promise<{ venueId: string; template
       }
 
       const { params } = context
-      const { venueId: slugOrId, templateId } = await params
+      const { venueId, templateId } = await params
 
-      // Look up venue by slug
+      // Look up venue by ID
       const venue = await prisma.venue.findUnique({
-        where: { slug: slugOrId },
+        where: { id: venueId },
       })
 
       if (!venue) {
@@ -114,11 +114,11 @@ export const DELETE = withRateLimit<{ params: Promise<{ venueId: string; templat
       }
 
       const { params } = context
-      const { venueId: slugOrId, templateId } = await params
+      const { venueId, templateId } = await params
 
-      // Look up venue by slug
+      // Look up venue by ID
       const venue = await prisma.venue.findUnique({
-        where: { slug: slugOrId },
+        where: { id: venueId },
       })
 
       if (!venue) {

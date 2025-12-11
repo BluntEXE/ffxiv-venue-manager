@@ -21,11 +21,11 @@ export const PATCH = withRateLimit<{ params: Promise<{ venueId: string; payrollI
         return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
       }
 
-      const { venueId: slugOrId, payrollId } = await params
+      const { venueId, payrollId } = await params
 
-      // Look up venue by slug (since frontend passes slug, not venueId)
+      // Look up venue by ID (standard ID lookup)
       const venue = await prisma.venue.findUnique({
-        where: { slug: slugOrId },
+        where: { id: venueId },
       })
 
       if (!venue) {
@@ -187,11 +187,11 @@ export const DELETE = withRateLimit<{ params: Promise<{ venueId: string; payroll
         return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
       }
 
-      const { venueId: slugOrId, payrollId } = await params
+      const { venueId, payrollId } = await params
 
-      // Look up venue by slug (since frontend passes slug, not venueId)
+      // Look up venue by ID (standard ID lookup)
       const venue = await prisma.venue.findUnique({
-        where: { slug: slugOrId },
+        where: { id: venueId },
       })
 
       if (!venue) {

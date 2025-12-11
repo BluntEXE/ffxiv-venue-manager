@@ -22,17 +22,17 @@ export const GET = withRateLimit<{ params: Promise<{ venueId: string }> }>(
       }
 
       const { params } = context
-      const { venueId: slugOrId } = await params
+      const { venueId } = await params
 
-      // Look up venue by slug or ID
+      // Look up venue by ID
       let venue = await prisma.venue.findUnique({
-        where: { slug: slugOrId },
+        where: { id: venueId },
       })
 
-      // If not found by slug, try by ID
+      // If not found by ID, try by slug
       if (!venue) {
         venue = await prisma.venue.findUnique({
-          where: { id: slugOrId },
+          where: { slug: venueId },
         })
       }
 
