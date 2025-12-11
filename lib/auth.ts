@@ -17,11 +17,19 @@ export const authOptions: NextAuthOptions = {
   ],
   callbacks: {
     async signIn({ user, account, profile }) {
+      console.log("=== NEXTAUTH SIGNIN CALLBACK START ===")
+      console.log("Environment NEXTAUTH_URL:", process.env.NEXTAUTH_URL)
+      console.log("Environment NODE_ENV:", process.env.NODE_ENV)
+      console.log("User:", JSON.stringify({ id: user?.id, email: user?.email, name: user?.name }, null, 2))
+      console.log("Account provider:", account?.provider)
+      console.log("Account providerAccountId:", account?.providerAccountId)
+
       // Allow sign in if user exists or can be created
       if (!user?.email && !account?.providerAccountId) {
-        console.error("SignIn callback: No user email or provider account ID")
+        console.error("SignIn callback FAILED: No user email or provider account ID")
         return false
       }
+      console.log("=== NEXTAUTH SIGNIN CALLBACK SUCCESS ===")
       return true
     },
     async jwt({ token, user, account }) {
