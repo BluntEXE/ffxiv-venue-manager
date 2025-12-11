@@ -93,7 +93,7 @@ export default function NewVenuePage() {
         <CardHeader>
           <CardTitle>Create New Venue</CardTitle>
           <CardDescription>
-            Set up your FFXIV roleplaying venue. You'll be able to add staff, events, and services after creation.
+            Set up your FFXIV venue. You'll be able to add staff, events, and services after creation.
           </CardDescription>
         </CardHeader>
         <CardContent>

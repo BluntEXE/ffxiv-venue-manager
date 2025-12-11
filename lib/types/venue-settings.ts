@@ -78,6 +78,8 @@ export interface VenueSettings {
   discordWebhooks?: DiscordWebhooks
   /** Webhook notification toggles */
   webhooks?: WebhookSettings
+  /** Index signature for Prisma JSON compatibility */
+  [key: string]: TaskVisibility | SalesVisibility | RevenueVisibility | EventVisibility | DiscordWebhooks | WebhookSettings | undefined
 }
 
 /**

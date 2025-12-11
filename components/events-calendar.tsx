@@ -60,10 +60,10 @@ export function EventsCalendar({ events, venueSlug }: EventsCalendarProps) {
           <Button variant="outline" size="sm" onClick={goToToday}>
             Today
           </Button>
-          <Button variant="outline" size="icon" onClick={goToPreviousMonth}>
+          <Button variant="outline" size="icon" className="min-h-11 min-w-11" onClick={goToPreviousMonth} aria-label="Previous month">
             <ChevronLeft className="h-4 w-4" />
           </Button>
-          <Button variant="outline" size="icon" onClick={goToNextMonth}>
+          <Button variant="outline" size="icon" className="min-h-11 min-w-11" onClick={goToNextMonth} aria-label="Next month">
             <ChevronRight className="h-4 w-4" />
           </Button>
         </div>

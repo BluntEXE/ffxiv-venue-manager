@@ -35,6 +35,7 @@ import {
   AlertDialogTitle,
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog"
+import { PageLoading } from "@/components/ui/loading-spinner"
 
 interface WebhookSettings {
   taskCreated: boolean
@@ -117,7 +118,7 @@ export default function SettingsPage({
         if (!venueResponse.ok) throw new Error("Failed to fetch venue")
 
         const venues = await venueResponse.json()
-        const venue = venues.find((v: any) => v.slug === slug)
+        const venue = venues.find((v: { slug: string }) => v.slug === slug)
         if (!venue) throw new Error("Venue not found")
 
         // Get user's role for this venue
@@ -151,8 +152,8 @@ export default function SettingsPage({
             },
           })
         }
-      } catch (err: any) {
-        setError(err.message || "Failed to load settings")
+      } catch (error: unknown) {
+        setError(error instanceof Error ? error.message : "Failed to load settings")
       } finally {
         setIsLoading(false)
       }
@@ -170,7 +171,7 @@ export default function SettingsPage({
       // Get venue ID
       const venueResponse = await fetch(`/api/venues?slug=${slug}`)
       const venues = await venueResponse.json()
-      const venue = venues.find((v: any) => v.slug === slug)
+      const venue = venues.find((v: { slug: string }) => v.slug === slug)
 
       const response = await fetch(`/api/venues/${venue.id}/settings`, {
         method: "PUT",
@@ -185,8 +186,8 @@ export default function SettingsPage({
 
       setSuccess(true)
       setTimeout(() => setSuccess(false), 3000)
-    } catch (err: any) {
-      setError(err.message || "Failed to save settings")
+    } catch (error: unknown) {
+      setError(error instanceof Error ? error.message : "Failed to save settings")
     } finally {
       setIsSaving(false)
     }
@@ -200,7 +201,7 @@ export default function SettingsPage({
       // Get venue ID
       const venueResponse = await fetch(`/api/venues?slug=${slug}`)
       const venues = await venueResponse.json()
-      const venue = venues.find((v: any) => v.slug === slug)
+      const venue = venues.find((v: { slug: string }) => v.slug === slug)
 
       const response = await fetch(`/api/venues/${venue.id}`, {
         method: "DELETE",
@@ -213,14 +214,14 @@ export default function SettingsPage({
 
       // Redirect to dashboard
       router.push("/dashboard")
-    } catch (err: any) {
-      setError(err.message || "Failed to delete venue")
+    } catch (error: unknown) {
+      setError(error instanceof Error ? error.message : "Failed to delete venue")
       setIsDeleting(false)
     }
   }
 
   if (!slug) {
-    return <div className="container mx-auto p-8">Loading...</div>
+    return <div className="container mx-auto p-8"><PageLoading /></div>
   }
 
   return (
@@ -260,9 +261,7 @@ export default function SettingsPage({
       )}
 
       {isLoading ? (
-        <div className="text-center py-12">
-          <p className="text-muted-foreground">Loading settings...</p>
-        </div>
+        <PageLoading text="Loading settings..." />
       ) : (
         <div className="space-y-6">
           {/* Task Visibility Settings */}
@@ -278,8 +277,8 @@ export default function SettingsPage({
                 <Label htmlFor="task-visibility">Staff can see:</Label>
                 <Select
                   value={settings.taskVisibility}
-                  onValueChange={(value: any) =>
-                    setSettings({ ...settings, taskVisibility: value })
+                  onValueChange={(value: string) =>
+                    setSettings({ ...settings, taskVisibility: value as "all" | "assigned" | "assigned_unassigned" })
                   }
                   disabled={isSaving}
                 >
@@ -335,8 +334,8 @@ export default function SettingsPage({
                 <Label htmlFor="sales-visibility">Staff can see:</Label>
                 <Select
                   value={settings.salesVisibility}
-                  onValueChange={(value: any) =>
-                    setSettings({ ...settings, salesVisibility: value })
+                  onValueChange={(value: string) =>
+                    setSettings({ ...settings, salesVisibility: value as "all" | "own" | "none" })
                   }
                   disabled={isSaving}
                 >
@@ -386,8 +385,8 @@ export default function SettingsPage({
                 <Label htmlFor="revenue-visibility">Staff can see:</Label>
                 <Select
                   value={settings.revenueVisibility}
-                  onValueChange={(value: any) =>
-                    setSettings({ ...settings, revenueVisibility: value })
+                  onValueChange={(value: string) =>
+                    setSettings({ ...settings, revenueVisibility: value as "all" | "hide" | "own" })
                   }
                   disabled={isSaving}
                 >
@@ -437,8 +436,8 @@ export default function SettingsPage({
                 <Label htmlFor="event-visibility">Staff can see:</Label>
                 <Select
                   value={settings.eventVisibility}
-                  onValueChange={(value: any) =>
-                    setSettings({ ...settings, eventVisibility: value })
+                  onValueChange={(value: string) =>
+                    setSettings({ ...settings, eventVisibility: value as "all" | "published" })
                   }
                   disabled={isSaving}
                 >

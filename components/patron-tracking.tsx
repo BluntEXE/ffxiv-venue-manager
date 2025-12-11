@@ -44,8 +44,8 @@ export function PatronTracking({ venueId, eventId }: PatronTrackingProps) {
       setCurrentCount(data.currentCount)
       setLogs(data.logs.slice(0, 10)) // Show last 10 entries
       setError("")
-    } catch (err: any) {
-      setError(err.message || "Failed to load patron data")
+    } catch (error: unknown) {
+      setError(error instanceof Error ? error.message : "Failed to load patron data")
     } finally {
       setIsLoading(false)
     }
@@ -79,8 +79,8 @@ export function PatronTracking({ venueId, eventId }: PatronTrackingProps) {
 
       // Add new log to the top
       setLogs((prev) => [data.log, ...prev.slice(0, 9)])
-    } catch (err: any) {
-      setError(err.message || "Failed to log patron")
+    } catch (error: unknown) {
+      setError(error instanceof Error ? error.message : "Failed to log patron")
     } finally {
       setIsSubmitting(false)
     }

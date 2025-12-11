@@ -8,11 +8,12 @@ const globalForPrisma = globalThis as unknown as {
 }
 
 // Create a singleton PostgreSQL connection pool
+// Use DIRECT_URL (session pooler) for pg adapter since it manages its own pool
 const pool =
   globalForPrisma.pool ??
   new pg.Pool({
-    connectionString: process.env.DATABASE_URL,
-    max: 10, // Production-ready pool size for transaction mode
+    connectionString: process.env.DIRECT_URL || process.env.DATABASE_URL,
+    max: 10,
   })
 
 if (process.env.NODE_ENV !== 'production') globalForPrisma.pool = pool

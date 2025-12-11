@@ -36,6 +36,7 @@ import {
 } from "@/components/ui/alert-dialog"
 import { Alert, AlertDescription } from "@/components/ui/alert"
 import { Badge } from "@/components/ui/badge"
+import { PageLoading } from "@/components/ui/loading-spinner"
 
 interface Role {
   id: string
@@ -89,7 +90,7 @@ export default function RolesPage({
         if (!venueResponse.ok) throw new Error("Failed to fetch venue")
 
         const venues = await venueResponse.json()
-        const venue = venues.find((v: any) => v.slug === slug)
+        const venue = venues.find((v: { slug: string }) => v.slug === slug)
         if (!venue) throw new Error("Venue not found")
 
         // Get roles
@@ -98,8 +99,8 @@ export default function RolesPage({
 
         const rolesData = await rolesResponse.json()
         setRoles(rolesData)
-      } catch (err: any) {
-        setError(err.message || "Failed to load roles")
+      } catch (error: unknown) {
+        setError(error instanceof Error ? error.message : "Failed to load roles")
       } finally {
         setIsLoading(false)
       }
@@ -121,7 +122,7 @@ export default function RolesPage({
       // Get venue ID
       const venueResponse = await fetch(`/api/venues?slug=${slug}`)
       const venues = await venueResponse.json()
-      const venue = venues.find((v: any) => v.slug === slug)
+      const venue = venues.find((v: { slug: string }) => v.slug === slug)
 
       const response = await fetch(`/api/venues/${venue.id}/roles`, {
         method: "POST",
@@ -138,8 +139,8 @@ export default function RolesPage({
       setRoles([newRole, ...roles])
       setIsCreateDialogOpen(false)
       setFormData({ name: "", responsibilities: "" })
-    } catch (err: any) {
-      setFormError(err.message || "Failed to create role")
+    } catch (error: unknown) {
+      setFormError(error instanceof Error ? error.message : "Failed to create role")
     } finally {
       setIsSubmitting(false)
     }
@@ -158,7 +159,7 @@ export default function RolesPage({
       // Get venue ID
       const venueResponse = await fetch(`/api/venues?slug=${slug}`)
       const venues = await venueResponse.json()
-      const venue = venues.find((v: any) => v.slug === slug)
+      const venue = venues.find((v: { slug: string }) => v.slug === slug)
 
       const response = await fetch(
         `/api/venues/${venue.id}/roles/${editingRole.id}`,
@@ -179,8 +180,8 @@ export default function RolesPage({
       setIsEditDialogOpen(false)
       setEditingRole(null)
       setFormData({ name: "", responsibilities: "" })
-    } catch (err: any) {
-      setFormError(err.message || "Failed to update role")
+    } catch (error: unknown) {
+      setFormError(error instanceof Error ? error.message : "Failed to update role")
     } finally {
       setIsSubmitting(false)
     }
@@ -191,7 +192,7 @@ export default function RolesPage({
       // Get venue ID
       const venueResponse = await fetch(`/api/venues?slug=${slug}`)
       const venues = await venueResponse.json()
-      const venue = venues.find((v: any) => v.slug === slug)
+      const venue = venues.find((v: { slug: string }) => v.slug === slug)
 
       const response = await fetch(`/api/venues/${venue.id}/roles/${role.id}`, {
         method: "DELETE",
@@ -203,8 +204,8 @@ export default function RolesPage({
       }
 
       setRoles(roles.filter((r) => r.id !== role.id))
-    } catch (err: any) {
-      alert(err.message || "Failed to delete role")
+    } catch (error: unknown) {
+      alert(error instanceof Error ? error.message : "Failed to delete role")
     }
   }
 
@@ -225,7 +226,7 @@ export default function RolesPage({
   }
 
   if (!slug) {
-    return <div className="container mx-auto p-8">Loading...</div>
+    return <div className="container mx-auto p-8"><PageLoading /></div>
   }
 
   return (
@@ -255,9 +256,7 @@ export default function RolesPage({
 
       {/* Roles List */}
       {isLoading ? (
-        <div className="text-center py-12">
-          <p className="text-muted-foreground">Loading roles...</p>
-        </div>
+        <PageLoading text="Loading roles..." />
       ) : roles.length === 0 ? (
         <Card className="text-center py-12">
           <CardContent>

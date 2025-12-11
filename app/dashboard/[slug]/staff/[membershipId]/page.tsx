@@ -34,6 +34,7 @@ import { Alert, AlertDescription } from "@/components/ui/alert"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { Badge } from "@/components/ui/badge"
 import { format } from "date-fns"
+import { PageLoading } from "@/components/ui/loading-spinner"
 
 interface StaffMember {
   id: string
@@ -111,7 +112,7 @@ export default function ManageStaffMemberPage({
         if (!venueResponse.ok) throw new Error("Failed to fetch venue")
 
         const venues = await venueResponse.json()
-        const venue = venues.find((v: any) => v.slug === slug)
+        const venue = venues.find((v: { slug: string }) => v.slug === slug)
         if (!venue) throw new Error("Venue not found")
 
         // Get staff member
@@ -135,8 +136,8 @@ export default function ManageStaffMemberPage({
           const rolesData = await rolesResponse.json()
           setCustomRoles(rolesData)
         }
-      } catch (err: any) {
-        setError(err.message || "Failed to load staff member")
+      } catch (error: unknown) {
+        setError(error instanceof Error ? error.message : "Failed to load staff member")
       } finally {
         setIsLoading(false)
       }
@@ -156,7 +157,7 @@ export default function ManageStaffMemberPage({
       // Get venue ID
       const venueResponse = await fetch(`/api/venues?slug=${slug}`)
       const venues = await venueResponse.json()
-      const venue = venues.find((v: any) => v.slug === slug)
+      const venue = venues.find((v: { slug: string }) => v.slug === slug)
 
       const response = await fetch(
         `/api/venues/${venue.id}/staff/${membershipId}`,
@@ -183,8 +184,8 @@ export default function ManageStaffMemberPage({
       setTimeout(() => {
         router.refresh()
       }, 1500)
-    } catch (err: any) {
-      setError(err.message || "Failed to update staff member")
+    } catch (error: unknown) {
+      setError(error instanceof Error ? error.message : "Failed to update staff member")
     } finally {
       setIsSaving(false)
     }
@@ -200,7 +201,7 @@ export default function ManageStaffMemberPage({
       // Get venue ID
       const venueResponse = await fetch(`/api/venues?slug=${slug}`)
       const venues = await venueResponse.json()
-      const venue = venues.find((v: any) => v.slug === slug)
+      const venue = venues.find((v: { slug: string }) => v.slug === slug)
 
       const response = await fetch(
         `/api/venues/${venue.id}/staff/${membershipId}`,
@@ -216,22 +217,20 @@ export default function ManageStaffMemberPage({
 
       // Redirect to staff page
       router.push(`/dashboard/${slug}/staff`)
-    } catch (err: any) {
-      setError(err.message || "Failed to remove staff member")
+    } catch (error: unknown) {
+      setError(error instanceof Error ? error.message : "Failed to remove staff member")
       setIsDeleting(false)
     }
   }
 
   if (!slug || !membershipId) {
-    return <div className="container mx-auto p-8">Loading...</div>
+    return <div className="container mx-auto p-8"><PageLoading /></div>
   }
 
   if (isLoading) {
     return (
       <div className="container mx-auto p-8">
-        <div className="text-center py-12">
-          <p className="text-muted-foreground">Loading staff member...</p>
-        </div>
+        <PageLoading text="Loading staff member..." />
       </div>
     )
   }
@@ -331,7 +330,7 @@ export default function ManageStaffMemberPage({
             <Label htmlFor="base-role">Base Role</Label>
             <Select
               value={selectedRole}
-              onValueChange={(value: any) => setSelectedRole(value)}
+              onValueChange={(value: string) => setSelectedRole(value as "OWNER" | "MANAGER" | "STAFF")}
               disabled={isSaving}
             >
               <SelectTrigger id="base-role">

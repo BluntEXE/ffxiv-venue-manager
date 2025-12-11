@@ -53,7 +53,7 @@ export default function InviteStaffPage({
         if (!venueResponse.ok) return
 
         const venues = await venueResponse.json()
-        const venue = venues.find((v: any) => v.slug === slug)
+        const venue = venues.find((v: { slug: string }) => v.slug === slug)
 
         if (venue?.membership?.role) {
           setCurrentUserRole(venue.membership.role)
@@ -80,7 +80,7 @@ export default function InviteStaffPage({
       }
 
       const venues = await venueResponse.json()
-      const venue = venues.find((v: any) => v.slug === slug)
+      const venue = venues.find((v: { slug: string }) => v.slug === slug)
 
       if (!venue) {
         throw new Error("Venue not found")
@@ -106,8 +106,8 @@ export default function InviteStaffPage({
 
       const data = await response.json()
       setInviteUrl(data.invite.inviteUrl)
-    } catch (err: any) {
-      setError(err.message || "An error occurred")
+    } catch (error: unknown) {
+      setError(error instanceof Error ? error.message : "An error occurred")
     } finally {
       setIsLoading(false)
     }
@@ -146,7 +146,7 @@ export default function InviteStaffPage({
 
   if (inviteUrl) {
     return (
-      <div className="container mx-auto p-8 max-w-2xl">
+      <div className="container mx-auto p-4 md:p-6 lg:p-8 max-w-2xl">
         {/* Header */}
         <div className="mb-8">
           <h1 className="text-4xl font-bold">Invite Link Created!</h1>
@@ -264,7 +264,7 @@ export default function InviteStaffPage({
   }
 
   return (
-    <div className="container mx-auto p-8 max-w-2xl">
+    <div className="container mx-auto p-4 md:p-6 lg:p-8 max-w-2xl">
       {/* Header */}
       <div className="mb-8">
         <h1 className="text-4xl font-bold">Create Staff Invite</h1>
@@ -333,7 +333,7 @@ export default function InviteStaffPage({
               </Label>
               <Select
                 value={role}
-                onValueChange={(value: any) => setRole(value)}
+                onValueChange={(value: string) => setRole(value as "STAFF" | "MANAGER" | "OWNER")}
                 disabled={isLoading}
               >
                 <SelectTrigger>

@@ -4,6 +4,8 @@ import DiscordProvider from "next-auth/providers/discord"
 import { prisma } from "@/lib/prisma"
 
 const isProduction = process.env.NODE_ENV === "production"
+// Use secure cookies only in production AND when not on localhost
+const useSecureCookies = isProduction && process.env.NEXTAUTH_URL?.startsWith("https://")
 
 export const authOptions: NextAuthOptions = {
   adapter: PrismaAdapter(prisma),
@@ -45,39 +47,39 @@ export const authOptions: NextAuthOptions = {
     maxAge: 7 * 24 * 60 * 60, // 7 days
     updateAge: 24 * 60 * 60, // Update session every 24 hours
   },
-  // Enable secure cookies in production (Vercel)
-  useSecureCookies: isProduction,
+  // Enable secure cookies only when using HTTPS
+  useSecureCookies: useSecureCookies,
   cookies: {
     // CSRF Token Cookie - NextAuth handles CSRF automatically
     csrfToken: {
-      name: isProduction ? "__Host-next-auth.csrf-token" : "next-auth.csrf-token",
+      name: useSecureCookies ? "__Host-next-auth.csrf-token" : "next-auth.csrf-token",
       options: {
         httpOnly: true,
         sameSite: "lax",
         path: "/",
-        secure: isProduction,
+        secure: useSecureCookies,
       },
     },
     // Session Token Cookie
     sessionToken: {
-      name: isProduction
+      name: useSecureCookies
         ? "__Secure-next-auth.session-token"
         : "next-auth.session-token",
       options: {
         httpOnly: true,
         sameSite: "lax",
         path: "/",
-        secure: isProduction,
+        secure: useSecureCookies,
       },
     },
     // Callback URL Cookie
     callbackUrl: {
-      name: isProduction ? "__Secure-next-auth.callback-url" : "next-auth.callback-url",
+      name: useSecureCookies ? "__Secure-next-auth.callback-url" : "next-auth.callback-url",
       options: {
         httpOnly: true,
         sameSite: "lax",
         path: "/",
-        secure: isProduction,
+        secure: useSecureCookies,
       },
     },
   },

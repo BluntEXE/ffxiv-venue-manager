@@ -135,8 +135,8 @@ export default function EventTemplatesPage() {
       setIsCreateDialogOpen(false)
       resetForm()
       fetchTemplates()
-    } catch (err: any) {
-      setError(err.message || "Failed to create template")
+    } catch (error: unknown) {
+      setError(error instanceof Error ? error.message : "Failed to create template")
     } finally {
       setIsSubmitting(false)
     }
@@ -163,8 +163,8 @@ export default function EventTemplatesPage() {
       setEditingTemplate(null)
       resetForm()
       fetchTemplates()
-    } catch (err: any) {
-      setError(err.message || "Failed to update template")
+    } catch (error: unknown) {
+      setError(error instanceof Error ? error.message : "Failed to update template")
     } finally {
       setIsSubmitting(false)
     }
@@ -184,8 +184,8 @@ export default function EventTemplatesPage() {
 
       setDeletingTemplate(null)
       fetchTemplates()
-    } catch (err: any) {
-      alert(err.message || "Failed to delete template")
+    } catch (error: unknown) {
+      alert(error instanceof Error ? error.message : "Failed to delete template")
     }
   }
 

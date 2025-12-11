@@ -253,10 +253,11 @@ export function TransactionsList({
               <p className="text-2xl font-bold">
                 {parseFloat(transaction.amount.toString()).toLocaleString()} gil
               </p>
-              <div className="flex gap-2">
+              <div className="flex gap-1">
                 <Button
                   variant="ghost"
-                  size="sm"
+                  size="icon"
+                  className="min-h-11 min-w-11"
                   onClick={() => openEditDialog(transaction)}
                   aria-label="Edit transaction"
                 >
@@ -264,7 +265,8 @@ export function TransactionsList({
                 </Button>
                 <Button
                   variant="ghost"
-                  size="sm"
+                  size="icon"
+                  className="min-h-11 min-w-11"
                   onClick={() => setDeletingTransaction(transaction)}
                   aria-label="Delete transaction"
                 >

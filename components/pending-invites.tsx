@@ -90,7 +90,7 @@ export function PendingInvites({ invites, slug, canManageStaff }: PendingInvites
       // Get venue ID first
       const venueResponse = await fetch(`/api/venues?slug=${slug}`)
       const venues = await venueResponse.json()
-      const venue = venues.find((v: any) => v.slug === slug)
+      const venue = venues.find((v: { slug: string }) => v.slug === slug)
 
       const response = await fetch(`/api/venues/${venue.id}/staff/${editingInvite.id}`, {
         method: "PUT",
@@ -123,8 +123,8 @@ export function PendingInvites({ invites, slug, canManageStaff }: PendingInvites
 
       setIsEditDialogOpen(false)
       setEditingInvite(null)
-    } catch (error: any) {
-      setEditError(error.message || "Failed to update invite")
+    } catch (error: unknown) {
+      setEditError(error instanceof Error ? error.message : "Failed to update invite")
     } finally {
       setIsUpdating(false)
     }
@@ -136,7 +136,7 @@ export function PendingInvites({ invites, slug, canManageStaff }: PendingInvites
       // Get venue ID first
       const venueResponse = await fetch(`/api/venues?slug=${slug}`)
       const venues = await venueResponse.json()
-      const venue = venues.find((v: any) => v.slug === slug)
+      const venue = venues.find((v: { slug: string }) => v.slug === slug)
 
       const response = await fetch(`/api/venues/${venue.id}/staff/${inviteId}`, {
         method: "DELETE",
@@ -149,8 +149,8 @@ export function PendingInvites({ invites, slug, canManageStaff }: PendingInvites
 
       // Remove from local state
       setPendingInvites((prev) => prev.filter((inv) => inv.id !== inviteId))
-    } catch (error: any) {
-      alert(error.message || "Failed to delete invite")
+    } catch (error: unknown) {
+      alert(error instanceof Error ? error.message : "Failed to delete invite")
     } finally {
       setDeletingId(null)
     }

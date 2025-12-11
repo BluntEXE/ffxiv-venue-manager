@@ -17,7 +17,7 @@ const geistMono = Geist_Mono({
 
 export const metadata: Metadata = {
   title: "XIV Venue Manager",
-  description: "Comprehensive venue management system for Final Fantasy XIV roleplaying venues",
+  description: "The ultimate venue management platform for Final Fantasy XIV. Track events, manage staff, monitor sales, and grow your community.",
   icons: {
     icon: [
       { url: "/icon-16x16.png", sizes: "16x16", type: "image/png" },

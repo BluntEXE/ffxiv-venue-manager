@@ -39,7 +39,7 @@ export interface AuthContext {
  * )
  * ```
  */
-export function withVenueAuth<T = { params: Promise<{ venueId: string }> }>(
+export function withVenueAuth<T extends { params: Promise<{ venueId: string }> } = { params: Promise<{ venueId: string }> }>(
   handler: (
     req: NextRequest,
     authContext: AuthContext,
@@ -52,7 +52,7 @@ export function withVenueAuth<T = { params: Promise<{ venueId: string }> }>(
 ) {
   return async (req: NextRequest, context?: T): Promise<NextResponse> => {
     // Verify context contains params
-    if (!context || !("params" in context)) {
+    if (!context || typeof context !== "object" || !("params" in context)) {
       return NextResponse.json({ error: "Invalid request context" }, { status: 400 })
     }
 
@@ -116,6 +116,8 @@ export function withVenueAuth<T = { params: Promise<{ venueId: string }> }>(
       }
 
       // 5. Call handler with auth context
+      // Note: We use session.user.id because membership.userId is nullable in schema
+      // but we know it matches since we queried by userId
       const authContext: AuthContext = {
         userId: session.user.id,
         venueId,
@@ -123,7 +125,7 @@ export function withVenueAuth<T = { params: Promise<{ venueId: string }> }>(
           id: membership.id,
           role: membership.role as "OWNER" | "MANAGER" | "STAFF",
           status: membership.status,
-          userId: membership.userId,
+          userId: session.user.id, // Use session userId since it's the same
           venueId: membership.venueId,
         },
       }
@@ -153,7 +155,7 @@ export function withVenueAuth<T = { params: Promise<{ venueId: string }> }>(
  * )
  * ```
  */
-export function withAuthAndRateLimit<T = { params: Promise<{ venueId: string }> }>(
+export function withAuthAndRateLimit<T extends { params: Promise<{ venueId: string }> } = { params: Promise<{ venueId: string }> }>(
   handler: (
     req: NextRequest,
     authContext: AuthContext,

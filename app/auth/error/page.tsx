@@ -5,6 +5,7 @@ import { useSearchParams } from "next/navigation"
 import Link from "next/link"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
+import { PageLoading } from "@/components/ui/loading-spinner"
 
 function AuthErrorContent() {
   const searchParams = useSearchParams()
@@ -47,7 +48,7 @@ function AuthErrorContent() {
 
 export default function AuthErrorPage() {
   return (
-    <Suspense fallback={<div className="container mx-auto flex items-center justify-center min-h-screen p-4">Loading...</div>}>
+    <Suspense fallback={<div className="container mx-auto flex items-center justify-center min-h-screen p-4"><PageLoading /></div>}>
       <AuthErrorContent />
     </Suspense>
   )

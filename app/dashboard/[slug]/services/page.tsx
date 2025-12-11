@@ -39,6 +39,7 @@ import {
   AlertDialogTitle,
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog"
+import { PageLoading } from "@/components/ui/loading-spinner"
 
 interface Role {
   id: string
@@ -104,7 +105,7 @@ export default function ServicesPage({
         if (!venueResponse.ok) throw new Error("Failed to fetch venue")
 
         const venues = await venueResponse.json()
-        const venue = venues.find((v: any) => v.slug === slug)
+        const venue = venues.find((v: { slug: string }) => v.slug === slug)
         if (!venue) throw new Error("Venue not found")
 
         // Get services and roles
@@ -121,8 +122,8 @@ export default function ServicesPage({
         setServices(servicesData)
         setRoles(rolesData)
 
-      } catch (err: any) {
-        setError(err.message || "Failed to load services")
+      } catch (error: unknown) {
+        setError(error instanceof Error ? error.message : "Failed to load services")
       } finally {
         setIsLoading(false)
       }
@@ -144,7 +145,7 @@ export default function ServicesPage({
       // Get venue ID
       const venueResponse = await fetch(`/api/venues`)
       const venues = await venueResponse.json()
-      const venue = venues.find((v: any) => v.slug === slug)
+      const venue = venues.find((v: { slug: string }) => v.slug === slug)
 
       const response = await fetch(`/api/venues/${venue.id}/services`, {
         method: "POST",
@@ -167,8 +168,8 @@ export default function ServicesPage({
       setServices([newService, ...services])
       setIsCreateDialogOpen(false)
       setFormData({ name: "", description: "", price: "", selectedRoleIds: [] as string[], isActive: true })
-    } catch (err: any) {
-      setFormError(err.message || "Failed to create service")
+    } catch (error: unknown) {
+      setFormError(error instanceof Error ? error.message : "Failed to create service")
     } finally {
       setIsSubmitting(false)
     }
@@ -187,7 +188,7 @@ export default function ServicesPage({
       // Get venue ID
       const venueResponse = await fetch(`/api/venues`)
       const venues = await venueResponse.json()
-      const venue = venues.find((v: any) => v.slug === slug)
+      const venue = venues.find((v: { slug: string }) => v.slug === slug)
 
       const response = await fetch(
         `/api/venues/${venue.id}/services/${editingService.id}`,
@@ -214,8 +215,8 @@ export default function ServicesPage({
       setIsEditDialogOpen(false)
       setEditingService(null)
       setFormData({ name: "", description: "", price: "", selectedRoleIds: [] as string[], isActive: true })
-    } catch (err: any) {
-      setFormError(err.message || "Failed to update service")
+    } catch (error: unknown) {
+      setFormError(error instanceof Error ? error.message : "Failed to update service")
     } finally {
       setIsSubmitting(false)
     }
@@ -226,7 +227,7 @@ export default function ServicesPage({
       // Get venue ID
       const venueResponse = await fetch(`/api/venues`)
       const venues = await venueResponse.json()
-      const venue = venues.find((v: any) => v.slug === slug)
+      const venue = venues.find((v: { slug: string }) => v.slug === slug)
 
       const response = await fetch(`/api/venues/${venue.id}/services/${service.id}`, {
         method: "DELETE",
@@ -238,8 +239,8 @@ export default function ServicesPage({
       }
 
       setServices(services.filter((s) => s.id !== service.id))
-    } catch (err: any) {
-      alert(err.message || "Failed to delete service")
+    } catch (error: unknown) {
+      alert(error instanceof Error ? error.message : "Failed to delete service")
     }
   }
 
@@ -272,7 +273,7 @@ export default function ServicesPage({
   }
 
   if (!slug) {
-    return <div className="container mx-auto p-8">Loading...</div>
+    return <div className="container mx-auto p-8"><PageLoading /></div>
   }
 
   const activeServices = services.filter((s) => s.isActive)
@@ -341,9 +342,7 @@ export default function ServicesPage({
 
       {/* Services List */}
       {isLoading ? (
-        <div className="text-center py-12">
-          <p className="text-muted-foreground">Loading services...</p>
-        </div>
+        <PageLoading text="Loading services..." />
       ) : services.length === 0 ? (
         <Card className="text-center py-12">
           <CardContent>

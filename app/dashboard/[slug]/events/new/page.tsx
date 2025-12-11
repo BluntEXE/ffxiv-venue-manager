@@ -168,7 +168,7 @@ export default function NewEventPage() {
       }
 
       const venues = await venueResponse.json()
-      const venue = venues.find((v: any) => v.slug === slug)
+      const venue = venues.find((v: { slug: string }) => v.slug === slug)
       if (!venue) throw new Error("Venue not found")
 
       const response = await fetch(`/api/venues/${venue.id}/events`, {
@@ -191,7 +191,7 @@ export default function NewEventPage() {
   }
 
   return (
-    <div className="container mx-auto p-8 max-w-3xl">
+    <div className="container mx-auto p-4 md:p-6 lg:p-8 max-w-3xl">
       <Card>
         <CardHeader>
           <CardTitle>Create New Event</CardTitle>

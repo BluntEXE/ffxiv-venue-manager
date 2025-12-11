@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server"
 import { getServerSession } from "next-auth"
 import { authOptions } from "@/lib/auth"
 import { prisma } from "@/lib/prisma"
+import { Prisma } from "@prisma/client"
 import { z } from "zod"
 import { withRateLimit } from "@/lib/middleware/with-rate-limit"
 import { VenueSettings, parseVenueSettings } from "@/lib/types/venue-settings"
@@ -148,7 +149,7 @@ export const PUT = withRateLimit<{ params: Promise<{ venueId: string }> }>(
     const updatedVenue = await prisma.venue.update({
       where: { id: venueId },
       data: {
-        settings: newSettings,
+        settings: newSettings as Prisma.InputJsonValue,
         ...(discordWebhookUrl !== undefined && {
           discordWebhookUrl: discordWebhookUrl || null,
         }),

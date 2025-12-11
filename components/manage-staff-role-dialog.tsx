@@ -83,7 +83,7 @@ export function ManageStaffRoleDialog({
       // Get venue ID
       const venueResponse = await fetch(`/api/venues?slug=${slug}`)
       const venues = await venueResponse.json()
-      const venue = venues.find((v: any) => v.slug === slug)
+      const venue = venues.find((v: { slug: string }) => v.slug === slug)
 
       const updateData: any = {}
 
@@ -119,8 +119,8 @@ export function ManageStaffRoleDialog({
 
       onUpdate()
       onClose()
-    } catch (err: any) {
-      setError(err.message || "Failed to update role")
+    } catch (error: unknown) {
+      setError(error instanceof Error ? error.message : "Failed to update role")
     } finally {
       setIsUpdating(false)
     }

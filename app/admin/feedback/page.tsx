@@ -22,6 +22,7 @@ import { Badge } from "@/components/ui/badge"
 import { Textarea } from "@/components/ui/textarea"
 import { Label } from "@/components/ui/label"
 import { format } from "date-fns"
+import { PageLoading } from "@/components/ui/loading-spinner"
 
 interface Feedback {
   id: string
@@ -161,7 +162,7 @@ export default function AdminFeedbackPage() {
   if (loading) {
     return (
       <div className="container mx-auto p-8">
-        <div className="text-center">Loading...</div>
+        <PageLoading text="Loading feedback..." />
       </div>
     )
   }

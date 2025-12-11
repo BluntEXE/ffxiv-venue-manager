@@ -49,9 +49,9 @@ export function VenueProvider({ children }: VenueProviderProps) {
       const data = await response.json()
       setVenues(data)
       setHasFetched(true)
-    } catch (err: any) {
-      console.error("Failed to fetch venues:", err)
-      setError(err.message || "Failed to load venues")
+    } catch (error: unknown) {
+      console.error("Failed to fetch venues:", error)
+      setError(error instanceof Error ? error.message : "Failed to load venues")
     } finally {
       setIsLoading(false)
     }

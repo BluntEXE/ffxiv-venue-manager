@@ -48,6 +48,7 @@ import { Checkbox } from "@/components/ui/checkbox"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { format } from "date-fns"
+import { PageLoading } from "@/components/ui/loading-spinner"
 
 interface Task {
   id: string
@@ -144,7 +145,7 @@ export default function TasksPage({
         if (!venueResponse.ok) throw new Error("Failed to fetch venue")
 
         const venues = await venueResponse.json()
-        const venue = venues.find((v: any) => v.slug === slug)
+        const venue = venues.find((v: { slug: string }) => v.slug === slug)
         if (!venue) throw new Error("Venue not found")
 
         // Get tasks
@@ -160,8 +161,8 @@ export default function TasksPage({
           const rolesData = await rolesResponse.json()
           setRoles(rolesData)
         }
-      } catch (err: any) {
-        setError(err.message || "Failed to load data")
+      } catch (error: unknown) {
+        setError(error instanceof Error ? error.message : "Failed to load data")
       } finally {
         setIsLoading(false)
       }
@@ -183,7 +184,7 @@ export default function TasksPage({
       // Get venue ID
       const venueResponse = await fetch(`/api/venues?slug=${slug}`)
       const venues = await venueResponse.json()
-      const venue = venues.find((v: any) => v.slug === slug)
+      const venue = venues.find((v: { slug: string }) => v.slug === slug)
 
       const response = await fetch(`/api/venues/${venue.id}/tasks`, {
         method: "POST",
@@ -214,8 +215,8 @@ export default function TasksPage({
         selectedRoleId: "",
         dueDate: "",
       })
-    } catch (err: any) {
-      setFormError(err.message || "Failed to create task")
+    } catch (error: unknown) {
+      setFormError(error instanceof Error ? error.message : "Failed to create task")
     } finally {
       setIsSubmitting(false)
     }
@@ -226,7 +227,7 @@ export default function TasksPage({
       // Get venue ID
       const venueResponse = await fetch(`/api/venues?slug=${slug}`)
       const venues = await venueResponse.json()
-      const venue = venues.find((v: any) => v.slug === slug)
+      const venue = venues.find((v: { slug: string }) => v.slug === slug)
 
       const response = await fetch(`/api/venues/${venue.id}/tasks/${taskId}`, {
         method: "PUT",
@@ -241,8 +242,8 @@ export default function TasksPage({
 
       const updatedTask = await response.json()
       setTasks(tasks.map((t) => (t.id === updatedTask.id ? updatedTask : t)))
-    } catch (err: any) {
-      alert(err.message || "Failed to update task")
+    } catch (error: unknown) {
+      alert(error instanceof Error ? error.message : "Failed to update task")
     }
   }
 
@@ -251,7 +252,7 @@ export default function TasksPage({
       // Get venue ID
       const venueResponse = await fetch(`/api/venues?slug=${slug}`)
       const venues = await venueResponse.json()
-      const venue = venues.find((v: any) => v.slug === slug)
+      const venue = venues.find((v: { slug: string }) => v.slug === slug)
 
       const response = await fetch(`/api/venues/${venue.id}/tasks/${taskId}`, {
         method: "DELETE",
@@ -263,8 +264,8 @@ export default function TasksPage({
       }
 
       setTasks(tasks.filter((t) => t.id !== taskId))
-    } catch (err: any) {
-      alert(err.message || "Failed to delete task")
+    } catch (error: unknown) {
+      alert(error instanceof Error ? error.message : "Failed to delete task")
     }
   }
 
@@ -310,7 +311,7 @@ export default function TasksPage({
       // Get venue ID
       const venueResponse = await fetch(`/api/venues?slug=${slug}`)
       const venues = await venueResponse.json()
-      const venue = venues.find((v: any) => v.slug === slug)
+      const venue = venues.find((v: { slug: string }) => v.slug === slug)
 
       const requestBody = {
         title: formData.title,
@@ -339,15 +340,15 @@ export default function TasksPage({
       setTasks(tasks.map((t) => (t.id === updatedTask.id ? updatedTask : t)))
       setIsEditDialogOpen(false)
       setEditingTask(null)
-    } catch (err: any) {
-      setFormError(err.message || "Failed to update task")
+    } catch (error: unknown) {
+      setFormError(error instanceof Error ? error.message : "Failed to update task")
     } finally {
       setIsSubmitting(false)
     }
   }
 
   if (!slug) {
-    return <div className="container mx-auto p-8">Loading...</div>
+    return <div className="container mx-auto p-8"><PageLoading /></div>
   }
 
   // Filter tasks by tab
@@ -454,9 +455,7 @@ export default function TasksPage({
 
         <TabsContent value={activeTab} className="mt-6">
           {isLoading ? (
-            <div className="text-center py-12">
-              <p className="text-muted-foreground">Loading tasks...</p>
-            </div>
+            <PageLoading text="Loading tasks..." />
           ) : filteredTasks.length === 0 ? (
             <Card className="text-center py-12">
               <CardContent>
@@ -630,8 +629,8 @@ export default function TasksPage({
                 <Label htmlFor="priority">Priority</Label>
                 <Select
                   value={formData.priority}
-                  onValueChange={(value: any) =>
-                    setFormData({ ...formData, priority: value })
+                  onValueChange={(value: string) =>
+                    setFormData({ ...formData, priority: value as "LOW" | "MEDIUM" | "HIGH" | "URGENT" })
                   }
                   disabled={isSubmitting}
                 >
@@ -763,8 +762,8 @@ export default function TasksPage({
                 <Label htmlFor="edit-priority">Priority</Label>
                 <Select
                   value={formData.priority}
-                  onValueChange={(value: any) =>
-                    setFormData({ ...formData, priority: value })
+                  onValueChange={(value: string) =>
+                    setFormData({ ...formData, priority: value as "LOW" | "MEDIUM" | "HIGH" | "URGENT" })
                   }
                   disabled={isSubmitting}
                 >

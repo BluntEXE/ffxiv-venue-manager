@@ -9,6 +9,7 @@ import { Label } from "@/components/ui/label"
 import { Textarea } from "@/components/ui/textarea"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { DateTimePicker } from "@/components/ui/date-time-picker"
+import { PageLoading } from "@/components/ui/loading-spinner"
 
 const EVENT_TYPES = [
   { value: "PERFORMANCE", label: "Performance" },
@@ -58,7 +59,7 @@ export default function EditEventPage() {
         // Get venue first
         const venueResponse = await fetch(`/api/venues?slug=${slug}`)
         const venues = await venueResponse.json()
-        const venue = venues.find((v: any) => v.slug === slug)
+        const venue = venues.find((v: { slug: string }) => v.slug === slug)
 
         if (!venue) throw new Error("Venue not found")
 
@@ -113,7 +114,7 @@ export default function EditEventPage() {
     try {
       const venueResponse = await fetch(`/api/venues?slug=${slug}`)
       const venues = await venueResponse.json()
-      const venue = venues.find((v: any) => v.slug === slug)
+      const venue = venues.find((v: { slug: string }) => v.slug === slug)
 
       if (!venue) throw new Error("Venue not found")
 
@@ -139,8 +140,8 @@ export default function EditEventPage() {
 
   if (isLoading) {
     return (
-      <div className="container mx-auto p-8 text-center">
-        <p>Loading event...</p>
+      <div className="container mx-auto p-8">
+        <PageLoading text="Loading event..." />
       </div>
     )
   }

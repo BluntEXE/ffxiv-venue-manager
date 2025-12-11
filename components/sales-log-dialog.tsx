@@ -105,8 +105,8 @@ export function SalesLogDialog({ venueId, services, events }: SalesLogDialogProp
       setIsOpen(false)
       setFormData({ serviceId: "", eventId: "", amount: "", customerName: "", notes: "" })
       router.refresh() // Trigger server-side data refresh
-    } catch (err: any) {
-      setFormError(err.message || "Failed to log sale")
+    } catch (error: unknown) {
+      setFormError(error instanceof Error ? error.message : "Failed to log sale")
     } finally {
       setIsSubmitting(false)
     }

@@ -24,6 +24,7 @@ import {
 } from "recharts"
 import { format } from "date-fns"
 import { TrendingUp, DollarSign, Users, Calendar, Target } from "lucide-react"
+import { PageLoading } from "@/components/ui/loading-spinner"
 
 interface AnalyticsData {
   venueId: string
@@ -115,7 +116,7 @@ export default function AnalyticsPage() {
     return (
       <VenueLayoutClient slug={slug}>
         <div className="container mx-auto p-8">
-          <p className="text-center">Loading analytics...</p>
+          <PageLoading text="Loading analytics..." />
         </div>
       </VenueLayoutClient>
     )
@@ -255,8 +256,8 @@ export default function AnalyticsPage() {
             </CardHeader>
             <CardContent>
               <div className="text-2xl font-bold">
-                {eventStats?.total > 0
-                  ? Math.round((eventStats.completed / eventStats.total) * 100)
+                {(eventStats?.total ?? 0) > 0
+                  ? Math.round(((eventStats?.completed ?? 0) / (eventStats?.total ?? 1)) * 100)
                   : 0}%
               </div>
               <p className="text-xs text-muted-foreground mt-1">
