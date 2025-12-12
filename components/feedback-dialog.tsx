@@ -88,7 +88,7 @@ export function FeedbackDialog() {
   return (
     <Dialog open={isOpen} onOpenChange={setIsOpen}>
       <DialogTrigger asChild>
-        <Button variant="outline" size="sm">
+        <Button variant="ghost" size="sm" className="font-medium hover:bg-white/5">
           <MessageSquare className="h-4 w-4 mr-2" />
           Feedback
         </Button>
