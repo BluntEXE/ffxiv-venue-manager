@@ -242,9 +242,6 @@
   body {
     overflow-x: hidden;
     max-width: 100vw;
-    /* Force text color inheritance on mobile */
-    -webkit-text-fill-color: inherit;
-    color: inherit;
   }
 
   /* Fix long URLs and text in all inputs and textareas */

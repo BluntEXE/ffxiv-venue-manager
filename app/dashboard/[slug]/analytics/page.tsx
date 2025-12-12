@@ -289,12 +289,14 @@ export default function AnalyticsPage() {
                       tickLine={false}
                       tickMargin={10}
                       fontSize={12}
+                      tick={{ fill: "hsl(var(--muted-foreground))" }}
                       stroke="hsl(var(--muted-foreground))"
                     />
                     <YAxis
                       axisLine={false}
                       tickLine={false}
                       fontSize={12}
+                      tick={{ fill: "hsl(var(--muted-foreground))" }}
                       stroke="hsl(var(--muted-foreground))"
                       tickFormatter={(value) => `${value / 1000}k`}
                     />
@@ -341,12 +343,14 @@ export default function AnalyticsPage() {
                       tickLine={false}
                       tickMargin={10}
                       fontSize={12}
+                      tick={{ fill: "hsl(var(--muted-foreground))" }}
                       stroke="hsl(var(--muted-foreground))"
                     />
                     <YAxis
                       axisLine={false}
                       tickLine={false}
                       fontSize={12}
+                      tick={{ fill: "hsl(var(--muted-foreground))" }}
                       stroke="hsl(var(--muted-foreground))"
                     />
                     <Tooltip content={<CustomTooltip />} cursor={{ fill: "hsl(var(--muted)/0.2)" }} />
@@ -389,20 +393,14 @@ export default function AnalyticsPage() {
                       <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
                     ))}
                   </Pie>
-                  <Tooltip
-                    contentStyle={{
-                      backgroundColor: "#ffffff",
-                      border: "1px solid #e5e7eb",
-                      borderRadius: "6px",
-                    }}
-                    formatter={(value: number) => `${value.toLocaleString()} gil`}
-                  />
+                  <Tooltip content={<CustomTooltip />} />
                   <Legend
                     verticalAlign="bottom"
                     height={36}
+                    wrapperStyle={{ paddingTop: "20px" }}
                     formatter={(value: string, entry: any) => {
                       const percent = ((entry.payload.value / serviceRevenue.reduce((sum, s) => sum + s.value, 0)) * 100).toFixed(0)
-                      return `${value} (${percent}%)`
+                      return <span className="text-muted-foreground">{value} ({percent}%)</span>
                     }}
                   />
                 </PieChart>
