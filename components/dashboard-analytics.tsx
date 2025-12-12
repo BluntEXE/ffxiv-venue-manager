@@ -43,7 +43,7 @@ const CustomTooltip = ({ active, payload, label }: any) => {
               style={{ backgroundColor: entry.color }}
             />
             <span className="font-medium text-foreground">
-              {entry.value.toLocaleString()} gil
+              {entry.value.toLocaleString()} {entry.name === "amount" ? "gil" : "tasks"}
             </span>
             {entry.payload.eventTitle && <span className="text-muted-foreground">({entry.payload.eventTitle})</span>}
           </div>
@@ -158,8 +158,8 @@ export function DashboardAnalytics({ venueId }: DashboardAnalyticsProps) {
               <AreaChart data={revenueData} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
                 <defs>
                   <linearGradient id="colorRevenue" x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="5%" stopColor="hsl(var(--primary))" stopOpacity={0.3} />
-                    <stop offset="95%" stopColor="hsl(var(--primary))" stopOpacity={0} />
+                    <stop offset="5%" stopColor="#8b5cf6" stopOpacity={0.3} />
+                    <stop offset="95%" stopColor="#8b5cf6" stopOpacity={0} />
                   </linearGradient>
                 </defs>
                 <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="hsl(var(--muted))" />
@@ -178,11 +178,11 @@ export function DashboardAnalytics({ venueId }: DashboardAnalyticsProps) {
                   stroke="hsl(var(--muted-foreground))"
                   tickFormatter={(value) => `${value / 1000}k`}
                 />
-                <Tooltip content={<CustomTooltip />} cursor={{ stroke: "hsl(var(--primary))", strokeWidth: 1, strokeDasharray: "4 4" }} />
+                <Tooltip content={<CustomTooltip />} cursor={{ stroke: "#8b5cf6", strokeWidth: 1, strokeDasharray: "4 4" }} />
                 <Area
                   type="monotone"
                   dataKey="amount"
-                  stroke="hsl(var(--primary))"
+                  stroke="#8b5cf6"
                   strokeWidth={2}
                   fillOpacity={1}
                   fill="url(#colorRevenue)"
@@ -209,12 +209,26 @@ export function DashboardAnalytics({ venueId }: DashboardAnalyticsProps) {
             <ResponsiveContainer width="100%" height="100%">
               <BarChart
                 data={[
-                  { name: "Completed", value: taskStats?.completed || 0, fill: "#10b981" },
-                  { name: "In Progress", value: taskStats?.inProgress || 0, fill: "#f59e0b" },
-                  { name: "Pending", value: taskStats?.pending || 0, fill: "#6366f1" },
+                  { name: "Completed", value: taskStats?.completed || 0, fill: "url(#colorCompleted)" },
+                  { name: "In Progress", value: taskStats?.inProgress || 0, fill: "url(#colorProgress)" },
+                  { name: "Pending", value: taskStats?.pending || 0, fill: "url(#colorPending)" },
                 ]}
                 margin={{ top: 10, right: 10, left: -20, bottom: 0 }}
               >
+                <defs>
+                  <linearGradient id="colorCompleted" x1="0" y1="0" x2="0" y2="1">
+                    <stop offset="0%" stopColor="#10b981" stopOpacity={0.8} />
+                    <stop offset="95%" stopColor="#10b981" stopOpacity={0.4} />
+                  </linearGradient>
+                  <linearGradient id="colorProgress" x1="0" y1="0" x2="0" y2="1">
+                    <stop offset="0%" stopColor="#f59e0b" stopOpacity={0.8} />
+                    <stop offset="95%" stopColor="#f59e0b" stopOpacity={0.4} />
+                  </linearGradient>
+                  <linearGradient id="colorPending" x1="0" y1="0" x2="0" y2="1">
+                    <stop offset="0%" stopColor="#6366f1" stopOpacity={0.8} />
+                    <stop offset="95%" stopColor="#6366f1" stopOpacity={0.4} />
+                  </linearGradient>
+                </defs>
                 <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="hsl(var(--muted))" />
                 <XAxis
                   dataKey="name"
@@ -232,19 +246,7 @@ export function DashboardAnalytics({ venueId }: DashboardAnalyticsProps) {
                 />
                 <Tooltip
                   cursor={{ fill: "hsl(var(--muted)/0.2)" }}
-                  content={({ active, payload, label }) => {
-                    if (active && payload && payload.length) {
-                      return (
-                        <div className="rounded-lg border bg-background/95 p-3 shadow-xl backdrop-blur-sm">
-                          <p className="mb-1 text-sm font-semibold">{label}</p>
-                          <p className="text-sm text-muted-foreground">
-                            {payload[0].value} tasks
-                          </p>
-                        </div>
-                      )
-                    }
-                    return null
-                  }}
+                  content={<CustomTooltip />}
                 />
                 <Bar dataKey="value" radius={[4, 4, 0, 0]} />
               </BarChart>
