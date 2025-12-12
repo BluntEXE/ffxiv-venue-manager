@@ -9,6 +9,7 @@ import { prisma } from "@/lib/prisma"
 import { format } from "date-fns"
 import { DeleteEventButton } from "@/components/delete-event-button"
 import { PatronTracking } from "@/components/patron-tracking"
+import { EventAttendanceChart } from "@/components/event-attendance-chart"
 
 const statusColors = {
   DRAFT: "bg-gray-500",
@@ -162,7 +163,15 @@ export default async function EventDetailsPage({
 
           {/* Patron Tracking - Show for published and active events */}
           {(event.status === "PUBLISHED" || event.status === "ACTIVE") && (
-            <PatronTracking venueId={venue.id} eventId={eventId} />
+            <div className="space-y-6">
+              <PatronTracking venueId={venue.id} eventId={eventId} />
+              <EventAttendanceChart slug={slug} eventId={eventId} />
+            </div>
+          )}
+
+          {/* Show chart for completed events too, but not the live tracker */}
+          {event.status === "COMPLETED" && (
+            <EventAttendanceChart slug={slug} eventId={eventId} />
           )}
         </div>
 

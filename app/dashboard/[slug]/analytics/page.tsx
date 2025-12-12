@@ -23,6 +23,7 @@ import {
 import { format } from "date-fns"
 import { TrendingUp, DollarSign, Users, Calendar, Target } from "lucide-react"
 import { PageLoading } from "@/components/ui/loading-spinner"
+import { AttendanceOverview } from "@/components/analytics/attendance-overview"
 
 interface AnalyticsData {
   venueId: string
@@ -407,6 +408,11 @@ export default function AnalyticsPage() {
               </ResponsiveContainer>
             </CardContent>
           </Card>
+
+          {/* Average Traffic Flow - Full Width */}
+          <div className="lg:col-span-2">
+            <AttendanceOverview slug={slug} />
+          </div>
         </div>
       </div>
     </VenueLayoutClient>

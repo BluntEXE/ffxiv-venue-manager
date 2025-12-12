@@ -1,0 +1,110 @@
+"use client"
+
+import { useEffect, useState } from "react"
+import { Area, AreaChart, ResponsiveContainer, Tooltip, XAxis, YAxis, CartesianGrid } from "recharts"
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
+import { Clock } from "lucide-react"
+
+interface AverageAttendanceData {
+    time: string
+    avgCount: number
+}
+
+interface AttendanceOverviewProps {
+    slug: string
+}
+
+export function AttendanceOverview({ slug }: AttendanceOverviewProps) {
+    const [data, setData] = useState<AverageAttendanceData[]>([])
+    const [loading, setLoading] = useState(true)
+
+    useEffect(() => {
+        const fetchAnalytics = async () => {
+            try {
+                const response = await fetch(`/api/venues/${slug}/analytics/attendance`)
+                if (response.ok) {
+                    const jsonData = await response.json()
+                    setData(jsonData)
+                }
+            } catch (err) {
+                console.error(err)
+            } finally {
+                setLoading(false)
+            }
+        }
+        fetchAnalytics()
+    }, [slug])
+
+    if (loading) return <div className="h-[300px] animate-pulse bg-muted/20 rounded-xl" />
+
+    if (data.length === 0) return null // Hide if no historical data
+
+    return (
+        <Card>
+            <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                    <Clock className="h-5 w-5 text-indigo-500" />
+                    Average Hourly Traffic
+                </CardTitle>
+                <CardDescription>
+                    Typical patron volume by time of day (based on last 20 events)
+                </CardDescription>
+            </CardHeader>
+            <CardContent>
+                <div className="h-[300px] w-full">
+                    <ResponsiveContainer width="100%" height="100%">
+                        <AreaChart data={data} margin={{ top: 10, right: 10, left: 0, bottom: 0 }}>
+                            <defs>
+                                <linearGradient id="colorAvg" x1="0" y1="0" x2="0" y2="1">
+                                    <stop offset="5%" stopColor="#6366f1" stopOpacity={0.3} />
+                                    <stop offset="95%" stopColor="#6366f1" stopOpacity={0} />
+                                </linearGradient>
+                            </defs>
+                            <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#313244" />
+                            <XAxis
+                                dataKey="time"
+                                stroke="#94a3b8"
+                                fontSize={12}
+                                tickLine={false}
+                                axisLine={false}
+                                minTickGap={30}
+                            />
+                            <YAxis
+                                stroke="#94a3b8"
+                                fontSize={12}
+                                tickLine={false}
+                                axisLine={false}
+                            />
+                            <Tooltip
+                                content={({ active, payload, label }) => {
+                                    if (active && payload && payload.length) {
+                                        return (
+                                            <div className="rounded-lg border bg-background/95 p-2 shadow-sm border-indigo-500/20">
+                                                <div className="flex flex-col">
+                                                    <span className="text-[0.70rem] uppercase text-muted-foreground mb-1">
+                                                        {label}
+                                                    </span>
+                                                    <span className="font-bold text-indigo-400">
+                                                        ~{payload[0].value} Patrons
+                                                    </span>
+                                                </div>
+                                            </div>
+                                        )
+                                    }
+                                    return null
+                                }}
+                            />
+                            <Area
+                                type="monotone"
+                                dataKey="avgCount"
+                                stroke="#6366f1"
+                                strokeWidth={2}
+                                fill="url(#colorAvg)"
+                            />
+                        </AreaChart>
+                    </ResponsiveContainer>
+                </div>
+            </CardContent>
+        </Card>
+    )
+}
