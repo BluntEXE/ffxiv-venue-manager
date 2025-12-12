@@ -162,20 +162,22 @@ export function DashboardAnalytics({ venueId }: DashboardAnalyticsProps) {
                     <stop offset="95%" stopColor="#8b5cf6" stopOpacity={0} />
                   </linearGradient>
                 </defs>
-                <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="hsl(var(--muted))" />
+                <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#313244" />
                 <XAxis
                   dataKey="date"
                   axisLine={false}
                   tickLine={false}
                   tickMargin={10}
                   fontSize={12}
-                  stroke="hsl(var(--muted-foreground))"
+                  tick={{ fill: "#9399b2" }}
+                  stroke="#9399b2"
                 />
                 <YAxis
                   axisLine={false}
                   tickLine={false}
                   fontSize={12}
-                  stroke="hsl(var(--muted-foreground))"
+                  tick={{ fill: "#9399b2" }}
+                  stroke="#9399b2"
                   tickFormatter={(value) => `${value / 1000}k`}
                 />
                 <Tooltip content={<CustomTooltip />} cursor={{ stroke: "#8b5cf6", strokeWidth: 1, strokeDasharray: "4 4" }} />
@@ -229,23 +231,25 @@ export function DashboardAnalytics({ venueId }: DashboardAnalyticsProps) {
                     <stop offset="95%" stopColor="#6366f1" stopOpacity={0.4} />
                   </linearGradient>
                 </defs>
-                <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="hsl(var(--muted))" />
+                <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#313244" />
                 <XAxis
                   dataKey="name"
                   axisLine={false}
                   tickLine={false}
                   tickMargin={10}
                   fontSize={12}
-                  stroke="hsl(var(--muted-foreground))"
+                  tick={{ fill: "#9399b2" }}
+                  stroke="#9399b2"
                 />
                 <YAxis
                   axisLine={false}
                   tickLine={false}
                   fontSize={12}
-                  stroke="hsl(var(--muted-foreground))"
+                  tick={{ fill: "#9399b2" }}
+                  stroke="#9399b2"
                 />
                 <Tooltip
-                  cursor={{ fill: "hsl(var(--muted)/0.2)" }}
+                  cursor={{ fill: "#313244", opacity: 0.2 }}
                   content={<CustomTooltip />}
                 />
                 <Bar dataKey="value" radius={[4, 4, 0, 0]} />
