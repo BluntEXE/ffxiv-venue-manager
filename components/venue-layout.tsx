@@ -45,7 +45,7 @@ export async function VenueLayout({
         userEmail={session?.user?.email || undefined}
         venues={venues}
       />
-      <main className="flex-1 lg:ml-[260px]">
+      <main className="flex-1 lg:ml-[292px] p-4 transition-all duration-300">
         {children}
       </main>
     </div>
