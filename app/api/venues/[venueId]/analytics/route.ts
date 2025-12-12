@@ -188,8 +188,14 @@ export const GET = withRateLimit<{ params: Promise<{ venueId: string }> }>(
         let currentCount = 0
         let logIndex = 0
 
+        // Determine actual end time (event end or last log, whichever is later)
+        const lastLog = eventLogs[eventLogs.length - 1]
+        const actualEnd = lastLog && new Date(lastLog.timestamp) > eventEnd
+          ? new Date(lastLog.timestamp)
+          : eventEnd
+
         // Process in 15-minute intervals
-        while (currentTime <= eventEnd || logIndex < eventLogs.length) {
+        while (currentTime <= actualEnd) {
           // Apply all logs up to current time
           while (logIndex < eventLogs.length) {
             const logTime = new Date(eventLogs[logIndex].timestamp)
@@ -211,8 +217,8 @@ export const GET = withRateLimit<{ params: Promise<{ venueId: string }> }>(
           // Advance 15 minutes
           currentTime = new Date(currentTime.getTime() + 15 * 60 * 1000)
 
-          // Safety: don't process forever
-          if (currentTime.getTime() - eventStart.getTime() > 24 * 60 * 60 * 1000) break
+          // Safety: don't process forever (max 48 hours)
+          if (currentTime.getTime() - eventStart.getTime() > 48 * 60 * 60 * 1000) break
         }
       })
 
