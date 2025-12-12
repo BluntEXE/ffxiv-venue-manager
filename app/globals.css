@@ -55,6 +55,10 @@
   --ctp-base: #1e1e2e;
   --ctp-mantle: #181825;
   --ctp-crust: #11111b;
+
+  /* Force explicit colors for dark mode to prevent mobile browser defaults */
+  color-scheme: dark;
+
   --ctp-text: #cdd6f4;
   --ctp-subtext1: #bac2de;
   --ctp-subtext0: #a6adc8;
@@ -238,6 +242,9 @@
   body {
     overflow-x: hidden;
     max-width: 100vw;
+    /* Force text color inheritance on mobile */
+    -webkit-text-fill-color: inherit;
+    color: inherit;
   }
 
   /* Fix long URLs and text in all inputs and textareas */
