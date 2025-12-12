@@ -165,13 +165,13 @@ export default async function EventDetailsPage({
           {(event.status === "PUBLISHED" || event.status === "ACTIVE") && (
             <div className="space-y-6">
               <PatronTracking venueId={venue.id} eventId={eventId} />
-              <EventAttendanceChart slug={slug} eventId={eventId} />
+              <EventAttendanceChart venueId={venue.id} eventId={eventId} />
             </div>
           )}
 
           {/* Show chart for completed events too, but not the live tracker */}
           {event.status === "COMPLETED" && (
-            <EventAttendanceChart slug={slug} eventId={eventId} />
+            <EventAttendanceChart venueId={venue.id} eventId={eventId} />
           )}
         </div>
 

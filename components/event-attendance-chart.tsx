@@ -12,12 +12,12 @@ interface AttendanceData {
 }
 
 interface EventAttendanceChartProps {
-    slug: string
+    venueId: string
     eventId: string
     className?: string
 }
 
-export function EventAttendanceChart({ slug, eventId, className }: EventAttendanceChartProps) {
+export function EventAttendanceChart({ venueId, eventId, className }: EventAttendanceChartProps) {
     const [data, setData] = useState<AttendanceData[]>([])
     const [loading, setLoading] = useState(true)
     const [error, setError] = useState<string | null>(null)
@@ -25,7 +25,7 @@ export function EventAttendanceChart({ slug, eventId, className }: EventAttendan
     useEffect(() => {
         const fetchData = async () => {
             try {
-                const response = await fetch(`/api/venues/${slug}/events/${eventId}/attendance`)
+                const response = await fetch(`/api/venues/${venueId}/events/${eventId}/attendance`)
                 if (!response.ok) throw new Error("Failed to fetch attendance data")
                 const jsonData = await response.json()
                 setData(jsonData)
@@ -38,7 +38,7 @@ export function EventAttendanceChart({ slug, eventId, className }: EventAttendan
         }
 
         fetchData()
-    }, [slug, eventId])
+    }, [venueId, eventId])
 
     if (loading) {
         return (
