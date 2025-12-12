@@ -38,6 +38,20 @@ import { Alert, AlertDescription } from "@/components/ui/alert"
 import { Badge } from "@/components/ui/badge"
 import { PageLoading } from "@/components/ui/loading-spinner"
 
+// Preset colors for quick selection
+const PRESET_COLORS = [
+  "#6366f1", // Indigo (default)
+  "#8b5cf6", // Purple
+  "#ec4899", // Pink
+  "#ef4444", // Red
+  "#f97316", // Orange
+  "#eab308", // Yellow
+  "#22c55e", // Green
+  "#14b8a6", // Teal
+  "#3b82f6", // Blue
+  "#6b7280", // Gray
+]
+
 interface Role {
   id: string
   name: string
@@ -67,6 +81,7 @@ export default function RolesPage({
   const [formData, setFormData] = useState({
     name: "",
     responsibilities: "",
+    color: "#6366f1",
   })
   const [formError, setFormError] = useState("")
   const [isSubmitting, setIsSubmitting] = useState(false)
@@ -138,7 +153,7 @@ export default function RolesPage({
       const newRole = await response.json()
       setRoles([newRole, ...roles])
       setIsCreateDialogOpen(false)
-      setFormData({ name: "", responsibilities: "" })
+      setFormData({ name: "", responsibilities: "", color: "#6366f1" })
     } catch (error: unknown) {
       setFormError(error instanceof Error ? error.message : "Failed to create role")
     } finally {
@@ -179,7 +194,7 @@ export default function RolesPage({
       setRoles(roles.map((r) => (r.id === updatedRole.id ? updatedRole : r)))
       setIsEditDialogOpen(false)
       setEditingRole(null)
-      setFormData({ name: "", responsibilities: "" })
+      setFormData({ name: "", responsibilities: "", color: "#6366f1" })
     } catch (error: unknown) {
       setFormError(error instanceof Error ? error.message : "Failed to update role")
     } finally {
@@ -214,13 +229,14 @@ export default function RolesPage({
     setFormData({
       name: role.name,
       responsibilities: role.responsibilities || "",
+      color: role.color || "#6366f1",
     })
     setFormError("")
     setIsEditDialogOpen(true)
   }
 
   const openCreateDialog = () => {
-    setFormData({ name: "", responsibilities: "" })
+    setFormData({ name: "", responsibilities: "", color: "#6366f1" })
     setFormError("")
     setIsCreateDialogOpen(true)
   }
@@ -272,13 +288,19 @@ export default function RolesPage({
             <Card key={role.id}>
               <CardHeader>
                 <div className="flex justify-between items-start">
-                  <div className="flex-1">
-                    <CardTitle>{role.name}</CardTitle>
-                    <CardDescription className="mt-2">
-                      {role.responsibilities || "No responsibilities specified"}
-                    </CardDescription>
+                  <div className="flex items-center gap-3 flex-1">
+                    <div
+                      className="w-4 h-4 rounded-full shrink-0"
+                      style={{ backgroundColor: role.color || "#6366f1" }}
+                    />
+                    <div className="flex-1 min-w-0">
+                      <CardTitle className="truncate">{role.name}</CardTitle>
+                      <CardDescription className="mt-2">
+                        {role.responsibilities || "No responsibilities specified"}
+                      </CardDescription>
+                    </div>
                   </div>
-                  <Badge variant="outline">
+                  <Badge variant="outline" className="shrink-0 ml-2">
                     {role._count?.memberships || 0}{" "}
                     {(role._count?.memberships || 0) === 1 ? "member" : "members"}
                   </Badge>
@@ -375,6 +397,51 @@ export default function RolesPage({
                 rows={3}
               />
             </div>
+            <div className="space-y-2">
+              <Label>Role Color</Label>
+              <div className="flex items-center gap-3">
+                <div className="flex gap-2 flex-wrap">
+                  {PRESET_COLORS.map((color) => (
+                    <button
+                      key={color}
+                      type="button"
+                      className={`w-8 h-8 rounded-full border-2 transition-all ${
+                        formData.color === color
+                          ? "border-foreground scale-110"
+                          : "border-transparent hover:scale-105"
+                      }`}
+                      style={{ backgroundColor: color }}
+                      onClick={() => setFormData({ ...formData, color })}
+                      disabled={isSubmitting}
+                      aria-label={`Select color ${color}`}
+                    />
+                  ))}
+                </div>
+                <div className="flex items-center gap-2">
+                  <Input
+                    type="color"
+                    value={formData.color}
+                    onChange={(e) =>
+                      setFormData({ ...formData, color: e.target.value })
+                    }
+                    disabled={isSubmitting}
+                    className="w-10 h-10 p-1 cursor-pointer"
+                  />
+                  <span className="text-sm text-muted-foreground">Custom</span>
+                </div>
+              </div>
+              <div className="flex items-center gap-2 mt-2">
+                <span className="text-sm text-muted-foreground">Preview:</span>
+                <Badge
+                  style={{
+                    backgroundColor: formData.color,
+                    color: "#fff",
+                  }}
+                >
+                  {formData.name || "Role Name"}
+                </Badge>
+              </div>
+            </div>
           </div>
           <DialogFooter>
             <Button
@@ -397,7 +464,7 @@ export default function RolesPage({
           <DialogHeader>
             <DialogTitle>Edit Role</DialogTitle>
             <DialogDescription>
-              Update the role name and description
+              Update the role name, description, and color
             </DialogDescription>
           </DialogHeader>
           <div className="space-y-4">
@@ -430,6 +497,51 @@ export default function RolesPage({
                 disabled={isSubmitting}
                 rows={3}
               />
+            </div>
+            <div className="space-y-2">
+              <Label>Role Color</Label>
+              <div className="flex items-center gap-3">
+                <div className="flex gap-2 flex-wrap">
+                  {PRESET_COLORS.map((color) => (
+                    <button
+                      key={color}
+                      type="button"
+                      className={`w-8 h-8 rounded-full border-2 transition-all ${
+                        formData.color === color
+                          ? "border-foreground scale-110"
+                          : "border-transparent hover:scale-105"
+                      }`}
+                      style={{ backgroundColor: color }}
+                      onClick={() => setFormData({ ...formData, color })}
+                      disabled={isSubmitting}
+                      aria-label={`Select color ${color}`}
+                    />
+                  ))}
+                </div>
+                <div className="flex items-center gap-2">
+                  <Input
+                    type="color"
+                    value={formData.color}
+                    onChange={(e) =>
+                      setFormData({ ...formData, color: e.target.value })
+                    }
+                    disabled={isSubmitting}
+                    className="w-10 h-10 p-1 cursor-pointer"
+                  />
+                  <span className="text-sm text-muted-foreground">Custom</span>
+                </div>
+              </div>
+              <div className="flex items-center gap-2 mt-2">
+                <span className="text-sm text-muted-foreground">Preview:</span>
+                <Badge
+                  style={{
+                    backgroundColor: formData.color,
+                    color: "#fff",
+                  }}
+                >
+                  {formData.name || "Role Name"}
+                </Badge>
+              </div>
             </div>
           </div>
           <DialogFooter>
