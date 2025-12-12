@@ -173,6 +173,57 @@ export const GET = withRateLimit<{ params: Promise<{ venueId: string }> }>(
         }
       })
 
+      // Calculate average hourly attendance across recent events (for trends)
+      const attendanceTrends: Record<string, { total: number; count: number }> = {}
+
+      completedOrActiveEvents.slice(0, 20).forEach((event) => {
+        const eventLogs = allPatronLogs.filter((log) => log.eventId === event.id)
+        if (eventLogs.length === 0) return
+
+        // Build time series for this event
+        const eventStart = new Date(event.startTime)
+        const eventEnd = new Date(event.endTime)
+
+        let currentTime = new Date(eventStart)
+        let currentCount = 0
+        let logIndex = 0
+
+        // Process in 15-minute intervals
+        while (currentTime <= eventEnd || logIndex < eventLogs.length) {
+          // Apply all logs up to current time
+          while (logIndex < eventLogs.length) {
+            const logTime = new Date(eventLogs[logIndex].timestamp)
+            if (logTime > currentTime) break
+            currentCount += eventLogs[logIndex].countChange
+            logIndex++
+          }
+
+          if (currentCount < 0) currentCount = 0
+
+          // Record by HH:mm time slot
+          const timeKey = currentTime.toTimeString().substring(0, 5) // "HH:mm"
+          if (!attendanceTrends[timeKey]) {
+            attendanceTrends[timeKey] = { total: 0, count: 0 }
+          }
+          attendanceTrends[timeKey].total += currentCount
+          attendanceTrends[timeKey].count += 1
+
+          // Advance 15 minutes
+          currentTime = new Date(currentTime.getTime() + 15 * 60 * 1000)
+
+          // Safety: don't process forever
+          if (currentTime.getTime() - eventStart.getTime() > 24 * 60 * 60 * 1000) break
+        }
+      })
+
+      // Convert to sorted array
+      const attendanceByHour = Object.entries(attendanceTrends)
+        .map(([time, data]) => ({
+          time,
+          avgCount: Math.round(data.total / data.count),
+        }))
+        .sort((a, b) => a.time.localeCompare(b.time))
+
       // Calculate event statistics
       const recentEvents = allEvents.filter(
         (e) => new Date(e.startTime) >= past30Days
@@ -207,6 +258,7 @@ export const GET = withRateLimit<{ params: Promise<{ venueId: string }> }>(
         revenueByEvent,
         serviceRevenue,
         patronByEvent,
+        attendanceByHour, // New: average hourly attendance
 
         // Metadata
         fetchedAt: new Date().toISOString(),

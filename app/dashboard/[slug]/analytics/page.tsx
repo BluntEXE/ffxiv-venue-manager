@@ -53,6 +53,10 @@ interface AnalyticsData {
     startTime: string
     peakPatrons: number
   }>
+  attendanceByHour: Array<{
+    time: string
+    avgCount: number
+  }>
 }
 
 const CustomTooltip = ({ active, payload, label }: any) => {
@@ -411,7 +415,7 @@ export default function AnalyticsPage() {
 
           {/* Average Traffic Flow - Full Width */}
           <div className="lg:col-span-2">
-            <AttendanceOverview slug={slug} />
+            <AttendanceOverview data={analyticsData?.attendanceByHour || []} />
           </div>
         </div>
       </div>

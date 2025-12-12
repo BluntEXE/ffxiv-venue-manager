@@ -1,6 +1,5 @@
 "use client"
 
-import { useEffect, useState } from "react"
 import { Area, AreaChart, ResponsiveContainer, Tooltip, XAxis, YAxis, CartesianGrid } from "recharts"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Clock } from "lucide-react"
@@ -11,33 +10,11 @@ interface AverageAttendanceData {
 }
 
 interface AttendanceOverviewProps {
-    slug: string
+    data: AverageAttendanceData[]
 }
 
-export function AttendanceOverview({ slug }: AttendanceOverviewProps) {
-    const [data, setData] = useState<AverageAttendanceData[]>([])
-    const [loading, setLoading] = useState(true)
-
-    useEffect(() => {
-        const fetchAnalytics = async () => {
-            try {
-                const response = await fetch(`/api/venues/${slug}/analytics/attendance`)
-                if (response.ok) {
-                    const jsonData = await response.json()
-                    setData(jsonData)
-                }
-            } catch (err) {
-                console.error(err)
-            } finally {
-                setLoading(false)
-            }
-        }
-        fetchAnalytics()
-    }, [slug])
-
-    if (loading) return <div className="h-[300px] animate-pulse bg-muted/20 rounded-xl" />
-
-    if (data.length === 0) return null // Hide if no historical data
+export function AttendanceOverview({ data }: AttendanceOverviewProps) {
+    if (!data || data.length === 0) return null // Hide if no historical data
 
     return (
         <Card>
