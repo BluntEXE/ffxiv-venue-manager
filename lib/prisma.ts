@@ -13,7 +13,7 @@ const pool =
   globalForPrisma.pool ??
   new pg.Pool({
     connectionString: process.env.DIRECT_URL || process.env.DATABASE_URL,
-    max: 10,
+    max: 1, // Limit to 1 connection per serverless instance to prevent exhausting PgBouncer pool
   })
 
 if (process.env.NODE_ENV !== 'production') globalForPrisma.pool = pool
