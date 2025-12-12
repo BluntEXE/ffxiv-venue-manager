@@ -3,10 +3,6 @@ import { PrismaAdapter } from "@next-auth/prisma-adapter"
 import DiscordProvider from "next-auth/providers/discord"
 import { prisma } from "@/lib/prisma"
 
-const isProduction = process.env.NODE_ENV === "production"
-// Use secure cookies only in production AND when not on localhost
-const useSecureCookies = isProduction && process.env.NEXTAUTH_URL?.startsWith("https://")
-
 export const authOptions: NextAuthOptions = {
   adapter: PrismaAdapter(prisma),
   providers: [
@@ -67,42 +63,9 @@ export const authOptions: NextAuthOptions = {
     maxAge: 7 * 24 * 60 * 60, // 7 days
     updateAge: 24 * 60 * 60, // Update session every 24 hours
   },
-  // Enable secure cookies only when using HTTPS
-  useSecureCookies: useSecureCookies,
-  cookies: {
-    // CSRF Token Cookie - NextAuth handles CSRF automatically
-    csrfToken: {
-      name: useSecureCookies ? "__Host-next-auth.csrf-token" : "next-auth.csrf-token",
-      options: {
-        httpOnly: true,
-        sameSite: "lax",
-        path: "/",
-        secure: useSecureCookies,
-      },
-    },
-    // Session Token Cookie
-    sessionToken: {
-      name: useSecureCookies
-        ? "__Secure-next-auth.session-token"
-        : "next-auth.session-token",
-      options: {
-        httpOnly: true,
-        sameSite: "lax",
-        path: "/",
-        secure: useSecureCookies,
-      },
-    },
-    // Callback URL Cookie
-    callbackUrl: {
-      name: useSecureCookies ? "__Secure-next-auth.callback-url" : "next-auth.callback-url",
-      options: {
-        httpOnly: true,
-        sameSite: "lax",
-        path: "/",
-        secure: useSecureCookies,
-      },
-    },
-  },
+  // Trust the host header (important for proxies like Vercel)
+  // @ts-ignore - trustHost is valid in NextAuth v4 but might be missing in type definitions
+  trustHost: true,
   // Enable debug mode if NEXTAUTH_DEBUG is set, or in development
   debug: process.env.NEXTAUTH_DEBUG === "true" || process.env.NODE_ENV === "development",
   events: {
