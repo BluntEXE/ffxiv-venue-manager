@@ -114,6 +114,19 @@ export default async function SalesPage({ params }: PageProps) {
           select: {
             id: true,
             name: true,
+            memberships: {
+              where: { venueId: venue.id },
+              select: {
+                role: true,
+                customRole: {
+                  select: {
+                    name: true,
+                    color: true,
+                  },
+                },
+              },
+              take: 1,
+            },
           },
         },
       },

@@ -29,6 +29,13 @@ interface Transaction {
   staff: {
     id: string
     name: string | null
+    memberships?: Array<{
+      role: string
+      customRole: {
+        name: string
+        color: string | null
+      } | null
+    }>
   } | null
 }
 
@@ -246,7 +253,19 @@ export function TransactionsList({
               )}
               <div className="flex items-center gap-2 mt-2 text-xs text-muted-foreground">
                 <span>{format(new Date(transaction.createdAt), "PPp")}</span>
-                {transaction.staff && <span>• by {transaction.staff.name}</span>}
+                {transaction.staff && (
+                  <div className="flex items-center gap-2">
+                    <span>• by {transaction.staff.name}</span>
+                    {transaction.staff.memberships?.[0]?.customRole && (
+                      <Badge
+                        className="text-[10px] px-1 py-0 h-5 border-0 text-white"
+                        style={{ backgroundColor: transaction.staff.memberships[0].customRole.color || "#6366f1" }}
+                      >
+                        {transaction.staff.memberships[0].customRole.name}
+                      </Badge>
+                    )}
+                  </div>
+                )}
               </div>
             </div>
             <div className="text-right flex items-center gap-4">
