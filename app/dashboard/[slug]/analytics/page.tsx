@@ -6,21 +6,19 @@ import { VenueLayoutClient } from "@/components/venue-layout-client"
 import { Breadcrumb } from "@/components/breadcrumb"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import {
-  LineChart,
-  Line,
-  ScatterChart,
-  Scatter,
-  BarChart,
+  Area,
+  AreaChart,
   Bar,
-  PieChart,
-  Pie,
+  BarChart,
+  CartesianGrid,
   Cell,
+  Legend,
+  Pie,
+  PieChart,
+  ResponsiveContainer,
+  Tooltip,
   XAxis,
   YAxis,
-  CartesianGrid,
-  Tooltip,
-  ResponsiveContainer,
-  Legend
 } from "recharts"
 import { format } from "date-fns"
 import { TrendingUp, DollarSign, Users, Calendar, Target } from "lucide-react"
@@ -54,6 +52,29 @@ interface AnalyticsData {
     startTime: string
     peakPatrons: number
   }>
+}
+
+const CustomTooltip = ({ active, payload, label }: any) => {
+  if (active && payload && payload.length) {
+    return (
+      <div className="rounded-lg border bg-background/95 p-3 shadow-xl backdrop-blur-sm ring-1 ring-black/5">
+        <p className="mb-1 text-sm font-semibold">{label}</p>
+        {payload.map((entry: any, index: number) => (
+          <div key={index} className="flex items-center gap-2 text-xs text-muted-foreground">
+            <span
+              className="block h-2 w-2 rounded-full"
+              style={{ backgroundColor: entry.color }}
+            />
+            <span className="font-medium text-foreground">
+              {entry.value.toLocaleString()} {entry.name === "revenue" ? "gil" : ""}
+            </span>
+            {entry.payload.eventTitle && <span className="text-muted-foreground">({entry.payload.eventTitle})</span>}
+          </div>
+        ))}
+      </div>
+    )
+  }
+  return null
 }
 
 export default function AnalyticsPage() {
@@ -153,35 +174,6 @@ export default function AnalyticsPage() {
     "#ec4899", // Pink
   ]
 
-  // Calculate linear regression for trendline
-  const calculateTrendline = (data: any[]) => {
-    if (data.length === 0) return []
-
-    const n = data.length
-    const sumX = data.reduce((sum, _, i) => sum + i, 0)
-    const sumY = data.reduce((sum, d) => sum + d.revenue, 0)
-    const sumXY = data.reduce((sum, d, i) => sum + i * d.revenue, 0)
-    const sumX2 = data.reduce((sum, _, i) => sum + i * i, 0)
-
-    const slope = (n * sumXY - sumX * sumY) / (n * sumX2 - sumX * sumX)
-    const intercept = (sumY - slope * sumX) / n
-
-    return data.map((d, i) => ({
-      date: d.date,
-      x: i,
-      trend: slope * i + intercept,
-    }))
-  }
-
-  const trendlineData = calculateTrendline(revenueData)
-
-  // Prepare scatter data with x-index for proper spacing
-  const scatterData = revenueData.map((d, i) => ({
-    ...d,
-    x: i,
-    y: d.revenue,
-  }))
-
   return (
     <VenueLayoutClient slug={slug}>
       <div className="container mx-auto p-4 md:p-6 lg:p-8">
@@ -273,7 +265,7 @@ export default function AnalyticsPage() {
           <Card className="lg:col-span-2">
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
-                <TrendingUp className="h-5 w-5" />
+                <TrendingUp className="h-5 w-5 text-primary" />
                 Revenue by Event (Last 10)
               </CardTitle>
               <CardDescription>
@@ -281,54 +273,43 @@ export default function AnalyticsPage() {
               </CardDescription>
             </CardHeader>
             <CardContent>
-              <ResponsiveContainer width="100%" height={300}>
-                <ScatterChart>
-                  <XAxis
-                    type="number"
-                    dataKey="x"
-                    domain={[0, scatterData.length - 1]}
-                    ticks={scatterData.map((_, i) => i)}
-                    tickFormatter={(value) => revenueData[value]?.date || ""}
-                    className="text-xs"
-                    tick={{ fill: "#6b7280" }}
-                  />
-                  <YAxis
-                    type="number"
-                    className="text-xs"
-                    tick={{ fill: "#6b7280" }}
-                  />
-                  <Tooltip
-                    contentStyle={{
-                      backgroundColor: "#ffffff",
-                      border: "1px solid #e5e7eb",
-                      borderRadius: "6px",
-                    }}
-                    formatter={(value: number, name: string, props: any) => {
-                      if (name === "y") {
-                        return [`${value.toLocaleString()} gil`, props.payload.eventTitle || "Revenue"]
-                      }
-                      return null
-                    }}
-                    labelFormatter={(value) => revenueData[value]?.date || ""}
-                  />
-                  <Scatter
-                    data={scatterData}
-                    fill="#8b5cf6"
-                    shape="circle"
-                    style={{ pointerEvents: "none" }}
-                  />
-                  <Line
-                    type="monotone"
-                    data={trendlineData}
-                    dataKey="trend"
-                    stroke="#a78bfa"
-                    strokeWidth={2}
-                    strokeDasharray="5 5"
-                    dot={false}
-                    style={{ pointerEvents: "none" }}
-                  />
-                </ScatterChart>
-              </ResponsiveContainer>
+              <div className="h-[300px] w-full">
+                <ResponsiveContainer width="100%" height="100%">
+                  <AreaChart data={revenueData} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
+                    <defs>
+                      <linearGradient id="colorRevenue" x1="0" y1="0" x2="0" y2="1">
+                        <stop offset="5%" stopColor="hsl(var(--primary))" stopOpacity={0.3} />
+                        <stop offset="95%" stopColor="hsl(var(--primary))" stopOpacity={0} />
+                      </linearGradient>
+                    </defs>
+                    <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="hsl(var(--muted))" />
+                    <XAxis
+                      dataKey="date"
+                      axisLine={false}
+                      tickLine={false}
+                      tickMargin={10}
+                      fontSize={12}
+                      stroke="hsl(var(--muted-foreground))"
+                    />
+                    <YAxis
+                      axisLine={false}
+                      tickLine={false}
+                      fontSize={12}
+                      stroke="hsl(var(--muted-foreground))"
+                      tickFormatter={(value) => `${value / 1000}k`}
+                    />
+                    <Tooltip content={<CustomTooltip />} cursor={{ stroke: "hsl(var(--primary))", strokeWidth: 1, strokeDasharray: "4 4" }} />
+                    <Area
+                      type="monotone"
+                      dataKey="revenue"
+                      stroke="hsl(var(--primary))"
+                      strokeWidth={2}
+                      fillOpacity={1}
+                      fill="url(#colorRevenue)"
+                    />
+                  </AreaChart>
+                </ResponsiveContainer>
+              </div>
             </CardContent>
           </Card>
 
@@ -336,7 +317,7 @@ export default function AnalyticsPage() {
           <Card>
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
-                <Users className="h-5 w-5" />
+                <Users className="h-5 w-5 text-green-500" />
                 Patron Visits (Last 7 Events)
               </CardTitle>
               <CardDescription>
@@ -344,33 +325,29 @@ export default function AnalyticsPage() {
               </CardDescription>
             </CardHeader>
             <CardContent>
-              <ResponsiveContainer width="100%" height={250}>
-                <BarChart data={patronData}>
-                  <XAxis
-                    dataKey="date"
-                    className="text-xs"
-                    tick={{ fill: "#6b7280" }}
-                  />
-                  <YAxis
-                    className="text-xs"
-                    tick={{ fill: "#6b7280" }}
-                    domain={[0, (dataMax: number) => Math.ceil(dataMax * 1.25)]}
-                  />
-                  <Tooltip
-                    contentStyle={{
-                      backgroundColor: "#ffffff",
-                      border: "1px solid #e5e7eb",
-                      borderRadius: "6px",
-                    }}
-                    formatter={(value: number, name: string, props: any) => [
-                      value,
-                      props.payload.eventTitle || "Peak Patrons"
-                    ]}
-                    cursor={{ fill: "rgba(16, 185, 129, 0.1)" }}
-                  />
-                  <Bar dataKey="patrons" fill="#10b981" radius={[4, 4, 0, 0]} style={{ pointerEvents: "none" }} />
-                </BarChart>
-              </ResponsiveContainer>
+              <div className="h-[250px] w-full">
+                <ResponsiveContainer width="100%" height="100%">
+                  <BarChart data={patronData} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
+                    <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="hsl(var(--muted))" />
+                    <XAxis
+                      dataKey="date"
+                      axisLine={false}
+                      tickLine={false}
+                      tickMargin={10}
+                      fontSize={12}
+                      stroke="hsl(var(--muted-foreground))"
+                    />
+                    <YAxis
+                      axisLine={false}
+                      tickLine={false}
+                      fontSize={12}
+                      stroke="hsl(var(--muted-foreground))"
+                    />
+                    <Tooltip content={<CustomTooltip />} cursor={{ fill: "hsl(var(--muted)/0.2)" }} />
+                    <Bar dataKey="patrons" fill="#10b981" radius={[4, 4, 0, 0]} />
+                  </BarChart>
+                </ResponsiveContainer>
+              </div>
             </CardContent>
           </Card>
 
@@ -378,7 +355,7 @@ export default function AnalyticsPage() {
           <Card>
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
-                <DollarSign className="h-5 w-5" />
+                <DollarSign className="h-5 w-5 text-blue-500" />
                 Top Services
               </CardTitle>
               <CardDescription>
