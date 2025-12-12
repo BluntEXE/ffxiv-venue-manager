@@ -282,22 +282,22 @@ export default function AnalyticsPage() {
                         <stop offset="95%" stopColor="#8b5cf6" stopOpacity={0} />
                       </linearGradient>
                     </defs>
-                    <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="hsl(var(--muted))" />
+                    <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="var(--muted)" />
                     <XAxis
                       dataKey="date"
                       axisLine={false}
                       tickLine={false}
                       tickMargin={10}
                       fontSize={12}
-                      tick={{ fill: "hsl(var(--muted-foreground))" }}
-                      stroke="hsl(var(--muted-foreground))"
+                      tick={{ fill: "var(--muted-foreground)" }}
+                      stroke="var(--muted-foreground)"
                     />
                     <YAxis
                       axisLine={false}
                       tickLine={false}
                       fontSize={12}
-                      tick={{ fill: "hsl(var(--muted-foreground))" }}
-                      stroke="hsl(var(--muted-foreground))"
+                      tick={{ fill: "var(--muted-foreground)" }}
+                      stroke="var(--muted-foreground)"
                       tickFormatter={(value) => `${value / 1000}k`}
                     />
                     <Tooltip content={<CustomTooltip />} cursor={{ stroke: "#8b5cf6", strokeWidth: 1, strokeDasharray: "4 4" }} />
@@ -336,24 +336,24 @@ export default function AnalyticsPage() {
                         <stop offset="95%" stopColor="#10b981" stopOpacity={0.3} />
                       </linearGradient>
                     </defs>
-                    <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="hsl(var(--muted))" />
+                    <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="var(--muted)" />
                     <XAxis
                       dataKey="date"
                       axisLine={false}
                       tickLine={false}
                       tickMargin={10}
                       fontSize={12}
-                      tick={{ fill: "hsl(var(--muted-foreground))" }}
-                      stroke="hsl(var(--muted-foreground))"
+                      tick={{ fill: "var(--muted-foreground)" }}
+                      stroke="var(--muted-foreground)"
                     />
                     <YAxis
                       axisLine={false}
                       tickLine={false}
                       fontSize={12}
-                      tick={{ fill: "hsl(var(--muted-foreground))" }}
-                      stroke="hsl(var(--muted-foreground))"
+                      tick={{ fill: "var(--muted-foreground)" }}
+                      stroke="var(--muted-foreground)"
                     />
-                    <Tooltip content={<CustomTooltip />} cursor={{ fill: "hsl(var(--muted)/0.2)" }} />
+                    <Tooltip content={<CustomTooltip />} cursor={{ fill: "var(--muted)", opacity: 0.2 }} />
                     <Bar
                       dataKey="patrons"
                       fill="url(#colorPatron)"
