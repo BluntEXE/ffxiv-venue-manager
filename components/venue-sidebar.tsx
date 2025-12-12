@@ -227,7 +227,7 @@ export function VenueSidebar({
       </div>
 
       {/* Desktop Sidebar */}
-      <aside className="hidden lg:flex lg:flex-col lg:w-[260px] glass border border-white/5 fixed left-4 top-[88px] bottom-4 rounded-xl transition-all duration-300">
+      <aside className="hidden lg:flex lg:flex-col lg:w-[260px] glass border border-white/5 fixed left-4 top-24 bottom-4 rounded-xl transition-all duration-300">
         <DesktopNavContent />
       </aside>
     </>
