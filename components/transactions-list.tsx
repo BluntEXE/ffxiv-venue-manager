@@ -3,6 +3,7 @@
 import { useState } from "react"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
+import { RoleBadge } from "@/components/role-badge"
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog"
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog"
 import { Input } from "@/components/ui/input"
@@ -257,12 +258,11 @@ export function TransactionsList({
                   <div className="flex items-center gap-2">
                     <span>• by {transaction.staff.name}</span>
                     {transaction.staff.memberships?.[0]?.customRole && (
-                      <Badge
-                        className="text-[10px] px-1 py-0 h-5 border-0 text-white"
-                        style={{ backgroundColor: transaction.staff.memberships[0].customRole.color || "#6366f1" }}
-                      >
-                        {transaction.staff.memberships[0].customRole.name}
-                      </Badge>
+                      <RoleBadge
+                        role={transaction.staff.memberships[0].customRole.name}
+                        color={transaction.staff.memberships[0].customRole.color}
+                        className="text-[10px] px-1 py-0 h-5"
+                      />
                     )}
                   </div>
                 )}

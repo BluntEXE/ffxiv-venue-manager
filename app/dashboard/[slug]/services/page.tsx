@@ -11,6 +11,7 @@ import { Label } from "@/components/ui/label"
 import { Textarea } from "@/components/ui/textarea"
 import { Alert, AlertDescription } from "@/components/ui/alert"
 import { Badge } from "@/components/ui/badge"
+import { RoleBadge } from "@/components/role-badge"
 import { Switch } from "@/components/ui/switch"
 import { Checkbox } from "@/components/ui/checkbox"
 import {
@@ -113,7 +114,7 @@ export default function ServicesPage({
           fetch(`/api/venues/${venue.id}/services`),
           fetch(`/api/venues/${venue.id}/roles`),
         ])
-        
+
         if (!servicesResponse.ok) throw new Error("Failed to fetch services")
         if (!rolesResponse.ok) throw new Error("Failed to fetch roles")
 
@@ -307,407 +308,399 @@ export default function ServicesPage({
 
         {/* Stats */}
         <div className="grid grid-cols-2 md:grid-cols-3 gap-4 md:gap-6 mb-6 md:mb-8">
-        <Card>
-          <CardHeader className="pb-3">
-            <CardTitle className="text-sm font-medium">Total Services</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="text-3xl font-bold">{services.length}</div>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardHeader className="pb-3">
-            <CardTitle className="text-sm font-medium">Active</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="text-3xl font-bold text-green-600">{activeServices.length}</div>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardHeader className="pb-3">
-            <CardTitle className="text-sm font-medium">Inactive</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="text-3xl font-bold text-gray-400">{inactiveServices.length}</div>
-          </CardContent>
-        </Card>
-      </div>
+          <Card>
+            <CardHeader className="pb-3">
+              <CardTitle className="text-sm font-medium">Total Services</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="text-3xl font-bold">{services.length}</div>
+            </CardContent>
+          </Card>
+          <Card>
+            <CardHeader className="pb-3">
+              <CardTitle className="text-sm font-medium">Active</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="text-3xl font-bold text-green-600">{activeServices.length}</div>
+            </CardContent>
+          </Card>
+          <Card>
+            <CardHeader className="pb-3">
+              <CardTitle className="text-sm font-medium">Inactive</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="text-3xl font-bold text-gray-400">{inactiveServices.length}</div>
+            </CardContent>
+          </Card>
+        </div>
 
-      {/* Error Message */}
-      {error && (
-        <Alert className="mb-6 bg-red-50 border-red-200">
-          <AlertDescription className="text-red-800">{error}</AlertDescription>
-        </Alert>
-      )}
+        {/* Error Message */}
+        {error && (
+          <Alert className="mb-6 bg-red-50 border-red-200">
+            <AlertDescription className="text-red-800">{error}</AlertDescription>
+          </Alert>
+        )}
 
-      {/* Services List */}
-      {isLoading ? (
-        <PageLoading text="Loading services..." />
-      ) : services.length === 0 ? (
-        <Card className="text-center py-12">
-          <CardContent>
-            <p className="text-muted-foreground mb-4">
-              No services yet. Add your first product or service!
-            </p>
-            <Button onClick={openCreateDialog}>Add Your First Service</Button>
-          </CardContent>
-        </Card>
-      ) : (
-        <>
-          {/* Active Services */}
-          {activeServices.length > 0 && (
-            <div className="mb-8">
-              <h2 className="text-2xl font-bold mb-4">Active Services</h2>
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                {activeServices.map((service) => (
-                  <Card key={service.id}>
-                    <CardHeader>
-                      <div className="flex justify-between items-start">
-                        <div className="flex-1">
-                          <CardTitle>{service.name}</CardTitle>
-                {service.roles && service.roles.length > 0 && (
-                  <div className="flex flex-wrap gap-1 mt-2">
-                    {service.roles.map((role) => (
-                      <Badge 
-                        key={role.id} 
-                        variant="outline"
-                        style={{ borderColor: role.color, color: role.color }}
-                      >
-                        {role.name}
-                      </Badge>
+        {/* Services List */}
+        {isLoading ? (
+          <PageLoading text="Loading services..." />
+        ) : services.length === 0 ? (
+          <Card className="text-center py-12">
+            <CardContent>
+              <p className="text-muted-foreground mb-4">
+                No services yet. Add your first product or service!
+              </p>
+              <Button onClick={openCreateDialog}>Add Your First Service</Button>
+            </CardContent>
+          </Card>
+        ) : (
+          <>
+            {/* Active Services */}
+            {activeServices.length > 0 && (
+              <div className="mb-8">
+                <h2 className="text-2xl font-bold mb-4">Active Services</h2>
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                  {activeServices.map((service) => (
+                    <Card key={service.id}>
+                      <CardHeader>
+                        <div className="flex justify-between items-start">
+                          <div className="flex-1">
+                            <CardTitle>{service.name}</CardTitle>
+                            {service.roles && service.roles.length > 0 && (
+                              <div className="flex flex-wrap gap-1 mt-2">
+                                {service.roles.map((role) => (
+                                  <RoleBadge
+                                    key={role.id}
+                                    role={role.name}
+                                    color={role.color}
+                                  />
+                                ))}
+                              </div>
+                            )}
+                          </div>
+                          <Badge className="bg-green-500">Active</Badge>
+                        </div>
+                        {service.description && (
+                          <CardDescription className="mt-2">
+                            {service.description}
+                          </CardDescription>
+                        )}
+                      </CardHeader>
+                      <CardContent>
+                        <div className="mb-4">
+                          <p className="text-2xl font-bold">{service.price} gil</p>
+                          {service._count && (
+                            <p className="text-xs text-muted-foreground mt-1">
+                              {service._count.transactions} sales
+                            </p>
+                          )}
+                        </div>
+                        <div className="flex gap-2">
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={() => openEditDialog(service)}
+                          >
+                            Edit
+                          </Button>
+                          <AlertDialog>
+                            <AlertDialogTrigger asChild>
+                              <Button variant="outline" size="sm">
+                                Delete
+                              </Button>
+                            </AlertDialogTrigger>
+                            <AlertDialogContent>
+                              <AlertDialogHeader>
+                                <AlertDialogTitle>Delete Service?</AlertDialogTitle>
+                                <AlertDialogDescription>
+                                  Are you sure you want to delete "{service.name}"? This action
+                                  cannot be undone.
+                                </AlertDialogDescription>
+                              </AlertDialogHeader>
+                              <AlertDialogFooter>
+                                <AlertDialogCancel>Cancel</AlertDialogCancel>
+                                <AlertDialogAction onClick={() => handleDeleteService(service)}>
+                                  Delete
+                                </AlertDialogAction>
+                              </AlertDialogFooter>
+                            </AlertDialogContent>
+                          </AlertDialog>
+                        </div>
+                      </CardContent>
+                    </Card>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {/* Inactive Services */}
+            {inactiveServices.length > 0 && (
+              <div className="mb-8">
+                <h2 className="text-2xl font-bold mb-4">Inactive Services</h2>
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 opacity-60">
+                  {inactiveServices.map((service) => (
+                    <Card key={service.id}>
+                      <CardHeader>
+                        <div className="flex justify-between items-start">
+                          <div className="flex-1">
+                            <CardTitle>{service.name}</CardTitle>
+                            {service.roles && service.roles.length > 0 && (
+                              <div className="flex flex-wrap gap-1 mt-2">
+                                {service.roles.map((role) => (
+                                  <RoleBadge
+                                    key={role.id}
+                                    role={role.name}
+                                    color={role.color}
+                                  />
+                                ))}
+                              </div>
+                            )}
+                          </div>
+                          <Badge variant="outline">Inactive</Badge>
+                        </div>
+                        {service.description && (
+                          <CardDescription className="mt-2">
+                            {service.description}
+                          </CardDescription>
+                        )}
+                      </CardHeader>
+                      <CardContent>
+                        <div className="mb-4">
+                          <p className="text-2xl font-bold">{service.price} gil</p>
+                        </div>
+                        <div className="flex gap-2">
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={() => openEditDialog(service)}
+                          >
+                            Edit
+                          </Button>
+                          <AlertDialog>
+                            <AlertDialogTrigger asChild>
+                              <Button variant="outline" size="sm">
+                                Delete
+                              </Button>
+                            </AlertDialogTrigger>
+                            <AlertDialogContent>
+                              <AlertDialogHeader>
+                                <AlertDialogTitle>Delete Service?</AlertDialogTitle>
+                                <AlertDialogDescription>
+                                  Are you sure you want to delete "{service.name}"?
+                                </AlertDialogDescription>
+                              </AlertDialogHeader>
+                              <AlertDialogFooter>
+                                <AlertDialogCancel>Cancel</AlertDialogCancel>
+                                <AlertDialogAction onClick={() => handleDeleteService(service)}>
+                                  Delete
+                                </AlertDialogAction>
+                              </AlertDialogFooter>
+                            </AlertDialogContent>
+                          </AlertDialog>
+                        </div>
+                      </CardContent>
+                    </Card>
+                  ))}
+                </div>
+              </div>
+            )}
+          </>
+        )}
+
+        {/* Create Service Dialog */}
+        <Dialog open={isCreateDialogOpen} onOpenChange={setIsCreateDialogOpen}>
+          <DialogContent className="max-w-xl">
+            <DialogHeader>
+              <DialogTitle>Add Service</DialogTitle>
+              <DialogDescription>Create a new product or service for your venue</DialogDescription>
+            </DialogHeader>
+            <div className="space-y-4">
+              {formError && (
+                <Alert className="bg-red-50 border-red-200">
+                  <AlertDescription className="text-red-800">{formError}</AlertDescription>
+                </Alert>
+              )}
+              <div className="space-y-2">
+                <Label htmlFor="create-name">Service Name *</Label>
+                <Input
+                  id="create-name"
+                  placeholder="e.g., House Special, VIP Pass"
+                  value={formData.name}
+                  onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+                  disabled={isSubmitting}
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="create-price">Price (gil) *</Label>
+                <Input
+                  id="create-price"
+                  type="number"
+                  min="0"
+                  step="1"
+                  placeholder="1000"
+                  value={formData.price}
+                  onChange={(e) => setFormData({ ...formData, price: e.target.value })}
+                  disabled={isSubmitting}
+                />
+              </div>
+              <div className="space-y-2">
+                <Label>Roles (who can provide this service)</Label>
+                {roles.length === 0 ? (
+                  <p className="text-sm text-muted-foreground">
+                    No roles yet. Create roles first to assign services.
+                  </p>
+                ) : (
+                  <div className="space-y-2 border rounded-lg p-3 max-h-48 overflow-y-auto">
+                    {roles.map((role) => (
+                      <div key={role.id} className="flex items-center space-x-2">
+                        <Checkbox
+                          id={`create-role-${role.id}`}
+                          checked={formData.selectedRoleIds.includes(role.id)}
+                          onCheckedChange={() => toggleRoleSelection(role.id)}
+                          disabled={isSubmitting}
+                        />
+                        <Label
+                          htmlFor={`create-role-${role.id}`}
+                          className="flex items-center gap-2 cursor-pointer"
+                        >
+                          <RoleBadge
+                            role={role.name}
+                            color={role.color}
+                          />
+                        </Label>
+                      </div>
                     ))}
                   </div>
                 )}
-                        </div>
-                        <Badge className="bg-green-500">Active</Badge>
-                      </div>
-                      {service.description && (
-                        <CardDescription className="mt-2">
-                          {service.description}
-                        </CardDescription>
-                      )}
-                    </CardHeader>
-                    <CardContent>
-                      <div className="mb-4">
-                        <p className="text-2xl font-bold">{service.price} gil</p>
-                        {service._count && (
-                          <p className="text-xs text-muted-foreground mt-1">
-                            {service._count.transactions} sales
-                          </p>
-                        )}
-                      </div>
-                      <div className="flex gap-2">
-                        <Button
-                          variant="outline"
-                          size="sm"
-                          onClick={() => openEditDialog(service)}
-                        >
-                          Edit
-                        </Button>
-                        <AlertDialog>
-                          <AlertDialogTrigger asChild>
-                            <Button variant="outline" size="sm">
-                              Delete
-                            </Button>
-                          </AlertDialogTrigger>
-                          <AlertDialogContent>
-                            <AlertDialogHeader>
-                              <AlertDialogTitle>Delete Service?</AlertDialogTitle>
-                              <AlertDialogDescription>
-                                Are you sure you want to delete "{service.name}"? This action
-                                cannot be undone.
-                              </AlertDialogDescription>
-                            </AlertDialogHeader>
-                            <AlertDialogFooter>
-                              <AlertDialogCancel>Cancel</AlertDialogCancel>
-                              <AlertDialogAction onClick={() => handleDeleteService(service)}>
-                                Delete
-                              </AlertDialogAction>
-                            </AlertDialogFooter>
-                          </AlertDialogContent>
-                        </AlertDialog>
-                      </div>
-                    </CardContent>
-                  </Card>
-                ))}
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="create-description">Description</Label>
+                <Textarea
+                  id="create-description"
+                  placeholder="Optional description"
+                  value={formData.description}
+                  onChange={(e) => setFormData({ ...formData, description: e.target.value })}
+                  disabled={isSubmitting}
+                  rows={3}
+                />
+              </div>
+              <div className="flex items-center space-x-2">
+                <Switch
+                  id="create-active"
+                  checked={formData.isActive}
+                  onCheckedChange={(checked) => setFormData({ ...formData, isActive: checked })}
+                  disabled={isSubmitting}
+                />
+                <Label htmlFor="create-active">Active (available for sale)</Label>
               </div>
             </div>
-          )}
+            <DialogFooter>
+              <Button variant="outline" onClick={() => setIsCreateDialogOpen(false)} disabled={isSubmitting}>
+                Cancel
+              </Button>
+              <Button onClick={handleCreateService} disabled={isSubmitting}>
+                {isSubmitting ? "Creating..." : "Create Service"}
+              </Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
 
-          {/* Inactive Services */}
-          {inactiveServices.length > 0 && (
-            <div className="mb-8">
-              <h2 className="text-2xl font-bold mb-4">Inactive Services</h2>
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 opacity-60">
-                {inactiveServices.map((service) => (
-                  <Card key={service.id}>
-                    <CardHeader>
-                      <div className="flex justify-between items-start">
-                        <div className="flex-1">
-                          <CardTitle>{service.name}</CardTitle>
-                          {service.roles && service.roles.length > 0 && (
-                            <div className="flex flex-wrap gap-1 mt-2">
-                              {service.roles.map((role) => (
-                                <Badge 
-                                  key={role.id} 
-                                  variant="outline"
-                                  style={{ borderColor: role.color, color: role.color }}
-                                >
-                                  {role.name}
-                                </Badge>
-                              ))}
-                            </div>
-                          )}
-                        </div>
-                        <Badge variant="outline">Inactive</Badge>
-                      </div>
-                      {service.description && (
-                        <CardDescription className="mt-2">
-                          {service.description}
-                        </CardDescription>
-                      )}
-                    </CardHeader>
-                    <CardContent>
-                      <div className="mb-4">
-                        <p className="text-2xl font-bold">{service.price} gil</p>
-                      </div>
-                      <div className="flex gap-2">
-                        <Button
-                          variant="outline"
-                          size="sm"
-                          onClick={() => openEditDialog(service)}
+        {/* Edit Service Dialog */}
+        <Dialog open={isEditDialogOpen} onOpenChange={setIsEditDialogOpen}>
+          <DialogContent className="max-w-xl">
+            <DialogHeader>
+              <DialogTitle>Edit Service</DialogTitle>
+              <DialogDescription>Update service details</DialogDescription>
+            </DialogHeader>
+            <div className="space-y-4">
+              {formError && (
+                <Alert className="bg-red-50 border-red-200">
+                  <AlertDescription className="text-red-800">{formError}</AlertDescription>
+                </Alert>
+              )}
+              <div className="space-y-2">
+                <Label htmlFor="edit-name">Service Name *</Label>
+                <Input
+                  id="edit-name"
+                  value={formData.name}
+                  onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+                  disabled={isSubmitting}
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="edit-price">Price (gil) *</Label>
+                <Input
+                  id="edit-price"
+                  type="number"
+                  min="0"
+                  step="1"
+                  value={formData.price}
+                  onChange={(e) => setFormData({ ...formData, price: e.target.value })}
+                  disabled={isSubmitting}
+                />
+              </div>
+              <div className="space-y-2">
+                <Label>Roles (who can provide this service)</Label>
+                {roles.length === 0 ? (
+                  <p className="text-sm text-muted-foreground">
+                    No roles yet. Create roles first to assign services.
+                  </p>
+                ) : (
+                  <div className="space-y-2 border rounded-lg p-3 max-h-48 overflow-y-auto">
+                    {roles.map((role) => (
+                      <div key={role.id} className="flex items-center space-x-2">
+                        <Checkbox
+                          id={`edit-role-${role.id}`}
+                          checked={formData.selectedRoleIds.includes(role.id)}
+                          onCheckedChange={() => toggleRoleSelection(role.id)}
+                          disabled={isSubmitting}
+                        />
+                        <Label
+                          htmlFor={`edit-role-${role.id}`}
+                          className="flex items-center gap-2 cursor-pointer"
                         >
-                          Edit
-                        </Button>
-                        <AlertDialog>
-                          <AlertDialogTrigger asChild>
-                            <Button variant="outline" size="sm">
-                              Delete
-                            </Button>
-                          </AlertDialogTrigger>
-                          <AlertDialogContent>
-                            <AlertDialogHeader>
-                              <AlertDialogTitle>Delete Service?</AlertDialogTitle>
-                              <AlertDialogDescription>
-                                Are you sure you want to delete "{service.name}"?
-                              </AlertDialogDescription>
-                            </AlertDialogHeader>
-                            <AlertDialogFooter>
-                              <AlertDialogCancel>Cancel</AlertDialogCancel>
-                              <AlertDialogAction onClick={() => handleDeleteService(service)}>
-                                Delete
-                              </AlertDialogAction>
-                            </AlertDialogFooter>
-                          </AlertDialogContent>
-                        </AlertDialog>
+                          <RoleBadge
+                            role={role.name}
+                            color={role.color}
+                          />
+                        </Label>
                       </div>
-                    </CardContent>
-                  </Card>
-                ))}
+                    ))}
+                  </div>
+                )}
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="edit-description">Description</Label>
+                <Textarea
+                  id="edit-description"
+                  value={formData.description}
+                  onChange={(e) => setFormData({ ...formData, description: e.target.value })}
+                  disabled={isSubmitting}
+                  rows={3}
+                />
+              </div>
+              <div className="flex items-center space-x-2">
+                <Switch
+                  id="edit-active"
+                  checked={formData.isActive}
+                  onCheckedChange={(checked) => setFormData({ ...formData, isActive: checked })}
+                  disabled={isSubmitting}
+                />
+                <Label htmlFor="edit-active">Active (available for sale)</Label>
               </div>
             </div>
-          )}
-        </>
-      )}
-
-      {/* Create Service Dialog */}
-      <Dialog open={isCreateDialogOpen} onOpenChange={setIsCreateDialogOpen}>
-        <DialogContent className="max-w-xl">
-          <DialogHeader>
-            <DialogTitle>Add Service</DialogTitle>
-            <DialogDescription>Create a new product or service for your venue</DialogDescription>
-          </DialogHeader>
-          <div className="space-y-4">
-            {formError && (
-              <Alert className="bg-red-50 border-red-200">
-                <AlertDescription className="text-red-800">{formError}</AlertDescription>
-              </Alert>
-            )}
-            <div className="space-y-2">
-              <Label htmlFor="create-name">Service Name *</Label>
-              <Input
-                id="create-name"
-                placeholder="e.g., House Special, VIP Pass"
-                value={formData.name}
-                onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                disabled={isSubmitting}
-              />
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="create-price">Price (gil) *</Label>
-              <Input
-                id="create-price"
-                type="number"
-                min="0"
-                step="1"
-                placeholder="1000"
-                value={formData.price}
-                onChange={(e) => setFormData({ ...formData, price: e.target.value })}
-                disabled={isSubmitting}
-              />
-            </div>
-            <div className="space-y-2">
-              <Label>Roles (who can provide this service)</Label>
-              {roles.length === 0 ? (
-                <p className="text-sm text-muted-foreground">
-                  No roles yet. Create roles first to assign services.
-                </p>
-              ) : (
-                <div className="space-y-2 border rounded-lg p-3 max-h-48 overflow-y-auto">
-                  {roles.map((role) => (
-                    <div key={role.id} className="flex items-center space-x-2">
-                      <Checkbox
-                        id={`create-role-${role.id}`}
-                        checked={formData.selectedRoleIds.includes(role.id)}
-                        onCheckedChange={() => toggleRoleSelection(role.id)}
-                        disabled={isSubmitting}
-                      />
-                      <Label
-                        htmlFor={`create-role-${role.id}`}
-                        className="flex items-center gap-2 cursor-pointer"
-                      >
-                        <Badge
-                          variant="outline"
-                          style={{ borderColor: role.color, color: role.color }}
-                        >
-                          {role.name}
-                        </Badge>
-                      </Label>
-                    </div>
-                  ))}
-                </div>
-              )}
-            </div>
-
-            <div className="space-y-2">
-              <Label htmlFor="create-description">Description</Label>
-              <Textarea
-                id="create-description"
-                placeholder="Optional description"
-                value={formData.description}
-                onChange={(e) => setFormData({ ...formData, description: e.target.value })}
-                disabled={isSubmitting}
-                rows={3}
-              />
-            </div>
-            <div className="flex items-center space-x-2">
-              <Switch
-                id="create-active"
-                checked={formData.isActive}
-                onCheckedChange={(checked) => setFormData({ ...formData, isActive: checked })}
-                disabled={isSubmitting}
-              />
-              <Label htmlFor="create-active">Active (available for sale)</Label>
-            </div>
-          </div>
-          <DialogFooter>
-            <Button variant="outline" onClick={() => setIsCreateDialogOpen(false)} disabled={isSubmitting}>
-              Cancel
-            </Button>
-            <Button onClick={handleCreateService} disabled={isSubmitting}>
-              {isSubmitting ? "Creating..." : "Create Service"}
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
-
-      {/* Edit Service Dialog */}
-      <Dialog open={isEditDialogOpen} onOpenChange={setIsEditDialogOpen}>
-        <DialogContent className="max-w-xl">
-          <DialogHeader>
-            <DialogTitle>Edit Service</DialogTitle>
-            <DialogDescription>Update service details</DialogDescription>
-          </DialogHeader>
-          <div className="space-y-4">
-            {formError && (
-              <Alert className="bg-red-50 border-red-200">
-                <AlertDescription className="text-red-800">{formError}</AlertDescription>
-              </Alert>
-            )}
-            <div className="space-y-2">
-              <Label htmlFor="edit-name">Service Name *</Label>
-              <Input
-                id="edit-name"
-                value={formData.name}
-                onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                disabled={isSubmitting}
-              />
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="edit-price">Price (gil) *</Label>
-              <Input
-                id="edit-price"
-                type="number"
-                min="0"
-                step="1"
-                value={formData.price}
-                onChange={(e) => setFormData({ ...formData, price: e.target.value })}
-                disabled={isSubmitting}
-              />
-            </div>
-            <div className="space-y-2">
-              <Label>Roles (who can provide this service)</Label>
-              {roles.length === 0 ? (
-                <p className="text-sm text-muted-foreground">
-                  No roles yet. Create roles first to assign services.
-                </p>
-              ) : (
-                <div className="space-y-2 border rounded-lg p-3 max-h-48 overflow-y-auto">
-                  {roles.map((role) => (
-                    <div key={role.id} className="flex items-center space-x-2">
-                      <Checkbox
-                        id={`edit-role-${role.id}`}
-                        checked={formData.selectedRoleIds.includes(role.id)}
-                        onCheckedChange={() => toggleRoleSelection(role.id)}
-                        disabled={isSubmitting}
-                      />
-                      <Label
-                        htmlFor={`edit-role-${role.id}`}
-                        className="flex items-center gap-2 cursor-pointer"
-                      >
-                        <Badge
-                          variant="outline"
-                          style={{ borderColor: role.color, color: role.color }}
-                        >
-                          {role.name}
-                        </Badge>
-                      </Label>
-                    </div>
-                  ))}
-                </div>
-              )}
-            </div>
-
-            <div className="space-y-2">
-              <Label htmlFor="edit-description">Description</Label>
-              <Textarea
-                id="edit-description"
-                value={formData.description}
-                onChange={(e) => setFormData({ ...formData, description: e.target.value })}
-                disabled={isSubmitting}
-                rows={3}
-              />
-            </div>
-            <div className="flex items-center space-x-2">
-              <Switch
-                id="edit-active"
-                checked={formData.isActive}
-                onCheckedChange={(checked) => setFormData({ ...formData, isActive: checked })}
-                disabled={isSubmitting}
-              />
-              <Label htmlFor="edit-active">Active (available for sale)</Label>
-            </div>
-          </div>
-          <DialogFooter>
-            <Button variant="outline" onClick={() => setIsEditDialogOpen(false)} disabled={isSubmitting}>
-              Cancel
-            </Button>
-            <Button onClick={handleEditService} disabled={isSubmitting}>
-              {isSubmitting ? "Saving..." : "Save Changes"}
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
+            <DialogFooter>
+              <Button variant="outline" onClick={() => setIsEditDialogOpen(false)} disabled={isSubmitting}>
+                Cancel
+              </Button>
+              <Button onClick={handleEditService} disabled={isSubmitting}>
+                {isSubmitting ? "Saving..." : "Save Changes"}
+              </Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
       </div>
     </VenueLayoutClient>
   )

@@ -12,11 +12,7 @@ import { PendingInvites } from "@/components/pending-invites"
 import { VenueLayout } from "@/components/venue-layout"
 import { Breadcrumb } from "@/components/breadcrumb"
 
-const roleColors = {
-  OWNER: "bg-purple-500",
-  MANAGER: "bg-blue-500",
-  STAFF: "bg-green-500",
-}
+import { RoleBadge } from "@/components/role-badge"
 
 export default async function StaffPage({
   params,
@@ -198,16 +194,12 @@ export default async function StaffPage({
                           </div>
                         </div>
                         <div className="flex items-center gap-3">
-                          <Badge className={roleColors[member.role as keyof typeof roleColors]}>
-                            {member.role}
-                          </Badge>
+                          <RoleBadge role={member.role} />
                           {member.customRole && (
-                            <Badge
-                              className="border-0 text-white"
-                              style={{ backgroundColor: member.customRole.color || "#6366f1" }}
-                            >
-                              {member.customRole.name}
-                            </Badge>
+                            <RoleBadge
+                              role={member.customRole.name}
+                              color={member.customRole.color}
+                            />
                           )}
                         </div>
                       </div>
@@ -242,16 +234,12 @@ export default async function StaffPage({
                           </div>
                         </div>
                         <div className="flex items-center gap-3">
-                          <Badge className={roleColors[member.role as keyof typeof roleColors]}>
-                            {member.role}
-                          </Badge>
+                          <RoleBadge role={member.role} />
                           {member.customRole && (
-                            <Badge
-                              className="border-0 text-white"
-                              style={{ backgroundColor: member.customRole.color || "#6366f1" }}
-                            >
-                              {member.customRole.name}
-                            </Badge>
+                            <RoleBadge
+                              role={member.customRole.name}
+                              color={member.customRole.color}
+                            />
                           )}
                           {canManageStaff && (
                             <Button variant="outline" size="sm" asChild>
@@ -293,16 +281,12 @@ export default async function StaffPage({
                           </div>
                         </div>
                         <div className="flex items-center gap-3">
-                          <Badge className={roleColors[member.role as keyof typeof roleColors]}>
-                            {member.role}
-                          </Badge>
+                          <RoleBadge role={member.role} />
                           {member.customRole && (
-                            <Badge
-                              className="border-0 text-white"
-                              style={{ backgroundColor: member.customRole.color || "#6366f1" }}
-                            >
-                              {member.customRole.name}
-                            </Badge>
+                            <RoleBadge
+                              role={member.customRole.name}
+                              color={member.customRole.color}
+                            />
                           )}
                           {canManageStaff && (
                             <Button variant="outline" size="sm" asChild>
