@@ -37,6 +37,7 @@ import { Badge } from "@/components/ui/badge"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { format } from "date-fns"
 import { Plus, DollarSign, Clock, CheckCircle2, XCircle } from "lucide-react"
+import { PageLoading } from "@/components/ui/loading-spinner"
 
 interface PayrollEntry {
   id: string
@@ -254,9 +255,11 @@ export default function PayrollPage() {
 
   if (loading) {
     return (
-      <div className="container mx-auto p-6">
-        <div className="animate-pulse">Loading payroll...</div>
-      </div>
+      <VenueLayoutClient slug={slug}>
+        <div className="container mx-auto p-8">
+          <PageLoading text="Loading payroll..." />
+        </div>
+      </VenueLayoutClient>
     )
   }
 
@@ -290,314 +293,314 @@ export default function PayrollPage() {
           </div>
 
           <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
-          <DialogTrigger asChild>
-            <Button>
-              <Plus className="mr-2 h-4 w-4" />
-              Add Payroll Entry
-            </Button>
-          </DialogTrigger>
-          <DialogContent className="max-w-2xl">
-            <DialogHeader>
-              <DialogTitle>Create Payroll Entry</DialogTitle>
-              <DialogDescription>
-                Add a new payroll entry for a staff member
-              </DialogDescription>
-            </DialogHeader>
+            <DialogTrigger asChild>
+              <Button>
+                <Plus className="mr-2 h-4 w-4" />
+                Add Payroll Entry
+              </Button>
+            </DialogTrigger>
+            <DialogContent className="max-w-2xl">
+              <DialogHeader>
+                <DialogTitle>Create Payroll Entry</DialogTitle>
+                <DialogDescription>
+                  Add a new payroll entry for a staff member
+                </DialogDescription>
+              </DialogHeader>
 
-            <div className="space-y-4">
-              {/* Staff Selection */}
-              <div className="space-y-2">
-                <Label>Staff Member</Label>
-                <Select value={selectedStaff} onValueChange={setSelectedStaff}>
-                  <SelectTrigger>
-                    <SelectValue placeholder="Select staff member" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {staff.map((member) => (
-                      <SelectItem key={member.id} value={member.id}>
-                        {member.user?.displayName || member.user?.name || "Unknown"}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
-
-              {/* Payment Type */}
-              <div className="space-y-2">
-                <Label>Payment Type</Label>
-                <Select
-                  value={paymentType}
-                  onValueChange={(value) => setPaymentType(value as "FIXED_SALARY" | "HOURLY")}
-                >
-                  <SelectTrigger>
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="FIXED_SALARY">Fixed Salary</SelectItem>
-                    <SelectItem value="HOURLY">Hourly Rate</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-
-              {/* Base Rate */}
-              <div className="space-y-2">
-                <Label>{paymentType === "HOURLY" ? "Hourly Rate" : "Fixed Amount"}</Label>
-                <Input
-                  type="number"
-                  step="0.01"
-                  placeholder="0.00"
-                  value={baseRate}
-                  onChange={(e) => setBaseRate(e.target.value)}
-                />
-              </div>
-
-              {/* Hours Worked (Hourly only) */}
-              {paymentType === "HOURLY" && (
+              <div className="space-y-4">
+                {/* Staff Selection */}
                 <div className="space-y-2">
-                  <Label>Hours Worked</Label>
+                  <Label>Staff Member</Label>
+                  <Select value={selectedStaff} onValueChange={setSelectedStaff}>
+                    <SelectTrigger>
+                      <SelectValue placeholder="Select staff member" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {staff.map((member) => (
+                        <SelectItem key={member.id} value={member.id}>
+                          {member.user?.displayName || member.user?.name || "Unknown"}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+
+                {/* Payment Type */}
+                <div className="space-y-2">
+                  <Label>Payment Type</Label>
+                  <Select
+                    value={paymentType}
+                    onValueChange={(value) => setPaymentType(value as "FIXED_SALARY" | "HOURLY")}
+                  >
+                    <SelectTrigger>
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="FIXED_SALARY">Fixed Salary</SelectItem>
+                      <SelectItem value="HOURLY">Hourly Rate</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+
+                {/* Base Rate */}
+                <div className="space-y-2">
+                  <Label>{paymentType === "HOURLY" ? "Hourly Rate" : "Fixed Amount"}</Label>
                   <Input
                     type="number"
-                    step="0.25"
+                    step="0.01"
                     placeholder="0.00"
-                    value={hoursWorked}
-                    onChange={(e) => setHoursWorked(e.target.value)}
+                    value={baseRate}
+                    onChange={(e) => setBaseRate(e.target.value)}
                   />
                 </div>
-              )}
 
-              {/* Bonus Amount */}
-              <div className="space-y-2">
-                <Label>Bonus (Optional)</Label>
-                <Input
-                  type="number"
-                  step="0.01"
-                  placeholder="0.00"
-                  value={bonusAmount}
-                  onChange={(e) => setBonusAmount(e.target.value)}
-                />
-              </div>
+                {/* Hours Worked (Hourly only) */}
+                {paymentType === "HOURLY" && (
+                  <div className="space-y-2">
+                    <Label>Hours Worked</Label>
+                    <Input
+                      type="number"
+                      step="0.25"
+                      placeholder="0.00"
+                      value={hoursWorked}
+                      onChange={(e) => setHoursWorked(e.target.value)}
+                    />
+                  </div>
+                )}
 
-              {/* Period */}
-              <div className="grid grid-cols-2 gap-4">
+                {/* Bonus Amount */}
                 <div className="space-y-2">
-                  <Label>Period Start</Label>
+                  <Label>Bonus (Optional)</Label>
                   <Input
-                    type="date"
-                    value={periodStart}
-                    onChange={(e) => setPeriodStart(e.target.value)}
+                    type="number"
+                    step="0.01"
+                    placeholder="0.00"
+                    value={bonusAmount}
+                    onChange={(e) => setBonusAmount(e.target.value)}
                   />
                 </div>
+
+                {/* Period */}
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="space-y-2">
+                    <Label>Period Start</Label>
+                    <Input
+                      type="date"
+                      value={periodStart}
+                      onChange={(e) => setPeriodStart(e.target.value)}
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label>Period End</Label>
+                    <Input
+                      type="date"
+                      value={periodEnd}
+                      onChange={(e) => setPeriodEnd(e.target.value)}
+                    />
+                  </div>
+                </div>
+
+                {/* Notes */}
                 <div className="space-y-2">
-                  <Label>Period End</Label>
-                  <Input
-                    type="date"
-                    value={periodEnd}
-                    onChange={(e) => setPeriodEnd(e.target.value)}
+                  <Label>Notes (Optional)</Label>
+                  <Textarea
+                    placeholder="Add any additional notes..."
+                    value={notes}
+                    onChange={(e) => setNotes(e.target.value)}
                   />
                 </div>
-              </div>
 
-              {/* Notes */}
-              <div className="space-y-2">
-                <Label>Notes (Optional)</Label>
-                <Textarea
-                  placeholder="Add any additional notes..."
-                  value={notes}
-                  onChange={(e) => setNotes(e.target.value)}
-                />
-              </div>
-
-              {/* Total Preview */}
-              <div className="p-4 bg-muted rounded-lg">
-                <div className="flex justify-between items-center">
-                  <span className="font-semibold">Total Amount:</span>
-                  <span className="text-2xl font-bold">{calculateTotal()} Gil</span>
+                {/* Total Preview */}
+                <div className="p-4 bg-muted rounded-lg">
+                  <div className="flex justify-between items-center">
+                    <span className="font-semibold">Total Amount:</span>
+                    <span className="text-2xl font-bold">{calculateTotal()} Gil</span>
+                  </div>
                 </div>
               </div>
-            </div>
 
-            <DialogFooter>
-              <Button variant="outline" onClick={() => setIsDialogOpen(false)} disabled={isCreating}>
-                Cancel
-              </Button>
-              <Button
-                onClick={handleCreatePayroll}
-                disabled={!selectedStaff || !baseRate || !periodStart || !periodEnd || isCreating}
-              >
-                {isCreating ? "Creating..." : "Create Entry"}
-              </Button>
-            </DialogFooter>
-          </DialogContent>
-        </Dialog>
-      </div>
+              <DialogFooter>
+                <Button variant="outline" onClick={() => setIsDialogOpen(false)} disabled={isCreating}>
+                  Cancel
+                </Button>
+                <Button
+                  onClick={handleCreatePayroll}
+                  disabled={!selectedStaff || !baseRate || !periodStart || !periodEnd || isCreating}
+                >
+                  {isCreating ? "Creating..." : "Create Entry"}
+                </Button>
+              </DialogFooter>
+            </DialogContent>
+          </Dialog>
+        </div>
 
-      {/* Summary Cards */}
-      <div className="grid gap-4 md:grid-cols-3">
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Unpaid</CardTitle>
-            <XCircle className="h-4 w-4 text-muted-foreground" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">{Math.round(unpaidTotal).toLocaleString()} Gil</div>
-            <p className="text-xs text-muted-foreground">
-              {payrollEntries.filter((e) => !e.isPaid).length} entries
-            </p>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Paid</CardTitle>
-            <CheckCircle2 className="h-4 w-4 text-muted-foreground" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">{Math.round(paidTotal).toLocaleString()} Gil</div>
-            <p className="text-xs text-muted-foreground">
-              {payrollEntries.filter((e) => e.isPaid).length} entries
-            </p>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Total</CardTitle>
-            <DollarSign className="h-4 w-4 text-muted-foreground" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">
-              {Math.round(unpaidTotal + paidTotal).toLocaleString()} Gil
-            </div>
-            <p className="text-xs text-muted-foreground">
-              {payrollEntries.length} entries
-            </p>
-          </CardContent>
-        </Card>
-      </div>
-
-      {/* Filter Tabs */}
-      <div className="flex space-x-2">
-        <Button
-          variant={filter === "all" ? "default" : "outline"}
-          onClick={() => setFilter("all")}
-        >
-          All
-        </Button>
-        <Button
-          variant={filter === "unpaid" ? "default" : "outline"}
-          onClick={() => setFilter("unpaid")}
-        >
-          Unpaid
-        </Button>
-        <Button
-          variant={filter === "paid" ? "default" : "outline"}
-          onClick={() => setFilter("paid")}
-        >
-          Paid
-        </Button>
-      </div>
-
-      {/* Payroll Entries List */}
-      <div className="space-y-4">
-        {filteredEntries.length === 0 ? (
+        {/* Summary Cards */}
+        <div className="grid gap-4 md:grid-cols-3">
           <Card>
-            <CardContent className="p-8 text-center text-muted-foreground">
-              No payroll entries found. Click "Add Payroll Entry" to create one.
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+              <CardTitle className="text-sm font-medium">Unpaid</CardTitle>
+              <XCircle className="h-4 w-4 text-muted-foreground" />
+            </CardHeader>
+            <CardContent>
+              <div className="text-2xl font-bold">{Math.round(unpaidTotal).toLocaleString()} Gil</div>
+              <p className="text-xs text-muted-foreground">
+                {payrollEntries.filter((e) => !e.isPaid).length} entries
+              </p>
             </CardContent>
           </Card>
-        ) : (
-          filteredEntries.map((entry) => (
-            <Card key={entry.id}>
-              <CardContent className="p-6">
-                <div className="flex items-start justify-between">
-                  <div className="flex items-start space-x-4">
-                    <Avatar>
-                      <AvatarImage src={entry.membership.user?.image || undefined} />
-                      <AvatarFallback>
-                        {(entry.membership.user?.displayName ||
-                          entry.membership.user?.name ||
-                          "?")[0]}
-                      </AvatarFallback>
-                    </Avatar>
 
-                    <div className="space-y-1">
-                      <div className="flex items-center space-x-2">
-                        <h3 className="font-semibold">
-                          {entry.membership.user?.displayName ||
-                            entry.membership.user?.name ||
-                            "Unknown"}
-                        </h3>
-                        <Badge variant={entry.isPaid ? "default" : "secondary"}>
-                          {entry.isPaid ? "Paid" : "Unpaid"}
-                        </Badge>
-                        {entry.paymentType === "HOURLY" && (
-                          <Badge variant="outline">
-                            <Clock className="mr-1 h-3 w-3" />
-                            Hourly
-                          </Badge>
-                        )}
-                      </div>
+          <Card>
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+              <CardTitle className="text-sm font-medium">Paid</CardTitle>
+              <CheckCircle2 className="h-4 w-4 text-muted-foreground" />
+            </CardHeader>
+            <CardContent>
+              <div className="text-2xl font-bold">{Math.round(paidTotal).toLocaleString()} Gil</div>
+              <p className="text-xs text-muted-foreground">
+                {payrollEntries.filter((e) => e.isPaid).length} entries
+              </p>
+            </CardContent>
+          </Card>
 
-                      <p className="text-sm text-muted-foreground">
-                        {format(new Date(entry.periodStart), "MMM d, yyyy")} -{" "}
-                        {format(new Date(entry.periodEnd), "MMM d, yyyy")}
-                      </p>
+          <Card>
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+              <CardTitle className="text-sm font-medium">Total</CardTitle>
+              <DollarSign className="h-4 w-4 text-muted-foreground" />
+            </CardHeader>
+            <CardContent>
+              <div className="text-2xl font-bold">
+                {Math.round(unpaidTotal + paidTotal).toLocaleString()} Gil
+              </div>
+              <p className="text-xs text-muted-foreground">
+                {payrollEntries.length} entries
+              </p>
+            </CardContent>
+          </Card>
+        </div>
 
-                      {entry.paymentType === "HOURLY" && entry.hoursWorked && (
-                        <p className="text-sm">
-                          {entry.hoursWorked} hours @ {entry.baseRate} Gil/hr
-                        </p>
-                      )}
+        {/* Filter Tabs */}
+        <div className="flex space-x-2">
+          <Button
+            variant={filter === "all" ? "default" : "outline"}
+            onClick={() => setFilter("all")}
+          >
+            All
+          </Button>
+          <Button
+            variant={filter === "unpaid" ? "default" : "outline"}
+            onClick={() => setFilter("unpaid")}
+          >
+            Unpaid
+          </Button>
+          <Button
+            variant={filter === "paid" ? "default" : "outline"}
+            onClick={() => setFilter("paid")}
+          >
+            Paid
+          </Button>
+        </div>
 
-                      {entry.bonusAmount && parseFloat(entry.bonusAmount) > 0 && (
-                        <p className="text-sm text-green-600">
-                          + {entry.bonusAmount} Gil bonus
-                        </p>
-                      )}
-
-                      {entry.notes && (
-                        <p className="text-sm text-muted-foreground italic">{entry.notes}</p>
-                      )}
-
-                      {entry.isPaid && entry.paidAt && (
-                        <p className="text-xs text-muted-foreground">
-                          Paid on {format(new Date(entry.paidAt), "MMM d, yyyy")} by{" "}
-                          {entry.paidByUser?.displayName || entry.paidByUser?.name || "Unknown"}
-                        </p>
-                      )}
-                    </div>
-                  </div>
-
-                  <div className="flex flex-col items-end space-y-2">
-                    <div className="text-2xl font-bold">{entry.totalAmount} Gil</div>
-
-                    <Button
-                      variant={entry.isPaid ? "outline" : "default"}
-                      size="sm"
-                      onClick={() => handleMarkAsPaid(entry.id, entry.isPaid)}
-                      disabled={updatingId === entry.id}
-                    >
-                      {updatingId === entry.id ? (
-                        "Updating..."
-                      ) : entry.isPaid ? (
-                        <>
-                          <XCircle className="mr-2 h-4 w-4" />
-                          Mark Unpaid
-                        </>
-                      ) : (
-                        <>
-                          <CheckCircle2 className="mr-2 h-4 w-4" />
-                          Mark as Paid
-                        </>
-                      )}
-                    </Button>
-                  </div>
-                </div>
+        {/* Payroll Entries List */}
+        <div className="space-y-4">
+          {filteredEntries.length === 0 ? (
+            <Card>
+              <CardContent className="p-8 text-center text-muted-foreground">
+                No payroll entries found. Click "Add Payroll Entry" to create one.
               </CardContent>
             </Card>
-          ))
-        )}
-      </div>
+          ) : (
+            filteredEntries.map((entry) => (
+              <Card key={entry.id}>
+                <CardContent className="p-6">
+                  <div className="flex items-start justify-between">
+                    <div className="flex items-start space-x-4">
+                      <Avatar>
+                        <AvatarImage src={entry.membership.user?.image || undefined} />
+                        <AvatarFallback>
+                          {(entry.membership.user?.displayName ||
+                            entry.membership.user?.name ||
+                            "?")[0]}
+                        </AvatarFallback>
+                      </Avatar>
+
+                      <div className="space-y-1">
+                        <div className="flex items-center space-x-2">
+                          <h3 className="font-semibold">
+                            {entry.membership.user?.displayName ||
+                              entry.membership.user?.name ||
+                              "Unknown"}
+                          </h3>
+                          <Badge variant={entry.isPaid ? "default" : "secondary"}>
+                            {entry.isPaid ? "Paid" : "Unpaid"}
+                          </Badge>
+                          {entry.paymentType === "HOURLY" && (
+                            <Badge variant="outline">
+                              <Clock className="mr-1 h-3 w-3" />
+                              Hourly
+                            </Badge>
+                          )}
+                        </div>
+
+                        <p className="text-sm text-muted-foreground">
+                          {format(new Date(entry.periodStart), "MMM d, yyyy")} -{" "}
+                          {format(new Date(entry.periodEnd), "MMM d, yyyy")}
+                        </p>
+
+                        {entry.paymentType === "HOURLY" && entry.hoursWorked && (
+                          <p className="text-sm">
+                            {entry.hoursWorked} hours @ {entry.baseRate} Gil/hr
+                          </p>
+                        )}
+
+                        {entry.bonusAmount && parseFloat(entry.bonusAmount) > 0 && (
+                          <p className="text-sm text-green-600">
+                            + {entry.bonusAmount} Gil bonus
+                          </p>
+                        )}
+
+                        {entry.notes && (
+                          <p className="text-sm text-muted-foreground italic">{entry.notes}</p>
+                        )}
+
+                        {entry.isPaid && entry.paidAt && (
+                          <p className="text-xs text-muted-foreground">
+                            Paid on {format(new Date(entry.paidAt), "MMM d, yyyy")} by{" "}
+                            {entry.paidByUser?.displayName || entry.paidByUser?.name || "Unknown"}
+                          </p>
+                        )}
+                      </div>
+                    </div>
+
+                    <div className="flex flex-col items-end space-y-2">
+                      <div className="text-2xl font-bold">{entry.totalAmount} Gil</div>
+
+                      <Button
+                        variant={entry.isPaid ? "outline" : "default"}
+                        size="sm"
+                        onClick={() => handleMarkAsPaid(entry.id, entry.isPaid)}
+                        disabled={updatingId === entry.id}
+                      >
+                        {updatingId === entry.id ? (
+                          "Updating..."
+                        ) : entry.isPaid ? (
+                          <>
+                            <XCircle className="mr-2 h-4 w-4" />
+                            Mark Unpaid
+                          </>
+                        ) : (
+                          <>
+                            <CheckCircle2 className="mr-2 h-4 w-4" />
+                            Mark as Paid
+                          </>
+                        )}
+                      </Button>
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+            ))
+          )}
+        </div>
       </div>
     </VenueLayoutClient>
   )
