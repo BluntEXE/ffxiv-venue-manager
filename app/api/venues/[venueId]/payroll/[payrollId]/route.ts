@@ -23,9 +23,14 @@ export const PATCH = withRateLimit<{ params: Promise<{ venueId: string; payrollI
 
       const { venueId, payrollId } = await params
 
-      // Look up venue by ID (standard ID lookup)
-      const venue = await prisma.venue.findUnique({
-        where: { id: venueId },
+      // Look up venue by slug or ID
+      const venue = await prisma.venue.findFirst({
+        where: {
+          OR: [
+            { id: venueId },
+            { slug: venueId }
+          ]
+        },
       })
 
       if (!venue) {
@@ -213,9 +218,14 @@ export const DELETE = withRateLimit<{ params: Promise<{ venueId: string; payroll
 
       const { venueId, payrollId } = await params
 
-      // Look up venue by ID (standard ID lookup)
-      const venue = await prisma.venue.findUnique({
-        where: { id: venueId },
+      // Look up venue by slug or ID
+      const venue = await prisma.venue.findFirst({
+        where: {
+          OR: [
+            { id: venueId },
+            { slug: venueId }
+          ]
+        },
       })
 
       if (!venue) {

@@ -23,9 +23,14 @@ export const GET = withRateLimit<{ params: Promise<{ venueId: string }> }>(
 
       const { venueId } = await params
 
-      // Look up venue by ID (standard ID lookup)
-      const venue = await prisma.venue.findUnique({
-        where: { id: venueId },
+      // Look up venue by slug or ID
+      const venue = await prisma.venue.findFirst({
+        where: {
+          OR: [
+            { id: venueId },
+            { slug: venueId }
+          ]
+        },
       })
 
       if (!venue) {
@@ -123,9 +128,14 @@ export const POST = withRateLimit<{ params: Promise<{ venueId: string }> }>(
 
       const { venueId } = await params
 
-      // Look up venue by ID (standard ID lookup)
-      const venue = await prisma.venue.findUnique({
-        where: { id: venueId },
+      // Look up venue by slug or ID
+      const venue = await prisma.venue.findFirst({
+        where: {
+          OR: [
+            { id: venueId },
+            { slug: venueId }
+          ]
+        },
       })
 
       if (!venue) {

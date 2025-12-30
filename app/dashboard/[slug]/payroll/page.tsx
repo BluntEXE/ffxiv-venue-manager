@@ -319,7 +319,7 @@ export default function PayrollPage() {
 
               <div className="space-y-4">
                 {/* Manual Entry Toggle */}
-                <div className="flex items-center space-x-2 p-4 bg-muted rounded-lg">
+                <div className="flex items-center space-x-2 p-4 bg-muted rounded-lg border-2 border-border">
                   <Checkbox
                     id="manual-entry"
                     checked={isManualEntry}
