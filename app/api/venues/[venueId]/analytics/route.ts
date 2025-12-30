@@ -140,12 +140,20 @@ export const GET = withRateLimit<{ params: Promise<{ venueId: string }> }>(
         )
 
         // Calculate payroll for this event
-        // Match payroll entries where the event date falls within the payroll period
+        // Match payroll entries where the event date (day only) falls within the payroll period
         const eventDate = new Date(event.startTime)
+        const eventDayStart = new Date(eventDate.getFullYear(), eventDate.getMonth(), eventDate.getDate())
+
         const eventPayroll = allPayrollEntries.filter((entry) => {
           const periodStart = new Date(entry.periodStart)
           const periodEnd = new Date(entry.periodEnd)
-          return eventDate >= periodStart && eventDate <= periodEnd
+
+          // Set to start of day for comparison
+          const periodStartDay = new Date(periodStart.getFullYear(), periodStart.getMonth(), periodStart.getDate())
+          const periodEndDay = new Date(periodEnd.getFullYear(), periodEnd.getMonth(), periodEnd.getDate())
+
+          // Check if event day falls within period (inclusive)
+          return eventDayStart >= periodStartDay && eventDayStart <= periodEndDay
         })
 
         const payroll = eventPayroll.reduce(
