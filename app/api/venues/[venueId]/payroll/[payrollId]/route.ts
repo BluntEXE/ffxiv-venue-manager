@@ -73,6 +73,7 @@ export const PATCH = withRateLimit<{ params: Promise<{ venueId: string; payrollI
       const body = await request.json()
       const {
         isPaid,
+        manualEntryName,
         baseRate,
         hoursWorked,
         bonusAmount,
@@ -82,7 +83,30 @@ export const PATCH = withRateLimit<{ params: Promise<{ venueId: string; payrollI
       } = body
 
       // Prepare update data
-      const updateData: any = {}
+      const updateData: {
+        isPaid?: boolean
+        paidAt?: Date | null
+        paidBy?: string | null
+        manualEntryName?: string | null
+        baseRate?: Decimal
+        hoursWorked?: Decimal | null
+        bonusAmount?: Decimal | null
+        totalAmount?: Decimal
+        periodStart?: Date
+        periodEnd?: Date
+        notes?: string | null
+      } = {}
+
+      // Update manual entry name if provided (only for manual entries)
+      if (manualEntryName !== undefined && existingEntry.isManualEntry) {
+        if (manualEntryName && manualEntryName.trim().length > 255) {
+          return NextResponse.json(
+            { error: "Name must be 255 characters or less" },
+            { status: 400 }
+          )
+        }
+        updateData.manualEntryName = manualEntryName ? manualEntryName.trim() : null
+      }
 
       // Handle marking as paid/unpaid
       if (typeof isPaid === "boolean") {

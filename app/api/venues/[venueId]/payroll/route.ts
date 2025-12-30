@@ -158,6 +158,8 @@ export const POST = withRateLimit<{ params: Promise<{ venueId: string }> }>(
       const body = await request.json()
       const {
         membershipId,
+        isManualEntry,
+        manualEntryName,
         paymentType,
         baseRate,
         hoursWorked,
@@ -168,11 +170,36 @@ export const POST = withRateLimit<{ params: Promise<{ venueId: string }> }>(
       } = body
 
       // Validate required fields
-      if (!membershipId || !paymentType || !baseRate || !periodStart || !periodEnd) {
+      if (!paymentType || !baseRate || !periodStart || !periodEnd) {
         return NextResponse.json(
           { error: "Missing required fields" },
           { status: 400 }
         )
+      }
+
+      // Validate manual entry fields
+      if (isManualEntry) {
+        if (!manualEntryName || manualEntryName.trim() === "") {
+          return NextResponse.json(
+            { error: "Name is required for manual entries" },
+            { status: 400 }
+          )
+        }
+        // Validate length
+        if (manualEntryName.trim().length > 255) {
+          return NextResponse.json(
+            { error: "Name must be 255 characters or less" },
+            { status: 400 }
+          )
+        }
+      } else {
+        // Regular entry - membershipId is required
+        if (!membershipId) {
+          return NextResponse.json(
+            { error: "Staff member is required for non-manual entries" },
+            { status: 400 }
+          )
+        }
       }
 
       // Validate payment type
@@ -183,27 +210,82 @@ export const POST = withRateLimit<{ params: Promise<{ venueId: string }> }>(
         )
       }
 
-      // Validate hoursWorked for hourly payments
-      if (paymentType === "HOURLY" && !hoursWorked) {
+      // Validate numeric fields
+      const baseRateNum = parseFloat(baseRate)
+      if (isNaN(baseRateNum) || baseRateNum < 0 || baseRateNum > 999999999) {
         return NextResponse.json(
-          { error: "Hours worked is required for hourly payments" },
+          { error: "Invalid base rate. Must be a positive number" },
           { status: 400 }
         )
       }
 
-      // Verify the staff member exists in this venue
-      const staffMembership = await prisma.membership.findFirst({
-        where: {
-          id: membershipId,
-          venueId: venue.id,
-        },
-      })
+      // Validate hoursWorked for hourly payments
+      if (paymentType === "HOURLY") {
+        if (!hoursWorked) {
+          return NextResponse.json(
+            { error: "Hours worked is required for hourly payments" },
+            { status: 400 }
+          )
+        }
+        const hoursNum = parseFloat(hoursWorked)
+        if (isNaN(hoursNum) || hoursNum < 0 || hoursNum > 9999) {
+          return NextResponse.json(
+            { error: "Invalid hours worked. Must be a positive number" },
+            { status: 400 }
+          )
+        }
+      }
 
-      if (!staffMembership) {
+      // Validate bonus amount if provided
+      if (bonusAmount) {
+        const bonusNum = parseFloat(bonusAmount)
+        if (isNaN(bonusNum) || bonusNum < 0 || bonusNum > 999999999) {
+          return NextResponse.json(
+            { error: "Invalid bonus amount. Must be a positive number" },
+            { status: 400 }
+          )
+        }
+      }
+
+      // Validate dates
+      const startDate = new Date(periodStart)
+      const endDate = new Date(periodEnd)
+      if (isNaN(startDate.getTime()) || isNaN(endDate.getTime())) {
         return NextResponse.json(
-          { error: "Staff member not found in this venue" },
-          { status: 404 }
+          { error: "Invalid date format" },
+          { status: 400 }
         )
+      }
+      if (endDate < startDate) {
+        return NextResponse.json(
+          { error: "Period end must be after period start" },
+          { status: 400 }
+        )
+      }
+
+      // Validate notes length if provided
+      if (notes && notes.length > 10000) {
+        return NextResponse.json(
+          { error: "Notes must be 10,000 characters or less" },
+          { status: 400 }
+        )
+      }
+
+      // Verify the staff member exists in this venue (skip for manual entries)
+      if (!isManualEntry) {
+        const staffMembership = await prisma.membership.findFirst({
+          where: {
+            id: membershipId,
+            venueId: venue.id,
+          },
+        })
+
+        if (!staffMembership) {
+          return NextResponse.json(
+            { error: "Staff member not found in this venue" },
+            { status: 404 }
+          )
+        }
       }
 
       // Calculate total amount
@@ -221,7 +303,9 @@ export const POST = withRateLimit<{ params: Promise<{ venueId: string }> }>(
       const payrollEntry = await prisma.payrollEntry.create({
         data: {
           venueId: venue.id,
-          membershipId,
+          membershipId: isManualEntry ? null : membershipId,
+          isManualEntry: isManualEntry || false,
+          manualEntryName: isManualEntry ? manualEntryName.trim() : null,
           paymentType,
           baseRate: new Decimal(baseRate),
           hoursWorked: hoursWorked ? new Decimal(hoursWorked) : null,
@@ -229,7 +313,7 @@ export const POST = withRateLimit<{ params: Promise<{ venueId: string }> }>(
           totalAmount,
           periodStart: new Date(periodStart),
           periodEnd: new Date(periodEnd),
-          notes,
+          notes: notes || null,
         },
         include: {
           membership: {

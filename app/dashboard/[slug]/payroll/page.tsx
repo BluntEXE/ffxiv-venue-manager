@@ -51,6 +51,8 @@ interface PayrollEntry {
   isPaid: boolean
   paidAt: string | null
   notes: string | null
+  isManualEntry: boolean
+  manualEntryName: string | null
   membership: {
     id: string
     role: string
@@ -65,7 +67,7 @@ interface PayrollEntry {
       name: string
       color: string | null
     } | null
-  }
+  } | null
   paidByUser: {
     id: string
     name: string | null
@@ -104,6 +106,8 @@ export default function PayrollPage() {
   const [updatingId, setUpdatingId] = useState<string | null>(null)
 
   // Form state
+  const [isManualEntry, setIsManualEntry] = useState(false)
+  const [manualEntryName, setManualEntryName] = useState("")
   const [selectedStaff, setSelectedStaff] = useState("")
   const [paymentType, setPaymentType] = useState<"FIXED_SALARY" | "HOURLY">("FIXED_SALARY")
   const [baseRate, setBaseRate] = useState("")
@@ -176,7 +180,9 @@ export default function PayrollPage() {
           "Content-Type": "application/json",
         },
         body: JSON.stringify({
-          membershipId: selectedStaff,
+          isManualEntry,
+          manualEntryName: isManualEntry ? manualEntryName : null,
+          membershipId: isManualEntry ? null : selectedStaff,
           paymentType,
           baseRate: parseFloat(baseRate),
           hoursWorked: paymentType === "HOURLY" && hoursWorked ? parseFloat(hoursWorked) : null,
@@ -188,10 +194,13 @@ export default function PayrollPage() {
       })
 
       if (!response.ok) {
-        throw new Error("Failed to create payroll entry")
+        const errorData = await response.json()
+        throw new Error(errorData.error || "Failed to create payroll entry")
       }
 
       // Reset form
+      setIsManualEntry(false)
+      setManualEntryName("")
       setSelectedStaff("")
       setPaymentType("FIXED_SALARY")
       setBaseRate("")
@@ -206,7 +215,8 @@ export default function PayrollPage() {
       fetchPayrollEntries()
     } catch (error) {
       console.error("Error creating payroll entry:", error)
-      alert("Failed to create payroll entry")
+      const errorMessage = error instanceof Error ? error.message : "Failed to create payroll entry"
+      alert(errorMessage)
     } finally {
       setIsCreating(false)
     }
@@ -308,22 +318,58 @@ export default function PayrollPage() {
               </DialogHeader>
 
               <div className="space-y-4">
-                {/* Staff Selection */}
-                <div className="space-y-2">
-                  <Label>Staff Member</Label>
-                  <Select value={selectedStaff} onValueChange={setSelectedStaff}>
-                    <SelectTrigger>
-                      <SelectValue placeholder="Select staff member" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {staff.map((member) => (
-                        <SelectItem key={member.id} value={member.id}>
-                          {member.user?.displayName || member.user?.name || "Unknown"}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
+                {/* Manual Entry Toggle */}
+                <div className="flex items-center space-x-2 p-4 bg-muted rounded-lg">
+                  <Checkbox
+                    id="manual-entry"
+                    checked={isManualEntry}
+                    onCheckedChange={(checked) => {
+                      setIsManualEntry(checked as boolean)
+                      // Clear staff selection when switching to manual entry
+                      if (checked) setSelectedStaff("")
+                      // Clear manual name when switching to staff selection
+                      else setManualEntryName("")
+                    }}
+                  />
+                  <Label
+                    htmlFor="manual-entry"
+                    className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70 cursor-pointer"
+                  >
+                    Manual Entry (for temp DJs, contractors, etc.)
+                  </Label>
                 </div>
+
+                {/* Conditional: Staff Selection OR Manual Name Input */}
+                {!isManualEntry ? (
+                  <div className="space-y-2">
+                    <Label>Staff Member</Label>
+                    <Select value={selectedStaff} onValueChange={setSelectedStaff}>
+                      <SelectTrigger>
+                        <SelectValue placeholder="Select staff member" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {staff.map((member) => (
+                          <SelectItem key={member.id} value={member.id}>
+                            {member.user?.displayName || member.user?.name || "Unknown"}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+                ) : (
+                  <div className="space-y-2">
+                    <Label>Name</Label>
+                    <Input
+                      type="text"
+                      placeholder="Enter name (e.g., John Doe)"
+                      value={manualEntryName}
+                      onChange={(e) => setManualEntryName(e.target.value)}
+                    />
+                    <p className="text-sm text-muted-foreground">
+                      Enter the name of the temporary DJ or contractor
+                    </p>
+                  </div>
+                )}
 
                 {/* Payment Type */}
                 <div className="space-y-2">
@@ -425,7 +471,14 @@ export default function PayrollPage() {
                 </Button>
                 <Button
                   onClick={handleCreatePayroll}
-                  disabled={!selectedStaff || !baseRate || !periodStart || !periodEnd || isCreating}
+                  disabled={
+                    (!isManualEntry && !selectedStaff) ||
+                    (isManualEntry && !manualEntryName.trim()) ||
+                    !baseRate ||
+                    !periodStart ||
+                    !periodEnd ||
+                    isCreating
+                  }
                 >
                   {isCreating ? "Creating..." : "Create Entry"}
                 </Button>
@@ -515,21 +568,30 @@ export default function PayrollPage() {
                   <div className="flex items-start justify-between">
                     <div className="flex items-start space-x-4">
                       <Avatar>
-                        <AvatarImage src={entry.membership.user?.image || undefined} />
+                        <AvatarImage src={entry.isManualEntry ? undefined : entry.membership?.user?.image || undefined} />
                         <AvatarFallback>
-                          {(entry.membership.user?.displayName ||
-                            entry.membership.user?.name ||
-                            "?")[0]}
+                          {entry.isManualEntry
+                            ? (entry.manualEntryName || "?")[0].toUpperCase()
+                            : (entry.membership?.user?.displayName ||
+                                entry.membership?.user?.name ||
+                                "?")[0].toUpperCase()}
                         </AvatarFallback>
                       </Avatar>
 
                       <div className="space-y-1">
                         <div className="flex items-center space-x-2">
                           <h3 className="font-semibold">
-                            {entry.membership.user?.displayName ||
-                              entry.membership.user?.name ||
-                              "Unknown"}
+                            {entry.isManualEntry
+                              ? entry.manualEntryName || "Unknown"
+                              : entry.membership?.user?.displayName ||
+                                entry.membership?.user?.name ||
+                                "Unknown"}
                           </h3>
+                          {entry.isManualEntry && (
+                            <Badge variant="outline" className="bg-blue-50 text-blue-700 border-blue-200">
+                              Manual
+                            </Badge>
+                          )}
                           <Badge variant={entry.isPaid ? "default" : "secondary"}>
                             {entry.isPaid ? "Paid" : "Unpaid"}
                           </Badge>
@@ -572,7 +634,9 @@ export default function PayrollPage() {
                     </div>
 
                     <div className="flex flex-col items-end space-y-2">
-                      <div className="text-2xl font-bold">{entry.totalAmount} Gil</div>
+                      <div className="text-2xl font-bold">
+                        {Math.round(parseFloat(entry.totalAmount)).toLocaleString()} Gil
+                      </div>
 
                       <Button
                         variant={entry.isPaid ? "outline" : "default"}

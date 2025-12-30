@@ -415,9 +415,13 @@ enum PaymentType {
 }
 
 model PayrollEntry {
-  id           String @id @default(cuid())
+  id           String  @id @default(cuid())
   venueId      String
-  membershipId String // Staff member being paid
+  membershipId String? // Staff member being paid (null for manual entries)
+
+  // Manual entry support (for temp DJs, contractors, etc.)
+  isManualEntry   Boolean @default(false)
+  manualEntryName String? // Name of person for manual entries
 
   // Payment configuration
   paymentType PaymentType
@@ -441,13 +445,14 @@ model PayrollEntry {
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
-  venue      Venue      @relation(fields: [venueId], references: [id], onDelete: Cascade)
-  membership Membership @relation(fields: [membershipId], references: [id], onDelete: Cascade)
-  paidByUser User?      @relation("PayrollPaidBy", fields: [paidBy], references: [id])
+  venue      Venue       @relation(fields: [venueId], references: [id], onDelete: Cascade)
+  membership Membership? @relation(fields: [membershipId], references: [id], onDelete: Cascade)
+  paidByUser User?       @relation("PayrollPaidBy", fields: [paidBy], references: [id])
 
   @@index([venueId, periodEnd])
   @@index([membershipId, isPaid])
   @@index([venueId, isPaid])
+  @@index([venueId, isManualEntry])
   @@map("payroll_entries")
 }
 
