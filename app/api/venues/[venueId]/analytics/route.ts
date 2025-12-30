@@ -58,7 +58,7 @@ export const GET = withRateLimit<{ params: Promise<{ venueId: string }> }>(
       const past30Days = subDays(now, 30)
 
       // Fetch all data in parallel for better performance
-      const [allEvents, allTransactions, allPatronLogs] = await Promise.all([
+      const [allEvents, allTransactions, allPatronLogs, allPayrollEntries] = await Promise.all([
         // Get all events with basic info
         prisma.event.findMany({
           where: { venueId: venue.id },
@@ -101,6 +101,21 @@ export const GET = withRateLimit<{ params: Promise<{ venueId: string }> }>(
           },
           orderBy: { timestamp: "asc" },
         }),
+
+        // Get all paid payroll entries
+        prisma.payrollEntry.findMany({
+          where: {
+            venueId: venue.id,
+            isPaid: true // Only paid payroll counts as actual expense
+          },
+          select: {
+            id: true,
+            totalAmount: true,
+            periodStart: true,
+            periodEnd: true,
+          },
+          orderBy: { periodEnd: "desc" },
+        }),
       ])
 
       // Process events for different views
@@ -114,21 +129,39 @@ export const GET = withRateLimit<{ params: Promise<{ venueId: string }> }>(
       // Last 7 events for patron chart
       const last7Events = completedOrActiveEvents.slice(0, 7).reverse()
 
-      // Calculate revenue per event
+      // Calculate revenue and payroll per event
       const revenueByEvent = last10Events.map((event) => {
         const eventTransactions = allTransactions.filter(
           (t) => t.eventId === event.id
         )
-        const total = eventTransactions.reduce(
+        const revenue = eventTransactions.reduce(
           (sum, t) => sum + Number(t.amount),
           0
         )
+
+        // Calculate payroll for this event
+        // Match payroll entries where the event date falls within the payroll period
+        const eventDate = new Date(event.startTime)
+        const eventPayroll = allPayrollEntries.filter((entry) => {
+          const periodStart = new Date(entry.periodStart)
+          const periodEnd = new Date(entry.periodEnd)
+          return eventDate >= periodStart && eventDate <= periodEnd
+        })
+
+        const payroll = eventPayroll.reduce(
+          (sum, entry) => sum + Number(entry.totalAmount),
+          0
+        )
+
+        const netProfit = revenue - payroll
 
         return {
           eventId: event.id,
           eventTitle: event.title,
           startTime: event.startTime,
-          revenue: total,
+          revenue,
+          payroll,
+          netProfit,
         }
       })
 

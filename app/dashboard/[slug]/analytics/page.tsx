@@ -13,6 +13,8 @@ import {
   CartesianGrid,
   Cell,
   Legend,
+  Line,
+  LineChart,
   Pie,
   PieChart,
   ResponsiveContainer,
@@ -21,7 +23,7 @@ import {
   YAxis,
 } from "recharts"
 import { format } from "date-fns"
-import { TrendingUp, DollarSign, Users, Calendar, Target } from "lucide-react"
+import { TrendingUp, DollarSign, Users, Calendar, Target, Download } from "lucide-react"
 import { PageLoading } from "@/components/ui/loading-spinner"
 import { AttendanceOverview } from "@/components/analytics/attendance-overview"
 
@@ -49,6 +51,8 @@ interface AnalyticsData {
     eventTitle: string
     startTime: string
     revenue: number
+    payroll: number
+    netProfit: number
   }>
   serviceRevenue: Array<{
     name: string
@@ -124,12 +128,61 @@ export default function AnalyticsPage() {
     }
   }
 
+  const exportToCSV = () => {
+    if (!analyticsData) return
+
+    // Prepare CSV data
+    const csvHeaders = ["Event", "Date", "Revenue (gil)", "Payroll (gil)", "Net Profit/Loss (gil)", "Profit Margin (%)"]
+    const csvRows = analyticsData.revenueByEvent.map((event) => {
+      const profitMargin = event.revenue > 0 ? ((event.netProfit / event.revenue) * 100).toFixed(2) : "0.00"
+      return [
+        `"${event.eventTitle}"`,
+        format(new Date(event.startTime), "MMM dd, yyyy"),
+        event.revenue.toFixed(2),
+        event.payroll.toFixed(2),
+        event.netProfit.toFixed(2),
+        profitMargin
+      ].join(",")
+    })
+
+    // Add summary row
+    const totalRevenue = analyticsData.revenueByEvent.reduce((sum, e) => sum + e.revenue, 0)
+    const totalPayroll = analyticsData.revenueByEvent.reduce((sum, e) => sum + e.payroll, 0)
+    const totalProfit = totalRevenue - totalPayroll
+    const overallMargin = totalRevenue > 0 ? ((totalProfit / totalRevenue) * 100).toFixed(2) : "0.00"
+
+    csvRows.push("") // Empty row
+    csvRows.push([
+      "\"TOTAL (Last 10 Events)\"",
+      "",
+      totalRevenue.toFixed(2),
+      totalPayroll.toFixed(2),
+      totalProfit.toFixed(2),
+      overallMargin
+    ].join(","))
+
+    const csvContent = [csvHeaders.join(","), ...csvRows].join("\n")
+
+    // Download CSV
+    const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" })
+    const link = document.createElement("a")
+    const url = URL.createObjectURL(blob)
+    link.setAttribute("href", url)
+    link.setAttribute("download", `${analyticsData.venueName}-financial-report-${format(new Date(), "yyyy-MM-dd")}.csv`)
+    link.style.visibility = "hidden"
+    document.body.appendChild(link)
+    link.click()
+    document.body.removeChild(link)
+  }
+
   // Transform data for charts
-  const revenueData = analyticsData?.revenueByEvent.map((e) => ({
+  const financialData = analyticsData?.revenueByEvent.map((e) => ({
     date: format(new Date(e.startTime), "MMM dd"),
     fullDate: new Date(e.startTime),
     eventTitle: e.eventTitle,
     revenue: e.revenue,
+    payroll: e.payroll,
+    netProfit: e.netProfit,
   })) || []
 
   const serviceRevenue = analyticsData?.serviceRevenue.map((s) => ({
@@ -349,27 +402,30 @@ export default function AnalyticsPage() {
 
         {/* Charts Grid */}
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-          {/* Revenue Trend (Last 10 Events) */}
+          {/* Financial Performance Chart (Last 10 Events) */}
           <Card className="lg:col-span-2">
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <TrendingUp className="h-5 w-5 text-primary" />
-                Revenue by Event (Last 10)
-              </CardTitle>
-              <CardDescription>
-                Revenue per event over recent events
-              </CardDescription>
+            <CardHeader className="flex flex-row items-center justify-between">
+              <div>
+                <CardTitle className="flex items-center gap-2">
+                  <TrendingUp className="h-5 w-5 text-primary" />
+                  Financial Performance (Last 10 Events)
+                </CardTitle>
+                <CardDescription>
+                  Revenue, payroll, and net profit at a glance
+                </CardDescription>
+              </div>
+              <button
+                onClick={exportToCSV}
+                className="flex items-center gap-2 px-3 py-2 text-sm bg-primary text-primary-foreground rounded-md hover:bg-primary/90 transition-colors"
+              >
+                <Download className="h-4 w-4" />
+                Export CSV
+              </button>
             </CardHeader>
             <CardContent>
-              <div className="h-[300px] w-full">
+              <div className="h-[350px] w-full">
                 <ResponsiveContainer width="100%" height="100%">
-                  <AreaChart data={revenueData} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
-                    <defs>
-                      <linearGradient id="colorRevenue" x1="0" y1="0" x2="0" y2="1">
-                        <stop offset="5%" stopColor="#8b5cf6" stopOpacity={0.3} />
-                        <stop offset="95%" stopColor="#8b5cf6" stopOpacity={0} />
-                      </linearGradient>
-                    </defs>
+                  <LineChart data={financialData} margin={{ top: 10, right: 30, left: 0, bottom: 0 }}>
                     <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#313244" />
                     <XAxis
                       dataKey="date"
@@ -386,19 +442,111 @@ export default function AnalyticsPage() {
                       fontSize={12}
                       tick={{ fill: "#9399b2" }}
                       stroke="#9399b2"
-                      tickFormatter={(value) => `${value / 1000}k`}
+                      tickFormatter={(value) => `${value >= 0 ? '' : '-'}${Math.abs(value) / 1000}k`}
                     />
-                    <Tooltip content={<CustomTooltip />} cursor={{ stroke: "#8b5cf6", strokeWidth: 1, strokeDasharray: "4 4" }} />
-                    <Area
+                    <Tooltip
+                      content={({ active, payload, label }) => {
+                        if (active && payload && payload.length) {
+                          return (
+                            <div className="rounded-lg border bg-background/95 p-3 shadow-xl backdrop-blur-sm ring-1 ring-black/5">
+                              <p className="mb-2 text-sm font-semibold">{label}</p>
+                              <p className="text-xs text-muted-foreground mb-2">{payload[0]?.payload.eventTitle}</p>
+                              {payload.map((entry: any, index: number) => (
+                                <div key={index} className="flex items-center justify-between gap-4 text-xs mb-1">
+                                  <div className="flex items-center gap-2">
+                                    <span
+                                      className="block h-2 w-2 rounded-full"
+                                      style={{ backgroundColor: entry.color }}
+                                    />
+                                    <span className="text-muted-foreground">{entry.name}:</span>
+                                  </div>
+                                  <span className="font-medium text-foreground">
+                                    {entry.value.toLocaleString()} gil
+                                  </span>
+                                </div>
+                              ))}
+                            </div>
+                          )
+                        }
+                        return null
+                      }}
+                      cursor={{ stroke: "#8b5cf6", strokeWidth: 1, strokeDasharray: "4 4" }}
+                    />
+                    <Legend
+                      verticalAlign="top"
+                      height={36}
+                      iconType="line"
+                      wrapperStyle={{ paddingBottom: "10px" }}
+                    />
+                    <Line
                       type="monotone"
                       dataKey="revenue"
+                      name="Revenue"
                       stroke="#8b5cf6"
-                      strokeWidth={2}
-                      fillOpacity={1}
-                      fill="url(#colorRevenue)"
+                      strokeWidth={3}
+                      dot={{ fill: "#8b5cf6", r: 4 }}
+                      activeDot={{ r: 6 }}
                     />
-                  </AreaChart>
+                    <Line
+                      type="monotone"
+                      dataKey="payroll"
+                      name="Payroll"
+                      stroke="#f59e0b"
+                      strokeWidth={3}
+                      dot={{ fill: "#f59e0b", r: 4 }}
+                      activeDot={{ r: 6 }}
+                    />
+                    <Line
+                      type="monotone"
+                      dataKey="netProfit"
+                      name="Net Profit"
+                      stroke="#10b981"
+                      strokeWidth={3}
+                      dot={(props: any) => {
+                        const { cx, cy, payload } = props
+                        const isNegative = payload.netProfit < 0
+                        return (
+                          <circle
+                            cx={cx}
+                            cy={cy}
+                            r={4}
+                            fill={isNegative ? "#ef4444" : "#10b981"}
+                            stroke={isNegative ? "#ef4444" : "#10b981"}
+                          />
+                        )
+                      }}
+                      activeDot={{ r: 6 }}
+                      strokeDasharray={(props: any) => {
+                        // You can't directly conditionally style the line, but dots will show red when negative
+                        return undefined
+                      }}
+                    />
+                  </LineChart>
                 </ResponsiveContainer>
+              </div>
+              <div className="mt-4 grid grid-cols-3 gap-4 text-center border-t pt-4">
+                <div>
+                  <p className="text-xs text-muted-foreground mb-1">Total Revenue</p>
+                  <p className="text-sm font-semibold text-purple-600">
+                    {financialData.reduce((sum, d) => sum + d.revenue, 0).toLocaleString()} gil
+                  </p>
+                </div>
+                <div>
+                  <p className="text-xs text-muted-foreground mb-1">Total Payroll</p>
+                  <p className="text-sm font-semibold text-orange-600">
+                    {financialData.reduce((sum, d) => sum + d.payroll, 0).toLocaleString()} gil
+                  </p>
+                </div>
+                <div>
+                  <p className="text-xs text-muted-foreground mb-1">Net Profit</p>
+                  <p className={`text-sm font-semibold ${
+                    financialData.reduce((sum, d) => sum + d.netProfit, 0) >= 0
+                      ? 'text-green-600'
+                      : 'text-red-600'
+                  }`}>
+                    {financialData.reduce((sum, d) => sum + d.netProfit, 0).toLocaleString()} gil
+                  </p>
+                </div>
               </div>
             </CardContent>
           </Card>
