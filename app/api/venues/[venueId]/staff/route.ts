@@ -22,9 +22,14 @@ export const GET = withRateLimit<{ params: Promise<{ venueId: string }> }>(
       const { params } = context
       const { venueId } = await params
 
-      // Look up venue by ID
-      const venue = await prisma.venue.findUnique({
-        where: { id: venueId },
+      // Look up venue by slug or ID
+      const venue = await prisma.venue.findFirst({
+        where: {
+          OR: [
+            { id: venueId },
+            { slug: venueId }
+          ]
+        },
       })
 
       if (!venue) {
@@ -46,9 +51,13 @@ export const GET = withRateLimit<{ params: Promise<{ venueId: string }> }>(
         )
       }
 
-      // Get all staff members
+      // Get all staff members (active with user accounts)
       const staff = await prisma.membership.findMany({
-        where: { venueId: venue.id },
+        where: {
+          venueId: venue.id,
+          status: "active", // Only active members
+          userId: { not: null }, // Only members with linked Discord accounts
+        },
         include: {
           user: {
             select: {
@@ -56,6 +65,7 @@ export const GET = withRateLimit<{ params: Promise<{ venueId: string }> }>(
               name: true,
               image: true,
               discordId: true,
+              displayName: true,
             },
           },
           customRole: true,

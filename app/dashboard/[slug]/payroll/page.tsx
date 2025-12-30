@@ -165,7 +165,8 @@ export default function PayrollPage() {
       }
 
       const data = await response.json()
-      setStaff(data.filter((s: StaffMember) => s.user))
+      // API already filters for active members with user accounts
+      setStaff(data)
     } catch (error) {
       console.error("Error fetching staff:", error)
     }
