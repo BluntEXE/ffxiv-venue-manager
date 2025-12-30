@@ -5,6 +5,7 @@ import { useParams } from "next/navigation"
 import { VenueLayoutClient } from "@/components/venue-layout-client"
 import { Breadcrumb } from "@/components/breadcrumb"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
 import {
   Area,
   AreaChart,
@@ -13,8 +14,6 @@ import {
   CartesianGrid,
   Cell,
   Legend,
-  Line,
-  LineChart,
   Pie,
   PieChart,
   ResponsiveContainer,
@@ -402,16 +401,16 @@ export default function AnalyticsPage() {
 
         {/* Charts Grid */}
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-          {/* Financial Performance Chart (Last 10 Events) */}
+          {/* Net Profit/Loss Chart (Last 10 Events) */}
           <Card className="lg:col-span-2">
             <CardHeader className="flex flex-row items-center justify-between">
               <div>
                 <CardTitle className="flex items-center gap-2">
                   <TrendingUp className="h-5 w-5 text-primary" />
-                  Financial Performance (Last 10 Events)
+                  Net Profit/Loss by Event (Last 10)
                 </CardTitle>
                 <CardDescription>
-                  Revenue, payroll, and net profit at a glance
+                  Revenue minus payroll expenses per event
                 </CardDescription>
               </div>
               <button
@@ -423,9 +422,15 @@ export default function AnalyticsPage() {
               </button>
             </CardHeader>
             <CardContent>
-              <div className="h-[350px] w-full">
+              <div className="h-[300px] w-full">
                 <ResponsiveContainer width="100%" height="100%">
-                  <LineChart data={financialData} margin={{ top: 10, right: 30, left: 0, bottom: 0 }}>
+                  <AreaChart data={financialData} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
+                    <defs>
+                      <linearGradient id="colorProfit" x1="0" y1="0" x2="0" y2="1">
+                        <stop offset="5%" stopColor="#10b981" stopOpacity={0.3} />
+                        <stop offset="95%" stopColor="#10b981" stopOpacity={0} />
+                      </linearGradient>
+                    </defs>
                     <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#313244" />
                     <XAxis
                       dataKey="date"
@@ -445,104 +450,46 @@ export default function AnalyticsPage() {
                       tickFormatter={(value) => `${value >= 0 ? '' : '-'}${Math.abs(value) / 1000}k`}
                     />
                     <Tooltip
-                      content={({ active, payload, label }) => {
+                      content={({ active, payload, label }: any) => {
                         if (active && payload && payload.length) {
+                          const data = payload[0].payload
                           return (
                             <div className="rounded-lg border bg-background/95 p-3 shadow-xl backdrop-blur-sm ring-1 ring-black/5">
-                              <p className="mb-2 text-sm font-semibold">{label}</p>
-                              <p className="text-xs text-muted-foreground mb-2">{payload[0]?.payload.eventTitle}</p>
-                              {payload.map((entry: any, index: number) => (
-                                <div key={index} className="flex items-center justify-between gap-4 text-xs mb-1">
-                                  <div className="flex items-center gap-2">
-                                    <span
-                                      className="block h-2 w-2 rounded-full"
-                                      style={{ backgroundColor: entry.color }}
-                                    />
-                                    <span className="text-muted-foreground">{entry.name}:</span>
-                                  </div>
-                                  <span className="font-medium text-foreground">
-                                    {entry.value.toLocaleString()} gil
+                              <p className="mb-1 text-sm font-semibold">{label}</p>
+                              <p className="text-xs text-muted-foreground mb-2">{data.eventTitle}</p>
+                              <div className="space-y-1">
+                                <div className="flex items-center justify-between gap-4 text-xs">
+                                  <span className="text-muted-foreground">Revenue:</span>
+                                  <span className="font-medium text-purple-600">{data.revenue.toLocaleString()} gil</span>
+                                </div>
+                                <div className="flex items-center justify-between gap-4 text-xs">
+                                  <span className="text-muted-foreground">Payroll:</span>
+                                  <span className="font-medium text-orange-600">{data.payroll.toLocaleString()} gil</span>
+                                </div>
+                                <div className="flex items-center justify-between gap-4 text-xs border-t pt-1">
+                                  <span className="text-muted-foreground font-semibold">Net Profit:</span>
+                                  <span className={`font-semibold ${data.netProfit >= 0 ? 'text-green-600' : 'text-red-600'}`}>
+                                    {data.netProfit >= 0 ? '+' : ''}{data.netProfit.toLocaleString()} gil
                                   </span>
                                 </div>
-                              ))}
+                              </div>
                             </div>
                           )
                         }
                         return null
                       }}
-                      cursor={{ stroke: "#8b5cf6", strokeWidth: 1, strokeDasharray: "4 4" }}
+                      cursor={{ stroke: "#10b981", strokeWidth: 1, strokeDasharray: "4 4" }}
                     />
-                    <Legend
-                      verticalAlign="top"
-                      height={36}
-                      iconType="line"
-                      wrapperStyle={{ paddingBottom: "10px" }}
-                    />
-                    <Line
-                      type="monotone"
-                      dataKey="revenue"
-                      name="Revenue"
-                      stroke="#8b5cf6"
-                      strokeWidth={3}
-                      dot={{ fill: "#8b5cf6", r: 4 }}
-                      activeDot={{ r: 6 }}
-                    />
-                    <Line
-                      type="monotone"
-                      dataKey="payroll"
-                      name="Payroll"
-                      stroke="#f59e0b"
-                      strokeWidth={3}
-                      dot={{ fill: "#f59e0b", r: 4 }}
-                      activeDot={{ r: 6 }}
-                    />
-                    <Line
+                    <Area
                       type="monotone"
                       dataKey="netProfit"
-                      name="Net Profit"
                       stroke="#10b981"
-                      strokeWidth={3}
-                      dot={(props: any) => {
-                        const { cx, cy, payload } = props
-                        const isNegative = payload.netProfit < 0
-                        return (
-                          <circle
-                            cx={cx}
-                            cy={cy}
-                            r={4}
-                            fill={isNegative ? "#ef4444" : "#10b981"}
-                            stroke={isNegative ? "#ef4444" : "#10b981"}
-                          />
-                        )
-                      }}
-                      activeDot={{ r: 6 }}
+                      strokeWidth={2}
+                      fillOpacity={1}
+                      fill="url(#colorProfit)"
                     />
-                  </LineChart>
+                  </AreaChart>
                 </ResponsiveContainer>
-              </div>
-              <div className="mt-4 grid grid-cols-3 gap-4 text-center border-t pt-4">
-                <div>
-                  <p className="text-xs text-muted-foreground mb-1">Total Revenue</p>
-                  <p className="text-sm font-semibold text-purple-600">
-                    {financialData.reduce((sum, d) => sum + d.revenue, 0).toLocaleString()} gil
-                  </p>
-                </div>
-                <div>
-                  <p className="text-xs text-muted-foreground mb-1">Total Payroll</p>
-                  <p className="text-sm font-semibold text-orange-600">
-                    {financialData.reduce((sum, d) => sum + d.payroll, 0).toLocaleString()} gil
-                  </p>
-                </div>
-                <div>
-                  <p className="text-xs text-muted-foreground mb-1">Net Profit</p>
-                  <p className={`text-sm font-semibold ${
-                    financialData.reduce((sum, d) => sum + d.netProfit, 0) >= 0
-                      ? 'text-green-600'
-                      : 'text-red-600'
-                  }`}>
-                    {financialData.reduce((sum, d) => sum + d.netProfit, 0).toLocaleString()} gil
-                  </p>
-                </div>
               </div>
             </CardContent>
           </Card>
@@ -644,6 +591,94 @@ export default function AnalyticsPage() {
           <div className="lg:col-span-2">
             <AttendanceOverview data={analyticsData?.attendanceByHour || []} />
           </div>
+
+          {/* Detailed Financial Table - Full Width */}
+          <Card className="lg:col-span-2">
+            <CardHeader>
+              <CardTitle>Detailed Financial Breakdown</CardTitle>
+              <CardDescription>
+                Revenue, payroll, and profit analysis for each event
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <div className="rounded-md border">
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead>Event</TableHead>
+                      <TableHead>Date</TableHead>
+                      <TableHead className="text-right">Revenue</TableHead>
+                      <TableHead className="text-right">Payroll</TableHead>
+                      <TableHead className="text-right">Net Profit/Loss</TableHead>
+                      <TableHead className="text-right">Margin</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {analyticsData?.revenueByEvent && analyticsData.revenueByEvent.length > 0 ? (
+                      analyticsData.revenueByEvent.map((event) => {
+                        const profitMargin = event.revenue > 0 ? ((event.netProfit / event.revenue) * 100).toFixed(1) : "0.0"
+                        return (
+                          <TableRow key={event.eventId}>
+                            <TableCell className="font-medium">{event.eventTitle}</TableCell>
+                            <TableCell className="text-muted-foreground">
+                              {format(new Date(event.startTime), "MMM dd, yyyy")}
+                            </TableCell>
+                            <TableCell className="text-right font-medium text-purple-600">
+                              {event.revenue.toLocaleString()} gil
+                            </TableCell>
+                            <TableCell className="text-right font-medium text-orange-600">
+                              {event.payroll.toLocaleString()} gil
+                            </TableCell>
+                            <TableCell className={`text-right font-semibold ${
+                              event.netProfit >= 0 ? 'text-green-600' : 'text-red-600'
+                            }`}>
+                              {event.netProfit >= 0 ? '+' : ''}{event.netProfit.toLocaleString()} gil
+                            </TableCell>
+                            <TableCell className={`text-right font-medium ${
+                              parseFloat(profitMargin) >= 0 ? 'text-green-600' : 'text-red-600'
+                            }`}>
+                              {profitMargin}%
+                            </TableCell>
+                          </TableRow>
+                        )
+                      })
+                    ) : (
+                      <TableRow>
+                        <TableCell colSpan={6} className="text-center text-muted-foreground py-8">
+                          No event data available
+                        </TableCell>
+                      </TableRow>
+                    )}
+                    {/* Total Row */}
+                    {analyticsData?.revenueByEvent && analyticsData.revenueByEvent.length > 0 && (
+                      <TableRow className="bg-muted/50 font-semibold border-t-2">
+                        <TableCell colSpan={2}>TOTAL (Last 10 Events)</TableCell>
+                        <TableCell className="text-right text-purple-600">
+                          {analyticsData.revenueByEvent.reduce((sum, e) => sum + e.revenue, 0).toLocaleString()} gil
+                        </TableCell>
+                        <TableCell className="text-right text-orange-600">
+                          {analyticsData.revenueByEvent.reduce((sum, e) => sum + e.payroll, 0).toLocaleString()} gil
+                        </TableCell>
+                        <TableCell className={`text-right ${
+                          analyticsData.revenueByEvent.reduce((sum, e) => sum + e.netProfit, 0) >= 0
+                            ? 'text-green-600'
+                            : 'text-red-600'
+                        }`}>
+                          {analyticsData.revenueByEvent.reduce((sum, e) => sum + e.netProfit, 0) >= 0 ? '+' : ''}
+                          {analyticsData.revenueByEvent.reduce((sum, e) => sum + e.netProfit, 0).toLocaleString()} gil
+                        </TableCell>
+                        <TableCell className={`text-right ${
+                          analyticsData.financial.profitMargin >= 0 ? 'text-green-600' : 'text-red-600'
+                        }`}>
+                          {analyticsData.financial.profitMargin.toFixed(1)}%
+                        </TableCell>
+                      </TableRow>
+                    )}
+                  </TableBody>
+                </Table>
+              </div>
+            </CardContent>
+          </Card>
         </div>
       </div>
     </VenueLayoutClient>

@@ -10,9 +10,11 @@ interface DashboardAnalyticsProps {
   venueId: string
 }
 
-interface RevenueData {
+interface FinancialData {
   date: string
-  amount: number
+  netProfit: number
+  revenue: number
+  payroll: number
   eventTitle?: string
 }
 
@@ -55,7 +57,7 @@ const CustomTooltip = ({ active, payload, label }: any) => {
 }
 
 export function DashboardAnalytics({ venueId }: DashboardAnalyticsProps) {
-  const [revenueData, setRevenueData] = useState<RevenueData[]>([])
+  const [financialData, setFinancialData] = useState<FinancialData[]>([])
   const [taskStats, setTaskStats] = useState<TaskStats | null>(null)
   const [upcomingEvents, setUpcomingEvents] = useState<UpcomingEvent[]>([])
   const [isLoading, setIsLoading] = useState(true)
@@ -66,36 +68,25 @@ export function DashboardAnalytics({ venueId }: DashboardAnalyticsProps) {
 
   const fetchAnalytics = async () => {
     try {
-      // Fetch all events to get the last 7 with data
+      // Fetch analytics data (includes per-event financial data)
+      const analyticsResponse = await fetch(`/api/venues/${venueId}/analytics`)
+      const analyticsData = await analyticsResponse.json()
+
+      // Transform to last 7 events for overview chart
+      const last7Events = analyticsData.revenueByEvent.slice(-7)
+      const financial = last7Events.map((event: any) => ({
+        date: format(new Date(event.startTime), "MMM dd"),
+        eventTitle: event.eventTitle,
+        netProfit: event.netProfit,
+        revenue: event.revenue,
+        payroll: event.payroll,
+      }))
+
+      setFinancialData(financial)
+
+      // Fetch all events for upcoming events section
       const eventsResponse = await fetch(`/api/venues/${venueId}/events`)
       const allEvents = await eventsResponse.json()
-
-      // Filter to completed/active events and sort by start time (most recent first)
-      const relevantEvents = allEvents
-        .filter((e: any) => e.status === "COMPLETED" || e.status === "ACTIVE")
-        .sort((a: any, b: any) => new Date(b.startTime).getTime() - new Date(a.startTime).getTime())
-        .slice(0, 7) // Last 7 events
-        .reverse() // Oldest to newest for chart
-
-      // Fetch revenue for each event
-      const revenuePromises = relevantEvents.map(async (event: any) => {
-        const response = await fetch(`/api/venues/${venueId}/transactions`)
-        const data = await response.json()
-        const transactions = data.transactions || []
-
-        // Filter transactions for this event
-        const eventTransactions = transactions.filter((t: any) => t.eventId === event.id)
-        const total = eventTransactions.reduce((sum: number, t: any) => sum + Number(t.amount), 0)
-
-        return {
-          date: format(new Date(event.startTime), "MMM dd"),
-          eventTitle: event.title,
-          amount: total,
-        }
-      })
-
-      const revenue = await Promise.all(revenuePromises)
-      setRevenueData(revenue)
 
       // Fetch task statistics
       const tasksResponse = await fetch(`/api/venues/${venueId}/tasks`)
@@ -108,7 +99,7 @@ export function DashboardAnalytics({ venueId }: DashboardAnalyticsProps) {
         inProgress: tasks.filter((t: any) => t.status === "IN_PROGRESS").length,
       })
 
-      // Get upcoming events (using already-fetched events)
+      // Get upcoming events
       const upcoming = allEvents
         .filter((e: any) => new Date(e.startTime) > new Date())
         .sort((a: any, b: any) => new Date(a.startTime).getTime() - new Date(b.startTime).getTime())
@@ -134,32 +125,38 @@ export function DashboardAnalytics({ venueId }: DashboardAnalyticsProps) {
     )
   }
 
-  const totalRevenue = revenueData.reduce((sum, day) => sum + day.amount, 0)
+  const totalNetProfit = financialData.reduce((sum, day) => sum + day.netProfit, 0)
   const completionRate = taskStats && taskStats.total > 0
     ? Math.round((taskStats.completed / taskStats.total) * 100)
     : 0
 
   return (
     <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-      {/* Revenue Trend */}
+      {/* Net Profit/Loss Trend */}
       <Card>
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
             <TrendingUp className="h-5 w-5 text-primary" />
-            Revenue by Event (Last 7)
+            Net Profit/Loss (Last 7 Events)
           </CardTitle>
           <CardDescription>
-            Total: <span className="font-semibold text-foreground">{totalRevenue.toLocaleString()} gil</span>
+            Total: <span className={`font-semibold ${totalNetProfit >= 0 ? 'text-green-600' : 'text-red-600'}`}>
+              {totalNetProfit >= 0 ? '+' : ''}{totalNetProfit.toLocaleString()} gil
+            </span>
           </CardDescription>
         </CardHeader>
         <CardContent>
           <div className="h-[200px] w-full">
             <ResponsiveContainer width="100%" height="100%">
-              <AreaChart data={revenueData} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
+              <AreaChart data={financialData} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
                 <defs>
-                  <linearGradient id="colorRevenue" x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="5%" stopColor="#8b5cf6" stopOpacity={0.3} />
-                    <stop offset="95%" stopColor="#8b5cf6" stopOpacity={0} />
+                  <linearGradient id="colorProfit" x1="0" y1="0" x2="0" y2="1">
+                    <stop offset="5%" stopColor="#10b981" stopOpacity={0.3} />
+                    <stop offset="95%" stopColor="#10b981" stopOpacity={0} />
+                  </linearGradient>
+                  <linearGradient id="colorLoss" x1="0" y1="0" x2="0" y2="1">
+                    <stop offset="5%" stopColor="#ef4444" stopOpacity={0.3} />
+                    <stop offset="95%" stopColor="#ef4444" stopOpacity={0} />
                   </linearGradient>
                 </defs>
                 <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#313244" />
@@ -178,16 +175,35 @@ export function DashboardAnalytics({ venueId }: DashboardAnalyticsProps) {
                   fontSize={12}
                   tick={{ fill: "#9399b2" }}
                   stroke="#9399b2"
-                  tickFormatter={(value) => `${value / 1000}k`}
+                  tickFormatter={(value) => `${value >= 0 ? '' : '-'}${Math.abs(value) / 1000}k`}
                 />
-                <Tooltip content={<CustomTooltip />} cursor={{ stroke: "#8b5cf6", strokeWidth: 1, strokeDasharray: "4 4" }} />
+                <Tooltip
+                  content={({ active, payload, label }: any) => {
+                    if (active && payload && payload.length) {
+                      const netProfit = payload[0].payload.netProfit
+                      return (
+                        <div className="rounded-lg border bg-background/95 p-3 shadow-xl backdrop-blur-sm ring-1 ring-black/5">
+                          <p className="mb-1 text-sm font-semibold">{label}</p>
+                          <p className="text-xs text-muted-foreground mb-2">{payload[0].payload.eventTitle}</p>
+                          <div className="flex items-center gap-2 text-xs">
+                            <span className={`font-medium ${netProfit >= 0 ? 'text-green-600' : 'text-red-600'}`}>
+                              {netProfit >= 0 ? 'Profit' : 'Loss'}: {Math.abs(netProfit).toLocaleString()} gil
+                            </span>
+                          </div>
+                        </div>
+                      )
+                    }
+                    return null
+                  }}
+                  cursor={{ stroke: "#10b981", strokeWidth: 1, strokeDasharray: "4 4" }}
+                />
                 <Area
                   type="monotone"
-                  dataKey="amount"
-                  stroke="#8b5cf6"
+                  dataKey="netProfit"
+                  stroke="#10b981"
                   strokeWidth={2}
                   fillOpacity={1}
-                  fill="url(#colorRevenue)"
+                  fill="url(#colorProfit)"
                 />
               </AreaChart>
             </ResponsiveContainer>
