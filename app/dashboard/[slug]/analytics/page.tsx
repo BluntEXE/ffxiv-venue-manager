@@ -37,6 +37,13 @@ interface AnalyticsData {
     completed: number
     recentCount: number
   }
+  financial: {
+    totalRevenue: number
+    totalPayroll: number
+    netProfit: number
+    profitMargin: number
+    payrollAsPercentOfRevenue: number
+  }
   revenueByEvent: Array<{
     eventId: string
     eventTitle: string
@@ -263,6 +270,82 @@ export default function AnalyticsPage() {
             </CardContent>
           </Card>
         </div>
+
+        {/* Financial Summary Cards */}
+        {analytics?.financial && (
+          <div className="mb-6 md:mb-8">
+            <h2 className="text-xl font-semibold mb-4">Financial Overview (Last 10 Events)</h2>
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4 md:gap-6">
+              <Card className="border-l-4 border-l-yellow-500">
+                <CardHeader className="pb-3">
+                  <CardTitle className="text-sm font-medium flex items-center gap-2">
+                    <DollarSign className="h-4 w-4 text-yellow-500" />
+                    Payroll Expenses
+                  </CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div className="text-2xl font-bold">
+                    {Math.round(analytics.financial.totalPayroll).toLocaleString()} gil
+                  </div>
+                  <p className="text-xs text-muted-foreground mt-1">
+                    {analytics.financial.payrollAsPercentOfRevenue.toFixed(1)}% of revenue
+                  </p>
+                </CardContent>
+              </Card>
+
+              <Card className={`border-l-4 ${
+                analytics.financial.netProfit >= 0
+                  ? 'border-l-green-500'
+                  : 'border-l-red-500'
+              }`}>
+                <CardHeader className="pb-3">
+                  <CardTitle className="text-sm font-medium flex items-center gap-2">
+                    <TrendingUp className={`h-4 w-4 ${
+                      analytics.financial.netProfit >= 0
+                        ? 'text-green-500'
+                        : 'text-red-500'
+                    }`} />
+                    Net Profit/Loss
+                  </CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div className={`text-2xl font-bold ${
+                    analytics.financial.netProfit >= 0
+                      ? 'text-green-600'
+                      : 'text-red-600'
+                  }`}>
+                    {analytics.financial.netProfit >= 0 ? '+' : ''}
+                    {Math.round(analytics.financial.netProfit).toLocaleString()} gil
+                  </div>
+                  <p className="text-xs text-muted-foreground mt-1">
+                    Revenue minus paid payroll
+                  </p>
+                </CardContent>
+              </Card>
+
+              <Card className="border-l-4 border-l-blue-500">
+                <CardHeader className="pb-3">
+                  <CardTitle className="text-sm font-medium flex items-center gap-2">
+                    <Target className="h-4 w-4 text-blue-500" />
+                    Profit Margin
+                  </CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div className="text-2xl font-bold">
+                    {analytics.financial.profitMargin.toFixed(1)}%
+                  </div>
+                  <p className="text-xs text-muted-foreground mt-1">
+                    {analytics.financial.profitMargin >= 50
+                      ? 'Healthy margin'
+                      : analytics.financial.profitMargin >= 25
+                      ? 'Moderate margin'
+                      : 'Low margin'}
+                  </p>
+                </CardContent>
+              </Card>
+            </div>
+          </div>
+        )}
 
         {/* Charts Grid */}
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">

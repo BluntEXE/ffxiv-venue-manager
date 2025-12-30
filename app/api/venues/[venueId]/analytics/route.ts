@@ -4,6 +4,7 @@ import { authOptions } from "@/lib/auth"
 import { prisma } from "@/lib/prisma"
 import { withRateLimit } from "@/lib/middleware/with-rate-limit"
 import { subDays } from "date-fns"
+import { getRecentEventsFinancialSummary } from "@/lib/financial-calculations"
 
 /**
  * Consolidated Analytics API
@@ -24,17 +25,15 @@ export const GET = withRateLimit<{ params: Promise<{ venueId: string }> }>(
       const { params } = context
       const { venueId } = await params
 
-      // Look up venue by ID
-      let venue = await prisma.venue.findUnique({
-        where: { id: venueId },
+      // Look up venue by slug or ID
+      let venue = await prisma.venue.findFirst({
+        where: {
+          OR: [
+            { id: venueId },
+            { slug: venueId }
+          ]
+        },
       })
-
-      // If not found by ID, try by slug
-      if (!venue) {
-        venue = await prisma.venue.findUnique({
-          where: { slug: venueId },
-        })
-      }
 
       if (!venue) {
         return NextResponse.json({ error: "Venue not found" }, { status: 404 })
@@ -246,6 +245,9 @@ export const GET = withRateLimit<{ params: Promise<{ venueId: string }> }>(
       const totalRevenue = revenueByEvent.reduce((sum, e) => sum + e.revenue, 0)
       const totalPatrons = patronByEvent.reduce((sum, e) => sum + e.peakPatrons, 0)
 
+      // Calculate financial summary (revenue vs payroll for last 10 events)
+      const financialSummary = await getRecentEventsFinancialSummary(venue.id, 10)
+
       return NextResponse.json({
         venueId: venue.id,
         venueName: venue.name,
@@ -258,6 +260,15 @@ export const GET = withRateLimit<{ params: Promise<{ venueId: string }> }>(
             : 0,
           totalPatrons,
           ...eventStats,
+        },
+
+        // Financial summary (profit/loss analysis)
+        financial: {
+          totalRevenue: financialSummary.totalRevenue,
+          totalPayroll: financialSummary.totalPayroll,
+          netProfit: financialSummary.netProfit,
+          profitMargin: financialSummary.profitMargin,
+          payrollAsPercentOfRevenue: financialSummary.payrollAsPercentOfRevenue,
         },
 
         // Chart data
