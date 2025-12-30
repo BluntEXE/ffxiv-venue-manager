@@ -1,8 +1,74 @@
 # Venue Manager Web - Development Progress
 
-**Last Updated:** 2025-12-30
+**Last Updated:** 2025-12-30 (Evening Update)
 
 ## 🎯 Recent Features Implemented
+
+### 3. Financial Analytics Chart & Table Redesign
+**Status:** ✅ Complete and Deployed
+
+#### Overview
+Redesigned financial analytics with consistent area chart styling and added comprehensive data table for detailed per-event financial breakdown.
+
+#### Technical Implementation
+
+**Main Dashboard Update** (`/components/dashboard-analytics.tsx`)
+- **Replaced** revenue chart with **Net Profit/Loss** area chart
+- Uses beautiful gradient area chart styling (consistent with other charts)
+- Shows last 7 events with profitability trend
+- Green gradient for profit visualization
+- Color-coded total (green for profit, red for loss)
+- Enhanced tooltip showing profit/loss per event
+- Now fetches data from consolidated analytics API
+
+**Analytics Page Redesign** (`/app/dashboard/[slug]/analytics/page.tsx`)
+- **Reverted** from multi-line chart back to area chart styling
+- Single green area chart showing Net Profit/Loss trend
+- Enhanced tooltip displaying:
+  - Revenue (purple)
+  - Payroll (orange)
+  - Net Profit/Loss (green/red)
+- **CSV Export Button** for downloading financial data
+- Export includes all events with full breakdown
+
+**Detailed Financial Table** (New Component)
+- Added comprehensive table below charts
+- **Columns:**
+  - Event name and date
+  - Revenue (purple color-coded)
+  - Payroll (orange color-coded)
+  - Net Profit/Loss (green/red with +/- indicators)
+  - Profit Margin % (green/red)
+- **Features:**
+  - Color-coded values matching chart colors
+  - Bold total summary row at bottom
+  - Responsive design for mobile
+  - Clean, professional layout
+  - Uses shadcn/ui table component
+
+**CSV Export Functionality**
+- One-click download of financial report
+- Includes all per-event data:
+  - Event name and date
+  - Revenue, Payroll, Net Profit/Loss
+  - Profit margin percentage
+- Total summary row included
+- Auto-named: `{VenueName}-financial-report-{Date}.csv`
+- Perfect for Excel/Google Sheets analysis
+
+**UI Components Added**
+- Added shadcn/ui table component (`/components/ui/table.tsx`)
+- Provides accessible, styled table primitives
+- Follows existing design system
+
+#### Business Value
+- Consistent visual design across all analytics
+- Both quick visual assessment (charts) and detailed analysis (table)
+- Export capability for offline analysis and reporting
+- Per-event profitability breakdown for informed decision-making
+- Easy identification of high-cost vs. high-profit events
+
+---
 
 ### 1. Manual Payroll Entry System
 **Status:** ✅ Complete and Deployed
@@ -138,6 +204,29 @@ const venue = await prisma.venue.findFirst({
 **Fix:** Set up SSH keys and configured Git to use SSH URLs
 **Status:** Resolved - all commits now use SSH
 
+### 5. Payroll-to-Event Date Matching Bug
+**Problem:** Payroll expenses showing as 0 for all events despite paid entries existing
+**Root Cause:** Date comparison used full timestamps (including time-of-day), causing mismatches when event times didn't align with payroll period end times
+**Example of Failure:**
+- Event startTime: `Dec 30, 2025 8:00 PM`
+- Payroll periodEnd: `Dec 30, 2025 12:00 AM` (midnight)
+- Result: Event time (8 PM) > Period end (midnight) = NO MATCH ❌
+
+**Fix:** Updated date comparison to use day-level precision, ignoring time component
+```typescript
+// Normalize to start of day (midnight) for comparison
+const eventDayStart = new Date(eventDate.getFullYear(), eventDate.getMonth(), eventDate.getDate())
+const periodStartDay = new Date(periodStart.getFullYear(), periodStart.getMonth(), periodStart.getDate())
+const periodEndDay = new Date(periodEnd.getFullYear(), periodEnd.getMonth(), periodEnd.getDate())
+
+// Check if event day falls within period (inclusive)
+return eventDayStart >= periodStartDay && eventDayStart <= periodEndDay
+```
+
+**Result:** Events now correctly match to payroll periods regardless of time-of-day
+**Affected File:** `/app/api/venues/[venueId]/analytics/route.ts`
+**Status:** ✅ Resolved - payroll expenses now display correctly in all charts and tables
+
 ---
 
 ## 🔧 Deployment Configuration
@@ -269,7 +358,14 @@ const venue = await prisma.venue.findFirst({
 
 ## 🚀 Recent Deployments
 
-### Latest Commits
+### Latest Commits (Session 2 - Dec 30th Evening)
+1. `d4cdbea` - Fix payroll-to-event matching by comparing dates only (not time)
+2. `bc2747f` - Add shadcn table component for financial breakdown
+3. `d64f84d` - Redesign financial analytics with area charts and detailed table
+4. `8a406a9` - Fix TypeScript error: remove invalid strokeDasharray prop
+5. `82c27bd` - Add comprehensive financial performance chart with CSV export
+
+### Previous Session Commits (Session 1 - Dec 30th)
 1. `78aa51f` - Fix analytics variable name bug (financial summary cards)
 2. Previous commits:
    - Fixed venue lookup to support slugs
@@ -279,6 +375,13 @@ const venue = await prisma.venue.findFirst({
 
 ### Deployment Status
 All features are live on Vercel production environment. Build passes successfully with updated `db push` approach.
+
+**Key Improvements This Session:**
+- ✅ Consistent area chart styling across all financial visualizations
+- ✅ Per-event financial breakdown table with export capability
+- ✅ Main dashboard now shows net profit/loss instead of raw revenue
+- ✅ Fixed critical date matching bug affecting payroll calculations
+- ✅ Added CSV export for detailed financial analysis
 
 ---
 
@@ -333,14 +436,52 @@ All features are live on Vercel production environment. Build passes successfull
 
 ## ✅ All Systems Operational
 
+### Core Features
 - ✅ Manual payroll entries for temp DJs/contractors
-- ✅ Net profit/loss analysis
+- ✅ Staff payroll with dropdown selection
 - ✅ Patron tracking and metrics
-- ✅ Financial dashboard with color-coded indicators
-- ✅ Staff management and payroll
-- ✅ Authentication and authorization
-- ✅ All features deployed to Vercel production
+- ✅ Authentication and authorization (Discord OAuth)
+- ✅ Event management and scheduling
+- ✅ Service and transaction tracking
+
+### Financial Analytics (New!)
+- ✅ Net profit/loss analysis (revenue minus payroll)
+- ✅ Main dashboard overview with net profit chart
+- ✅ Analytics page with detailed financial charts
+- ✅ Per-event financial breakdown table
+- ✅ CSV export for financial reports
+- ✅ Color-coded profit/loss indicators
+- ✅ Payroll expense tracking (paid entries only)
+- ✅ Profit margin calculations
+
+### Visual Design
+- ✅ Consistent area chart styling across all analytics
+- ✅ Color-coded financial indicators (purple/orange/green/red)
+- ✅ Responsive mobile-first design
+- ✅ Accessible UI components (shadcn/ui)
+
+### Data Accuracy
+- ✅ Date-level matching for payroll-to-event attribution
+- ✅ Decimal precision for financial calculations
+- ✅ Only paid payroll counts as actual expense
+- ✅ Real-time analytics updates
+
+### All Features Deployed to Vercel Production ✨
 
 ---
 
 **For questions or issues, refer to the codebase or check Vercel deployment logs.**
+
+---
+
+## 📈 Session Summary
+
+**Session 1 (Morning):** Implemented manual payroll entries and basic financial analysis
+**Session 2 (Evening):** Redesigned analytics with charts, tables, and fixed critical date bug
+
+**Total Features Delivered:**
+- Manual payroll entry system ✅
+- Complete financial analytics suite ✅
+- Visual charts and detailed tables ✅
+- CSV export capability ✅
+- All bugs fixed and deployed ✅
