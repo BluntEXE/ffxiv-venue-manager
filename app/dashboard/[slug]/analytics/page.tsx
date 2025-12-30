@@ -516,10 +516,6 @@ export default function AnalyticsPage() {
                         )
                       }}
                       activeDot={{ r: 6 }}
-                      strokeDasharray={(props: any) => {
-                        // You can't directly conditionally style the line, but dots will show red when negative
-                        return undefined
-                      }}
                     />
                   </LineChart>
                 </ResponsiveContainer>
