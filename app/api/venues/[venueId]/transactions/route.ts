@@ -3,23 +3,11 @@ import { getServerSession } from "next-auth"
 import { authOptions } from "@/lib/auth"
 import { prisma } from "@/lib/prisma"
 import { z } from "zod"
-import {
-  sendDiscordWebhook,
-  formatSaleLoggedEmbed,
-  getWebhookUrlForType,
-  type VenueWebhookConfig,
-} from "@/lib/discord-webhook"
 import { withRateLimit } from "@/lib/middleware/with-rate-limit"
-import { validators, sanitizeDiscordContent } from "@/lib/validation"
-import { invalidateCache } from "@/lib/redis-cache"
-
-const createTransactionSchema = z.object({
-  serviceId: z.string().optional(),
-  eventId: z.string().optional(),
-  amount: validators.amount,
-  customerName: validators.customerName,
-  notes: validators.transactionNotes,
-})
+import {
+  createTransaction,
+  createTransactionSchema,
+} from "@/lib/api/transactions"
 
 export const GET = withRateLimit<{ params: Promise<{ venueId: string }> }>(
   async (request, context) => {
@@ -76,6 +64,7 @@ export const GET = withRateLimit<{ params: Promise<{ venueId: string }> }>(
       where: {
         userId: session.user.id,
         venueId,
+        status: "active",
       },
     })
 
@@ -200,6 +189,7 @@ export const POST = withRateLimit<{ params: Promise<{ venueId: string }> }>(
       where: {
         userId: session.user.id,
         venueId,
+        status: "active",
       },
     })
 
@@ -213,78 +203,15 @@ export const POST = withRateLimit<{ params: Promise<{ venueId: string }> }>(
     const body = await request.json()
     const validatedData = createTransactionSchema.parse(body)
 
-    const newTransaction = await prisma.transaction.create({
-      data: {
-        venueId,
-        serviceId: validatedData.serviceId,
-        eventId: validatedData.eventId,
-        staffId: session.user.id, // Log who created the transaction
-        amount: validatedData.amount,
-        customerName: validatedData.customerName,
-        notes: validatedData.notes,
-      },
-      include: {
-        service: {
-          select: {
-            id: true,
-            name: true,
-            price: true,
-          },
-        },
-        event: {
-          select: {
-            id: true,
-            title: true,
-          },
-        },
-        staff: {
-          select: {
-            id: true,
-            name: true,
-          },
-        },
-      },
-    })
-
-    // Send Discord webhook notification if enabled
-    const venue = await prisma.venue.findUnique({
-      where: { id: venueId },
-      select: {
-        discordWebhookUrl: true,
-        settings: true,
-      },
-    })
-
-    if (venue) {
-      const webhookConfig: VenueWebhookConfig = {
-        discordWebhooks: (venue.settings as any)?.discordWebhooks,
-        webhooks: (venue.settings as any)?.webhooks,
-        discordWebhookUrl: venue.discordWebhookUrl,
-      }
-
-      const webhookUrl = getWebhookUrlForType(webhookConfig, "saleLogged")
-      if (webhookUrl) {
-        const embed = formatSaleLoggedEmbed({
-          amount: Number(newTransaction.amount),
-          service: newTransaction.service,
-          // Sanitize customer name to prevent @everyone/@here mentions
-          customerName: sanitizeDiscordContent(newTransaction.customerName, {
-            maxLength: 100,
-            stripUrls: true,
-          }),
-          staff: newTransaction.staff,
-        })
-
-        // Send webhook asynchronously (don't wait for response)
-        sendDiscordWebhook(webhookUrl, { embeds: [embed] }).catch(
-          (error) => console.error("Failed to send Discord webhook:", error)
-        )
-      }
-    }
-
-    // Invalidate relevant caches (transactions affect service stats)
-    await invalidateCache(`venue:${venueId}:services`)
-    await invalidateCache(`venue:${venueId}:transactions:*`)
+    // Delegate row creation, webhook dispatch, and cache invalidation to
+    // the shared helper. The plugin route (/api/plugin/transactions) uses
+    // the exact same helper with an api-key-derived userId, so the two
+    // surfaces are guaranteed to produce identical side effects.
+    const newTransaction = await createTransaction(
+      venueId,
+      session.user.id,
+      validatedData
+    )
 
       return NextResponse.json(newTransaction, { status: 201 })
     } catch (error) {

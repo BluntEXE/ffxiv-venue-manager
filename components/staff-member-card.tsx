@@ -8,7 +8,7 @@ import { Button } from "@/components/ui/button"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { ManageStaffRoleDialog } from "@/components/manage-staff-role-dialog"
 import { format } from "date-fns"
-import { Clock } from "lucide-react"
+import { Clock, Unlock } from "lucide-react"
 
 interface StaffMember {
   id: string
@@ -39,7 +39,7 @@ interface StaffMemberCardProps {
 const roleColors = {
   OWNER: "bg-purple-500",
   MANAGER: "bg-blue-500",
-  STAFF: "bg-green-500",
+  STAFF: "bg-emerald-500",
 }
 
 export function StaffMemberCard({
@@ -92,8 +92,9 @@ export function StaffMemberCard({
                   {effectiveRole}
                 </Badge>
                 {isDeputized && (
-                  <Badge variant="secondary" className="bg-yellow-400/10 text-yellow-600">
-                    🔓 Deputized
+                  <Badge variant="secondary" className="bg-yellow-400/10 text-yellow-600 gap-1">
+                    <Unlock className="h-3 w-3" aria-hidden="true" />
+                    Deputized
                   </Badge>
                 )}
                 {member.permanentRole && isDeputized && (

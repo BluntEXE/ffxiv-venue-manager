@@ -103,8 +103,8 @@ export function FeedbackDialog() {
 
         {isSuccess ? (
           <div className="flex flex-col items-center justify-center py-8">
-            <div className="rounded-full bg-green-100 p-3 mb-4">
-              <Check className="h-8 w-8 text-green-600" />
+            <div className="rounded-full bg-emerald-500/10 p-3 mb-4">
+              <Check className="h-8 w-8 text-emerald-500" />
             </div>
             <h3 className="text-lg font-semibold mb-2">Thank you!</h3>
             <p className="text-sm text-muted-foreground text-center">

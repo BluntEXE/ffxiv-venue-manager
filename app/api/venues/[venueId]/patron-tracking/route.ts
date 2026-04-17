@@ -33,6 +33,7 @@ export const GET = withRateLimit<{ params: Promise<{ venueId: string }> }>(
         where: {
           userId: session.user.id,
           venueId,
+        status: "active",
         },
       })
 
@@ -66,7 +67,7 @@ export const GET = withRateLimit<{ params: Promise<{ venueId: string }> }>(
         select: { countChange: true },
       })
 
-      const currentCount = allLogs.reduce((sum, log) => sum + log.countChange, 0)
+      const currentCount = allLogs.reduce((sum, log) => sum + (log.countChange ?? 0), 0)
 
       return NextResponse.json({
         currentCount: Math.max(0, currentCount), // Never negative
@@ -101,6 +102,7 @@ export const POST = withRateLimit<{ params: Promise<{ venueId: string }> }>(
         where: {
           userId: session.user.id,
           venueId,
+        status: "active",
         },
       })
 
@@ -143,7 +145,7 @@ export const POST = withRateLimit<{ params: Promise<{ venueId: string }> }>(
         select: { countChange: true },
       })
 
-      const currentCount = allLogs.reduce((sum, log) => sum + log.countChange, 0)
+      const currentCount = allLogs.reduce((sum, log) => sum + (log.countChange ?? 0), 0)
 
       return NextResponse.json({
         log: patronLog,

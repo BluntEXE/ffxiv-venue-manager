@@ -40,8 +40,30 @@ model User {
   feedback              Feedback[]
   reviewedFeedback      Feedback[]      @relation("FeedbackReviewer")
   patronLogs            PatronLog[]     @relation("PatronLogger")
+  patronLogsWorking     PatronLog[]     @relation("PatronLogWorking")
+  characters            UserCharacter[]
+  apiKeys               ApiKey[]
 
   @@map("users")
+}
+
+// Bridge between a user account and their FFXIV character(s). Required so
+// the plugin (which only knows characterName + world) can classify a
+// patron_log entry as "staff working" vs "patron" — shift state is per
+// user, so we need the character → user lookup.
+model UserCharacter {
+  id            String   @id @default(cuid())
+  userId        String
+  characterName String
+  world         String
+  isPrimary     Boolean  @default(false)
+  createdAt     DateTime @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([characterName, world])
+  @@index([userId])
+  @@map("user_characters")
 }
 
 model Account {
@@ -105,6 +127,9 @@ model Venue {
   currencyName String @default("Gil")
   settings     Json   @default("{\"taskVisibility\":\"all\",\"salesVisibility\":\"all\",\"revenueVisibility\":\"all\",\"eventVisibility\":\"all\",\"webhooks\":{\"taskCreated\":false,\"taskCompleted\":false,\"eventCreated\":false,\"eventStartingSoon\":false,\"saleLogged\":false,\"dailySalesSummary\":false,\"staffJoined\":false},\"discordWebhooks\":{\"staff\":\"\",\"events\":\"\",\"revenue\":\"\"}}")
 
+  // Partake Integration
+  partakeTeamId Int?
+
   // Discord Integration (deprecated - kept for migration)
   discordWebhookUrl String?
   discordServerId   String?
@@ -125,7 +150,9 @@ model Venue {
   tasks          Task[]
   webhooks       Webhook[]
   payrollEntries PayrollEntry[]
+  shifts         Shift[]
   patronLogs     PatronLog[]
+  apiKeys        ApiKey[]
 
   @@map("venues")
 }
@@ -156,6 +183,9 @@ model Membership {
   invitedEmail    String? // Email for display purposes only (not used for auth)
   invitedName     String? // Name placeholder for invited staff
 
+  // Compensation
+  hourlyRate Decimal? @db.Decimal(10, 2) // Default hourly rate for this member at this venue
+
   // Temporary role system (for deputizing staff)
   temporaryRole          MembershipRole? // Elevated role while deputized
   temporaryRoleExpiresAt DateTime? // When temporary role expires
@@ -168,6 +198,7 @@ model Membership {
   venue          Venue          @relation(fields: [venueId], references: [id], onDelete: Cascade)
   customRole     Role?          @relation(fields: [roleId], references: [id])
   payrollEntries PayrollEntry[]
+  shifts         Shift[]
 
   @@index([venueId, userId])
   @@index([venueId, role])
@@ -233,6 +264,10 @@ model Event {
   recurrenceRule String? // iCal RRULE format
   parentEventId  String? // For recurring event instances
 
+  // Partake sync
+  partakeEventId      Int?  @unique
+  partakeAttendeeCount Int?
+
   // Tracking
   attendanceCount Int?
   revenue         Decimal? @db.Decimal(10, 2)
@@ -290,20 +325,33 @@ enum PatronAction {
 }
 
 model PatronLog {
-  id          String       @id @default(cuid())
-  venueId     String
-  eventId     String? // Optional: associate with specific event
-  action      PatronAction
-  countChange Int // +1 for ENTER, -1 for EXIT
-  loggedBy    String? // Staff member who logged this
-  timestamp   DateTime     @default(now())
+  id            String    @id @default(cuid())
+  venueId       String
+  eventId       String? // Optional: associate with specific event
+  characterName String? // FFXIV character name (from Dalamud plugin)
+  world         String? // FFXIV home world (from Dalamud plugin)
+  action        String    @default("ENTER") // ENTER, EXIT/LEAVE, PRESENT
+  countChange   Int? // +1 for ENTER, -1 for EXIT (nullable for character-level logs)
+  loggedBy      String? // User ID that logged this (staff or API key user)
+  timestamp     DateTime  @default(now()) // When the event actually happened
+  loggedAt      DateTime  @default(now()) // When the server received/recorded it
+
+  // Was the character's user clocked into an ACTIVE shift at this venue
+  // when they walked in? Snapshotted at insert time so later shift edits
+  // don't rewrite history. Off-duty staff → wasWorking = false (they're
+  // a patron that night).
+  wasWorking    Boolean   @default(false)
+  workingUserId String? // The user whose character was on shift (only set when wasWorking=true)
 
   venue Venue  @relation(fields: [venueId], references: [id], onDelete: Cascade)
   event Event? @relation(fields: [eventId], references: [id], onDelete: Cascade)
   staff User?  @relation("PatronLogger", fields: [loggedBy], references: [id])
+  workingUser User? @relation("PatronLogWorking", fields: [workingUserId], references: [id], onDelete: SetNull)
 
   @@index([venueId, timestamp])
   @@index([eventId, timestamp])
+  @@index([venueId, characterName])
+  @@index([venueId, wasWorking, timestamp])
   @@map("patron_logs")
 }
 
@@ -448,6 +496,7 @@ model PayrollEntry {
   venue      Venue       @relation(fields: [venueId], references: [id], onDelete: Cascade)
   membership Membership? @relation(fields: [membershipId], references: [id], onDelete: Cascade)
   paidByUser User?       @relation("PayrollPaidBy", fields: [paidBy], references: [id])
+  shifts     Shift[] // Shifts covered by this payroll entry
 
   @@index([venueId, periodEnd])
   @@index([membershipId, isPaid])
@@ -535,4 +584,70 @@ model Feedback {
   @@index([status, createdAt])
   @@index([category])
   @@map("feedback")
+}
+
+// ============================================
+// PLUGIN / EXTERNAL API KEYS
+// ============================================
+
+model ApiKey {
+  id         String    @id
+  key        String    @unique
+  keyHash    String?   @unique
+  name       String
+  userId     String
+  venueId    String?
+  lastUsedAt DateTime?
+  createdAt  DateTime  @default(now())
+  revokedAt  DateTime?
+
+  user  User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+  venue Venue? @relation(fields: [venueId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([keyHash])
+  @@map("api_keys")
+}
+// ============================================
+// SHIFTS & TIME TRACKING
+// ============================================
+
+enum ShiftStatus {
+  SCHEDULED
+  ACTIVE
+  COMPLETED
+  MISSED
+  CANCELLED
+}
+
+model Shift {
+  id             String      @id @default(cuid())
+  venueId        String
+  membershipId   String
+  payrollEntryId String? // Links to the payroll entry that paid for this shift
+
+  // Schedule (set by manager when creating the shift)
+  scheduledStart DateTime
+  scheduledEnd   DateTime
+
+  // Actuals (set by staff via clock-in / clock-out)
+  actualStart DateTime?
+  actualEnd   DateTime?
+  hoursWorked Decimal?    @db.Decimal(6, 2) // Stored at clock-out for immediate display
+
+  status ShiftStatus @default(SCHEDULED)
+  notes  String?     @db.Text
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  venue        Venue         @relation(fields: [venueId], references: [id], onDelete: Cascade)
+  membership   Membership    @relation(fields: [membershipId], references: [id], onDelete: Cascade)
+  payrollEntry PayrollEntry? @relation(fields: [payrollEntryId], references: [id], onDelete: SetNull)
+
+  @@index([venueId, scheduledStart])
+  @@index([membershipId, status])
+  @@index([venueId, status])
+  @@index([payrollEntryId])
+  @@map("shifts")
 }

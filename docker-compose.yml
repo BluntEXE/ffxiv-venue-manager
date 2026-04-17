@@ -1,0 +1,68 @@
+services:
+  postgres:
+    image: postgres:16-alpine
+    container_name: postgres
+    environment:
+      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD}
+      - POSTGRES_DB=venue_manager
+    volumes:
+      - ./docker/postgres/data:/var/lib/postgresql/data
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - app-network
+
+  redis:
+    image: redis:7-alpine
+    container_name: redis
+    command: redis-server --maxmemory 256mb --maxmemory-policy allkeys-lru
+    volumes:
+      - ./docker/redis/data:/data
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 3s
+      retries: 3
+    networks:
+      - app-network
+
+  venue-manager:
+    build: .
+    container_name: venue-manager
+    working_dir: /app
+    ports:
+      - "3000:3000"
+    env_file: .env
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    restart: unless-stopped
+    networks:
+      - app-network
+
+  cron-jobs:
+    image: alpine:latest
+    container_name: cron-jobs
+    restart: unless-stopped
+    networks:
+      - app-network
+    environment:
+      - CRON_SECRET=${CRON_SECRET}
+    command: >
+      sh -c "apk add --no-cache curl &&
+             echo '*/5 * * * * curl -s -H \"Authorization: Bearer '$$CRON_SECRET'\" http://venue-manager:3000/api/cron/update-event-statuses >> /var/log/cron.log 2>&1' > /etc/crontabs/root &&
+             echo '*/15 * * * * curl -s -H \"Authorization: Bearer '$$CRON_SECRET'\" http://venue-manager:3000/api/cron/event-reminders >> /var/log/cron.log 2>&1' >> /etc/crontabs/root &&
+             echo '0 0 * * * curl -s -H \"Authorization: Bearer '$$CRON_SECRET'\" http://venue-manager:3000/api/cron/daily-sales-summary >> /var/log/cron.log 2>&1' >> /etc/crontabs/root &&
+             echo '0 * * * * curl -s -H \"Authorization: Bearer '$$CRON_SECRET'\" http://venue-manager:3000/api/cron/sync-partake-events >> /var/log/cron.log 2>&1' >> /etc/crontabs/root &&
+             crond -f -l 2"
+
+networks:
+  app-network:
+    driver: bridge

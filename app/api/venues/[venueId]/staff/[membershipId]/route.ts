@@ -36,6 +36,7 @@ export const PUT = withRateLimit<{ params: Promise<{ venueId: string; membership
       where: {
         userId: session.user.id,
         venueId,
+        status: "active",
       },
     })
 
@@ -65,6 +66,28 @@ export const PUT = withRateLimit<{ params: Promise<{ venueId: string; membership
 
     const body = await request.json()
     const validatedData = updateStaffSchema.parse(body)
+
+    // Only OWNERs can grant or change role to OWNER
+    if (userMembership.role !== "OWNER") {
+      if (validatedData.role === "OWNER") {
+        return NextResponse.json(
+          { error: "Only owners can promote members to owner" },
+          { status: 403 }
+        )
+      }
+      if (validatedData.temporaryRole === "OWNER") {
+        return NextResponse.json(
+          { error: "Only owners can grant temporary owner role" },
+          { status: 403 }
+        )
+      }
+      if (validatedData.permanentRole === "OWNER") {
+        return NextResponse.json(
+          { error: "Only owners can set permanent owner role" },
+          { status: 403 }
+        )
+      }
+    }
 
     // Prepare update data, converting date strings to Date objects
     const updateData: any = {}
@@ -132,6 +155,7 @@ export const DELETE = withRateLimit<{ params: Promise<{ venueId: string; members
       where: {
         userId: session.user.id,
         venueId,
+        status: "active",
       },
     })
 
@@ -168,8 +192,6 @@ export const DELETE = withRateLimit<{ params: Promise<{ venueId: string; members
     if (targetMembership.role === "OWNER") {
       try {
         await prisma.$transaction(async (tx) => {
-          // Lock and count owners in a single atomic operation
-          // Using SELECT FOR UPDATE to prevent concurrent modifications
           const owners = await tx.membership.findMany({
             where: {
               venueId,
@@ -179,17 +201,14 @@ export const DELETE = withRateLimit<{ params: Promise<{ venueId: string; members
             select: { id: true },
           })
 
-          // Check if we can safely delete (need at least 2 owners to delete 1)
           if (owners.length <= 1) {
             throw new Error("LAST_OWNER")
           }
 
-          // Delete within the transaction
           await tx.membership.delete({
             where: { id: membershipId, venueId },
           })
         }, {
-          // Serializable isolation prevents concurrent reads from seeing inconsistent data
           isolationLevel: "Serializable",
           timeout: 5000,
         })
@@ -200,11 +219,9 @@ export const DELETE = withRateLimit<{ params: Promise<{ venueId: string; members
             { status: 400 }
           )
         }
-        // Re-throw other errors to be caught by outer handler
         throw txError
       }
     } else {
-      // Non-owner deletions don't need the serializable transaction
       await prisma.membership.delete({
         where: { id: membershipId, venueId },
       })

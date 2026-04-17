@@ -62,6 +62,8 @@ interface VenueSettings {
   discordWebhooks: DiscordWebhooks
   // Legacy support
   discordWebhookUrl?: string
+  // Partake integration
+  partakeTeamId: number | null
 }
 
 export default function SettingsPage({
@@ -91,12 +93,16 @@ export default function SettingsPage({
       events: "",
       revenue: "",
     },
+    partakeTeamId: null,
   })
   const [isLoading, setIsLoading] = useState(true)
   const [isSaving, setIsSaving] = useState(false)
   const [error, setError] = useState("")
   const [success, setSuccess] = useState(false)
   const [isDeleting, setIsDeleting] = useState(false)
+  const [isSyncing, setIsSyncing] = useState(false)
+  const [syncResult, setSyncResult] = useState("")
+  const [venueId, setVenueId] = useState<string>("")
   const [userRole, setUserRole] = useState<string>("")
 
   // Unwrap params
@@ -122,6 +128,7 @@ export default function SettingsPage({
         if (!venue) throw new Error("Venue not found")
 
         // Get user's role for this venue
+        setVenueId(venue.id)
         if (venue.memberships?.[0]) {
           setUserRole(venue.memberships[0].role)
         }
@@ -150,6 +157,7 @@ export default function SettingsPage({
               events: "",
               revenue: "",
             },
+            partakeTeamId: settingsData.partakeTeamId ?? null,
           })
         }
       } catch (error: unknown) {
@@ -244,10 +252,101 @@ export default function SettingsPage({
           </p>
         </div>
 
+        {/* Sub-pages */}
+        <Card className="mb-6">
+          <CardHeader>
+            <CardTitle>Integrations</CardTitle>
+            <CardDescription>Manage external connections for this venue</CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <div>
+              <Link
+                href={`/dashboard/${slug}/settings/api-keys`}
+                className="inline-flex items-center gap-2 text-sm font-medium text-primary hover:underline"
+              >
+                Dalamud Plugin API Keys &rarr;
+              </Link>
+              <p className="text-xs text-muted-foreground mt-1">
+                Generate keys so the XIV-App Dalamud plugin can sync patron visits.
+              </p>
+            </div>
+
+            {/* Partake Integration */}
+            <div className="border rounded-lg p-4 bg-gradient-to-r from-indigo-500/10 to-transparent">
+              <Label htmlFor="partake-team-id" className="text-base font-semibold flex items-center gap-2">
+                Partake.gg Event Sync
+              </Label>
+              <p className="text-sm text-muted-foreground mt-1 mb-3">
+                Link your Partake team to automatically sync events. Find your Team ID on your{" "}
+                <a href="https://partake.gg" target="_blank" rel="noopener noreferrer" className="text-primary hover:underline">
+                  Partake.gg
+                </a>{" "}
+                team dashboard URL (e.g. partake.gg/team/<strong>123</strong>).
+              </p>
+              <div className="flex gap-2 items-end">
+                <div className="flex-1">
+                  <Input
+                    id="partake-team-id"
+                    type="number"
+                    placeholder="e.g. 123"
+                    value={settings.partakeTeamId ?? ""}
+                    onChange={(e) => {
+                      const val = e.target.value
+                      setSettings({
+                        ...settings,
+                        partakeTeamId: val ? parseInt(val, 10) : null,
+                      })
+                    }}
+                    disabled={isSaving}
+                    min={1}
+                  />
+                </div>
+                {settings.partakeTeamId && (
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    disabled={isSyncing}
+                    onClick={async () => {
+                      setIsSyncing(true)
+                      setSyncResult("")
+                      try {
+                        const res = await fetch(`/api/venues/${venueId}/sync-partake`, {
+                          method: "POST",
+                        })
+                        if (!res.ok) {
+                          const data = await res.json()
+                          throw new Error(data.error || "Sync failed")
+                        }
+                        const data = await res.json()
+                        setSyncResult(`Synced: ${data.results.created} new, ${data.results.updated} updated, ${data.results.skipped} unchanged`)
+                        setTimeout(() => setSyncResult(""), 5000)
+                      } catch (err: unknown) {
+                        setSyncResult(err instanceof Error ? err.message : "Sync failed")
+                      } finally {
+                        setIsSyncing(false)
+                      }
+                    }}
+                  >
+                    {isSyncing ? "Syncing..." : "Sync Now"}
+                  </Button>
+                )}
+              </div>
+              {syncResult && (
+                <p className="text-sm text-emerald-400 mt-2">{syncResult}</p>
+              )}
+              {settings.partakeTeamId && (
+                <p className="text-xs text-muted-foreground mt-2">
+                  Events sync automatically every hour. Use &quot;Sync Now&quot; to pull events immediately.
+                </p>
+              )}
+            </div>
+          </CardContent>
+        </Card>
+
         {/* Success Message */}
         {success && (
-          <Alert className="mb-6 bg-green-500/10 border-green-500/20">
-            <AlertDescription className="text-green-400">
+          <Alert className="mb-6 bg-emerald-500/10 border-green-500/20">
+            <AlertDescription className="text-emerald-400">
               Settings saved successfully!
             </AlertDescription>
           </Alert>

@@ -44,6 +44,7 @@ export const GET = withRateLimit<{ params: Promise<{ venueId: string }> }>(
         where: {
           userId: session.user.id,
           venueId: venue.id,
+        status: "active",
         },
       })
 
@@ -139,8 +140,14 @@ export const GET = withRateLimit<{ params: Promise<{ venueId: string }> }>(
           0
         )
 
-        // Calculate payroll for this event
-        // Match payroll entries where the event date (day only) falls within the payroll period
+        // Calculate payroll for this event.
+        // TODO(payroll-alloc): payroll entries are period-scoped, not event-scoped.
+        // When a payroll period covers multiple events (e.g. weekly payroll with
+        // several event-days, or any multi-day period), the full payroll amount
+        // is charged against each event in the period and the summary totals
+        // double/triple-count. Safe today because typical usage is 1 event per
+        // payroll period, but revisit (pro-rate, first-event-only, or separate
+        // period-level card) if multi-event periods become common.
         const eventDate = new Date(event.startTime)
         const eventDayStart = new Date(eventDate.getFullYear(), eventDate.getMonth(), eventDate.getDate())
 
@@ -201,7 +208,7 @@ export const GET = withRateLimit<{ params: Promise<{ venueId: string }> }>(
         let currentCount = 0
         let maxCount = 0
         eventLogs.forEach((log) => {
-          currentCount += log.countChange
+          currentCount += (log.countChange ?? 0)
           maxCount = Math.max(maxCount, currentCount)
         })
 
@@ -240,7 +247,7 @@ export const GET = withRateLimit<{ params: Promise<{ venueId: string }> }>(
           while (logIndex < eventLogs.length) {
             const logTime = new Date(eventLogs[logIndex].timestamp)
             if (logTime > currentTime) break
-            currentCount += eventLogs[logIndex].countChange
+            currentCount += (eventLogs[logIndex].countChange ?? 0)
             logIndex++
           }
 

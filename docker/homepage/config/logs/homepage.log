@@ -1,0 +1,73 @@
+[2026-04-04T14:00:00.403Z] info: docker.yaml was copied to the config folder
+[2026-04-04T14:00:00.405Z] info: services.yaml was copied to the config folder
+[2026-04-04T14:00:00.406Z] info: bookmarks.yaml was copied to the config folder
+[2026-04-04T14:00:00.412Z] info: widgets.yaml was copied to the config folder
+[2026-04-04T14:00:00.413Z] info: custom.css was copied to the config folder
+[2026-04-04T14:00:00.413Z] info: custom.js was copied to the config folder
+[2026-04-04T14:00:00.503Z] info: kubernetes.yaml was copied to the config folder
+[2026-04-04T15:22:31.610Z] error: undefined
+[2026-04-04T15:22:31.665Z] error: <index> TypeError: group[Object.keys(...)[0]].map is not a function
+    at /app/.next/server/pages/index.js:3292:45
+    at Array.map (<anonymous>)
+    at bookmarksResponse (/app/.next/server/pages/index.js:3290:36)
+    at async getStaticProps (/app/.next/server/pages/index.js:2727:23)
+    at async Object.renderToHTML (/app/node_modules/.pnpm/next@12.3.4_react-dom@18.2.0_react@18.2.0/node_modules/next/dist/server/render.js:386:20)
+    at async doRender (/app/node_modules/.pnpm/next@12.3.4_react-dom@18.2.0_react@18.2.0/node_modules/next/dist/server/base-server.js:687:38)
+    at async cacheEntry.responseCache.get.isManualRevalidate.isManualRevalidate (/app/node_modules/.pnpm/next@12.3.4_react-dom@18.2.0_react@18.2.0/node_modules/next/dist/server/base-server.js:796:28)
+    at async /app/node_modules/.pnpm/next@12.3.4_react-dom@18.2.0_react@18.2.0/node_modules/next/dist/server/response-cache/index.js:80:36
+[2026-04-04T15:22:31.829Z] error: undefined
+[2026-04-04T15:22:34.498Z] error: undefined
+[2026-04-04T15:22:35.145Z] error: undefined
+[2026-04-04T15:22:35.277Z] error: undefined
+[2026-04-04T15:22:35.429Z] error: undefined
+[2026-04-04T15:22:35.540Z] error: undefined
+[2026-04-04T15:22:35.674Z] error: undefined
+[2026-04-04T15:22:35.823Z] error: undefined
+[2026-04-04T15:22:35.940Z] error: undefined
+[2026-04-04T15:22:36.087Z] error: undefined
+[2026-04-04T15:22:36.205Z] error: undefined
+[2026-04-04T15:22:44.590Z] error: undefined
+[2026-04-04T15:22:46.240Z] error: undefined
+[2026-04-04T15:22:54.624Z] error: undefined
+[2026-04-04T16:23:58.322Z] info: proxmox.yaml was copied to the config folder
+[2026-04-04T16:23:58.534Z] error: undefined
+[2026-04-04T16:23:58.681Z] error: <index> TypeError: a[Object.keys(...)[0]].map is not a function
+    at /app/.next/server/pages/index.js:11:47918
+    at Array.map (<anonymous>)
+    at n (/app/.next/server/pages/index.js:11:47855)
+    at async K (/app/.next/server/pages/index.js:6:120985)
+    at async rg (/app/node_modules/.pnpm/next@16.1.7_react-dom@19.2.4_react@19.2.4__react@19.2.4/node_modules/next/dist/compiled/next-server/pages.runtime.prod.js:13:4344)
+    at async o (/app/.next/server/chunks/3100.js:1:29313)
+    at async tn.handleRevalidate (/app/node_modules/.pnpm/next@16.1.7_react-dom@19.2.4_react@19.2.4__react@19.2.4/node_modules/next/dist/compiled/next-server/pages.runtime.prod.js:1:56570)
+    at async /app/node_modules/.pnpm/next@16.1.7_react-dom@19.2.4_react@19.2.4__react@19.2.4/node_modules/next/dist/compiled/next-server/pages.runtime.prod.js:1:42750
+[2026-04-04T16:23:58.936Z] error: undefined
+[2026-04-04T16:24:02.517Z] error: undefined
+[2026-04-04T16:24:07.635Z] error: undefined
+[2026-04-04T16:36:07.056Z] error: undefined
+[2026-04-04T16:36:07.093Z] error: <index> TypeError: a[Object.keys(...)[0]].map is not a function
+    at /app/.next/server/pages/index.js:11:47918
+    at Array.map (<anonymous>)
+    at n (/app/.next/server/pages/index.js:11:47855)
+    at async K (/app/.next/server/pages/index.js:6:120985)
+    at async rg (/app/node_modules/.pnpm/next@16.1.7_react-dom@19.2.4_react@19.2.4__react@19.2.4/node_modules/next/dist/compiled/next-server/pages.runtime.prod.js:13:4344)
+    at async o (/app/.next/server/chunks/3100.js:1:29313)
+    at async tn.handleRevalidate (/app/node_modules/.pnpm/next@16.1.7_react-dom@19.2.4_react@19.2.4__react@19.2.4/node_modules/next/dist/compiled/next-server/pages.runtime.prod.js:1:56570)
+    at async /app/node_modules/.pnpm/next@16.1.7_react-dom@19.2.4_react@19.2.4__react@19.2.4/node_modules/next/dist/compiled/next-server/pages.runtime.prod.js:1:42750
+[2026-04-04T16:36:07.306Z] error: undefined
+[2026-04-04T16:36:12.340Z] error: undefined
+[2026-04-04T16:36:18.242Z] error: undefined
+[2026-04-04T16:36:20.597Z] error: undefined
+[2026-04-04T16:36:21.306Z] error: undefined
+[2026-04-04T16:36:21.703Z] error: undefined
+[2026-04-04T16:36:21.851Z] error: undefined
+[2026-04-04T16:36:21.984Z] error: undefined
+[2026-04-04T16:36:22.122Z] error: undefined
+[2026-04-04T16:36:32.159Z] error: undefined
+[2026-04-04T16:36:33.029Z] error: undefined
+[2026-04-04T16:36:38.071Z] error: undefined
+[2026-04-04T16:36:40.064Z] error: undefined
+[2026-04-04T16:36:45.109Z] error: undefined
+[2026-04-04T16:36:48.104Z] error: undefined
+[2026-04-04T16:36:55.144Z] error: undefined
+[2026-04-04T16:36:57.194Z] error: undefined
+[2026-04-04T16:37:15.182Z] error: undefined

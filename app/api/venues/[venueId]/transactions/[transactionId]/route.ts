@@ -45,6 +45,7 @@ export const PATCH = withRateLimit<{ params: Promise<{ venueId: string; transact
         where: {
           userId: session.user.id,
           venueId: venue.id,
+        status: "active",
         },
       })
 
@@ -145,6 +146,7 @@ export const DELETE = withRateLimit<{ params: Promise<{ venueId: string; transac
         where: {
           userId: session.user.id,
           venueId: venue.id,
+        status: "active",
         },
       })
 

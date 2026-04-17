@@ -42,6 +42,7 @@ export const PATCH = withRateLimit<{ params: Promise<{ venueId: string; payrollI
         where: {
           userId: session.user.id,
           venueId: venue.id,
+        status: "active",
         },
       })
 
@@ -237,6 +238,7 @@ export const DELETE = withRateLimit<{ params: Promise<{ venueId: string; payroll
         where: {
           userId: session.user.id,
           venueId: venue.id,
+        status: "active",
         },
       })
 
@@ -247,10 +249,10 @@ export const DELETE = withRateLimit<{ params: Promise<{ venueId: string; payroll
         )
       }
 
-      // Only OWNER can delete payroll entries (more restrictive than update)
-      if (membership.role !== "OWNER") {
+      // OWNER and MANAGER can delete payroll entries.
+      if (membership.role !== "OWNER" && membership.role !== "MANAGER") {
         return NextResponse.json(
-          { error: "Insufficient permissions. Only owners can delete payroll entries." },
+          { error: "Insufficient permissions. Only owners and managers can delete payroll entries." },
           { status: 403 }
         )
       }

@@ -140,7 +140,7 @@ export default function EditEventPage() {
 
   if (isLoading) {
     return (
-      <div className="container mx-auto p-8">
+      <div className="container mx-auto p-4 md:p-8">
         <PageLoading text="Loading event..." />
       </div>
     )
@@ -148,14 +148,14 @@ export default function EditEventPage() {
 
   if (!event) {
     return (
-      <div className="container mx-auto p-8 text-center">
+      <div className="container mx-auto p-4 md:p-8 text-center">
         <p className="text-destructive">Event not found</p>
       </div>
     )
   }
 
   return (
-    <div className="container mx-auto p-8 max-w-3xl">
+    <div className="container mx-auto p-4 md:p-8 max-w-3xl">
       <Card>
         <CardHeader>
           <CardTitle>Edit Event</CardTitle>

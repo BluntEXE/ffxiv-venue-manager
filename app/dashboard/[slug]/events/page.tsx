@@ -12,9 +12,9 @@ import { VenueLayout } from "@/components/venue-layout"
 import { Breadcrumb } from "@/components/breadcrumb"
 
 const statusColors = {
-  DRAFT: "bg-gray-500",
+  DRAFT: "bg-zinc-500",
   PUBLISHED: "bg-blue-500",
-  ACTIVE: "bg-green-500",
+  ACTIVE: "bg-emerald-500",
   COMPLETED: "bg-purple-500",
   CANCELLED: "bg-red-500",
 }
@@ -153,7 +153,7 @@ export default async function EventsPage({
               <Card>
                 <CardContent className="py-8 text-center">
                   <p className="text-muted-foreground">
-                    No upcoming events. Create your first event to get started!
+                    No events yet. Check back soon or ask your manager about upcoming events.
                   </p>
                 </CardContent>
               </Card>
@@ -169,13 +169,18 @@ export default async function EventsPage({
                             {format(new Date(event.startTime), "PPP 'at' p")} - {format(new Date(event.endTime), "p")}
                           </CardDescription>
                         </div>
-                        <div className="flex gap-2">
+                        <div className="flex gap-2 flex-wrap">
                           <Badge className={statusColors[event.status as keyof typeof statusColors]}>
                             {event.status}
                           </Badge>
                           <Badge variant="outline">
                             {typeLabels[event.eventType as keyof typeof typeLabels]}
                           </Badge>
+                          {event.partakeEventId && (
+                            <Badge variant="outline" className="border-indigo-500/50 text-indigo-400">
+                              Partake
+                            </Badge>
+                          )}
                         </div>
                       </div>
                     </CardHeader>
@@ -221,13 +226,18 @@ export default async function EventsPage({
                             {format(new Date(event.startTime), "PPP 'at' p")}
                           </CardDescription>
                         </div>
-                        <div className="flex gap-2">
+                        <div className="flex gap-2 flex-wrap">
                           <Badge className={statusColors[event.status as keyof typeof statusColors]}>
                             {event.status}
                           </Badge>
                           <Badge variant="outline">
                             {typeLabels[event.eventType as keyof typeof typeLabels]}
                           </Badge>
+                          {event.partakeEventId && (
+                            <Badge variant="outline" className="border-indigo-500/50 text-indigo-400">
+                              Partake
+                            </Badge>
+                          )}
                         </div>
                       </div>
                     </CardHeader>

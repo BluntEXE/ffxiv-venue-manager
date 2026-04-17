@@ -58,9 +58,6 @@ export const POST = withRateLimit(
         },
       })
 
-      // TODO: Optional - Send Discord webhook notification for new feedback
-      // This can be added later to notify admins of new feedback
-
       return NextResponse.json(feedback, { status: 201 })
     } catch (error) {
       console.error("Error creating feedback:", error)
@@ -70,10 +67,10 @@ export const POST = withRateLimit(
       )
     }
   },
-  { requests: 5, window: "1 m" } // Strict rate limiting to prevent spam
+  { requests: 5, window: "1 m" }
 )
 
-// GET /api/feedback - List all feedback (admin only - for future implementation)
+// GET /api/feedback - List current user's own feedback only
 export const GET = withRateLimit(
   async (request: NextRequest) => {
     try {
@@ -82,15 +79,11 @@ export const GET = withRateLimit(
         return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
       }
 
-      // TODO: Add admin role check here when admin system is implemented
-      // For now, any authenticated user can view their own feedback
-
-      const searchParams = request.nextUrl.searchParams
-      const userId = searchParams.get("userId")
-
+      // Always scope to the authenticated user — no userId param accepted.
+      // Admin access uses /api/admin/feedback instead.
       const feedback = await prisma.feedback.findMany({
         where: {
-          userId: userId || session.user.id,
+          userId: session.user.id,
         },
         include: {
           user: {

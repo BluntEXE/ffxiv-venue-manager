@@ -345,8 +345,8 @@ export default function EventTemplatesPage() {
 
             <div className="space-y-4 py-4">
               {error && (
-                <Alert className="bg-red-50 border-red-200">
-                  <AlertDescription className="text-red-800">{error}</AlertDescription>
+                <Alert className="bg-destructive/10 border-destructive/20">
+                  <AlertDescription className="text-destructive">{error}</AlertDescription>
                 </Alert>
               )}
 

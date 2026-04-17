@@ -48,11 +48,17 @@ export function VenueSidebar({
       href: `/dashboard/${venueSlug}/analytics`,
       label: "Analytics",
       icon: "📊",
+      roles: ["OWNER", "MANAGER"],
     },
     {
       href: `/dashboard/${venueSlug}/events`,
       label: "Events",
       icon: "📅",
+    },
+    {
+      href: `/dashboard/${venueSlug}/live`,
+      label: "Live",
+      icon: "🔴",
     },
     {
       href: `/dashboard/${venueSlug}/event-templates`,
@@ -64,6 +70,11 @@ export function VenueSidebar({
       href: `/dashboard/${venueSlug}/staff`,
       label: "Staff",
       icon: "👥",
+    },
+    {
+      href: `/dashboard/${venueSlug}/shifts`,
+      label: "Shifts",
+      icon: "🕐",
     },
     {
       href: `/dashboard/${venueSlug}/tasks`,
@@ -79,6 +90,11 @@ export function VenueSidebar({
       href: `/dashboard/${venueSlug}/sales`,
       label: "Sales",
       icon: "💰",
+    },
+    {
+      href: `/dashboard/${venueSlug}/timeline`,
+      label: "Timeline",
+      icon: "📜",
     },
     {
       href: `/dashboard/${venueSlug}/payroll`,

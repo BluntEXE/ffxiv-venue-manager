@@ -32,6 +32,8 @@ const updateSettingsSchema = z.object({
   discordWebhooks: discordWebhooksSchema.optional(),
   // Keep for backward compatibility
   discordWebhookUrl: z.string().url().optional().or(z.literal("")),
+  // Partake integration
+  partakeTeamId: z.number().int().positive().nullable().optional(),
 })
 
 export const GET = withRateLimit<{ params: Promise<{ venueId: string }> }>(
@@ -54,6 +56,7 @@ export const GET = withRateLimit<{ params: Promise<{ venueId: string }> }>(
       where: {
         userId: session.user.id,
         venueId,
+        status: "active",
       },
     })
 
@@ -70,6 +73,7 @@ export const GET = withRateLimit<{ params: Promise<{ venueId: string }> }>(
       select: {
         settings: true,
         discordWebhookUrl: true,
+        partakeTeamId: true,
       },
     })
 
@@ -80,6 +84,7 @@ export const GET = withRateLimit<{ params: Promise<{ venueId: string }> }>(
       return NextResponse.json({
         ...parseVenueSettings(venue.settings),
         discordWebhookUrl: venue.discordWebhookUrl,
+        partakeTeamId: venue.partakeTeamId,
       })
     } catch (error) {
       console.error("Error fetching venue settings:", error)
@@ -112,6 +117,7 @@ export const PUT = withRateLimit<{ params: Promise<{ venueId: string }> }>(
       where: {
         userId: session.user.id,
         venueId,
+        status: "active",
       },
     })
 
@@ -135,8 +141,8 @@ export const PUT = withRateLimit<{ params: Promise<{ venueId: string }> }>(
       return NextResponse.json({ error: "Venue not found" }, { status: 404 })
     }
 
-    // Extract Discord webhook URL from validated data
-    const { discordWebhookUrl, ...settingsData } = validatedData
+    // Extract top-level venue columns from validated data
+    const { discordWebhookUrl, partakeTeamId, ...settingsData } = validatedData
 
     // Merge new settings with existing settings (type-safe)
     const currentSettings = parseVenueSettings(venue.settings)
@@ -145,7 +151,7 @@ export const PUT = withRateLimit<{ params: Promise<{ venueId: string }> }>(
       ...settingsData,
     }
 
-    // Update venue settings and webhook URL
+    // Update venue settings, webhook URL, and Partake team ID
     const updatedVenue = await prisma.venue.update({
       where: { id: venueId },
       data: {
@@ -153,16 +159,21 @@ export const PUT = withRateLimit<{ params: Promise<{ venueId: string }> }>(
         ...(discordWebhookUrl !== undefined && {
           discordWebhookUrl: discordWebhookUrl || null,
         }),
+        ...(partakeTeamId !== undefined && {
+          partakeTeamId: partakeTeamId,
+        }),
       },
       select: {
         settings: true,
         discordWebhookUrl: true,
+        partakeTeamId: true,
       },
     })
 
       return NextResponse.json({
         ...parseVenueSettings(updatedVenue.settings),
         discordWebhookUrl: updatedVenue.discordWebhookUrl,
+        partakeTeamId: updatedVenue.partakeTeamId,
       })
     } catch (error) {
       if (error instanceof z.ZodError) {

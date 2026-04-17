@@ -36,7 +36,7 @@ import { Checkbox } from "@/components/ui/checkbox"
 import { Badge } from "@/components/ui/badge"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { format } from "date-fns"
-import { Plus, DollarSign, Clock, CheckCircle2, XCircle } from "lucide-react"
+import { Plus, DollarSign, Clock, CheckCircle2, XCircle, Zap, Trash2 } from "lucide-react"
 import { PageLoading } from "@/components/ui/loading-spinner"
 
 interface PayrollEntry {
@@ -79,6 +79,7 @@ interface StaffMember {
   id: string
   userId: string | null
   role: string
+  hourlyRate: string | null
   user: {
     id: string
     name: string | null
@@ -89,6 +90,30 @@ interface StaffMember {
     id: string
     name: string
   } | null
+}
+
+interface ShiftPreview {
+  id: string
+  scheduledStart: string
+  scheduledEnd: string
+  actualStart: string | null
+  actualEnd: string | null
+  hoursWorked: number
+}
+
+interface GeneratePreview {
+  staff: {
+    membershipId: string
+    name: string
+    image: string | null
+    defaultHourlyRate: number | null
+  }
+  shifts: ShiftPreview[]
+  summary: {
+    shiftCount: number
+    totalHours: number
+    estimatedTotal: number | null
+  }
 }
 
 export default function PayrollPage() {
@@ -116,6 +141,18 @@ export default function PayrollPage() {
   const [periodStart, setPeriodStart] = useState("")
   const [periodEnd, setPeriodEnd] = useState("")
   const [notes, setNotes] = useState("")
+
+  // Generate from Shifts dialog state
+  const [isGenerateOpen, setIsGenerateOpen] = useState(false)
+  const [genStaff, setGenStaff] = useState("")
+  const [genPeriodStart, setGenPeriodStart] = useState("")
+  const [genPeriodEnd, setGenPeriodEnd] = useState("")
+  const [genRateOverride, setGenRateOverride] = useState("")
+  const [genBonus, setGenBonus] = useState("")
+  const [genNotes, setGenNotes] = useState("")
+  const [genPreview, setGenPreview] = useState<GeneratePreview | null>(null)
+  const [genLoading, setGenLoading] = useState(false)
+  const [genCreating, setGenCreating] = useState(false)
 
   const venueId = params?.slug as string
 
@@ -250,6 +287,109 @@ export default function PayrollPage() {
     }
   }
 
+  const handleDeleteEntry = async (payrollId: string, isPaid: boolean) => {
+    const msg = isPaid
+      ? "This payroll entry is marked PAID. Deleting it removes the record of that payment. Continue?"
+      : "Delete this payroll entry? This cannot be undone."
+    if (!confirm(msg)) return
+
+    setUpdatingId(payrollId)
+    try {
+      const response = await fetch(`/api/venues/${slug}/payroll/${payrollId}`, {
+        method: "DELETE",
+      })
+      if (!response.ok) {
+        const body = await response.json().catch(() => ({}))
+        alert(body.error || `Delete failed (${response.status})`)
+        return
+      }
+      fetchPayrollEntries()
+    } catch (error) {
+      console.error("Error deleting payroll entry:", error)
+      alert("Failed to delete payroll entry")
+    } finally {
+      setUpdatingId(null)
+    }
+  }
+
+  const fetchGeneratePreview = async () => {
+    if (!genStaff || !genPeriodStart || !genPeriodEnd) return
+    setGenLoading(true)
+    setGenPreview(null)
+    try {
+      const params = new URLSearchParams({
+        membershipId: genStaff,
+        periodStart: genPeriodStart,
+        periodEnd: genPeriodEnd,
+      })
+      const response = await fetch(
+        `/api/venues/${slug}/payroll/generate?${params}`
+      )
+      if (!response.ok) {
+        const err = await response.json()
+        throw new Error(err.error || "Failed to fetch preview")
+      }
+      const data = await response.json()
+      setGenPreview(data)
+      // Auto-fill rate from staff default if no override set
+      if (!genRateOverride && data.staff.defaultHourlyRate) {
+        setGenRateOverride(String(data.staff.defaultHourlyRate))
+      }
+    } catch (error) {
+      console.error("Error fetching generate preview:", error)
+      const msg = error instanceof Error ? error.message : "Failed to fetch preview"
+      alert(msg)
+    } finally {
+      setGenLoading(false)
+    }
+  }
+
+  const handleGeneratePayroll = async () => {
+    if (!genStaff || !genPeriodStart || !genPeriodEnd) return
+    setGenCreating(true)
+    try {
+      const response = await fetch(`/api/venues/${slug}/payroll/generate`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          membershipId: genStaff,
+          periodStart: genPeriodStart,
+          periodEnd: genPeriodEnd,
+          baseRate: genRateOverride ? parseFloat(genRateOverride) : undefined,
+          bonusAmount: genBonus ? parseFloat(genBonus) : undefined,
+          notes: genNotes || undefined,
+        }),
+      })
+      if (!response.ok) {
+        const err = await response.json()
+        throw new Error(err.error || "Failed to generate payroll")
+      }
+      // Reset and close
+      setGenStaff("")
+      setGenPeriodStart("")
+      setGenPeriodEnd("")
+      setGenRateOverride("")
+      setGenBonus("")
+      setGenNotes("")
+      setGenPreview(null)
+      setIsGenerateOpen(false)
+      fetchPayrollEntries()
+    } catch (error) {
+      console.error("Error generating payroll:", error)
+      const msg = error instanceof Error ? error.message : "Failed to generate payroll"
+      alert(msg)
+    } finally {
+      setGenCreating(false)
+    }
+  }
+
+  const genEffectiveRate = genRateOverride
+    ? parseFloat(genRateOverride)
+    : genPreview?.staff.defaultHourlyRate ?? 0
+  const genEstimatedTotal = genPreview
+    ? Math.round(genEffectiveRate * genPreview.summary.totalHours) + (genBonus ? parseFloat(genBonus) || 0 : 0)
+    : 0
+
   const calculateTotal = () => {
     let total = parseFloat(baseRate) || 0
 
@@ -303,11 +443,202 @@ export default function PayrollPage() {
             <p className="text-sm md:text-base text-muted-foreground mt-1 md:mt-2">Manage staff compensation and payments</p>
           </div>
 
+          <div className="flex flex-col sm:flex-row gap-2">
+          <Dialog open={isGenerateOpen} onOpenChange={(open) => {
+            setIsGenerateOpen(open)
+            if (!open) {
+              setGenPreview(null)
+              setGenStaff("")
+              setGenPeriodStart("")
+              setGenPeriodEnd("")
+              setGenRateOverride("")
+              setGenBonus("")
+              setGenNotes("")
+            }
+          }}>
+            <DialogTrigger asChild>
+              <Button variant="outline">
+                <Zap className="mr-2 h-4 w-4" />
+                Generate from Shifts
+              </Button>
+            </DialogTrigger>
+            <DialogContent className="max-w-2xl max-h-[85vh] overflow-y-auto">
+              <DialogHeader>
+                <DialogTitle>Generate Payroll from Shifts</DialogTitle>
+                <DialogDescription>
+                  Automatically calculate pay from completed, unpaid shifts
+                </DialogDescription>
+              </DialogHeader>
+
+              <div className="space-y-4">
+                {/* Staff Selection */}
+                <div className="space-y-2">
+                  <Label>Staff Member</Label>
+                  <Select value={genStaff} onValueChange={(v) => { setGenStaff(v); setGenPreview(null) }}>
+                    <SelectTrigger>
+                      <SelectValue placeholder="Select staff member" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {staff.map((member) => (
+                        <SelectItem key={member.id} value={member.id}>
+                          {member.user?.displayName || member.user?.name || "Unknown"}
+                          {member.hourlyRate ? ` (${member.hourlyRate} Gil/hr)` : ""}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+
+                {/* Date Range */}
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="space-y-2">
+                    <Label>Period Start</Label>
+                    <Input
+                      type="date"
+                      value={genPeriodStart}
+                      onChange={(e) => { setGenPeriodStart(e.target.value); setGenPreview(null) }}
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label>Period End</Label>
+                    <Input
+                      type="date"
+                      value={genPeriodEnd}
+                      onChange={(e) => { setGenPeriodEnd(e.target.value); setGenPreview(null) }}
+                    />
+                  </div>
+                </div>
+
+                {/* Preview Button */}
+                <Button
+                  variant="outline"
+                  className="w-full"
+                  onClick={fetchGeneratePreview}
+                  disabled={!genStaff || !genPeriodStart || !genPeriodEnd || genLoading}
+                >
+                  {genLoading ? "Loading..." : "Preview Shifts"}
+                </Button>
+
+                {/* Preview Results */}
+                {genPreview && (
+                  <>
+                    {genPreview.shifts.length === 0 ? (
+                      <div className="p-4 bg-muted rounded-lg text-center text-muted-foreground">
+                        No unpaid completed shifts found in this period
+                      </div>
+                    ) : (
+                      <>
+                        {/* Shift List */}
+                        <div className="space-y-2">
+                          <Label>{genPreview.summary.shiftCount} Shift{genPreview.summary.shiftCount !== 1 ? "s" : ""} Found</Label>
+                          <div className="max-h-48 overflow-y-auto space-y-1">
+                            {genPreview.shifts.map((shift) => (
+                              <div
+                                key={shift.id}
+                                className="flex justify-between items-center p-2 bg-muted rounded text-sm"
+                              >
+                                <span>
+                                  {format(new Date(shift.actualStart!), "MMM d, h:mm a")} –{" "}
+                                  {format(new Date(shift.actualEnd!), "h:mm a")}
+                                </span>
+                                <span className="font-mono">{shift.hoursWorked}h</span>
+                              </div>
+                            ))}
+                          </div>
+                        </div>
+
+                        {/* Rate Override */}
+                        <div className="space-y-2">
+                          <Label>
+                            Hourly Rate
+                            {genPreview.staff.defaultHourlyRate && (
+                              <span className="text-muted-foreground font-normal ml-1">
+                                (default: {genPreview.staff.defaultHourlyRate} Gil/hr)
+                              </span>
+                            )}
+                          </Label>
+                          <Input
+                            type="number"
+                            step="0.01"
+                            placeholder={genPreview.staff.defaultHourlyRate?.toString() || "Enter rate"}
+                            value={genRateOverride}
+                            onChange={(e) => setGenRateOverride(e.target.value)}
+                          />
+                        </div>
+
+                        {/* Bonus */}
+                        <div className="space-y-2">
+                          <Label>Bonus (Optional)</Label>
+                          <Input
+                            type="number"
+                            step="0.01"
+                            placeholder="0"
+                            value={genBonus}
+                            onChange={(e) => setGenBonus(e.target.value)}
+                          />
+                        </div>
+
+                        {/* Notes */}
+                        <div className="space-y-2">
+                          <Label>Notes (Optional)</Label>
+                          <Textarea
+                            placeholder="Add any notes..."
+                            value={genNotes}
+                            onChange={(e) => setGenNotes(e.target.value)}
+                          />
+                        </div>
+
+                        {/* Summary */}
+                        <div className="p-4 bg-muted rounded-lg space-y-1">
+                          <div className="flex justify-between text-sm">
+                            <span>Total Hours</span>
+                            <span className="font-mono">{genPreview.summary.totalHours}h</span>
+                          </div>
+                          <div className="flex justify-between text-sm">
+                            <span>Rate</span>
+                            <span className="font-mono">{genEffectiveRate} Gil/hr</span>
+                          </div>
+                          {genBonus && parseFloat(genBonus) > 0 && (
+                            <div className="flex justify-between text-sm">
+                              <span>Bonus</span>
+                              <span className="font-mono">+{parseFloat(genBonus)} Gil</span>
+                            </div>
+                          )}
+                          <div className="flex justify-between font-semibold pt-2 border-t border-border">
+                            <span>Total</span>
+                            <span className="text-lg">{Math.round(genEstimatedTotal).toLocaleString()} Gil</span>
+                          </div>
+                        </div>
+                      </>
+                    )}
+                  </>
+                )}
+              </div>
+
+              <DialogFooter>
+                <Button variant="outline" onClick={() => setIsGenerateOpen(false)} disabled={genCreating}>
+                  Cancel
+                </Button>
+                <Button
+                  onClick={handleGeneratePayroll}
+                  disabled={
+                    !genPreview ||
+                    genPreview.shifts.length === 0 ||
+                    genEffectiveRate <= 0 ||
+                    genCreating
+                  }
+                >
+                  {genCreating ? "Generating..." : `Generate (${genPreview?.summary.shiftCount || 0} shifts)`}
+                </Button>
+              </DialogFooter>
+            </DialogContent>
+          </Dialog>
+
           <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
             <DialogTrigger asChild>
               <Button>
                 <Plus className="mr-2 h-4 w-4" />
-                Add Payroll Entry
+                Add Manual Entry
               </Button>
             </DialogTrigger>
             <DialogContent className="max-w-2xl">
@@ -486,6 +817,7 @@ export default function PayrollPage() {
               </DialogFooter>
             </DialogContent>
           </Dialog>
+          </div>
         </div>
 
         {/* Summary Cards */}
@@ -589,7 +921,7 @@ export default function PayrollPage() {
                                 "Unknown"}
                           </h3>
                           {entry.isManualEntry && (
-                            <Badge variant="outline" className="bg-blue-50 text-blue-700 border-blue-200">
+                            <Badge variant="outline" className="bg-blue-500/10 text-blue-400 border-blue-500/20">
                               Manual
                             </Badge>
                           )}
@@ -616,7 +948,7 @@ export default function PayrollPage() {
                         )}
 
                         {entry.bonusAmount && parseFloat(entry.bonusAmount) > 0 && (
-                          <p className="text-sm text-green-600">
+                          <p className="text-sm text-emerald-400">
                             + {entry.bonusAmount} Gil bonus
                           </p>
                         )}
@@ -639,26 +971,38 @@ export default function PayrollPage() {
                         {Math.round(parseFloat(entry.totalAmount)).toLocaleString()} Gil
                       </div>
 
-                      <Button
-                        variant={entry.isPaid ? "outline" : "default"}
-                        size="sm"
-                        onClick={() => handleMarkAsPaid(entry.id, entry.isPaid)}
-                        disabled={updatingId === entry.id}
-                      >
-                        {updatingId === entry.id ? (
-                          "Updating..."
-                        ) : entry.isPaid ? (
-                          <>
-                            <XCircle className="mr-2 h-4 w-4" />
-                            Mark Unpaid
-                          </>
-                        ) : (
-                          <>
-                            <CheckCircle2 className="mr-2 h-4 w-4" />
-                            Mark as Paid
-                          </>
-                        )}
-                      </Button>
+                      <div className="flex items-center gap-2">
+                        <Button
+                          variant={entry.isPaid ? "outline" : "default"}
+                          size="sm"
+                          onClick={() => handleMarkAsPaid(entry.id, entry.isPaid)}
+                          disabled={updatingId === entry.id}
+                        >
+                          {updatingId === entry.id ? (
+                            "Updating..."
+                          ) : entry.isPaid ? (
+                            <>
+                              <XCircle className="mr-2 h-4 w-4" />
+                              Mark Unpaid
+                            </>
+                          ) : (
+                            <>
+                              <CheckCircle2 className="mr-2 h-4 w-4" />
+                              Mark as Paid
+                            </>
+                          )}
+                        </Button>
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          className="text-destructive hover:text-destructive"
+                          onClick={() => handleDeleteEntry(entry.id, entry.isPaid)}
+                          disabled={updatingId === entry.id}
+                          aria-label="Delete payroll entry"
+                        >
+                          <Trash2 className="h-4 w-4" />
+                        </Button>
+                      </div>
                     </div>
                   </div>
                 </CardContent>

@@ -12,9 +12,9 @@ import { PatronTracking } from "@/components/patron-tracking"
 import { EventAttendanceChart } from "@/components/event-attendance-chart"
 
 const statusColors = {
-  DRAFT: "bg-gray-500",
+  DRAFT: "bg-zinc-500",
   PUBLISHED: "bg-blue-500",
-  ACTIVE: "bg-green-500",
+  ACTIVE: "bg-emerald-500",
   COMPLETED: "bg-purple-500",
   CANCELLED: "bg-red-500",
 }
@@ -78,32 +78,39 @@ export default async function EventDetailsPage({
   const canEdit = ["OWNER", "MANAGER"].includes(userRole)
 
   return (
-    <div className="container mx-auto p-8 max-w-4xl">
+    <div className="container mx-auto p-4 md:p-8 max-w-4xl">
       {/* Header */}
-      <div className="flex justify-between items-start mb-8">
-        <div className="flex-1">
-          <div className="flex items-center gap-3 mb-2">
-            <h1 className="text-4xl font-bold">{event.title}</h1>
+      <div className="flex flex-col sm:flex-row sm:justify-between sm:items-start gap-4 mb-6 md:mb-8">
+        <div className="flex-1 min-w-0">
+          <h1 className="text-2xl md:text-4xl font-bold mb-2 break-words">{event.title}</h1>
+          <div className="flex flex-wrap items-center gap-2 mb-2">
             <Badge className={statusColors[event.status as keyof typeof statusColors]}>
               {event.status}
             </Badge>
             <Badge variant="outline">
               {typeLabels[event.eventType as keyof typeof typeLabels]}
             </Badge>
+            {event.partakeEventId && (
+              <Badge variant="outline" className="border-indigo-500/50 text-indigo-400">
+                Partake
+              </Badge>
+            )}
           </div>
-          <p className="text-muted-foreground">
-            Created by {event.createdBy.name}
+          <p className="text-sm text-muted-foreground">
+            {event.partakeEventId
+              ? "Synced from Partake.gg"
+              : `Created by ${event.createdBy.name}`}
           </p>
         </div>
-        <div className="flex gap-2">
-          <Button variant="outline" asChild>
+        <div className="flex flex-wrap gap-2 shrink-0">
+          <Button variant="outline" size="sm" asChild>
             <Link href={`/dashboard/${slug}/events`}>← Back</Link>
           </Button>
           {canEdit && (
             <>
-              <Button asChild>
+              <Button size="sm" asChild>
                 <Link href={`/dashboard/${slug}/events/${eventId}/edit`}>
-                  Edit Event
+                  Edit
                 </Link>
               </Button>
               <DeleteEventButton
@@ -139,16 +146,27 @@ export default async function EventDetailsPage({
               <CardTitle>Event Metrics</CardTitle>
               <CardDescription>Final totals after event completion</CardDescription>
             </CardHeader>
-            <CardContent className="grid grid-cols-2 gap-4">
+            <CardContent className={`grid gap-4 grid-cols-2 ${event.partakeAttendeeCount ? "sm:grid-cols-3" : ""}`}>
               <div>
                 <p className="text-sm text-muted-foreground">Final Attendance</p>
                 <p className="text-2xl font-bold">
                   {event.attendanceCount || "—"}
                 </p>
                 <p className="text-xs text-muted-foreground mt-1">
-                  Manual entry
+                  From patron tracking
                 </p>
               </div>
+              {event.partakeAttendeeCount && (
+                <div>
+                  <p className="text-sm text-muted-foreground">Partake RSVPs</p>
+                  <p className="text-2xl font-bold text-indigo-400">
+                    {event.partakeAttendeeCount}
+                  </p>
+                  <p className="text-xs text-muted-foreground mt-1">
+                    From Partake.gg
+                  </p>
+                </div>
+              )}
               <div>
                 <p className="text-sm text-muted-foreground">Revenue</p>
                 <p className="text-2xl font-bold">
@@ -207,6 +225,24 @@ export default async function EventDetailsPage({
               </div>
             </CardContent>
           </Card>
+
+          {/* Partake Source */}
+          {event.partakeEventId && (
+            <Card className="border-indigo-500/20 bg-indigo-500/5">
+              <CardHeader>
+                <CardTitle className="text-sm">Synced from Partake</CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-2">
+                <div>
+                  <p className="text-sm text-muted-foreground">Partake Event ID</p>
+                  <p className="text-sm font-mono">{event.partakeEventId}</p>
+                </div>
+                <p className="text-xs text-muted-foreground">
+                  This event was automatically imported from Partake.gg and syncs hourly.
+                </p>
+              </CardContent>
+            </Card>
+          )}
 
           {/* Venue Info */}
           <Card>

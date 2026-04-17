@@ -1,0 +1,40 @@
+{
+  "$schema": "https://opencode.ai/config.json",
+  "instructions": [
+    "./docs/SECURITY_HEADERS.md",
+    "./docs/SECURITY_CREDENTIAL_ROTATION.md",
+    "./docs/CSRF_PROTECTION.md",
+    "./docs/RATE_LIMITING_SETUP.md"
+  ],
+  "command": {
+    "dev": {
+      "template": "Start the development server for XIV Venue Manager",
+      "description": "Start Next.js dev server"
+    },
+    "build": {
+      "template": "Run the production build and check for errors",
+      "description": "Production build"
+    },
+    "lint": {
+      "template": "Run ESLint to check for code issues",
+      "description": "Run linter"
+    },
+    "security-audit": {
+      "template": "Run a security audit on this codebase. Check for:\n1. Dependency vulnerabilities (npm audit)\n2. Exposed secrets in code\n3. Missing security headers\n4. SQL injection risks\n5. XSS vulnerabilities\n\nUse the @security-auditor agent for detailed analysis.",
+      "description": "Run security audit",
+      "agent": "security-auditor"
+    },
+    "deploy": {
+      "template": "Show me the commands to deploy to Vercel for production",
+      "description": "Vercel deployment commands"
+    },
+    "db-push": {
+      "template": "Push Prisma schema changes to the database",
+      "description": "Push database schema"
+    },
+    "db-generate": {
+      "template": "Generate Prisma client",
+      "description": "Generate Prisma client"
+    }
+  }
+}

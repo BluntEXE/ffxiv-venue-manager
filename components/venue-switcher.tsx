@@ -19,15 +19,22 @@ export function VenueSwitcher({ venues, currentSlug }: VenueSwitcherProps) {
   const pathname = usePathname()
 
   const handleVenueChange = (slug: string) => {
-    // If we're on a dashboard page, navigate to the new venue's dashboard
-    if (pathname.includes("/dashboard/")) {
+    // Only swap segment 2 when the current path is already inside a
+    // venue-slug-scoped route (e.g. /dashboard/my-venue/shifts). If we're
+    // on an account-scoped page like /dashboard/account/characters or
+    // /dashboard/api-keys, that segment is NOT a venue slug, and blindly
+    // overwriting it produces a 404 (e.g. /dashboard/my-venue/characters
+    // has no such page). In that case, jump to the venue root instead.
+    const knownSlugs = new Set(venues.map((v) => v.slug))
+    if (pathname.startsWith("/dashboard/")) {
       const pathParts = pathname.split("/")
-      pathParts[2] = slug // Replace the slug in the path
-      router.push(pathParts.join("/"))
-    } else {
-      // Otherwise, just go to the venue's main dashboard
-      router.push(`/dashboard/${slug}`)
+      if (pathParts[2] && knownSlugs.has(pathParts[2])) {
+        pathParts[2] = slug
+        router.push(pathParts.join("/"))
+        return
+      }
     }
+    router.push(`/dashboard/${slug}`)
   }
 
   if (venues.length <= 1) {

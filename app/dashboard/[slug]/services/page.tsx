@@ -274,7 +274,7 @@ export default function ServicesPage({
   }
 
   if (!slug) {
-    return <div className="container mx-auto p-8"><PageLoading /></div>
+    return <div className="container mx-auto p-4 md:p-8"><PageLoading /></div>
   }
 
   const activeServices = services.filter((s) => s.isActive)
@@ -321,7 +321,7 @@ export default function ServicesPage({
               <CardTitle className="text-sm font-medium">Active</CardTitle>
             </CardHeader>
             <CardContent>
-              <div className="text-3xl font-bold text-green-600">{activeServices.length}</div>
+              <div className="text-3xl font-bold text-emerald-500">{activeServices.length}</div>
             </CardContent>
           </Card>
           <Card>
@@ -329,15 +329,15 @@ export default function ServicesPage({
               <CardTitle className="text-sm font-medium">Inactive</CardTitle>
             </CardHeader>
             <CardContent>
-              <div className="text-3xl font-bold text-gray-400">{inactiveServices.length}</div>
+              <div className="text-3xl font-bold text-zinc-400">{inactiveServices.length}</div>
             </CardContent>
           </Card>
         </div>
 
         {/* Error Message */}
         {error && (
-          <Alert className="mb-6 bg-red-50 border-red-200">
-            <AlertDescription className="text-red-800">{error}</AlertDescription>
+          <Alert className="mb-6 bg-destructive/10 border-destructive/20">
+            <AlertDescription className="text-destructive">{error}</AlertDescription>
           </Alert>
         )}
 
@@ -348,7 +348,7 @@ export default function ServicesPage({
           <Card className="text-center py-12">
             <CardContent>
               <p className="text-muted-foreground mb-4">
-                No services yet. Add your first product or service!
+                No services configured yet.
               </p>
               <Button onClick={openCreateDialog}>Add Your First Service</Button>
             </CardContent>
@@ -378,7 +378,7 @@ export default function ServicesPage({
                               </div>
                             )}
                           </div>
-                          <Badge className="bg-green-500">Active</Badge>
+                          <Badge className="bg-emerald-500">Active</Badge>
                         </div>
                         {service.description && (
                           <CardDescription className="mt-2">
@@ -516,8 +516,8 @@ export default function ServicesPage({
             </DialogHeader>
             <div className="space-y-4">
               {formError && (
-                <Alert className="bg-red-50 border-red-200">
-                  <AlertDescription className="text-red-800">{formError}</AlertDescription>
+                <Alert className="bg-destructive/10 border-destructive/20">
+                  <AlertDescription className="text-destructive">{formError}</AlertDescription>
                 </Alert>
               )}
               <div className="space-y-2">
@@ -615,8 +615,8 @@ export default function ServicesPage({
             </DialogHeader>
             <div className="space-y-4">
               {formError && (
-                <Alert className="bg-red-50 border-red-200">
-                  <AlertDescription className="text-red-800">{formError}</AlertDescription>
+                <Alert className="bg-destructive/10 border-destructive/20">
+                  <AlertDescription className="text-destructive">{formError}</AlertDescription>
                 </Alert>
               )}
               <div className="space-y-2">

@@ -240,7 +240,7 @@ export function PendingInvites({ invites, slug, canManageStaff }: PendingInvites
                           <Button
                             size="sm"
                             variant="outline"
-                            className="text-red-600 hover:text-red-700 hover:bg-red-50"
+                            className="text-destructive hover:text-destructive hover:bg-destructive/10"
                             disabled={deletingId === invite.id}
                           >
                             <Trash2 className="h-4 w-4" />
@@ -287,7 +287,7 @@ export function PendingInvites({ invites, slug, canManageStaff }: PendingInvites
           </DialogHeader>
           <div className="space-y-4 py-4">
             {editError && (
-              <div className="bg-red-50 border border-red-200 text-red-800 px-4 py-2 rounded text-sm">
+              <div className="bg-destructive/10 border border-destructive/20 text-destructive px-4 py-2 rounded text-sm">
                 {editError}
               </div>
             )}

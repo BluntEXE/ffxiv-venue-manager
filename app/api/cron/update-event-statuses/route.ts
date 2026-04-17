@@ -31,10 +31,6 @@ export async function GET(request: Request) {
     const expectedHeader = `Bearer ${cronSecret}`
 
     // Debug logging
-    console.log("[Cron Auth Debug]")
-    console.log("  Received header:", authHeader)
-    console.log("  Expected header:", expectedHeader)
-    console.log("  Match:", authHeader === expectedHeader)
 
     if (authHeader !== expectedHeader) {
       console.log("Unauthorized cron access attempt - invalid token")
@@ -118,7 +114,7 @@ export async function GET(request: Request) {
           where: { eventId: event.id },
           select: { countChange: true },
         })
-        const finalPatronCount = patronLogs.reduce((sum, log) => sum + log.countChange, 0)
+        const finalPatronCount = patronLogs.reduce((sum, log) => sum + (log.countChange ?? 0), 0)
 
         // Calculate total revenue from transactions
         const transactions = await prisma.transaction.findMany({
@@ -185,7 +181,7 @@ export async function GET(request: Request) {
   } catch (error) {
     console.error("Error in update-event-statuses cron job:", error)
     return NextResponse.json(
-      { error: "Internal server error", details: String(error) },
+      { error: "Internal server error" },
       { status: 500 }
     )
   }

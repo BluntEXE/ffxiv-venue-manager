@@ -159,13 +159,13 @@ export default function InvitePage({
         <Card className="w-full max-w-md">
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
-              <CheckCircle2 className="h-5 w-5 text-green-400" />
+              <CheckCircle2 className="h-5 w-5 text-emerald-400" />
               Invite Accepted!
             </CardTitle>
           </CardHeader>
           <CardContent>
             <Alert className="bg-green-400/10 border-green-400/20">
-              <AlertDescription className="text-green-400">
+              <AlertDescription className="text-emerald-400">
                 You have successfully joined <strong>{inviteDetails?.venue.name}</strong> as{" "}
                 <strong>{inviteDetails?.role.toLowerCase()}</strong>. Redirecting to dashboard...
               </AlertDescription>

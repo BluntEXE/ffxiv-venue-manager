@@ -37,6 +37,7 @@ export const GET = withRateLimit<{ params: Promise<{ venueId: string; eventId: s
       where: {
         userId: session.user.id,
         venueId,
+        status: "active",
       },
     })
 
@@ -89,6 +90,7 @@ export const PUT = withRateLimit<{ params: Promise<{ venueId: string; eventId: s
       where: {
         userId: session.user.id,
         venueId,
+        status: "active",
       },
     })
 
@@ -109,7 +111,7 @@ export const PUT = withRateLimit<{ params: Promise<{ venueId: string; eventId: s
         where: { eventId },
         select: { countChange: true },
       })
-      const finalPatronCount = patronLogs.reduce((sum, log) => sum + log.countChange, 0)
+      const finalPatronCount = patronLogs.reduce((sum, log) => sum + (log.countChange ?? 0), 0)
 
       // Calculate total revenue from transactions
       const transactions = await prisma.transaction.findMany({
@@ -168,6 +170,7 @@ export const DELETE = withRateLimit<{ params: Promise<{ venueId: string; eventId
       where: {
         userId: session.user.id,
         venueId,
+        status: "active",
       },
     })
 

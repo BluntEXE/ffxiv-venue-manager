@@ -200,7 +200,7 @@ export default function AnalyticsPage() {
   if (isLoading) {
     return (
       <VenueLayoutClient slug={slug}>
-        <div className="container mx-auto p-8">
+        <div className="container mx-auto p-4 md:p-8">
           <PageLoading text="Loading analytics..." />
         </div>
       </VenueLayoutClient>
@@ -210,7 +210,7 @@ export default function AnalyticsPage() {
   if (error) {
     return (
       <VenueLayoutClient slug={slug}>
-        <div className="container mx-auto p-8">
+        <div className="container mx-auto p-4 md:p-8">
           <div className="text-center text-red-500">
             <p>Error loading analytics: {error}</p>
             <button
@@ -354,7 +354,7 @@ export default function AnalyticsPage() {
                   <CardTitle className="text-sm font-medium flex items-center gap-2">
                     <TrendingUp className={`h-4 w-4 ${
                       analyticsData.financial.netProfit >= 0
-                        ? 'text-green-500'
+                        ? 'text-emerald-500'
                         : 'text-red-500'
                     }`} />
                     Net Profit/Loss
@@ -363,8 +363,8 @@ export default function AnalyticsPage() {
                 <CardContent>
                   <div className={`text-2xl font-bold ${
                     analyticsData.financial.netProfit >= 0
-                      ? 'text-green-600'
-                      : 'text-red-600'
+                      ? 'text-emerald-500'
+                      : 'text-red-400'
                   }`}>
                     {analyticsData.financial.netProfit >= 0 ? '+' : ''}
                     {Math.round(analyticsData.financial.netProfit).toLocaleString()} gil
@@ -468,7 +468,7 @@ export default function AnalyticsPage() {
                                 </div>
                                 <div className="flex items-center justify-between gap-4 text-xs border-t pt-1">
                                   <span className="text-muted-foreground font-semibold">Net Profit:</span>
-                                  <span className={`font-semibold ${data.netProfit >= 0 ? 'text-green-600' : 'text-red-600'}`}>
+                                  <span className={`font-semibold ${data.netProfit >= 0 ? 'text-emerald-500' : 'text-red-400'}`}>
                                     {data.netProfit >= 0 ? '+' : ''}{data.netProfit.toLocaleString()} gil
                                   </span>
                                 </div>
@@ -498,7 +498,7 @@ export default function AnalyticsPage() {
           <Card>
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
-                <Users className="h-5 w-5 text-green-500" />
+                <Users className="h-5 w-5 text-emerald-500" />
                 Patron Visits (Last 7 Events)
               </CardTitle>
               <CardDescription>
@@ -630,12 +630,12 @@ export default function AnalyticsPage() {
                               {event.payroll.toLocaleString()} gil
                             </TableCell>
                             <TableCell className={`text-right font-semibold ${
-                              event.netProfit >= 0 ? 'text-green-600' : 'text-red-600'
+                              event.netProfit >= 0 ? 'text-emerald-500' : 'text-red-400'
                             }`}>
                               {event.netProfit >= 0 ? '+' : ''}{event.netProfit.toLocaleString()} gil
                             </TableCell>
                             <TableCell className={`text-right font-medium ${
-                              parseFloat(profitMargin) >= 0 ? 'text-green-600' : 'text-red-600'
+                              parseFloat(profitMargin) >= 0 ? 'text-emerald-500' : 'text-red-400'
                             }`}>
                               {profitMargin}%
                             </TableCell>
@@ -661,14 +661,14 @@ export default function AnalyticsPage() {
                         </TableCell>
                         <TableCell className={`text-right ${
                           analyticsData.revenueByEvent.reduce((sum, e) => sum + e.netProfit, 0) >= 0
-                            ? 'text-green-600'
-                            : 'text-red-600'
+                            ? 'text-emerald-500'
+                            : 'text-red-400'
                         }`}>
                           {analyticsData.revenueByEvent.reduce((sum, e) => sum + e.netProfit, 0) >= 0 ? '+' : ''}
                           {analyticsData.revenueByEvent.reduce((sum, e) => sum + e.netProfit, 0).toLocaleString()} gil
                         </TableCell>
                         <TableCell className={`text-right ${
-                          analyticsData.financial.profitMargin >= 0 ? 'text-green-600' : 'text-red-600'
+                          analyticsData.financial.profitMargin >= 0 ? 'text-emerald-500' : 'text-red-400'
                         }`}>
                           {analyticsData.financial.profitMargin.toFixed(1)}%
                         </TableCell>

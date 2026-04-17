@@ -32,6 +32,7 @@ export const GET = withRateLimit<{ params: Promise<{ venueId: string; roleId: st
       where: {
         userId: session.user.id,
         venueId,
+        status: "active",
       },
     })
 
@@ -86,6 +87,7 @@ export const PUT = withRateLimit<{ params: Promise<{ venueId: string; roleId: st
       where: {
         userId: session.user.id,
         venueId,
+        status: "active",
       },
     })
 
@@ -174,6 +176,7 @@ export const DELETE = withRateLimit<{ params: Promise<{ venueId: string; roleId:
       where: {
         userId: session.user.id,
         venueId,
+        status: "active",
       },
     })
 

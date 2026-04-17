@@ -67,7 +67,7 @@ interface CustomRole {
 const roleColors = {
   OWNER: "bg-purple-500",
   MANAGER: "bg-blue-500",
-  STAFF: "bg-green-500",
+  STAFF: "bg-emerald-500",
 }
 
 export default function ManageStaffMemberPage({
@@ -224,12 +224,12 @@ export default function ManageStaffMemberPage({
   }
 
   if (!slug || !membershipId) {
-    return <div className="container mx-auto p-8"><PageLoading /></div>
+    return <div className="container mx-auto p-4 md:p-8"><PageLoading /></div>
   }
 
   if (isLoading) {
     return (
-      <div className="container mx-auto p-8">
+      <div className="container mx-auto p-4 md:p-8">
         <PageLoading text="Loading staff member..." />
       </div>
     )
@@ -237,9 +237,9 @@ export default function ManageStaffMemberPage({
 
   if (!staffMember) {
     return (
-      <div className="container mx-auto p-8">
-        <Alert className="bg-red-50 border-red-200">
-          <AlertDescription className="text-red-800">
+      <div className="container mx-auto p-4 md:p-8">
+        <Alert className="bg-destructive/10 border-destructive/20">
+          <AlertDescription className="text-destructive">
             Staff member not found
           </AlertDescription>
         </Alert>
@@ -251,10 +251,10 @@ export default function ManageStaffMemberPage({
   }
 
   return (
-    <div className="container mx-auto p-8 max-w-3xl">
+    <div className="container mx-auto p-4 md:p-8 max-w-3xl">
       {/* Header */}
-      <div className="mb-8">
-        <h1 className="text-4xl font-bold">Manage Staff Member</h1>
+      <div className="mb-6 md:mb-8">
+        <h1 className="text-2xl md:text-4xl font-bold">Manage Staff Member</h1>
         <p className="text-muted-foreground mt-2">
           Update roles and permissions for this team member
         </p>
@@ -262,8 +262,8 @@ export default function ManageStaffMemberPage({
 
       {/* Success Message */}
       {success && (
-        <Alert className="mb-6 bg-green-50 border-green-200">
-          <AlertDescription className="text-green-800">
+        <Alert className="mb-6 bg-emerald-500/10 border-emerald-500/20">
+          <AlertDescription className="text-emerald-400">
             {success}
           </AlertDescription>
         </Alert>
@@ -271,8 +271,8 @@ export default function ManageStaffMemberPage({
 
       {/* Error Message */}
       {error && (
-        <Alert className="mb-6 bg-red-50 border-red-200">
-          <AlertDescription className="text-red-800">{error}</AlertDescription>
+        <Alert className="mb-6 bg-destructive/10 border-destructive/20">
+          <AlertDescription className="text-destructive">{error}</AlertDescription>
         </Alert>
       )}
 
@@ -402,7 +402,7 @@ export default function ManageStaffMemberPage({
       {/* Danger Zone */}
       <Card className="border-red-200">
         <CardHeader>
-          <CardTitle className="text-red-600">Danger Zone</CardTitle>
+          <CardTitle className="text-red-400">Danger Zone</CardTitle>
           <CardDescription>
             Irreversible actions for this staff member
           </CardDescription>

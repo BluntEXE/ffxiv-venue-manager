@@ -107,8 +107,8 @@ export function PatronTracking({ venueId, eventId }: PatronTrackingProps) {
       </CardHeader>
       <CardContent className="space-y-4">
         {error && (
-          <Alert className="bg-red-50 border-red-200">
-            <AlertDescription className="text-red-800">{error}</AlertDescription>
+          <Alert className="bg-destructive/10 border-destructive/20">
+            <AlertDescription className="text-destructive">{error}</AlertDescription>
           </Alert>
         )}
 
@@ -158,7 +158,7 @@ export function PatronTracking({ venueId, eventId }: PatronTrackingProps) {
                 >
                   <div className="flex items-center gap-2">
                     {log.action === "ENTER" ? (
-                      <ArrowUpCircle className="h-4 w-4 text-green-600" />
+                      <ArrowUpCircle className="h-4 w-4 text-emerald-500" />
                     ) : (
                       <ArrowDownCircle className="h-4 w-4 text-orange-600" />
                     )}

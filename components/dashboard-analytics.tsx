@@ -140,7 +140,7 @@ export function DashboardAnalytics({ venueId }: DashboardAnalyticsProps) {
             Net Profit/Loss (Last 7 Events)
           </CardTitle>
           <CardDescription>
-            Total: <span className={`font-semibold ${totalNetProfit >= 0 ? 'text-green-600' : 'text-red-600'}`}>
+            Total: <span className={`font-semibold ${totalNetProfit >= 0 ? 'text-emerald-500' : 'text-red-400'}`}>
               {totalNetProfit >= 0 ? '+' : ''}{totalNetProfit.toLocaleString()} gil
             </span>
           </CardDescription>
@@ -186,7 +186,7 @@ export function DashboardAnalytics({ venueId }: DashboardAnalyticsProps) {
                           <p className="mb-1 text-sm font-semibold">{label}</p>
                           <p className="text-xs text-muted-foreground mb-2">{payload[0].payload.eventTitle}</p>
                           <div className="flex items-center gap-2 text-xs">
-                            <span className={`font-medium ${netProfit >= 0 ? 'text-green-600' : 'text-red-600'}`}>
+                            <span className={`font-medium ${netProfit >= 0 ? 'text-emerald-500' : 'text-red-400'}`}>
                               {netProfit >= 0 ? 'Profit' : 'Loss'}: {Math.abs(netProfit).toLocaleString()} gil
                             </span>
                           </div>
@@ -215,7 +215,7 @@ export function DashboardAnalytics({ venueId }: DashboardAnalyticsProps) {
       <Card>
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
-            <CheckCircle2 className="h-5 w-5 text-green-500" />
+            <CheckCircle2 className="h-5 w-5 text-emerald-500" />
             Task Completion
           </CardTitle>
           <CardDescription>

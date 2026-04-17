@@ -43,6 +43,7 @@ export const POST = withRateLimit<{ params: Promise<{ venueId: string }> }>(
       where: {
         userId: session.user.id,
         venueId,
+        status: "active",
       },
     })
 
@@ -138,6 +139,7 @@ export const GET = withRateLimit<{ params: Promise<{ venueId: string }> }>(
       where: {
         userId: session.user.id,
         venueId,
+        status: "active",
       },
     })
 

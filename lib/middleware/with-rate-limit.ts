@@ -101,7 +101,7 @@ export function withRateLimit<T = unknown>(
     }
 
     // Default rate limit: 60 requests per minute
-    const maxRequests = options?.requests || 60
+    const maxRequests = options?.requests || 200
     const windowStr = options?.window || "1 m"
     const windowMs = parseWindow(windowStr)
 

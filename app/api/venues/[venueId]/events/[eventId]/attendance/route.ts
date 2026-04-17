@@ -29,6 +29,7 @@ export const GET = withRateLimit<{ params: Promise<{ venueId: string; eventId: s
                 where: {
                     userId: session.user.id,
                     venueId,
+        status: "active",
                 },
             })
 
@@ -81,7 +82,7 @@ export const GET = withRateLimit<{ params: Promise<{ venueId: string; eventId: s
             // Build time-series data showing cumulative count at each log point
             let runningCount = 0
             const attendanceData = logs.map((log) => {
-                runningCount += log.countChange
+                runningCount += (log.countChange ?? 0)
                 return {
                     time: format(new Date(log.timestamp), "HH:mm"),
                     timestamp: log.timestamp.toISOString(),

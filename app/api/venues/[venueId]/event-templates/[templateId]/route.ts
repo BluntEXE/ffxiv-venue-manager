@@ -45,6 +45,7 @@ export const PATCH = withRateLimit<{ params: Promise<{ venueId: string; template
         where: {
           userId: session.user.id,
           venueId: venue.id,
+        status: "active",
         },
       })
 
@@ -130,6 +131,7 @@ export const DELETE = withRateLimit<{ params: Promise<{ venueId: string; templat
         where: {
           userId: session.user.id,
           venueId: venue.id,
+        status: "active",
         },
       })
 

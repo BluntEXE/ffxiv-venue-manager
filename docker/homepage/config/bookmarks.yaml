@@ -1,0 +1,33 @@
+---
+- name: FFXIV Tools
+  links:
+    - xivmodarchive:
+        href: https://xivmodarchive.com/search
+        icon: search
+    - heliosphere:
+        href: https://heliosphere.app/search
+        icon: search
+    - unvaulted:
+        href: https://unvaulted.coomer.party/?s=
+        icon: search
+    - aetherlink:
+        href: https://aetherlink.app/browse?query=
+        icon: search
+
+- name: My Sites
+  links:
+    - xiv-venue-manager:
+        href: https://xivvenuemanager.com
+        icon: gamepad
+    - ehno:
+        href: https://ehno.xivvenuemanager.com
+        icon: user
+    - moonshadow:
+        href: https://moonshadow-moments.netlify.app
+        icon: camera
+
+- name: Local
+  links:
+    - homepage-local:
+        href: http://192.168.1.122:8080
+        icon: home

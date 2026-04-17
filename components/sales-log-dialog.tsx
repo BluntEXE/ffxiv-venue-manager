@@ -140,8 +140,8 @@ export function SalesLogDialog({ venueId, services, events }: SalesLogDialogProp
           </DialogHeader>
           <div className="space-y-4">
             {formError && (
-              <Alert className="bg-red-50 border-red-200">
-                <AlertDescription className="text-red-800">{formError}</AlertDescription>
+              <Alert className="bg-destructive/10 border-destructive/20">
+                <AlertDescription className="text-destructive">{formError}</AlertDescription>
               </Alert>
             )}
             <div className="space-y-2">
@@ -166,7 +166,7 @@ export function SalesLogDialog({ venueId, services, events }: SalesLogDialogProp
             </div>
             <div className="space-y-2">
               <Label htmlFor="event">
-                Event {activeEvent && <span className="text-xs text-green-600">(Auto-selected active event)</span>}
+                Event {activeEvent && <span className="text-xs text-emerald-500">(Auto-selected active event)</span>}
               </Label>
               <Select
                 value={formData.eventId || "none"}

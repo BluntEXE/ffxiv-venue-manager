@@ -6,6 +6,7 @@ import { z } from "zod"
 import { withRateLimit } from "@/lib/middleware/with-rate-limit"
 import { validators } from "@/lib/validation"
 import { getOrSet, cacheKeys, cacheTTL, invalidateCache } from "@/lib/redis-cache"
+import { ensureManagerRole } from "@/lib/api/venue-setup"
 
 const venueSchema = z.object({
   name: validators.venueName,
@@ -44,27 +45,42 @@ export const POST = withRateLimit(
         )
       }
 
-      // Create venue with owner membership
-      const venue = await prisma.venue.create({
-        data: {
-          name: validatedData.name,
-          slug: validatedData.slug,
-          description: validatedData.description,
-          dataCenter: validatedData.dataCenter,
-          world: validatedData.world,
-          location: validatedData.location,
-          ownerId: session.user.id,
-          memberships: {
-            create: {
-              userId: session.user.id,
-              role: "OWNER",
-              status: "active", // Owner is automatically active, no invite needed
+      // Create venue + owner membership + Manager role atomically.
+      // The invariant we're enforcing: every active OWNER/MANAGER tier
+      // membership has a non-null customRole pointing at a "Manager" role
+      // that the plugin's strict role-filter can return. See
+      // lib/api/venue-setup.ts for why.
+      const userId = session.user.id
+      const venue = await prisma.$transaction(async (tx) => {
+        const v = await tx.venue.create({
+          data: {
+            name: validatedData.name,
+            slug: validatedData.slug,
+            description: validatedData.description,
+            dataCenter: validatedData.dataCenter,
+            world: validatedData.world,
+            location: validatedData.location,
+            ownerId: userId,
+            memberships: {
+              create: {
+                userId,
+                role: "OWNER",
+                status: "active", // Owner is automatically active, no invite needed
+              },
             },
           },
-        },
-        include: {
-          memberships: true,
-        },
+          include: {
+            memberships: true,
+          },
+        })
+
+        const managerRole = await ensureManagerRole(v.id, tx)
+        await tx.membership.updateMany({
+          where: { venueId: v.id, userId, roleId: null },
+          data: { roleId: managerRole.id },
+        })
+
+        return v
       })
 
       // Invalidate user's venue cache

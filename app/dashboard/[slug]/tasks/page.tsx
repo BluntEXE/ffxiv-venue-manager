@@ -85,12 +85,12 @@ const TASK_CATEGORIES = ["Setup", "Cleanup", "Promotional", "Maintenance", "Admi
 const statusColors = {
   PENDING: "bg-yellow-500",
   IN_PROGRESS: "bg-blue-500",
-  COMPLETED: "bg-green-500",
-  CANCELLED: "bg-gray-500",
+  COMPLETED: "bg-emerald-500",
+  CANCELLED: "bg-zinc-500",
 }
 
 const priorityColors = {
-  LOW: "bg-gray-400",
+  LOW: "bg-zinc-400",
   MEDIUM: "bg-blue-400",
   HIGH: "bg-orange-500",
   URGENT: "bg-red-500",
@@ -348,7 +348,7 @@ export default function TasksPage({
   }
 
   if (!slug) {
-    return <div className="container mx-auto p-8"><PageLoading /></div>
+    return <div className="container mx-auto p-4 md:p-8"><PageLoading /></div>
   }
 
   // Filter tasks by tab
@@ -424,7 +424,7 @@ export default function TasksPage({
             <CardTitle className="text-sm font-medium">Completed</CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="text-3xl font-bold text-green-600">
+            <div className="text-3xl font-bold text-emerald-500">
               {tasks.filter((t) => t.status === "COMPLETED").length}
             </div>
           </CardContent>
@@ -433,8 +433,8 @@ export default function TasksPage({
 
       {/* Error Message */}
       {error && (
-        <Alert className="mb-6 bg-red-50 border-red-200">
-          <AlertDescription className="text-red-800">{error}</AlertDescription>
+        <Alert className="mb-6 bg-destructive/10 border-destructive/20">
+          <AlertDescription className="text-destructive">{error}</AlertDescription>
         </Alert>
       )}
 
@@ -597,8 +597,8 @@ export default function TasksPage({
           </DialogHeader>
           <div className="space-y-4">
             {formError && (
-              <Alert className="bg-red-50 border-red-200">
-                <AlertDescription className="text-red-800">{formError}</AlertDescription>
+              <Alert className="bg-destructive/10 border-destructive/20">
+                <AlertDescription className="text-destructive">{formError}</AlertDescription>
               </Alert>
             )}
             <div className="space-y-2">
@@ -731,8 +731,8 @@ export default function TasksPage({
           </DialogHeader>
           <div className="space-y-4">
             {formError && (
-              <Alert className="bg-red-50 border-red-200">
-                <AlertDescription className="text-red-800">{formError}</AlertDescription>
+              <Alert className="bg-destructive/10 border-destructive/20">
+                <AlertDescription className="text-destructive">{formError}</AlertDescription>
               </Alert>
             )}
             <div className="space-y-2">

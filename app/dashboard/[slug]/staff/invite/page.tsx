@@ -149,7 +149,7 @@ export default function InviteStaffPage({
       <div className="container mx-auto p-4 md:p-6 lg:p-8 max-w-2xl">
         {/* Header */}
         <div className="mb-8">
-          <h1 className="text-4xl font-bold">Invite Link Created!</h1>
+          <h1 className="text-2xl md:text-4xl font-bold">Invite Link Created!</h1>
           <p className="text-muted-foreground mt-2">
             Share this link with your new staff member
           </p>
@@ -159,7 +159,7 @@ export default function InviteStaffPage({
         <Card className="mb-6 border-green-400/20">
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
-              <CheckCircle2 className="h-5 w-5 text-green-400" />
+              <CheckCircle2 className="h-5 w-5 text-emerald-400" />
               Invitation Ready
             </CardTitle>
             <CardDescription>
@@ -267,7 +267,7 @@ export default function InviteStaffPage({
     <div className="container mx-auto p-4 md:p-6 lg:p-8 max-w-2xl">
       {/* Header */}
       <div className="mb-8">
-        <h1 className="text-4xl font-bold">Create Staff Invite</h1>
+        <h1 className="text-2xl md:text-4xl font-bold">Create Staff Invite</h1>
         <p className="text-muted-foreground mt-2">
           Generate a unique invite link for a new team member
         </p>
@@ -275,8 +275,8 @@ export default function InviteStaffPage({
 
       {/* Error Message */}
       {error && (
-        <Alert className="mb-6 bg-red-50 border-red-200">
-          <AlertDescription className="text-red-800">{error}</AlertDescription>
+        <Alert className="mb-6 bg-destructive/10 border-destructive/20">
+          <AlertDescription className="text-destructive">{error}</AlertDescription>
         </Alert>
       )}
 

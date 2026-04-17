@@ -4,6 +4,7 @@ import { authOptions } from "@/lib/auth"
 import { prisma } from "@/lib/prisma"
 import crypto from "crypto"
 import { withRateLimit } from "@/lib/middleware/with-rate-limit"
+import { ensureManagerRole } from "@/lib/api/venue-setup"
 
 export const POST = withRateLimit<{ params: Promise<{ venueId: string }> }>(
   async (request, context) => {
@@ -57,6 +58,17 @@ export const POST = withRateLimit<{ params: Promise<{ venueId: string }> }>(
       )
     }
 
+    // If the invited tier is OWNER or MANAGER and the caller didn't pass
+    // a specific roleId, default to the venue's Manager custom role so
+    // the new member lands with a non-null customRole (matching our
+    // invariant: every OWNER/MANAGER-tier membership has a customRole
+    // that the plugin's strict role-filter can return).
+    let effectiveRoleId: string | null = roleId || null
+    if (!effectiveRoleId && (role === "OWNER" || role === "MANAGER")) {
+      const managerRole = await ensureManagerRole(venue.id)
+      effectiveRoleId = managerRole.id
+    }
+
     // Generate cryptographically secure invite token (URL-safe)
     const inviteToken = crypto.randomBytes(32).toString("base64url")
 
@@ -69,7 +81,7 @@ export const POST = withRateLimit<{ params: Promise<{ venueId: string }> }>(
       data: {
         venueId: venue.id,
         role: role,
-        roleId: roleId || null,
+        roleId: effectiveRoleId,
         status: "pending",
         inviteToken,
         inviteExpiresAt,

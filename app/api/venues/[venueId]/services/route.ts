@@ -5,6 +5,7 @@ import { prisma } from "@/lib/prisma"
 import { z } from "zod"
 import { withRateLimit } from "@/lib/middleware/with-rate-limit"
 import { getOrSet, invalidateCache, cacheKeys, cacheTTL } from "@/lib/redis-cache"
+import { ensureManagerRole } from "@/lib/api/venue-setup"
 
 const createServiceSchema = z.object({
   name: z.string().min(1, "Service name is required").max(100),
@@ -34,6 +35,7 @@ export const GET = withRateLimit<{ params: Promise<{ venueId: string }> }>(
       where: {
         userId: session.user.id,
         venueId,
+        status: "active",
       },
     })
 
@@ -106,6 +108,7 @@ export const POST = withRateLimit<{ params: Promise<{ venueId: string }> }>(
       where: {
         userId: session.user.id,
         venueId,
+        status: "active",
       },
     })
 
@@ -119,6 +122,16 @@ export const POST = withRateLimit<{ params: Promise<{ venueId: string }> }>(
     const body = await request.json()
     const validatedData = createServiceSchema.parse(body)
 
+    // Auto-link the venue's Manager role to every new service. This is
+    // the "sees everything" invariant: Manager role must always contain
+    // every service so OWNER/MANAGER tier members (who default to the
+    // Manager custom role) can log anything. Extra user-picked roles in
+    // validatedData.roleIds are preserved and merged.
+    const managerRole = await ensureManagerRole(venueId)
+    const roleIdSet = new Set<string>(validatedData.roleIds)
+    roleIdSet.add(managerRole.id)
+    const finalRoleIds = Array.from(roleIdSet)
+
     const newService = await prisma.service.create({
       data: {
         venueId,
@@ -127,7 +140,7 @@ export const POST = withRateLimit<{ params: Promise<{ venueId: string }> }>(
         price: validatedData.price,
         isActive: validatedData.isActive,
         roles: {
-          connect: validatedData.roleIds.map(id => ({ id })),
+          connect: finalRoleIds.map(id => ({ id })),
         },
       },
       include: {

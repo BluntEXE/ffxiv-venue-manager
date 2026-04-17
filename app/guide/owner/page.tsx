@@ -1,0 +1,283 @@
+import Link from "next/link"
+import { Button } from "@/components/ui/button"
+
+export default function OwnerManagerGuidePage() {
+  return (
+    <div className="min-h-screen">
+      <div className="container mx-auto px-4 py-12 max-w-3xl">
+        <div className="mb-8">
+          <Button asChild variant="outline" size="sm">
+            <Link href="/">&#8592; Back to Home</Link>
+          </Button>
+        </div>
+
+        <article className="space-y-8">
+          <header className="space-y-3">
+            <h1 className="text-4xl font-bold tracking-tight">Owner &amp; Manager Guide</h1>
+            <p className="text-xl text-muted-foreground">
+              Complete guide to setting up and managing your venue with XIV Venue Manager.
+            </p>
+          </header>
+
+          {/* Initial Setup */}
+          <section className="space-y-6">
+            <h2 className="text-2xl font-semibold border-b border-white/10 pb-2">Initial Setup</h2>
+
+            <div className="space-y-3">
+              <h3 className="text-lg font-medium text-muted-foreground">1. Create Your Venue</h3>
+              <ol className="list-decimal list-inside space-y-1.5 pl-2 text-sm leading-relaxed">
+                <li>Sign in at <a href="https://xivvenuemanager.com" className="text-primary underline underline-offset-2 hover:text-primary/80">xivvenuemanager.com</a> with Discord</li>
+                <li>Click &quot;Create Venue&quot;</li>
+                <li>Fill in your venue name, world, data center, and optional location/description</li>
+              </ol>
+            </div>
+
+            <div className="space-y-3">
+              <h3 className="text-lg font-medium text-muted-foreground">2. Install the Plugin</h3>
+              <ol className="list-decimal list-inside space-y-1.5 pl-2 text-sm leading-relaxed">
+                <li>Open Dalamud Settings (type <code className="bg-muted/60 px-1.5 py-0.5 rounded text-xs font-mono">/xlsettings</code> in the game chat)</li>
+                <li>Go to the <span className="font-medium">Experimental</span> tab</li>
+                <li>Under <span className="font-medium">Custom Plugin Repositories</span>, paste this URL and click the <span className="font-medium">+</span> button:<br />
+                  <code className="bg-muted/60 px-1.5 py-0.5 rounded text-xs font-mono select-all break-all">https://raw.githubusercontent.com/BluntEXE/XIVVenueManagerSync/master/repo.json</code>
+                </li>
+                <li>Click <span className="font-medium">Save and Close</span></li>
+                <li>Open the Plugin Installer, search for &quot;XIVVenueManagerSync&quot;, and install it</li>
+                <li>Open with <code className="bg-muted/60 px-1.5 py-0.5 rounded text-xs font-mono">/vm</code>, go to Settings</li>
+                <li>Generate an API key on the website (Settings &gt; API Keys) and paste it in the plugin</li>
+                <li>Set the server URL to <code className="bg-muted/60 px-1.5 py-0.5 rounded text-xs font-mono">https://xivvenuemanager.com</code></li>
+                <li>Select your venue</li>
+              </ol>
+            </div>
+
+            <div className="space-y-3">
+              <h3 className="text-lg font-medium text-muted-foreground">3. Configure Venue Settings</h3>
+              <p className="text-sm leading-relaxed">Go to Settings for your venue to configure:</p>
+              <ul className="space-y-3 pl-2 text-sm leading-relaxed">
+                <li className="space-y-1.5">
+                  <span className="font-medium">Visibility Controls</span> &mdash; Control what staff can see:
+                  <ul className="list-disc list-inside pl-4 space-y-1 mt-1.5 text-muted-foreground">
+                    <li><code className="bg-muted/60 px-1.5 py-0.5 rounded text-xs font-mono">salesVisibility</code>: <code className="bg-muted/60 px-1.5 py-0.5 rounded text-xs font-mono">all</code> (everyone sees all sales), <code className="bg-muted/60 px-1.5 py-0.5 rounded text-xs font-mono">own</code> (staff see only their own), <code className="bg-muted/60 px-1.5 py-0.5 rounded text-xs font-mono">none</code></li>
+                    <li><code className="bg-muted/60 px-1.5 py-0.5 rounded text-xs font-mono">revenueVisibility</code>: Same options &mdash; controls revenue numbers in analytics and Live Mode</li>
+                  </ul>
+                </li>
+                <li><span className="font-medium">Discord Webhooks</span> &mdash; Separate webhook URLs for staff, events, and revenue channels</li>
+              </ul>
+            </div>
+          </section>
+
+          {/* Managing Staff */}
+          <section className="space-y-6">
+            <h2 className="text-2xl font-semibold border-b border-white/10 pb-2">Managing Staff</h2>
+
+            <div className="space-y-3">
+              <h3 className="text-lg font-medium text-muted-foreground">Inviting Staff</h3>
+              <p className="text-sm leading-relaxed">Go to Staff &gt; Invite, create an invite link, and share it. Staff sign in with Discord.</p>
+            </div>
+
+            <div className="space-y-3">
+              <h3 className="text-lg font-medium text-muted-foreground">Roles</h3>
+              <ul className="space-y-2 pl-2 text-sm leading-relaxed">
+                <li><span className="font-medium">Owner</span> &mdash; Full access to everything</li>
+                <li><span className="font-medium">Manager</span> &mdash; Can manage events, tasks, shifts, services, staff, and view analytics</li>
+                <li><span className="font-medium">Staff</span> &mdash; Can log sales, view their shifts, see events. Visibility depends on settings.</li>
+              </ul>
+            </div>
+
+            <div className="space-y-3">
+              <h3 className="text-lg font-medium text-muted-foreground">Custom Roles</h3>
+              <p className="text-sm leading-relaxed">Create custom roles like Bartender, DJ, Greeter under Staff &gt; Roles. Assign them to services so staff only see relevant offerings in the plugin.</p>
+            </div>
+          </section>
+
+          {/* Event Management */}
+          <section className="space-y-6">
+            <h2 className="text-2xl font-semibold border-b border-white/10 pb-2">Event Management</h2>
+
+            <div className="space-y-3">
+              <h3 className="text-lg font-medium text-muted-foreground">Creating Events</h3>
+              <p className="text-sm leading-relaxed">Go to Events &gt; Create. Set title, type (Performance, Game Night, Social, etc.), start/end time, and description. Events start as Draft, move to Published (visible to staff), then Active (running).</p>
+            </div>
+
+            <div className="space-y-3">
+              <h3 className="text-lg font-medium text-muted-foreground">Event Templates</h3>
+              <p className="text-sm leading-relaxed">For recurring events, create templates that save the title, type, description, and default times. Create new events from templates with one click.</p>
+            </div>
+
+            <div className="space-y-3">
+              <h3 className="text-lg font-medium text-muted-foreground">Partake.gg Integration</h3>
+              <p className="text-sm leading-relaxed">If your venue uses <a href="https://partake.gg" target="_blank" rel="noopener noreferrer" className="text-primary underline underline-offset-2 hover:text-primary/80">Partake.gg</a> for event listings, you can automatically sync those events into XIV Venue Manager:</p>
+              <ol className="list-decimal list-inside space-y-1.5 pl-2 text-sm leading-relaxed">
+                <li>Go to Settings for your venue</li>
+                <li>In the Integrations section, find <span className="font-medium">Partake.gg Event Sync</span></li>
+                <li>Enter your Partake Team ID (found in your Partake team URL, e.g. <code className="bg-muted/60 px-1.5 py-0.5 rounded text-xs font-mono">partake.gg/team/123</code>)</li>
+                <li>Click <span className="font-medium">Save Settings</span>, then <span className="font-medium">Sync Now</span> to pull events immediately</li>
+              </ol>
+              <p className="text-sm leading-relaxed text-muted-foreground">Once linked, events sync automatically every hour. Synced events show a <span className="font-medium text-indigo-400">Partake</span> badge on the events list and detail pages. The sync creates new events and updates existing ones if the title or times change on Partake.</p>
+            </div>
+
+            <div className="space-y-3">
+              <h3 className="text-lg font-medium text-muted-foreground">Live Mode</h3>
+              <p className="text-sm leading-relaxed">When an event is Active, the <span className="font-medium">Live</span> page shows real-time stats:</p>
+              <ul className="list-disc list-inside space-y-1.5 pl-4 text-sm text-muted-foreground">
+                <li>Live patron count</li>
+                <li>Running sale count and revenue total</li>
+                <li>Live activity feed (every sale and patron movement appears instantly)</li>
+                <li>Event duration timer</li>
+              </ul>
+              <p className="text-sm leading-relaxed text-muted-foreground">Powered by Server-Sent Events &mdash; no refreshing needed.</p>
+            </div>
+          </section>
+
+          {/* Shift Scheduling */}
+          <section className="space-y-6">
+            <h2 className="text-2xl font-semibold border-b border-white/10 pb-2">Shift Scheduling</h2>
+
+            <div className="space-y-3">
+              <h3 className="text-lg font-medium text-muted-foreground">Creating Shifts</h3>
+              <ol className="list-decimal list-inside space-y-1.5 pl-2 text-sm leading-relaxed">
+                <li>Go to Shifts and click &quot;Schedule Shift&quot;</li>
+                <li>Select a staff member, date, start time, and end time</li>
+                <li>All times are in <span className="font-medium">Server Time (ST)</span></li>
+              </ol>
+            </div>
+
+            <div className="space-y-3">
+              <h3 className="text-lg font-medium text-muted-foreground">How Shifts Work</h3>
+              <ul className="list-disc list-inside space-y-1.5 pl-4 text-sm leading-relaxed">
+                <li>Staff see their shifts on their dashboard and in the plugin</li>
+                <li>Staff can Clock In up to 30 minutes before their shift starts</li>
+                <li>Clock Out calculates hours worked automatically</li>
+                <li>Statuses: Scheduled, Active, Completed, Missed, Cancelled</li>
+              </ul>
+            </div>
+
+            <div className="space-y-3">
+              <h3 className="text-lg font-medium text-muted-foreground">Quick Commands</h3>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                <div className="bg-muted/30 rounded-lg p-3">
+                  <code className="text-xs font-mono font-medium">/vm start</code>
+                  <p className="text-xs text-muted-foreground mt-1">Clock into your current shift</p>
+                </div>
+                <div className="bg-muted/30 rounded-lg p-3">
+                  <code className="text-xs font-mono font-medium">/vm end</code>
+                  <p className="text-xs text-muted-foreground mt-1">Clock out of your active shift</p>
+                </div>
+              </div>
+            </div>
+          </section>
+
+          {/* Sales & Revenue */}
+          <section className="space-y-6">
+            <h2 className="text-2xl font-semibold border-b border-white/10 pb-2">Sales &amp; Revenue</h2>
+
+            <p className="text-sm leading-relaxed">Sales come from two places: the <span className="font-medium">plugin</span> (<code className="bg-muted/60 px-1.5 py-0.5 rounded text-xs font-mono">/vm sale</code> commands or Sales tab) and the <span className="font-medium">website</span> (Sales page). Both create identical records with amount, customer, service, event, and staff attribution.</p>
+
+            <div className="space-y-3">
+              <h3 className="text-lg font-medium text-muted-foreground">Plugin Commands</h3>
+              <div className="grid grid-cols-1 gap-3">
+                <div className="bg-muted/30 rounded-lg p-3">
+                  <code className="text-xs font-mono font-medium">/vm sale 500 Ehno</code>
+                  <p className="text-xs text-muted-foreground mt-1">Open Sales tab with amount and customer prefilled</p>
+                </div>
+                <div className="bg-muted/30 rounded-lg p-3">
+                  <code className="text-xs font-mono font-medium">/vm sale! 500 Ehno</code>
+                  <p className="text-xs text-muted-foreground mt-1">Log sale instantly without opening UI &mdash; chat confirmation shown</p>
+                </div>
+                <div className="bg-muted/30 rounded-lg p-3">
+                  <code className="text-xs font-mono font-medium">/vm target 500</code>
+                  <p className="text-xs text-muted-foreground mt-1">Open Sales tab with your current target as customer</p>
+                </div>
+                <div className="bg-muted/30 rounded-lg p-3">
+                  <code className="text-xs font-mono font-medium">/vm target! 500</code>
+                  <p className="text-xs text-muted-foreground mt-1">Log sale instantly for your current target &mdash; no UI needed</p>
+                </div>
+              </div>
+            </div>
+
+            <div className="space-y-3">
+              <h3 className="text-lg font-medium text-muted-foreground">Timeline</h3>
+              <p className="text-sm leading-relaxed">The Timeline merges all sales and patron activity into a single feed with real-time updates. Filter by Sales or Patrons. New entries appear at the top without refreshing.</p>
+            </div>
+
+            <div className="space-y-3">
+              <h3 className="text-lg font-medium text-muted-foreground">Analytics</h3>
+              <p className="text-sm leading-relaxed">The Analytics page shows revenue over time, average transactions, top services, patron trends, and per-event performance with profit margins.</p>
+            </div>
+          </section>
+
+          {/* Payroll */}
+          <section className="space-y-6">
+            <h2 className="text-2xl font-semibold border-b border-white/10 pb-2">Payroll</h2>
+
+            <p className="text-sm leading-relaxed">The Payroll page calculates staff compensation based on completed shift hours. Managers and Owners see a breakdown of each staff member&apos;s hours worked and recommended payment amounts rounded to the nearest whole number.</p>
+
+            <ul className="list-disc list-inside space-y-1.5 pl-4 text-sm leading-relaxed">
+              <li>Set an hourly rate for your venue</li>
+              <li>View total hours worked per staff member</li>
+              <li>See calculated payment amounts based on shift records</li>
+              <li>Add manual payroll entries with notes</li>
+            </ul>
+          </section>
+
+          {/* Discord Webhooks */}
+          <section className="space-y-6">
+            <h2 className="text-2xl font-semibold border-b border-white/10 pb-2">Discord Webhooks</h2>
+
+            <p className="text-sm leading-relaxed">Set up webhooks in Settings to auto-post to Discord:</p>
+            <ul className="list-disc list-inside space-y-1.5 pl-4 text-sm leading-relaxed">
+              <li>Sale Logged, Event Created, Event Starting Soon</li>
+              <li>Task Created/Completed, Staff Joined</li>
+              <li>Daily Sales Summary</li>
+            </ul>
+            <p className="text-sm leading-relaxed text-muted-foreground">Route different types to different channels (e.g., revenue to a private channel, events to a public one).</p>
+          </section>
+
+          {/* Server Time */}
+          <section className="space-y-6">
+            <h2 className="text-2xl font-semibold border-b border-white/10 pb-2">Server Time (ST)</h2>
+
+            <p className="text-sm leading-relaxed">All times are displayed in <span className="font-medium">Server Time (ST)</span>:</p>
+            <ul className="list-disc list-inside space-y-1.5 pl-4 text-sm leading-relaxed">
+              <li>NA (Aether, Primal, Crystal, Dynamis): Eastern Time</li>
+              <li>EU (Chaos, Light): UTC</li>
+              <li>JP (Elemental, Gaia, Mana, Meteor): JST</li>
+              <li>OCE (Materia): AEST</li>
+            </ul>
+          </section>
+
+          {/* Tips */}
+          <section className="space-y-6">
+            <h2 className="text-2xl font-semibold border-b border-white/10 pb-2">Tips</h2>
+
+            <ul className="space-y-2.5 pl-2 text-sm leading-relaxed">
+              <li className="flex items-start gap-2">
+                <span className="text-emerald-500 mt-0.5">&#10003;</span>
+                <span>Use <span className="font-medium">Live Mode</span> during events to monitor patron flow and revenue in real-time</span>
+              </li>
+              <li className="flex items-start gap-2">
+                <span className="text-emerald-500 mt-0.5">&#10003;</span>
+                <span>Set up Discord webhooks early for automatic community updates</span>
+              </li>
+              <li className="flex items-start gap-2">
+                <span className="text-emerald-500 mt-0.5">&#10003;</span>
+                <span>Use <span className="font-medium">Event Templates</span> for recurring events</span>
+              </li>
+              <li className="flex items-start gap-2">
+                <span className="text-emerald-500 mt-0.5">&#10003;</span>
+                <span>Review <span className="font-medium">Analytics</span> weekly to spot trends</span>
+              </li>
+              <li className="flex items-start gap-2">
+                <span className="text-emerald-500 mt-0.5">&#10003;</span>
+                <span>Set <code className="bg-muted/60 px-1.5 py-0.5 rounded text-xs font-mono">salesVisibility</code> to <code className="bg-muted/60 px-1.5 py-0.5 rounded text-xs font-mono">own</code> if you want staff to only see their own performance</span>
+              </li>
+              <li className="flex items-start gap-2">
+                <span className="text-emerald-500 mt-0.5">&#10003;</span>
+                <span>Link your <span className="font-medium">Partake.gg</span> team in Settings to auto-import events &mdash; no manual event creation needed</span>
+              </li>
+            </ul>
+          </section>
+        </article>
+      </div>
+    </div>
+  )
+}

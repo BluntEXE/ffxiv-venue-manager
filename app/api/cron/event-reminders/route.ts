@@ -104,7 +104,7 @@ export async function GET(request: Request) {
   } catch (error) {
     console.error("Error in event reminders cron job:", error)
     return NextResponse.json(
-      { error: "Internal server error", details: String(error) },
+      { error: "Internal server error" },
       { status: 500 }
     )
   }

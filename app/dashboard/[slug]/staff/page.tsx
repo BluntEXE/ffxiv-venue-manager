@@ -201,6 +201,13 @@ export default async function StaffPage({
                               color={member.customRole.color}
                             />
                           )}
+                          {userRole === "OWNER" && (
+                            <Button variant="outline" size="sm" asChild>
+                              <Link href={`/dashboard/${slug}/staff/${member.id}`}>
+                                Edit Role
+                              </Link>
+                            </Button>
+                          )}
                         </div>
                       </div>
                     </CardContent>
@@ -244,7 +251,7 @@ export default async function StaffPage({
                           {canManageStaff && (
                             <Button variant="outline" size="sm" asChild>
                               <Link href={`/dashboard/${slug}/staff/${member.id}`}>
-                                Manage
+                                Edit Role
                               </Link>
                             </Button>
                           )}
@@ -291,7 +298,7 @@ export default async function StaffPage({
                           {canManageStaff && (
                             <Button variant="outline" size="sm" asChild>
                               <Link href={`/dashboard/${slug}/staff/${member.id}`}>
-                                Manage
+                                Edit Role
                               </Link>
                             </Button>
                           )}

@@ -34,9 +34,9 @@ export default async function SalesPage({ params }: PageProps) {
 
   if (!venue) {
     return (
-      <div className="container mx-auto p-8">
-        <Alert className="bg-red-50 border-red-200">
-          <AlertDescription className="text-red-800">Venue not found</AlertDescription>
+      <div className="container mx-auto p-4 md:p-8">
+        <Alert className="bg-destructive/10 border-destructive/20">
+          <AlertDescription className="text-destructive">Venue not found</AlertDescription>
         </Alert>
       </div>
     )
@@ -52,9 +52,9 @@ export default async function SalesPage({ params }: PageProps) {
 
   if (!membership) {
     return (
-      <div className="container mx-auto p-8">
-        <Alert className="bg-red-50 border-red-200">
-          <AlertDescription className="text-red-800">
+      <div className="container mx-auto p-4 md:p-8">
+        <Alert className="bg-destructive/10 border-destructive/20">
+          <AlertDescription className="text-destructive">
             You don't have access to this venue
           </AlertDescription>
         </Alert>
@@ -71,9 +71,9 @@ export default async function SalesPage({ params }: PageProps) {
     if (salesVisibility === "none") {
       return (
         <VenueLayoutClient slug={slug}>
-          <div className="container mx-auto p-8">
-            <Alert className="bg-red-50 border-red-200">
-              <AlertDescription className="text-red-800">
+          <div className="container mx-auto p-4 md:p-8">
+            <Alert className="bg-destructive/10 border-destructive/20">
+              <AlertDescription className="text-destructive">
                 You don't have permission to view sales data
               </AlertDescription>
             </Alert>
@@ -228,7 +228,7 @@ export default async function SalesPage({ params }: PageProps) {
               <CardTitle className="text-sm font-medium">Today's Revenue</CardTitle>
             </CardHeader>
             <CardContent>
-              <div className="text-3xl font-bold text-green-600">
+              <div className="text-3xl font-bold text-emerald-500">
                 {todayRevenue.toLocaleString()} gil
               </div>
               <p className="text-xs text-muted-foreground mt-1">
@@ -253,7 +253,7 @@ export default async function SalesPage({ params }: PageProps) {
           <Card className="text-center py-12">
             <CardContent>
               <p className="text-muted-foreground mb-4">
-                No transactions yet. Log your first sale!
+                No sales recorded yet.
               </p>
               <SalesLogDialog venueId={venue.id} services={servicesWithNumberPrices} events={activeEvents} />
             </CardContent>
