@@ -47,3 +47,13 @@ yarn-error.log*
 next-env.d.ts
 
 /app/generated/prisma
+
+# Local backups (from in-place edits)
+*.bak
+*.bak-*
+.env.bak-*
+.env.local.backup
+
+# Local runtime data volumes (mounted into containers)
+/docker/postgres/data
+/docker/redis/data
