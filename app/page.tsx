@@ -137,6 +137,12 @@ export default function Home() {
             </IconBadge>
           </div>
           <h2 className="text-3xl md:text-4xl font-bold">In-Game Dalamud Plugin</h2>
+          <div className="flex justify-center">
+            <span className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-primary/10 border border-primary/20 text-xs font-medium text-primary">
+              <span className="inline-block h-1.5 w-1.5 rounded-full bg-primary" />
+              v3.3.0 — Catppuccin Mocha theme refresh
+            </span>
+          </div>
           <p className="text-lg text-muted-foreground">
             Log sales, track patrons, and manage shifts without ever leaving
             the game. The XIV Venue Manager plugin runs inside FFXIV via
