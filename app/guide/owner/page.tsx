@@ -87,6 +87,18 @@ export default function OwnerManagerGuidePage() {
               <h3 className="text-lg font-medium text-muted-foreground">Custom Roles</h3>
               <p className="text-sm leading-relaxed">Create custom roles like Bartender, DJ, Greeter under Staff &gt; Roles. Assign them to services so staff only see relevant offerings in the plugin.</p>
             </div>
+
+            <div className="space-y-3">
+              <h3 className="text-lg font-medium text-muted-foreground">Temporary Roles (Deputize)</h3>
+              <p className="text-sm leading-relaxed">Grant someone a higher role for a limited time &mdash; useful when you&apos;re away and need a trusted staff member to cover manager duties.</p>
+              <ul className="space-y-2 pl-2 text-sm leading-relaxed list-disc list-inside">
+                <li>On the Staff page, open a member&apos;s card and click <span className="font-medium">Manage Role</span></li>
+                <li>Set a <span className="font-medium">Temporary Role</span> (e.g. Manager) and pick an expiry</li>
+                <li>They get the elevated role immediately and revert to their permanent role when it expires</li>
+                <li>Cards show a <span className="font-medium text-yellow-400">Temporary</span> badge while active; the badge turns warning-colored in the last 24h</li>
+              </ul>
+              <p className="text-sm leading-relaxed text-muted-foreground">Permanent role is preserved underneath, so you never lose their base assignment.</p>
+            </div>
           </section>
 
           {/* Event Management */}

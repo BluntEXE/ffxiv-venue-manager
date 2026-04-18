@@ -928,7 +928,7 @@ export default function SettingsPage({
                         <AlertDialogCancel>Cancel</AlertDialogCancel>
                         <AlertDialogAction
                           onClick={handleDeleteVenue}
-                          className="bg-red-600 hover:bg-red-700"
+                          className="bg-destructive text-white hover:bg-destructive/90"
                         >
                           Yes, delete permanently
                         </AlertDialogAction>

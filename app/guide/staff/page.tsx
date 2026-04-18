@@ -98,6 +98,11 @@ export default function StaffGuidePage() {
             <h2 className="text-2xl font-semibold border-b border-white/10 pb-2">Patron Tracking</h2>
 
             <p className="text-sm leading-relaxed">The plugin automatically tracks when patrons enter and leave your venue&apos;s housing plot. You don&apos;t need to do anything &mdash; it syncs in the background.</p>
+
+            <ul className="space-y-2 pl-2 text-sm leading-relaxed list-disc list-inside">
+              <li><span className="font-medium">Event-gated by default:</span> patrons are only logged while a published event is active. Toggle in plugin Settings if you want always-on tracking.</li>
+              <li><span className="font-medium">Staff aren&apos;t double-counted:</span> if you&apos;re on an active shift, the plugin classifies you as staff, not a patron (v3.2.0+).</li>
+            </ul>
           </section>
 
           {/* Shifts */}
