@@ -256,8 +256,8 @@ export function ManageStaffRoleDialog({
           </div>
 
           {/* Info Box */}
-          <Alert className="bg-blue-50 border-blue-200">
-            <AlertDescription className="text-blue-800 text-sm space-y-1">
+          <Alert className="bg-blue-500/10 border-blue-500/20">
+            <AlertDescription className="text-blue-400 text-sm space-y-1">
               <p>
                 <strong>💡 Tip:</strong> Use temporary roles to deputize someone while you're away.
               </p>

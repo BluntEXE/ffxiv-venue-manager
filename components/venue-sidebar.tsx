@@ -8,7 +8,24 @@ import { ScrollArea } from "@/components/ui/scroll-area"
 import { VenueSwitcher } from "./venue-switcher"
 import { FeedbackDialog } from "./feedback-dialog"
 import { cn } from "@/lib/utils"
-import { Menu, Heart } from "lucide-react"
+import {
+  Menu,
+  Heart,
+  Home,
+  BarChart3,
+  Calendar,
+  Radio,
+  ClipboardList,
+  Users,
+  Clock,
+  CheckSquare,
+  ShoppingBag,
+  Coins,
+  Scroll,
+  Wallet,
+  Settings,
+  type LucideIcon,
+} from "lucide-react"
 import { useState } from "react"
 
 interface VenueSidebarProps {
@@ -23,7 +40,7 @@ interface VenueSidebarProps {
 interface NavItem {
   href: string
   label: string
-  icon: string
+  icon: LucideIcon
   roles?: string[]
 }
 
@@ -42,70 +59,70 @@ export function VenueSidebar({
     {
       href: `/dashboard/${venueSlug}`,
       label: "Overview",
-      icon: "🏠",
+      icon: Home,
     },
     {
       href: `/dashboard/${venueSlug}/analytics`,
       label: "Analytics",
-      icon: "📊",
+      icon: BarChart3,
       roles: ["OWNER", "MANAGER"],
     },
     {
       href: `/dashboard/${venueSlug}/events`,
       label: "Events",
-      icon: "📅",
+      icon: Calendar,
     },
     {
       href: `/dashboard/${venueSlug}/live`,
       label: "Live",
-      icon: "🔴",
+      icon: Radio,
     },
     {
       href: `/dashboard/${venueSlug}/event-templates`,
       label: "Event Templates",
-      icon: "📋",
+      icon: ClipboardList,
       roles: ["OWNER", "MANAGER"],
     },
     {
       href: `/dashboard/${venueSlug}/staff`,
       label: "Staff",
-      icon: "👥",
+      icon: Users,
     },
     {
       href: `/dashboard/${venueSlug}/shifts`,
       label: "Shifts",
-      icon: "🕐",
+      icon: Clock,
     },
     {
       href: `/dashboard/${venueSlug}/tasks`,
       label: "Tasks",
-      icon: "✅",
+      icon: CheckSquare,
     },
     {
       href: `/dashboard/${venueSlug}/services`,
       label: "Services",
-      icon: "🛍️",
+      icon: ShoppingBag,
     },
     {
       href: `/dashboard/${venueSlug}/sales`,
       label: "Sales",
-      icon: "💰",
+      icon: Coins,
     },
     {
       href: `/dashboard/${venueSlug}/timeline`,
       label: "Timeline",
-      icon: "📜",
+      icon: Scroll,
     },
     {
       href: `/dashboard/${venueSlug}/payroll`,
       label: "Payroll",
-      icon: "💵",
+      icon: Wallet,
       roles: ["OWNER", "MANAGER"],
     },
     {
       href: `/dashboard/${venueSlug}/settings`,
       label: "Settings",
-      icon: "⚙️",
+      icon: Settings,
     },
   ]
 
@@ -135,7 +152,7 @@ export function VenueSidebar({
                     : "hover:bg-accent hover:text-accent-foreground"
                 )}
               >
-                <span className="text-lg">{item.icon}</span>
+                <item.icon className="h-5 w-5 shrink-0" />
                 <span>{item.label}</span>
               </Link>
             )
@@ -195,7 +212,7 @@ export function VenueSidebar({
                     : "hover:bg-accent hover:text-accent-foreground"
                 )}
               >
-                <span className="text-lg">{item.icon}</span>
+                <item.icon className="h-5 w-5 shrink-0" />
                 <span>{item.label}</span>
               </Link>
             )
