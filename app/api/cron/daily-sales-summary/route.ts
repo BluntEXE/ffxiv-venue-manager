@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server"
 import { prisma } from "@/lib/prisma"
+import { verifyCronAuth } from "@/lib/cron-auth"
 import {
   sendDiscordWebhook,
   formatDailySalesSummaryEmbed,
@@ -15,20 +16,8 @@ import { parseVenueSettings } from "@/lib/types/venue-settings"
  */
 export async function GET(request: Request) {
   try {
-    // Verify cron secret for security (REQUIRED)
-    const cronSecret = process.env.CRON_SECRET
-    if (!cronSecret) {
-      console.error("CRON_SECRET not configured - cron jobs cannot run securely")
-      return NextResponse.json(
-        { error: "Server misconfiguration" },
-        { status: 500 }
-      )
-    }
-
-    const authHeader = request.headers.get("authorization")
-    if (authHeader !== `Bearer ${cronSecret}`) {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
-    }
+    const authError = verifyCronAuth(request)
+    if (authError) return authError
 
     // Get yesterday's date range
     const today = new Date()

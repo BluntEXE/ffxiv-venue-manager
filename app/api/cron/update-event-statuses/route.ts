@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server"
 import { prisma } from "@/lib/prisma"
+import { verifyCronAuth } from "@/lib/cron-auth"
 
 /**
  * Cron Job: Automatic Event Status Updates
@@ -17,25 +18,8 @@ import { prisma } from "@/lib/prisma"
  */
 export async function GET(request: Request) {
   try {
-    // Verify cron secret for security (REQUIRED)
-    const cronSecret = process.env.CRON_SECRET
-    if (!cronSecret) {
-      console.error("CRON_SECRET not configured - cron jobs cannot run securely")
-      return NextResponse.json(
-        { error: "Server misconfiguration" },
-        { status: 500 }
-      )
-    }
-
-    const authHeader = request.headers.get("authorization")
-    const expectedHeader = `Bearer ${cronSecret}`
-
-    // Debug logging
-
-    if (authHeader !== expectedHeader) {
-      console.log("Unauthorized cron access attempt - invalid token")
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
-    }
+    const authError = verifyCronAuth(request)
+    if (authError) return authError
 
     const now = new Date()
     console.log(`[Cron] Event status update starting at ${now.toISOString()}`)

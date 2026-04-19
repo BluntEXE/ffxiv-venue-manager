@@ -1,9 +1,7 @@
 import { NextRequest, NextResponse } from "next/server"
 import { z } from "zod"
-import { PrismaClient } from "@prisma/client"
+import { prisma } from "@/lib/prisma"
 import { validateApiKey, checkPermission } from "@/lib/api/plugin-auth"
-
-const prisma = new PrismaClient()
 
 /**
  * POST /api/plugin/shifts/clock-out

@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server"
 import { syncPartakeEvents } from "@/lib/partake"
+import { verifyCronAuth } from "@/lib/cron-auth"
 
 /**
  * Cron Job: Sync events from Partake.gg
@@ -13,16 +14,8 @@ import { syncPartakeEvents } from "@/lib/partake"
  */
 export async function GET(request: Request) {
   try {
-    const cronSecret = process.env.CRON_SECRET
-    if (!cronSecret) {
-      console.error("CRON_SECRET not configured")
-      return NextResponse.json({ error: "Server misconfiguration" }, { status: 500 })
-    }
-
-    const authHeader = request.headers.get("authorization")
-    if (authHeader !== `Bearer ${cronSecret}`) {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
-    }
+    const authError = verifyCronAuth(request)
+    if (authError) return authError
 
     const now = new Date()
     console.log(`[Partake Sync] Starting at ${now.toISOString()}`)
