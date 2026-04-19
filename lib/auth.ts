@@ -66,8 +66,9 @@ export const authOptions: NextAuthOptions = {
   // Trust the host header (important for proxies like Vercel)
   // @ts-ignore - trustHost is valid in NextAuth v4 but might be missing in type definitions
   trustHost: true,
-  // Enable debug mode if NEXTAUTH_DEBUG is set, or in development
-  debug: process.env.NEXTAUTH_DEBUG === "true" || process.env.NODE_ENV === "development",
+  // Debug must be explicitly opted into. NODE_ENV is untrusted in prod
+  // containers and can leak verbose auth logs if set wrong.
+  debug: process.env.NEXTAUTH_DEBUG === "true",
   events: {
     async signIn(message) {
       console.log("NextAuth signIn event:", JSON.stringify(message, null, 2))
