@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { validateApiKey } from '@/lib/api/plugin-auth'
+import { enforcePluginRateLimit } from '@/lib/api/plugin-rate-limit'
 import { prisma } from '@/lib/prisma'
 
 /**
@@ -22,6 +23,9 @@ export async function GET(
     if (!auth || !auth.userId) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
+
+    const limited = await enforcePluginRateLimit(apiKey, 'read')
+    if (limited) return limited
 
     const { venueId } = await params
     if (!venueId || !auth.venues.includes(venueId)) {

@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server"
 import { z } from "zod"
 import { prisma } from "@/lib/prisma"
 import { validateApiKey, checkPermission } from "@/lib/api/plugin-auth"
+import { enforcePluginRateLimit } from "@/lib/api/plugin-rate-limit"
 
 /**
  * POST /api/plugin/shifts/clock-out
@@ -24,6 +25,9 @@ export async function POST(request: NextRequest) {
     if (!auth || !auth.userId) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
     }
+
+    const limited = await enforcePluginRateLimit(apiKey, "write")
+    if (limited) return limited
 
     const body = await request.json()
     const parsed = bodySchema.safeParse(body)

@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { validateApiKey, checkPermission, logPatronVisit, getPatronVisits } from '@/lib/api/plugin-auth'
+import { enforcePluginRateLimit } from '@/lib/api/plugin-rate-limit'
 import { nanoid } from 'nanoid'
 
 interface PatronVisitPayload {
@@ -25,11 +26,14 @@ export async function POST(request: NextRequest) {
     }
     
     const auth = await validateApiKey(apiKey)
-    
+
     if (!auth || !auth.userId) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
-    
+
+    const limited = await enforcePluginRateLimit(apiKey, 'write')
+    if (limited) return limited
+
     const body: PatronVisitPayload = await request.json()
     const { venueId, characterName, world, action, timestamp, countChange } = body
     
@@ -99,11 +103,14 @@ export async function GET(request: NextRequest) {
     }
     
     const auth = await validateApiKey(apiKey)
-    
+
     if (!auth || !auth.userId) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
-    
+
+    const limited = await enforcePluginRateLimit(apiKey, 'read')
+    if (limited) return limited
+
     if (!venueId) {
       return NextResponse.json(
         { error: 'venueId is required' },

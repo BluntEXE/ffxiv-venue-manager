@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server"
 import { z } from "zod"
 import { prisma } from "@/lib/prisma"
 import { validateApiKey, checkPermission } from "@/lib/api/plugin-auth"
+import { enforcePluginRateLimit } from "@/lib/api/plugin-rate-limit"
 
 /**
  * GET /api/plugin/shifts?venueId=X
@@ -26,6 +27,9 @@ export async function GET(request: NextRequest) {
     if (!auth || !auth.userId) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
     }
+
+    const limited = await enforcePluginRateLimit(apiKey, "read")
+    if (limited) return limited
 
     const params = Object.fromEntries(request.nextUrl.searchParams)
     const parsed = querySchema.safeParse(params)

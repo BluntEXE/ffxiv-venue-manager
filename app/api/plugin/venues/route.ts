@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { validateApiKey, getUserVenues } from '@/lib/api/plugin-auth'
+import { enforcePluginRateLimit } from '@/lib/api/plugin-rate-limit'
 
 /**
  * GET /api/plugin/venues
@@ -26,7 +27,10 @@ export async function GET(request: NextRequest) {
         { status: 401 }
       )
     }
-    
+
+    const limited = await enforcePluginRateLimit(apiKey, 'read')
+    if (limited) return limited
+
     const venues = await getUserVenues(auth.userId)
     
     // If key is venue-specific, filter to only that venue
