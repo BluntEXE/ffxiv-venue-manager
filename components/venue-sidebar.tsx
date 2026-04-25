@@ -22,6 +22,7 @@ import {
   ShoppingBag,
   Coins,
   Scroll,
+  History,
   Wallet,
   Settings,
   type LucideIcon,
@@ -112,6 +113,12 @@ export function VenueSidebar({
       href: `/dashboard/${venueSlug}/timeline`,
       label: "Timeline",
       icon: Scroll,
+    },
+    {
+      href: `/dashboard/${venueSlug}/patron-logs`,
+      label: "Patron Logs",
+      icon: History,
+      roles: ["OWNER", "MANAGER"],
     },
     {
       href: `/dashboard/${venueSlug}/payroll`,

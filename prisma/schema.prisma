@@ -41,6 +41,7 @@ model User {
   reviewedFeedback      Feedback[]      @relation("FeedbackReviewer")
   patronLogs            PatronLog[]     @relation("PatronLogger")
   patronLogsWorking     PatronLog[]     @relation("PatronLogWorking")
+  patronLogsReclassified PatronLog[]    @relation("PatronLogReclassifier")
   characters            UserCharacter[]
   apiKeys               ApiKey[]
 
@@ -343,10 +344,16 @@ model PatronLog {
   wasWorking    Boolean   @default(false)
   workingUserId String? // The user whose character was on shift (only set when wasWorking=true)
 
+  // Manual reclassification audit (OWNER/MANAGER override). Null = original snapshot, untouched.
+  reclassifiedAt   DateTime?
+  reclassifiedById String?
+  reclassifyReason String?
+
   venue Venue  @relation(fields: [venueId], references: [id], onDelete: Cascade)
   event Event? @relation(fields: [eventId], references: [id], onDelete: Cascade)
   staff User?  @relation("PatronLogger", fields: [loggedBy], references: [id])
   workingUser User? @relation("PatronLogWorking", fields: [workingUserId], references: [id], onDelete: SetNull)
+  reclassifiedBy User? @relation("PatronLogReclassifier", fields: [reclassifiedById], references: [id], onDelete: SetNull)
 
   @@index([venueId, timestamp])
   @@index([eventId, timestamp])
