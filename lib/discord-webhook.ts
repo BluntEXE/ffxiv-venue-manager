@@ -439,3 +439,56 @@ export function formatStaffJoinedEmbed(staff: {
     timestamp: new Date().toISOString(),
   }
 }
+
+/**
+ * Format an app-level feedback notification (sent to the admin channel,
+ * not per-venue). Triggered when a user submits via POST /api/feedback.
+ */
+export function formatFeedbackSubmittedEmbed(feedback: {
+  category: string
+  subject: string
+  description: string
+  url?: string | null
+  user: { name?: string | null; displayName?: string | null; email?: string | null }
+}): DiscordEmbed {
+  const safeSubject = sanitizeForDiscord(feedback.subject, 256)
+  const safeDescription = sanitizeForDiscord(feedback.description, 1024)
+  const safeUserName = sanitizeForDiscord(
+    feedback.user.displayName || feedback.user.name || feedback.user.email || "Unknown",
+    256
+  )
+  const safeUrl = sanitizeForDiscord(feedback.url, 512)
+
+  const colorByCategory: Record<string, number> = {
+    BUG_REPORT: DiscordColors.Red,
+    FEATURE_REQUEST: DiscordColors.Blurple,
+    IMPROVEMENT: DiscordColors.Info,
+    GENERAL: DiscordColors.Yellow,
+  }
+
+  const iconByCategory: Record<string, string> = {
+    BUG_REPORT: "🐛",
+    FEATURE_REQUEST: "💡",
+    IMPROVEMENT: "✨",
+    GENERAL: "💬",
+  }
+
+  const fields = [
+    { name: "From", value: safeUserName, inline: true },
+    { name: "Category", value: feedback.category, inline: true },
+  ]
+
+  if (safeUrl) {
+    fields.push({ name: "Page", value: safeUrl, inline: false })
+  }
+
+  fields.push({ name: "Details", value: safeDescription || "(no description)", inline: false })
+
+  return {
+    title: `${iconByCategory[feedback.category] ?? "💬"} New Feedback: ${safeSubject || "(no subject)"}`,
+    description: "A user submitted feedback on xivvenuemanager.com",
+    color: colorByCategory[feedback.category] ?? DiscordColors.Info,
+    fields,
+    timestamp: new Date().toISOString(),
+  }
+}

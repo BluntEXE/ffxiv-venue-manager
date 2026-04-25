@@ -3,6 +3,7 @@ import { getServerSession } from "next-auth"
 import { authOptions } from "@/lib/auth"
 import { prisma } from "@/lib/prisma"
 import { withRateLimit } from "@/lib/middleware/with-rate-limit"
+import { sendDiscordWebhook, formatFeedbackSubmittedEmbed } from "@/lib/discord-webhook"
 
 // POST /api/feedback - Submit new feedback
 export const POST = withRateLimit(
@@ -57,6 +58,22 @@ export const POST = withRateLimit(
           },
         },
       })
+
+      // Fire-and-forget Discord notification to admin channel.
+      // Failures here must not break the user response.
+      const adminWebhookUrl = process.env.FEEDBACK_DISCORD_WEBHOOK_URL
+      if (adminWebhookUrl) {
+        const embed = formatFeedbackSubmittedEmbed({
+          category: feedback.category,
+          subject: feedback.subject,
+          description: feedback.description,
+          url: feedback.url,
+          user: feedback.user,
+        })
+        void sendDiscordWebhook(adminWebhookUrl, { embeds: [embed] }).catch((err) => {
+          console.error("[feedback] Discord notify failed:", err)
+        })
+      }
 
       return NextResponse.json(feedback, { status: 201 })
     } catch (error) {
