@@ -1,6 +1,7 @@
 import Link from "next/link"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
+import { LatestPluginVersion } from "@/components/latest-plugin-version"
 import {
   Gamepad2,
   Calendar,
@@ -74,7 +75,7 @@ export default function Home() {
 
           <p className="text-xl md:text-2xl text-muted-foreground max-w-2xl">
             Run your FFXIV venue like a pro. Track events, manage staff, log sales
-            in real-time, schedule shifts, and grow your community — all from one
+            in real-time, schedule shifts, and grow your community - all from one
             powerful dashboard and an in-game Dalamud plugin.
           </p>
 
@@ -91,7 +92,7 @@ export default function Home() {
           </div>
 
           <p className="text-sm text-muted-foreground">
-            No credit card required. Sign in with Discord to get started.
+            Sign in with Discord to get started.
           </p>
         </div>
       </section>
@@ -138,10 +139,7 @@ export default function Home() {
           </div>
           <h2 className="text-3xl md:text-4xl font-bold">In-Game Dalamud Plugin</h2>
           <div className="flex justify-center">
-            <span className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-primary/10 border border-primary/20 text-xs font-medium text-primary">
-              <span className="inline-block h-1.5 w-1.5 rounded-full bg-primary" />
-              v3.3.0 — Catppuccin Mocha theme refresh
-            </span>
+            <LatestPluginVersion />
           </div>
           <p className="text-lg text-muted-foreground">
             Log sales, track patrons, and manage shifts without ever leaving
