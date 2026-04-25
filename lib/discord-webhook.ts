@@ -32,7 +32,9 @@ function isValidDiscordWebhookUrl(url: string | null | undefined): boolean {
     const parsed = new URL(url)
     return (
       parsed.protocol === "https:" &&
-      (parsed.hostname === "discord.com" || parsed.hostname === "discordapp.com") &&
+      ["discord.com", "discordapp.com", "canary.discord.com", "ptb.discord.com"].includes(
+        parsed.hostname
+      ) &&
       parsed.pathname.startsWith("/api/webhooks/")
     )
   } catch {
