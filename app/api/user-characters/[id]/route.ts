@@ -8,7 +8,7 @@ import { prisma } from "@/lib/prisma"
  *
  * Unlink a character. Scoped by userId so you can't delete someone else's
  * link even if you guess the id. PatronLog rows retain their
- * characterName/world/workingUserId snapshot — unlinking doesn't rewrite
+ * characterName/world/workingUserId snapshot - unlinking doesn't rewrite
  * history, it just stops future visits from classifying as this user.
  */
 export async function DELETE(

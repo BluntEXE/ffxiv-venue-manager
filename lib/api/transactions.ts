@@ -14,7 +14,7 @@ import { invalidateCache } from "@/lib/redis-cache"
  * Shared validation schema for transaction creation. Used by both the
  * session-authed web route (/api/venues/[venueId]/transactions) and the
  * api-key-authed plugin route (/api/plugin/transactions). Keeping the
- * schema here means the two callers can't drift — adding a field in one
+ * schema here means the two callers can't drift - adding a field in one
  * place adds it in both.
  */
 export const createTransactionSchema = z.object({
@@ -30,7 +30,7 @@ export type CreateTransactionInput = z.infer<typeof createTransactionSchema>
 /**
  * Create a transaction row, fire the sale-logged Discord webhook, and
  * invalidate the services + transactions caches. Callers are responsible
- * for auth, venue access verification, and permission checks — this
+ * for auth, venue access verification, and permission checks - this
  * helper only owns the domain write + side effects.
  */
 export async function createTransaction(
@@ -71,7 +71,7 @@ export async function createTransaction(
     },
   })
 
-  // Discord webhook (fire-and-forget — never block the response)
+  // Discord webhook (fire-and-forget - never block the response)
   const venue = await prisma.venue.findUnique({
     where: { id: venueId },
     select: {

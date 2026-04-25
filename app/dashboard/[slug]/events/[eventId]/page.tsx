@@ -150,7 +150,7 @@ export default async function EventDetailsPage({
               <div>
                 <p className="text-sm text-muted-foreground">Final Attendance</p>
                 <p className="text-2xl font-bold">
-                  {event.attendanceCount || "—"}
+                  {event.attendanceCount || "-"}
                 </p>
                 <p className="text-xs text-muted-foreground mt-1">
                   From patron tracking
@@ -170,7 +170,7 @@ export default async function EventDetailsPage({
               <div>
                 <p className="text-sm text-muted-foreground">Revenue</p>
                 <p className="text-2xl font-bold">
-                  {event.revenue ? `${event.revenue} Gil` : "—"}
+                  {event.revenue ? `${event.revenue} Gil` : "-"}
                 </p>
                 <p className="text-xs text-muted-foreground mt-1">
                   From transactions

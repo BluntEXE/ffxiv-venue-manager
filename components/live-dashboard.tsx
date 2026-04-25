@@ -110,7 +110,7 @@ export function LiveDashboard({
                 timestamp: data.timestamp,
                 text:
                   name +
-                  " — " +
+                  " - " +
                   amt.toLocaleString() +
                   " gil" +
                   (staffName ? " (by " + staffName + ")" : ""),
@@ -188,7 +188,7 @@ export function LiveDashboard({
           </div>
           <p className="text-sm text-muted-foreground mt-1">
             {typeLabels[event.eventType] || event.eventType} &middot;{" "}
-            {formatST(event.startTime)} — {formatST(event.endTime)}
+            {formatST(event.startTime)} - {formatST(event.endTime)}
           </p>
         </div>
         <div className="flex items-center gap-2">

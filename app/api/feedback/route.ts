@@ -96,7 +96,7 @@ export const GET = withRateLimit(
         return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
       }
 
-      // Always scope to the authenticated user — no userId param accepted.
+      // Always scope to the authenticated user - no userId param accepted.
       // Admin access uses /api/admin/feedback instead.
       const feedback = await prisma.feedback.findMany({
         where: {

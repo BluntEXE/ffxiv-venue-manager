@@ -231,7 +231,7 @@ export default function UnifiedApiKeysPage() {
             <CardHeader>
               <CardTitle>Create New API Key</CardTitle>
               <CardDescription>
-                The full key is shown only once — copy it immediately after
+                The full key is shown only once - copy it immediately after
                 creation.
               </CardDescription>
             </CardHeader>
@@ -262,7 +262,7 @@ export default function UnifiedApiKeysPage() {
                   className="mt-1 flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
                 >
                   <option value="">
-                    All my venues (recommended — one key, works everywhere)
+                    All my venues (recommended - one key, works everywhere)
                   </option>
                   {ownedVenues.map((v) => (
                     <option key={v.id} value={v.id}>
@@ -422,7 +422,7 @@ export default function UnifiedApiKeysPage() {
                           </span>
                         ) : (
                           <>
-                            any of your venues — this key works for all of
+                            any of your venues - this key works for all of
                             them
                           </>
                         )}

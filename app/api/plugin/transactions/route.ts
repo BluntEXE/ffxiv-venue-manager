@@ -14,13 +14,13 @@ import {
  * Body shape:
  *   { venueId, serviceId?, eventId?, amount, customerName?, notes? }
  *
- * Returns a minimal success payload — the plugin only needs to know the
+ * Returns a minimal success payload - the plugin only needs to know the
  * row was accepted and get a short confirmation. Full transaction detail
  * lives on the website.
  *
  * Permission: delegates to checkPermission('log_transaction'), which
  * permits OWNER/MANAGER unconditionally and STAFF as well (aligned with
- * the web route's behavior — any active member can log a sale).
+ * the web route's behavior - any active member can log a sale).
  */
 const pluginTransactionSchema = createTransactionSchema.extend({
   venueId: z.string().min(1, "venueId is required"),

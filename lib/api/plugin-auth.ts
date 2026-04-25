@@ -16,7 +16,7 @@ export function hashApiKey(key: string): string {
 
 /**
  * Generate a new API key for a user. Returns the raw key (shown once
- * at creation). Both the raw key and its SHA-256 hash are persisted —
+ * at creation). Both the raw key and its SHA-256 hash are persisted -
  * raw is kept during the migration window so we can roll back to
  * plaintext lookup if the hash path misbehaves. Drop the `key` column
  * once the soak window is clean.
@@ -71,7 +71,7 @@ export async function validateApiKey(apiKey: string): Promise<{
   }
   
   // Fire-and-forget: bump lastUsedAt so the web UI shows when each key
-  // was last seen. We intentionally do NOT await — swallowing errors and
+  // was last seen. We intentionally do NOT await - swallowing errors and
   // not blocking validation keeps plugin requests fast.
   prisma.apiKey.update({
     where: { id: apiKeyRecord.id },
@@ -231,7 +231,7 @@ export async function checkPermission(
   
   // STAFF can log services, patron visits, and transactions (sales).
   // Aligned with the web transactions POST route, which only checks for
-  // active membership — any active member can log a sale from either
+  // active membership - any active member can log a sale from either
   // surface.
   if (membership.role === 'STAFF') {
     return (
@@ -252,7 +252,7 @@ export async function checkPermission(
  *
  * Classification rule: a character is "working" only if their linked user
  * account has an ACTIVE shift at this venue at log time. Off-duty staff
- * (membership but no active shift) are logged as patrons — that's the
+ * (membership but no active shift) are logged as patrons - that's the
  * visit-as-a-friend case the venue owner wants tracked as attendance.
  *
  * Dedupe: 60s sliding window on (venueId, character, world, action).
@@ -269,7 +269,7 @@ export async function logPatronVisit(data: {
 }) {
   const action = (data.action || "ENTER").toUpperCase()
 
-  // 1) Dedupe — sliding 60s window.
+  // 1) Dedupe - sliding 60s window.
   const dedupeSince = new Date(Date.now() - 60_000)
   const existing = await prisma.patronLog.findFirst({
     where: {
@@ -302,7 +302,7 @@ export async function logPatronVisit(data: {
     select: { userId: true },
   })
 
-  // 3) Active shift check — only true if the user is clocked into an
+  // 3) Active shift check - only true if the user is clocked into an
   // ACTIVE shift at this venue right now. Off-duty staff fall through.
   let wasWorking = false
   let workingUserId: string | null = null
@@ -321,7 +321,7 @@ export async function logPatronVisit(data: {
     }
   }
 
-  // 4) Event attribution — active event at this venue (startTime ≤ now
+  // 4) Event attribution - active event at this venue (startTime ≤ now
   // ≤ endTime, status PUBLISHED/ACTIVE). Snapshotted so later event
   // reschedules don't retro-rewrite history.
   const now = new Date()
@@ -354,7 +354,7 @@ export async function logPatronVisit(data: {
   })
 
   // 6) Push to SSE bus so /dashboard/<venue>/live updates in real time
-  // without polling. Fire-and-forget — bus emit failures must not break
+  // without polling. Fire-and-forget - bus emit failures must not break
   // the plugin's POST. The live page consumer lives at
   // /api/stream/[venueId]/route.ts.
   const isEnter = action === "ENTER" || action === "PRESENT"
@@ -367,7 +367,7 @@ export async function logPatronVisit(data: {
       data: { characterName: data.characterName, world: data.world, action },
     })
   } catch {
-    // Swallowed — never fail a plugin write because the live page bus is sad.
+    // Swallowed - never fail a plugin write because the live page bus is sad.
   }
 
   return {

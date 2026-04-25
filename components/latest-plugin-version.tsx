@@ -9,7 +9,7 @@
 // current.
 
 const FALLBACK_TAG = "v3.5.0"
-const FALLBACK_NAME = "v3.5.0 — Auto-load venues on startup"
+const FALLBACK_NAME = "v3.5.0 - Auto-load venues on startup"
 
 type LatestRelease = {
   tag_name?: string
@@ -28,12 +28,12 @@ async function fetchLatest(): Promise<{ tag: string; title: string }> {
     if (!res.ok) throw new Error(`GitHub API ${res.status}`)
     const data: LatestRelease = await res.json()
     const tag = data.tag_name?.trim() || FALLBACK_TAG
-    const title = (data.name?.trim() || tag).replace(/—/g, "-")
+    const title = (data.name?.trim() || tag).replace(/\u2014/g, "-")
     return { tag, title }
   } catch (err) {
     // Swallowed: a GitHub outage must not break the homepage.
     console.warn("[LatestPluginVersion] fetch failed, using fallback:", err)
-    return { tag: FALLBACK_TAG, title: FALLBACK_NAME.replace(/—/g, "-") }
+    return { tag: FALLBACK_TAG, title: FALLBACK_NAME.replace(/\u2014/g, "-") }
   }
 }
 

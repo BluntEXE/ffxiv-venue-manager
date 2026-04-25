@@ -44,7 +44,7 @@ if (process.env.REDIS_URL) {
 }
 
 // In-memory fallback. Per-process, so multi-replica deployments lose shared
-// state — fine here, only one venue-manager container.
+// state - fine here, only one venue-manager container.
 const memBuckets = new Map<string, { count: number; reset: number }>()
 setInterval(() => {
   const now = Date.now()
@@ -109,7 +109,7 @@ export async function checkLimit(
 /**
  * Budgets tuned for plugin traffic. Plugin polls ~once/min per active
  * screen, plus user-driven writes that are rare (clock-in 2x/shift, etc).
- * These caps are abuse-only territory — real use won't come close.
+ * These caps are abuse-only territory - real use won't come close.
  */
 export const budgets = {
   pluginRead: { limit: 120, windowSec: 60 }, // polling endpoints
@@ -118,7 +118,7 @@ export const budgets = {
 } as const
 
 /**
- * Legacy export — kept null so any old imports fall through to the
+ * Legacy export - kept null so any old imports fall through to the
  * middleware's in-memory fallback path. Removed once middleware is
  * refactored.
  */

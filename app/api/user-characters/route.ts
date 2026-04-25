@@ -37,7 +37,7 @@ export async function GET() {
  * body: { characterName, world, isPrimary? }
  *
  * Link a character to the signed-in user. (characterName, world) is unique
- * across the whole table — if another user already claimed it, return 409
+ * across the whole table - if another user already claimed it, return 409
  * with a clear message instead of leaking Prisma error details.
  */
 export async function POST(request: NextRequest) {

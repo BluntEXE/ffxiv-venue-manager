@@ -8,7 +8,7 @@ import { checkLimit } from "@/lib/rate-limit"
  * Backed by the shared Redis limiter when available, in-memory fallback
  * otherwise (see lib/rate-limit.ts).
  *
- * Plugin routes do NOT use this — they key off the API key via
+ * Plugin routes do NOT use this - they key off the API key via
  * lib/api/plugin-rate-limit.ts so shared-NAT users aren't collapsed.
  */
 export function withRateLimit<T = unknown>(

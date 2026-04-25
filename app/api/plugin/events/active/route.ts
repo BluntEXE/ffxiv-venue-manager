@@ -8,7 +8,7 @@ import { prisma } from '@/lib/prisma'
  *
  * Returns the currently-active event at the given venue (startTime ≤ now ≤
  * endTime, status PUBLISHED or ACTIVE). Used by the Dalamud plugin to gate
- * patron-visit sync when `syncOnlyDuringEvents` is enabled — the plugin
+ * patron-visit sync when `syncOnlyDuringEvents` is enabled - the plugin
  * caches the result for ~60s per venue, so analytics stay attributed to
  * the right event without hammering this endpoint.
  */
@@ -33,7 +33,7 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ error: 'Missing venueId' }, { status: 400 })
     }
 
-    // Venue scoping — the API key must be authorized for this venue. This
+    // Venue scoping - the API key must be authorized for this venue. This
     // mirrors the same gate used by other /api/plugin/* routes.
     if (!auth.venues.includes(venueId)) {
       return NextResponse.json({ error: 'Venue not authorized for this key' }, { status: 403 })

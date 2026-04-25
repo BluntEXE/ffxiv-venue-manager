@@ -12,7 +12,7 @@ import { prisma } from '@/lib/prisma'
  *
  * If the caller has no customRole at this venue (e.g. an OWNER who hasn't
  * been backfilled yet, or a STAFF with no assignment), services is an
- * empty list and userRole is null — plugin renders "Services: 0".
+ * empty list and userRole is null - plugin renders "Services: 0".
  *
  * Price is serialized as a string to match the plugin's Service.Price
  * field type (XIVAppApiClient.cs defines Price as string, so sending a

@@ -46,7 +46,7 @@ export const POST = withRateLimit<{ params: Promise<{ venueId: string }> }>(
         return NextResponse.json({ error: "Venue not found" }, { status: 404 })
       }
 
-      // Check permissions — OWNER or MANAGER only
+      // Check permissions - OWNER or MANAGER only
       const callerMembership = await prisma.membership.findFirst({
         where: {
           userId: session.user.id,

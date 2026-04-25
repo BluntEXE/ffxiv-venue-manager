@@ -263,7 +263,7 @@ export default function ApiKeysPage({
           <CardDescription>
             Generates a key scoped to{" "}
             <span className="font-medium">{currentVenue?.name}</span>. The full
-            key is shown only once — copy it immediately.
+            key is shown only once - copy it immediately.
           </CardDescription>
         </CardHeader>
         <CardContent>

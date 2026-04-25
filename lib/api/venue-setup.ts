@@ -12,7 +12,7 @@ type PrismaLike = Prisma.TransactionClient | typeof defaultPrisma
 /**
  * Find-or-create the Manager role for a venue.
  *
- * "Manager" is the "sees everything" default custom role — every OWNER/MANAGER
+ * "Manager" is the "sees everything" default custom role - every OWNER/MANAGER
  * tier membership auto-gets it when they have no other custom role assigned,
  * and every new Service auto-links to it. That way the plugin's strict
  * "show only my assigned role + its services" behavior still gives owners
@@ -33,7 +33,7 @@ export async function ensureManagerRole(
       venueId,
       name: "Manager",
       color: "#6366f1",
-      responsibilities: "Full venue access — auto-linked to every service.",
+      responsibilities: "Full venue access - auto-linked to every service.",
     },
   })
 }

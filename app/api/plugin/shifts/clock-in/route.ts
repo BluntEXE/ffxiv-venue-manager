@@ -10,7 +10,7 @@ import { enforcePluginRateLimit } from "@/lib/api/plugin-rate-limit"
  * Clock into a shift. Sets actualStart to now and status to ACTIVE.
  * Only the assigned staff member can clock in, and only if the shift is
  * SCHEDULED and within a reasonable window (30 min before scheduledStart
- * to 60 min after — prevents accidental clock-ins on distant shifts).
+ * to 60 min after - prevents accidental clock-ins on distant shifts).
  */
 const bodySchema = z.object({
   shiftId: z.string().min(1),

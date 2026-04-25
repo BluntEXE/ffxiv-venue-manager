@@ -35,7 +35,7 @@ export async function GET(request: NextRequest) {
     },
   })
 
-  // Mask the keys — full key is only ever returned at create time
+  // Mask the keys - full key is only ever returned at create time
   const maskedKeys = keys.map((k) => ({
     ...k,
     key: k.key.substring(0, 8) + "..." + k.key.substring(k.key.length - 4),

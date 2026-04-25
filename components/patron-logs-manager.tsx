@@ -213,7 +213,7 @@ export function PatronLogsManager({
                   <SelectValue placeholder="All events / date range" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="none">— Use date range —</SelectItem>
+                  <SelectItem value="none">- Use date range -</SelectItem>
                   {events.map((e) => (
                     <SelectItem key={e.id} value={e.id}>
                       {e.title} ({new Date(e.startTime).toLocaleDateString()})
@@ -366,7 +366,7 @@ export function PatronLogsManager({
                     {new Date(l.timestamp).toLocaleString()}
                   </td>
                   <td className="p-3">
-                    {l.characterName ?? "—"}
+                    {l.characterName ?? "-"}
                     {l.world && (
                       <span className="text-muted-foreground"> ({l.world})</span>
                     )}
@@ -383,12 +383,12 @@ export function PatronLogsManager({
                       )}
                       {l.workingUser && (
                         <span className="text-xs text-muted-foreground">
-                          {l.workingUser.name ?? "—"}
+                          {l.workingUser.name ?? "-"}
                         </span>
                       )}
                       {l.reclassifiedAt && (
                         <span
-                          title={`Reclassified by ${l.reclassifiedBy?.name ?? "?"} on ${new Date(l.reclassifiedAt).toLocaleString()}${l.reclassifyReason ? ` — ${l.reclassifyReason}` : ""}`}
+                          title={`Reclassified by ${l.reclassifiedBy?.name ?? "?"} on ${new Date(l.reclassifiedAt).toLocaleString()}${l.reclassifyReason ? ` - ${l.reclassifyReason}` : ""}`}
                           className="inline-flex"
                         >
                           <History className="h-3.5 w-3.5 text-amber-500" />
@@ -397,7 +397,7 @@ export function PatronLogsManager({
                     </div>
                   </td>
                   <td className="p-3 text-muted-foreground">
-                    {l.event?.title ?? "—"}
+                    {l.event?.title ?? "-"}
                   </td>
                 </tr>
               ))}

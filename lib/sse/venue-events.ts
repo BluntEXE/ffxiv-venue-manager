@@ -1,7 +1,7 @@
 import { EventEmitter } from "events"
 
 // In-memory pub/sub for venue timeline events.
-// Single-container deployment — no Redis needed.
+// Single-container deployment - no Redis needed.
 
 export interface VenueEvent {
   id: string
@@ -22,7 +22,7 @@ class VenueEventBus extends EventEmitter {
   }
 }
 
-// Singleton — survives across hot reloads in dev via globalThis
+// Singleton - survives across hot reloads in dev via globalThis
 const globalBus = globalThis as unknown as { __venueEventBus?: VenueEventBus }
 export const venueEventBus = globalBus.__venueEventBus ??= new VenueEventBus()
 venueEventBus.setMaxListeners(200)

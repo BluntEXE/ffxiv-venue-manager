@@ -7,7 +7,7 @@ import { prisma } from '@/lib/prisma'
  * GET /api/plugin/roles?venueId=…
  *
  * Returns ONLY the caller's assigned custom role at this venue, as a
- * 0-or-1 element list. Membership.roleId is a scalar nullable — a member
+ * 0-or-1 element list. Membership.roleId is a scalar nullable - a member
  * has exactly one custom role or none, so the plugin never needs a
  * multi-select here.
  *
@@ -21,7 +21,7 @@ import { prisma } from '@/lib/prisma'
  *    own role.
  *
  * auth.venues.includes(venueId) already proves active membership, and the
- * prisma.membership.findFirst below is self-scoping — no extra
+ * prisma.membership.findFirst below is self-scoping - no extra
  * checkPermission is needed.
  */
 export async function GET(request: NextRequest) {

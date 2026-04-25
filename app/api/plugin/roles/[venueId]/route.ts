@@ -6,7 +6,7 @@ import { prisma } from '@/lib/prisma'
 /**
  * GET /api/plugin/roles/[venueId]
  *
- * Path-param variant of /api/plugin/roles — same semantics. Returns only
+ * Path-param variant of /api/plugin/roles - same semantics. Returns only
  * the caller's assigned custom role at the venue, as a 0-or-1 element
  * list. See ../route.ts for the rationale on why checkPermission('view')
  * was removed.

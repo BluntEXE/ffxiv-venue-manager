@@ -99,7 +99,7 @@ export default async function VenueDashboardPage({
           )}
         </div>
 
-        {/* Stat Cards — Owner/Manager see all 4, Staff sees none */}
+        {/* Stat Cards - Owner/Manager see all 4, Staff sees none */}
         {canManage && (
           <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 md:gap-6 mb-6 md:mb-8">
             <Link href={`/dashboard/${venue.slug}/events`}>
@@ -149,7 +149,7 @@ export default async function VenueDashboardPage({
           </div>
         )}
 
-        {/* My Shifts — all roles */}
+        {/* My Shifts - all roles */}
         <div className="mb-6 md:mb-8">
           <div className="flex items-center justify-between mb-4">
             <h2 className="text-xl font-semibold">My Shifts</h2>
@@ -197,7 +197,7 @@ export default async function VenueDashboardPage({
           )}
         </div>
 
-        {/* Upcoming Events — all roles */}
+        {/* Upcoming Events - all roles */}
         <div className="mb-6 md:mb-8">
           <div className="flex items-center justify-between mb-4">
             <h2 className="text-xl font-semibold">Upcoming Events</h2>
@@ -239,7 +239,7 @@ export default async function VenueDashboardPage({
           )}
         </div>
 
-        {/* Analytics — Owner/Manager only */}
+        {/* Analytics - Owner/Manager only */}
         {canViewReports && (
           <div className="mt-6 md:mt-8">
             <h2 className="text-xl font-semibold mb-4">Analytics Overview</h2>

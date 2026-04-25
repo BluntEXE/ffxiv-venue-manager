@@ -25,7 +25,7 @@ export function LocalTimeRange({
   const e = new Date(end)
   return (
     <span className={className}>
-      {format(s, "MMM d")} &middot; {format(s, "h:mm a")} — {format(e, "h:mm a")}
+      {format(s, "MMM d")} &middot; {format(s, "h:mm a")} - {format(e, "h:mm a")}
     </span>
   )
 }
