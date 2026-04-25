@@ -3,6 +3,7 @@ import { getServerSession } from "next-auth"
 import { authOptions } from "@/lib/auth"
 import { prisma } from "@/lib/prisma"
 import { nanoid } from "nanoid"
+import { hashApiKey } from "@/lib/api/plugin-auth"
 
 export async function GET(request: NextRequest) {
   const session = await getServerSession(authOptions)
@@ -97,13 +98,16 @@ export async function POST(request: NextRequest) {
     }
   }
 
-  // Generate new API key
+  // Generate new API key. The plaintext key is returned to the user once
+  // here and never again (the validation path looks up by keyHash).
   const key = "vm_" + nanoid(32)
+  const keyHash = hashApiKey(key)
 
   const apiKey = await prisma.apiKey.create({
     data: {
       id: nanoid(),
       key,
+      keyHash,
       name: name.trim(),
       userId: session.user.id,
       venueId: venueId ?? null,

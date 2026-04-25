@@ -1,27 +1,46 @@
 import { nanoid } from 'nanoid'
+import crypto from 'crypto'
 import { prisma } from '@/lib/prisma'
+import { venueEventBus } from '@/lib/sse/venue-events'
 
 /**
- * Generate a new API key for a user
+ * SHA-256 hash of an API key for storage + lookup. The plaintext key is
+ * shown to the user once at creation; on every subsequent validation we
+ * hash the incoming header and look up by `keyHash`. Plain SHA-256 (no
+ * salt/HMAC) is sufficient because keys are 32-char nanoids = 192 bits of
+ * entropy, beyond brute-force rainbow attacks even unsalted.
+ */
+export function hashApiKey(key: string): string {
+  return crypto.createHash('sha256').update(key).digest('hex')
+}
+
+/**
+ * Generate a new API key for a user. Returns the raw key (shown once
+ * at creation). Both the raw key and its SHA-256 hash are persisted —
+ * raw is kept during the migration window so we can roll back to
+ * plaintext lookup if the hash path misbehaves. Drop the `key` column
+ * once the soak window is clean.
  */
 export async function generateApiKey(
-  userId: string, 
+  userId: string,
   name?: string,
   venueId?: string
 ): Promise<string> {
   const key = `vm_${nanoid(32)}`
   const id = nanoid()
-  
+  const keyHash = hashApiKey(key)
+
   await prisma.apiKey.create({
     data: {
       id,
       userId,
       key,
+      keyHash,
       name: name || 'Plugin API Key',
       venueId
     }
   })
-  
+
   return key
 }
 
@@ -36,19 +55,17 @@ export async function validateApiKey(apiKey: string): Promise<{
   if (!apiKey || !apiKey.startsWith('vm_')) {
     return null
   }
-  
-  const apiKeyRecord = await prisma.apiKey.findUnique({
-    where: { key: apiKey },
+
+  // Lookup by keyHash, never by plaintext. Combined with revokedAt: null
+  // in the where clause so revoked keys don't even produce a record.
+  const keyHash = hashApiKey(apiKey)
+  const apiKeyRecord = await prisma.apiKey.findFirst({
+    where: { keyHash, revokedAt: null },
     include: {
       user: true
     }
   })
-  
-  // Check if key is revoked
-  if (apiKeyRecord?.revokedAt) {
-    return null
-  }
-  
+
   if (!apiKeyRecord) {
     return null
   }
@@ -335,6 +352,23 @@ export async function logPatronVisit(data: {
       eventId: activeEvent?.id ?? null,
     },
   })
+
+  // 6) Push to SSE bus so /dashboard/<venue>/live updates in real time
+  // without polling. Fire-and-forget — bus emit failures must not break
+  // the plugin's POST. The live page consumer lives at
+  // /api/stream/[venueId]/route.ts.
+  const isEnter = action === "ENTER" || action === "PRESENT"
+  try {
+    venueEventBus.emit(data.venueId, {
+      id: created.id,
+      type: isEnter ? "patron_enter" : "patron_exit",
+      venueId: data.venueId,
+      timestamp: created.timestamp.toISOString(),
+      data: { characterName: data.characterName, world: data.world, action },
+    })
+  } catch {
+    // Swallowed — never fail a plugin write because the live page bus is sad.
+  }
 
   return {
     created,
