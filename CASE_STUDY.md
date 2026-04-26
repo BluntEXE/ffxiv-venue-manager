@@ -3,7 +3,7 @@
 # XIV Venue Manager
 ### Production venue management for an MMO community
 
-[![Next.js](https://img.shields.io/badge/Next.js-15-000000?logo=next.js)](https://nextjs.org)
+[![Next.js](https://img.shields.io/badge/Next.js-16-000000?logo=next.js)](https://nextjs.org)
 [![TypeScript](https://img.shields.io/badge/TypeScript-strict-3178C6?logo=typescript)](https://www.typescriptlang.org)
 [![PostgreSQL](https://img.shields.io/badge/PostgreSQL-16-336791?logo=postgresql)](https://www.postgresql.org)
 [![C# Plugin](https://img.shields.io/badge/Dalamud_Plugin-C%23-239120?logo=csharp)](https://github.com/goatcorp/Dalamud)
@@ -22,7 +22,7 @@ A two-part venue management system for **Final Fantasy XIV** social venues: a **
 ```
 ┌──────────────────┐       ┌──────────────────┐       ┌──────────────────┐
 │  FFXIV client    │  HTTP │  Web app + API   │  SQL  │   PostgreSQL     │
-│  + Dalamud       ├──────►│  (Next.js 15)    ├──────►│   19 tables      │
+│  + Dalamud       ├──────►│  (Next.js 16)    ├──────►│   19 tables      │
 │  + my plugin     │  SSE  │  + Redis cache   │       │                  │
 │  (4,981 LOC C#)  │◄──────┤  (19,419 LOC TS) │       │                  │
 └──────────────────┘       └──────────────────┘       └──────────────────┘
@@ -69,7 +69,7 @@ A two-tier system, each tier doing what it's good at.
 - Tracks staff shifts (clock-in/out)
 - Authenticates to the web app via per-user API key
 
-### Tier 2: Web app (Next.js 15 + PostgreSQL, ~19k LOC)
+### Tier 2: Web app (Next.js 16 + PostgreSQL, ~19k LOC)
 - 55-route REST API: plugin-facing routes (API key auth) + dashboard routes (Discord OAuth)
 - Live page with **server-sent events** (SSE) for real-time patron flow
 - Analytics dashboards per venue
@@ -92,7 +92,7 @@ graph TB
     end
 
     subgraph Edge["Web Edge"]
-        Next["Next.js 15<br/>App Router<br/>Standalone Build"]
+        Next["Next.js 16<br/>App Router<br/>Standalone Build"]
     end
 
     subgraph Data["Persistence Layer"]
@@ -138,7 +138,7 @@ graph TB
 
 | Layer | Choice | Why this and not the alternative |
 |---|---|---|
-| **Frontend framework** | Next.js 15 App Router | Server Components mean dashboard data joins happen on the server, no waterfall fetches. Standalone build keeps the production image lean. |
+| **Frontend framework** | Next.js 16 App Router | Server Components mean dashboard data joins happen on the server, no waterfall fetches. Standalone build keeps the production image lean. |
 | **Language** | TypeScript with `strict: true` | The plugin↔server contract is the single most important interface in the system. A typed contract catches drift at build time, not in production. |
 | **Database** | PostgreSQL 16 | Relational because the domain is relational: venues have memberships, memberships have shifts, shifts have transactions. Joins, not document gymnastics. |
 | **ORM** | Prisma | Generated types feed the TS strictness. Schema-first migrations force me to think about data shape before writing routes. |

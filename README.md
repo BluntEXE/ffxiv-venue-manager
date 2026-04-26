@@ -1,11 +1,24 @@
+<div align="center">
+
 # XIV Venue Manager
 
-**A comprehensive web-based venue management system for Final Fantasy XIV roleplaying venues**
+**A comprehensive venue management system for Final Fantasy XIV roleplaying venues**
 
+[![Live](https://img.shields.io/badge/live-xivvenuemanager.com-success)](https://xivvenuemanager.com)
+[![Next.js](https://img.shields.io/badge/Next.js-16-000000?logo=next.js)](https://nextjs.org)
+[![TypeScript](https://img.shields.io/badge/TypeScript-strict-3178C6?logo=typescript)](https://www.typescriptlang.org)
+[![PostgreSQL](https://img.shields.io/badge/PostgreSQL-16-336791?logo=postgresql)](https://www.postgresql.org)
+[![Plugin](https://img.shields.io/badge/Dalamud_Plugin-C%23-239120?logo=csharp)](https://github.com/goatcorp/Dalamud)
+
+</div>
+
+> **For engineers and hiring managers:** see [`CASE_STUDY.md`](./CASE_STUDY.md) for the engineering deep-dive: architecture diagram, tech-stack rationale, three engineering vignettes (cross-platform contract, security audit, real-time choices), and an honest "what I would do differently" section.
 
 ## Overview
 
-XIV Venue Manager is a modern, full-featured platform designed specifically for FFXIV roleplaying venue owners and staff. Manage multiple venues, coordinate events, track staff, handle sales, assign tasks, and automate Discord notifications—all from one powerful dashboard.
+XIV Venue Manager is a modern, full-featured platform designed specifically for FFXIV roleplaying venue owners and staff. Manage multiple venues, coordinate events, track staff, handle sales, assign tasks, and automate Discord notifications, all from one powerful dashboard.
+
+The platform is two parts: a **web dashboard** (this repo) and a **Dalamud game-client plugin** that captures in-game patron events and shifts in real time, syncing them to the dashboard for analytics and payroll.
 
 ### Key Benefits
 
@@ -64,13 +77,17 @@ XIV Venue Manager is a modern, full-featured platform designed specifically for 
 
 ## Technology Stack
 
-- **Frontend**: Next.js 16, React 19, Tailwind CSS, shadcn/ui
-- **Backend**: Node.js, Next.js API Routes
-- **Database**: PostgreSQL (Supabase)
-- **ORM**: Prisma
-- **Authentication**: NextAuth.js with Discord OAuth
-- **Rate Limiting**: Upstash Redis
-- **Hosting**: Vercel
+- **Frontend**: Next.js 16 (App Router), React 19, Tailwind CSS, shadcn/ui
+- **Backend**: Node.js, Next.js API Routes (55 routes), TypeScript with `strict: true`
+- **Database**: PostgreSQL 16 (self-hosted via Docker Compose), 19 tables
+- **ORM**: Prisma (using `db push` workflow)
+- **Authentication**: NextAuth.js (browser, Discord OAuth) + hashed API keys (game-client plugin)
+- **Caching + Rate Limiting**: Redis 7 (single instance, ioredis client, namespaced `cache:` and `rl:` keys)
+- **Real-time**: Server-Sent Events (SSE) for the live patron feed
+- **Game-client integration**: C# Dalamud plugin (~5k LOC), separate repo
+- **Hosting**: Self-hosted Linux server, Docker Compose, GitHub Actions for CI
+
+For the why-this-and-not-that on each choice, see [`CASE_STUDY.md`](./CASE_STUDY.md#tech-stack--why).
 
 ---
 
@@ -79,18 +96,21 @@ XIV Venue Manager is a modern, full-featured platform designed specifically for 
 See [QUICK_START.md](./QUICK_START.md) for detailed setup instructions.
 
 ### Prerequisites
-- Node.js 18+
-- PostgreSQL database
-- Discord application
-- Upstash Redis account
+- Node.js 20+
+- PostgreSQL 16
+- Redis 7
+- Discord application (for OAuth)
 
 ### Installation
 ```bash
 npm install
+cp .env.example .env  # fill in DATABASE_URL, REDIS_URL, NEXTAUTH_SECRET, DISCORD_CLIENT_ID/SECRET
 npx prisma generate
 npx prisma db push
 npm run dev
 ```
+
+For production, the entire stack runs as a Docker Compose project: `docker compose up -d` builds and starts the web app, Postgres, Redis, and a cron-jobs container.
 
 ---
 
