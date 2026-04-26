@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { validateApiKey } from '@/lib/api/plugin-auth'
-import { enforcePluginRateLimit } from '@/lib/api/plugin-rate-limit'
+import { enforcePluginRateLimit, enforcePluginIpRateLimit } from '@/lib/api/plugin-rate-limit'
 import { prisma } from '@/lib/prisma'
 
 /**
@@ -26,6 +26,9 @@ import { prisma } from '@/lib/prisma'
  */
 export async function GET(request: NextRequest) {
   try {
+    const __ipLimited = await enforcePluginIpRateLimit(request)
+    if (__ipLimited) return __ipLimited
+
     const apiKey = request.headers.get('x-api-key')
     if (!apiKey) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
 

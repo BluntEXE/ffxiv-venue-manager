@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { validateApiKey, getUserVenues } from '@/lib/api/plugin-auth'
-import { enforcePluginRateLimit } from '@/lib/api/plugin-rate-limit'
+import { enforcePluginRateLimit, enforcePluginIpRateLimit } from '@/lib/api/plugin-rate-limit'
 
 /**
  * GET /api/plugin/venues
@@ -10,6 +10,9 @@ import { enforcePluginRateLimit } from '@/lib/api/plugin-rate-limit'
  */
 export async function GET(request: NextRequest) {
   try {
+    const __ipLimited = await enforcePluginIpRateLimit(request)
+    if (__ipLimited) return __ipLimited
+
     const apiKey = request.headers.get('x-api-key')
     
     if (!apiKey) {

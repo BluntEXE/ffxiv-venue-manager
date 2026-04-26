@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { validateApiKey, checkPermission, logPatronVisit, getPatronVisits } from '@/lib/api/plugin-auth'
-import { enforcePluginRateLimit } from '@/lib/api/plugin-rate-limit'
+import { enforcePluginRateLimit, enforcePluginIpRateLimit } from '@/lib/api/plugin-rate-limit'
 import { nanoid } from 'nanoid'
 
 interface PatronVisitPayload {
@@ -19,6 +19,9 @@ interface PatronVisitPayload {
  */
 export async function POST(request: NextRequest) {
   try {
+    const __ipLimited = await enforcePluginIpRateLimit(request)
+    if (__ipLimited) return __ipLimited
+
     const apiKey = request.headers.get('x-api-key')
     
     if (!apiKey) {
@@ -93,6 +96,9 @@ export async function POST(request: NextRequest) {
  */
 export async function GET(request: NextRequest) {
   try {
+    const __ipLimited = await enforcePluginIpRateLimit(request)
+    if (__ipLimited) return __ipLimited
+
     const apiKey = request.headers.get('x-api-key')
     const { searchParams } = new URL(request.url)
     const venueId = searchParams.get('venueId')
