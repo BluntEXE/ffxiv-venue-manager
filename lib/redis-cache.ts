@@ -1,18 +1,18 @@
-import { Redis } from "@upstash/redis"
+import { redis, ready } from "@/lib/redis"
 
-// Redis instance for caching
-let redis: Redis | null = null
+/**
+ * Cache-aside layer backed by the shared ioredis singleton.
+ *
+ * Keys are manually prefixed with "cache:" here (no client-side keyPrefix
+ * option) so the same connection can serve both the rate limiter ("rl:"
+ * prefix) and this cache.
+ *
+ * Fail-open: any Redis error returns null/no-op so a cache outage degrades
+ * to direct DB hits, never to a 500.
+ */
 
-// Initialize Redis if credentials are available
-if (process.env.UPSTASH_REDIS_REST_URL && process.env.UPSTASH_REDIS_REST_TOKEN) {
-  redis = new Redis({
-    url: process.env.UPSTASH_REDIS_REST_URL,
-    token: process.env.UPSTASH_REDIS_REST_TOKEN,
-  })
-  console.log("✅ Redis caching enabled")
-} else {
-  console.warn("⚠️  Redis caching disabled: Upstash credentials not configured")
-}
+const PREFIX = "cache:"
+const k = (key: string) => `${PREFIX}${key}`
 
 /**
  * Cache TTL (Time To Live) configurations
@@ -27,7 +27,8 @@ export const cacheTTL = {
 }
 
 /**
- * Cache key prefixes
+ * Cache key prefixes (the "cache:" namespace prefix is added by k() at
+ * the boundary of every Redis call, not here).
  */
 export const cacheKeys = {
   venue: (id: string) => `venue:${id}`,
@@ -39,101 +40,75 @@ export const cacheKeys = {
   venueTransactions: (venueId: string, params: string) => `venue:${venueId}:transactions:${params}`,
 }
 
-/**
- * Get cached data by key
- */
 export async function getCached<T>(key: string): Promise<T | null> {
-  if (!redis) return null
-
+  if (!ready() || !redis) return null
   try {
-    const data = await redis.get<T>(key)
-    return data
+    const raw = await redis.get(k(key))
+    if (raw === null) return null
+    return JSON.parse(raw) as T
   } catch (error) {
-    console.error(`Redis get error for key ${key}:`, error)
+    console.error(`[redis-cache] get error for key ${key}:`, error)
     return null
   }
 }
 
-/**
- * Set cached data with TTL
- */
 export async function setCache<T>(
   key: string,
   data: T,
   ttlSeconds: number
 ): Promise<void> {
-  if (!redis) return
-
+  if (!ready() || !redis) return
   try {
-    await redis.setex(key, ttlSeconds, JSON.stringify(data))
+    await redis.setex(k(key), ttlSeconds, JSON.stringify(data))
   } catch (error) {
-    console.error(`Redis set error for key ${key}:`, error)
+    console.error(`[redis-cache] set error for key ${key}:`, error)
   }
 }
 
 /**
- * Invalidate cache by key or pattern
+ * Invalidate a single key, or all keys matching a glob pattern.
+ *
+ * Patterns are scanned with the "cache:" prefix already applied so we
+ * never accidentally match other namespaces (e.g. "rl:*").
  */
 export async function invalidateCache(keyOrPattern: string): Promise<void> {
-  if (!redis) return
-
+  if (!ready() || !redis) return
   try {
-    // If it's a pattern (contains *), scan and delete
     if (keyOrPattern.includes("*")) {
       let cursor = "0"
       do {
-        const [nextCursor, keys] = await redis.scan(cursor, {
-          match: keyOrPattern,
-          count: 100,
-        })
-        cursor = nextCursor
-
+        const [next, keys] = await redis.scan(cursor, "MATCH", k(keyOrPattern), "COUNT", 100)
+        cursor = next
         if (keys.length > 0) {
           await redis.del(...keys)
         }
       } while (cursor !== "0")
     } else {
-      // Simple key deletion
-      await redis.del(keyOrPattern)
+      await redis.del(k(keyOrPattern))
     }
   } catch (error) {
-    console.error(`Redis invalidate error for key ${keyOrPattern}:`, error)
+    console.error(`[redis-cache] invalidate error for ${keyOrPattern}:`, error)
   }
 }
 
-/**
- * Invalidate multiple cache keys
- */
 export async function invalidateCacheKeys(keys: string[]): Promise<void> {
-  if (!redis || keys.length === 0) return
-
+  if (!ready() || !redis || keys.length === 0) return
   try {
-    await redis.del(...keys)
+    await redis.del(...keys.map(k))
   } catch (error) {
-    console.error("Redis batch invalidate error:", error)
+    console.error("[redis-cache] batch invalidate error:", error)
   }
 }
 
-/**
- * Get or set cached data (cache-aside pattern)
- */
 export async function getOrSet<T>(
   key: string,
   fetchFn: () => Promise<T>,
   ttlSeconds: number
 ): Promise<T> {
-  // Try to get from cache
   const cached = await getCached<T>(key)
-  if (cached !== null) {
-    return cached
-  }
-
-  // Fetch fresh data
+  if (cached !== null) return cached
   const data = await fetchFn()
-
-  // Store in cache
   await setCache(key, data, ttlSeconds)
-
   return data
 }
 

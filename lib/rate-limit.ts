@@ -1,7 +1,8 @@
-import Redis from "ioredis"
+import { redis, ready } from "@/lib/redis"
 
 /**
- * Fixed-window rate limiter backed by ioredis, with in-memory fallback.
+ * Fixed-window rate limiter backed by the shared ioredis singleton, with
+ * in-memory fallback.
  *
  * Why fixed-window not sliding: one INCR + EXPIRE per request is cheap and
  * the ~2x burst at window edges is acceptable for abuse protection. Sliding
@@ -16,31 +17,6 @@ export type RateLimitResult = {
   limit: number
   remaining: number
   reset: number // ms since epoch when window rolls
-}
-
-let redis: Redis | null = null
-let redisErrorLogged = false
-
-if (process.env.REDIS_URL) {
-  redis = new Redis(process.env.REDIS_URL, {
-    lazyConnect: true,
-    maxRetriesPerRequest: 1,
-    connectTimeout: 2000,
-    enableOfflineQueue: false,
-  })
-  redis.on("error", (e) => {
-    if (!redisErrorLogged) {
-      console.error("[rate-limit] Redis error:", e.message)
-      redisErrorLogged = true
-    }
-  })
-  redis.on("ready", () => {
-    console.log("[rate-limit] Redis ready")
-    redisErrorLogged = false
-  })
-  redis.connect().catch((e) => {
-    console.error("[rate-limit] Initial connect failed:", e.message)
-  })
 }
 
 // In-memory fallback. Per-process, so multi-replica deployments lose shared
@@ -84,7 +60,7 @@ export async function checkLimit(
   const bucket = Math.floor(now / windowMs)
   const reset = (bucket + 1) * windowMs
 
-  if (!redis || redis.status !== "ready") {
+  if (!ready() || !redis) {
     return memLimit(identifier, limit, windowMs)
   }
 
