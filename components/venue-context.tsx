@@ -1,6 +1,7 @@
 "use client"
 
 import { createContext, useContext, ReactNode, useState, useCallback, useEffect } from "react"
+import { useSession } from "next-auth/react"
 
 interface Venue {
   id: string
@@ -25,6 +26,7 @@ interface VenueProviderProps {
 }
 
 export function VenueProvider({ children }: VenueProviderProps) {
+  const { status } = useSession()
   const [venues, setVenues] = useState<Venue[]>([])
   const [isLoading, setIsLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
@@ -69,12 +71,14 @@ export function VenueProvider({ children }: VenueProviderProps) {
     setHasFetched(false)
   }, [])
 
-  // Auto-fetch on mount if not fetched
+  // Auto-fetch on mount once authenticated. Skipping on the public landing
+  // page avoids a wasted /api/venues call that returns 401 (or HTML at the
+  // edge) and pollutes the console.
   useEffect(() => {
-    if (!hasFetched) {
+    if (status === "authenticated" && !hasFetched) {
       fetchVenues()
     }
-  }, [hasFetched, fetchVenues])
+  }, [status, hasFetched, fetchVenues])
 
   return (
     <VenueContext.Provider
