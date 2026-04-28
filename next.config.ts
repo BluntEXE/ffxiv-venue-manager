@@ -47,7 +47,7 @@ const nextConfig: NextConfig = {
               "style-src 'self' 'unsafe-inline'", // Tailwind requires unsafe-inline
               "img-src 'self' data: https://cdn.discordapp.com https://raw.githubusercontent.com", // Discord avatars + GitHub images
               "font-src 'self' data:",
-              "connect-src 'self' https://discord.com https://api.github.com https://qstash.upstash.io", // API connections
+              "connect-src 'self' https://discord.com https://api.github.com https://qstash.upstash.io https://errors.xivvenuemanager.com", // API connections
               "frame-ancestors 'none'", // Equivalent to X-Frame-Options: DENY
               "base-uri 'self'",
               "form-action 'self'",
@@ -62,4 +62,11 @@ const nextConfig: NextConfig = {
   },
 }
 
-export default nextConfig
+import { withSentryConfig } from "@sentry/nextjs"
+
+export default withSentryConfig(nextConfig, {
+  silent: !process.env.CI,
+  widenClientFileUpload: false,
+  disableLogger: true,
+  sourcemaps: { disable: true },
+})
