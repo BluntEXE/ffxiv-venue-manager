@@ -57,3 +57,7 @@ next-env.d.ts
 # Local runtime data volumes (mounted into containers)
 /docker/postgres/data
 /docker/redis/data
+
+# Playwright artefacts
+test-results/
+playwright-report/
