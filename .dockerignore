@@ -1,2 +1,29 @@
+# Build artefacts
+.next
+node_modules
+out
+
+# Source control
+.git
+.gitignore
+.github
+
+# Editor / OS
+.vscode
+.idea
+.DS_Store
+*.swp
+
+# Local-only
 docker
 docker/*
+.env*
+!.env
+
+# Logs and tests
+*.log
+npm-debug.log*
+coverage
+
+# Docs
+*.md
