@@ -24,6 +24,7 @@ export const cacheTTL = {
   user: 300, // 5 minutes
   services: 600, // 10 minutes (services don't change often)
   transactions: 180, // 3 minutes (more dynamic)
+  publicStats: 300, // 5 minutes (public /stats page)
 }
 
 /**
@@ -38,6 +39,7 @@ export const cacheKeys = {
   userVenues: (userId: string) => `user:${userId}:venues`,
   venueServices: (venueId: string) => `venue:${venueId}:services`,
   venueTransactions: (venueId: string, params: string) => `venue:${venueId}:transactions:${params}`,
+  publicStats: () => `public:stats`,
 }
 
 export async function getCached<T>(key: string): Promise<T | null> {

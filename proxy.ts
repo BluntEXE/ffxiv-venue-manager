@@ -12,7 +12,7 @@ export default withAuth(
         const path = req.nextUrl.pathname
 
         // Public paths that don't require authentication
-        const publicPaths = ["/", "/auth/signin", "/auth/error", "/test"]
+        const publicPaths = ["/", "/auth/signin", "/auth/error", "/test", "/stats"]
         const isPublicPath = publicPaths.some(p => path === p)
         const isPublicPrefix = path.startsWith("/guide/") || path.startsWith("/invite/") || path.startsWith("/api/invites/")
 
@@ -42,6 +42,6 @@ export const config = {
      * - favicon.ico (favicon file)
      * - public files (images, etc)
      */
-    "/((?!api/auth|api/cron|api/plugin|_next/static|_next/image|favicon.ico|.*\\.png|.*\\.jpg|.*\\.svg).*)",
+    "/((?!api/auth|api/cron|api/plugin|api/stats|_next/static|_next/image|favicon.ico|.*\\.png|.*\\.jpg|.*\\.svg).*)",
   ],
 }
