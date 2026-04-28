@@ -6,10 +6,10 @@ import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { prisma } from "@/lib/prisma"
-import { format } from "date-fns"
 import { DeleteEventButton } from "@/components/delete-event-button"
 import { PatronTracking } from "@/components/patron-tracking"
 import { EventAttendanceChart } from "@/components/event-attendance-chart"
+import { ServerTime, SERVER_TIME_LABEL } from "@/components/server-time"
 
 const statusColors = {
   DRAFT: "bg-zinc-500",
@@ -204,19 +204,19 @@ export default async function EventDetailsPage({
               <div>
                 <p className="text-sm text-muted-foreground">Start</p>
                 <p className="font-semibold">
-                  {format(new Date(event.startTime), "PPP")}
+                  <ServerTime date={event.startTime} formatStr="datelong" />
                 </p>
                 <p className="text-sm">
-                  {format(new Date(event.startTime), "p")}
+                  <ServerTime date={event.startTime} formatStr="time" /> {SERVER_TIME_LABEL}
                 </p>
               </div>
               <div>
                 <p className="text-sm text-muted-foreground">End</p>
                 <p className="font-semibold">
-                  {format(new Date(event.endTime), "PPP")}
+                  <ServerTime date={event.endTime} formatStr="datelong" />
                 </p>
                 <p className="text-sm">
-                  {format(new Date(event.endTime), "p")}
+                  <ServerTime date={event.endTime} formatStr="time" /> {SERVER_TIME_LABEL}
                 </p>
               </div>
               <div>

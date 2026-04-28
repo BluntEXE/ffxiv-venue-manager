@@ -4,9 +4,9 @@ import { useEffect, useState } from "react"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
+import { ServerTime, SERVER_TIME_LABEL } from "@/components/server-time"
 import { Alert, AlertDescription } from "@/components/ui/alert"
 import { Users, ArrowUpCircle, ArrowDownCircle } from "lucide-react"
-import { format } from "date-fns"
 
 interface PatronLog {
   id: string
@@ -170,7 +170,7 @@ export function PatronTracking({ venueId, eventId }: PatronTrackingProps) {
                     )}
                   </div>
                   <span className="text-muted-foreground text-xs">
-                    {format(new Date(log.timestamp), "HH:mm:ss")}
+                    <ServerTime date={log.timestamp} formatStr="time" /> {SERVER_TIME_LABEL}
                   </span>
                 </div>
               ))}

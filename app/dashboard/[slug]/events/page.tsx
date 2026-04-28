@@ -6,10 +6,10 @@ import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { prisma } from "@/lib/prisma"
-import { format } from "date-fns"
 import { EventsCalendar } from "@/components/events-calendar"
 import { VenueLayout } from "@/components/venue-layout"
 import { Breadcrumb } from "@/components/breadcrumb"
+import { formatServerTime, SERVER_TIME_LABEL } from "@/components/server-time"
 
 const statusColors = {
   DRAFT: "bg-zinc-500",
@@ -166,7 +166,7 @@ export default async function EventsPage({
                         <div className="flex-1">
                           <CardTitle>{event.title}</CardTitle>
                           <CardDescription className="mt-2">
-                            {format(new Date(event.startTime), "PPP 'at' p")} - {format(new Date(event.endTime), "p")}
+                            {formatServerTime(event.startTime, "datelong")} at {formatServerTime(event.startTime, "time")} - {formatServerTime(event.endTime, "time")} {SERVER_TIME_LABEL}
                           </CardDescription>
                         </div>
                         <div className="flex gap-2 flex-wrap">
@@ -223,7 +223,7 @@ export default async function EventsPage({
                         <div className="flex-1">
                           <CardTitle>{event.title}</CardTitle>
                           <CardDescription className="mt-2">
-                            {format(new Date(event.startTime), "PPP 'at' p")}
+                            {formatServerTime(event.startTime, "datelong")} at {formatServerTime(event.startTime, "time")} {SERVER_TIME_LABEL}
                           </CardDescription>
                         </div>
                         <div className="flex gap-2 flex-wrap">

@@ -3,7 +3,6 @@ import { getServerSession } from "next-auth"
 import { authOptions } from "@/lib/auth"
 import { prisma } from "@/lib/prisma"
 import { withRateLimit } from "@/lib/middleware/with-rate-limit"
-import { format } from "date-fns"
 
 /**
  * GET - Get attendance data for a specific event formatted for charts
@@ -84,8 +83,7 @@ export const GET = withRateLimit<{ params: Promise<{ venueId: string; eventId: s
             const attendanceData = logs.map((log) => {
                 runningCount += (log.countChange ?? 0)
                 return {
-                    time: format(new Date(log.timestamp), "HH:mm"),
-                    timestamp: log.timestamp.toISOString(),
+                    time: log.timestamp.toISOString(),
                     count: Math.max(0, runningCount), // Never show negative
                 }
             })

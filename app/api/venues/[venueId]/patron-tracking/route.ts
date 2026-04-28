@@ -116,11 +116,31 @@ export const POST = withRateLimit<{ params: Promise<{ venueId: string }> }>(
       const body = await request.json()
       const validatedData = logPatronSchema.parse(body)
 
+      // Validate the eventId before attribution. The dashboard sends the
+      // pages eventId on every click, including future/draft events; we
+      // only attribute the log if the event is currently within its
+      // active window. Otherwise the log is venue-scoped (eventId null).
+      let attributedEventId: string | null = null
+      if (validatedData.eventId) {
+        const now = new Date()
+        const activeEvent = await prisma.event.findFirst({
+          where: {
+            id: validatedData.eventId,
+            venueId,
+            startTime: { lte: now },
+            endTime: { gte: now },
+            status: { in: ["PUBLISHED", "ACTIVE"] },
+          },
+          select: { id: true },
+        })
+        if (activeEvent) attributedEventId = activeEvent.id
+      }
+
       // Create patron log entry
       const patronLog = await prisma.patronLog.create({
         data: {
           venueId,
-          eventId: validatedData.eventId,
+          eventId: attributedEventId,
           action: validatedData.action,
           countChange: validatedData.action === "ENTER" ? 1 : -1,
           loggedBy: session.user.id,
