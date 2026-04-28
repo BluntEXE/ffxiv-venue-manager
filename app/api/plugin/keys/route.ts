@@ -20,7 +20,7 @@ export async function GET(request: NextRequest) {
     orderBy: { createdAt: "desc" },
     select: {
       id: true,
-      key: true,
+      keyPreview: true,
       name: true,
       createdAt: true,
       lastUsedAt: true,
@@ -35,11 +35,9 @@ export async function GET(request: NextRequest) {
     },
   })
 
-  // Mask the keys - full key is only ever returned at create time
-  const maskedKeys = keys.map((k) => ({
-    ...k,
-    key: k.key.substring(0, 8) + "..." + k.key.substring(k.key.length - 4),
-  }))
+  // Plaintext keys are no longer stored; the keyPreview column holds
+  // a pre-computed mask shown in the dashboard listing.
+  const maskedKeys = keys.map((k) => ({ ...k, key: k.keyPreview }))
 
   return NextResponse.json({ keys: maskedKeys })
 }
@@ -99,15 +97,17 @@ export async function POST(request: NextRequest) {
   }
 
   // Generate new API key. The plaintext key is returned to the user once
-  // here and never again (the validation path looks up by keyHash).
+  // here and never again - we persist only the SHA-256 hash plus a
+  // truncated keyPreview for the dashboard listing.
   const key = "vm_" + nanoid(32)
   const keyHash = hashApiKey(key)
+  const keyPreview = key.substring(0, 8) + "..." + key.substring(key.length - 4)
 
   const apiKey = await prisma.apiKey.create({
     data: {
       id: nanoid(),
-      key,
       keyHash,
+      keyPreview,
       name: name.trim(),
       userId: session.user.id,
       venueId: venueId ?? null,
@@ -116,7 +116,7 @@ export async function POST(request: NextRequest) {
 
   return NextResponse.json({
     id: apiKey.id,
-    key: apiKey.key,
+    key,
     name: apiKey.name,
     venue: venueResponse,
     createdAt: apiKey.createdAt.toISOString(),

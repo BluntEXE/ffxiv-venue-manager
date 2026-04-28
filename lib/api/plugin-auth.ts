@@ -16,10 +16,8 @@ export function hashApiKey(key: string): string {
 
 /**
  * Generate a new API key for a user. Returns the raw key (shown once
- * at creation). Both the raw key and its SHA-256 hash are persisted -
- * raw is kept during the migration window so we can roll back to
- * plaintext lookup if the hash path misbehaves. Drop the `key` column
- * once the soak window is clean.
+ * at creation). Only the SHA-256 hash is persisted, plus a non-sensitive
+ * keyPreview (first 8 + last 4 chars) for the dashboard listing.
  */
 export async function generateApiKey(
   userId: string,
@@ -29,13 +27,14 @@ export async function generateApiKey(
   const key = `vm_${nanoid(32)}`
   const id = nanoid()
   const keyHash = hashApiKey(key)
+  const keyPreview = `${key.substring(0, 8)}...${key.substring(key.length - 4)}`
 
   await prisma.apiKey.create({
     data: {
       id,
       userId,
-      key,
       keyHash,
+      keyPreview,
       name: name || 'Plugin API Key',
       venueId
     }
