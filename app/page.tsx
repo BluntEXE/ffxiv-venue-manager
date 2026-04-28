@@ -1,4 +1,29 @@
 import Link from "next/link"
+import { getPublicStats } from "@/lib/public-stats"
+
+export const revalidate = 60
+
+function fmt(n: number): string {
+  return new Intl.NumberFormat("en-US").format(n)
+}
+
+function fmtCompact(n: number): string {
+  if (n >= 1_000_000) return `${(n / 1_000_000).toFixed(1).replace(/\.0$/, "")}m`
+  if (n >= 1_000) return `${(n / 1_000).toFixed(1).replace(/\.0$/, "")}k`
+  return fmt(n)
+}
+
+function relTime(iso: string | null): string {
+  if (!iso) return "—"
+  const diff = Date.now() - new Date(iso).getTime()
+  const m = Math.floor(diff / 60_000)
+  if (m < 1) return "just now"
+  if (m < 60) return `${m}m ago`
+  const h = Math.floor(m / 60)
+  if (h < 24) return `${h}h ago`
+  const d = Math.floor(h / 24)
+  return `${d}d ago`
+}
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { LatestPluginVersion } from "@/components/latest-plugin-version"
@@ -62,7 +87,8 @@ function IconBadge({
   )
 }
 
-export default function Home() {
+export default async function Home() {
+  const stats = await getPublicStats().catch(() => null)
   return (
     <div className="min-h-screen">
       {/* Hero Section */}
@@ -97,35 +123,41 @@ export default function Home() {
         </div>
       </section>
 
-      {/* Stats Section */}
+      {/* Stats Section — live aggregates from /stats */}
       <section className="border-y bg-muted/30">
         <div className="container mx-auto px-4 py-12">
           <div className="grid grid-cols-2 md:grid-cols-4 gap-8 text-center">
             <div>
               <p className="text-3xl md:text-4xl font-bold text-primary tabular-nums">
-                Unlimited
+                {stats ? fmt(stats.venuesActive30d) : "—"}
               </p>
-              <p className="text-muted-foreground">Venues</p>
+              <p className="text-muted-foreground">Active venues</p>
             </div>
             <div>
               <p className="text-3xl md:text-4xl font-bold text-primary tabular-nums">
-                Unlimited
+                {stats ? fmt(stats.eventsTotal) : "—"}
               </p>
-              <p className="text-muted-foreground">Staff Members</p>
+              <p className="text-muted-foreground">Events tracked</p>
             </div>
             <div>
               <p className="text-3xl md:text-4xl font-bold text-primary tabular-nums">
-                Real-time
+                {stats ? `${fmtCompact(stats.gilTracked)} gil` : "—"}
               </p>
-              <p className="text-muted-foreground">Live Dashboard</p>
+              <p className="text-muted-foreground">Gil tracked</p>
             </div>
             <div>
-              <p className="text-3xl md:text-4xl font-bold text-primary tabular-nums">
-                100%
+              <p className="text-3xl md:text-4xl font-bold text-emerald-500 tabular-nums">
+                {stats ? relTime(stats.lastActivityAt) : "—"}
               </p>
-              <p className="text-muted-foreground">Free Forever</p>
+              <p className="text-muted-foreground">Last activity</p>
             </div>
           </div>
+          <p className="text-center text-sm text-muted-foreground mt-6">
+            <Link href="/stats" className="hover:text-primary transition-colors inline-flex items-center gap-1">
+              See full usage stats
+              <ArrowRight className="h-3.5 w-3.5" aria-hidden="true" />
+            </Link>
+          </p>
         </div>
       </section>
 
@@ -421,7 +453,12 @@ export default function Home() {
 
       {/* Footer */}
       <footer className="border-t">
-        <div className="container mx-auto px-4 py-8">
+        <div className="container mx-auto px-4 py-8 space-y-3">
+          <p className="text-sm text-muted-foreground text-center">
+            <Link href="/stats" className="hover:text-primary transition-colors">
+              Usage stats
+            </Link>
+          </p>
           <p className="text-sm text-muted-foreground text-center">
             XIV Venue Manager is not affiliated with SQUARE ENIX CO., LTD.
             FINAL FANTASY is a registered trademark of Square Enix Holdings Co., Ltd.
