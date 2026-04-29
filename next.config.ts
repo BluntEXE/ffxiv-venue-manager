@@ -45,7 +45,7 @@ const nextConfig: NextConfig = {
               "default-src 'self'",
               "script-src 'self' 'unsafe-eval' 'unsafe-inline'", // Next.js requires unsafe-inline/unsafe-eval
               "style-src 'self' 'unsafe-inline'", // Tailwind requires unsafe-inline
-              "img-src 'self' data: https://cdn.discordapp.com https://raw.githubusercontent.com", // Discord avatars + GitHub images
+              "img-src 'self' data: https://cdn.discordapp.com https://raw.githubusercontent.com https://cdn.partake.gg", // Discord avatars + GitHub images + Partake event flyers
               "font-src 'self' data:",
               "connect-src 'self' https://discord.com https://api.github.com https://qstash.upstash.io https://errors.xivvenuemanager.com", // API connections
               "frame-ancestors 'none'", // Equivalent to X-Frame-Options: DENY

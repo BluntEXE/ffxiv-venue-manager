@@ -11,6 +11,7 @@ import { PatronTracking } from "@/components/patron-tracking"
 import { EventAttendanceChart } from "@/components/event-attendance-chart"
 import { ServerTime, SERVER_TIME_LABEL } from "@/components/server-time"
 import { extractPartakeImages, extractPartakeTextBody } from "@/lib/discord-webhook"
+import { renderPartakeProse } from "@/lib/render-partake-prose"
 
 const statusColors = {
   DRAFT: "bg-zinc-500",
@@ -150,7 +151,9 @@ export default async function EventDetailsPage({
                   <CardTitle>Event Description</CardTitle>
                 </CardHeader>
                 <CardContent className="space-y-4">
-                  {textBody && <p className="whitespace-pre-wrap">{textBody}</p>}
+                  {textBody && (
+                    <div className="whitespace-pre-wrap leading-relaxed">{renderPartakeProse(textBody)}</div>
+                  )}
                   {flyers.length > 0 && (
                     <div className={`grid gap-3 ${flyers.length === 1 ? "grid-cols-1" : "grid-cols-1 sm:grid-cols-2"}`}>
                       {flyers.map((src, i) => (
