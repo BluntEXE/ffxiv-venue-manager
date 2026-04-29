@@ -271,10 +271,11 @@ model Event {
   partakeAttendeeCount Int?
 
   // Discord post tracking (Partake mirror)
-  discordMessageId     String?
-  discordWebhookGroup  String?
-  discordContentHash   String?
-  discordCancelledAt   DateTime?
+  discordMessageId      String?
+  discordWebhookGroup   String?
+  discordContentHash    String?
+  discordCancelledAt    DateTime?
+  discordReminderSentAt DateTime?
 
   // Tracking
   attendanceCount Int?

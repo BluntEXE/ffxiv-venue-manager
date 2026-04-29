@@ -10,6 +10,7 @@ import { DeleteEventButton } from "@/components/delete-event-button"
 import { PatronTracking } from "@/components/patron-tracking"
 import { EventAttendanceChart } from "@/components/event-attendance-chart"
 import { ServerTime, SERVER_TIME_LABEL } from "@/components/server-time"
+import { extractPartakeImages, extractPartakeTextBody } from "@/lib/discord-webhook"
 
 const statusColors = {
   DRAFT: "bg-zinc-500",
@@ -139,18 +140,37 @@ export default async function EventDetailsPage({
           )}
 
           {/* Description */}
-          <Card>
-            <CardHeader>
-              <CardTitle>Event Description</CardTitle>
-            </CardHeader>
-            <CardContent>
-              {event.description ? (
-                <p className="whitespace-pre-wrap">{event.description}</p>
-              ) : (
-                <p className="text-muted-foreground">No description provided</p>
-              )}
-            </CardContent>
-          </Card>
+          {(() => {
+            const flyers = extractPartakeImages(event.description)
+            const textBody = extractPartakeTextBody(event.description)
+            const hasContent = flyers.length > 0 || textBody.length > 0
+            return (
+              <Card>
+                <CardHeader>
+                  <CardTitle>Event Description</CardTitle>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                  {textBody && <p className="whitespace-pre-wrap">{textBody}</p>}
+                  {flyers.length > 0 && (
+                    <div className={`grid gap-3 ${flyers.length === 1 ? "grid-cols-1" : "grid-cols-1 sm:grid-cols-2"}`}>
+                      {flyers.map((src, i) => (
+                        <a key={src} href={src} target="_blank" rel="noopener noreferrer" className="block">
+                          {/* eslint-disable-next-line @next/next/no-img-element */}
+                          <img
+                            src={src}
+                            alt={`Flyer ${i + 1}`}
+                            className="w-full rounded-md border border-white/10 hover:opacity-90 transition"
+                            loading="lazy"
+                          />
+                        </a>
+                      ))}
+                    </div>
+                  )}
+                  {!hasContent && <p className="text-muted-foreground">No description provided</p>}
+                </CardContent>
+              </Card>
+            )
+          })()}
 
           {/* Metrics */}
           <Card>

@@ -419,6 +419,39 @@ export function formatPartakeEventPayload(event: {
   return { embeds }
 }
 
+export function formatPartakeEventReminderPayload(event: {
+  partakeEventId: number
+  title: string
+  description?: string | null
+  location?: string | null
+  startTime: Date
+  endTime: Date
+}): DiscordWebhookPayload {
+  const partakeUrl = `https://www.partake.gg/events/${event.partakeEventId}`
+  const safeTitle = sanitizeForDiscord(event.title, 240)
+  const safeLocation = sanitizeForDiscord(event.location, 256)
+  const startUnix = Math.floor(event.startTime.getTime() / 1000)
+  const endUnix = Math.floor(event.endTime.getTime() / 1000)
+  const images = extractPartakeImages(event.description)
+
+  const parts = [`**📅 <t:${startUnix}:F> → <t:${endUnix}:t> (<t:${startUnix}:R>)**`]
+  if (safeLocation) parts.push(`📍 ${safeLocation}`)
+  parts.push(`[View on Partake →](${partakeUrl})`)
+
+  const embed: DiscordEmbed = {
+    title: `⏰ Tomorrow: ${safeTitle}`,
+    url: partakeUrl,
+    description: parts.join("\n\n"),
+    color: DiscordColors.Warning,
+    timestamp: new Date().toISOString(),
+  }
+  if (images.length > 0) {
+    embed.thumbnail = { url: images[0] }
+  }
+
+  return { embeds: [embed] }
+}
+
 export function hashPartakeEventContent(event: {
   title: string
   description?: string | null

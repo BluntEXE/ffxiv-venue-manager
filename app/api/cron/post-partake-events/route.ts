@@ -4,7 +4,9 @@ import { verifyCronAuth } from "@/lib/cron-auth"
 import { fetchPartakeEvents } from "@/lib/partake"
 import {
   formatPartakeEventPayload,
+  formatPartakeEventReminderPayload,
   hashPartakeEventContent,
+  sendDiscordWebhook,
   sendDiscordWebhookWithMessageId,
   editDiscordMessage,
   getWebhookUrlForType,
@@ -12,6 +14,7 @@ import {
 } from "@/lib/discord-webhook"
 
 const WINDOW_MS = 7 * 24 * 60 * 60 * 1000
+const REMINDER_LEAD_MS = 24 * 60 * 60 * 1000
 
 /**
  * Cron Job: Post Partake-synced events to Discord within a 7-day window.
@@ -40,8 +43,8 @@ export async function GET(request: Request) {
       },
     })
 
-    const stats = { posted: 0, patched: 0, cancelled: 0, skipped: 0, errors: 0 }
-    const perVenue: Array<{ venue: string; posted: number; patched: number; cancelled: number }> = []
+    const stats = { posted: 0, patched: 0, cancelled: 0, reminded: 0, skipped: 0, errors: 0 }
+    const perVenue: Array<{ venue: string; posted: number; patched: number; cancelled: number; reminded: number }> = []
 
     for (const venue of venues) {
       const settings = (venue.settings as any) || {}
@@ -56,7 +59,7 @@ export async function GET(request: Request) {
         continue
       }
 
-      const venueStats = { venue: venue.name, posted: 0, patched: 0, cancelled: 0 }
+      const venueStats = { venue: venue.name, posted: 0, patched: 0, cancelled: 0, reminded: 0 }
 
       let livePartakeIds = new Set<number>()
       try {
@@ -164,6 +167,34 @@ export async function GET(request: Request) {
           }
         } else {
           stats.skipped++
+        }
+
+        const msUntilStart = ev.startTime.getTime() - now.getTime()
+        if (
+          msUntilStart > 0 &&
+          msUntilStart <= REMINDER_LEAD_MS &&
+          !ev.discordReminderSentAt &&
+          !ev.discordCancelledAt
+        ) {
+          const reminderPayload = formatPartakeEventReminderPayload({
+            partakeEventId: ev.partakeEventId,
+            title: ev.title,
+            description: ev.description,
+            location: ev.location,
+            startTime: ev.startTime,
+            endTime: ev.endTime,
+          })
+          const ok = await sendDiscordWebhook(webhookUrl, reminderPayload)
+          if (ok) {
+            await prisma.event.update({
+              where: { id: ev.id },
+              data: { discordReminderSentAt: now },
+            })
+            stats.reminded++
+            venueStats.reminded++
+          } else {
+            stats.errors++
+          }
         }
 
         await new Promise((r) => setTimeout(r, 200))
