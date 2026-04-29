@@ -9,7 +9,7 @@ import { prisma } from "@/lib/prisma"
 import { EventsCalendar } from "@/components/events-calendar"
 import { VenueLayout } from "@/components/venue-layout"
 import { Breadcrumb } from "@/components/breadcrumb"
-import { formatServerTime, SERVER_TIME_LABEL } from "@/components/server-time"
+import { formatServerTime, SERVER_TIME_LABEL } from "@/lib/server-time"
 
 const statusColors = {
   DRAFT: "bg-zinc-500",
