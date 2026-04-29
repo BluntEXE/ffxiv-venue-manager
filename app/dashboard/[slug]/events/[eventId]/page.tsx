@@ -155,7 +155,7 @@ export default async function EventDetailsPage({
                     <div className="whitespace-pre-wrap leading-relaxed">{renderPartakeProse(textBody)}</div>
                   )}
                   {flyers.length > 0 && (
-                    <div className={`grid gap-3 ${flyers.length === 1 ? "grid-cols-1" : "grid-cols-1 sm:grid-cols-2"}`}>
+                    <div className="space-y-3">
                       {flyers.map((src, i) => (
                         <a key={src} href={src} target="_blank" rel="noopener noreferrer" className="block">
                           {/* eslint-disable-next-line @next/next/no-img-element */}
