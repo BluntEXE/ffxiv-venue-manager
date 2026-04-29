@@ -126,6 +126,18 @@ export default async function EventDetailsPage({
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
         {/* Main Content */}
         <div className="md:col-span-2 space-y-6">
+          {/* Location */}
+          {event.location && (
+            <Card>
+              <CardHeader>
+                <CardTitle>Location</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <p className="whitespace-pre-wrap">📍 {event.location}</p>
+              </CardContent>
+            </Card>
+          )}
+
           {/* Description */}
           <Card>
             <CardHeader>

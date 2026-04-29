@@ -185,6 +185,11 @@ export default async function EventsPage({
                       </div>
                     </CardHeader>
                     <CardContent>
+                      {event.location && (
+                        <p className="text-sm text-muted-foreground mb-2 line-clamp-1">
+                          📍 {event.location}
+                        </p>
+                      )}
                       {event.description && (
                         <p className="text-sm text-muted-foreground mb-4 line-clamp-2">
                           {event.description}

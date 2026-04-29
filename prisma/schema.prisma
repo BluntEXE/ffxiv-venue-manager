@@ -126,7 +126,7 @@ model Venue {
   // Settings
   timezone     String @default("UTC")
   currencyName String @default("Gil")
-  settings     Json   @default("{\"taskVisibility\":\"all\",\"salesVisibility\":\"all\",\"revenueVisibility\":\"all\",\"eventVisibility\":\"all\",\"webhooks\":{\"taskCreated\":false,\"taskCompleted\":false,\"eventCreated\":false,\"eventStartingSoon\":false,\"saleLogged\":false,\"dailySalesSummary\":false,\"staffJoined\":false},\"discordWebhooks\":{\"staff\":\"\",\"events\":\"\",\"revenue\":\"\"}}")
+  settings     Json   @default("{\"taskVisibility\":\"all\",\"salesVisibility\":\"all\",\"revenueVisibility\":\"all\",\"eventVisibility\":\"all\",\"webhooks\":{\"taskCreated\":false,\"taskCompleted\":false,\"partakeEvent\":false,\"saleLogged\":false,\"dailySalesSummary\":false,\"staffJoined\":false},\"discordWebhooks\":{\"staff\":\"\",\"events\":\"\",\"revenue\":\"\"}}")
 
   // Partake Integration
   partakeTeamId Int?
@@ -253,6 +253,7 @@ model Event {
   venueId     String
   title       String
   description String?     @db.Text
+  location    String?     @db.Text
   eventType   EventType   @default(OTHER)
   status      EventStatus @default(DRAFT)
 
@@ -266,8 +267,14 @@ model Event {
   parentEventId  String? // For recurring event instances
 
   // Partake sync
-  partakeEventId      Int?  @unique
+  partakeEventId       Int?  @unique
   partakeAttendeeCount Int?
+
+  // Discord post tracking (Partake mirror)
+  discordMessageId     String?
+  discordWebhookGroup  String?
+  discordContentHash   String?
+  discordCancelledAt   DateTime?
 
   // Tracking
   attendanceCount Int?

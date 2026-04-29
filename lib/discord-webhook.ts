@@ -43,14 +43,17 @@ function isValidDiscordWebhookUrl(url: string | null | undefined): boolean {
 }
 
 export interface DiscordEmbed {
-  title: string
-  description: string
-  color: number
+  title?: string
+  description?: string
+  color?: number
+  url?: string
   fields?: Array<{
     name: string
     value: string
     inline?: boolean
   }>
+  image?: { url: string }
+  thumbnail?: { url: string }
   timestamp?: string
 }
 
@@ -64,8 +67,7 @@ export interface DiscordWebhookPayload {
 export type WebhookType =
   | "taskCreated"
   | "taskCompleted"
-  | "eventCreated"
-  | "eventStartingSoon"
+  | "partakeEvent"
   | "saleLogged"
   | "dailySalesSummary"
   | "staffJoined"
@@ -77,8 +79,7 @@ const WEBHOOK_TYPE_TO_GROUP: Record<WebhookType, WebhookGroup> = {
   taskCreated: "staff",
   taskCompleted: "staff",
   staffJoined: "staff",
-  eventCreated: "events",
-  eventStartingSoon: "events",
+  partakeEvent: "events",
   saleLogged: "revenue",
   dailySalesSummary: "revenue",
 }
@@ -156,6 +157,81 @@ export async function sendDiscordWebhook(
   } catch (error) {
     console.error("Error sending Discord webhook:", error)
     return false
+  }
+}
+
+/**
+ * Edit an existing Discord webhook message via PATCH.
+ * Returns true on success.
+ */
+export async function editDiscordMessage(
+  webhookUrl: string | null,
+  messageId: string,
+  payload: DiscordWebhookPayload
+): Promise<boolean> {
+  if (!webhookUrl || !isValidDiscordWebhookUrl(webhookUrl)) return false
+  try {
+    const res = await fetch(`${webhookUrl}/messages/${encodeURIComponent(messageId)}`, {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(payload),
+    })
+    if (!res.ok) {
+      console.error("Discord webhook PATCH failed:", res.status, res.statusText)
+      return false
+    }
+    return true
+  } catch (error) {
+    console.error("Error patching Discord webhook message:", error)
+    return false
+  }
+}
+
+/**
+ * Delete an existing Discord webhook message.
+ */
+export async function deleteDiscordMessage(
+  webhookUrl: string | null,
+  messageId: string
+): Promise<boolean> {
+  if (!webhookUrl || !isValidDiscordWebhookUrl(webhookUrl)) return false
+  try {
+    const res = await fetch(`${webhookUrl}/messages/${encodeURIComponent(messageId)}`, {
+      method: "DELETE",
+    })
+    return res.ok
+  } catch (error) {
+    console.error("Error deleting Discord webhook message:", error)
+    return false
+  }
+}
+
+/**
+ * Send a webhook with `wait=true` so Discord returns the created message.
+ * Returns the created message ID for later PATCH/DELETE, or null on failure.
+ */
+export async function sendDiscordWebhookWithMessageId(
+  webhookUrl: string | null,
+  payload: DiscordWebhookPayload
+): Promise<string | null> {
+  if (!webhookUrl || !isValidDiscordWebhookUrl(webhookUrl)) return null
+  try {
+    const url = new URL(webhookUrl)
+    url.searchParams.set("wait", "true")
+    const res = await fetch(url.toString(), {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(payload),
+    })
+    if (!res.ok) {
+      console.error("Discord webhook POST failed:", res.status, res.statusText)
+      return null
+    }
+    const json = (await res.json()) as { id?: string }
+    return json.id ?? null
+  } catch (error) {
+    console.error("Error sending Discord webhook:", error)
+    return null
   }
 }
 
@@ -269,68 +345,101 @@ export function formatTaskCompletedEmbed(task: {
   }
 }
 
-/**
- * Format an event created notification
- */
-export function formatEventCreatedEmbed(event: {
-  title: string
-  description?: string | null
-  eventType: string
-  startTime: Date
-  endTime: Date
-}): DiscordEmbed {
-  // Sanitize user inputs
-  const safeTitle = sanitizeForDiscord(event.title, 256)
-  const safeDescription = sanitizeForDiscord(event.description, 1024)
-
-  return {
-    title: "📅 New Event Created",
-    description: `**${safeTitle}**${safeDescription ? `\n${safeDescription}` : ""}`,
-    color: DiscordColors.Blurple,
-    fields: [
-      {
-        name: "Type",
-        value: event.eventType.replace("_", " "),
-        inline: true,
-      },
-      {
-        name: "Start Time",
-        value: new Date(event.startTime).toLocaleString(),
-        inline: true,
-      },
-      {
-        name: "End Time",
-        value: new Date(event.endTime).toLocaleString(),
-        inline: true,
-      },
-    ],
-    timestamp: new Date().toISOString(),
+export function extractPartakeImages(description: string | null | undefined): string[] {
+  if (!description) return []
+  const re = /!\[[^\]]*\]\(([^)]+)\)/g
+  const urls: string[] = []
+  let m: RegExpExecArray | null
+  while ((m = re.exec(description)) !== null) {
+    const url = m[1].trim()
+    if (/^https?:\/\//i.test(url)) urls.push(url)
   }
+  return urls.slice(0, 10)
 }
 
-/**
- * Format an event starting soon notification
- */
-export function formatEventStartingSoonEmbed(event: {
-  title: string
-  startTime: Date
-}): DiscordEmbed {
-  // Sanitize user inputs
-  const safeTitle = sanitizeForDiscord(event.title, 256)
+export function extractPartakeTextBody(description: string | null | undefined): string {
+  if (!description) return ""
+  return description
+    .replace(/!\[[^\]]*\]\([^)]+\)/g, "")
+    .split("\n")
+    .map((l) => l.trim())
+    .filter((l) => l.length > 0 && !/^\*+$/.test(l))
+    .join("\n")
+    .trim()
+}
 
-  return {
-    title: "⏰ Event Starting Soon!",
-    description: `**${safeTitle}** starts in less than 1 hour!`,
-    color: DiscordColors.Warning,
-    fields: [
-      {
-        name: "Start Time",
-        value: new Date(event.startTime).toLocaleString(),
-        inline: false,
-      },
-    ],
+export function formatPartakeEventPayload(event: {
+  partakeEventId: number
+  title: string
+  description?: string | null
+  location?: string | null
+  startTime: Date
+  endTime: Date
+  partakeAttendeeCount?: number | null
+  cancelled?: boolean
+}): DiscordWebhookPayload {
+  const partakeUrl = `https://www.partake.gg/events/${event.partakeEventId}`
+  const safeTitle = sanitizeForDiscord(event.title, 240)
+  const safeLocation = sanitizeForDiscord(event.location, 256)
+  const textBody = sanitizeForDiscord(extractPartakeTextBody(event.description), 3800)
+  const images = extractPartakeImages(event.description)
+
+  const startUnix = Math.floor(event.startTime.getTime() / 1000)
+  const endUnix = Math.floor(event.endTime.getTime() / 1000)
+  const timeLine = `<t:${startUnix}:F> → <t:${endUnix}:t> (<t:${startUnix}:R>)`
+
+  const titleDisplay = event.cancelled ? `❌ ~~${safeTitle}~~ (CANCELLED)` : safeTitle
+  const color = event.cancelled ? DiscordColors.Red : DiscordColors.Blurple
+
+  const headerParts = [`**📅 ${timeLine}**`]
+  if (safeLocation) headerParts.push(`📍 ${safeLocation}`)
+  if (textBody) headerParts.push(textBody)
+  if (typeof event.partakeAttendeeCount === "number" && event.partakeAttendeeCount > 0) {
+    headerParts.push(`👥 ${event.partakeAttendeeCount} attending on Partake`)
+  }
+  headerParts.push(`[View on Partake →](${partakeUrl})`)
+
+  const headerEmbed: DiscordEmbed = {
+    title: titleDisplay,
+    url: partakeUrl,
+    description: headerParts.join("\n\n"),
+    color,
     timestamp: new Date().toISOString(),
   }
+
+  const embeds: DiscordEmbed[] = [headerEmbed]
+
+  if (images.length > 0) {
+    headerEmbed.image = { url: images[0] }
+    for (let i = 1; i < images.length; i++) {
+      embeds.push({ url: partakeUrl, image: { url: images[i] } })
+    }
+  }
+
+  return { embeds }
+}
+
+export function hashPartakeEventContent(event: {
+  title: string
+  description?: string | null
+  location?: string | null
+  startTime: Date
+  endTime: Date
+  partakeAttendeeCount?: number | null
+}): string {
+  const payload = [
+    event.title,
+    event.description ?? "",
+    event.location ?? "",
+    event.startTime.toISOString(),
+    event.endTime.toISOString(),
+    String(event.partakeAttendeeCount ?? 0),
+  ].join("|")
+  let h = 0
+  for (let i = 0; i < payload.length; i++) {
+    h = (h * 31 + payload.charCodeAt(i)) | 0
+  }
+  return h.toString(36)
 }
 
 /**

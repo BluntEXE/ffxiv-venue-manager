@@ -4,12 +4,6 @@ import { authOptions } from "@/lib/auth"
 import { prisma } from "@/lib/prisma"
 import { z } from "zod"
 import { withRateLimit } from "@/lib/middleware/with-rate-limit"
-import {
-  sendDiscordWebhook,
-  formatEventCreatedEmbed,
-  getWebhookUrlForType,
-  type VenueWebhookConfig,
-} from "@/lib/discord-webhook"
 
 const eventSchema = z.object({
   title: z.string().min(1, "Event title is required"),
@@ -64,39 +58,6 @@ export const POST = withRateLimit<{ params: Promise<{ venueId: string }> }>(
         createdById: session.user.id,
       },
     })
-
-    // Send Discord webhook notification if enabled
-    const venue = await prisma.venue.findUnique({
-      where: { id: venueId },
-      select: {
-        discordWebhookUrl: true,
-        settings: true,
-      },
-    })
-
-    if (venue) {
-      const webhookConfig: VenueWebhookConfig = {
-        discordWebhooks: (venue.settings as any)?.discordWebhooks,
-        webhooks: (venue.settings as any)?.webhooks,
-        discordWebhookUrl: venue.discordWebhookUrl,
-      }
-
-      const webhookUrl = getWebhookUrlForType(webhookConfig, "eventCreated")
-      if (webhookUrl) {
-        const embed = formatEventCreatedEmbed({
-          title: event.title,
-          description: event.description,
-          eventType: event.eventType,
-          startTime: event.startTime,
-          endTime: event.endTime,
-        })
-
-        // Send webhook asynchronously (don't wait for response)
-        sendDiscordWebhook(webhookUrl, { embeds: [embed] }).catch(
-          (error) => console.error("Failed to send Discord webhook:", error)
-        )
-      }
-    }
 
     return NextResponse.json(event, { status: 201 })
   } catch (error) {

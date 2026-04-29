@@ -237,11 +237,11 @@ export default function OwnerManagerGuidePage() {
 
             <p className="text-sm leading-relaxed">Set up webhooks in Settings to auto-post to Discord:</p>
             <ul className="list-disc list-inside space-y-1.5 pl-4 text-sm leading-relaxed">
-              <li>Sale Logged, Event Created, Event Starting Soon</li>
+              <li>Sale Logged, Daily Sales Summary</li>
               <li>Task Created/Completed, Staff Joined</li>
-              <li>Daily Sales Summary</li>
+              <li>Partake Event Mirror — auto-posts your Partake events to Discord (with flyer images) when they fall within 7 days of start, and keeps the post in sync with edits and cancellations</li>
             </ul>
-            <p className="text-sm leading-relaxed text-muted-foreground">Route different types to different channels (e.g., revenue to a private channel, events to a public one).</p>
+            <p className="text-sm leading-relaxed text-muted-foreground">Route different types to different channels (e.g., revenue to a private channel, events to a public one). The Partake Event Mirror requires your venue to have a linked Partake team in Settings.</p>
           </section>
 
           {/* Server Time */}

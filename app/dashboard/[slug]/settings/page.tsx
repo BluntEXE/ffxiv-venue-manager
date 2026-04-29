@@ -40,8 +40,7 @@ import { PageLoading } from "@/components/ui/loading-spinner"
 interface WebhookSettings {
   taskCreated: boolean
   taskCompleted: boolean
-  eventCreated: boolean
-  eventStartingSoon: boolean
+  partakeEvent: boolean
   saleLogged: boolean
   dailySalesSummary: boolean
   staffJoined: boolean
@@ -82,8 +81,7 @@ export default function SettingsPage({
     webhooks: {
       taskCreated: false,
       taskCompleted: false,
-      eventCreated: false,
-      eventStartingSoon: false,
+      partakeEvent: false,
       saleLogged: false,
       dailySalesSummary: false,
       staffJoined: false,
@@ -145,8 +143,7 @@ export default function SettingsPage({
             webhooks: settingsData.webhooks || {
               taskCreated: false,
               taskCompleted: false,
-              eventCreated: false,
-              eventStartingSoon: false,
+              partakeEvent: false,
               saleLogged: false,
               dailySalesSummary: false,
               staffJoined: false,
@@ -715,49 +712,31 @@ export default function SettingsPage({
                     <div className="space-y-2 pl-4 border-l-2 border-blue-500/30">
                       <div className="flex items-center space-x-2">
                         <Checkbox
-                          id="webhook-event-created"
-                          checked={settings.webhooks.eventCreated}
+                          id="webhook-partake-event"
+                          checked={settings.webhooks.partakeEvent}
                           onCheckedChange={(checked) =>
                             setSettings({
                               ...settings,
                               webhooks: {
                                 ...settings.webhooks,
-                                eventCreated: checked as boolean,
+                                partakeEvent: checked as boolean,
                               },
                             })
                           }
-                          disabled={isSaving}
+                          disabled={isSaving || !settings.partakeTeamId}
                         />
                         <label
-                          htmlFor="webhook-event-created"
+                          htmlFor="webhook-partake-event"
                           className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
                         >
-                          📅 Event Created
+                          📅 Partake Event Mirror
                         </label>
                       </div>
-
-                      <div className="flex items-center space-x-2">
-                        <Checkbox
-                          id="webhook-event-starting-soon"
-                          checked={settings.webhooks.eventStartingSoon}
-                          onCheckedChange={(checked) =>
-                            setSettings({
-                              ...settings,
-                              webhooks: {
-                                ...settings.webhooks,
-                                eventStartingSoon: checked as boolean,
-                              },
-                            })
-                          }
-                          disabled={isSaving}
-                        />
-                        <label
-                          htmlFor="webhook-event-starting-soon"
-                          className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
-                        >
-                          ⏰ Event Starting Soon
-                        </label>
-                      </div>
+                      <p className="text-xs text-muted-foreground pl-6">
+                        Mirrors Partake events to this Discord channel when they fall within 7 days of start.
+                        Posts include flyer images and a Partake link. Edits and cancellations are kept in sync automatically.
+                        Requires a linked Partake team.
+                      </p>
                     </div>
                   )}
                 </div>

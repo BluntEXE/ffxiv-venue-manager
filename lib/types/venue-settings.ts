@@ -25,10 +25,8 @@ export interface WebhookSettings {
   taskCreated?: boolean
   /** Task completed notification */
   taskCompleted?: boolean
-  /** Event created notification */
-  eventCreated?: boolean
-  /** Event starting soon reminder */
-  eventStartingSoon?: boolean
+  /** Mirror Partake-synced events to Discord (post / patch / cancel) */
+  partakeEvent?: boolean
   /** Sale logged notification */
   saleLogged?: boolean
   /** Daily sales summary */
@@ -149,8 +147,7 @@ export function getDefaultVenueSettings(): VenueSettings {
     webhooks: {
       taskCreated: false,
       taskCompleted: false,
-      eventCreated: false,
-      eventStartingSoon: false,
+      partakeEvent: false,
       saleLogged: false,
       dailySalesSummary: false,
       staffJoined: false,

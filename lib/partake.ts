@@ -13,6 +13,7 @@ const EVENTS_QUERY = `
     ) {
       id
       title
+      description
       tags
       ageRating
       location
@@ -23,6 +24,8 @@ const EVENTS_QUERY = `
       startsAt
       endsAt
       attendeeCount
+      createdAt
+      updatedAt
     }
   }
 `
@@ -30,6 +33,7 @@ const EVENTS_QUERY = `
 interface PartakeEvent {
   id: number
   title: string
+  description: string | null
   tags: string[]
   ageRating: string
   location: string
@@ -40,6 +44,8 @@ interface PartakeEvent {
   startsAt: string
   endsAt: string
   attendeeCount: number
+  createdAt: string
+  updatedAt: string
 }
 
 /**
@@ -57,7 +63,7 @@ function mapEventType(tags: string[]): string {
 /**
  * Fetch upcoming events from Partake for a given team ID.
  */
-async function fetchPartakeEvents(teamId: number): Promise<PartakeEvent[]> {
+export async function fetchPartakeEvents(teamId: number): Promise<PartakeEvent[]> {
   const res = await fetch(PARTAKE_API, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
@@ -99,9 +105,14 @@ export async function syncVenuePartakeEvents(venue: {
       where: { partakeEventId: pe.id },
     })
 
+    const locationStr = pe.locationData?.server?.name
+      ? `${pe.location} (${pe.locationData.server.name} - ${pe.locationData.dataCenter.name})`
+      : pe.location || null
+
     const eventData = {
       title: pe.title,
-      description: pe.locationData?.server?.name ? `${pe.location} (${pe.locationData.server.name} - ${pe.locationData.dataCenter.name})` : pe.location || null,
+      description: pe.description || null,
+      location: locationStr,
       eventType: mapEventType(pe.tags) as any,
       status: "PUBLISHED" as const,
       startTime: new Date(pe.startsAt),
@@ -113,6 +124,8 @@ export async function syncVenuePartakeEvents(venue: {
     if (existing) {
       if (
         existing.title !== eventData.title ||
+        existing.description !== eventData.description ||
+        existing.location !== eventData.location ||
         existing.startTime.toISOString() !== eventData.startTime.toISOString() ||
         existing.endTime.toISOString() !== eventData.endTime.toISOString()
       ) {

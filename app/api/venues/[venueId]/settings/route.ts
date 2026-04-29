@@ -10,8 +10,7 @@ import { VenueSettings, parseVenueSettings } from "@/lib/types/venue-settings"
 const webhookSettingsSchema = z.object({
   taskCreated: z.boolean().optional(),
   taskCompleted: z.boolean().optional(),
-  eventCreated: z.boolean().optional(),
-  eventStartingSoon: z.boolean().optional(),
+  partakeEvent: z.boolean().optional(),
   saleLogged: z.boolean().optional(),
   dailySalesSummary: z.boolean().optional(),
   staffJoined: z.boolean().optional(),
