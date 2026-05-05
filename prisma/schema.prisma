@@ -607,7 +607,6 @@ model Feedback {
 
 model ApiKey {
   id         String    @id
-  key        String?   @unique
   keyHash    String?   @unique
   keyPreview String?
   name       String
