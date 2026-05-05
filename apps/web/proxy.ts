@@ -14,7 +14,7 @@ export default withAuth(
         // Public paths that don't require authentication
         const publicPaths = ["/", "/auth/signin", "/auth/error", "/test", "/stats"]
         const isPublicPath = publicPaths.some(p => path === p)
-        const isPublicPrefix = path.startsWith("/guide/") || path.startsWith("/invite/") || path.startsWith("/api/invites/")
+        const isPublicPrefix = path.startsWith("/guide/") || path.startsWith("/invite/") || path.startsWith("/api/invites/") || path.startsWith("/api/mobile/")
 
         if (isPublicPath || isPublicPrefix) {
           return true

@@ -44,6 +44,7 @@ model User {
   patronLogsReclassified PatronLog[]    @relation("PatronLogReclassifier")
   characters            UserCharacter[]
   apiKeys               ApiKey[]
+  refreshTokens         RefreshToken[]
 
   @@map("users")
 }
@@ -665,4 +666,21 @@ model Shift {
   @@index([venueId, status])
   @@index([payrollEntryId])
   @@map("shifts")
+}
+
+model RefreshToken {
+  id          String    @id
+  userId      String
+  tokenHash   String    @unique
+  deviceLabel String?
+  createdAt   DateTime  @default(now())
+  expiresAt   DateTime
+  lastUsedAt  DateTime?
+  revokedAt   DateTime?
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([tokenHash])
+  @@map("refresh_tokens")
 }
