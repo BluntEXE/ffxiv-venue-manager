@@ -71,7 +71,7 @@ export const authOptions: NextAuthOptions = {
   debug: process.env.NEXTAUTH_DEBUG === "true",
   events: {
     async signIn(message) {
-      console.log("NextAuth signIn event:", JSON.stringify(message, null, 2))
+      console.log("NextAuth signIn event:", message.user?.id)
     },
     async signOut(message) {
       console.log("NextAuth signOut event")

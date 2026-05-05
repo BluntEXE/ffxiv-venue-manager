@@ -92,20 +92,3 @@ export const budgets = {
   pluginWrite: { limit: 60, windowSec: 60 }, // logs + clock actions
   keyMgmt: { limit: 20, windowSec: 60 }, // UI-driven key CRUD
 } as const
-
-/**
- * Legacy export - kept null so any old imports fall through to the
- * middleware's in-memory fallback path. Removed once middleware is
- * refactored.
- */
-export const ratelimit = null
-
-/**
- * Rate limiting configurations for different endpoints (legacy).
- */
-export const rateLimitConfig = {
-  auth: { requests: 5, window: "1 m" },
-  api: { requests: 30, window: "1 m" },
-  read: { requests: 60, window: "1 m" },
-  sensitive: { requests: 3, window: "1 m" },
-}

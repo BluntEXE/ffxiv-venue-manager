@@ -76,17 +76,3 @@ function getIdentifier(req: NextRequest): string {
   if (cfConnectingIp) return cfConnectingIp
   return "anonymous"
 }
-
-export function rateLimitedGET(
-  handler: (req: NextRequest) => Promise<NextResponse>,
-  requests: number = 30
-) {
-  return withRateLimit(handler, { requests, window: "1 m" })
-}
-
-export function rateLimitedPOST(
-  handler: (req: NextRequest) => Promise<NextResponse>,
-  requests: number = 10
-) {
-  return withRateLimit(handler, { requests, window: "1 m" })
-}

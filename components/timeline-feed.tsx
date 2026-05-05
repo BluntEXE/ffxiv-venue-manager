@@ -1,6 +1,7 @@
 "use client"
 
 import { useState, useEffect, useCallback, useRef } from "react"
+import { formatServerTime, SERVER_TIME_LABEL } from "@/lib/server-time"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import { Card, CardContent } from "@/components/ui/card"
@@ -25,12 +26,6 @@ const filterLabels: Record<TimelineFilter, string> = {
   patrons: "Patrons",
 }
 
-function formatST(date: string | Date): string {
-  const d = new Date(date)
-  const dateStr = d.toLocaleString("en-US", { timeZone: "Etc/UTC", month: "short", day: "numeric" })
-  const timeStr = d.toLocaleString("en-US", { timeZone: "Etc/UTC", hour: "numeric", minute: "2-digit" })
-  return dateStr + ", " + timeStr + " ST"
-}
 
 function matchesFilter(item: TimelineItem, filter: TimelineFilter): boolean {
   if (filter === "all") return true
@@ -175,7 +170,7 @@ export function TimelineFeed({ venueId, initialFilter = "all" }: TimelineFeedPro
 }
 
 function TimelineRow({ item }: { item: TimelineItem }) {
-  const time = formatST(item.timestamp)
+  const time = formatServerTime(item.timestamp, "datetime") + " " + SERVER_TIME_LABEL
 
   if (item.type === "sale") {
     const { amount, customerName, service, staff, notes } = item.data

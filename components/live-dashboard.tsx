@@ -1,19 +1,11 @@
 "use client"
 
 import { useState, useEffect, useRef } from "react"
+import { formatServerTime, SERVER_TIME_LABEL } from "@/lib/server-time"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { Coins, UserPlus, UserMinus } from "lucide-react"
 
-function formatST(date: string | Date): string {
-  const d = new Date(date)
-  const timeStr = d.toLocaleString("en-US", {
-    timeZone: "Etc/UTC",
-    hour: "numeric",
-    minute: "2-digit",
-  })
-  return timeStr + " ST"
-}
 
 function formatDuration(ms: number): string {
   const totalSeconds = Math.floor(ms / 1000)
@@ -188,7 +180,7 @@ export function LiveDashboard({
           </div>
           <p className="text-sm text-muted-foreground mt-1">
             {typeLabels[event.eventType] || event.eventType} &middot;{" "}
-            {formatST(event.startTime)} - {formatST(event.endTime)}
+            {formatServerTime(event.startTime, "time") + " " + SERVER_TIME_LABEL} - {formatServerTime(event.endTime, "time") + " " + SERVER_TIME_LABEL}
           </p>
         </div>
         <div className="flex items-center gap-2">
@@ -314,7 +306,7 @@ export function LiveDashboard({
                     <span className="text-sm">{item.text}</span>
                   </div>
                   <span className="text-xs text-muted-foreground flex-shrink-0">
-                    {formatST(item.timestamp)}
+                    {formatServerTime(item.timestamp, "time") + " " + SERVER_TIME_LABEL}
                   </span>
                 </CardContent>
               </Card>
