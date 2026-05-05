@@ -61,3 +61,15 @@ next-env.d.ts
 # Playwright artefacts
 test-results/
 playwright-report/
+
+# pnpm
+pnpm-lock.yaml
+.pnpm-store/
+
+# Turbo
+.turbo/
+
+# Monorepo app build outputs
+apps/web/.next/
+apps/web/out/
+packages/*/dist/

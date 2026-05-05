@@ -32,7 +32,9 @@ services:
       - app-network
 
   venue-manager:
-    build: .
+    build:
+      context: .
+      dockerfile: apps/web/Dockerfile
     container_name: venue-manager
     working_dir: /app
     ports:

@@ -1,5 +1,6 @@
 # Build artefacts
-.next
+apps/web/.next
+apps/web/node_modules
 node_modules
 out
 
@@ -24,12 +25,13 @@ docker/*
 *.log
 npm-debug.log*
 coverage
+apps/web/tests
+apps/web/playwright.config.ts
+apps/web/playwright-report
+test-results
 
 # Docs
 *.md
 
-# Playwright suites and artefacts
-tests
-playwright.config.ts
-playwright-report
-test-results
+# TypeScript build info
+*.tsbuildinfo
