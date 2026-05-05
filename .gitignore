@@ -73,3 +73,7 @@ pnpm-lock.yaml
 apps/web/.next/
 apps/web/out/
 packages/*/dist/
+
+# Workspace app node_modules (pnpm symlinks)
+apps/*/node_modules/
+packages/*/node_modules/
