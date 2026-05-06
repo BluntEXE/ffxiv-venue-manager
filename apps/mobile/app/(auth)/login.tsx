@@ -1,9 +1,7 @@
-import { YStack, XStack, Text, Button, Spinner } from 'tamagui'
-import { useRouter } from 'expo-router'
+import { YStack, Text, Button, Spinner } from 'tamagui'
+import { useLocalSearchParams, useRouter } from 'expo-router'
 import * as WebBrowser from 'expo-web-browser'
-import * as Linking from 'expo-linking'
-import { useEffect, useRef, useState } from 'react'
-import { saveTokens } from '@/lib/auth'
+import { useState } from 'react'
 
 const API_BASE = 'https://xivvenuemanager.com'
 const DISCORD_AUTH_URL =
@@ -14,38 +12,15 @@ const DISCORD_AUTH_URL =
   `&scope=identify%20email`
 
 export default function LoginScreen() {
-  const router   = useRouter()
+  const router = useRouter()
+  const { error: routeError } = useLocalSearchParams<{ error?: string }>()
   const [loading, setLoading] = useState(false)
-  const [error, setError]     = useState<string | null>(null)
-  const listener = useRef<ReturnType<typeof Linking.addEventListener> | null>(null)
-
-  useEffect(() => {
-    listener.current = Linking.addEventListener('url', handleDeepLink)
-    return () => listener.current?.remove()
-  }, [])
-
-  async function handleDeepLink({ url }: { url: string }) {
-    const parsed = Linking.parse(url)
-    if (parsed.scheme !== 'vmapp') return
-
-    if (parsed.path === 'auth/callback') {
-      const { token, refresh, expiresAt } = parsed.queryParams as Record<string, string>
-      if (token && refresh) {
-        await saveTokens({ token, refreshToken: refresh, expiresAt })
-        router.replace('/(app)/home')
-      }
-    } else if (parsed.path === 'auth/error') {
-      const msg = (parsed.queryParams as any)?.message ?? 'Authentication failed'
-      setError(decodeURIComponent(msg))
-      setLoading(false)
-    }
-  }
+  const [error, setError] = useState<string | null>(routeError ?? null)
 
   async function startLogin() {
     setError(null)
     setLoading(true)
     await WebBrowser.openAuthSessionAsync(DISCORD_AUTH_URL, 'vmapp://')
-    // If user cancelled the browser without completing auth
     setLoading(false)
   }
 
@@ -59,7 +34,7 @@ export default function LoginScreen() {
       padding="$6"
     >
       <YStack alignItems="center" gap="$2">
-        <Text fontSize={28} fontWeight="bold" color="$text" fontFamily="InterBold">
+        <Text fontSize={28} color="$text" fontFamily="Outfit_700Bold">
           XIV Venue Manager
         </Text>
         <Text fontSize={14} color="$subtext0">

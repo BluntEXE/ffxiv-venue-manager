@@ -19,8 +19,8 @@ export default function HomeScreen() {
       gap="$5"
       padding="$6"
     >
-      <Text fontSize={22} fontWeight="bold" color="$text" fontFamily="InterBold">
-        You're in! 🎉
+      <Text fontSize={22} color="$text" fontFamily="Outfit_700Bold">
+        You're in!
       </Text>
       <Text color="$subtext0" textAlign="center">
         Phase 2 complete. Auth working.{'\n'}Phase 3 (Discover) coming next.

@@ -25,6 +25,9 @@ importers:
 
   apps/mobile:
     dependencies:
+      '@expo-google-fonts/outfit':
+        specifier: ^0.4.3
+        version: 0.4.3
       '@tamagui/animations-css':
         specifier: 1.114.0
         version: 1.114.0(react@18.2.0)
@@ -1335,6 +1338,9 @@ packages:
   '@eslint/plugin-kit@0.4.1':
     resolution: {integrity: sha512-43/qtrDUokr7LJqoF2c3+RInu/t4zfrpYdoSDfYyhg52rwLV6TnOvdG4fXm7IkSB3wErkcmJS9iEhjVtOSEjjA==}
     engines: {node: ^18.18.0 || ^20.9.0 || >=21.1.0}
+
+  '@expo-google-fonts/outfit@0.4.3':
+    resolution: {integrity: sha512-2uQmDVJencWLllxds6SG92E+SjxyZfvg7eZKZ5XLHggmm5AuUyQK7lzMAFOUzT6kheq2kJ7BAiubMdjKT32fJg==}
 
   '@expo/bunyan@4.0.1':
     resolution: {integrity: sha512-+Lla7nYSiHZirgK+U/uYzsLv/X+HaJienbD5AKX1UQZHYfWaP+9uuQluRB4GrEVWF0GZ7vEVp/jzaOT9k/SQlg==}
@@ -9607,6 +9613,8 @@ snapshots:
     dependencies:
       '@eslint/core': 0.17.0
       levn: 0.4.1
+
+  '@expo-google-fonts/outfit@0.4.3': {}
 
   '@expo/bunyan@4.0.1':
     dependencies:
