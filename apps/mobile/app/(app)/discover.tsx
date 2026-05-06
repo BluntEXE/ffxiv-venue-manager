@@ -3,7 +3,7 @@ import { FlashList } from '@shopify/flash-list'
 import { YStack, XStack, Text, Spinner, Button } from 'tamagui'
 import { useRouter } from 'expo-router'
 import { useFocusEffect } from 'expo-router'
-import { loadTokens } from '@/lib/auth'
+import { getValidToken } from '@/lib/auth'
 import { formatST, formatOpenSince, formatUntil } from '@/lib/server-time'
 
 const API = 'https://xivvenuemanager.com'
@@ -103,16 +103,19 @@ export default function DiscoverScreen() {
     setLoading(true)
     setError(null)
     try {
-      const tokens = await loadTokens()
-      if (!tokens) return
-      const data = await fetchVenues(t, tokens.token)
+      const token = await getValidToken()
+      const data = await fetchVenues(t, token)
       setVenues(data)
-    } catch {
+    } catch (e: any) {
+      if (e?.message === 'not_authenticated' || e?.message === 'session_expired') {
+        router.replace('/(auth)/login')
+        return
+      }
       setError('Could not load venues. Try again.')
     } finally {
       setLoading(false)
     }
-  }, [])
+  }, [router])
 
   useFocusEffect(useCallback(() => { load(tab) }, [tab, load]))
 

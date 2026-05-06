@@ -37,3 +37,29 @@ export async function clearTokens(): Promise<void> {
 export function isExpired(expiresAt: string): boolean {
   return Date.now() >= new Date(expiresAt).getTime() - 30_000 // 30s buffer
 }
+
+const API = 'https://xivvenuemanager.com'
+
+// Returns a valid JWT, refreshing silently if the 15-min token has expired.
+// Throws if the refresh token is also expired (caller should redirect to login).
+export async function getValidToken(): Promise<string> {
+  const tokens = await loadTokens()
+  if (!tokens) throw new Error('not_authenticated')
+
+  if (!isExpired(tokens.expiresAt)) return tokens.token
+
+  const res = await fetch(`${API}/api/mobile/auth/refresh`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ refreshToken: tokens.refreshToken }),
+  })
+
+  if (!res.ok) {
+    await clearTokens()
+    throw new Error('session_expired')
+  }
+
+  const { token, refreshToken, expiresAt } = await res.json()
+  await saveTokens({ token, refreshToken, expiresAt })
+  return token
+}

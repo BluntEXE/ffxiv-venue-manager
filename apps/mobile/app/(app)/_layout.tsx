@@ -1,6 +1,7 @@
 import { Tabs, useRouter } from 'expo-router'
 import { useEffect, useState } from 'react'
 import { loadTokens } from '@/lib/auth'
+import { Ionicons } from '@expo/vector-icons'
 
 export default function AppLayout() {
   const router = useRouter()
@@ -28,8 +29,24 @@ export default function AppLayout() {
         tabBarLabelStyle: { fontFamily: 'Inter', fontSize: 12 },
       }}
     >
-      <Tabs.Screen name="home" options={{ title: 'Home' }} />
-      <Tabs.Screen name="discover" options={{ title: 'Discover' }} />
+      <Tabs.Screen
+        name="home"
+        options={{
+          title: 'Home',
+          tabBarIcon: ({ color, size }) => (
+            <Ionicons name="home-outline" size={size} color={color} />
+          ),
+        }}
+      />
+      <Tabs.Screen
+        name="discover"
+        options={{
+          title: 'Discover',
+          tabBarIcon: ({ color, size }) => (
+            <Ionicons name="compass-outline" size={size} color={color} />
+          ),
+        }}
+      />
     </Tabs>
   )
 }
