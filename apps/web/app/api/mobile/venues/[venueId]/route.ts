@@ -4,7 +4,7 @@ import { prisma } from "@/lib/prisma"
 
 export async function GET(
   req: Request,
-  { params }: { params: { venueId: string } }
+  { params }: { params: Promise<{ venueId: string }> }
 ) {
   const auth = req.headers.get("Authorization")?.replace("Bearer ", "")
   if (!auth) return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
@@ -15,10 +15,11 @@ export async function GET(
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
   }
 
+  const { venueId } = await params
   const now = new Date()
 
   const venue = await prisma.venue.findUnique({
-    where: { id: params.venueId, isActive: true },
+    where: { id: venueId, isActive: true },
     select: {
       id: true,
       name: true,
