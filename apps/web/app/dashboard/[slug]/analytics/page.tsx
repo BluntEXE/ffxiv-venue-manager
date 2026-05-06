@@ -45,6 +45,10 @@ interface AnalyticsData {
     profitMargin: number
     payrollAsPercentOfRevenue: number
   }
+  followers?: {
+    total: number
+    byMonth: Record<string, number>
+  }
   revenueByEvent: Array<{
     eventId: string
     eventTitle: string
@@ -322,6 +326,40 @@ export default function AnalyticsPage() {
             </CardContent>
           </Card>
         </div>
+
+        {/* Mobile Followers */}
+        {analyticsData?.followers && (
+          <div className="mb-6 md:mb-8">
+            <h2 className="text-xl font-semibold mb-4">Mobile App Followers</h2>
+            <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+              <Card>
+                <CardHeader className="pb-3">
+                  <CardTitle className="text-sm font-medium flex items-center gap-2">
+                    <Users className="h-4 w-4" />
+                    Total Followers
+                  </CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div className="text-2xl font-bold">{analyticsData.followers.total}</div>
+                  <p className="text-xs text-muted-foreground mt-1">App users following this venue</p>
+                </CardContent>
+              </Card>
+              {Object.entries(analyticsData.followers.byMonth).map(([month, count]) => (
+                <Card key={month}>
+                  <CardHeader className="pb-3">
+                    <CardTitle className="text-sm font-medium">
+                      {new Date(month + '-01').toLocaleDateString('en-GB', { month: 'short', year: 'numeric' })}
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="text-2xl font-bold">+{count as number}</div>
+                    <p className="text-xs text-muted-foreground mt-1">New followers</p>
+                  </CardContent>
+                </Card>
+              ))}
+            </div>
+          </div>
+        )}
 
         {/* Financial Summary Cards */}
         {analyticsData?.financial && (

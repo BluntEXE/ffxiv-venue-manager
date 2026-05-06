@@ -59,7 +59,7 @@ export const GET = withRateLimit<{ params: Promise<{ venueId: string }> }>(
       const past30Days = subDays(now, 30)
 
       // Fetch all data in parallel for better performance
-      const [allEvents, allTransactions, allPatronLogs, allPayrollEntries] = await Promise.all([
+      const [allEvents, allTransactions, allPatronLogs, allPayrollEntries, followerCount, followersByMonth] = await Promise.all([
         // Get all events with basic info
         prisma.event.findMany({
           where: { venueId: venue.id },
@@ -116,6 +116,19 @@ export const GET = withRateLimit<{ params: Promise<{ venueId: string }> }>(
             periodEnd: true,
           },
           orderBy: { periodEnd: "desc" },
+        }),
+
+        // Follower count
+        prisma.venueFollow.count({ where: { venueId: venue.id } }),
+
+        // Followers gained by month (last 6 months)
+        prisma.venueFollow.findMany({
+          where: {
+            venueId: venue.id,
+            createdAt: { gte: new Date(Date.now() - 180 * 24 * 60 * 60 * 1000) },
+          },
+          select: { createdAt: true },
+          orderBy: { createdAt: "asc" },
         }),
       ])
 
@@ -319,11 +332,21 @@ export const GET = withRateLimit<{ params: Promise<{ venueId: string }> }>(
           payrollAsPercentOfRevenue: financialSummary.payrollAsPercentOfRevenue,
         },
 
+        // Mobile followers
+        followers: {
+          total: followerCount,
+          byMonth: followersByMonth.reduce<Record<string, number>>((acc, f) => {
+            const key = f.createdAt.toISOString().slice(0, 7) // YYYY-MM
+            acc[key] = (acc[key] ?? 0) + 1
+            return acc
+          }, {}),
+        },
+
         // Chart data
         revenueByEvent,
         serviceRevenue,
         patronByEvent,
-        attendanceByHour, // New: average hourly attendance
+        attendanceByHour,
 
         // Metadata
         fetchedAt: new Date().toISOString(),
