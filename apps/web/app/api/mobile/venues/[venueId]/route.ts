@@ -1,0 +1,78 @@
+import { NextResponse } from "next/server"
+import { verifyMobileJwt } from "@/lib/auth/mobile-auth"
+import { prisma } from "@/lib/prisma"
+
+export async function GET(
+  req: Request,
+  { params }: { params: { venueId: string } }
+) {
+  const auth = req.headers.get("Authorization")?.replace("Bearer ", "")
+  if (!auth) return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
+
+  try {
+    await verifyMobileJwt(auth)
+  } catch {
+    return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
+  }
+
+  const now = new Date()
+
+  const venue = await prisma.venue.findUnique({
+    where: { id: params.venueId, isActive: true },
+    select: {
+      id: true,
+      name: true,
+      slug: true,
+      description: true,
+      dataCenter: true,
+      world: true,
+      location: true,
+      logoUrl: true,
+      bannerUrl: true,
+      currencyName: true,
+      shifts: {
+        where: {
+          status: { in: ["ACTIVE", "SCHEDULED"] },
+          scheduledStart: { lte: new Date(now.getTime() + 24 * 60 * 60 * 1000) },
+          scheduledEnd: { gte: now },
+        },
+        select: {
+          id: true,
+          status: true,
+          scheduledStart: true,
+          scheduledEnd: true,
+          actualStart: true,
+          membership: {
+            select: {
+              user: { select: { name: true, image: true } },
+            },
+          },
+        },
+        orderBy: { scheduledStart: "asc" },
+        take: 20,
+      },
+      events: {
+        where: {
+          status: { in: ["PUBLISHED", "ACTIVE"] },
+          endTime: { gte: now },
+          startTime: { lte: new Date(now.getTime() + 7 * 24 * 60 * 60 * 1000) },
+        },
+        select: {
+          id: true,
+          title: true,
+          description: true,
+          eventType: true,
+          status: true,
+          startTime: true,
+          endTime: true,
+        },
+        orderBy: { startTime: "asc" },
+        take: 10,
+      },
+    },
+  })
+
+  if (!venue) return NextResponse.json({ error: "Not found" }, { status: 404 })
+
+  return NextResponse.json(venue)
+}
