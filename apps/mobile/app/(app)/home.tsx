@@ -97,10 +97,11 @@ export default function HomeScreen() {
           backgroundColor="$primary"
           color="$base"
           fontFamily="InterBold"
+          fontSize={14}
           borderRadius="$3"
           onPress={startLogin}
           disabled={loading}
-          icon={loading ? <Spinner color="$base" /> : undefined}
+          icon={loading ? <Spinner color="$base" size="small" /> : undefined}
           pressStyle={{ opacity: 0.85, scale: 0.97 }}
         >
           {loading ? 'Connecting…' : 'Sign in with Discord'}
