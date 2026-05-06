@@ -5,6 +5,11 @@
     "version": "1.0.0",
     "scheme": "vmapp",
     "orientation": "portrait",
+    "icon": "./assets/icon.png",
+    "splash": {
+      "backgroundColor": "#1e1e2e",
+      "resizeMode": "contain"
+    },
     "platforms": [
       "android"
     ],
