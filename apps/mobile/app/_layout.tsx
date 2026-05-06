@@ -8,14 +8,10 @@ import {
   Outfit_600SemiBold,
   Outfit_700Bold,
 } from '@expo-google-fonts/outfit'
-import * as Sentry from '@sentry/react-native'
 import { OfflineBanner } from '@/components/OfflineBanner'
+import { setupErrorReporting } from '@/lib/error-reporter'
 
-Sentry.init({
-  dsn: 'https://0361538a2d1e42a8934f4d255890ad8d@errors.xivvenuemanager.com/1',
-  tracesSampleRate: 0,         // no perf tracing — error capture only
-  enabled: process.env.NODE_ENV !== 'development',
-})
+setupErrorReporting()
 
 SplashScreen.preventAutoHideAsync()
 
@@ -44,4 +40,4 @@ function RootLayout() {
   )
 }
 
-export default Sentry.wrap(RootLayout)
+export default RootLayout
