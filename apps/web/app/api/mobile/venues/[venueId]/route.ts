@@ -34,11 +34,6 @@ export async function GET(
           scheduledStart: true,
           scheduledEnd: true,
           actualStart: true,
-          membership: {
-            select: {
-              user: { select: { name: true, image: true } },
-            },
-          },
         },
         orderBy: { scheduledStart: "asc" },
         take: 20,

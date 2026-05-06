@@ -13,7 +13,6 @@ type Shift = {
   scheduledStart: string
   scheduledEnd: string
   actualStart: string | null
-  membership: { user: { name: string | null; image: string | null } }
 }
 
 type Event = {
@@ -128,29 +127,24 @@ export default function VenueDetailScreen() {
                   Open Now
                 </Text>
               </XStack>
-              {activeShifts.map((s) => (
-                <XStack key={s.id} backgroundColor="$surface0" borderRadius="$2" padding="$3" alignItems="center" gap="$2">
-                  <Text color="$text" fontSize={14} flex={1}>
-                    {s.membership.user.name ?? 'Staff'}
-                  </Text>
-                  <Text color="$subtext0" fontSize={12}>
-                    until {formatST(s.scheduledEnd)} ST
-                  </Text>
-                </XStack>
-              ))}
+              <XStack backgroundColor="$surface0" borderRadius="$2" padding="$3" alignItems="center" gap="$2">
+                <Text color="$text" fontSize={14} flex={1}>
+                  {activeShifts.length} staff on shift
+                </Text>
+                <Text color="$subtext0" fontSize={12}>
+                  until {formatST(activeShifts[0].scheduledEnd)} ST
+                </Text>
+              </XStack>
             </YStack>
           )}
 
           {scheduledShifts.length > 0 && (
             <YStack gap="$2">
-              <Text fontFamily="Outfit_600SemiBold" fontSize={16} color="$text">Upcoming Shifts</Text>
+              <Text fontFamily="Outfit_600SemiBold" fontSize={16} color="$text">Upcoming</Text>
               {scheduledShifts.map((s) => (
                 <XStack key={s.id} backgroundColor="$surface0" borderRadius="$2" padding="$3" alignItems="center" gap="$2">
-                  <Text color="$text" fontSize={14} flex={1}>
-                    {s.membership.user.name ?? 'Staff'}
-                  </Text>
-                  <Text color="$subtext0" fontSize={12}>
-                    {formatST(s.scheduledStart)} ST
+                  <Text color="$subtext0" fontSize={13} flex={1}>
+                    {formatST(s.scheduledStart)} – {formatST(s.scheduledEnd)} ST
                   </Text>
                 </XStack>
               ))}
