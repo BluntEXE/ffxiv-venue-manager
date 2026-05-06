@@ -185,6 +185,7 @@ export default function DiscoverScreen() {
               onRefresh={onRefresh}
               tintColor="#cba6f7"
               colors={['#cba6f7']}
+              progressBackgroundColor="#313244"
             />
           }
         />
