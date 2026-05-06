@@ -2,6 +2,7 @@ import { useState, useCallback } from 'react'
 import { ScrollView } from 'react-native'
 import { YStack, XStack, Text, Spinner, Button } from 'tamagui'
 import { useRouter, useFocusEffect } from 'expo-router'
+import { ScreenTop } from '@/components/ScreenContainer'
 import { loadTokens, isExpired } from '@/lib/auth'
 import { apiFetch } from '@/lib/api'
 import { formatST, formatUntil, formatOpenSince } from '@/lib/server-time'
@@ -114,7 +115,7 @@ export default function ManageScreen() {
 
   return (
     <YStack flex={1} backgroundColor="$base">
-      <YStack padding="$4" paddingTop="$6" gap="$3">
+      <ScreenTop gap="$3">
         <Text fontFamily="Outfit_700Bold" fontSize={24} color="$text">Manage</Text>
 
         {venues.length > 1 && (
@@ -135,7 +136,7 @@ export default function ManageScreen() {
             </XStack>
           </ScrollView>
         )}
-      </YStack>
+      </ScreenTop>
 
       {dashLoading ? (
         <YStack flex={1} alignItems="center" justifyContent="center">

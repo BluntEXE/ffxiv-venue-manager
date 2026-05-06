@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { ScrollView, TextInput, StyleSheet } from 'react-native'
 import { YStack, XStack, Text, Button, Spinner } from 'tamagui'
+import { ScreenHeader } from '@/components/ScreenHeader'
 import { useLocalSearchParams, useRouter } from 'expo-router'
 import { apiFetch } from '@/lib/api'
 
@@ -80,7 +81,7 @@ export default function NewEventScreen() {
 
   return (
     <YStack flex={1} backgroundColor="$base">
-      <XStack padding="$4" paddingTop="$6" alignItems="center" gap="$3" borderBottomWidth={1} borderBottomColor="$surface0">
+      <ScreenHeader>
         <Button size="$3" backgroundColor="$surface0" color="$text" borderRadius="$4" onPress={() => router.back()}>
           Cancel
         </Button>
@@ -96,7 +97,7 @@ export default function NewEventScreen() {
         >
           {saving ? '' : 'Create'}
         </Button>
-      </XStack>
+      </ScreenHeader>
 
       <ScrollView style={{ flex: 1 }} contentContainerStyle={{ padding: 16, gap: 16 }}>
         {error && (

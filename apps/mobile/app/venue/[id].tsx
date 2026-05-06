@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react'
 import { ScrollView } from 'react-native'
 import { YStack, XStack, Text, Spinner, Button } from 'tamagui'
 import { useLocalSearchParams, useRouter } from 'expo-router'
+import { ScreenHeader } from '@/components/ScreenHeader'
 // Public endpoint — no auth needed for venue detail
 import { formatST } from '@/lib/server-time'
 
@@ -85,14 +86,7 @@ export default function VenueDetailScreen() {
 
   return (
     <YStack flex={1} backgroundColor="$base">
-      <XStack
-        padding="$4"
-        paddingTop="$6"
-        alignItems="center"
-        gap="$3"
-        borderBottomWidth={1}
-        borderBottomColor="$surface0"
-      >
+      <ScreenHeader>
         <Button
           size="$3"
           backgroundColor="$surface0"
@@ -105,7 +99,7 @@ export default function VenueDetailScreen() {
         <Text fontFamily="Outfit_700Bold" fontSize={20} color="$text" flex={1} numberOfLines={1}>
           {venue.name}
         </Text>
-      </XStack>
+      </ScreenHeader>
 
       <ScrollView style={{ flex: 1 }}>
         <YStack padding="$4" gap="$4">

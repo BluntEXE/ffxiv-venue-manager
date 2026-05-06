@@ -3,6 +3,7 @@ import { FlashList } from '@shopify/flash-list'
 import { YStack, XStack, Text, Spinner, Button } from 'tamagui'
 import { useRouter } from 'expo-router'
 import { useFocusEffect } from 'expo-router'
+import { ScreenTop } from '@/components/ScreenContainer'
 // No auth import needed — discover is public
 import { formatST, formatOpenSince, formatUntil } from '@/lib/server-time'
 
@@ -119,7 +120,7 @@ export default function DiscoverScreen() {
 
   return (
     <YStack flex={1} backgroundColor="$base">
-      <YStack padding="$4" paddingTop="$6" gap="$3">
+      <ScreenTop gap="$3">
         <Text fontFamily="Outfit_700Bold" fontSize={24} color="$text">Discover</Text>
 
         <XStack gap="$2">
@@ -137,7 +138,7 @@ export default function DiscoverScreen() {
             </Button>
           ))}
         </XStack>
-      </YStack>
+      </ScreenTop>
 
       {loading ? (
         <YStack flex={1} alignItems="center" justifyContent="center">
