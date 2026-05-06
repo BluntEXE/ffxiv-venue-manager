@@ -719,9 +719,10 @@ model PendingNotification {
 model NotificationPreference {
   id             String   @id @default(cuid())
   userId         String   @unique
-  shiftReminder  Boolean  @default(true)
-  venueOpenedNow Boolean  @default(true)
-  eventReminder  Boolean  @default(true)
+  shiftReminder    Boolean  @default(true)
+  venueOpenedNow   Boolean  @default(true)
+  eventReminder    Boolean  @default(true)
+  followVisibility Boolean  @default(false)
   createdAt      DateTime @default(now())
   updatedAt      DateTime @updatedAt
 

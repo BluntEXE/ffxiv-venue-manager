@@ -40,12 +40,17 @@ export async function POST(
   const userId = await getUserId(req)
   if (!userId) return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
 
-  const body = await req.json().catch(() => ({}))
+  // Use global follow visibility preference as the default
+  const prefs = await prisma.notificationPreference.findUnique({
+    where: { userId },
+    select: { followVisibility: true },
+  })
+  const visibleToOperators = prefs?.followVisibility ?? false
 
   await prisma.venueFollow.upsert({
     where: { userId_venueId: { userId, venueId } },
-    update: { visibleToOperators: body.visibleToOperators ?? false },
-    create: { userId, venueId, visibleToOperators: body.visibleToOperators ?? false },
+    update: { visibleToOperators },
+    create: { userId, venueId, visibleToOperators },
   })
 
   return NextResponse.json({ following: true })

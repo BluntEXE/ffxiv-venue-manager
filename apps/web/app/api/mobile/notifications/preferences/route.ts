@@ -30,7 +30,7 @@ export async function PATCH(req: Request) {
   if (!payload) return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
 
   const body = await req.json()
-  const allowed = ["shiftReminder", "venueOpenedNow", "eventReminder"] as const
+  const allowed = ["shiftReminder", "venueOpenedNow", "eventReminder", "followVisibility"] as const
   const data: Partial<Record<(typeof allowed)[number], boolean>> = {}
   for (const key of allowed) {
     if (typeof body[key] === "boolean") data[key] = body[key]

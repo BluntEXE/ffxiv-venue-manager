@@ -4,7 +4,7 @@ import { YStack, XStack, Text, Button, Spinner } from 'tamagui'
 import { useRouter, useFocusEffect } from 'expo-router'
 import { Ionicons } from '@expo/vector-icons'
 import * as WebBrowser from 'expo-web-browser'
-import { loadTokens, clearTokens, isExpired } from '@/lib/auth'
+import { loadTokens, isExpired } from '@/lib/auth'
 import { apiFetch } from '@/lib/api'
 import { formatST, formatUntil, formatOpenSince } from '@/lib/server-time'
 import { ScreenTop } from '@/components/ScreenContainer'
@@ -82,11 +82,6 @@ export default function HomeScreen() {
     setLoading(false)
   }
 
-  async function logout() {
-    await clearTokens()
-    setShifts([])
-    setAuthed(false)
-  }
 
   if (authed === null) {
     return (
@@ -256,17 +251,6 @@ export default function HomeScreen() {
           </YStack>
         )}
 
-        <Button
-          size="$3"
-          backgroundColor="$surface0"
-          color="$subtext0"
-          borderRadius="$3"
-          onPress={logout}
-          marginTop="$4"
-          alignSelf="center"
-        >
-          Sign out
-        </Button>
       </ScrollView>
     </YStack>
   )

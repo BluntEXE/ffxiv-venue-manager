@@ -6,6 +6,7 @@ import { Ionicons } from '@expo/vector-icons'
 import { ScreenHeader } from '@/components/ScreenHeader'
 import { formatST } from '@/lib/server-time'
 import { loadTokens, isExpired, getValidToken } from '@/lib/auth'
+import { setPendingAction } from '@/lib/pending-action'
 
 const API = 'https://xivvenuemanager.com'
 
@@ -82,7 +83,11 @@ export default function VenueDetailScreen() {
   }, [id])
 
   async function toggleFollow() {
-    if (!isAuthed) { router.push('/(auth)/login'); return }
+    if (!isAuthed) {
+      await setPendingAction({ type: 'follow_venue', venueId: id!, returnTo: `/venue/${id}` })
+      router.push('/(auth)/login')
+      return
+    }
     setFollowLoading(true)
     try {
       const token = await getValidToken()
