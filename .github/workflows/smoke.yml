@@ -9,15 +9,14 @@ on:
     branches: [main]
     paths:
       # Only re-run on changes that could break the public surface.
-      - "app/**"
-      - "components/**"
-      - "lib/**"
-      - "next.config.ts"
-      - "proxy.ts"
-      - "package.json"
-      - "package-lock.json"
-      - "tests/**"
-      - "playwright.config.ts"
+      - "apps/web/app/**"
+      - "apps/web/components/**"
+      - "apps/web/lib/**"
+      - "apps/web/next.config.ts"
+      - "apps/web/proxy.ts"
+      - "apps/web/package.json"
+      - "apps/web/tests/**"
+      - "apps/web/playwright.config.ts"
       - ".github/workflows/smoke.yml"
 
 permissions:
@@ -30,13 +29,17 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 10
+
       - uses: actions/setup-node@v4
         with:
           node-version: "20"
-          cache: "npm"
+          cache: "pnpm"
 
       - name: Install deps
-        run: npm ci
+        run: pnpm install --frozen-lockfile
 
       - name: Install Playwright browsers
         run: npx playwright install --with-deps chromium
@@ -44,7 +47,7 @@ jobs:
       - name: Run smoke suite against prod
         env:
           PLAYWRIGHT_BASE_URL: https://xivvenuemanager.com
-        run: npm run test:smoke
+        run: pnpm --filter web test:smoke
 
       - name: Upload report on failure
         if: failure()
