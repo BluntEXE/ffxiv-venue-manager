@@ -152,12 +152,35 @@ export default function VenueDetailScreen() {
         />
       </ScreenHeader>
 
+      {!isAuthed && !following && (
+        <XStack
+          backgroundColor="#cba6f715"
+          borderBottomWidth={1}
+          borderBottomColor="#cba6f730"
+          padding="$3"
+          paddingHorizontal="$4"
+          alignItems="center"
+          gap="$3"
+          pressStyle={{ opacity: 0.85 }}
+          onPress={toggleFollow}
+        >
+          <Ionicons name="heart-outline" size={16} color="#cba6f7" />
+          <Text color="$primary" fontSize={13} fontFamily="Inter" flex={1}>
+            Sign in with Discord to follow this venue and get notified when it opens.
+          </Text>
+          <Ionicons name="chevron-forward" size={14} color="#cba6f7" />
+        </XStack>
+      )}
+
       <ScrollView style={{ flex: 1 }}>
         <YStack padding="$4" gap="$4">
           <YStack gap="$1">
             <Text color="$subtext0" fontSize={13}>{venue.world} · {venue.dataCenter}</Text>
             {venue.location && (
-              <Text color="$subtext0" fontSize={13}>📍 {venue.location}</Text>
+              <XStack alignItems="center" gap="$1">
+                <Ionicons name="location-outline" size={13} color="#a6adc8" />
+                <Text color="$subtext0" fontSize={13}>{venue.location}</Text>
+              </XStack>
             )}
             {venue.description && (
               <Text color="$text" fontSize={14} marginTop="$2">{venue.description}</Text>

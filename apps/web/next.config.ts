@@ -1,6 +1,8 @@
 import path from "path"
 import type { NextConfig } from "next"
 
+const isDev = process.env.NODE_ENV === "development"
+
 const nextConfig: NextConfig = {
   output: "standalone",
   // Required for pnpm workspaces: trace file deps from monorepo root
@@ -46,7 +48,9 @@ const nextConfig: NextConfig = {
             key: "Content-Security-Policy",
             value: [
               "default-src 'self'",
-              "script-src 'self' 'unsafe-eval' 'unsafe-inline'", // Next.js requires unsafe-inline/unsafe-eval
+              // unsafe-eval only needed in dev for webpack HMR; removed in production
+              // unsafe-inline still required by Next.js hydration scripts (nonce-based fix is a follow-up)
+              `script-src 'self' 'unsafe-inline'${isDev ? " 'unsafe-eval'" : ""}`,
               "style-src 'self' 'unsafe-inline'", // Tailwind requires unsafe-inline
               "img-src 'self' data: https://cdn.discordapp.com https://raw.githubusercontent.com https://cdn.partake.gg", // Discord avatars + GitHub images + Partake event flyers
               "font-src 'self' data:",
