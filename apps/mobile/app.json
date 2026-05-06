@@ -14,7 +14,7 @@
       "android"
     ],
     "android": {
-      "package": "com.xivvenuemanager.app",
+      "package": "com.xivvenuemanager.mobile",
       "versionCode": 1,
       "adaptiveIcon": {
         "foregroundImage": "./assets/adaptive-icon.png",
