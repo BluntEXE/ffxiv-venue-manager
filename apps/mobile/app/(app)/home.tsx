@@ -23,8 +23,7 @@ export default function HomeScreen() {
         You're in! 🎉
       </Text>
       <Text color="$subtext0" textAlign="center">
-        Phase 2 complete — auth working.{'
-'}Phase 3 (Discover) coming next.
+        Phase 2 complete. Auth working.{'\n'}Phase 3 (Discover) coming next.
       </Text>
       <Button
         size="$4"
