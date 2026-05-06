@@ -162,10 +162,10 @@ export async function POST(
 
     // Queue shift reminder 1 hour before start (best-effort, don't fail the request)
     const reminderAt = new Date(scheduledStart.getTime() - 60 * 60 * 1000)
-    if (reminderAt > new Date()) {
+    if (reminderAt > new Date() && shift.membership.userId) {
       prisma.pendingNotification.create({
         data: {
-          userId: shift.membership.userId,
+          userId: shift.membership.userId as string,
           type: "SHIFT_REMINDER",
           title: "Shift starting soon",
           body: `Your shift at ${venue.name} starts in 1 hour.`,
