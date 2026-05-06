@@ -148,15 +148,32 @@ export async function POST(
       )
     }
 
+    const scheduledStart = new Date(parsed.data.scheduledStart)
     const shift = await prisma.shift.create({
       data: {
         venueId: venue.id,
         membershipId: parsed.data.membershipId,
-        scheduledStart: new Date(parsed.data.scheduledStart),
+        scheduledStart,
         scheduledEnd: new Date(parsed.data.scheduledEnd),
         notes: parsed.data.notes ?? null,
       },
+      include: { membership: { select: { userId: true } } },
     })
+
+    // Queue shift reminder 1 hour before start (best-effort, don't fail the request)
+    const reminderAt = new Date(scheduledStart.getTime() - 60 * 60 * 1000)
+    if (reminderAt > new Date()) {
+      prisma.pendingNotification.create({
+        data: {
+          userId: shift.membership.userId,
+          type: "SHIFT_REMINDER",
+          title: "Shift starting soon",
+          body: `Your shift at ${venue.name} starts in 1 hour.`,
+          data: { venueId: venue.id, shiftId: shift.id },
+          scheduledFor: reminderAt,
+        },
+      }).catch(() => {}) // non-blocking
+    }
 
     return NextResponse.json({ shift }, { status: 201 })
   } catch (error) {

@@ -43,8 +43,11 @@ model User {
   patronLogsWorking     PatronLog[]     @relation("PatronLogWorking")
   patronLogsReclassified PatronLog[]    @relation("PatronLogReclassifier")
   characters            UserCharacter[]
-  apiKeys               ApiKey[]
-  refreshTokens         RefreshToken[]
+  apiKeys                  ApiKey[]
+  refreshTokens            RefreshToken[]
+  deviceTokens             DeviceToken[]
+  pendingNotifications     PendingNotification[]
+  notificationPreference   NotificationPreference?
 
   @@map("users")
 }
@@ -666,6 +669,63 @@ model Shift {
   @@index([venueId, status])
   @@index([payrollEntryId])
   @@map("shifts")
+}
+
+// ============================================
+// PUSH NOTIFICATIONS (Phase 4)
+// ============================================
+
+model DeviceToken {
+  id        String   @id @default(cuid())
+  userId    String
+  token     String   @unique
+  platform  String   @default("android")
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@map("device_tokens")
+}
+
+enum NotificationType {
+  SHIFT_REMINDER
+  VENUE_OPENED_NOW
+  EVENT_REMINDER_30M
+}
+
+model PendingNotification {
+  id           String           @id @default(cuid())
+  userId       String
+  type         NotificationType
+  title        String
+  body         String
+  data         Json?
+  scheduledFor DateTime
+  sentAt       DateTime?
+  receiptId    String?
+  createdAt    DateTime         @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([scheduledFor, sentAt])
+  @@index([userId])
+  @@map("pending_notifications")
+}
+
+model NotificationPreference {
+  id             String   @id @default(cuid())
+  userId         String   @unique
+  shiftReminder  Boolean  @default(true)
+  venueOpenedNow Boolean  @default(true)
+  eventReminder  Boolean  @default(true)
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("notification_preferences")
 }
 
 model RefreshToken {
