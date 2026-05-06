@@ -8,17 +8,26 @@
       "distribution": "internal",
       "android": {
         "buildType": "apk"
+      },
+      "env": {
+        "EXPO_PUBLIC_DISCORD_CLIENT_ID": "1442821194263957616"
       }
     },
     "preview": {
       "distribution": "internal",
       "android": {
         "buildType": "apk"
+      },
+      "env": {
+        "EXPO_PUBLIC_DISCORD_CLIENT_ID": "1442821194263957616"
       }
     },
     "production": {
       "android": {
-        "buildType": "aab"
+        "buildType": "app-bundle"
+      },
+      "env": {
+        "EXPO_PUBLIC_DISCORD_CLIENT_ID": "1442821194263957616"
       }
     }
   },

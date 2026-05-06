@@ -1,5 +1,6 @@
 import { defaultConfig } from '@tamagui/config/v3'
 import { createTamagui, createTokens } from 'tamagui'
+import { createAnimations } from '@tamagui/animations-css'
 
 // Catppuccin Mocha palette
 const mocha = createTokens({
@@ -25,8 +26,15 @@ const mocha = createTokens({
   zIndex: { 1: 100, 2: 200, 3: 300 },
 })
 
+const animations = createAnimations({
+  fast:   'ease-in 150ms',
+  medium: 'ease-in 300ms',
+  slow:   'ease-in 450ms',
+})
+
 export const tamaguiConfig = createTamagui({
   ...defaultConfig,
+  animations,
   tokens: mocha,
 })
 
