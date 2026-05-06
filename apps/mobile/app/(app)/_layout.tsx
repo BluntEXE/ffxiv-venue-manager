@@ -1,7 +1,6 @@
 import { Tabs } from 'expo-router'
 import { Ionicons } from '@expo/vector-icons'
 
-// No auth gate here -- Discover is public. Home handles its own auth check.
 export default function AppLayout() {
   return (
     <Tabs
@@ -31,6 +30,15 @@ export default function AppLayout() {
           title: 'Discover',
           tabBarIcon: ({ color, size }) => (
             <Ionicons name="compass-outline" size={size} color={color} />
+          ),
+        }}
+      />
+      <Tabs.Screen
+        name="manage"
+        options={{
+          title: 'Manage',
+          tabBarIcon: ({ color, size }) => (
+            <Ionicons name="business-outline" size={size} color={color} />
           ),
         }}
       />
