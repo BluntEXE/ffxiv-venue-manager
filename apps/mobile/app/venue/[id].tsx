@@ -141,11 +141,26 @@ export default function VenueDetailScreen() {
           {scheduledShifts.length > 0 && (
             <YStack gap="$2">
               <Text fontFamily="Outfit_600SemiBold" fontSize={16} color="$text">Upcoming</Text>
-              {scheduledShifts.map((s) => (
-                <XStack key={s.id} backgroundColor="$surface0" borderRadius="$2" padding="$3" alignItems="center" gap="$2">
+              {Object.values(
+                scheduledShifts.reduce<Record<string, { start: string; end: string; count: number }>>((acc, s) => {
+                  const key = `${s.scheduledStart}|${s.scheduledEnd}`
+                  if (!acc[key]) acc[key] = { start: s.scheduledStart, end: s.scheduledEnd, count: 0 }
+                  acc[key].count++
+                  return acc
+                }, {})
+              ).map((slot) => (
+                <XStack
+                  key={`${slot.start}|${slot.end}`}
+                  backgroundColor="$surface0"
+                  borderRadius="$2"
+                  padding="$3"
+                  alignItems="center"
+                  gap="$2"
+                >
                   <Text color="$subtext0" fontSize={13} flex={1}>
-                    {formatST(s.scheduledStart)} – {formatST(s.scheduledEnd)} ST
+                    {formatST(slot.start)} – {formatST(slot.end)} ST
                   </Text>
+                  <Text color="$subtext0" fontSize={12}>{slot.count} staff</Text>
                 </XStack>
               ))}
             </YStack>

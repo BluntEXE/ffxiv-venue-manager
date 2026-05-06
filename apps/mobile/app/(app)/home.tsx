@@ -1,17 +1,34 @@
 import { useEffect, useState } from 'react'
 import { YStack, Text, Button, Spinner } from 'tamagui'
 import { useRouter } from 'expo-router'
+import * as WebBrowser from 'expo-web-browser'
 import { loadTokens, clearTokens, isExpired } from '@/lib/auth'
+
+const API_BASE = 'https://xivvenuemanager.com'
+const DISCORD_AUTH_URL =
+  `https://discord.com/oauth2/authorize` +
+  `?client_id=${process.env.EXPO_PUBLIC_DISCORD_CLIENT_ID}` +
+  `&redirect_uri=${encodeURIComponent(API_BASE + '/api/mobile/auth/discord/callback')}` +
+  `&response_type=code` +
+  `&scope=identify%20email`
 
 export default function HomeScreen() {
   const router = useRouter()
   const [authed, setAuthed] = useState<boolean | null>(null)
+  const [loading, setLoading] = useState(false)
 
   useEffect(() => {
     loadTokens().then((tokens) => {
       setAuthed(!!tokens && !isExpired(tokens.expiresAt))
     })
   }, [])
+
+  async function startLogin() {
+    setLoading(true)
+    await WebBrowser.openAuthSessionAsync(DISCORD_AUTH_URL, 'vmapp://')
+    setLoading(false)
+    // auth/callback route handles the token save and navigation
+  }
 
   async function logout() {
     await clearTokens()
@@ -51,10 +68,12 @@ export default function HomeScreen() {
           color="$base"
           fontFamily="InterBold"
           borderRadius="$3"
-          onPress={() => router.push('/(auth)/login')}
+          onPress={startLogin}
+          disabled={loading}
+          icon={loading ? <Spinner color="$base" /> : undefined}
           pressStyle={{ opacity: 0.85, scale: 0.97 }}
         >
-          Sign in with Discord
+          {loading ? 'Connecting…' : 'Sign in with Discord'}
         </Button>
       </YStack>
     )
