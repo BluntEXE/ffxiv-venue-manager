@@ -63,7 +63,6 @@ test-results/
 playwright-report/
 
 # pnpm
-pnpm-lock.yaml
 .pnpm-store/
 
 # Turbo
