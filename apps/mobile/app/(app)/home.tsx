@@ -1,12 +1,15 @@
 import { useEffect, useState, useCallback } from 'react'
-import { ScrollView } from 'react-native'
+import { ScrollView, RefreshControl } from 'react-native'
 import { YStack, XStack, Text, Button, Spinner } from 'tamagui'
 import { useRouter, useFocusEffect } from 'expo-router'
+import { Ionicons } from '@expo/vector-icons'
 import * as WebBrowser from 'expo-web-browser'
 import { loadTokens, clearTokens, isExpired } from '@/lib/auth'
 import { apiFetch } from '@/lib/api'
 import { formatST, formatUntil, formatOpenSince } from '@/lib/server-time'
 import { ScreenTop } from '@/components/ScreenContainer'
+import { ShiftSkeleton } from '@/components/Skeleton'
+import { EmptyState } from '@/components/EmptyState'
 
 const DISCORD_AUTH_URL =
   `https://discord.com/oauth2/authorize` +
@@ -30,19 +33,26 @@ export default function HomeScreen() {
   const [loading, setLoading] = useState(false)
   const [shifts, setShifts] = useState<Shift[]>([])
   const [shiftsLoading, setShiftsLoading] = useState(false)
+  const [refreshing, setRefreshing] = useState(false)
 
   async function checkAuth() {
     const tokens = await loadTokens()
     setAuthed(!!tokens && !isExpired(tokens.expiresAt))
   }
 
-  async function loadShifts() {
-    setShiftsLoading(true)
+  async function loadShifts(isRefresh = false) {
+    if (!isRefresh) setShiftsLoading(true)
     try {
       const res = await apiFetch('/api/mobile/my/shifts')
       if (res.ok) setShifts(await res.json())
     } catch {}
     setShiftsLoading(false)
+    setRefreshing(false)
+  }
+
+  function onRefresh() {
+    setRefreshing(true)
+    loadShifts(true)
   }
 
   useFocusEffect(useCallback(() => {
@@ -108,10 +118,23 @@ export default function HomeScreen() {
         <Text fontFamily="Outfit_700Bold" fontSize={24} color="$text">Home</Text>
       </ScreenTop>
 
-      <ScrollView style={{ flex: 1 }} contentContainerStyle={{ padding: 16, gap: 16, paddingBottom: 32 }}>
+      <ScrollView
+        style={{ flex: 1 }}
+        contentContainerStyle={{ padding: 16, gap: 16, paddingBottom: 32 }}
+        refreshControl={
+          <RefreshControl
+            refreshing={refreshing}
+            onRefresh={onRefresh}
+            tintColor="#cba6f7"
+            colors={['#cba6f7']}
+          />
+        }
+      >
         {shiftsLoading ? (
-          <YStack alignItems="center" padding="$6">
-            <Spinner color="$primary" />
+          <YStack gap="$3" paddingTop="$2">
+            <ShiftSkeleton />
+            <ShiftSkeleton />
+            <ShiftSkeleton />
           </YStack>
         ) : (
           <>
@@ -177,10 +200,11 @@ export default function HomeScreen() {
                 ))}
               </YStack>
             ) : !activeShift ? (
-              <YStack alignItems="center" padding="$6" gap="$2">
-                <Text fontSize={32}>🌙</Text>
-                <Text color="$subtext0" textAlign="center">No shifts scheduled in the next 7 days.</Text>
-              </YStack>
+              <EmptyState
+                icon="calendar-outline"
+                title="No upcoming shifts"
+                subtitle="Nothing scheduled in the next 7 days."
+              />
             ) : null}
           </>
         )}

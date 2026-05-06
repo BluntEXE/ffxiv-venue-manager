@@ -1,10 +1,13 @@
 import { useState, useCallback } from 'react'
 import { FlashList } from '@shopify/flash-list'
-import { YStack, XStack, Text, Spinner, Button } from 'tamagui'
+import { RefreshControl } from 'react-native'
+import { YStack, XStack, Text, Button } from 'tamagui'
 import { useRouter } from 'expo-router'
 import { useFocusEffect } from 'expo-router'
+import { Ionicons } from '@expo/vector-icons'
 import { ScreenTop } from '@/components/ScreenContainer'
-// No auth import needed — discover is public
+import { VenueSkeleton } from '@/components/Skeleton'
+import { EmptyState } from '@/components/EmptyState'
 import { formatST, formatOpenSince, formatUntil } from '@/lib/server-time'
 
 const API = 'https://xivvenuemanager.com'
@@ -59,7 +62,7 @@ function VenueRow({ venue, tab, onPress }: { venue: Venue; tab: Tab; onPress: ()
         justifyContent="center"
         flexShrink={0}
       >
-        <Text fontSize={20}>🏠</Text>
+        <Ionicons name="storefront-outline" size={22} color="#a6adc8" />
       </YStack>
 
       <YStack flex={1} gap="$1">
@@ -96,10 +99,11 @@ export default function DiscoverScreen() {
   const [tab, setTab] = useState<Tab>('open')
   const [venues, setVenues] = useState<Venue[]>([])
   const [loading, setLoading] = useState(true)
+  const [refreshing, setRefreshing] = useState(false)
   const [error, setError] = useState<string | null>(null)
 
-  const load = useCallback(async (t: Tab) => {
-    setLoading(true)
+  const load = useCallback(async (t: Tab, isRefresh = false) => {
+    if (!isRefresh) setLoading(true)
     setError(null)
     try {
       const data = await fetchVenues(t)
@@ -108,6 +112,7 @@ export default function DiscoverScreen() {
       setError('Could not load venues. Try again.')
     } finally {
       setLoading(false)
+      setRefreshing(false)
     }
   }, [])
 
@@ -116,6 +121,11 @@ export default function DiscoverScreen() {
   function switchTab(t: Tab) {
     setTab(t)
     load(t)
+  }
+
+  function onRefresh() {
+    setRefreshing(true)
+    load(tab, true)
   }
 
   return (
@@ -141,23 +151,21 @@ export default function DiscoverScreen() {
       </ScreenTop>
 
       {loading ? (
-        <YStack flex={1} alignItems="center" justifyContent="center">
-          <Spinner color="$primary" size="large" />
+        <YStack flex={1} paddingTop="$2">
+          {[1,2,3,4].map((i) => <VenueSkeleton key={i} />)}
         </YStack>
       ) : error ? (
-        <YStack flex={1} alignItems="center" justifyContent="center" gap="$3" padding="$6">
-          <Text color="$danger" textAlign="center">{error}</Text>
-          <Button size="$3" backgroundColor="$surface0" color="$text" onPress={() => load(tab)}>
-            Retry
-          </Button>
-        </YStack>
+        <EmptyState
+          icon="cloud-offline-outline"
+          title="Could not load venues"
+          subtitle={error}
+        />
       ) : venues.length === 0 ? (
-        <YStack flex={1} alignItems="center" justifyContent="center" gap="$2" padding="$6">
-          <Text fontSize={32}>🌙</Text>
-          <Text color="$subtext0" textAlign="center">
-            {tab === 'open' ? 'No venues open right now.' : 'No venues scheduled for tonight.'}
-          </Text>
-        </YStack>
+        <EmptyState
+          icon="moon-outline"
+          title={tab === 'open' ? 'No venues open right now' : 'Nothing scheduled tonight'}
+          subtitle={tab === 'open' ? 'Check back later or browse Tonight.' : 'No shifts scheduled for the rest of today.'}
+        />
       ) : (
         <FlashList
           data={venues}
@@ -171,6 +179,14 @@ export default function DiscoverScreen() {
             />
           )}
           contentContainerStyle={{ paddingBottom: 24 }}
+          refreshControl={
+            <RefreshControl
+              refreshing={refreshing}
+              onRefresh={onRefresh}
+              tintColor="#cba6f7"
+              colors={['#cba6f7']}
+            />
+          }
         />
       )}
     </YStack>

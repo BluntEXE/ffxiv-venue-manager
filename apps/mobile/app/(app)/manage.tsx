@@ -1,8 +1,10 @@
 import { useState, useCallback } from 'react'
-import { ScrollView } from 'react-native'
+import { ScrollView, RefreshControl } from 'react-native'
 import { YStack, XStack, Text, Spinner, Button } from 'tamagui'
 import { useRouter, useFocusEffect } from 'expo-router'
+import { Ionicons } from '@expo/vector-icons'
 import { ScreenTop } from '@/components/ScreenContainer'
+import { EmptyState } from '@/components/EmptyState'
 import { loadTokens, isExpired } from '@/lib/auth'
 import { apiFetch } from '@/lib/api'
 import { formatST, formatUntil, formatOpenSince } from '@/lib/server-time'
@@ -51,6 +53,7 @@ export default function ManageScreen() {
   const [loading, setLoading] = useState(true)
   const [dashLoading, setDashLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
+  const [refreshing, setRefreshing] = useState(false)
 
   const loadVenues = useCallback(async () => {
     setLoading(true)
@@ -87,10 +90,19 @@ export default function ManageScreen() {
 
   useFocusEffect(useCallback(() => { loadVenues() }, [loadVenues]))
 
+  function onRefresh() {
+    setRefreshing(true)
+    if (selectedVenue) {
+      loadDashboard(selectedVenue).finally(() => setRefreshing(false))
+    } else {
+      loadVenues().finally(() => setRefreshing(false))
+    }
+  }
+
   if (authed === false) {
     return (
       <YStack flex={1} backgroundColor="$base" alignItems="center" justifyContent="center" gap="$4" padding="$6">
-        <Text fontFamily="Outfit_700Bold" fontSize={22} color="$text">Manage</Text>
+        <Text fontFamily="Outfit_700Bold" fontSize={24} color="$text">Manage</Text>
         <Text color="$subtext0" textAlign="center">Sign in to manage your venues.</Text>
       </YStack>
     )
@@ -106,9 +118,12 @@ export default function ManageScreen() {
 
   if (venues.length === 0) {
     return (
-      <YStack flex={1} backgroundColor="$base" alignItems="center" justifyContent="center" gap="$3" padding="$6">
-        <Text fontSize={32}>🏢</Text>
-        <Text color="$subtext0" textAlign="center">You're not an owner or manager of any venue yet.</Text>
+      <YStack flex={1} backgroundColor="$base">
+        <EmptyState
+          icon="business-outline"
+          title="No venues to manage"
+          subtitle="You're not listed as owner or manager of any venue yet."
+        />
       </YStack>
     )
   }
@@ -143,7 +158,17 @@ export default function ManageScreen() {
           <Spinner color="$primary" />
         </YStack>
       ) : dashboard ? (
-        <ScrollView style={{ flex: 1 }}>
+        <ScrollView
+          style={{ flex: 1 }}
+          refreshControl={
+            <RefreshControl
+              refreshing={refreshing}
+              onRefresh={onRefresh}
+              tintColor="#cba6f7"
+              colors={['#cba6f7']}
+            />
+          }
+        >
           <YStack padding="$4" gap="$4" paddingBottom={32}>
             {/* Summary row */}
             <XStack gap="$3">
@@ -153,7 +178,7 @@ export default function ManageScreen() {
                 { label: 'Scheduled', value: dashboard.summary.scheduledShifts, color: '$primary' },
               ].map((s) => (
                 <YStack key={s.label} flex={1} backgroundColor="$surface0" borderRadius="$3" padding="$3" alignItems="center" gap="$1">
-                  <Text fontSize={22} fontFamily="Outfit_700Bold" color={s.color}>{s.value}</Text>
+                  <Text fontSize={24} fontFamily="Outfit_700Bold" color={s.color}>{s.value}</Text>
                   <Text fontSize={11} color="$subtext0">{s.label}</Text>
                 </YStack>
               ))}
@@ -175,7 +200,10 @@ export default function ManageScreen() {
               </XStack>
 
               {dashboard.events.length === 0 ? (
-                <Text color="$subtext0" fontSize={13}>No events today.</Text>
+                <XStack alignItems="center" gap="$2" paddingVertical="$2">
+                <Ionicons name="calendar-outline" size={16} color="#6c7086" />
+                <Text color="$overlay" fontSize={13}>No events today</Text>
+              </XStack>
               ) : (
                 dashboard.events.map((e) => (
                   <XStack
@@ -212,7 +240,10 @@ export default function ManageScreen() {
             <YStack gap="$2">
               <Text fontFamily="Outfit_600SemiBold" fontSize={16} color="$text">Today's Staff</Text>
               {dashboard.shifts.length === 0 ? (
-                <Text color="$subtext0" fontSize={13}>No shifts scheduled today.</Text>
+                <XStack alignItems="center" gap="$2" paddingVertical="$2">
+                <Ionicons name="people-outline" size={16} color="#6c7086" />
+                <Text color="$overlay" fontSize={13}>No shifts scheduled today</Text>
+              </XStack>
               ) : (
                 dashboard.shifts.map((s) => (
                   <XStack key={s.id} backgroundColor="$surface0" borderRadius="$2" padding="$3" alignItems="center" gap="$3">
