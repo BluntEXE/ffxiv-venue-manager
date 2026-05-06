@@ -34,6 +34,7 @@ export default async function VenueDashboardPage({
           memberships: true,
           tasks: true,
           services: true,
+          follows: true,
         },
       },
     },
@@ -124,6 +125,15 @@ export default async function VenueDashboardPage({
                 </CardContent>
               </Card>
             </Link>
+            <Card>
+              <CardHeader className="pb-3">
+                <CardTitle className="text-sm font-medium">Mobile Followers</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="text-3xl font-bold">{venue._count.follows}</div>
+                <p className="text-xs text-muted-foreground mt-1">App followers</p>
+              </CardContent>
+            </Card>
             <Link href={`/dashboard/${venue.slug}/tasks`}>
               <Card className="hover:shadow-lg hover:border-primary transition-all cursor-pointer">
                 <CardHeader className="pb-3">

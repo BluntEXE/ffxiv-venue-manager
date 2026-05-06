@@ -27,12 +27,21 @@ type Shift = {
   venue: { id: string; name: string; dataCenter: string; world: string }
 }
 
+type FollowedVenue = {
+  venueId: string
+  venueName: string
+  dataCenter: string
+  world: string
+  isOpenNow: boolean
+}
+
 export default function HomeScreen() {
   const router = useRouter()
   const [authed, setAuthed] = useState<boolean | null>(null)
   const [loading, setLoading] = useState(false)
   const [shifts, setShifts] = useState<Shift[]>([])
   const [shiftsLoading, setShiftsLoading] = useState(false)
+  const [follows, setFollows] = useState<FollowedVenue[]>([])
   const [refreshing, setRefreshing] = useState(false)
 
   async function checkAuth() {
@@ -43,8 +52,12 @@ export default function HomeScreen() {
   async function loadShifts(isRefresh = false) {
     if (!isRefresh) setShiftsLoading(true)
     try {
-      const res = await apiFetch('/api/mobile/my/shifts')
-      if (res.ok) setShifts(await res.json())
+      const [shiftsRes, followsRes] = await Promise.all([
+        apiFetch('/api/mobile/my/shifts'),
+        apiFetch('/api/mobile/my/follows'),
+      ])
+      if (shiftsRes.ok) setShifts(await shiftsRes.json())
+      if (followsRes.ok) setFollows(await followsRes.json())
     } catch {}
     setShiftsLoading(false)
     setRefreshing(false)
@@ -209,6 +222,38 @@ export default function HomeScreen() {
               />
             ) : null}
           </>
+        )}
+
+        {follows.length > 0 && (
+          <YStack gap="$2" marginTop="$2">
+            <Text fontFamily="Outfit_600SemiBold" fontSize={16} color="$text">Following</Text>
+            {follows.map((f) => (
+              <XStack
+                key={f.venueId}
+                backgroundColor="$surface0"
+                borderRadius="$2"
+                padding="$3"
+                alignItems="center"
+                gap="$3"
+                pressStyle={{ opacity: 0.85 }}
+                onPress={() => router.push(`/venue/${f.venueId}` as any)}
+              >
+                <YStack flex={1} gap="$1">
+                  <Text color="$text" fontSize={14} fontFamily="Outfit_600SemiBold" numberOfLines={1}>
+                    {f.venueName}
+                  </Text>
+                  <Text color="$subtext0" fontSize={12}>{f.world} · {f.dataCenter}</Text>
+                </YStack>
+                {f.isOpenNow && (
+                  <XStack backgroundColor="#a6e3a120" borderRadius="$4" paddingHorizontal="$2" paddingVertical={2} alignItems="center" gap="$1">
+                    <XStack width={6} height={6} borderRadius="$4" backgroundColor="$success" />
+                    <Text fontSize={11} color="$success">Open</Text>
+                  </XStack>
+                )}
+                <Ionicons name="chevron-forward" size={16} color="#6c7086" />
+              </XStack>
+            ))}
+          </YStack>
         )}
 
         <Button

@@ -48,6 +48,7 @@ model User {
   deviceTokens             DeviceToken[]
   pendingNotifications     PendingNotification[]
   notificationPreference   NotificationPreference?
+  venueFollows             VenueFollow[]
 
   @@map("users")
 }
@@ -158,6 +159,7 @@ model Venue {
   shifts         Shift[]
   patronLogs     PatronLog[]
   apiKeys        ApiKey[]
+  follows        VenueFollow[]
 
   @@map("venues")
 }
@@ -726,6 +728,21 @@ model NotificationPreference {
   user User @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@map("notification_preferences")
+}
+
+model VenueFollow {
+  id                  String   @id @default(cuid())
+  userId              String
+  venueId             String
+  visibleToOperators  Boolean  @default(false)
+  createdAt           DateTime @default(now())
+
+  user  User  @relation(fields: [userId], references: [id], onDelete: Cascade)
+  venue Venue @relation(fields: [venueId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, venueId])
+  @@index([venueId])
+  @@map("venue_follows")
 }
 
 model RefreshToken {

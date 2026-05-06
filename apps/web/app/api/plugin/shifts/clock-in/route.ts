@@ -4,6 +4,36 @@ import { prisma } from "@/lib/prisma"
 import { validateApiKey, checkPermission } from "@/lib/api/plugin-auth"
 import { enforcePluginRateLimit, enforcePluginIpRateLimit } from "@/lib/api/plugin-rate-limit"
 
+async function queueOpenedNowNotifications(venueId: string, now: Date) {
+  // Only queue if no VENUE_OPENED_NOW notification was sent for this venue in the last 30 min
+  // (prevents duplicate pushes if multiple staff clock in)
+  const recentlySent = await prisma.pendingNotification.findFirst({
+    where: {
+      type: "VENUE_OPENED_NOW",
+      data: { path: ["venueId"], equals: venueId },
+      createdAt: { gte: new Date(now.getTime() - 30 * 60 * 1000) },
+    },
+  })
+  if (recentlySent) return
+
+  const venue = await prisma.venue.findUnique({
+    where: { id: venueId },
+    select: { name: true, follows: { select: { userId: true } } },
+  })
+  if (!venue || venue.follows.length === 0) return
+
+  await prisma.pendingNotification.createMany({
+    data: venue.follows.map((f) => ({
+      userId: f.userId,
+      type: "VENUE_OPENED_NOW" as const,
+      title: `${venue.name} is open!`,
+      body: "A venue you follow just opened.",
+      data: { venueId },
+      scheduledFor: now,
+    })),
+  })
+}
+
 /**
  * POST /api/plugin/shifts/clock-in
  *
@@ -112,6 +142,9 @@ export async function POST(request: NextRequest) {
         status: "ACTIVE",
       },
     })
+
+    // Queue VENUE_OPENED_NOW notifications for all followers (best-effort)
+    queueOpenedNowNotifications(shift.venueId, now).catch(() => {})
 
     return NextResponse.json({
       success: true,

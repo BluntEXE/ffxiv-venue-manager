@@ -2,9 +2,10 @@ import { useEffect, useState } from 'react'
 import { ScrollView } from 'react-native'
 import { YStack, XStack, Text, Spinner, Button } from 'tamagui'
 import { useLocalSearchParams, useRouter } from 'expo-router'
+import { Ionicons } from '@expo/vector-icons'
 import { ScreenHeader } from '@/components/ScreenHeader'
-// Public endpoint — no auth needed for venue detail
 import { formatST } from '@/lib/server-time'
+import { loadTokens, isExpired, getValidToken } from '@/lib/auth'
 
 const API = 'https://xivvenuemanager.com'
 
@@ -46,13 +47,31 @@ export default function VenueDetailScreen() {
   const [venue, setVenue] = useState<VenueDetail | null>(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
+  const [following, setFollowing] = useState(false)
+  const [followLoading, setFollowLoading] = useState(false)
+  const [isAuthed, setIsAuthed] = useState(false)
 
   useEffect(() => {
     async function load() {
       try {
-        const res = await fetch(`${API}/api/mobile/venues/${id}`)
-        if (!res.ok) throw new Error('Not found')
-        setVenue(await res.json())
+        const [venueRes] = await Promise.all([
+          fetch(`${API}/api/mobile/venues/${id}`),
+        ])
+        if (!venueRes.ok) throw new Error('Not found')
+        setVenue(await venueRes.json())
+
+        const tokens = await loadTokens()
+        if (tokens && !isExpired(tokens.expiresAt)) {
+          setIsAuthed(true)
+          const token = await getValidToken()
+          const followRes = await fetch(`${API}/api/mobile/venues/${id}/follow`, {
+            headers: { Authorization: `Bearer ${token}` },
+          })
+          if (followRes.ok) {
+            const data = await followRes.json()
+            setFollowing(data.following)
+          }
+        }
       } catch {
         setError('Could not load venue.')
       } finally {
@@ -61,6 +80,22 @@ export default function VenueDetailScreen() {
     }
     load()
   }, [id])
+
+  async function toggleFollow() {
+    if (!isAuthed) { router.push('/(auth)/login'); return }
+    setFollowLoading(true)
+    try {
+      const token = await getValidToken()
+      const method = following ? 'DELETE' : 'POST'
+      await fetch(`${API}/api/mobile/venues/${id}/follow`, {
+        method,
+        headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' },
+        body: method === 'POST' ? JSON.stringify({}) : undefined,
+      })
+      setFollowing(!following)
+    } catch {}
+    setFollowLoading(false)
+  }
 
   if (loading) {
     return (
@@ -99,6 +134,17 @@ export default function VenueDetailScreen() {
         <Text fontFamily="Outfit_700Bold" fontSize={20} color="$text" flex={1} numberOfLines={1}>
           {venue.name}
         </Text>
+        <Button
+          size="$3"
+          backgroundColor={following ? '#cba6f720' : '$surface0'}
+          borderRadius="$4"
+          onPress={toggleFollow}
+          disabled={followLoading}
+          icon={followLoading
+            ? <Spinner size="small" color="$primary" />
+            : <Ionicons name={following ? 'heart' : 'heart-outline'} size={18} color={following ? '#cba6f7' : '#a6adc8'} />
+          }
+        />
       </ScreenHeader>
 
       <ScrollView style={{ flex: 1 }}>
