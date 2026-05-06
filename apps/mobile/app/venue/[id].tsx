@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react'
 import { ScrollView } from 'react-native'
 import { YStack, XStack, Text, Spinner, Button } from 'tamagui'
 import { useLocalSearchParams, useRouter } from 'expo-router'
-import { getValidToken } from '@/lib/auth'
+// Public endpoint — no auth needed for venue detail
 import { formatST } from '@/lib/server-time'
 
 const API = 'https://xivvenuemanager.com'
@@ -50,17 +50,10 @@ export default function VenueDetailScreen() {
   useEffect(() => {
     async function load() {
       try {
-        const token = await getValidToken()
-        const res = await fetch(`${API}/api/mobile/venues/${id}`, {
-          headers: { Authorization: `Bearer ${token}` },
-        })
+        const res = await fetch(`${API}/api/mobile/venues/${id}`)
         if (!res.ok) throw new Error('Not found')
         setVenue(await res.json())
-      } catch (e: any) {
-        if (e?.message === 'session_expired' || e?.message === 'not_authenticated') {
-          router.replace('/(auth)/login')
-          return
-        }
+      } catch {
         setError('Could not load venue.')
       } finally {
         setLoading(false)

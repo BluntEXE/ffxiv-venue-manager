@@ -7,10 +7,11 @@ export default function Index() {
 
   useEffect(() => {
     loadTokens().then((tokens) => {
+      // Authed users land on home, everyone else goes straight to Discover
       if (tokens && !isExpired(tokens.expiresAt)) {
         setDest('/(app)/home')
       } else {
-        setDest('/(auth)/login')
+        setDest('/(app)/discover')
       }
     })
   }, [])

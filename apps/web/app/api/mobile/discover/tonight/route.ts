@@ -1,17 +1,7 @@
 import { NextResponse } from "next/server"
-import { verifyMobileJwt } from "@/lib/auth/mobile-auth"
 import { prisma } from "@/lib/prisma"
 
-export async function GET(req: Request) {
-  const auth = req.headers.get("Authorization")?.replace("Bearer ", "")
-  if (!auth) return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
-
-  try {
-    await verifyMobileJwt(auth)
-  } catch {
-    return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
-  }
-
+export async function GET() {
   const now = new Date()
   const endOfDay = new Date(now)
   endOfDay.setUTCHours(23, 59, 59, 999)

@@ -3,7 +3,7 @@ import { FlashList } from '@shopify/flash-list'
 import { YStack, XStack, Text, Spinner, Button } from 'tamagui'
 import { useRouter } from 'expo-router'
 import { useFocusEffect } from 'expo-router'
-import { getValidToken } from '@/lib/auth'
+// No auth import needed — discover is public
 import { formatST, formatOpenSince, formatUntil } from '@/lib/server-time'
 
 const API = 'https://xivvenuemanager.com'
@@ -24,11 +24,9 @@ type Venue = {
 
 type Tab = 'open' | 'tonight'
 
-async function fetchVenues(tab: Tab, token: string): Promise<Venue[]> {
+async function fetchVenues(tab: Tab): Promise<Venue[]> {
   const path = tab === 'open' ? 'open-now' : 'tonight'
-  const res = await fetch(`${API}/api/mobile/discover/${path}`, {
-    headers: { Authorization: `Bearer ${token}` },
-  })
+  const res = await fetch(`${API}/api/mobile/discover/${path}`)
   if (!res.ok) throw new Error('Failed to fetch')
   return res.json()
 }
@@ -103,19 +101,14 @@ export default function DiscoverScreen() {
     setLoading(true)
     setError(null)
     try {
-      const token = await getValidToken()
-      const data = await fetchVenues(t, token)
+      const data = await fetchVenues(t)
       setVenues(data)
-    } catch (e: any) {
-      if (e?.message === 'not_authenticated' || e?.message === 'session_expired') {
-        router.replace('/(auth)/login')
-        return
-      }
+    } catch {
       setError('Could not load venues. Try again.')
     } finally {
       setLoading(false)
     }
-  }, [router])
+  }, [])
 
   useFocusEffect(useCallback(() => { load(tab) }, [tab, load]))
 

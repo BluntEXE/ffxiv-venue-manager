@@ -1,21 +1,8 @@
-import { Tabs, useRouter } from 'expo-router'
-import { useEffect, useState } from 'react'
-import { loadTokens } from '@/lib/auth'
+import { Tabs } from 'expo-router'
 import { Ionicons } from '@expo/vector-icons'
 
+// No auth gate here -- Discover is public. Home handles its own auth check.
 export default function AppLayout() {
-  const router = useRouter()
-  const [ready, setReady] = useState(false)
-
-  useEffect(() => {
-    loadTokens().then((tokens) => {
-      if (!tokens) router.replace('/(auth)/login')
-      else setReady(true)
-    })
-  }, [])
-
-  if (!ready) return null
-
   return (
     <Tabs
       screenOptions={{

@@ -1,19 +1,10 @@
 import { NextResponse } from "next/server"
-import { verifyMobileJwt } from "@/lib/auth/mobile-auth"
 import { prisma } from "@/lib/prisma"
 
 export async function GET(
-  req: Request,
+  _req: Request,
   { params }: { params: Promise<{ venueId: string }> }
 ) {
-  const auth = req.headers.get("Authorization")?.replace("Bearer ", "")
-  if (!auth) return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
-
-  try {
-    await verifyMobileJwt(auth)
-  } catch {
-    return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
-  }
 
   const { venueId } = await params
   const now = new Date()
