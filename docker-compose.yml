@@ -84,6 +84,9 @@ services:
     environment:
       - DATABASE_URL=${DATABASE_URL}
       - HOMEPAGE_API_KEY=${HOMEPAGE_API_KEY}
+      - GLITCHTIP_TOKEN=${GLITCHTIP_TOKEN}
+      - GLITCHTIP_ORG=${GLITCHTIP_ORG}
+      - GLITCHTIP_URL=${GLITCHTIP_URL}
     depends_on:
       postgres:
         condition: service_healthy
