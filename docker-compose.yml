@@ -65,6 +65,18 @@ services:
              echo '0 * * * * curl -s -H \"Authorization: Bearer '$$CRON_SECRET'\" http://venue-manager:3000/api/cron/sync-partake-events >> /var/log/cron.log 2>&1' >> /etc/crontabs/root &&
              crond -f -l 2"
 
+  adminer:
+    image: adminer:latest
+    container_name: adminer
+    restart: unless-stopped
+    ports:
+      - "8080:8080"
+    depends_on:
+      postgres:
+        condition: service_healthy
+    networks:
+      - app-network
+
 networks:
   app-network:
     driver: bridge
