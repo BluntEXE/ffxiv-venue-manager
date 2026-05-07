@@ -293,10 +293,10 @@ Honesty over polish.
 - **Live production:** [xivvenuemanager.com](https://xivvenuemanager.com)
 - **Plugin distribution:** Released as a [Dalamud third-party repo](https://github.com/goatcorp/Dalamud) (binary zips, auto-updated by the Dalamud installer)
 
-For a deeper engineering walkthrough see [`docs/engineering/`](./docs/engineering) - broken into:
-- [Architecture](./docs/engineering/architecture.md) - system diagram, component responsibilities, data flow
-- [Security](./docs/engineering/security.md) - full audit narrative, what was fixed, what was deferred and why
-- [Scaling](./docs/engineering/scaling.md) - Redis + rate limit decisions, what changes at 10x and 100x
+For a deeper engineering walkthrough see [`apps/web/docs/engineering/`](./apps/web/docs/engineering) - broken into:
+- [Architecture](./apps/web/docs/engineering/architecture.md) - system diagram, component responsibilities, data flow
+- [Security](./apps/web/docs/engineering/security.md) - full audit narrative, what was fixed, what was deferred and why
+- [Scaling](./apps/web/docs/engineering/scaling.md) - Redis + rate limit decisions, what changes at 10x and 100x
 
 ---
 
