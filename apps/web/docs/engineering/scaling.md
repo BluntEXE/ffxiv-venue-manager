@@ -12,6 +12,7 @@ Single self-hosted Linux server. Seven containers via Docker Compose:
 | `postgres` | `postgres:16` | Persistence |
 | `redis` | `redis:7-alpine` | Cache + rate limit |
 | `cron-jobs` | `alpine` + `crond` | Scheduled jobs |
+| `xiv-stats` | `node:20-alpine` | Homepage stats API |
 | `adminer` | `adminer` | DB admin UI (port 8080) |
 | `static-ehno` | `nginx:alpine` | Static site at ehno.xivvenuemanager.com |
 
@@ -24,7 +25,7 @@ Headroom snapshot (April 2026):
 | Postgres connections | low single digits | default 100 | very high |
 | Container disk | 12 GB | 24 GB | 50% free |
 
-The bottleneck at scale is not infrastructure capacity. It's specific architectural choices.
+The scaling constraint is architectural, not infrastructure capacity.
 
 ## The four design choices that affect scaling
 
@@ -102,7 +103,7 @@ Architectural changes warranted:
 - **Add cache stampede protection in `getOrSet`.** Single-flight pattern (in-process `Map<string, Promise<T>>`) so a hot key expiring under concurrent load doesn't N-fan-out to N database hits. Currently deferred; would matter at 100x because hot-key QPS would cross the threshold.
 - **Add cache hit/miss observability.** Prometheus counters or sampled logs by namespace, so TTL tuning becomes data-driven instead of guess-driven.
 
-The good news: every one of these is a contained change. The current architecture isn't blocking any of them. Items 5 and 6 (stampede + observability) live in persistent memory so they surface on the next session that touches caching.
+Every one of these is a contained change. The current architecture isn't blocking any of them. Items 5 and 6 (stampede + observability) are documented with their trigger conditions.
 
 ## What was just shipped (May 2026)
 

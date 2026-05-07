@@ -1,6 +1,6 @@
 # Development Journey
 
-A chronological record of how XIV Venue Manager was designed, built, and hardened — from initial concept to production system.
+A chronological record of how XIV Venue Manager was designed, built, and hardened. From initial concept to production system.
 
 For the engineering depth behind specific decisions, see the [case study](../../CASE_STUDY.md) and [engineering docs](./engineering/).
 
@@ -10,7 +10,7 @@ For the engineering depth behind specific decisions, see the [case study](../../
 
 The problem was concrete: FFXIV venue operators were tracking patron attendance, staff shifts, sales, and payroll in Google Sheets and Discord. Every venue re-invented the same broken system.
 
-The insight: Dalamud exposes plugin APIs for the game client. A plugin could observe game events (zone changes, party arrivals, chat) and push them somewhere structured. Pair that with a web dashboard and the spreadsheet workflow becomes real software.
+The insight: Dalamud exposes plugin APIs for the game client. A plugin could observe game events (zone changes, party arrivals, chat) and push them somewhere structured. Pair that with a web dashboard and you replace the spreadsheet workflow with real software.
 
 Initial scope defined: two-part system. Plugin handles in-game capture. Web app handles everything else. Plugin is the primary action surface; website is analytics and fallback.
 
@@ -27,7 +27,7 @@ Built the core data model and API from scratch:
 - Staff invite system via unique links (no email required)
 - Task management, service catalog, transaction logging
 
-Stack decisions locked in: Next.js App Router, TypeScript strict, Prisma, self-hosted Postgres + Redis via Docker Compose.
+I locked in the stack: Next.js App Router, TypeScript strict, Prisma, self-hosted Postgres + Redis via Docker Compose.
 
 ---
 
@@ -68,7 +68,7 @@ Key fixes:
 - **IDOR on feedback endpoint fixed**, **40 membership queries gained active status filter**, **cron auth made timing-safe**
 - **SSH password auth disabled**, ed25519 keys only
 
-Intentionally deferred with documented triggers: CSP nonces, DB password rotation.
+Both deferred, with documented triggers: CSP nonces, DB password rotation.
 
 Full audit status in [security.md](./engineering/security.md).
 
@@ -102,7 +102,7 @@ Added a React Native / Expo mobile app targeting Android (iOS deferred — cost)
 | Total LOC | ~24,400 (19,419 TS/TSX + 4,981 C#) |
 | API routes | 55 |
 | Database tables | 19 |
-| Containers | 7 (web, postgres, redis, cron, adminer, static-ehno, reverse proxy) |
+| Containers | 7 (web, postgres, redis, cron, xiv-stats, adminer, static-ehno) |
 | Security findings | 18/18 closed |
 | Development span | December 2025 – present |
 

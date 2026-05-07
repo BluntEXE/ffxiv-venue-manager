@@ -119,7 +119,7 @@ Two layers run on every authenticated request: the IP throttle catches credentia
 ## What I learned
 
 1. **Audits are checklists; verification is sequential reasoning.** "Rate limiting exists" passed the checklist. "Rate limiting runs before the expensive operation it's protecting" did not. Test the *invariant*, not the *presence*.
-2. **Document deferrals with their re-trigger.** Every `⏸ Deferred` line above has a "trigger to revisit" condition. Without it, deferrals quietly become permanent.
+2. **Document deferrals with their re-trigger.** Every `⏸ Deferred` line above has a "trigger to revisit" condition. Without it, deferrals become permanent.
 3. **Threat model first, then prioritize.** Strict CSP is "best practice." For an app with no user-rendered HTML, it's premature. The same hour of work could close higher-likelihood holes elsewhere.
 4. **Some findings are not real findings.** M5 (invite token leaks venue name) was dismissed because anyone joining the venue sees the name anyway. Auditors find what's there; humans decide what matters.
 
