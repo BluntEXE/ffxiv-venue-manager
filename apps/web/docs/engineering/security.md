@@ -53,7 +53,7 @@ A line-by-line review six months in produced **18 findings**: 4 Critical, 6 High
 | M3 | `withAuthAndRateLimit` dead code | ✅ Removed |
 | M4 | CSP allows `unsafe-eval` and `unsafe-inline` | ✅ Fixed 2026-05-07: nonce-based CSP implemented in `proxy.ts`. Per-request nonce stamped on every Next.js-generated `<script>` tag. `unsafe-inline` and `unsafe-eval` removed from `script-src`. CSP moved from `next.config.ts` (static, per-build) to `proxy.ts` (per-request, required for nonce generation). `style-src unsafe-inline` retained - required by Tailwind. |
 | M5 | Invite token GET requires no auth, leaks venue name | ❌ Dismissed: intentional UX. Anyone joining will see the venue name regardless. Not a real leak. |
-| M6 | Database password is weak (`venue_db_pass_2026`) | ⏸ Deferred. Internal docker network only, not externally exposed. Trigger to rotate: any future external DB exposure, or any container breach. |
+| M6 | Database password is weak (`venue_db_pass_2026`) | ✅ Fixed 2026-05-07: rotated to 64-char hex (`openssl rand -hex 32`). ALTER USER ran before .env update to avoid downtime window. Stored in Proton Pass. |
 | M7 | SSH password auth enabled | ✅ Fixed: ed25519 keys only, password auth disabled in `sshd_config.d/10-disable-password.conf` |
 
 ### Low (most fixed)

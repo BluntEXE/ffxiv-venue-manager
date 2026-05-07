@@ -128,7 +128,6 @@ In persistent memory for whenever traffic justifies the work:
 
 - **Cache stampede protection** in `getOrSet`. Triggers: cache hit rate >1k lifetime, or any single key >50 RPS.
 - **Cache observability** (per-namespace hit/miss). Trigger: same as above.
-- **DB password rotation.** Trigger: any external DB exposure or container breach.
 - **Multi-replica web tier** (requires SSE bus migration). Trigger: app-tier CPU sustains >70% under steady load.
 
 For the underlying architecture, see [architecture.md](./architecture.md). For the security posture, see [security.md](./security.md).

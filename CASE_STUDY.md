@@ -276,7 +276,6 @@ Honesty over polish.
 
 **What's in the queue (deferred-with-trigger):**
 - Cache stampede protection + observability (deferred until traffic justifies)
-- DB password rotation (deferred, low exposure - internal Docker network only)
 - Multi-replica web tier (would require swapping in-process event bus for Redis pub/sub)
 
 **What I'd build next if this were a job:**

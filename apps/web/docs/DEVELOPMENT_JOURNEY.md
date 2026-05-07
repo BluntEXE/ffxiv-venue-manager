@@ -103,7 +103,7 @@ Added a React Native / Expo mobile app targeting Android (iOS deferred — cost)
 | API routes | 55 |
 | Database tables | 19 |
 | Containers | 7 (web, postgres, redis, cron, adminer, static-ehno, reverse proxy) |
-| Security findings | 17/18 closed; 1 deferred (DB password, internal network only) |
+| Security findings | 18/18 closed |
 | Development span | December 2025 – present |
 
-One open security item: DB password rotation (M6 — weak password, internal Docker network only, not externally exposed).
+All 18 security findings closed as of 2026-05-07.
