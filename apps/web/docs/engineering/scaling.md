@@ -12,6 +12,7 @@ Single self-hosted Linux server. Five containers via Docker Compose:
 | `postgres` | `postgres:16` | Persistence |
 | `redis` | `redis:7-alpine` | Cache + rate limit |
 | `cron-jobs` | `alpine` + `crond` | Scheduled jobs |
+| `adminer` | `adminer` | DB admin UI (port 8080) |
 | `static-ehno` | `nginx` | Unrelated static site I host on the same box |
 
 Headroom snapshot (April 2026):
@@ -103,7 +104,13 @@ Architectural changes warranted:
 
 The good news: every one of these is a contained change. The current architecture isn't blocking any of them. Items 5 and 6 (stampede + observability) live in persistent memory so they surface on the next session that touches caching.
 
-## What was just shipped (April 2026)
+## What was just shipped (May 2026)
+
+1. **Nonce-based CSP.** Moved CSP from `next.config.ts` (static) to `proxy.ts` (per-request). Per-request nonce generated via `crypto.randomUUID()`, stamped automatically on all Next.js `<script>` tags. `unsafe-inline` and `unsafe-eval` removed from `script-src`. No architectural impact; contained to `proxy.ts`.
+
+2. **Adminer added to compose stack.** Previously a manually started standalone container with no restart policy. Now managed alongside the rest of the stack on port 8080; restarts automatically.
+
+## What was shipped before that (April 2026)
 
 A scaling-prep session that closed three production gaps:
 
@@ -121,7 +128,6 @@ In persistent memory for whenever traffic justifies the work:
 
 - **Cache stampede protection** in `getOrSet`. Triggers: cache hit rate >1k lifetime, or any single key >50 RPS.
 - **Cache observability** (per-namespace hit/miss). Trigger: same as above.
-- **Strict CSP migration**. Trigger: any feature that renders user-supplied HTML.
 - **DB password rotation.** Trigger: any external DB exposure or container breach.
 - **Multi-replica web tier** (requires SSE bus migration). Trigger: app-tier CPU sustains >70% under steady load.
 

@@ -62,7 +62,7 @@ xiv-app/
 │   ├── rate-limit.ts             # Sliding-window limiter (uses lib/redis)
 │   └── redis-cache.ts            # Cache-aside layer (uses lib/redis)
 ├── prisma/schema.prisma          # 19 models
-└── docker-compose.yml            # web + postgres + redis + cron + static
+└── docker-compose.yml            # web + postgres + redis + cron + static + adminer
 ```
 
 ## Data model summary
@@ -190,7 +190,7 @@ All four authenticate via `verifyCronAuth(request)` with constant-time compariso
 ## Production deployment
 
 - Single Linux box, `docker compose up -d`
-- 5 containers: `venue-manager` (Next.js standalone), `postgres`, `redis`, `cron-jobs`, `static-ehno`
+- 6 containers: `venue-manager` (Next.js standalone), `postgres`, `redis`, `cron-jobs`, `adminer` (DB admin UI, port 8080), `static-ehno`
 - Reverse proxy fronts the public URL (`xivvenuemanager.com`) and terminates TLS
 - GitHub Actions runs lint + `npm audit --audit-level=high` on push and weekly cron
 - Deploys are manual: SSH to server, `git pull`, `docker compose build venue-manager && docker compose up -d venue-manager`. Solo project; full continuous deployment isn't worth its failure modes when I'm the only shipper.
