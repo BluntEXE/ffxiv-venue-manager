@@ -26,5 +26,4 @@ jobs:
       - name: Install deps
         run: pnpm install --ignore-scripts --frozen-lockfile
       - name: Audit web app (high+)
-        working-directory: apps/web
         run: pnpm audit --audit-level=high
