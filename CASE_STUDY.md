@@ -189,7 +189,7 @@ Six months in I sat down and ran a full security audit against the production ap
 - **SSH password auth disabled**, ed25519 keys only
 
 **What got intentionally deferred, with rationale:**
-- **Strict CSP (no `unsafe-eval`/`unsafe-inline`):** the realistic threat model for this app (no user-rendered HTML, no comments/uploads, OAuth-only auth) doesn't justify the click-through testing cost yet
+- **Strict CSP:** initially deferred given low threat model, later completed (2026-05-07) - nonce-based CSP with `unsafe-eval`/`unsafe-inline` removed, implemented via per-request nonce generation in `proxy.ts`
 - **Database password rotation:** the password is weak but the database isn't externally exposed; rotated when convenient, not as fire-drill
 - **Invite token venue-name leak:** non-issue - anyone joining will see the venue name regardless
 
@@ -254,9 +254,9 @@ Asked of every senior engineer in every interview. My honest answer:
 | Web-only routes | 43 |
 | Cron jobs | 4 |
 | Commits | 117 |
-| Active development span | ~5 months (Dec 2025 → Apr 2026) |
+| Active development span | ~6 months (Dec 2025 → May 2026) |
 | Production environment | Single self-hosted Linux box |
-| Container count | 5 (web, postgres, redis, cron, static) |
+| Container count | 6 (web, postgres, redis, cron, static, adminer) |
 | Redis memory ceiling | 256 MB (`allkeys-lru`) |
 
 </div>
@@ -269,19 +269,18 @@ Honesty over polish.
 
 **What it doesn't do (yet):**
 - No multi-region deployment - single box, single region
-- No mobile native apps - responsive web only (mobile responsive patterns exist but no PWA)
+- No iOS app - Android companion app ships (Expo/React Native, Play Store); iOS deferred (cost)
 - No public API for third parties - `/api/plugin/*` is for the official plugin only
 - No marketplace / cross-venue discovery - venues are isolated tenants
 - No automated database backups beyond manual nightly tarballs
 
 **What's in the queue (deferred-with-trigger):**
 - Cache stampede protection + observability (deferred until traffic justifies)
-- Strict CSP migration (deferred until threat model warrants)
-- DB password rotation (deferred, low exposure)
+- DB password rotation (deferred, low exposure - internal Docker network only)
 - Multi-replica web tier (would require swapping in-process event bus for Redis pub/sub)
 
 **What I'd build next if this were a job:**
-- Mobile PWA so venue staff can clock in from phones during real-life venue events
+- iOS companion app (Android shipped; deferred for cost, not technical reasons)
 - Public read API for venue listings (with rate-limited keys)
 - Per-venue custom branding so each venue feels distinct
 - Slack / Discord webhook integrations for shift notifications

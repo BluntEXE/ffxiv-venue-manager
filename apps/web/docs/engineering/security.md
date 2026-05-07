@@ -51,7 +51,7 @@ A line-by-line review six months in produced **18 findings**: 4 Critical, 6 High
 | M1 | No rate limit on auth flow | ✅ Fixed (see H2) |
 | M2 | Manager could self-promote to OWNER via PATCH | ✅ Fixed: role escalation check looks at `role`, `temporaryRole`, `permanentRole` |
 | M3 | `withAuthAndRateLimit` dead code | ✅ Removed |
-| M4 | CSP allows `unsafe-eval` and `unsafe-inline` | ⏸ Deferred. Threat model is low-risk for this app (no user-rendered HTML, no comments/uploads, OAuth-only auth). Strict CSP would require nonce-based setup + click-through testing of every page. Trigger to revisit: any feature that renders user-supplied HTML, or an XSS finding in dependencies. |
+| M4 | CSP allows `unsafe-eval` and `unsafe-inline` | ✅ Fixed 2026-05-07: nonce-based CSP implemented in `proxy.ts`. Per-request nonce stamped on every Next.js-generated `<script>` tag. `unsafe-inline` and `unsafe-eval` removed from `script-src`. CSP moved from `next.config.ts` (static, per-build) to `proxy.ts` (per-request, required for nonce generation). `style-src unsafe-inline` retained - required by Tailwind. |
 | M5 | Invite token GET requires no auth, leaks venue name | ❌ Dismissed: intentional UX. Anyone joining will see the venue name regardless. Not a real leak. |
 | M6 | Database password is weak (`venue_db_pass_2026`) | ⏸ Deferred. Internal docker network only, not externally exposed. Trigger to rotate: any future external DB exposure, or any container breach. |
 | M7 | SSH password auth enabled | ✅ Fixed: ed25519 keys only, password auth disabled in `sshd_config.d/10-disable-password.conf` |
@@ -112,6 +112,7 @@ Two layers run on every authenticated request: the IP throttle catches credentia
 | **Web route rate limit** | Per-IP, per-route budgets | `lib/middleware/with-rate-limit.ts` |
 | **Cron auth** | Constant-time Bearer token comparison | `lib/cron-auth.ts` |
 | **Permission model** | Membership-based with role + status check | `lib/permissions.ts` |
+| **CSP** | Nonce-based per-request CSP; `script-src 'self' 'nonce-{n}'`; no `unsafe-inline`/`unsafe-eval` | `proxy.ts` |
 | **Headers** | `X-Frame-Options: DENY`, `X-Content-Type-Options: nosniff`, `Referrer-Policy: strict-origin-when-cross-origin`, HSTS | `next.config.ts` |
 | **Build-time scan** | `npm audit --audit-level=high` in CI | `.github/workflows/security.yml` |
 
