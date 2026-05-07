@@ -1,10 +1,28 @@
 import { withAuth } from "next-auth/middleware"
 import { NextResponse } from "next/server"
 
+function buildCsp(nonce: string): string {
+  return [
+    "default-src 'self'",
+    `script-src 'self' 'nonce-${nonce}'`,
+    "style-src 'self' 'unsafe-inline'",
+    "img-src 'self' data: https://cdn.discordapp.com https://raw.githubusercontent.com https://cdn.partake.gg",
+    "font-src 'self' data:",
+    "connect-src 'self' https://discord.com https://api.github.com https://qstash.upstash.io https://errors.xivvenuemanager.com",
+    "frame-ancestors 'none'",
+    "base-uri 'self'",
+    "form-action 'self'",
+    "upgrade-insecure-requests",
+  ].join("; ")
+}
+
 export default withAuth(
   function middleware(req) {
-    // Allow the request to proceed
-    return NextResponse.next()
+    const nonce = Buffer.from(crypto.randomUUID()).toString("base64")
+    const response = NextResponse.next()
+    response.headers.set("x-nonce", nonce)
+    response.headers.set("Content-Security-Policy", buildCsp(nonce))
+    return response
   },
   {
     callbacks: {

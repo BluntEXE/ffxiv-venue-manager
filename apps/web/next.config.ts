@@ -1,8 +1,6 @@
 import path from "path"
 import type { NextConfig } from "next"
 
-const isDev = process.env.NODE_ENV === "development"
-
 const nextConfig: NextConfig = {
   output: "standalone",
   // Required for pnpm workspaces: trace file deps from monorepo root
@@ -40,28 +38,7 @@ const nextConfig: NextConfig = {
           // Control browser features (disable potentially dangerous APIs)
           {
             key: "Permissions-Policy",
-            value:
-              "camera=(), microphone=(), geolocation=(), interest-cohort=()",
-          },
-          // Content Security Policy - Defense against XSS
-          {
-            key: "Content-Security-Policy",
-            value: [
-              "default-src 'self'",
-              // unsafe-eval only needed in dev for webpack HMR; removed in production
-              // unsafe-inline still required by Next.js hydration scripts (nonce-based fix is a follow-up)
-              `script-src 'self' 'unsafe-inline'${isDev ? " 'unsafe-eval'" : ""}`,
-              "style-src 'self' 'unsafe-inline'", // Tailwind requires unsafe-inline
-              "img-src 'self' data: https://cdn.discordapp.com https://raw.githubusercontent.com https://cdn.partake.gg", // Discord avatars + GitHub images + Partake event flyers
-              "font-src 'self' data:",
-              "connect-src 'self' https://discord.com https://api.github.com https://qstash.upstash.io https://errors.xivvenuemanager.com", // API connections
-              "frame-ancestors 'none'", // Equivalent to X-Frame-Options: DENY
-              "base-uri 'self'",
-              "form-action 'self'",
-              "upgrade-insecure-requests",
-            ]
-              .join("; ")
-              .replace(/\s{2,}/g, " "),
+            value: "camera=(), microphone=(), geolocation=()",
           },
         ],
       },
