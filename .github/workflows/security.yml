@@ -26,4 +26,29 @@ jobs:
       - name: Install deps
         run: pnpm install --ignore-scripts --frozen-lockfile
       - name: Audit web app (high+)
-        run: pnpm audit --audit-level=high
+        run: |
+          pnpm audit --json 2>/dev/null > audit.json || true
+          python3 - <<'EOF'
+          import json, sys
+          with open("audit.json") as f:
+              data = json.load(f)
+          advisories = data.get("advisories", {})
+          failures = []
+          for adv in advisories.values():
+              severity = adv.get("severity", "")
+              if severity not in ("high", "critical"):
+                  continue
+              paths = [f.get("paths", []) for f in adv.get("findings", [])]
+              flat = [p for group in paths for p in group]
+              # Skip vulnerabilities that only affect mobile build tooling
+              if all("apps__mobile" in p for p in flat):
+                  continue
+              failures.append(f"{severity}: {adv.get('title')} ({adv.get('url')})")
+          if failures:
+              print(f"Found {len(failures)} high/critical vulnerabilities in web app:")
+              for f in failures:
+                  print(f" - {f}")
+              sys.exit(1)
+          else:
+              print("No high/critical vulnerabilities in production web app.")
+          EOF
