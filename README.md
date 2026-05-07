@@ -110,7 +110,7 @@ npx prisma db push
 npm run dev
 ```
 
-For production, the entire stack runs as a Docker Compose project: `docker compose up -d` builds and starts the web app, Postgres, Redis, and a cron-jobs container.
+For production, the entire stack runs as a Docker Compose project: `docker compose up -d` builds and starts the web app, Postgres, Redis, a cron-jobs container, and Adminer (DB admin UI on port 8080).
 
 ---
 

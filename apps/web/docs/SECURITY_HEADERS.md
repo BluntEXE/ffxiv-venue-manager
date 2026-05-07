@@ -37,37 +37,38 @@ Forces browsers to only access the site via HTTPS for 1 year (31536000 seconds),
 **Protection**: Unauthorized API access
 
 ```
-camera=(), microphone=(), geolocation=(), interest-cohort=()
+camera=(), microphone=(), geolocation=()
 ```
 
 Disables potentially dangerous browser APIs:
 - No camera access
 - No microphone access
 - No geolocation access
-- No FLoC tracking (privacy protection)
 
 ### 6. Content-Security-Policy (CSP)
 **Protection**: XSS, injection attacks, unauthorized resource loading
 
-Comprehensive CSP configuration:
+Nonce-based CSP generated per-request in `proxy.ts`:
 
 ```
 default-src 'self';
-script-src 'self' 'unsafe-eval' 'unsafe-inline';
+script-src 'self' 'nonce-{per-request-random}';
 style-src 'self' 'unsafe-inline';
-img-src 'self' data: https://cdn.discordapp.com https://raw.githubusercontent.com;
+img-src 'self' data: https://cdn.discordapp.com https://raw.githubusercontent.com https://cdn.partake.gg;
 font-src 'self' data:;
-connect-src 'self' https://discord.com https://api.github.com https://qstash.upstash.io;
+connect-src 'self' https://discord.com https://api.github.com https://qstash.upstash.io https://errors.xivvenuemanager.com;
 frame-ancestors 'none';
 base-uri 'self';
 form-action 'self';
 upgrade-insecure-requests
 ```
 
-**Note on `unsafe-inline` and `unsafe-eval`:**
-- Required by Next.js for React hydration and hot module replacement
-- Required by Tailwind CSS for runtime styling
-- Future improvement: Implement nonces for stricter CSP
+**Nonce implementation (2026-05-07):**
+- `unsafe-inline` and `unsafe-eval` removed from `script-src`
+- Per-request nonce via `crypto.randomUUID()`, base64-encoded
+- Next.js automatically stamps the nonce on all generated `<script>` tags
+- CSP lives in `proxy.ts` (not `next.config.ts`) because nonces require per-request generation
+- `style-src unsafe-inline` retained - required by Tailwind CSS
 
 **Allowed External Sources:**
 - Discord CDN: For user avatars via Discord OAuth
@@ -117,8 +118,8 @@ x-frame-options: DENY
 x-content-type-options: nosniff
 referrer-policy: strict-origin-when-cross-origin
 strict-transport-security: max-age=31536000; includeSubDomains; preload
-permissions-policy: camera=(), microphone=(), geolocation=(), interest-cohort=()
-content-security-policy: default-src 'self'; script-src 'self' 'unsafe-eval' 'unsafe-inline'; ...
+permissions-policy: camera=(), microphone=(), geolocation=()
+content-security-policy: default-src 'self'; script-src 'self' 'nonce-{base64}'; ...
 ```
 
 ## Security Benefits
@@ -130,29 +131,13 @@ content-security-policy: default-src 'self'; script-src 'self' 'unsafe-eval' 'un
 | Referrer-Policy | Information leakage | Low | ✅ Balanced privacy |
 | Strict-Transport-Security | MITM, SSL strip | High | ✅ Complete protection |
 | Permissions-Policy | Unauthorized API use | Medium | ✅ Complete protection |
-| Content-Security-Policy | XSS, injection | High | ⚠️ Good (with unsafe-inline) |
+| Content-Security-Policy | XSS, injection | High | ✅ Nonce-based (no unsafe-inline/eval in script-src) |
 
 ## Known Limitations
 
-### CSP Unsafe Directives
+### style-src unsafe-inline
 
-The CSP includes `unsafe-inline` and `unsafe-eval` which weakens XSS protection:
-
-**Why it's needed:**
-- Next.js requires `unsafe-eval` for React hydration
-- Tailwind CSS requires `unsafe-inline` for utility classes
-
-**Future improvement:**
-```javascript
-// Use nonces for stricter CSP
-script-src 'self' 'nonce-{random}';
-style-src 'self' 'nonce-{random}';
-```
-
-This requires:
-1. Generating random nonce per request
-2. Passing nonce to Next.js Head component
-3. Adding nonce to all inline scripts/styles
+`style-src` still includes `unsafe-inline` — required by Tailwind CSS for utility class injection. Removing it would require a full CSS-in-JS migration.
 
 ## Compliance
 
