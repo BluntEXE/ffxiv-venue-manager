@@ -102,7 +102,7 @@ Added a React Native / Expo mobile app targeting Android (iOS deferred — cost)
 | Total LOC | ~24,400 (19,419 TS/TSX + 4,981 C#) |
 | API routes | 55 |
 | Database tables | 19 |
-| Containers | 6 (web, postgres, redis, cron, static, adminer) |
+| Containers | 7 (web, postgres, redis, cron, adminer, static-ehno, reverse proxy) |
 | Security findings | 17/18 closed; 1 deferred (DB password, internal network only) |
 | Development span | December 2025 – present |
 

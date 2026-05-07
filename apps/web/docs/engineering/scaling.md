@@ -4,7 +4,7 @@
 
 ## Where I am right now
 
-Single self-hosted Linux server. Five containers via Docker Compose:
+Single self-hosted Linux server. Seven containers via Docker Compose:
 
 | Container | Image | Purpose |
 |---|---|---|
@@ -13,7 +13,7 @@ Single self-hosted Linux server. Five containers via Docker Compose:
 | `redis` | `redis:7-alpine` | Cache + rate limit |
 | `cron-jobs` | `alpine` + `crond` | Scheduled jobs |
 | `adminer` | `adminer` | DB admin UI (port 8080) |
-| `static-ehno` | `nginx` | Unrelated static site I host on the same box |
+| `static-ehno` | `nginx:alpine` | Static site at ehno.xivvenuemanager.com |
 
 Headroom snapshot (April 2026):
 

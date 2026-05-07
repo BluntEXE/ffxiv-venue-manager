@@ -256,7 +256,7 @@ Asked of every senior engineer in every interview. My honest answer:
 | Commits | 117 |
 | Active development span | ~6 months (Dec 2025 → May 2026) |
 | Production environment | Single self-hosted Linux box |
-| Container count | 6 (web, postgres, redis, cron, static, adminer) |
+| Container count | 7 (web, postgres, redis, cron, static, adminer, static-ehno) |
 | Redis memory ceiling | 256 MB (`allkeys-lru`) |
 
 </div>
