@@ -54,7 +54,7 @@ Specific pain points that drove the build:
 3. **Analytics** didn't exist: no one knew which events drew traffic, which services sold, what staffing levels were needed
 4. **Cross-venue mobility** was impossible: a bartender working at three different venues had no portable record of their hours
 
-The opportunity: FFXIV exposes plugin APIs through the **Dalamud** framework. A plugin can observe game events directly (zone changes, party adds, chat messages, target focus) and report them somewhere structured. Pair that with a web app and the spreadsheet-and-prayer workflow becomes real software.
+The opportunity: FFXIV exposes plugin APIs through the **Dalamud** framework. A plugin can observe game events directly (zone changes, party adds, chat messages, target focus) and report them somewhere structured. Pair that with a web app and you replace the spreadsheet-and-prayer workflow with real software.
 
 ---
 
@@ -80,6 +80,12 @@ A two-tier system, each tier doing what it's good at.
 ### Design principle
 > The plugin is the **primary action surface**. The website is the **fallback + analytics surface**.
 > Players are already in the game, in the venue, busy. The plugin lets them act in 1-2 keystrokes; the website is where they review, configure, and analyze.
+
+### A note on tooling
+> This project was built with AI tooling throughout. Claude Code assisted with architecture decisions, code generation, security review, and documentation. Every decision, deployment, and line of judgement remains mine - AI compressed the execution time, not the thinking.
+
+### A note on shipping
+> The platform wasn't opened to real users until it was production-ready and secure. The security audit ran before anyone depended on it. Shipping something unsafe or half-finished to a community that trusts you with their data isn't a trade-off worth making.
 
 ---
 
@@ -177,7 +183,7 @@ The plugin and web app are written in different languages, run on different mach
 
 ### Vignette 2: A real security audit, with deferrals
 
-Six months in I sat down and ran a full security audit against the production app. Not "did I read the OWASP top 10," but a line-by-line review against an actual checklist. **18 findings:** 4 Critical, 6 High, 7 Medium, 5 Low.
+Six months in I ran a full security audit against the production app. A line-by-line review against an actual checklist, not a quick OWASP skim. **18 findings:** 4 Critical, 6 High, 7 Medium, 5 Low.
 
 **What got fixed (highlights):**
 - **API keys hashed at rest** (was: plaintext in DB). Migration was non-trivial because existing keys had no `keyHash`; would have logged out every plugin user mid-session.
@@ -193,12 +199,12 @@ Six months in I sat down and ran a full security audit against the production ap
 - **Database password rotation:** the password is weak but the database isn't externally exposed; rotated when convenient, not as fire-drill
 - **Invite token venue-name leak:** non-issue - anyone joining will see the venue name regardless
 
-**The senior-engineer move here isn't "I fixed everything."** It's "I documented every deferred item with the reason it's deferred and the trigger that should bring it back to the top of the queue." Memory entries flag these for future-me; if I forget, the next time I touch that part of the code the deferral note shows up.
+The more useful move was documenting every deferred item with the reason it was deferred and the trigger that should bring it back up. "I fixed everything" is less valuable than knowing which things you chose not to fix and why.
 
 **The bug I shipped on top of the audit:**
 Even after the audit declared rate limiting "fixed," a recent test exposed an **ordering bug**: the rate limit ran *after* API-key validation. So bad/missing keys returned 401 before any counter incremented, leaving the keyspace open to unthrottled brute-force probing - each attempt costing a database lookup. Fixed by adding a per-IP pre-filter that runs **before** key validation. Verified: 80-request burst from one IP → 60×401 + 20×429.
 
-> **Lesson captured:** Audits catch what's missing, not what's mis-ordered. "Rate limiting exists" and "rate limiting is positioned to do its job" are different claims. Test the assumption, not the checklist.
+> **Lesson captured:** Audits check whether a control exists. They don't check whether it's positioned to do its job. Test the assumption, not the checklist.
 
 ### Vignette 3: Real-time without WebSockets
 
@@ -224,13 +230,13 @@ The bus is **in-process per Node container**. With one venue-manager replica tha
 
 **The honest cost:** SSE doesn't survive a server restart - connections drop and the browser reconnects. For a live patron feed, that's a sub-second blip nobody notices. For a chat app it would be unacceptable.
 
-> **Trade-off captured:** SSE is the right pick when traffic is unidirectional and you can tolerate brief reconnect blips. WebSockets are right when you need bidirectional push or rich session protocols. Picking the simpler tool when it fits is its own engineering skill.
+> **Trade-off captured:** SSE is the right pick when traffic is unidirectional and you can tolerate brief reconnect blips. WebSockets are right when you need bidirectional push or rich session protocols. The simpler tool wins when it fits.
 
 ---
 
 ## What I'd Do Differently
 
-Asked of every senior engineer in every interview. My honest answer:
+My honest answer:
 
 1. **I'd write the plugin↔web contract as a typed schema first.** Today the contract is implicit in route handlers and hand-coded plugin DTOs. A shared OpenAPI or `zod`-derived schema would cut the chance of silent drift to near zero. The cost would be one extra build step. Worth it from day one in any future project.
 2. **I'd start with Prisma migrations, not `db push`.** Today's schema is at v19 tables. Iterating with `db push` was fast early; today every schema change is an audit-trail gap I have to reconstruct from git. The trade-off was right for week one and wrong for week 26.
@@ -256,7 +262,7 @@ Asked of every senior engineer in every interview. My honest answer:
 | Commits | 117 |
 | Active development span | ~6 months (Dec 2025 → May 2026) |
 | Production environment | Single self-hosted Linux box |
-| Container count | 7 (web, postgres, redis, cron, static, adminer, static-ehno) |
+| Container count | 7 (web, postgres, redis, cron, xiv-stats, adminer, static-ehno) |
 | Redis memory ceiling | 256 MB (`allkeys-lru`) |
 
 </div>
@@ -264,8 +270,6 @@ Asked of every senior engineer in every interview. My honest answer:
 ---
 
 ## Limitations & Roadmap
-
-Honesty over polish.
 
 **What it doesn't do (yet):**
 - No multi-region deployment - single box, single region
