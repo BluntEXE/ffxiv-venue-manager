@@ -13,7 +13,7 @@ Single self-hosted Linux server. Seven containers via Docker Compose:
 | `redis` | `redis:7-alpine` | Cache + rate limit |
 | `cron-jobs` | `alpine` + `crond` | Scheduled jobs |
 | `xiv-stats` | `node:20-alpine` | Homepage stats API |
-| `adminer` | `adminer` | DB admin UI (port 8080) |
+| `adminer` | `adminer` | DB admin UI (internal only) |
 | `static-ehno` | `nginx:alpine` | Static site at ehno.xivvenuemanager.com |
 
 Headroom snapshot (April 2026):
@@ -109,7 +109,7 @@ Every one of these is a contained change. The current architecture isn't blockin
 
 1. **Nonce-based CSP.** Moved CSP from `next.config.ts` (static) to `proxy.ts` (per-request). Per-request nonce generated via `crypto.randomUUID()`, stamped automatically on all Next.js `<script>` tags. `unsafe-inline` and `unsafe-eval` removed from `script-src`. No architectural impact; contained to `proxy.ts`.
 
-2. **Adminer added to compose stack.** Previously a manually started standalone container with no restart policy. Now managed alongside the rest of the stack on port 8080; restarts automatically.
+2. **Adminer added to compose stack.** Previously a manually started standalone container with no restart policy. Now managed alongside the rest of the stack; restarts automatically.
 
 ## What was shipped before that (April 2026)
 

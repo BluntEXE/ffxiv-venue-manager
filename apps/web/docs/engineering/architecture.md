@@ -190,7 +190,7 @@ All four authenticate via `verifyCronAuth(request)` with constant-time compariso
 ## Production deployment
 
 - Single Linux box, `docker compose up -d`
-- 7 containers: `venue-manager` (Next.js standalone), `postgres`, `redis`, `cron-jobs`, `xiv-stats` (homepage stats API), `adminer` (DB admin UI, port 8080), `static-ehno` (nginx, ehno.xivvenuemanager.com)
+- 7 containers: `venue-manager` (Next.js standalone), `postgres`, `redis`, `cron-jobs`, `xiv-stats` (homepage stats API), `adminer` (DB admin UI, internal only), `static-ehno` (nginx, ehno.xivvenuemanager.com)
 - Reverse proxy fronts the public URL (`xivvenuemanager.com`) and terminates TLS
 - GitHub Actions runs lint + `npm audit --audit-level=high` on push and weekly cron
 - Deploys are manual: SSH to server, `git pull`, `docker compose build venue-manager && docker compose up -d venue-manager`. Solo project; full continuous deployment isn't worth its failure modes when I'm the only shipper.

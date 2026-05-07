@@ -90,7 +90,7 @@ Added a React Native / Expo mobile app targeting Android (iOS deferred — cost)
 ## Phase 7: Security hardening continued (May 2026)
 
 - **Nonce-based CSP** — `unsafe-inline` and `unsafe-eval` removed from `script-src`. Per-request nonce generated in `proxy.ts`, stamped automatically on all Next.js `<script>` tags. CSP moved from `next.config.ts` (static) to `proxy.ts` (per-request).
-- **Adminer** added to Docker Compose stack — previously a standalone container with no restart policy; now managed alongside the rest of the stack on port 8080.
+- **Adminer** added to Docker Compose stack — previously a standalone container with no restart policy; now managed alongside the rest of the stack.
 - **Deprecated headers cleaned up** — `interest-cohort` removed from Permissions-Policy.
 
 ---
