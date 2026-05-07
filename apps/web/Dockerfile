@@ -37,6 +37,10 @@ COPY --from=builder --chown=nextjs:nodejs /app/apps/web/public ./apps/web/public
 # Prisma schema for runtime queries
 COPY --from=builder /app/apps/web/prisma ./apps/web/prisma
 
+# Next.js disk-lru-cache needs a writable cache dir at runtime
+RUN mkdir -p ./apps/web/.next/cache \
+ && chown -R nextjs:nodejs ./apps/web/.next/cache
+
 USER nextjs
 EXPOSE 3000
 ENV PORT=3000
