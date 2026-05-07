@@ -74,6 +74,22 @@ services:
     volumes:
       - /home/server/static-ehno:/usr/share/nginx/html:ro
 
+  xiv-stats:
+    build:
+      context: /home/server/xiv-stats
+    container_name: xiv-stats
+    restart: unless-stopped
+    ports:
+      - "3005:3001"
+    environment:
+      - DATABASE_URL=${DATABASE_URL}
+      - HOMEPAGE_API_KEY=${HOMEPAGE_API_KEY}
+    depends_on:
+      postgres:
+        condition: service_healthy
+    networks:
+      - app-network
+
   adminer:
     image: adminer:latest
     container_name: adminer
