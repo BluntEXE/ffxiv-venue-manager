@@ -15,6 +15,8 @@ const outfit = Outfit({
   subsets: ["latin"],
 })
 
+export const dynamic = "force-dynamic"
+
 export const metadata: Metadata = {
   title: "XIV Venue Manager",
   description: "The ultimate venue management platform for Final Fantasy XIV. Track events, manage staff, monitor sales, and grow your community.",
