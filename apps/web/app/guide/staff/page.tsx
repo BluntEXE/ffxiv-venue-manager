@@ -15,7 +15,7 @@ export default function StaffGuidePage() {
           <header className="space-y-3">
             <h1 className="text-4xl font-bold tracking-tight">Staff Guide</h1>
             <p className="text-xl text-muted-foreground">
-              Everything you need as a staff member at an FFXIV venue using XIV Venue Manager.
+              Your guide as an XIV Venue Manager staff member.
             </p>
           </header>
 
@@ -26,7 +26,7 @@ export default function StaffGuidePage() {
             <ol className="space-y-3 pl-2 text-sm leading-relaxed">
               <li className="flex items-start gap-3">
                 <span className="font-mono text-xs bg-primary/20 text-primary rounded-full w-6 h-6 flex items-center justify-center shrink-0 mt-0.5">1</span>
-                <span><span className="font-medium">Accept your invite</span> &mdash; Your manager will send you an invite link. Click it and sign in with Discord.</span>
+                <span><span className="font-medium">Accept your invite.</span> Your manager will send an invite link; click it and sign in with Discord.</span>
               </li>
               <li className="flex items-start gap-3">
                 <span className="font-mono text-xs bg-primary/20 text-primary rounded-full w-6 h-6 flex items-center justify-center shrink-0 mt-0.5">2</span>
@@ -45,7 +45,7 @@ export default function StaffGuidePage() {
               </li>
               <li className="flex items-start gap-3">
                 <span className="font-mono text-xs bg-primary/20 text-primary rounded-full w-6 h-6 flex items-center justify-center shrink-0 mt-0.5">3</span>
-                <span><span className="font-medium">Configure the plugin</span> &mdash; Open it with <code className="bg-muted/60 px-1.5 py-0.5 rounded text-xs font-mono">/vm</code>, go to Settings, paste your API key (from the website under Settings &gt; API Keys), set the server URL to <code className="bg-muted/60 px-1.5 py-0.5 rounded text-xs font-mono">https://xivvenuemanager.com</code>, and select your venue.</span>
+                <span><span className="font-medium">Configure the plugin:</span> Open it with <code className="bg-muted/60 px-1.5 py-0.5 rounded text-xs font-mono">/vm</code>, go to Settings, paste your API key (from the website under Settings &gt; API Keys), set the server URL to <code className="bg-muted/60 px-1.5 py-0.5 rounded text-xs font-mono">https://xivvenuemanager.com</code>, and select your venue.</span>
               </li>
             </ol>
           </section>
@@ -54,10 +54,10 @@ export default function StaffGuidePage() {
           <section className="space-y-6">
             <h2 className="text-2xl font-semibold border-b border-white/10 pb-2">Your Dashboard</h2>
 
-            <p className="text-sm leading-relaxed">When you log in to the website, your venue home page shows:</p>
+            <p className="text-sm leading-relaxed">Your venue dashboard shows:</p>
             <ul className="space-y-2 pl-2 text-sm leading-relaxed">
               <li><span className="font-medium">My Shifts</span> &mdash; Your upcoming and active shifts</li>
-              <li><span className="font-medium">Upcoming Events</span> &mdash; Events happening soon at your venue. Some events may be auto-synced from <a href="https://partake.gg" target="_blank" rel="noopener noreferrer" className="text-primary underline underline-offset-2 hover:text-primary/80">Partake.gg</a> &mdash; these show a <span className="font-medium text-indigo-400">Partake</span> badge and update automatically.</li>
+              <li><span className="font-medium">Upcoming Events</span> &mdash; Events happening soon at your venue. Some events may be auto-synced from <a href="https://partake.gg" target="_blank" rel="noopener noreferrer" className="text-primary underline underline-offset-2 hover:text-primary/80">Partake.gg</a>; these show a <span className="font-medium text-indigo-400">Partake</span> badge and update automatically.</li>
             </ul>
           </section>
 
@@ -74,7 +74,7 @@ export default function StaffGuidePage() {
                 </div>
                 <div className="bg-muted/30 rounded-lg p-3">
                   <code className="text-xs font-mono font-medium">/vm sale! 500 Ehno</code>
-                  <p className="text-xs text-muted-foreground mt-1">Log sale instantly without opening UI &mdash; chat confirmation shown</p>
+                  <p className="text-xs text-muted-foreground mt-1">Log sale instantly without opening UI; chat confirmation shown</p>
                 </div>
                 <div className="bg-muted/30 rounded-lg p-3">
                   <code className="text-xs font-mono font-medium">/vm target 500</code>
@@ -82,7 +82,7 @@ export default function StaffGuidePage() {
                 </div>
                 <div className="bg-muted/30 rounded-lg p-3">
                   <code className="text-xs font-mono font-medium">/vm target! 500</code>
-                  <p className="text-xs text-muted-foreground mt-1">Log sale instantly for your current target &mdash; no UI needed</p>
+                  <p className="text-xs text-muted-foreground mt-1">Log sale instantly for your current target; no UI needed</p>
                 </div>
               </div>
             </div>
@@ -97,7 +97,7 @@ export default function StaffGuidePage() {
           <section className="space-y-6">
             <h2 className="text-2xl font-semibold border-b border-white/10 pb-2">Patron Tracking</h2>
 
-            <p className="text-sm leading-relaxed">The plugin automatically tracks when patrons enter and leave your venue&apos;s housing plot. You don&apos;t need to do anything &mdash; it syncs in the background.</p>
+            <p className="text-sm leading-relaxed">The plugin tracks when patrons enter and leave your venue&apos;s housing plot, syncing in the background.</p>
 
             <ul className="space-y-2 pl-2 text-sm leading-relaxed list-disc list-inside">
               <li><span className="font-medium">Event-gated by default:</span> patrons are only logged while a published event is active. Toggle in plugin Settings if you want always-on tracking.</li>
@@ -135,7 +135,7 @@ export default function StaffGuidePage() {
 
             <div className="space-y-3">
               <h3 className="text-lg font-medium text-muted-foreground">Server Time (ST)</h3>
-              <p className="text-sm leading-relaxed">All times are displayed in <span className="font-medium">Server Time (ST)</span>, which is the standard FFXIV server time for your data center. This keeps everyone on the same page regardless of their local timezone.</p>
+              <p className="text-sm leading-relaxed">All times show in <span className="font-medium">Server Time (ST)</span>, the standard FFXIV time for your data center. Your timezone doesn&apos;t matter.</p>
             </div>
           </section>
 
@@ -143,20 +143,20 @@ export default function StaffGuidePage() {
           <section className="space-y-6">
             <h2 className="text-2xl font-semibold border-b border-white/10 pb-2">Timeline</h2>
 
-            <p className="text-sm leading-relaxed">The Timeline page shows a live feed of all venue activity &mdash; sales and patron visits. You can filter by:</p>
+            <p className="text-sm leading-relaxed">The Timeline shows a live feed of venue activity: sales and patron visits. Filter by:</p>
             <ul className="list-disc list-inside space-y-1.5 pl-4 text-sm text-muted-foreground">
               <li><span className="font-medium text-foreground">All Activity</span> &mdash; Everything</li>
               <li><span className="font-medium text-foreground">Sales</span> &mdash; Just transactions</li>
               <li><span className="font-medium text-foreground">Patrons</span> &mdash; Just enter/leave events</li>
             </ul>
-            <p className="text-sm leading-relaxed text-muted-foreground">New events appear in real-time without refreshing the page.</p>
+            <p className="text-sm leading-relaxed text-muted-foreground">New entries appear without refreshing.</p>
           </section>
 
           {/* Live Mode */}
           <section className="space-y-6">
             <h2 className="text-2xl font-semibold border-b border-white/10 pb-2">Live Mode</h2>
 
-            <p className="text-sm leading-relaxed">During active events, the Live page shows real-time stats: patron count, sales, revenue (depending on your venue&apos;s visibility settings &mdash; your manager controls what you can see), and a live activity feed.</p>
+            <p className="text-sm leading-relaxed">During active events, the Live page shows patron count, sales, revenue (your manager&apos;s visibility settings control what you see), and a live activity feed.</p>
           </section>
 
           {/* Tips */}
@@ -166,7 +166,7 @@ export default function StaffGuidePage() {
             <ul className="space-y-2.5 pl-2 text-sm leading-relaxed">
               <li className="flex items-start gap-2">
                 <span className="text-emerald-500 mt-0.5">&#10003;</span>
-                <span>Use <code className="bg-muted/60 px-1.5 py-0.5 rounded text-xs font-mono">/vm sale!</code> or <code className="bg-muted/60 px-1.5 py-0.5 rounded text-xs font-mono">/vm target!</code> for fast logging during busy events &mdash; no UI interruption</span>
+                <span>Use <code className="bg-muted/60 px-1.5 py-0.5 rounded text-xs font-mono">/vm sale!</code> or <code className="bg-muted/60 px-1.5 py-0.5 rounded text-xs font-mono">/vm target!</code> for fast logging during busy events; no UI interruption.</span>
               </li>
               <li className="flex items-start gap-2">
                 <span className="text-emerald-500 mt-0.5">&#10003;</span>

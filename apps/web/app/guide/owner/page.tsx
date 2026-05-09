@@ -15,7 +15,7 @@ export default function OwnerManagerGuidePage() {
           <header className="space-y-3">
             <h1 className="text-4xl font-bold tracking-tight">Owner &amp; Manager Guide</h1>
             <p className="text-xl text-muted-foreground">
-              Complete guide to setting up and managing your venue with XIV Venue Manager.
+              Setup and management reference for XIV Venue Manager.
             </p>
           </header>
 
@@ -51,7 +51,7 @@ export default function OwnerManagerGuidePage() {
 
             <div className="space-y-3">
               <h3 className="text-lg font-medium text-muted-foreground">3. Configure Venue Settings</h3>
-              <p className="text-sm leading-relaxed">Go to Settings for your venue to configure:</p>
+              <p className="text-sm leading-relaxed">In venue Settings:</p>
               <ul className="space-y-3 pl-2 text-sm leading-relaxed">
                 <li className="space-y-1.5">
                   <span className="font-medium">Visibility Controls</span> &mdash; Control what staff can see:
@@ -90,14 +90,14 @@ export default function OwnerManagerGuidePage() {
 
             <div className="space-y-3">
               <h3 className="text-lg font-medium text-muted-foreground">Temporary Roles (Deputize)</h3>
-              <p className="text-sm leading-relaxed">Grant someone a higher role for a limited time &mdash; useful when you&apos;re away and need a trusted staff member to cover manager duties.</p>
+              <p className="text-sm leading-relaxed">Grant someone a higher role for a set time, useful when you need cover.</p>
               <ul className="space-y-2 pl-2 text-sm leading-relaxed list-disc list-inside">
                 <li>On the Staff page, open a member&apos;s card and click <span className="font-medium">Manage Role</span></li>
                 <li>Set a <span className="font-medium">Temporary Role</span> (e.g. Manager) and pick an expiry</li>
                 <li>They get the elevated role immediately and revert to their permanent role when it expires</li>
                 <li>Cards show a <span className="font-medium text-yellow-400">Temporary</span> badge while active; the badge turns warning-colored in the last 24h</li>
               </ul>
-              <p className="text-sm leading-relaxed text-muted-foreground">Permanent role is preserved underneath, so you never lose their base assignment.</p>
+              <p className="text-sm leading-relaxed text-muted-foreground">Their permanent role stays in place.</p>
             </div>
           </section>
 
@@ -112,7 +112,7 @@ export default function OwnerManagerGuidePage() {
 
             <div className="space-y-3">
               <h3 className="text-lg font-medium text-muted-foreground">Event Templates</h3>
-              <p className="text-sm leading-relaxed">For recurring events, create templates that save the title, type, description, and default times. Create new events from templates with one click.</p>
+              <p className="text-sm leading-relaxed">For recurring events, create templates that save the title, type, description, and default times. Create new events from a template.</p>
             </div>
 
             <div className="space-y-3">
@@ -124,7 +124,7 @@ export default function OwnerManagerGuidePage() {
                 <li>Enter your Partake Team ID (found in your Partake team URL, e.g. <code className="bg-muted/60 px-1.5 py-0.5 rounded text-xs font-mono">partake.gg/team/123</code>)</li>
                 <li>Click <span className="font-medium">Save Settings</span>, then <span className="font-medium">Sync Now</span> to pull events immediately</li>
               </ol>
-              <p className="text-sm leading-relaxed text-muted-foreground">Once linked, events sync automatically every hour. Synced events show a <span className="font-medium text-indigo-400">Partake</span> badge on the events list and detail pages. The sync creates new events and updates existing ones if the title or times change on Partake.</p>
+              <p className="text-sm leading-relaxed text-muted-foreground">Once linked, events sync every hour. Synced events show a <span className="font-medium text-indigo-400">Partake</span> badge on the events list and detail pages. XIV Venue Manager creates new events and updates existing ones if the title or times change on Partake.</p>
             </div>
 
             <div className="space-y-3">
@@ -136,7 +136,7 @@ export default function OwnerManagerGuidePage() {
                 <li>Live activity feed (every sale and patron movement appears instantly)</li>
                 <li>Event duration timer</li>
               </ul>
-              <p className="text-sm leading-relaxed text-muted-foreground">Powered by Server-Sent Events &mdash; no refreshing needed.</p>
+              <p className="text-sm leading-relaxed text-muted-foreground">Powered by Server-Sent Events. No refresh needed.</p>
             </div>
           </section>
 
@@ -193,7 +193,7 @@ export default function OwnerManagerGuidePage() {
                 </div>
                 <div className="bg-muted/30 rounded-lg p-3">
                   <code className="text-xs font-mono font-medium">/vm sale! 500 Ehno</code>
-                  <p className="text-xs text-muted-foreground mt-1">Log sale instantly without opening UI &mdash; chat confirmation shown</p>
+                  <p className="text-xs text-muted-foreground mt-1">Log sale instantly without opening UI; chat confirmation shown</p>
                 </div>
                 <div className="bg-muted/30 rounded-lg p-3">
                   <code className="text-xs font-mono font-medium">/vm target 500</code>
@@ -201,7 +201,7 @@ export default function OwnerManagerGuidePage() {
                 </div>
                 <div className="bg-muted/30 rounded-lg p-3">
                   <code className="text-xs font-mono font-medium">/vm target! 500</code>
-                  <p className="text-xs text-muted-foreground mt-1">Log sale instantly for your current target &mdash; no UI needed</p>
+                  <p className="text-xs text-muted-foreground mt-1">Log sale instantly for your current target; no UI needed</p>
                 </div>
               </div>
             </div>
@@ -239,7 +239,7 @@ export default function OwnerManagerGuidePage() {
             <ul className="list-disc list-inside space-y-1.5 pl-4 text-sm leading-relaxed">
               <li>Sale Logged, Daily Sales Summary</li>
               <li>Task Created/Completed, Staff Joined</li>
-              <li>Partake Event Mirror — auto-posts your Partake events to Discord (with flyer images) when they fall within 7 days of start, and keeps the post in sync with edits and cancellations</li>
+              <li>Partake Event Mirror: auto-posts your Partake events to Discord (with flyer images) within 7 days of the start date, and updates the post for edits and cancellations</li>
             </ul>
             <p className="text-sm leading-relaxed text-muted-foreground">Route different types to different channels (e.g., revenue to a private channel, events to a public one). The Partake Event Mirror requires your venue to have a linked Partake team in Settings.</p>
           </section>
@@ -264,7 +264,7 @@ export default function OwnerManagerGuidePage() {
             <ul className="space-y-2.5 pl-2 text-sm leading-relaxed">
               <li className="flex items-start gap-2">
                 <span className="text-emerald-500 mt-0.5">&#10003;</span>
-                <span>Use <span className="font-medium">Live Mode</span> during events to monitor patron flow and revenue in real-time</span>
+                <span>Use <span className="font-medium">Live Mode</span> during events to watch patron flow and revenue.</span>
               </li>
               <li className="flex items-start gap-2">
                 <span className="text-emerald-500 mt-0.5">&#10003;</span>
@@ -284,7 +284,7 @@ export default function OwnerManagerGuidePage() {
               </li>
               <li className="flex items-start gap-2">
                 <span className="text-emerald-500 mt-0.5">&#10003;</span>
-                <span>Link your <span className="font-medium">Partake.gg</span> team in Settings to auto-import events &mdash; no manual event creation needed</span>
+                <span>Link your <span className="font-medium">Partake.gg</span> team in Settings to import events without creating them manually.</span>
               </li>
             </ul>
           </section>
