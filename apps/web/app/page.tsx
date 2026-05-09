@@ -95,14 +95,12 @@ export default async function Home() {
       <section className="container mx-auto px-4 py-16 md:py-24">
         <div className="flex flex-col items-center text-center space-y-8">
           <h1 className="text-4xl md:text-6xl lg:text-7xl font-bold tracking-tight max-w-4xl">
-            The Ultimate Venue Management Platform for{" "}
-            <span className="text-primary">Final Fantasy XIV</span>
+            Venue management built for{" "}
+            <span className="text-primary">FFXIV</span>
           </h1>
 
           <p className="text-xl md:text-2xl text-muted-foreground max-w-2xl">
-            Run your FFXIV venue like a pro. Track events, manage staff, log sales
-            in real-time, schedule shifts, and grow your community - all from one
-            powerful dashboard and an in-game Dalamud plugin.
+            Track events, log sales, and manage staff from a web dashboard or inside FFXIV via Dalamud.
           </p>
 
           <div className="flex flex-col sm:flex-row gap-4 mt-4">
@@ -174,10 +172,9 @@ export default async function Home() {
             <LatestPluginVersion />
           </div>
           <p className="text-lg text-muted-foreground">
-            Log sales, track patrons, and manage shifts without ever leaving
-            the game. The XIV Venue Manager plugin runs inside FFXIV via
-            Dalamud, syncing every transaction and patron visit to your
-            web dashboard in real-time.
+            Log sales, track patrons, and manage shifts without leaving
+            the game. The plugin runs inside FFXIV, syncing every sale and
+            patron visit to your dashboard as it happens.
           </p>
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 pt-4">
             <div className="p-4 rounded-lg bg-muted/50 border border-white/5">
@@ -206,12 +203,8 @@ export default async function Home() {
       <section id="features" className="container mx-auto px-4 py-16 md:py-24">
         <div className="text-center mb-16">
           <h2 className="text-3xl md:text-4xl font-bold mb-4">
-            Everything You Need to Run Your Venue
+            Tools built for FFXIV venues
           </h2>
-          <p className="text-xl text-muted-foreground max-w-2xl mx-auto">
-            From scheduling events to tracking revenue, we have you covered
-            with powerful tools built specifically for FFXIV venues.
-          </p>
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
@@ -346,16 +339,16 @@ export default async function Home() {
       <section className="border-y bg-muted/30">
         <div className="container mx-auto px-4 py-16 md:py-24">
           <div className="text-center mb-12">
-            <h2 className="text-3xl md:text-4xl font-bold mb-4">Plus So Much More</h2>
+            <h2 className="text-3xl md:text-4xl font-bold mb-4">Included</h2>
           </div>
 
           <div className="grid grid-cols-2 md:grid-cols-4 gap-6 text-center">
             {[
               { icon: ShoppingBag, title: "Service Catalog", blurb: "Define your offerings with prices" },
               { icon: Banknote, title: "Payroll Tracking", blurb: "Track staff earnings and tips" },
-              { icon: Building2, title: "Multi-Venue", blurb: "Manage multiple venues easily" },
+              { icon: Building2, title: "Multi-Venue", blurb: "Manage multiple venues" },
               { icon: Lock, title: "Privacy Controls", blurb: "Control what staff can see" },
-              { icon: Smartphone, title: "Mobile Friendly", blurb: "Works great on any device" },
+              { icon: Smartphone, title: "Mobile Friendly", blurb: "Works on any device" },
               { icon: Bell, title: "Discord Webhooks", blurb: "Auto-post events, sales, tasks" },
               { icon: Link2, title: "Partake.gg Sync", blurb: "Auto-import events from Partake" },
               { icon: CheckCircle2, title: "Task Management", blurb: "Assign, prioritize, track" },
@@ -382,11 +375,10 @@ export default async function Home() {
               </IconBadge>
             </div>
             <h2 className="text-3xl md:text-4xl font-bold mb-4">
-              Get Started with Our Guides
+              Start with a guide
             </h2>
             <p className="text-lg text-muted-foreground">
-              Step-by-step guides tailored to your role. Everything you need
-              to hit the ground running.
+              Pick a guide for your role and start.
             </p>
           </div>
 
@@ -435,18 +427,20 @@ export default async function Home() {
         <div className="container mx-auto px-4 py-16 md:py-24">
           <div className="text-center space-y-8">
             <h2 className="text-3xl md:text-4xl font-bold">
-              Ready to Level Up Your Venue?
+              Get your venue running.
             </h2>
             <p className="text-xl text-muted-foreground max-w-2xl mx-auto">
-              Join venue owners across Eorzea who are already using XIV Venue Manager
-              to streamline their operations and delight their patrons.
+              Your sales, staff hours, and patron counts. One dashboard.
             </p>
-            <Button asChild size="lg" className="text-lg px-8 py-6 group">
-              <Link href="/auth/signin">
-                Start Managing Your Venue
-                <ArrowRight className="ml-2 h-5 w-5 transition-transform group-hover:translate-x-1" />
-              </Link>
-            </Button>
+            <div className="flex flex-col items-center gap-2">
+              <Button asChild size="lg" className="text-lg px-8 py-6 group">
+                <Link href="/auth/signin">
+                  Start Managing Your Venue
+                  <ArrowRight className="ml-2 h-5 w-5 transition-transform group-hover:translate-x-1" />
+                </Link>
+              </Button>
+              <p className="text-sm text-muted-foreground">Sign in with Discord in 30 seconds.</p>
+            </div>
           </div>
         </div>
       </section>
