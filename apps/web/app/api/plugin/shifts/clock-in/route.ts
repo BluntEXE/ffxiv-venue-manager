@@ -108,7 +108,7 @@ export async function POST(request: NextRequest) {
 
     if (shift.status !== "SCHEDULED") {
       return NextResponse.json(
-        { error: `Cannot clock into a ${shift.status.toLowerCase()} shift` },
+        { error: `Cannot clock in — shift is already ${shift.status.toLowerCase()}` },
         { status: 400 }
       )
     }
@@ -143,7 +143,7 @@ export async function POST(request: NextRequest) {
     if (writeResult.count === 0) {
       const current = await prisma.shift.findUnique({ where: { id: shift.id } })
       return NextResponse.json(
-        { error: `Cannot clock into a ${current?.status.toLowerCase() ?? "unknown"} shift` },
+        { error: `Cannot clock in — shift is already ${current?.status.toLowerCase() ?? "unknown"}` },
         { status: 400 }
       )
     }

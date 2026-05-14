@@ -75,7 +75,7 @@ export async function POST(request: NextRequest) {
 
     if (shift.status !== "ACTIVE") {
       return NextResponse.json(
-        { error: `Cannot clock out of a ${shift.status.toLowerCase()} shift` },
+        { error: `Cannot clock out — shift is already ${shift.status.toLowerCase()}` },
         { status: 400 }
       )
     }
@@ -98,7 +98,7 @@ export async function POST(request: NextRequest) {
     if (writeResult.count === 0) {
       const current = await prisma.shift.findUnique({ where: { id: shift.id } })
       return NextResponse.json(
-        { error: `Cannot clock out of a ${current?.status.toLowerCase() ?? "unknown"} shift` },
+        { error: `Cannot clock out — shift is already ${current?.status.toLowerCase() ?? "unknown"}` },
         { status: 400 }
       )
     }
