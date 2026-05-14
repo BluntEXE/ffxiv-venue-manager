@@ -90,22 +90,26 @@ export async function POST(request: NextRequest) {
       ? Math.round(calculatedHours * 100) / 100
       : null
 
-    const updated = await prisma.shift.update({
-      where: { id: shift.id },
-      data: {
-        actualEnd: now,
-        status: "COMPLETED",
-        hoursWorked: roundedHours,
-      },
+    const writeResult = await prisma.shift.updateMany({
+      where: { id: shift.id, status: "ACTIVE" },
+      data: { actualEnd: now, status: "COMPLETED", hoursWorked: roundedHours },
     })
+
+    if (writeResult.count === 0) {
+      const current = await prisma.shift.findUnique({ where: { id: shift.id } })
+      return NextResponse.json(
+        { error: `Cannot clock out of a ${current?.status.toLowerCase() ?? "unknown"} shift` },
+        { status: 400 }
+      )
+    }
 
     return NextResponse.json({
       success: true,
       shift: {
-        id: updated.id,
-        actualStart: updated.actualStart?.toISOString() ?? null,
-        actualEnd: updated.actualEnd?.toISOString() ?? null,
-        status: updated.status,
+        id: shift.id,
+        actualStart: shift.actualStart?.toISOString() ?? null,
+        actualEnd: now.toISOString(),
+        status: "COMPLETED",
         hoursWorked: roundedHours,
       },
     })

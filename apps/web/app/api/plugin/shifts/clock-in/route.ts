@@ -135,13 +135,18 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    const updated = await prisma.shift.update({
-      where: { id: shift.id },
-      data: {
-        actualStart: now,
-        status: "ACTIVE",
-      },
+    const writeResult = await prisma.shift.updateMany({
+      where: { id: shift.id, status: "SCHEDULED" },
+      data: { actualStart: now, status: "ACTIVE" },
     })
+
+    if (writeResult.count === 0) {
+      const current = await prisma.shift.findUnique({ where: { id: shift.id } })
+      return NextResponse.json(
+        { error: `Cannot clock into a ${current?.status.toLowerCase() ?? "unknown"} shift` },
+        { status: 400 }
+      )
+    }
 
     // Queue VENUE_OPENED_NOW notifications for all followers (best-effort)
     queueOpenedNowNotifications(shift.venueId, now).catch(() => {})
@@ -149,9 +154,9 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({
       success: true,
       shift: {
-        id: updated.id,
-        actualStart: updated.actualStart?.toISOString() ?? null,
-        status: updated.status,
+        id: shift.id,
+        actualStart: now.toISOString(),
+        status: "ACTIVE",
       },
     })
   } catch (error) {
