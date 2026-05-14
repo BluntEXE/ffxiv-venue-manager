@@ -10,3 +10,29 @@
 - search:
     provider: duckduckgo
     target: _blank
+
+- customapi:
+    title: XIV Venue Manager
+    url: https://xivvenuemanager.com/api/homepage
+    headers:
+      X-API-Key: "{{HOMEPAGE_VAR_XIV_API_KEY}}"
+    refreshInterval: 60000
+    mappings:
+      - field: totalVenues
+        label: Venues
+        format: number
+      - field: venuesActive30d
+        label: Active 30d
+        format: number
+      - field: pluginInstalls
+        label: Plugin Keys
+        format: number
+      - field: patronEntries
+        label: Patron Visits
+        format: number
+      - field: totalTransactions
+        label: Sales Logged
+        format: number
+      - field: gilTracked
+        label: Gil Tracked
+        format: number

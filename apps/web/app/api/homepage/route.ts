@@ -1,6 +1,5 @@
 import { NextResponse } from "next/server"
-
-export const dynamic = 'force-dynamic'
+import { getPublicStats } from "@/lib/public-stats"
 
 const VALID_API_KEY = process.env.HOMEPAGE_API_KEY
 
@@ -18,22 +17,21 @@ export async function GET(request: Request) {
     )
   }
 
-  const stats = {
-    totalUsers: 20,
-    totalVenues: 2,
-    totalEvents: 7,
-    activeEvents: 0,
-    upcomingEvents: [],
-    totalTransactions: 25,
-    totalMemberships: 12,
-    totalRoles: 24,
-    totalServices: 13,
-    totalTasks: 8,
-    lastUpdated: new Date().toISOString()
-  }
+  const s = await getPublicStats()
 
-  const response = NextResponse.json(stats)
-  response.headers.set("Cache-Control", "public, s-maxage=30")
+  const response = NextResponse.json({
+    totalVenues: s.venuesTotal,
+    venuesActive30d: s.venuesActive30d,
+    totalEvents: s.eventsTotal,
+    partakeEventsSynced: s.partakeEventsSynced,
+    totalTransactions: s.salesTotal,
+    gilTracked: s.gilTracked,
+    pluginInstalls: s.pluginInstalls,
+    patronEntries: s.patronEntriesTotal,
+    dataCenters: s.dataCenters,
+    lastUpdated: s.generatedAt,
+  })
+  response.headers.set("Cache-Control", "public, s-maxage=60")
   response.headers.set("Access-Control-Allow-Origin", "*")
 
   return response
