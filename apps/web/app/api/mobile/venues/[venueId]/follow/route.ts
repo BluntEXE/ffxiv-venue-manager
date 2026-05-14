@@ -1,27 +1,17 @@
 // POST   /api/mobile/venues/:venueId/follow   — follow
 // DELETE /api/mobile/venues/:venueId/follow   — unfollow
-// GET    /api/mobile/venues/:venueId/follow   — check follow status
+// GET    /api/mobile/venues/:venueId/follow   — check follow status (returns false if unauthenticated)
 import { NextResponse } from "next/server"
-import { verifyMobileJwt } from "@/lib/auth/mobile-auth"
+import { requireMobileAuth, isAuthFailure } from "@/lib/mobile-auth-guard"
 import { prisma } from "@/lib/prisma"
-
-async function getUserId(req: Request) {
-  const auth = req.headers.get("Authorization")?.replace("Bearer ", "")
-  if (!auth) return null
-  try {
-    const p = await verifyMobileJwt(auth)
-    return p.sub
-  } catch {
-    return null
-  }
-}
 
 export async function GET(
   req: Request,
   { params }: { params: Promise<{ venueId: string }> }
 ) {
   const { venueId } = await params
-  const userId = await getUserId(req)
+  const result = await requireMobileAuth(req)
+  const userId = isAuthFailure(result) ? null : result
   if (!userId) return NextResponse.json({ following: false })
 
   const follow = await prisma.venueFollow.findUnique({
@@ -37,8 +27,9 @@ export async function POST(
   { params }: { params: Promise<{ venueId: string }> }
 ) {
   const { venueId } = await params
-  const userId = await getUserId(req)
-  if (!userId) return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
+  const result = await requireMobileAuth(req)
+  if (isAuthFailure(result)) return result
+  const userId = result
 
   // Use global follow visibility preference as the default
   const prefs = await prisma.notificationPreference.findUnique({
@@ -61,8 +52,9 @@ export async function DELETE(
   { params }: { params: Promise<{ venueId: string }> }
 ) {
   const { venueId } = await params
-  const userId = await getUserId(req)
-  if (!userId) return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
+  const result = await requireMobileAuth(req)
+  if (isAuthFailure(result)) return result
+  const userId = result
 
   await prisma.venueFollow.deleteMany({ where: { userId, venueId } })
   return NextResponse.json({ following: false })

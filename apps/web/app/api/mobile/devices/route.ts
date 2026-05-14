@@ -1,18 +1,11 @@
 import { NextResponse } from "next/server"
-import { verifyMobileJwt } from "@/lib/auth/mobile-auth"
+import { requireMobileAuth, isAuthFailure } from "@/lib/mobile-auth-guard"
 import { prisma } from "@/lib/prisma"
 
 export async function POST(req: Request) {
-  const auth = req.headers.get("Authorization")?.replace("Bearer ", "")
-  if (!auth) return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
-
-  let userId: string
-  try {
-    const payload = await verifyMobileJwt(auth)
-    userId = payload.sub
-  } catch {
-    return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
-  }
+  const result = await requireMobileAuth(req)
+  if (isAuthFailure(result)) return result
+  const userId = result
 
   const { token, platform = "android" } = await req.json()
   if (!token || typeof token !== "string") {
@@ -29,16 +22,9 @@ export async function POST(req: Request) {
 }
 
 export async function DELETE(req: Request) {
-  const auth = req.headers.get("Authorization")?.replace("Bearer ", "")
-  if (!auth) return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
-
-  let userId: string
-  try {
-    const payload = await verifyMobileJwt(auth)
-    userId = payload.sub
-  } catch {
-    return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
-  }
+  const result = await requireMobileAuth(req)
+  if (isAuthFailure(result)) return result
+  const userId = result
 
   const { token } = await req.json()
   await prisma.deviceToken.deleteMany({ where: { token, userId } })

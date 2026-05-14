@@ -1,33 +1,25 @@
 import { NextResponse } from "next/server"
-import { verifyMobileJwt } from "@/lib/auth/mobile-auth"
+import { requireMobileAuth, isAuthFailure } from "@/lib/mobile-auth-guard"
 import { prisma } from "@/lib/prisma"
 
-async function getUser(req: Request) {
-  const auth = req.headers.get("Authorization")?.replace("Bearer ", "")
-  if (!auth) return null
-  try {
-    return await verifyMobileJwt(auth)
-  } catch {
-    return null
-  }
-}
-
 export async function GET(req: Request) {
-  const payload = await getUser(req)
-  if (!payload) return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
+  const result = await requireMobileAuth(req)
+  if (isAuthFailure(result)) return result
+  const userId = result
 
   const prefs = await prisma.notificationPreference.upsert({
-    where: { userId: payload.sub },
+    where: { userId },
     update: {},
-    create: { userId: payload.sub },
+    create: { userId },
   })
 
   return NextResponse.json(prefs)
 }
 
 export async function PATCH(req: Request) {
-  const payload = await getUser(req)
-  if (!payload) return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
+  const result = await requireMobileAuth(req)
+  if (isAuthFailure(result)) return result
+  const userId = result
 
   const body = await req.json()
   const allowed = ["shiftReminder", "venueOpenedNow", "eventReminder", "followVisibility"] as const
@@ -37,9 +29,9 @@ export async function PATCH(req: Request) {
   }
 
   const prefs = await prisma.notificationPreference.upsert({
-    where: { userId: payload.sub },
+    where: { userId },
     update: data,
-    create: { userId: payload.sub, ...data },
+    create: { userId, ...data },
   })
 
   return NextResponse.json(prefs)

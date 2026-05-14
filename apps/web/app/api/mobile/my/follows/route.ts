@@ -1,19 +1,12 @@
 // GET /api/mobile/my/follows — list followed venues with current open status
 import { NextResponse } from "next/server"
-import { verifyMobileJwt } from "@/lib/auth/mobile-auth"
+import { requireMobileAuth, isAuthFailure } from "@/lib/mobile-auth-guard"
 import { prisma } from "@/lib/prisma"
 
 export async function GET(req: Request) {
-  const auth = req.headers.get("Authorization")?.replace("Bearer ", "")
-  if (!auth) return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
-
-  let userId: string
-  try {
-    const p = await verifyMobileJwt(auth)
-    userId = p.sub
-  } catch {
-    return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
-  }
+  const result = await requireMobileAuth(req)
+  if (isAuthFailure(result)) return result
+  const userId = result
 
   const now = new Date()
 

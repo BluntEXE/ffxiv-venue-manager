@@ -1,20 +1,13 @@
 // GET /api/mobile/operator/venues
 // Returns all venues where the authenticated user is OWNER or MANAGER
 import { NextResponse } from "next/server"
-import { verifyMobileJwt } from "@/lib/auth/mobile-auth"
+import { requireMobileAuth, isAuthFailure } from "@/lib/mobile-auth-guard"
 import { prisma } from "@/lib/prisma"
 
 export async function GET(req: Request) {
-  const auth = req.headers.get("Authorization")?.replace("Bearer ", "")
-  if (!auth) return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
-
-  let userId: string
-  try {
-    const payload = await verifyMobileJwt(auth)
-    userId = payload.sub
-  } catch {
-    return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
-  }
+  const result = await requireMobileAuth(req)
+  if (isAuthFailure(result)) return result
+  const userId = result
 
   const memberships = await prisma.membership.findMany({
     where: {
