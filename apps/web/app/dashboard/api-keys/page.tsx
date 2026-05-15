@@ -43,10 +43,11 @@ interface Venue {
 }
 
 export default function UnifiedApiKeysPage() {
+  const [memberVenues, setMemberVenues] = useState<Venue[]>([])
   const [ownedVenues, setOwnedVenues] = useState<Venue[]>([])
   const [apiKeys, setApiKeys] = useState<ApiKey[]>([])
   const [newKeyName, setNewKeyName] = useState("")
-  // Empty string means "account-wide" (all my venues).
+  // Empty string means "account-wide" (all my venues, owners only).
   const [selectedVenueId, setSelectedVenueId] = useState<string>("")
   const [isLoading, setIsLoading] = useState(true)
   const [isCreating, setIsCreating] = useState(false)
@@ -75,13 +76,18 @@ export default function UnifiedApiKeysPage() {
 
       if (venuesRes.ok) {
         const venues: Venue[] = await venuesRes.json()
-        // Only venues where the user is an active OWNER can have keys.
-        const owned = venues.filter((v) =>
-          v.memberships?.some(
-            (m) => m.role === "OWNER" && m.status === "active"
-          )
+        const active = venues.filter((v) =>
+          v.memberships?.some((m) => m.status === "active")
         )
+        const owned = active.filter((v) =>
+          v.memberships?.some((m) => m.role === "OWNER" && m.status === "active")
+        )
+        setMemberVenues(active)
         setOwnedVenues(owned)
+        // Non-owners must pick a specific venue; pre-select the first one.
+        if (owned.length === 0 && active.length > 0) {
+          setSelectedVenueId(active[0].id)
+        }
       }
 
       if (keysRes.ok) {
@@ -179,7 +185,8 @@ export default function UnifiedApiKeysPage() {
     )
   }
 
-  const hasOwnedVenues = ownedVenues.length > 0
+  const hasMemberVenues = memberVenues.length > 0
+  const canCreateAccountWide = ownedVenues.length > 0
 
   return (
     <div className="container mx-auto p-4 md:p-6 lg:p-8 max-w-4xl">
@@ -214,10 +221,10 @@ export default function UnifiedApiKeysPage() {
         </Alert>
       )}
 
-      {!hasOwnedVenues ? (
+      {!hasMemberVenues ? (
         <Card>
           <CardContent className="py-8 text-center text-muted-foreground">
-            You need to own at least one venue before you can create API keys.{" "}
+            You need to be a member of at least one venue before you can create API keys.{" "}
             <Link href="/venues/new" className="text-primary hover:underline">
               Create one now
             </Link>
@@ -261,10 +268,12 @@ export default function UnifiedApiKeysPage() {
                   onChange={(e) => setSelectedVenueId(e.target.value)}
                   className="mt-1 flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
                 >
-                  <option value="">
-                    All my venues (recommended - one key, works everywhere)
-                  </option>
-                  {ownedVenues.map((v) => (
+                  {canCreateAccountWide && (
+                    <option value="">
+                      All my venues (recommended - one key, works everywhere)
+                    </option>
+                  )}
+                  {memberVenues.map((v) => (
                     <option key={v.id} value={v.id}>
                       Only: {v.name}
                     </option>
