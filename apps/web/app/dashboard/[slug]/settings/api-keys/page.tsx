@@ -99,7 +99,7 @@ export default function ApiKeysPage({
       }
 
       const ownerMembership = match.memberships?.find(
-        (m) => m.role === "OWNER" && m.status === "active"
+        (m) => ["OWNER", "MANAGER", "STAFF"].includes(m.role ?? "") && m.status === "active"
       )
       if (!ownerMembership) {
         setNotOwner(true)
@@ -214,7 +214,7 @@ export default function ApiKeysPage({
         />
         <Alert variant="destructive" className="mt-6">
           <AlertDescription>
-            Only venue owners can manage API keys for the Dalamud plugin.
+            Only active venue members can manage API keys for the Dalamud plugin.
           </AlertDescription>
         </Alert>
       </div>

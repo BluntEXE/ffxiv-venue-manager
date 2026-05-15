@@ -70,7 +70,7 @@ export async function POST(request: NextRequest) {
     if (
       !venue ||
       venue.memberships.length === 0 ||
-      venue.memberships[0].role !== "OWNER"
+      !["OWNER", "MANAGER", "STAFF"].includes(venue.memberships[0].role)
     ) {
       return NextResponse.json({ error: "Forbidden" }, { status: 403 })
     }
