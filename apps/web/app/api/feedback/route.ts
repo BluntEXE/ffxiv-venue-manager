@@ -25,7 +25,7 @@ export const POST = withRateLimit(
     try {
       const session = await getServerSession(authOptions)
       if (!session?.user?.id) {
-        return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
+        return addCors(NextResponse.json({ error: "Unauthorized" }, { status: 401 }))
       }
 
       const body = await request.json()
