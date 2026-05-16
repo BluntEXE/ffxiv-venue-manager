@@ -44,13 +44,14 @@ export const authOptions: NextAuthOptions = {
     async redirect({ url, baseUrl }) {
       // Allow relative URLs
       if (url.startsWith("/")) return `${baseUrl}${url}`
-      // Allow same origin URLs
+      // Allow same origin and trusted subdomain URLs
       try {
-        if (new URL(url).origin === baseUrl) return url
+        const parsed = new URL(url)
+        if (parsed.origin === baseUrl) return url
+        if (parsed.hostname.endsWith(".xivvenuemanager.com")) return url
       } catch {
         // Invalid URL, return baseUrl
       }
-      // Default to base URL for external redirects
       return baseUrl
     },
   },
