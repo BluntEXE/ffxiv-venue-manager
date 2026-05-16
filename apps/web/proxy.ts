@@ -19,7 +19,7 @@ function buildCsp(nonce: string): string {
 }
 
 const PUBLIC_PATHS = ["/", "/auth/signin", "/auth/error", "/auth/signout-shoutcrafter", "/test", "/stats"]
-const PUBLIC_PREFIXES = ["/guide/", "/invite/", "/api/invites/", "/api/mobile/", "/api/shout-crafter/"]
+const PUBLIC_PREFIXES = ["/guide/", "/invite/", "/api/invites/", "/api/mobile/", "/api/shout-crafter/", "/api/feedback"]
 
 export async function proxy(req: NextRequest) {
   const nonce = Buffer.from(crypto.randomUUID()).toString("base64")
