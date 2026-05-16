@@ -60,9 +60,22 @@ export const authOptions: NextAuthOptions = {
   },
   session: {
     strategy: "jwt",
-    maxAge: 7 * 24 * 60 * 60, // 7 days
-    updateAge: 24 * 60 * 60, // Update session every 24 hours
+    maxAge: 7 * 24 * 60 * 60,
+    updateAge: 24 * 60 * 60,
   },
+  // Scope session cookie to parent domain so subdomains (shout.xivvenuemanager.com) can read it
+  cookies: process.env.NODE_ENV === "production" ? {
+    sessionToken: {
+      name: `__Secure-next-auth.session-token`,
+      options: {
+        httpOnly: true,
+        sameSite: "lax" as const,
+        path: "/",
+        domain: ".xivvenuemanager.com",
+        secure: true,
+      },
+    },
+  } : undefined,
   // Trust the host header (important for proxies like Vercel)
   // @ts-ignore - trustHost is valid in NextAuth v4 but might be missing in type definitions
   trustHost: true,

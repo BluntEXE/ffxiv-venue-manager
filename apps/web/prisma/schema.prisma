@@ -49,8 +49,25 @@ model User {
   pendingNotifications     PendingNotification[]
   notificationPreference   NotificationPreference?
   venueFollows             VenueFollow[]
+  shoutTemplates           ShoutTemplate[]
 
   @@map("users")
+}
+
+model ShoutTemplate {
+  id          String   @id @default(cuid())
+  userId      String
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  label       String
+  fields      Json
+  templateId  String
+  separatorId String
+  decorId     String
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@index([userId])
+  @@map("shout_templates")
 }
 
 // Bridge between a user account and their FFXIV character(s). Required so
