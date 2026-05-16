@@ -17,15 +17,16 @@ export async function OPTIONS() {
   return cors(new NextResponse(null, { status: 204 }))
 }
 
-export async function DELETE(_req: NextRequest, { params }: { params: { id: string } }) {
+export async function DELETE(_req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
+  const { id } = await params
   const session = await getServerSession(authOptions)
   if (!session?.user?.id) return cors(NextResponse.json({ error: "Unauthorized" }, { status: 401 }))
 
-  const shout = await prisma.shoutTemplate.findUnique({ where: { id: params.id } })
+  const shout = await prisma.shoutTemplate.findUnique({ where: { id } })
   if (!shout || shout.userId !== session.user.id) {
     return cors(NextResponse.json({ error: "Not found." }, { status: 404 }))
   }
 
-  await prisma.shoutTemplate.delete({ where: { id: params.id } })
+  await prisma.shoutTemplate.delete({ where: { id } })
   return cors(NextResponse.json({ ok: true }))
 }
