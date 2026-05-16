@@ -9,6 +9,7 @@ import type { SeparatorId, DecorId } from './lib/shout-templates'
 import { fetchSession } from './lib/xivvm-auth'
 import type { XivVMSession } from './lib/xivvm-auth'
 import { SavedShouts } from './components/SavedShouts'
+import { FeedbackModal } from './components/FeedbackModal'
 
 const EMPTY_FIELDS: ShoutFields = {
   venueName: '',
@@ -31,6 +32,7 @@ export default function App() {
   const [fields, setFields] = useState<ShoutFields>(EMPTY_FIELDS)
   const [templateId, setTemplateId] = useState<TemplateId>('pre')
   const [separatorId, setSeparatorId] = useState<SeparatorId>('dot')
+  const [showFeedback, setShowFeedback] = useState(false)
   const [decorId, setDecorId] = useState<DecorId>('diamond')
   const [xivvm, setXivvm] = useState<XivVMSession | null>(null)
 
@@ -143,10 +145,23 @@ export default function App() {
       </main>
 
       <footer className="border-t border-[#313244] px-4 py-4 mt-8">
-        <div className="max-w-3xl mx-auto text-xs text-[#6c7086] text-center">
-          Part of <a href="https://xivvenuemanager.com" className="text-[#cba6f7] hover:underline">XIV Venue Manager</a>
+        <div className="max-w-3xl mx-auto text-xs text-[#6c7086] flex items-center justify-center gap-3">
+          <span>Part of <a href="https://xivvenuemanager.com" className="text-[#cba6f7] hover:underline">XIV Venue Manager</a></span>
+          {xivvm?.user && (
+            <>
+              <span>·</span>
+              <button
+                onClick={() => setShowFeedback(true)}
+                className="text-[#6c7086] hover:text-[#a6adc8] transition-colors"
+              >
+                Feedback
+              </button>
+            </>
+          )}
         </div>
       </footer>
+
+      {showFeedback && <FeedbackModal onClose={() => setShowFeedback(false)} />}
     </div>
   )
 }
