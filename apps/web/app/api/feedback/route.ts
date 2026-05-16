@@ -5,6 +5,20 @@ import { prisma } from "@/lib/prisma"
 import { withRateLimit } from "@/lib/middleware/with-rate-limit"
 import { sendDiscordWebhook, formatFeedbackSubmittedEmbed } from "@/lib/discord-webhook"
 
+const SHOUT_ORIGIN = "https://shout.xivvenuemanager.com"
+
+function addCors(res: NextResponse) {
+  res.headers.set("Access-Control-Allow-Origin", SHOUT_ORIGIN)
+  res.headers.set("Access-Control-Allow-Credentials", "true")
+  res.headers.set("Access-Control-Allow-Methods", "POST, OPTIONS")
+  res.headers.set("Access-Control-Allow-Headers", "Content-Type")
+  return res
+}
+
+export async function OPTIONS() {
+  return addCors(new NextResponse(null, { status: 204 }))
+}
+
 // POST /api/feedback - Submit new feedback
 export const POST = withRateLimit(
   async (request: NextRequest) => {
@@ -75,13 +89,13 @@ export const POST = withRateLimit(
         })
       }
 
-      return NextResponse.json(feedback, { status: 201 })
+      return addCors(NextResponse.json(feedback, { status: 201 }))
     } catch (error) {
       console.error("Error creating feedback:", error)
-      return NextResponse.json(
+      return addCors(NextResponse.json(
         { error: "Internal server error" },
         { status: 500 }
-      )
+      ))
     }
   },
   { requests: 5, window: "1 m" }
