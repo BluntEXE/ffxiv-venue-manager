@@ -27,6 +27,12 @@ type Shift = {
   venue: { id: string; name: string; dataCenter: string; world: string }
 }
 
+function canClockIn(scheduledStart: string): boolean {
+  const start = new Date(scheduledStart).getTime()
+  const now = Date.now()
+  return now >= start - 30 * 60 * 1000 && now <= start + 60 * 60 * 1000
+}
+
 type FollowedVenue = {
   venueId: string
   venueName: string
@@ -43,6 +49,7 @@ export default function HomeScreen() {
   const [shiftsLoading, setShiftsLoading] = useState(false)
   const [follows, setFollows] = useState<FollowedVenue[]>([])
   const [refreshing, setRefreshing] = useState(false)
+  const [clocking, setClocking] = useState<string | null>(null)
 
   async function checkAuth() {
     const tokens = await loadTokens()
@@ -66,6 +73,26 @@ export default function HomeScreen() {
   function onRefresh() {
     setRefreshing(true)
     loadShifts(true)
+  }
+
+  async function clockShift(shiftId: string, action: 'clock-in' | 'clock-out') {
+    setClocking(shiftId)
+    try {
+      const res = await apiFetch(`/api/mobile/my/shifts/${shiftId}`, {
+        method: 'PATCH',
+        body: JSON.stringify({ action }),
+      })
+      const data = await res.json()
+      if (!res.ok) {
+        alert(data.error || 'Something went wrong.')
+        return
+      }
+      await loadShifts()
+    } catch {
+      alert('Network error.')
+    } finally {
+      setClocking(null)
+    }
   }
 
   useFocusEffect(useCallback(() => {
@@ -173,6 +200,35 @@ export default function HomeScreen() {
                   {formatST(activeShift.scheduledStart)} – {formatST(activeShift.scheduledEnd)} ST
                   {activeShift.actualStart ? ` · Started ${formatOpenSince(activeShift.actualStart)}` : ''}
                 </Text>
+                <XStack gap="$2" marginTop="$2">
+                  <Button
+                    flex={1}
+                    size="$3"
+                    backgroundColor="$primary"
+                    color="$base"
+                    fontFamily="InterBold"
+                    fontSize={13}
+                    borderRadius="$2"
+                    onPress={() => router.push({ pathname: '/log-sale', params: { venueId: activeShift.venue.id, venueName: activeShift.venue.name } } as any)}
+                    pressStyle={{ opacity: 0.85, scale: 0.97 }}
+                  >
+                    Log Sale
+                  </Button>
+                  <Button
+                    flex={1}
+                    size="$3"
+                    backgroundColor="$danger"
+                    color="$base"
+                    fontFamily="InterBold"
+                    fontSize={13}
+                    borderRadius="$2"
+                    onPress={() => clockShift(activeShift.id, 'clock-out')}
+                    disabled={clocking === activeShift.id}
+                    pressStyle={{ opacity: 0.85, scale: 0.97 }}
+                  >
+                    {clocking === activeShift.id ? 'Clocking out…' : 'Clock Out'}
+                  </Button>
+                </XStack>
               </YStack>
             )}
 

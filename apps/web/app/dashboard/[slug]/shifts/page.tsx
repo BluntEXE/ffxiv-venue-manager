@@ -11,6 +11,7 @@ import { CreateShiftDialog } from "@/components/create-shift-dialog"
 import { ServerTimeRange } from "@/components/server-time"
 import { getServerTimezone, getServerTimeLabel } from "@/lib/server-time"
 import { DeleteShiftButton } from "@/components/delete-shift-button"
+import { ClockShiftButton } from "@/components/clock-shift-button"
 
 const statusColors: Record<string, string> = {
   SCHEDULED: "bg-blue-500/10 text-blue-500 border-blue-500/20",
@@ -46,6 +47,7 @@ export default async function ShiftsPage({
   }
 
   const userRole = venue.memberships[0].role
+  const currentMembershipId = venue.memberships[0].id
   const canManage = ["OWNER", "MANAGER"].includes(userRole)
   const timezone = getServerTimezone(venue.dataCenter)
   const tzLabel = getServerTimeLabel(venue.dataCenter)
@@ -169,6 +171,7 @@ export default async function ShiftsPage({
                     shift={shift}
                     slug={slug}
                     canManage={canManage}
+                    currentMembershipId={currentMembershipId}
                     timezone={timezone}
                     tzLabel={tzLabel}
                   />
@@ -188,6 +191,7 @@ export default async function ShiftsPage({
                     shift={shift}
                     slug={slug}
                     canManage={canManage}
+                    currentMembershipId={currentMembershipId}
                     timezone={timezone}
                     tzLabel={tzLabel}
                   />
@@ -207,6 +211,7 @@ export default async function ShiftsPage({
                     shift={shift}
                     slug={slug}
                     canManage={canManage}
+                    currentMembershipId={currentMembershipId}
                     timezone={timezone}
                     tzLabel={tzLabel}
                   />
@@ -237,12 +242,14 @@ function ShiftCard({
   shift,
   slug,
   canManage,
+  currentMembershipId,
   timezone,
   tzLabel,
 }: {
   shift: any
   slug: string
   canManage: boolean
+  currentMembershipId: string
   timezone: string
   tzLabel: string
 }) {
@@ -292,6 +299,38 @@ function ShiftCard({
             >
               {shift.status}
             </Badge>
+            {canManage && shift.status === 'SCHEDULED' && (
+              <ClockShiftButton
+                venueSlug={slug}
+                shiftId={shift.id}
+                action="clock-in"
+                staffName={shift.membership.user?.name || 'staff'}
+              />
+            )}
+            {canManage && shift.status === 'ACTIVE' && (
+              <ClockShiftButton
+                venueSlug={slug}
+                shiftId={shift.id}
+                action="clock-out"
+                staffName={shift.membership.user?.name || 'staff'}
+              />
+            )}
+            {!canManage && shift.membershipId === currentMembershipId && shift.status === 'SCHEDULED' && (
+              <ClockShiftButton
+                venueSlug={slug}
+                shiftId={shift.id}
+                action="clock-in"
+                staffName="yourself"
+              />
+            )}
+            {!canManage && shift.membershipId === currentMembershipId && shift.status === 'ACTIVE' && (
+              <ClockShiftButton
+                venueSlug={slug}
+                shiftId={shift.id}
+                action="clock-out"
+                staffName="yourself"
+              />
+            )}
             {canManage && (
               <DeleteShiftButton
                 venueSlug={slug}

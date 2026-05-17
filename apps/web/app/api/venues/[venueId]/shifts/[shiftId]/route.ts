@@ -2,6 +2,164 @@ import { NextRequest, NextResponse } from "next/server"
 import { getServerSession } from "next-auth"
 import { authOptions } from "@/lib/auth"
 import { prisma } from "@/lib/prisma"
+import { z } from "zod"
+
+const patchSchema = z.object({
+  action: z.enum(["clock-in", "clock-out"]),
+})
+
+/**
+ * PATCH /api/venues/[venueId]/shifts/[shiftId]
+ * Clock a shift in or out.
+ * - OWNER/MANAGER: any shift, no time window
+ * - STAFF: own shifts only, 30-min-before/60-min-after window for clock-in
+ */
+export async function PATCH(
+  request: NextRequest,
+  { params }: { params: Promise<{ venueId: string; shiftId: string }> }
+) {
+  try {
+    const session = await getServerSession(authOptions)
+    if (!session?.user?.id) {
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
+    }
+
+    const { venueId, shiftId } = await params
+
+    const venue = await prisma.venue.findFirst({
+      where: { OR: [{ id: venueId }, { slug: venueId }] },
+    })
+    if (!venue) {
+      return NextResponse.json({ error: "Venue not found" }, { status: 404 })
+    }
+
+    const membership = await prisma.membership.findFirst({
+      where: { userId: session.user.id, venueId: venue.id, status: "active" },
+    })
+    if (!membership) {
+      return NextResponse.json({ error: "Not a member of this venue" }, { status: 403 })
+    }
+
+    const isManager = ["OWNER", "MANAGER"].includes(membership.role)
+
+    const body = await request.json()
+    const parsed = patchSchema.safeParse(body)
+    if (!parsed.success) {
+      return NextResponse.json({ error: "action must be clock-in or clock-out" }, { status: 400 })
+    }
+
+    const shift = await prisma.shift.findFirst({
+      where: { id: shiftId, venueId: venue.id },
+    })
+    if (!shift) {
+      return NextResponse.json({ error: "Shift not found" }, { status: 404 })
+    }
+
+    if (!isManager && shift.membershipId !== membership.id) {
+      return NextResponse.json({ error: "This shift is not assigned to you" }, { status: 403 })
+    }
+
+    const now = new Date()
+
+    if (parsed.data.action === "clock-in") {
+      if (shift.status !== "SCHEDULED") {
+        return NextResponse.json(
+          { error: `Cannot clock in — shift is already ${shift.status.toLowerCase()}` },
+          { status: 400 }
+        )
+      }
+
+      if (!isManager) {
+        const earliest = new Date(shift.scheduledStart.getTime() - 30 * 60 * 1000)
+        const latest = new Date(shift.scheduledStart.getTime() + 60 * 60 * 1000)
+        if (now < earliest) {
+          return NextResponse.json(
+            { error: "Too early to clock in (earliest 30 min before start)" },
+            { status: 400 }
+          )
+        }
+        if (now > latest) {
+          return NextResponse.json(
+            { error: "Clock-in window has passed (60 min after start)" },
+            { status: 400 }
+          )
+        }
+      }
+
+      const writeResult = await prisma.shift.updateMany({
+        where: { id: shift.id, status: "SCHEDULED" },
+        data: { actualStart: now, status: "ACTIVE" },
+      })
+
+      if (writeResult.count === 0) {
+        return NextResponse.json({ error: "Shift status changed concurrently" }, { status: 409 })
+      }
+
+      queueOpenedNowNotifications(venue.id, venue.name, now).catch(() => {})
+
+      return NextResponse.json({
+        success: true,
+        shift: { id: shift.id, status: "ACTIVE", actualStart: now.toISOString() },
+      })
+    }
+
+    if (shift.status !== "ACTIVE") {
+      return NextResponse.json(
+        { error: `Cannot clock out — shift is already ${shift.status.toLowerCase()}` },
+        { status: 400 }
+      )
+    }
+
+    const calculatedHours = shift.actualStart
+      ? Math.round(((now.getTime() - shift.actualStart.getTime()) / (1000 * 60 * 60)) * 100) / 100
+      : null
+
+    const writeResult = await prisma.shift.updateMany({
+      where: { id: shift.id, status: "ACTIVE" },
+      data: { actualEnd: now, status: "COMPLETED", hoursWorked: calculatedHours },
+    })
+
+    if (writeResult.count === 0) {
+      return NextResponse.json({ error: "Shift status changed concurrently" }, { status: 409 })
+    }
+
+    return NextResponse.json({
+      success: true,
+      shift: { id: shift.id, status: "COMPLETED", actualEnd: now.toISOString(), hoursWorked: calculatedHours },
+    })
+  } catch (error) {
+    console.error("Error updating shift:", error)
+    return NextResponse.json({ error: "Internal server error" }, { status: 500 })
+  }
+}
+
+async function queueOpenedNowNotifications(venueId: string, venueName: string, now: Date) {
+  const recentlySent = await prisma.pendingNotification.findFirst({
+    where: {
+      type: "VENUE_OPENED_NOW",
+      data: { path: ["venueId"], equals: venueId },
+      createdAt: { gte: new Date(now.getTime() - 30 * 60 * 1000) },
+    },
+  })
+  if (recentlySent) return
+
+  const follows = await prisma.venueFollow.findMany({
+    where: { venueId },
+    select: { userId: true },
+  })
+  if (follows.length === 0) return
+
+  await prisma.pendingNotification.createMany({
+    data: follows.map((f) => ({
+      userId: f.userId,
+      type: "VENUE_OPENED_NOW" as const,
+      title: `${venueName} is open!`,
+      body: "A venue you follow just opened.",
+      data: { venueId },
+      scheduledFor: now,
+    })),
+  })
+}
 
 /**
  * DELETE /api/venues/[venueId]/shifts/[shiftId]
@@ -48,9 +206,6 @@ export async function DELETE(
     await prisma.$transaction(async (tx) => {
       await tx.shift.delete({ where: { id: shift.id } })
       if (shift.payrollEntryId) {
-        // Cascade the payroll entry too. Without this, analytics keeps
-        // counting the old payroll against the venue even after the shift
-        // that generated it is gone.
         await tx.payrollEntry.delete({ where: { id: shift.payrollEntryId } })
       }
     })
@@ -58,9 +213,6 @@ export async function DELETE(
     return NextResponse.json({ success: true })
   } catch (error) {
     console.error("Error deleting shift:", error)
-    return NextResponse.json(
-      { error: "Internal server error" },
-      { status: 500 }
-    )
+    return NextResponse.json({ error: "Internal server error" }, { status: 500 })
   }
 }
