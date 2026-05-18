@@ -65,7 +65,7 @@ A two-tier system, each tier doing what it's good at.
 ### Tier 1: Dalamud plugin (C#, ~5k LOC)
 - Runs inside the FFXIV game client
 - Observes patron arrivals/departures via zone-change + party events
-- Provides chat commands (`/venue`, `/vm`, `sale!`, `target!`) for instant logging without leaving the game
+- Provides chat commands (`/xvenue`, `/xvm`, `sale!`, `target!`) for instant logging without leaving the game
 - Tracks staff shifts (clock-in/out)
 - Authenticates to the web app via per-user API key
 

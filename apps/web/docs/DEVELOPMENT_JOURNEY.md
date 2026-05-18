@@ -37,7 +37,7 @@ Built the C# Dalamud plugin (~5k LOC):
 
 - Zone-change detection for patron arrival/departure
 - Party event hooks for tracking who enters the venue
-- Chat command system: `/venue`, `/vm`, `sale!`, `target!`
+- Chat command system: `/xvenue`, `/xvm`, `sale!`, `target!`
 - Staff shift clock-in/out
 - Plugin↔web HTTP contract deliberately kept small and stable (12 routes, treated as a versioned API surface)
 - API key auth from the plugin side; no OAuth dance possible from inside a game client
