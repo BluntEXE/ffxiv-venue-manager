@@ -42,7 +42,7 @@ export default function OwnerManagerGuidePage() {
                 </li>
                 <li>Click <span className="font-medium">Save and Close</span></li>
                 <li>Open the Plugin Installer, search for &quot;XIVVenueManagerSync&quot;, and install it</li>
-                <li>Open with <code className="bg-muted/60 px-1.5 py-0.5 rounded text-xs font-mono">/vm</code>, go to Settings</li>
+                <li>Open with <code className="bg-muted/60 px-1.5 py-0.5 rounded text-xs font-mono">/xvm</code>, go to Settings</li>
                 <li>Generate an API key on the website (Settings &gt; API Keys) and paste it in the plugin</li>
                 <li>Set the server URL to <code className="bg-muted/60 px-1.5 py-0.5 rounded text-xs font-mono">https://xivvenuemanager.com</code></li>
                 <li>Select your venue</li>
@@ -167,11 +167,11 @@ export default function OwnerManagerGuidePage() {
               <h3 className="text-lg font-medium text-muted-foreground">Quick Commands</h3>
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                 <div className="bg-muted/30 rounded-lg p-3">
-                  <code className="text-xs font-mono font-medium">/vm start</code>
+                  <code className="text-xs font-mono font-medium">/xvm start</code>
                   <p className="text-xs text-muted-foreground mt-1">Clock into your current shift</p>
                 </div>
                 <div className="bg-muted/30 rounded-lg p-3">
-                  <code className="text-xs font-mono font-medium">/vm end</code>
+                  <code className="text-xs font-mono font-medium">/xvm end</code>
                   <p className="text-xs text-muted-foreground mt-1">Clock out of your active shift</p>
                 </div>
               </div>
@@ -182,25 +182,25 @@ export default function OwnerManagerGuidePage() {
           <section className="space-y-6">
             <h2 className="text-2xl font-semibold border-b border-white/10 pb-2">Sales &amp; Revenue</h2>
 
-            <p className="text-sm leading-relaxed">Sales come from two places: the <span className="font-medium">plugin</span> (<code className="bg-muted/60 px-1.5 py-0.5 rounded text-xs font-mono">/vm sale</code> commands or Sales tab) and the <span className="font-medium">website</span> (Sales page). Both create identical records with amount, customer, service, event, and staff attribution.</p>
+            <p className="text-sm leading-relaxed">Sales come from two places: the <span className="font-medium">plugin</span> (<code className="bg-muted/60 px-1.5 py-0.5 rounded text-xs font-mono">/xvm sale</code> commands or Sales tab) and the <span className="font-medium">website</span> (Sales page). Both create identical records with amount, customer, service, event, and staff attribution.</p>
 
             <div className="space-y-3">
               <h3 className="text-lg font-medium text-muted-foreground">Plugin Commands</h3>
               <div className="grid grid-cols-1 gap-3">
                 <div className="bg-muted/30 rounded-lg p-3">
-                  <code className="text-xs font-mono font-medium">/vm sale 500 Ehno</code>
+                  <code className="text-xs font-mono font-medium">/xvm sale 500 Ehno</code>
                   <p className="text-xs text-muted-foreground mt-1">Open Sales tab with amount and customer prefilled</p>
                 </div>
                 <div className="bg-muted/30 rounded-lg p-3">
-                  <code className="text-xs font-mono font-medium">/vm sale! 500 Ehno</code>
+                  <code className="text-xs font-mono font-medium">/xvm sale! 500 Ehno</code>
                   <p className="text-xs text-muted-foreground mt-1">Log sale instantly without opening UI; chat confirmation shown</p>
                 </div>
                 <div className="bg-muted/30 rounded-lg p-3">
-                  <code className="text-xs font-mono font-medium">/vm target 500</code>
+                  <code className="text-xs font-mono font-medium">/xvm target 500</code>
                   <p className="text-xs text-muted-foreground mt-1">Open Sales tab with your current target as customer</p>
                 </div>
                 <div className="bg-muted/30 rounded-lg p-3">
-                  <code className="text-xs font-mono font-medium">/vm target! 500</code>
+                  <code className="text-xs font-mono font-medium">/xvm target! 500</code>
                   <p className="text-xs text-muted-foreground mt-1">Log sale instantly for your current target; no UI needed</p>
                 </div>
               </div>

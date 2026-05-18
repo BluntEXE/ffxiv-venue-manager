@@ -403,7 +403,7 @@ export default function UnifiedApiKeysPage() {
                       <li>
                         In-game, type{" "}
                         <code className="bg-muted px-1 rounded">
-                          /venue
+                          /xvenue
                         </code>{" "}
                         to open the plugin window
                       </li>

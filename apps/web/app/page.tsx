@@ -178,7 +178,7 @@ export default async function Home() {
           </p>
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 pt-4">
             <div className="p-4 rounded-lg bg-muted/50 border border-white/5">
-              <p className="font-semibold mb-1 font-mono text-sm">/vm sale 500</p>
+              <p className="font-semibold mb-1 font-mono text-sm">/xvm sale 500</p>
               <p className="text-sm text-muted-foreground">
                 Log sales with slash commands
               </p>

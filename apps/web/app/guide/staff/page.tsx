@@ -45,7 +45,7 @@ export default function StaffGuidePage() {
               </li>
               <li className="flex items-start gap-3">
                 <span className="font-mono text-xs bg-primary/20 text-primary rounded-full w-6 h-6 flex items-center justify-center shrink-0 mt-0.5">3</span>
-                <span><span className="font-medium">Configure the plugin:</span> Open it with <code className="bg-muted/60 px-1.5 py-0.5 rounded text-xs font-mono">/vm</code>, go to Settings, paste your API key (from the website under Settings &gt; API Keys), set the server URL to <code className="bg-muted/60 px-1.5 py-0.5 rounded text-xs font-mono">https://xivvenuemanager.com</code>, and select your venue.</span>
+                <span><span className="font-medium">Configure the plugin:</span> Open it with <code className="bg-muted/60 px-1.5 py-0.5 rounded text-xs font-mono">/xvm</code>, go to Settings, paste your API key (from the website under Settings &gt; API Keys), set the server URL to <code className="bg-muted/60 px-1.5 py-0.5 rounded text-xs font-mono">https://xivvenuemanager.com</code>, and select your venue.</span>
               </li>
             </ol>
           </section>
@@ -69,19 +69,19 @@ export default function StaffGuidePage() {
               <h3 className="text-lg font-medium text-muted-foreground">From the Plugin (Recommended)</h3>
               <div className="grid grid-cols-1 gap-3">
                 <div className="bg-muted/30 rounded-lg p-3">
-                  <code className="text-xs font-mono font-medium">/vm sale 500 Ehno</code>
+                  <code className="text-xs font-mono font-medium">/xvm sale 500 Ehno</code>
                   <p className="text-xs text-muted-foreground mt-1">Open Sales tab with amount and customer prefilled</p>
                 </div>
                 <div className="bg-muted/30 rounded-lg p-3">
-                  <code className="text-xs font-mono font-medium">/vm sale! 500 Ehno</code>
+                  <code className="text-xs font-mono font-medium">/xvm sale! 500 Ehno</code>
                   <p className="text-xs text-muted-foreground mt-1">Log sale instantly without opening UI; chat confirmation shown</p>
                 </div>
                 <div className="bg-muted/30 rounded-lg p-3">
-                  <code className="text-xs font-mono font-medium">/vm target 500</code>
+                  <code className="text-xs font-mono font-medium">/xvm target 500</code>
                   <p className="text-xs text-muted-foreground mt-1">Open Sales tab with your current target as customer</p>
                 </div>
                 <div className="bg-muted/30 rounded-lg p-3">
-                  <code className="text-xs font-mono font-medium">/vm target! 500</code>
+                  <code className="text-xs font-mono font-medium">/xvm target! 500</code>
                   <p className="text-xs text-muted-foreground mt-1">Log sale instantly for your current target; no UI needed</p>
                 </div>
               </div>
@@ -112,7 +112,7 @@ export default function StaffGuidePage() {
             <div className="space-y-3">
               <h3 className="text-lg font-medium text-muted-foreground">Viewing Your Shifts</h3>
               <ul className="space-y-2 pl-2 text-sm leading-relaxed">
-                <li><span className="font-medium">Plugin</span> &mdash; Open <code className="bg-muted/60 px-1.5 py-0.5 rounded text-xs font-mono">/vm</code> and go to the My Shift tab</li>
+                <li><span className="font-medium">Plugin</span> &mdash; Open <code className="bg-muted/60 px-1.5 py-0.5 rounded text-xs font-mono">/xvm</code> and go to the My Shift tab</li>
                 <li><span className="font-medium">Website</span> &mdash; Check the Shifts page or your dashboard home</li>
               </ul>
             </div>
@@ -122,15 +122,15 @@ export default function StaffGuidePage() {
               <p className="text-sm leading-relaxed mb-3">Use the plugin UI or quick commands:</p>
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 mb-3">
                 <div className="bg-muted/30 rounded-lg p-3">
-                  <code className="text-xs font-mono font-medium">/vm start</code>
+                  <code className="text-xs font-mono font-medium">/xvm start</code>
                   <p className="text-xs text-muted-foreground mt-1">Clock into your current shift</p>
                 </div>
                 <div className="bg-muted/30 rounded-lg p-3">
-                  <code className="text-xs font-mono font-medium">/vm end</code>
+                  <code className="text-xs font-mono font-medium">/xvm end</code>
                   <p className="text-xs text-muted-foreground mt-1">Clock out of your active shift</p>
                 </div>
               </div>
-              <p className="text-sm leading-relaxed text-muted-foreground">Or open the plugin (<code className="bg-muted/60 px-1.5 py-0.5 rounded text-xs font-mono">/vm</code>), go to the My Shift tab, and use the Clock In / Clock Out buttons. You can clock in up to 30 minutes early and up to 60 minutes late.</p>
+              <p className="text-sm leading-relaxed text-muted-foreground">Or open the plugin (<code className="bg-muted/60 px-1.5 py-0.5 rounded text-xs font-mono">/xvm</code>), go to the My Shift tab, and use the Clock In / Clock Out buttons. You can clock in up to 30 minutes early and up to 60 minutes late.</p>
             </div>
 
             <div className="space-y-3">
@@ -166,11 +166,11 @@ export default function StaffGuidePage() {
             <ul className="space-y-2.5 pl-2 text-sm leading-relaxed">
               <li className="flex items-start gap-2">
                 <span className="text-emerald-500 mt-0.5">&#10003;</span>
-                <span>Use <code className="bg-muted/60 px-1.5 py-0.5 rounded text-xs font-mono">/vm sale!</code> or <code className="bg-muted/60 px-1.5 py-0.5 rounded text-xs font-mono">/vm target!</code> for fast logging during busy events; no UI interruption.</span>
+                <span>Use <code className="bg-muted/60 px-1.5 py-0.5 rounded text-xs font-mono">/xvm sale!</code> or <code className="bg-muted/60 px-1.5 py-0.5 rounded text-xs font-mono">/xvm target!</code> for fast logging during busy events; no UI interruption.</span>
               </li>
               <li className="flex items-start gap-2">
                 <span className="text-emerald-500 mt-0.5">&#10003;</span>
-                <span>Use <code className="bg-muted/60 px-1.5 py-0.5 rounded text-xs font-mono">/vm start</code> and <code className="bg-muted/60 px-1.5 py-0.5 rounded text-xs font-mono">/vm end</code> for quick shift management</span>
+                <span>Use <code className="bg-muted/60 px-1.5 py-0.5 rounded text-xs font-mono">/xvm start</code> and <code className="bg-muted/60 px-1.5 py-0.5 rounded text-xs font-mono">/xvm end</code> for quick shift management</span>
               </li>
               <li className="flex items-start gap-2">
                 <span className="text-emerald-500 mt-0.5">&#10003;</span>

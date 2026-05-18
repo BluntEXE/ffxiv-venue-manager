@@ -389,7 +389,7 @@ export default function ApiKeysPage({
                 <ol className="text-sm text-foreground list-decimal list-inside space-y-1">
                   <li>
                     In-game, type{" "}
-                    <code className="bg-muted px-1 rounded">/venue</code>{" "}
+                    <code className="bg-muted px-1 rounded">/xvenue</code>{" "}
                     to open the plugin window
                   </li>
                   <li>
