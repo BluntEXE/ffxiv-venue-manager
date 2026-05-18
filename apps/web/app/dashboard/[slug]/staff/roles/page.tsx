@@ -427,7 +427,19 @@ export default function RolesPage({
                     disabled={isSubmitting}
                     className="w-10 h-10 p-1 cursor-pointer"
                   />
-                  <span className="text-sm text-muted-foreground">Custom</span>
+                  <Input
+                    type="text"
+                    value={formData.color.toUpperCase()}
+                    onChange={(e) => {
+                      const val = e.target.value.startsWith("#") ? e.target.value : "#" + e.target.value;
+                      if (/^#[0-9A-Fa-f]{6}$/.test(val))
+                        setFormData({ ...formData, color: val.toLowerCase() });
+                    }}
+                    disabled={isSubmitting}
+                    maxLength={7}
+                    className="w-24 font-mono text-sm"
+                    placeholder="#6366F1"
+                  />
                 </div>
               </div>
               <div className="flex items-center gap-2 mt-2">
@@ -528,7 +540,19 @@ export default function RolesPage({
                     disabled={isSubmitting}
                     className="w-10 h-10 p-1 cursor-pointer"
                   />
-                  <span className="text-sm text-muted-foreground">Custom</span>
+                  <Input
+                    type="text"
+                    value={formData.color.toUpperCase()}
+                    onChange={(e) => {
+                      const val = e.target.value.startsWith("#") ? e.target.value : "#" + e.target.value;
+                      if (/^#[0-9A-Fa-f]{6}$/.test(val))
+                        setFormData({ ...formData, color: val.toLowerCase() });
+                    }}
+                    disabled={isSubmitting}
+                    maxLength={7}
+                    className="w-24 font-mono text-sm"
+                    placeholder="#6366F1"
+                  />
                 </div>
               </div>
               <div className="flex items-center gap-2 mt-2">
