@@ -54,6 +54,29 @@ export default function ManageScreen() {
   const [dashLoading, setDashLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [refreshing, setRefreshing] = useState(false)
+  const [clocking, setClocking] = useState<string | null>(null)
+
+  async function clockShift(shiftId: string, action: 'clock-in' | 'clock-out') {
+    if (!selectedVenue || clocking) return
+    setClocking(shiftId)
+    try {
+      const res = await apiFetch(
+        `/api/mobile/operator/venues/${selectedVenue.id}/shifts/${shiftId}`,
+        { method: 'PATCH', body: JSON.stringify({ action }) }
+      )
+      if (!res.ok) {
+        const data = await res.json().catch(() => ({}))
+        console.error('Clock action failed:', data.error)
+        return
+      }
+      // Refresh dashboard to reflect new status
+      await loadDashboard(selectedVenue)
+    } catch {
+      console.error('Clock action error')
+    } finally {
+      setClocking(null)
+    }
+  }
 
   const loadVenues = useCallback(async () => {
     setLoading(true)
@@ -252,12 +275,49 @@ export default function ManageScreen() {
                       width={8} height={8} borderRadius="$4"
                       backgroundColor={s.status === 'ACTIVE' ? '$success' : '$surface2'}
                     />
-                    <Text color="$text" fontSize={14} flex={1}>
-                      {s.membership.user.name ?? 'Staff'}
-                    </Text>
-                    <Text color="$subtext0" fontSize={12}>
-                      {formatST(s.scheduledStart)} – {formatST(s.scheduledEnd)}
-                    </Text>
+                    <YStack flex={1} gap="$1">
+                      <Text color="$text" fontSize={14}>
+                        {s.membership.user.name ?? 'Staff'}
+                      </Text>
+                      <Text color="$subtext0" fontSize={11}>
+                        {formatST(s.scheduledStart)} – {formatST(s.scheduledEnd)}
+                      </Text>
+                    </YStack>
+                    {s.status === 'SCHEDULED' && (
+                      <Button
+                        size="$2"
+                        backgroundColor="$success"
+                        color="$base"
+                        borderRadius="$2"
+                        fontFamily="InterBold"
+                        fontSize={12}
+                        disabled={clocking === s.id}
+                        pressStyle={{ opacity: 0.85 }}
+                        onPress={() => clockShift(s.id, 'clock-in')}
+                      >
+                        {clocking === s.id ? '…' : 'Clock In'}
+                      </Button>
+                    )}
+                    {s.status === 'ACTIVE' && (
+                      <Button
+                        size="$2"
+                        backgroundColor="$danger"
+                        color="$base"
+                        borderRadius="$2"
+                        fontFamily="InterBold"
+                        fontSize={12}
+                        disabled={clocking === s.id}
+                        pressStyle={{ opacity: 0.85 }}
+                        onPress={() => clockShift(s.id, 'clock-out')}
+                      >
+                        {clocking === s.id ? '…' : 'Clock Out'}
+                      </Button>
+                    )}
+                    {s.status === 'COMPLETED' && (
+                      <XStack backgroundColor="$surface1" borderRadius="$2" paddingHorizontal="$2" paddingVertical={3}>
+                        <Text fontSize={11} color="$subtext0">Done</Text>
+                      </XStack>
+                    )}
                   </XStack>
                 ))
               )}
