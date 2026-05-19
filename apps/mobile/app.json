@@ -40,7 +40,8 @@
       "expo-router",
       "expo-secure-store",
       ["expo-notifications", { "icon": "./assets/icon.png", "color": "#1e1e2e" }],
-      "./plugins/withGradle88"
+      "./plugins/withGradle88",
+      "./plugins/withExpoModulesCoreAndroidFix"
     ],
     "experiments": {
       "typedRoutes": true
