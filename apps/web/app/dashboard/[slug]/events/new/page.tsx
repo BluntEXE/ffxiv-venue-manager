@@ -46,6 +46,7 @@ export default function NewEventPage() {
   const [endTime, setEndTime] = useState<Date>()
   const [templates, setTemplates] = useState<EventTemplate[]>([])
   const [selectedTemplate, setSelectedTemplate] = useState<string>("")
+  const [selectedStatus, setSelectedStatus] = useState("DRAFT")
   const [formValues, setFormValues] = useState({
     title: "",
     description: "",
@@ -151,9 +152,9 @@ export default function NewEventPage() {
     const formData = new FormData(e.currentTarget)
     const data = {
       title: formValues.title,
-      description: formValues.description,
+      description: formValues.description || undefined,
       eventType: formValues.eventType,
-      status: formData.get("status"),
+      status: selectedStatus,
       startTime: startTime.toISOString(),
       endTime: endTime.toISOString(),
       timezone: Intl.DateTimeFormat().resolvedOptions().timeZone,
@@ -295,7 +296,7 @@ export default function NewEventPage() {
             {/* Status */}
             <div className="space-y-2">
               <Label htmlFor="status">Status *</Label>
-              <Select name="status" defaultValue="DRAFT" required>
+              <Select value={selectedStatus} onValueChange={setSelectedStatus} required>
                 <SelectTrigger>
                   <SelectValue />
                 </SelectTrigger>

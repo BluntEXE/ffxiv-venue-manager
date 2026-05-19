@@ -43,20 +43,28 @@ export default function NewVenuePage() {
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [error, setError] = useState("")
   const [selectedDataCenter, setSelectedDataCenter] = useState("")
+  const [selectedWorld, setSelectedWorld] = useState("")
+  const [slugPreview, setSlugPreview] = useState("")
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault()
     setIsSubmitting(true)
     setError("")
 
+    if (!selectedDataCenter || !selectedWorld) {
+      setError(!selectedDataCenter ? "Please select a data center." : "Please select a world.")
+      setIsSubmitting(false)
+      return
+    }
+
     const formData = new FormData(e.currentTarget)
     const data = {
-      name: formData.get("name"),
-      slug: formData.get("slug"),
-      description: formData.get("description"),
-      dataCenter: formData.get("dataCenter"),
-      world: formData.get("world"),
-      location: formData.get("location"),
+      name: formData.get("name") as string,
+      slug: formData.get("slug") as string,
+      description: (formData.get("description") as string) || undefined,
+      dataCenter: selectedDataCenter,
+      world: selectedWorld,
+      location: (formData.get("location") as string) || undefined,
     }
 
     try {
@@ -109,24 +117,32 @@ export default function NewVenuePage() {
                 onChange={(e) => {
                   const slugInput = document.getElementById("slug") as HTMLInputElement
                   if (slugInput && !slugInput.value) {
-                    slugInput.value = generateSlug(e.target.value)
+                    const generated = generateSlug(e.target.value)
+                    slugInput.value = generated
+                    setSlugPreview(generated)
                   }
                 }}
               />
             </div>
 
-            {/* URL */}
+            {/* Slug */}
             <div className="space-y-2">
-              <Label htmlFor="slug">URL *</Label>
+              <Label htmlFor="slug">Venue Page Address *</Label>
               <Input
                 id="slug"
                 name="slug"
                 placeholder="the-gilded-rose"
                 required
                 pattern="[a-z0-9-]+"
+                onChange={(e) => setSlugPreview(e.target.value)}
               />
               <p className="text-sm text-muted-foreground">
-                Cannot contain spaces, uppercase letters, or special characters (e.g., my-venue-name)
+                This sets your venue&apos;s address on this site — lowercase letters, numbers, and hyphens only.
+                {slugPreview && (
+                  <span className="block mt-1 font-medium text-foreground/70">
+                    Your page: xivvenuemanager.com/dashboard/{slugPreview}
+                  </span>
+                )}
               </p>
             </div>
 
@@ -147,7 +163,7 @@ export default function NewVenuePage() {
               <Select
                 name="dataCenter"
                 required
-                onValueChange={setSelectedDataCenter}
+                onValueChange={(v) => { setSelectedDataCenter(v); setSelectedWorld("") }}
               >
                 <SelectTrigger>
                   <SelectValue placeholder="Select data center" />
@@ -172,7 +188,7 @@ export default function NewVenuePage() {
             {/* World */}
             <div className="space-y-2">
               <Label htmlFor="world">World (Server) *</Label>
-              <Select name="world" required disabled={!selectedDataCenter}>
+              <Select name="world" required value={selectedWorld} onValueChange={setSelectedWorld} disabled={!selectedDataCenter}>
                 <SelectTrigger>
                   <SelectValue placeholder={selectedDataCenter ? "Select world" : "Select data center first"} />
                 </SelectTrigger>

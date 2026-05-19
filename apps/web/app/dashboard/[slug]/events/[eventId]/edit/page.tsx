@@ -52,6 +52,8 @@ export default function EditEventPage() {
   const [error, setError] = useState("")
   const [startTime, setStartTime] = useState<Date>()
   const [endTime, setEndTime] = useState<Date>()
+  const [selectedEventType, setSelectedEventType] = useState("")
+  const [selectedStatus, setSelectedStatus] = useState("")
 
   useEffect(() => {
     const fetchEvent = async () => {
@@ -71,6 +73,8 @@ export default function EditEventPage() {
         setEvent(eventData)
         setStartTime(new Date(eventData.startTime))
         setEndTime(new Date(eventData.endTime))
+        setSelectedEventType(eventData.eventType)
+        setSelectedStatus(eventData.status)
       } catch (err) {
         setError("Failed to load event")
         console.error(err)
@@ -101,10 +105,10 @@ export default function EditEventPage() {
 
     const formData = new FormData(e.currentTarget)
     const data = {
-      title: formData.get("title"),
-      description: formData.get("description"),
-      eventType: formData.get("eventType"),
-      status: formData.get("status"),
+      title: formData.get("title") as string,
+      description: (formData.get("description") as string) || undefined,
+      eventType: selectedEventType,
+      status: selectedStatus,
       startTime: startTime.toISOString(),
       endTime: endTime.toISOString(),
       attendanceCount: formData.get("attendanceCount") ? parseInt(formData.get("attendanceCount") as string) : undefined,
@@ -179,7 +183,7 @@ export default function EditEventPage() {
             {/* Event Type */}
             <div className="space-y-2">
               <Label htmlFor="eventType">Event Type *</Label>
-              <Select name="eventType" defaultValue={event.eventType} required>
+              <Select value={selectedEventType} onValueChange={setSelectedEventType} required>
                 <SelectTrigger>
                   <SelectValue />
                 </SelectTrigger>
@@ -225,7 +229,7 @@ export default function EditEventPage() {
             {/* Status */}
             <div className="space-y-2">
               <Label htmlFor="status">Status *</Label>
-              <Select name="status" defaultValue={event.status} required>
+              <Select value={selectedStatus} onValueChange={setSelectedStatus} required>
                 <SelectTrigger>
                   <SelectValue />
                 </SelectTrigger>
