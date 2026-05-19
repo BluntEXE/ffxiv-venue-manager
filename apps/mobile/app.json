@@ -39,7 +39,9 @@
     "plugins": [
       "expo-router",
       "expo-secure-store",
-      ["expo-notifications", { "icon": "./assets/icon.png", "color": "#1e1e2e" }]    ],
+      ["expo-notifications", { "icon": "./assets/icon.png", "color": "#1e1e2e" }],
+      "./plugins/withGradle814"
+    ],
     "experiments": {
       "typedRoutes": true
     },
