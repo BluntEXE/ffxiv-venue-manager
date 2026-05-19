@@ -41,7 +41,8 @@
       "expo-secure-store",
       ["expo-notifications", { "icon": "./assets/icon.png", "color": "#1e1e2e" }],
       "./plugins/withGradle88",
-      "./plugins/withExpoModulesCoreAndroidFix"
+      "./plugins/withExpoModulesCoreAndroidFix",
+      "./plugins/withTamaguiAndroidFix"
     ],
     "experiments": {
       "typedRoutes": true
