@@ -17,6 +17,16 @@ export const authOptions: NextAuthOptions = {
       if (!user?.email && !account?.providerAccountId) {
         return false
       }
+      // Refresh Discord avatar on every sign-in. PrismaAdapter only stores
+      // image at account creation, so avatars go stale when users change them.
+      // user.id is only present for existing users (new users get their id
+      // after the adapter creates them post-callback).
+      if (account?.provider === "discord" && user?.id && user?.image) {
+        prisma.user.update({
+          where: { id: user.id },
+          data: { image: user.image },
+        }).catch(() => {})
+      }
       return true
     },
     async jwt({ token, user, account }) {
