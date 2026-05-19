@@ -18,6 +18,9 @@
       "android": {
         "buildType": "apk"
       },
+      "builderEnvironment": {
+        "node": "18.20.4"
+      },
       "env": {
         "EXPO_PUBLIC_DISCORD_CLIENT_ID": "1442821194263957616"
       }
