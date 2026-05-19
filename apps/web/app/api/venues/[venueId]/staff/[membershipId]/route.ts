@@ -16,6 +16,34 @@ const updateStaffSchema = z.object({
   permanentRole: z.enum(["OWNER", "MANAGER", "STAFF"]).nullable().optional(),
 })
 
+async function cleanupMemberData(
+  tx: Parameters<Parameters<typeof prisma.$transaction>[0]>[0],
+  userId: string,
+  venueId: string,
+  membershipId: string
+) {
+  // Revoke venue-scoped API keys for this user at this venue
+  await tx.apiKey.updateMany({
+    where: { userId, venueId, revokedAt: null },
+    data: { revokedAt: new Date() },
+  })
+
+  // Unassign pending tasks at this venue assigned to the departing member
+  await tx.task.updateMany({
+    where: {
+      venueId,
+      assignedTo: userId,
+      status: { in: ["PENDING", "IN_PROGRESS"] },
+    },
+    data: { assignedTo: null },
+  })
+
+  // Delete the membership (Shift + PayrollEntry rows cascade via DB)
+  await tx.membership.delete({
+    where: { id: membershipId, venueId },
+  })
+}
+
 export const PUT = withRateLimit<{ params: Promise<{ venueId: string; membershipId: string }> }>(
   async (request, context) => {
     if (!context?.params) {
@@ -187,6 +215,14 @@ export const DELETE = withRateLimit<{ params: Promise<{ venueId: string; members
       )
     }
 
+    const userId = targetMembership.userId
+
+    // Pending invites have no userId - no API keys or tasks to clean up
+    if (userId === null) {
+      await prisma.membership.delete({ where: { id: membershipId, venueId } })
+      return NextResponse.json({ success: true })
+    }
+
     // Use transaction with row-level locking to prevent race condition
     // when deleting owners (ensures at least 1 owner remains)
     if (targetMembership.role === "OWNER") {
@@ -205,9 +241,7 @@ export const DELETE = withRateLimit<{ params: Promise<{ venueId: string; members
             throw new Error("LAST_OWNER")
           }
 
-          await tx.membership.delete({
-            where: { id: membershipId, venueId },
-          })
+          await cleanupMemberData(tx, userId, venueId, membershipId)
         }, {
           isolationLevel: "Serializable",
           timeout: 5000,
@@ -222,8 +256,8 @@ export const DELETE = withRateLimit<{ params: Promise<{ venueId: string; members
         throw txError
       }
     } else {
-      await prisma.membership.delete({
-        where: { id: membershipId, venueId },
+      await prisma.$transaction(async (tx) => {
+        await cleanupMemberData(tx, userId, venueId, membershipId)
       })
     }
 

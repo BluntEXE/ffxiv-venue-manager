@@ -254,14 +254,30 @@ export default function HomeScreen() {
                         {formatST(s.scheduledStart, 'datetime')} ST
                       </Text>
                     </YStack>
-                    <XStack
-                      backgroundColor="#cba6f720"
-                      borderRadius="$4"
-                      paddingHorizontal="$2"
-                      paddingVertical={2}
-                    >
-                      <Text fontSize={11} color="$primary">{formatUntil(s.scheduledStart)}</Text>
-                    </XStack>
+                    {canClockIn(s.scheduledStart) ? (
+                      <Button
+                        size="$3"
+                        backgroundColor="$success"
+                        color="$base"
+                        fontFamily="InterBold"
+                        fontSize={13}
+                        borderRadius="$2"
+                        onPress={() => clockShift(s.id, 'clock-in')}
+                        disabled={clocking === s.id}
+                        pressStyle={{ opacity: 0.85, scale: 0.97 }}
+                      >
+                        {clocking === s.id ? 'Clocking in…' : 'Clock In'}
+                      </Button>
+                    ) : (
+                      <XStack
+                        backgroundColor="#cba6f720"
+                        borderRadius="$4"
+                        paddingHorizontal="$2"
+                        paddingVertical={2}
+                      >
+                        <Text fontSize={11} color="$primary">{formatUntil(s.scheduledStart)}</Text>
+                      </XStack>
+                    )}
                   </XStack>
                 ))}
               </YStack>
