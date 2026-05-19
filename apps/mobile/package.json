@@ -6,11 +6,12 @@
     "start": "expo start",
     "android": "expo run:android",
     "build:android:preview": "eas build --platform android --profile preview",
-    "build:android:dev": "eas build --platform android --profile development"
+    "build:android:dev": "eas build --platform android --profile development",
+    "ios": "expo run:ios"
   },
   "dependencies": {
     "@expo-google-fonts/outfit": "^0.4.3",
-    "@shopify/flash-list": "1.6.3",
+    "@shopify/flash-list": "1.6.4",
     "@tamagui/animations-css": "1.114.0",
     "@tamagui/config": "1.114.0",
     "@tamagui/font-inter": "1.114.0",
