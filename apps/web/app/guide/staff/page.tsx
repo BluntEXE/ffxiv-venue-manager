@@ -102,6 +102,7 @@ export default function StaffGuidePage() {
             <ul className="space-y-2 pl-2 text-sm leading-relaxed list-disc list-inside">
               <li><span className="font-medium">Event-gated by default:</span> patrons are only logged while a published event is active. Toggle in plugin Settings if you want always-on tracking.</li>
               <li><span className="font-medium">Staff aren&apos;t double-counted:</span> if you&apos;re on an active shift, the plugin classifies you as staff, not a patron (v3.2.0+).</li>
+              <li><span className="font-medium">Snooze alerts:</span> run <code className="bg-muted/60 px-1.5 py-0.5 rounded text-xs font-mono">/xvm snooze</code> to silence patron tracking notifications until you leave the house instance.</li>
             </ul>
           </section>
 
@@ -137,6 +138,14 @@ export default function StaffGuidePage() {
               <h3 className="text-lg font-medium text-muted-foreground">Server Time (ST)</h3>
               <p className="text-sm leading-relaxed">All times show in <span className="font-medium">Server Time (ST)</span>, the standard FFXIV time for your data center. Your timezone doesn&apos;t matter.</p>
             </div>
+          </section>
+
+          {/* Tasks */}
+          <section className="space-y-6">
+            <h2 className="text-2xl font-semibold border-b border-white/10 pb-2">Tasks</h2>
+
+            <p className="text-sm leading-relaxed">Your manager may assign you tasks on the Tasks page &mdash; prep items, event duties, follow-ups, etc. Depending on your venue&apos;s task visibility setting, you may also see unassigned tasks or all tasks.</p>
+            <p className="text-sm leading-relaxed text-muted-foreground">Mark tasks complete from the Tasks page when you&apos;re done.</p>
           </section>
 
           {/* Timeline */}

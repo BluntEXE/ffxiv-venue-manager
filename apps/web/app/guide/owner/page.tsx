@@ -101,6 +101,23 @@ export default function OwnerManagerGuidePage() {
             </div>
           </section>
 
+          {/* Services */}
+          <section className="space-y-6">
+            <h2 className="text-2xl font-semibold border-b border-white/10 pb-2">Services</h2>
+
+            <p className="text-sm leading-relaxed">Services are the offerings your staff sell — drinks, dances, lap dances, etc. They appear as selectable items when staff log a sale in the plugin or website.</p>
+
+            <div className="space-y-3">
+              <h3 className="text-lg font-medium text-muted-foreground">Creating Services</h3>
+              <ol className="list-decimal list-inside space-y-1.5 pl-2 text-sm leading-relaxed">
+                <li>Go to Services and click &quot;Add Service&quot;</li>
+                <li>Set a name, optional description, and default price</li>
+                <li>Assign to one or more custom roles (optional) &mdash; staff only see services linked to their role(s), keeping the plugin clean</li>
+                <li>Toggle active/inactive to hide services without deleting them</li>
+              </ol>
+            </div>
+          </section>
+
           {/* Event Management */}
           <section className="space-y-6">
             <h2 className="text-2xl font-semibold border-b border-white/10 pb-2">Event Management</h2>
@@ -228,6 +245,32 @@ export default function OwnerManagerGuidePage() {
               <li>View total hours worked per staff member</li>
               <li>See calculated payment amounts based on shift records</li>
               <li>Add manual payroll entries with notes</li>
+            </ul>
+          </section>
+
+          {/* Tasks */}
+          <section className="space-y-6">
+            <h2 className="text-2xl font-semibold border-b border-white/10 pb-2">Tasks</h2>
+
+            <p className="text-sm leading-relaxed">Tasks let you assign and track to-dos for your team &mdash; prep items before an event, follow-ups, recurring duties, etc.</p>
+
+            <ul className="list-disc list-inside space-y-1.5 pl-4 text-sm leading-relaxed">
+              <li>Create tasks from the Tasks page; optionally assign to a staff member and set a due date</li>
+              <li>Staff can view and complete their assigned tasks</li>
+              <li><span className="font-medium">Task Visibility</span> (in Settings): <span className="font-medium">All</span> shows every task to all staff; <span className="font-medium">Assigned only</span> shows staff only the tasks assigned to them; <span className="font-medium">Assigned + unassigned</span> shows their tasks plus tasks with no assignee</li>
+            </ul>
+          </section>
+
+          {/* Patron Logs */}
+          <section className="space-y-6">
+            <h2 className="text-2xl font-semibold border-b border-white/10 pb-2">Patron Logs</h2>
+
+            <p className="text-sm leading-relaxed">The Patron Logs page (Owners and Managers only) gives you a full historical view of every patron visit. Filter by:</p>
+            <ul className="list-disc list-inside space-y-1.5 pl-4 text-sm text-muted-foreground">
+              <li><span className="font-medium text-foreground">Event</span> &mdash; see all visits for a specific event</li>
+              <li><span className="font-medium text-foreground">Date range</span> &mdash; defaults to the last 7 days</li>
+              <li><span className="font-medium text-foreground">Character name</span> &mdash; look up a specific visitor</li>
+              <li><span className="font-medium text-foreground">Classification</span> &mdash; patron, staff, or all (the plugin separates staff on active shifts from patrons)</li>
             </ul>
           </section>
 
