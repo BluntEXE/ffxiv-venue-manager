@@ -112,58 +112,30 @@ export function LiveDashboard({
 
         if (data.type === "sale") {
           const amt = Number(data.data.amount || 0)
-          if (showRevenue) {
-            setRevenue((prev) => prev + amt)
-          }
+          if (showRevenue) setRevenue((prev) => prev + amt)
           setSaleCount((prev) => prev + 1)
           const name = data.data.customerName || "Someone"
           const staffName = data.data.staff?.name
-          setActivity((prev) =>
-            [
-              {
-                id: data.id,
-                type: "sale" as const,
-                timestamp: data.timestamp,
-                text:
-                  name +
-                  " - " +
-                  amt.toLocaleString() +
-                  " gil" +
-                  (staffName ? " (by " + staffName + ")" : ""),
-              },
-              ...prev,
-            ].slice(0, 50)
-          )
+          setActivity((prev) => {
+            if (prev.some((a) => a.id === data.id)) return prev
+            return [{ id: data.id, type: "sale" as const, timestamp: data.timestamp, text: name + " - " + amt.toLocaleString() + " gil" + (staffName ? " (by " + staffName + ")" : "") }, ...prev].slice(0, 50)
+          })
         }
 
         if (data.type === "patron_enter") {
           setPatronCount((prev) => prev + 1)
-          setActivity((prev) =>
-            [
-              {
-                id: data.id,
-                type: "patron_enter" as const,
-                timestamp: data.timestamp,
-                text: (data.data.characterName || "Unknown") + " entered",
-              },
-              ...prev,
-            ].slice(0, 50)
-          )
+          setActivity((prev) => {
+            if (prev.some((a) => a.id === data.id)) return prev
+            return [{ id: data.id, type: "patron_enter" as const, timestamp: data.timestamp, text: (data.data.characterName || "Unknown") + " entered" }, ...prev].slice(0, 50)
+          })
         }
 
         if (data.type === "patron_exit") {
           setPatronCount((prev) => Math.max(0, prev - 1))
-          setActivity((prev) =>
-            [
-              {
-                id: data.id,
-                type: "patron_exit" as const,
-                timestamp: data.timestamp,
-                text: (data.data.characterName || "Unknown") + " left",
-              },
-              ...prev,
-            ].slice(0, 50)
-          )
+          setActivity((prev) => {
+            if (prev.some((a) => a.id === data.id)) return prev
+            return [{ id: data.id, type: "patron_exit" as const, timestamp: data.timestamp, text: (data.data.characterName || "Unknown") + " left" }, ...prev].slice(0, 50)
+          })
         }
       } catch {}
     }
