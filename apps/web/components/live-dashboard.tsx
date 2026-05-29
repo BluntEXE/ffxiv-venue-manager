@@ -166,7 +166,7 @@ export function LiveDashboard({
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 mb-6">
         <div>
           <div className="flex items-center gap-3">
-            <h1 className="text-2xl md:text-3xl font-bold">{event.title}</h1>
+            <h1 className="font-cinzel text-2xl md:text-3xl font-bold tracking-wide">{event.title}</h1>
             <Badge
               variant="outline"
               className={
@@ -184,12 +184,10 @@ export function LiveDashboard({
           </p>
         </div>
         <div className="flex items-center gap-2">
-          <span
-            className={
-              "inline-block w-2 h-2 rounded-full " +
-              (connected ? "bg-emerald-500" : "bg-zinc-500")
-            }
-          />
+          <span className="relative flex h-2.5 w-2.5">
+            {connected && <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75" />}
+            <span className={"relative inline-flex rounded-full h-2.5 w-2.5 " + (connected ? "bg-emerald-500" : "bg-zinc-500")} />
+          </span>
           <span className="text-xs text-muted-foreground">
             {connected ? "Live" : "Connecting..."}
           </span>
@@ -213,7 +211,7 @@ export function LiveDashboard({
             <CardTitle className="text-sm font-medium">Patrons</CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="text-3xl font-bold">{patronCount}</div>
+            <div className="text-3xl font-bold text-[var(--xiv-blue)]">{patronCount}</div>
             <p className="text-xs text-muted-foreground mt-1">Currently inside</p>
           </CardContent>
         </Card>
@@ -223,7 +221,7 @@ export function LiveDashboard({
             <CardTitle className="text-sm font-medium">Sales</CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="text-3xl font-bold">{saleCount}</div>
+            <div className="text-3xl font-bold text-emerald-400">{saleCount}</div>
             <p className="text-xs text-muted-foreground mt-1">Transactions</p>
           </CardContent>
         </Card>
@@ -261,14 +259,21 @@ export function LiveDashboard({
 
       {/* Live activity feed */}
       <div>
-        <h2 className="text-xl font-semibold mb-4">Live Activity</h2>
+        <h2 className="font-cinzel text-xl font-semibold tracking-wide mb-4">Live Activity</h2>
         {activity.length === 0 ? (
           <Card>
-            <CardContent className="py-8 text-center">
-              <p className="text-muted-foreground">
+            <CardContent className="py-10 text-center space-y-3">
+              {!isUpcoming && (
+                <div className="flex justify-center gap-1.5">
+                  <span className="w-2 h-2 rounded-full bg-[var(--xiv-blue)] opacity-60 animate-bounce [animation-delay:0ms]" />
+                  <span className="w-2 h-2 rounded-full bg-[var(--xiv-blue)] opacity-60 animate-bounce [animation-delay:150ms]" />
+                  <span className="w-2 h-2 rounded-full bg-[var(--xiv-blue)] opacity-60 animate-bounce [animation-delay:300ms]" />
+                </div>
+              )}
+              <p className="text-muted-foreground text-sm">
                 {isUpcoming
                   ? "Activity will appear here once the event starts."
-                  : "Waiting for activity..."}
+                  : "Listening for activity..."}
               </p>
             </CardContent>
           </Card>
@@ -284,7 +289,7 @@ export function LiveDashboard({
                         ? "bg-emerald-500/10 text-emerald-500"
                         : item.type === "patron_enter"
                           ? "bg-[rgba(0,180,255,0.12)] text-[var(--xiv-blue)]"
-                          : "bg-zinc-500/10 text-zinc-400")
+                          : "bg-[rgba(255,100,100,0.1)] text-rose-400")
                     }
                     aria-label={
                       item.type === "sale"

@@ -5,6 +5,7 @@ import { formatServerTime, SERVER_TIME_LABEL } from "@/lib/server-time"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import { Card, CardContent } from "@/components/ui/card"
+import { LogIn, LogOut } from "lucide-react"
 
 type TimelineFilter = "all" | "sales" | "patrons"
 
@@ -206,15 +207,16 @@ function TimelineRow({ item }: { item: TimelineItem }) {
   const isEnter = item.type === "patron_enter"
 
   return (
-    <Card>
+    <Card className={isEnter ? "border-[rgba(0,180,255,0.2)]" : "border-[rgba(255,100,100,0.15)]"}>
       <CardContent className="p-4">
         <div className="flex items-center gap-3">
           <div className={"flex-shrink-0 w-8 h-8 rounded-full flex items-center justify-center " + (
-            isEnter ? "bg-blue-500/10" : "bg-zinc-500/10"
+            isEnter ? "bg-[rgba(0,180,255,0.12)]" : "bg-[rgba(255,100,100,0.1)]"
           )}>
-            <span className={"text-sm " + (isEnter ? "text-blue-500" : "text-zinc-400")}>
-              {isEnter ? "+" : "-"}
-            </span>
+            {isEnter
+              ? <LogIn className="h-4 w-4 text-[var(--xiv-blue)]" />
+              : <LogOut className="h-4 w-4 text-rose-400" />
+            }
           </div>
           <div className="flex-1 min-w-0">
             <p className="font-medium">
@@ -227,11 +229,11 @@ function TimelineRow({ item }: { item: TimelineItem }) {
           <Badge
             variant="outline"
             className={isEnter
-              ? "bg-blue-500/10 text-blue-500 border-blue-500/20"
-              : "bg-zinc-500/10 text-zinc-400 border-zinc-500/20"
+              ? "bg-[rgba(0,180,255,0.12)] text-[var(--xiv-blue)] border-[rgba(0,180,255,0.35)]"
+              : "bg-[rgba(255,100,100,0.1)] text-rose-400 border-rose-500/30"
             }
           >
-            {isEnter ? "Enter" : "Exit"}
+            {isEnter ? "Entered" : "Left"}
           </Badge>
         </div>
       </CardContent>
