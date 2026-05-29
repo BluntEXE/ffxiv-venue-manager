@@ -71,7 +71,7 @@ function IconBadge({
   const toneClasses =
     tone === "emerald"
       ? "bg-emerald-500/10 text-emerald-500"
-      : "bg-primary/10 text-primary"
+      : "bg-[rgba(0,180,255,0.1)] text-[var(--xiv-blue)]"
   const sizeClasses = {
     sm: "w-10 h-10 rounded-lg",
     md: "w-12 h-12 rounded-lg",
@@ -92,82 +92,71 @@ export default async function Home() {
   return (
     <div className="min-h-screen">
       {/* Hero Section */}
-      <section className="container mx-auto px-4 py-16 md:py-24">
-        <div className="flex flex-col items-center text-center space-y-8">
-          <h1 className="text-4xl md:text-6xl lg:text-7xl font-bold tracking-tight max-w-4xl">
-            Venue management built for{" "}
-            <span className="text-primary">FFXIV</span>
-          </h1>
+      <section className="xiv-hero-bg overflow-hidden">
+        <div className="container mx-auto px-4 py-16 md:py-28">
+          <div className="flex flex-col items-center text-center space-y-8">
+            <h1 className="xiv-fade-up font-cinzel font-bold tracking-wide max-w-4xl leading-tight" style={{fontSize: 'var(--text-hero)'}}>
+              Venue management built for{" "}
+              <span className="xiv-glow-text">FFXIV</span>
+            </h1>
 
-          <p className="text-xl md:text-2xl text-muted-foreground max-w-2xl">
-            Track events, log sales, and manage staff from a web dashboard or inside FFXIV via Dalamud.
-          </p>
+            <p className="xiv-fade-up-delay-1 text-xl md:text-2xl text-muted-foreground max-w-2xl">
+              Track events, log sales, and manage staff from a web dashboard or inside FFXIV via Dalamud.
+            </p>
 
-          <div className="flex flex-col sm:flex-row gap-4 mt-4">
-            <Button asChild size="lg" className="text-lg px-8 py-6 group">
-              <Link href="/auth/signin">
-                Get Started Free
-                <ArrowRight className="ml-2 h-5 w-5 transition-transform group-hover:translate-x-1" />
-              </Link>
-            </Button>
-            <Button asChild size="lg" variant="outline" className="text-lg px-8 py-6">
-              <Link href="#features">See Features</Link>
-            </Button>
+            <div className="xiv-fade-up-delay-2 flex flex-col sm:flex-row gap-4 mt-4">
+              <Button asChild size="lg" className="xiv-btn-shimmer text-lg px-8 py-6 group font-semibold" style={{background: 'var(--xiv-blue)', color: '#070b14', boxShadow: '0 0 28px rgba(0,180,255,0.4)'}}>
+                <Link href="/auth/signin">
+                  Get Started Free
+                  <ArrowRight className="ml-2 h-5 w-5 transition-transform group-hover:translate-x-1" />
+                </Link>
+              </Button>
+              <Button asChild size="lg" variant="outline" className="text-lg px-8 py-6 border-[var(--xiv-blue-border)] hover:bg-[var(--xiv-blue-dim)] hover:border-[var(--xiv-blue)]">
+                <Link href="#features">See Features</Link>
+              </Button>
+            </div>
+
+            <p className="xiv-fade-up-delay-2 text-sm text-muted-foreground">
+              Sign in with Discord to get started.
+            </p>
           </div>
-
-          <p className="text-sm text-muted-foreground">
-            Sign in with Discord to get started.
-          </p>
         </div>
       </section>
 
-      {/* Stats Section — live aggregates from /stats */}
-      <section className="border-y bg-muted/30">
-        <div className="container mx-auto px-4 py-12">
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-8 text-center">
-            <div>
-              <p className="text-3xl md:text-4xl font-bold text-primary tabular-nums">
-                {stats ? fmt(stats.venuesActive30d) : "—"}
-              </p>
-              <p className="text-muted-foreground">Active venues</p>
-            </div>
-            <div>
-              <p className="text-3xl md:text-4xl font-bold text-primary tabular-nums">
-                {stats ? fmt(stats.eventsTotal) : "—"}
-              </p>
-              <p className="text-muted-foreground">Events tracked</p>
-            </div>
-            <div>
-              <p className="text-3xl md:text-4xl font-bold text-primary tabular-nums">
-                {stats ? `${fmtCompact(stats.gilTracked)} gil` : "—"}
-              </p>
-              <p className="text-muted-foreground">Gil tracked</p>
-            </div>
-            <div>
-              <p className="text-3xl md:text-4xl font-bold text-emerald-500 tabular-nums">
-                {stats ? relTime(stats.lastActivityAt) : "—"}
-              </p>
-              <p className="text-muted-foreground">Last activity</p>
-            </div>
-          </div>
-          <p className="text-center text-sm text-muted-foreground mt-6">
-            <Link href="/stats" className="hover:text-primary transition-colors inline-flex items-center gap-1">
-              See full usage stats
-              <ArrowRight className="h-3.5 w-3.5" aria-hidden="true" />
+      {/* Social proof strip — live aggregates */}
+      <section className="border-y border-[rgba(0,180,255,0.1)] bg-[#060b16]">
+        <div className="container mx-auto px-4 py-6">
+          <div className="flex flex-col sm:flex-row items-center justify-center gap-2 sm:gap-0 text-sm text-muted-foreground text-center">
+            {stats ? (
+              <>
+                <span><span className="font-semibold text-foreground tabular-nums">{fmt(stats.venuesActive30d)}</span> active venues</span>
+                <span className="hidden sm:inline mx-4 text-[rgba(0,180,255,0.3)]">|</span>
+                <span><span className="font-semibold text-foreground tabular-nums">{fmt(stats.eventsTotal)}</span> events tracked</span>
+                <span className="hidden sm:inline mx-4 text-[rgba(0,180,255,0.3)]">|</span>
+                <span><span className="font-semibold text-[var(--xiv-blue)] tabular-nums">{fmtCompact(stats.gilTracked)} gil</span> flowing through the economy</span>
+                <span className="hidden sm:inline mx-4 text-[rgba(0,180,255,0.3)]">|</span>
+                <span>last activity <span className="font-semibold text-emerald-400">{relTime(stats.lastActivityAt)}</span></span>
+              </>
+            ) : (
+              <span className="opacity-40">Loading usage data&hellip;</span>
+            )}
+            <span className="hidden sm:inline mx-4 text-[rgba(0,180,255,0.3)]">|</span>
+            <Link href="/stats" className="hover:text-[var(--xiv-blue)] transition-colors inline-flex items-center gap-1">
+              Full stats <ArrowRight className="h-3 w-3" aria-hidden="true" />
             </Link>
-          </p>
+          </div>
         </div>
       </section>
 
       {/* Plugin Callout */}
-      <section className="container mx-auto px-4 py-16 md:py-20">
+      <section className="container mx-auto px-4 py-16 md:py-20 xiv-scroll-reveal">
         <div className="max-w-3xl mx-auto text-center space-y-6">
           <div className="flex justify-center">
             <IconBadge size="xl">
               <Gamepad2 className="h-10 w-10" aria-hidden="true" />
             </IconBadge>
           </div>
-          <h2 className="text-3xl md:text-4xl font-bold">In-Game Dalamud Plugin</h2>
+          <h2 className="font-cinzel text-3xl md:text-4xl font-bold tracking-wide">In-Game Dalamud Plugin</h2>
           <div className="flex justify-center">
             <LatestPluginVersion />
           </div>
@@ -177,23 +166,17 @@ export default async function Home() {
             patron visit to your dashboard as it happens.
           </p>
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 pt-4">
-            <div className="p-4 rounded-lg bg-muted/50 border border-white/5">
-              <p className="font-semibold mb-1 font-mono text-sm">/xvm sale 500</p>
-              <p className="text-sm text-muted-foreground">
-                Log sales with slash commands
-              </p>
+            <div className="p-5 rounded-lg xiv-card flex flex-col gap-2">
+              <p className="font-mono text-sm font-semibold" style={{color: 'var(--xiv-blue)'}}>/xvm sale 500</p>
+              <p className="text-sm text-muted-foreground leading-snug">Log sales with slash commands</p>
             </div>
-            <div className="p-4 rounded-lg bg-muted/50 border border-white/5">
-              <p className="font-semibold mb-1">Auto-Sync Patrons</p>
-              <p className="text-sm text-muted-foreground">
-                Enter/leave tracked automatically
-              </p>
+            <div className="p-5 rounded-lg xiv-card flex flex-col gap-2">
+              <p className="text-sm font-semibold text-foreground">Auto-Sync Patrons</p>
+              <p className="text-sm text-muted-foreground leading-snug">Enter/leave tracked automatically</p>
             </div>
-            <div className="p-4 rounded-lg bg-muted/50 border border-white/5">
-              <p className="font-semibold mb-1">Shift Clock In/Out</p>
-              <p className="text-sm text-muted-foreground">
-                Start and end shifts in-game
-              </p>
+            <div className="p-5 rounded-lg xiv-card flex flex-col gap-2">
+              <p className="text-sm font-semibold text-foreground">Shift Clock In/Out</p>
+              <p className="text-sm text-muted-foreground leading-snug">Start and end shifts in-game</p>
             </div>
           </div>
         </div>
@@ -202,144 +185,132 @@ export default async function Home() {
       {/* Features Grid */}
       <section id="features" className="container mx-auto px-4 py-16 md:py-24">
         <div className="text-center mb-16">
-          <h2 className="text-3xl md:text-4xl font-bold mb-4">
+          <div className="xiv-divider">
+            <svg width="12" height="12" viewBox="0 0 12 12" fill="none" aria-hidden="true"><rect x="6" y="0" width="8.485" height="8.485" transform="rotate(45 6 0)" fill="rgba(0,180,255,0.7)"/></svg>
+          </div>
+          <h2 className="font-cinzel text-3xl md:text-4xl font-bold tracking-wide">
             Tools built for FFXIV venues
           </h2>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {/* Event Management */}
-          <Card className="border-2 transition-all hover:border-primary/40 hover:shadow-lg">
-            <CardHeader>
-              <IconBadge>
-                <Calendar className="h-6 w-6" aria-hidden="true" />
-              </IconBadge>
-              <CardTitle className="mt-3">Event Management</CardTitle>
-              <CardDescription>
-                Full-featured event scheduling and tracking
-              </CardDescription>
-            </CardHeader>
-            <CardContent>
-              <ul className="space-y-2 text-sm text-muted-foreground">
-                <FeatureCheck>Recurring event templates</FeatureCheck>
-                <FeatureCheck>
-                  Event status tracking (Draft, Published, Active)
-                </FeatureCheck>
-                <FeatureCheck>Attendance and revenue per event</FeatureCheck>
-                <FeatureCheck>Partake.gg auto-sync</FeatureCheck>
-                <FeatureCheck>Discord webhook announcements</FeatureCheck>
-              </ul>
-            </CardContent>
-          </Card>
+        {/* Editorial feature rows — numbered, full-width, premium */}
+        <div className="max-w-4xl mx-auto">
 
-          {/* Live Mode */}
-          <Card className="border-2 border-emerald-500/30 transition-all hover:border-emerald-500/60 hover:shadow-lg">
-            <CardHeader>
-              <IconBadge tone="emerald">
-                <Radio className="h-6 w-6" aria-hidden="true" />
-              </IconBadge>
-              <CardTitle className="mt-3">Live Mode</CardTitle>
-              <CardDescription>
-                Real-time dashboard during active events
-              </CardDescription>
-            </CardHeader>
-            <CardContent>
-              <ul className="space-y-2 text-sm text-muted-foreground">
+          <div className="xiv-feature-row xiv-scroll-reveal">
+            <span className="xiv-feature-num" aria-hidden="true">01</span>
+            <div className="flex flex-col sm:flex-row gap-6">
+              <div className="flex-1">
+                <div className="flex items-center gap-3 mb-3">
+                  <IconBadge><Calendar className="h-6 w-6" aria-hidden="true" /></IconBadge>
+                  <h3 className="font-cinzel font-bold text-xl tracking-wide">Event Management</h3>
+                </div>
+                <p className="text-muted-foreground mb-4 leading-relaxed">Full-featured scheduling: draft, publish, run. Revenue and attendance tracked per event with Discord announcements on autopilot.</p>
+                <ul className="grid grid-cols-1 sm:grid-cols-2 gap-x-6 gap-y-2 text-sm text-muted-foreground">
+                  <FeatureCheck>Recurring templates</FeatureCheck>
+                  <FeatureCheck>Partake.gg auto-sync</FeatureCheck>
+                  <FeatureCheck>Draft / Published / Active states</FeatureCheck>
+                  <FeatureCheck>Discord webhooks</FeatureCheck>
+                </ul>
+              </div>
+            </div>
+          </div>
+
+          <div className="xiv-feature-row xiv-scroll-reveal">
+            <span className="xiv-feature-num" aria-hidden="true">02</span>
+            <div className="flex-1">
+              <div className="flex items-center gap-3 mb-3">
+                <IconBadge tone="emerald"><Radio className="h-6 w-6" aria-hidden="true" /></IconBadge>
+                <h3 className="font-cinzel font-bold text-xl tracking-wide">Live Mode</h3>
+              </div>
+              <p className="text-muted-foreground mb-4 leading-relaxed">A real-time command centre during your open events. Patron count, running gil total, and every sale pushed live via server-sent events.</p>
+              <ul className="grid grid-cols-1 sm:grid-cols-2 gap-x-6 gap-y-2 text-sm text-muted-foreground">
                 <FeatureCheck>Live patron count and sales</FeatureCheck>
-                <FeatureCheck>Real-time activity feed via SSE</FeatureCheck>
                 <FeatureCheck>Running revenue total</FeatureCheck>
-                <FeatureCheck>Event duration timer</FeatureCheck>
+                <FeatureCheck>Activity feed via SSE</FeatureCheck>
+                <FeatureCheck>No refresh needed</FeatureCheck>
               </ul>
-            </CardContent>
-          </Card>
+            </div>
+          </div>
 
-          {/* Shifts */}
-          <Card className="border-2 border-emerald-500/30 transition-all hover:border-emerald-500/60 hover:shadow-lg">
-            <CardHeader>
-              <IconBadge tone="emerald">
-                <Clock className="h-6 w-6" aria-hidden="true" />
-              </IconBadge>
-              <CardTitle className="mt-3">Shift Scheduling</CardTitle>
-              <CardDescription>Schedule and track staff shifts</CardDescription>
-            </CardHeader>
-            <CardContent>
-              <ul className="space-y-2 text-sm text-muted-foreground">
-                <FeatureCheck>Managers create and assign shifts</FeatureCheck>
-                <FeatureCheck>In-game clock in/out via plugin</FeatureCheck>
-                <FeatureCheck>Hours worked tracking</FeatureCheck>
-                <FeatureCheck>FFXIV Server Time (ST) display</FeatureCheck>
-              </ul>
-            </CardContent>
-          </Card>
-
-          {/* Staff Management */}
-          <Card className="border-2 transition-all hover:border-primary/40 hover:shadow-lg">
-            <CardHeader>
-              <IconBadge>
-                <Users className="h-6 w-6" aria-hidden="true" />
-              </IconBadge>
-              <CardTitle className="mt-3">Staff Management</CardTitle>
-              <CardDescription>
-                Organize your team with roles and permissions
-              </CardDescription>
-            </CardHeader>
-            <CardContent>
-              <ul className="space-y-2 text-sm text-muted-foreground">
+          <div className="xiv-feature-row xiv-scroll-reveal">
+            <span className="xiv-feature-num" aria-hidden="true">03</span>
+            <div className="flex-1">
+              <div className="flex items-center gap-3 mb-3">
+                <IconBadge><Users className="h-6 w-6" aria-hidden="true" /></IconBadge>
+                <h3 className="font-cinzel font-bold text-xl tracking-wide">Staff Management</h3>
+              </div>
+              <p className="text-muted-foreground mb-4 leading-relaxed">Roles, permissions, and onboarding built for venue teams of any size. Control what each person can see and do.</p>
+              <ul className="grid grid-cols-1 sm:grid-cols-2 gap-x-6 gap-y-2 text-sm text-muted-foreground">
                 <FeatureCheck>Owner, Manager, Staff roles</FeatureCheck>
-                <FeatureCheck>Custom roles (Bartender, DJ, etc.)</FeatureCheck>
-                <FeatureCheck>Invite links for easy onboarding</FeatureCheck>
+                <FeatureCheck>Custom roles (DJ, Bartender…)</FeatureCheck>
+                <FeatureCheck>Invite links</FeatureCheck>
                 <FeatureCheck>Granular visibility controls</FeatureCheck>
               </ul>
-            </CardContent>
-          </Card>
+            </div>
+          </div>
 
-          {/* Sales & Timeline */}
-          <Card className="border-2 transition-all hover:border-primary/40 hover:shadow-lg">
-            <CardHeader>
-              <IconBadge>
-                <Coins className="h-6 w-6" aria-hidden="true" />
-              </IconBadge>
-              <CardTitle className="mt-3">Sales &amp; Timeline</CardTitle>
-              <CardDescription>
-                Track every gil with a unified activity feed
-              </CardDescription>
-            </CardHeader>
-            <CardContent>
-              <ul className="space-y-2 text-sm text-muted-foreground">
-                <FeatureCheck>Log sales in-game or on the web</FeatureCheck>
-                <FeatureCheck>Live timeline (sales + patrons)</FeatureCheck>
+          <div className="xiv-feature-row xiv-scroll-reveal">
+            <span className="xiv-feature-num" aria-hidden="true">04</span>
+            <div className="flex-1">
+              <div className="flex items-center gap-3 mb-3">
+                <IconBadge><Coins className="h-6 w-6" aria-hidden="true" /></IconBadge>
+                <h3 className="font-cinzel font-bold text-xl tracking-wide">Sales &amp; Timeline</h3>
+              </div>
+              <p className="text-muted-foreground mb-4 leading-relaxed">Every gil accounted for. Log from in-game with a slash command or on the web — it lands in the timeline in real time.</p>
+              <ul className="grid grid-cols-1 sm:grid-cols-2 gap-x-6 gap-y-2 text-sm text-muted-foreground">
+                <FeatureCheck>Log in-game or on the web</FeatureCheck>
                 <FeatureCheck>Staff sales attribution</FeatureCheck>
-                <FeatureCheck>Filter by type (Sales / Patrons)</FeatureCheck>
+                <FeatureCheck>Live timeline feed</FeatureCheck>
+                <FeatureCheck>Filter by type</FeatureCheck>
               </ul>
-            </CardContent>
-          </Card>
+            </div>
+          </div>
 
-          {/* Analytics */}
-          <Card className="border-2 transition-all hover:border-primary/40 hover:shadow-lg">
-            <CardHeader>
-              <IconBadge>
-                <BarChart3 className="h-6 w-6" aria-hidden="true" />
-              </IconBadge>
-              <CardTitle className="mt-3">Analytics Dashboard</CardTitle>
-              <CardDescription>Visualize your venue&apos;s performance</CardDescription>
-            </CardHeader>
-            <CardContent>
-              <ul className="space-y-2 text-sm text-muted-foreground">
-                <FeatureCheck>Revenue trends over time</FeatureCheck>
-                <FeatureCheck>Patron visit tracking</FeatureCheck>
-                <FeatureCheck>Top services breakdown</FeatureCheck>
-                <FeatureCheck>Per-event performance</FeatureCheck>
+          <div className="xiv-feature-row xiv-scroll-reveal">
+            <span className="xiv-feature-num" aria-hidden="true">05</span>
+            <div className="flex-1">
+              <div className="flex items-center gap-3 mb-3">
+                <IconBadge tone="emerald"><Clock className="h-6 w-6" aria-hidden="true" /></IconBadge>
+                <h3 className="font-cinzel font-bold text-xl tracking-wide">Shift Scheduling</h3>
+              </div>
+              <p className="text-muted-foreground mb-4 leading-relaxed">Assign shifts before the event, then staff clock in and out without leaving FFXIV. Hours are tracked automatically.</p>
+              <ul className="grid grid-cols-1 sm:grid-cols-2 gap-x-6 gap-y-2 text-sm text-muted-foreground">
+                <FeatureCheck>Create and assign shifts</FeatureCheck>
+                <FeatureCheck>In-game clock in/out</FeatureCheck>
+                <FeatureCheck>FFXIV Server Time display</FeatureCheck>
+                <FeatureCheck>Hours summary per staff</FeatureCheck>
               </ul>
-            </CardContent>
-          </Card>
+            </div>
+          </div>
+
+          <div className="xiv-feature-row xiv-scroll-reveal">
+            <span className="xiv-feature-num" aria-hidden="true">06</span>
+            <div className="flex-1">
+              <div className="flex items-center gap-3 mb-3">
+                <IconBadge><BarChart3 className="h-6 w-6" aria-hidden="true" /></IconBadge>
+                <h3 className="font-cinzel font-bold text-xl tracking-wide">Analytics</h3>
+              </div>
+              <p className="text-muted-foreground mb-4 leading-relaxed">Visualise your venue&apos;s performance over time. Revenue trends, patron visit heatmaps, and per-event breakdowns.</p>
+              <ul className="grid grid-cols-1 sm:grid-cols-2 gap-x-6 gap-y-2 text-sm text-muted-foreground">
+                <FeatureCheck>Revenue trends</FeatureCheck>
+                <FeatureCheck>Patron visit tracking</FeatureCheck>
+                <FeatureCheck>Per-event performance</FeatureCheck>
+                <FeatureCheck>Export-ready data</FeatureCheck>
+              </ul>
+            </div>
+          </div>
+
         </div>
       </section>
 
       {/* Additional Features */}
-      <section className="border-y bg-muted/30">
+      <section className="border-y border-[rgba(0,180,255,0.1)] bg-[#060b16]">
         <div className="container mx-auto px-4 py-16 md:py-24">
           <div className="text-center mb-12">
-            <h2 className="text-3xl md:text-4xl font-bold mb-4">Included</h2>
+            <div className="xiv-divider">
+              <svg width="12" height="12" viewBox="0 0 12 12" fill="none" aria-hidden="true"><rect x="6" y="0" width="8.485" height="8.485" transform="rotate(45 6 0)" fill="rgba(0,180,255,0.7)"/></svg>
+            </div>
+            <h2 className="font-cinzel text-3xl md:text-4xl font-bold mb-4 tracking-wide">Included</h2>
           </div>
 
           <div className="grid grid-cols-2 md:grid-cols-4 gap-6 text-center">
@@ -366,7 +337,7 @@ export default async function Home() {
       </section>
 
       {/* Guides Section */}
-      <section className="container mx-auto px-4 py-16 md:py-20">
+      <section id="guides" className="container mx-auto px-4 py-16 md:py-20">
         <div className="max-w-3xl mx-auto">
           <div className="text-center mb-10">
             <div className="flex justify-center mb-4">
@@ -374,7 +345,10 @@ export default async function Home() {
                 <BookOpen className="h-8 w-8" aria-hidden="true" />
               </IconBadge>
             </div>
-            <h2 className="text-3xl md:text-4xl font-bold mb-4">
+            <div className="xiv-divider">
+              <svg width="12" height="12" viewBox="0 0 12 12" fill="none" aria-hidden="true"><rect x="6" y="0" width="8.485" height="8.485" transform="rotate(45 6 0)" fill="rgba(0,180,255,0.7)"/></svg>
+            </div>
+            <h2 className="font-cinzel text-3xl md:text-4xl font-bold mb-4 tracking-wide">
               Start with a guide
             </h2>
             <p className="text-lg text-muted-foreground">
@@ -385,14 +359,14 @@ export default async function Home() {
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
             <Link
               href="/guide/owner"
-              className="group block rounded-xl border-2 border-white/10 bg-muted/20 p-6 transition-all hover:border-primary/40 hover:bg-muted/40 hover:shadow-lg"
+              className="group block rounded-xl p-6 xiv-card"
             >
               <div className="mb-3">
                 <IconBadge>
                   <Crown className="h-6 w-6" aria-hidden="true" />
                 </IconBadge>
               </div>
-              <h3 className="text-xl font-semibold mb-2 group-hover:text-primary transition-colors">
+              <h3 className="text-xl font-semibold mb-2 transition-colors group-hover:text-[var(--xiv-blue)]">
                 Owner &amp; Manager Guide
               </h3>
               <p className="text-sm text-muted-foreground">
@@ -403,14 +377,14 @@ export default async function Home() {
 
             <Link
               href="/guide/staff"
-              className="group block rounded-xl border-2 border-white/10 bg-muted/20 p-6 transition-all hover:border-primary/40 hover:bg-muted/40 hover:shadow-lg"
+              className="group block rounded-xl p-6 xiv-card"
             >
               <div className="mb-3">
                 <IconBadge>
                   <Drama className="h-6 w-6" aria-hidden="true" />
                 </IconBadge>
               </div>
-              <h3 className="text-xl font-semibold mb-2 group-hover:text-primary transition-colors">
+              <h3 className="text-xl font-semibold mb-2 transition-colors group-hover:text-[var(--xiv-blue)]">
                 Staff Guide
               </h3>
               <p className="text-sm text-muted-foreground">
@@ -423,17 +397,20 @@ export default async function Home() {
       </section>
 
       {/* CTA Section */}
-      <section className="border-t bg-muted/30">
+      <section className="border-t border-[rgba(0,180,255,0.1)] bg-[#060b16]">
         <div className="container mx-auto px-4 py-16 md:py-24">
           <div className="text-center space-y-8">
-            <h2 className="text-3xl md:text-4xl font-bold">
+            <div className="xiv-divider">
+              <svg width="12" height="12" viewBox="0 0 12 12" fill="none" aria-hidden="true"><rect x="6" y="0" width="8.485" height="8.485" transform="rotate(45 6 0)" fill="rgba(0,180,255,0.7)"/></svg>
+            </div>
+            <h2 className="font-cinzel text-3xl md:text-4xl font-bold tracking-wide">
               Get your venue running.
             </h2>
             <p className="text-xl text-muted-foreground max-w-2xl mx-auto">
               Your sales, staff hours, and patron counts. One dashboard.
             </p>
             <div className="flex flex-col items-center gap-2">
-              <Button asChild size="lg" className="text-lg px-8 py-6 group">
+              <Button asChild size="lg" className="text-lg px-8 py-6 group" style={{background: 'var(--xiv-blue)', color: '#070b14', boxShadow: '0 0 24px rgba(0,180,255,0.35)'}}>
                 <Link href="/auth/signin">
                   Start Managing Your Venue
                   <ArrowRight className="ml-2 h-5 w-5 transition-transform group-hover:translate-x-1" />
@@ -449,7 +426,7 @@ export default async function Home() {
       <footer className="border-t">
         <div className="container mx-auto px-4 py-8 space-y-3">
           <p className="text-sm text-muted-foreground text-center">
-            <Link href="/stats" className="hover:text-primary transition-colors">
+            <Link href="/stats" className="hover:text-[var(--xiv-blue)] transition-colors">
               Usage stats
             </Link>
           </p>
