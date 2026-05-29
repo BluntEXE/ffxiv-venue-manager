@@ -128,7 +128,7 @@ export default async function StatsPage() {
             </span>
             Live data
           </div>
-          <h1 className="font-cinzel text-4xl md:text-6xl font-bold tracking-wide max-w-3xl">
+          <h1 className="font-cinzel text-4xl md:text-6xl font-bold tracking-wide max-w-3xl text-balance">
             Real venues. <span className="text-[var(--xiv-blue)] xiv-glow-text">Real usage.</span>
           </h1>
           <p className="text-lg md:text-xl text-muted-foreground max-w-2xl">

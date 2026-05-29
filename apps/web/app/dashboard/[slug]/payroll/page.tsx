@@ -439,7 +439,7 @@ export default function PayrollPage() {
         {/* Header */}
         <div className="flex flex-col sm:flex-row sm:justify-between sm:items-start gap-4">
           <div>
-            <h1 className="text-2xl md:text-3xl lg:text-4xl font-bold">Payroll</h1>
+            <h1 className="font-cinzel text-2xl md:text-3xl lg:text-4xl font-bold tracking-wide">Payroll</h1>
             <p className="text-sm md:text-base text-muted-foreground mt-1 md:mt-2">Manage staff compensation and payments</p>
           </div>
 

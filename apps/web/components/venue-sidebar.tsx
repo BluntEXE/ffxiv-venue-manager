@@ -155,8 +155,8 @@ export function VenueSidebar({
                 className={cn(
                   "flex items-center gap-3 px-3 py-2 rounded-lg text-sm transition-colors",
                   isActive
-                    ? "bg-primary text-primary-foreground font-medium"
-                    : "hover:bg-accent hover:text-accent-foreground"
+                    ? "bg-primary text-primary-foreground font-medium border-l-2 border-[var(--xiv-blue)] pl-[10px]"
+                    : "hover:bg-accent hover:text-accent-foreground border-l-2 border-transparent pl-[10px]"
                 )}
               >
                 <item.icon className="h-5 w-5 shrink-0" />
@@ -215,8 +215,8 @@ export function VenueSidebar({
                 className={cn(
                   "flex items-center gap-3 px-3 py-2 rounded-lg text-sm transition-colors",
                   isActive
-                    ? "bg-primary text-primary-foreground font-medium"
-                    : "hover:bg-accent hover:text-accent-foreground"
+                    ? "bg-primary text-primary-foreground font-medium border-l-2 border-[var(--xiv-blue)] pl-[10px]"
+                    : "hover:bg-accent hover:text-accent-foreground border-l-2 border-transparent pl-[10px]"
                 )}
               >
                 <item.icon className="h-5 w-5 shrink-0" />

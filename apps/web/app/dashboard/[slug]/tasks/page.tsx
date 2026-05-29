@@ -378,7 +378,7 @@ export default function TasksPage({
         {/* Header */}
         <div className="flex flex-col sm:flex-row sm:justify-between sm:items-start gap-4 mb-6 md:mb-8">
           <div>
-            <h1 className="text-2xl md:text-3xl lg:text-4xl font-bold">Tasks</h1>
+            <h1 className="font-cinzel text-2xl md:text-3xl lg:text-4xl font-bold tracking-wide">Tasks</h1>
             <p className="text-sm md:text-base text-muted-foreground mt-1 md:mt-2">
               Manage and assign tasks to your team
             </p>
@@ -392,41 +392,45 @@ export default function TasksPage({
         {/* Stats */}
         <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 md:gap-6 mb-6 md:mb-8">
         <Card>
-          <CardHeader className="pb-3">
-            <CardTitle className="text-sm font-medium">Total Tasks</CardTitle>
+          <CardHeader className="pb-2">
+            <CardTitle className="text-xs font-medium text-muted-foreground uppercase tracking-wide">Total Tasks</CardTitle>
           </CardHeader>
           <CardContent>
             <div className="text-3xl font-bold">{tasks.length}</div>
+            <p className="text-xs text-muted-foreground mt-1">All tasks</p>
           </CardContent>
         </Card>
         <Card>
-          <CardHeader className="pb-3">
-            <CardTitle className="text-sm font-medium">Pending</CardTitle>
+          <CardHeader className="pb-2">
+            <CardTitle className="text-xs font-medium text-muted-foreground uppercase tracking-wide">Pending</CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="text-3xl font-bold text-yellow-600">
+            <div className="text-3xl font-bold text-yellow-300">
               {tasks.filter((t) => t.status === "PENDING").length}
             </div>
+            <p className="text-xs text-muted-foreground mt-1">Not started</p>
           </CardContent>
         </Card>
         <Card>
-          <CardHeader className="pb-3">
-            <CardTitle className="text-sm font-medium">In Progress</CardTitle>
+          <CardHeader className="pb-2">
+            <CardTitle className="text-xs font-medium text-muted-foreground uppercase tracking-wide">In Progress</CardTitle>
           </CardHeader>
           <CardContent>
             <div className="text-3xl font-bold text-[var(--xiv-blue)]">
               {tasks.filter((t) => t.status === "IN_PROGRESS").length}
             </div>
+            <p className="text-xs text-muted-foreground mt-1">Active</p>
           </CardContent>
         </Card>
         <Card>
-          <CardHeader className="pb-3">
-            <CardTitle className="text-sm font-medium">Completed</CardTitle>
+          <CardHeader className="pb-2">
+            <CardTitle className="text-xs font-medium text-muted-foreground uppercase tracking-wide">Completed</CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="text-3xl font-bold text-emerald-500">
+            <div className="text-3xl font-bold text-emerald-400">
               {tasks.filter((t) => t.status === "COMPLETED").length}
             </div>
+            <p className="text-xs text-muted-foreground mt-1">Done</p>
           </CardContent>
         </Card>
       </div>

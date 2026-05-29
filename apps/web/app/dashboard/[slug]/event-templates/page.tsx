@@ -37,7 +37,7 @@ import {
   SelectValue,
 } from "@/components/ui/select"
 import { Alert, AlertDescription } from "@/components/ui/alert"
-import { Clock, Trash2, Edit, Plus } from "lucide-react"
+import { Clock, Trash2, Edit, Plus, ClipboardList } from "lucide-react"
 
 interface EventTemplate {
   id: string
@@ -261,17 +261,17 @@ export default function EventTemplatesPage() {
 
         {/* Templates Grid */}
         {templates.length === 0 ? (
-          <Card className="text-center py-12">
-            <CardContent>
-              <p className="text-muted-foreground mb-4">
-                No templates yet. Create your first template for recurring events!
-              </p>
-              <Button onClick={openCreateDialog}>
-                <Plus className="mr-2 h-4 w-4" />
-                Create Template
-              </Button>
-            </CardContent>
-          </Card>
+          <div className="xiv-card rounded-xl py-16 text-center space-y-4">
+            <ClipboardList className="h-12 w-12 text-[var(--xiv-blue)] mx-auto opacity-50" />
+            <div>
+              <p className="font-cinzel font-semibold tracking-wide">No Templates Yet</p>
+              <p className="text-sm text-muted-foreground mt-1">Save time by templating your recurring events.</p>
+            </div>
+            <Button onClick={openCreateDialog} style={{ background: "var(--xiv-blue)", color: "#070b14" }}>
+              <Plus className="mr-2 h-4 w-4" />
+              Create Template
+            </Button>
+          </div>
         ) : (
           <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
             {templates.map((template) => (

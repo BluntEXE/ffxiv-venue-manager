@@ -189,8 +189,8 @@ export function PendingInvites({ invites, slug, canManageStaff }: PendingInvites
                     {invite.inviteToken && (
                       <div className="mt-3">
                         <p className="text-xs font-medium mb-1 text-muted-foreground">Invite Link:</p>
-                        <div className="flex items-center gap-2">
-                          <code className="text-xs bg-muted px-2 py-1 rounded flex-1 truncate">
+                        <div className="flex items-center gap-2 min-w-0">
+                          <code className="text-xs bg-[rgba(0,180,255,0.08)] text-[var(--xiv-blue)] px-2 py-1 rounded flex-1 truncate min-w-0 border border-[rgba(0,180,255,0.15)]">
                             {getInviteUrl(invite.inviteToken)}
                           </code>
                           <Button

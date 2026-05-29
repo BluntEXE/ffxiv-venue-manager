@@ -107,7 +107,7 @@ export default async function VenueDashboardPage({
             <Link href={`/dashboard/${venue.slug}/events`}>
               <Card className="hover:shadow-lg hover:border-primary transition-all cursor-pointer">
                 <CardHeader className="pb-3">
-                  <CardTitle className="text-sm font-medium">Events</CardTitle>
+                  <CardTitle className="text-xs font-medium text-muted-foreground uppercase tracking-wide">Events</CardTitle>
                 </CardHeader>
                 <CardContent>
                   <div className="text-3xl font-bold">{venue._count.events}</div>
@@ -118,7 +118,7 @@ export default async function VenueDashboardPage({
             <Link href={`/dashboard/${venue.slug}/staff`}>
               <Card className="hover:shadow-lg hover:border-primary transition-all cursor-pointer">
                 <CardHeader className="pb-3">
-                  <CardTitle className="text-sm font-medium">Staff</CardTitle>
+                  <CardTitle className="text-xs font-medium text-muted-foreground uppercase tracking-wide">Staff</CardTitle>
                 </CardHeader>
                 <CardContent>
                   <div className="text-3xl font-bold">{venue._count.memberships}</div>
@@ -129,7 +129,7 @@ export default async function VenueDashboardPage({
             <Link href={`/dashboard/${venue.slug}/analytics`}>
               <Card className="hover:shadow-lg hover:border-primary transition-all cursor-pointer">
                 <CardHeader className="pb-3">
-                  <CardTitle className="text-sm font-medium">Mobile Followers</CardTitle>
+                  <CardTitle className="text-xs font-medium text-muted-foreground uppercase tracking-wide">Followers</CardTitle>
                 </CardHeader>
                 <CardContent>
                   <div className="text-3xl font-bold">{venue._count.follows}</div>
@@ -140,7 +140,7 @@ export default async function VenueDashboardPage({
             <Link href={`/dashboard/${venue.slug}/tasks`}>
               <Card className="hover:shadow-lg hover:border-primary transition-all cursor-pointer">
                 <CardHeader className="pb-3">
-                  <CardTitle className="text-sm font-medium">Tasks</CardTitle>
+                  <CardTitle className="text-xs font-medium text-muted-foreground uppercase tracking-wide">Tasks</CardTitle>
                 </CardHeader>
                 <CardContent>
                   <div className="text-3xl font-bold">{venue._count.tasks}</div>
@@ -151,7 +151,7 @@ export default async function VenueDashboardPage({
             <Link href={`/dashboard/${venue.slug}/services`}>
               <Card className="hover:shadow-lg hover:border-primary transition-all cursor-pointer">
                 <CardHeader className="pb-3">
-                  <CardTitle className="text-sm font-medium">Services</CardTitle>
+                  <CardTitle className="text-xs font-medium text-muted-foreground uppercase tracking-wide">Services</CardTitle>
                 </CardHeader>
                 <CardContent>
                   <div className="text-3xl font-bold">{venue._count.services}</div>
