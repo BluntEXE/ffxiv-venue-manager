@@ -46,7 +46,7 @@ export function UserMenu({ user }: UserMenuProps) {
             <p className="text-sm font-medium leading-none">{user.name || "User"}</p>
           </div>
         </DropdownMenuLabel>
-        <DropdownMenuSeparator />
+        <DropdownMenuSeparator className="bg-[rgba(0,180,255,0.15)]" />
         <DropdownMenuItem asChild>
           <Link href="/dashboard">Dashboard</Link>
         </DropdownMenuItem>
@@ -56,7 +56,7 @@ export function UserMenu({ user }: UserMenuProps) {
         <DropdownMenuItem asChild>
           <Link href="/dashboard/account/characters">My Characters</Link>
         </DropdownMenuItem>
-        <DropdownMenuSeparator />
+        <DropdownMenuSeparator className="bg-[rgba(0,180,255,0.15)]" />
         <DropdownMenuItem onClick={() => signOut({ callbackUrl: "/" })}>
           Sign out
         </DropdownMenuItem>

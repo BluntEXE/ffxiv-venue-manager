@@ -6,6 +6,8 @@ import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
 import { Button } from "@/components/ui/button"
@@ -51,7 +53,7 @@ export function VenueSwitcher({ venues }: VenueSwitcherProps) {
       <DropdownMenuTrigger asChild>
         <Button
           variant="ghost"
-          className="flex items-center gap-1.5 px-2.5 h-9 text-sm font-medium text-foreground/80 hover:text-foreground hover:bg-[rgba(0,180,255,0.06)] border border-transparent hover:border-[rgba(0,180,255,0.2)] rounded-lg transition-all"
+          className="flex items-center gap-1.5 px-3 h-11 text-sm font-medium text-foreground/80 hover:text-foreground hover:bg-[rgba(0,180,255,0.06)] border border-transparent hover:border-[rgba(0,180,255,0.2)] rounded-lg transition-all"
         >
           <Building2 className="h-3.5 w-3.5 text-[var(--xiv-blue)] opacity-70 shrink-0" />
           <span className="max-w-[140px] truncate">
@@ -60,7 +62,11 @@ export function VenueSwitcher({ venues }: VenueSwitcherProps) {
           <ChevronDownIcon className="h-3.5 w-3.5 opacity-50 shrink-0" />
         </Button>
       </DropdownMenuTrigger>
-      <DropdownMenuContent align="center" className="w-48">
+      <DropdownMenuContent align="center" className="w-56">
+        <DropdownMenuLabel className="text-xs text-muted-foreground font-medium">
+          Switch Venue
+        </DropdownMenuLabel>
+        <DropdownMenuSeparator className="bg-[rgba(0,180,255,0.15)]" />
         {venues.map((venue) => (
           <DropdownMenuItem
             key={venue.id}
