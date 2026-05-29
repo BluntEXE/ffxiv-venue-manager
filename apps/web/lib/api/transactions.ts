@@ -109,6 +109,19 @@ export async function createTransaction(
   await invalidateCache(`venue:${venueId}:services`)
   await invalidateCache(`venue:${venueId}:transactions:*`)
 
-  // Emit SSE event for live timeline  venueEventBus.emit(venueId, {    id: newTransaction.id,    type: "sale",    venueId,    timestamp: newTransaction.createdAt.toISOString(),    data: {      amount: Number(newTransaction.amount),      customerName: newTransaction.customerName,      service: newTransaction.service,      staff: newTransaction.staff,      notes: newTransaction.notes,    },  })
+  venueEventBus.emit(venueId, {
+    id: newTransaction.id,
+    type: "sale",
+    venueId,
+    timestamp: newTransaction.createdAt.toISOString(),
+    data: {
+      amount: Number(newTransaction.amount),
+      customerName: newTransaction.customerName,
+      service: newTransaction.service,
+      staff: newTransaction.staff,
+      notes: newTransaction.notes,
+    },
+  })
+
   return newTransaction
 }
