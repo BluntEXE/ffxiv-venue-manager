@@ -83,17 +83,17 @@ interface Role {
 const TASK_CATEGORIES = ["Setup", "Cleanup", "Promotional", "Maintenance", "Administrative", "Other"]
 
 const statusColors = {
-  PENDING: "bg-yellow-500",
-  IN_PROGRESS: "bg-blue-500",
-  COMPLETED: "bg-emerald-500",
-  CANCELLED: "bg-zinc-500",
+  PENDING: "bg-yellow-500/15 text-yellow-300 border-yellow-500/30",
+  IN_PROGRESS: "bg-[rgba(0,180,255,0.15)] text-[var(--xiv-blue)] border-[rgba(0,180,255,0.35)]",
+  COMPLETED: "bg-emerald-500/15 text-emerald-400 border-emerald-500/30",
+  CANCELLED: "bg-zinc-500/15 text-zinc-400 border-zinc-500/30",
 }
 
 const priorityColors = {
-  LOW: "bg-zinc-400",
-  MEDIUM: "bg-blue-400",
-  HIGH: "bg-orange-500",
-  URGENT: "bg-red-500",
+  LOW: "bg-zinc-400/15 text-zinc-400 border-zinc-400/30",
+  MEDIUM: "bg-[rgba(0,180,255,0.15)] text-[var(--xiv-blue)] border-[rgba(0,180,255,0.35)]",
+  HIGH: "bg-orange-500/15 text-orange-400 border-orange-500/30",
+  URGENT: "bg-red-500/15 text-red-400 border-red-500/30",
 }
 
 export default function TasksPage({
@@ -414,7 +414,7 @@ export default function TasksPage({
             <CardTitle className="text-sm font-medium">In Progress</CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="text-3xl font-bold text-blue-600">
+            <div className="text-3xl font-bold text-[var(--xiv-blue)]">
               {tasks.filter((t) => t.status === "IN_PROGRESS").length}
             </div>
           </CardContent>
