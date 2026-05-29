@@ -76,7 +76,7 @@ interface AnalyticsData {
 const CustomTooltip = ({ active, payload, label }: any) => {
   if (active && payload && payload.length) {
     return (
-      <div className="rounded-lg border bg-background/95 p-3 shadow-xl backdrop-blur-sm ring-1 ring-black/5">
+      <div className="rounded-lg border border-[rgba(0,180,255,0.25)] bg-[#0a0f1e] p-3 shadow-xl">
         <p className="mb-1 text-sm font-semibold">{label}</p>
         {payload.map((entry: any, index: number) => (
           <div key={index} className="flex items-center gap-2 text-xs text-muted-foreground">
@@ -494,17 +494,17 @@ export default function AnalyticsPage() {
                         if (active && payload && payload.length) {
                           const data = payload[0].payload
                           return (
-                            <div className="rounded-lg border bg-background/95 p-3 shadow-xl backdrop-blur-sm ring-1 ring-black/5">
+                            <div className="rounded-lg border border-[rgba(0,180,255,0.25)] bg-[#0a0f1e] p-3 shadow-xl">
                               <p className="mb-1 text-sm font-semibold">{label}</p>
                               <p className="text-xs text-muted-foreground mb-2">{data.eventTitle}</p>
                               <div className="space-y-1">
                                 <div className="flex items-center justify-between gap-4 text-xs">
                                   <span className="text-muted-foreground">Revenue:</span>
-                                  <span className="font-medium text-purple-600">{data.revenue.toLocaleString()} gil</span>
+                                  <span className="font-medium text-[var(--xiv-blue)]">{data.revenue.toLocaleString()} gil</span>
                                 </div>
                                 <div className="flex items-center justify-between gap-4 text-xs">
                                   <span className="text-muted-foreground">Payroll:</span>
-                                  <span className="font-medium text-orange-600">{data.payroll.toLocaleString()} gil</span>
+                                  <span className="font-medium text-amber-400">{data.payroll.toLocaleString()} gil</span>
                                 </div>
                                 <div className="flex items-center justify-between gap-4 text-xs border-t pt-1">
                                   <span className="text-muted-foreground font-semibold">Net Profit:</span>
@@ -551,8 +551,8 @@ export default function AnalyticsPage() {
                   <BarChart data={patronData} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
                     <defs>
                       <linearGradient id="colorPatron" x1="0" y1="0" x2="0" y2="1">
-                        <stop offset="0%" stopColor="#10b981" stopOpacity={0.8} />
-                        <stop offset="95%" stopColor="#10b981" stopOpacity={0.3} />
+                        <stop offset="0%" stopColor="#00b4ff" stopOpacity={0.8} />
+                        <stop offset="95%" stopColor="#00b4ff" stopOpacity={0.2} />
                       </linearGradient>
                     </defs>
                     <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#313244" />
@@ -572,7 +572,7 @@ export default function AnalyticsPage() {
                       tick={{ fill: "#9399b2" }}
                       stroke="#9399b2"
                     />
-                    <Tooltip content={<CustomTooltip />} cursor={{ fill: "#313244", opacity: 0.2 }} />
+                    <Tooltip content={<CustomTooltip />} cursor={{ fill: "rgba(0,180,255,0.06)" }} />
                     <Bar
                       dataKey="patrons"
                       fill="url(#colorPatron)"
@@ -588,7 +588,7 @@ export default function AnalyticsPage() {
           <Card>
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
-                <DollarSign className="h-5 w-5 text-blue-500" />
+                <DollarSign className="h-5 w-5 text-[var(--xiv-blue)]" />
                 Top Services
               </CardTitle>
               <CardDescription>
@@ -641,7 +641,7 @@ export default function AnalyticsPage() {
               </CardDescription>
             </CardHeader>
             <CardContent>
-              <div className="rounded-md border">
+              <div className="rounded-xl border border-[rgba(0,180,255,0.15)] overflow-hidden">
                 <Table>
                   <TableHeader>
                     <TableRow>
@@ -663,10 +663,10 @@ export default function AnalyticsPage() {
                             <TableCell className="text-muted-foreground">
                               {format(new Date(event.startTime), "MMM dd, yyyy")}
                             </TableCell>
-                            <TableCell className="text-right font-medium text-purple-600">
+                            <TableCell className="text-right font-medium text-[var(--xiv-blue)]">
                               {event.revenue.toLocaleString()} gil
                             </TableCell>
-                            <TableCell className="text-right font-medium text-orange-600">
+                            <TableCell className="text-right font-medium text-amber-400">
                               {event.payroll.toLocaleString()} gil
                             </TableCell>
                             <TableCell className={`text-right font-semibold ${
@@ -691,12 +691,12 @@ export default function AnalyticsPage() {
                     )}
                     {/* Total Row */}
                     {analyticsData?.revenueByEvent && analyticsData.revenueByEvent.length > 0 && (
-                      <TableRow className="bg-muted/50 font-semibold border-t-2">
-                        <TableCell colSpan={2}>TOTAL (Last 10 Events)</TableCell>
-                        <TableCell className="text-right text-purple-600">
+                      <TableRow className="bg-[rgba(0,180,255,0.06)] font-semibold border-t border-[rgba(0,180,255,0.25)]">
+                        <TableCell colSpan={2} className="text-[var(--xiv-blue)]">TOTAL (Last 10 Events)</TableCell>
+                        <TableCell className="text-right text-[var(--xiv-blue)]">
                           {analyticsData.revenueByEvent.reduce((sum, e) => sum + e.revenue, 0).toLocaleString()} gil
                         </TableCell>
-                        <TableCell className="text-right text-orange-600">
+                        <TableCell className="text-right text-amber-400">
                           {analyticsData.revenueByEvent.reduce((sum, e) => sum + e.payroll, 0).toLocaleString()} gil
                         </TableCell>
                         <TableCell className={`text-right ${
