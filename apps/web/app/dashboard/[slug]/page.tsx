@@ -189,7 +189,7 @@ export default async function VenueDashboardPage({
                           variant="outline"
                           className={isActive
                             ? "bg-emerald-500/10 text-emerald-500 border-emerald-500/20"
-                            : "bg-blue-500/10 text-blue-500 border-blue-500/20"
+                            : "bg-[rgba(0,180,255,0.12)] text-[var(--xiv-blue)] border-[rgba(0,180,255,0.35)]"
                           }
                         >
                           {isActive ? "On Shift" : "Upcoming"}

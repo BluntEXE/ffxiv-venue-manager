@@ -13,9 +13,9 @@ import { formatServerTime, SERVER_TIME_LABEL } from "@/lib/server-time"
 
 const statusColors = {
   DRAFT: "bg-zinc-500",
-  PUBLISHED: "bg-blue-500",
+  PUBLISHED: "bg-[rgba(0,180,255,0.15)] text-[var(--xiv-blue)] border-[rgba(0,180,255,0.35)]",
   ACTIVE: "bg-emerald-500",
-  COMPLETED: "bg-purple-500",
+  COMPLETED: "bg-zinc-500/15 text-zinc-400 border-zinc-500/30",
   CANCELLED: "bg-red-500",
 }
 
@@ -177,7 +177,7 @@ export default async function EventsPage({
                             {typeLabels[event.eventType as keyof typeof typeLabels]}
                           </Badge>
                           {event.partakeEventId && (
-                            <Badge variant="outline" className="border-indigo-500/50 text-indigo-400">
+                            <Badge variant="outline" className="border-[rgba(0,180,255,0.4)] text-[var(--xiv-blue)]">
                               Partake
                             </Badge>
                           )}
@@ -234,7 +234,7 @@ export default async function EventsPage({
                             {typeLabels[event.eventType as keyof typeof typeLabels]}
                           </Badge>
                           {event.partakeEventId && (
-                            <Badge variant="outline" className="border-indigo-500/50 text-indigo-400">
+                            <Badge variant="outline" className="border-[rgba(0,180,255,0.4)] text-[var(--xiv-blue)]">
                               Partake
                             </Badge>
                           )}

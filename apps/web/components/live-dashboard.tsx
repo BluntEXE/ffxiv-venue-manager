@@ -171,7 +171,7 @@ export function LiveDashboard({
               variant="outline"
               className={
                 isUpcoming
-                  ? "bg-blue-500/10 text-blue-500 border-blue-500/20"
+                  ? "bg-[rgba(0,180,255,0.12)] text-[var(--xiv-blue)] border-[rgba(0,180,255,0.35)]"
                   : "bg-emerald-500/10 text-emerald-500 border-emerald-500/20"
               }
             >
@@ -283,7 +283,7 @@ export function LiveDashboard({
                       (item.type === "sale"
                         ? "bg-emerald-500/10 text-emerald-500"
                         : item.type === "patron_enter"
-                          ? "bg-blue-500/10 text-blue-500"
+                          ? "bg-[rgba(0,180,255,0.12)] text-[var(--xiv-blue)]"
                           : "bg-zinc-500/10 text-zinc-400")
                     }
                     aria-label={

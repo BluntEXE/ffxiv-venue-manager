@@ -14,7 +14,7 @@ import { DeleteShiftButton } from "@/components/delete-shift-button"
 import { ClockShiftButton } from "@/components/clock-shift-button"
 
 const statusColors: Record<string, string> = {
-  SCHEDULED: "bg-blue-500/10 text-blue-500 border-blue-500/20",
+  SCHEDULED: "bg-[rgba(0,180,255,0.12)] text-[var(--xiv-blue)] border-[rgba(0,180,255,0.35)]",
   ACTIVE: "bg-emerald-500/10 text-emerald-500 border-emerald-500/20",
   COMPLETED: "bg-zinc-500/10 text-zinc-400 border-zinc-500/20",
   MISSED: "bg-amber-500/10 text-amber-500 border-amber-500/20",

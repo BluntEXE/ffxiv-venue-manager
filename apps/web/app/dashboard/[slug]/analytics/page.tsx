@@ -417,7 +417,7 @@ export default function AnalyticsPage() {
               <Card className="border-l-4 border-l-blue-500">
                 <CardHeader className="pb-3">
                   <CardTitle className="text-sm font-medium flex items-center gap-2">
-                    <Target className="h-4 w-4 text-blue-500" />
+                    <Target className="h-4 w-4 text-[var(--xiv-blue)]" />
                     Profit Margin
                   </CardTitle>
                 </CardHeader>

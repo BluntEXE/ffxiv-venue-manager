@@ -108,8 +108,8 @@ export function EventAttendanceChart({ venueId, eventId, className }: EventAtten
                         <AreaChart data={data} margin={{ top: 10, right: 10, left: 0, bottom: 0 }}>
                             <defs>
                                 <linearGradient id="attendanceGradient" x1="0" y1="0" x2="0" y2="1">
-                                    <stop offset="5%" stopColor="#8b5cf6" stopOpacity={0.3} />
-                                    <stop offset="95%" stopColor="#8b5cf6" stopOpacity={0} />
+                                    <stop offset="5%" stopColor="#00b4ff" stopOpacity={0.3} />
+                                    <stop offset="95%" stopColor="#00b4ff" stopOpacity={0} />
                                 </linearGradient>
                             </defs>
                             <CartesianGrid strokeDasharray="3 3" stroke="#334155" opacity={0.2} vertical={false} />
@@ -161,7 +161,7 @@ export function EventAttendanceChart({ venueId, eventId, className }: EventAtten
                             <Area
                                 type="monotone"
                                 dataKey="count"
-                                stroke="#8b5cf6"
+                                stroke="#00b4ff"
                                 strokeWidth={2}
                                 fill="url(#attendanceGradient)"
                                 animationDuration={1500}

@@ -921,7 +921,7 @@ export default function PayrollPage() {
                                 "Unknown"}
                           </h3>
                           {entry.isManualEntry && (
-                            <Badge variant="outline" className="bg-blue-500/10 text-blue-400 border-blue-500/20">
+                            <Badge variant="outline" className="bg-[rgba(0,180,255,0.12)] text-[var(--xiv-blue)] border-[rgba(0,180,255,0.35)]">
                               Manual
                             </Badge>
                           )}

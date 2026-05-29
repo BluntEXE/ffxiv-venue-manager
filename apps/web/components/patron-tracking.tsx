@@ -113,9 +113,9 @@ export function PatronTracking({ venueId, eventId }: PatronTrackingProps) {
         )}
 
         {/* Current Count Display */}
-        <div className="text-center p-6 bg-primary/5 rounded-lg">
+        <div className="text-center p-6 bg-[rgba(0,180,255,0.06)] rounded-xl border border-[rgba(0,180,255,0.15)]">
           <div className="text-sm text-muted-foreground mb-2">Current Patrons</div>
-          <div className="text-5xl font-bold text-primary">{currentCount}</div>
+          <div className="text-5xl font-bold text-[var(--xiv-blue)]">{currentCount}</div>
         </div>
 
         {/* Action Buttons */}
