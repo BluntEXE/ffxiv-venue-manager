@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { validateApiKey, checkPermission, logPatronVisit, getPatronVisits } from '@/lib/api/plugin-auth'
 import { enforcePluginRateLimit, enforcePluginIpRateLimit } from '@/lib/api/plugin-rate-limit'
+import { venueEventBus } from '@/lib/sse/venue-events'
 import { nanoid } from 'nanoid'
 
 interface PatronVisitPayload {
@@ -66,6 +67,16 @@ export async function POST(request: NextRequest) {
       timestamp: new Date(timestamp),
       loggedBy: auth.userId
     })
+
+    if (!result.deduped && !result.wasWorking) {
+      venueEventBus.emit(venueId, {
+        id: result.id,
+        type: action === 'enter' ? 'patron_enter' : 'patron_exit',
+        venueId,
+        timestamp: new Date(timestamp).toISOString(),
+        data: { characterName, world },
+      })
+    }
 
     return NextResponse.json({
       success: true,
