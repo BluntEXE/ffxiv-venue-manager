@@ -219,7 +219,8 @@ export default function AnalyticsPage() {
             <p>Error loading analytics: {error}</p>
             <button
               onClick={fetchAnalytics}
-              className="mt-4 px-4 py-2 bg-primary text-primary-foreground rounded-md hover:bg-primary/90"
+              className="mt-4 px-4 py-2 rounded-md transition-colors"
+              style={{ background: "var(--xiv-blue)", color: "#070b14" }}
             >
               Retry
             </button>
@@ -235,11 +236,11 @@ export default function AnalyticsPage() {
   const totalPatrons = eventStats?.totalPatrons || 0
 
   const COLORS = [
-    "#8b5cf6", // Purple
-    "#10b981", // Green
-    "#f59e0b", // Orange
-    "#3b82f6", // Blue
-    "#ec4899", // Pink
+    "#00b4ff", // XIV blue
+    "#10b981", // Emerald
+    "#f59e0b", // Amber
+    "#38bdf8", // Sky
+    "#a78bfa", // Violet
   ]
 
   return (
@@ -254,7 +255,7 @@ export default function AnalyticsPage() {
         />
 
         <div className="mb-6 md:mb-8">
-          <h1 className="text-2xl md:text-3xl lg:text-4xl font-bold mb-2">Analytics Dashboard</h1>
+          <h1 className="font-cinzel text-2xl md:text-3xl lg:text-4xl font-bold tracking-wide mb-2">Analytics Dashboard</h1>
           <p className="text-sm md:text-base text-muted-foreground">
             Comprehensive insights into your venue's performance
           </p>
@@ -330,7 +331,7 @@ export default function AnalyticsPage() {
         {/* Mobile Followers */}
         {analyticsData?.followers && (
           <div className="mb-6 md:mb-8">
-            <h2 className="text-xl font-semibold mb-4">Mobile App Followers</h2>
+            <h2 className="font-cinzel text-xl font-semibold mb-4 tracking-wide">Mobile App Followers</h2>
             <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
               <Card>
                 <CardHeader className="pb-3">
@@ -364,7 +365,7 @@ export default function AnalyticsPage() {
         {/* Financial Summary Cards */}
         {analyticsData?.financial && (
           <div className="mb-6 md:mb-8">
-            <h2 className="text-xl font-semibold mb-4">Financial Overview (Last 10 Events)</h2>
+            <h2 className="font-cinzel text-xl font-semibold mb-4 tracking-wide">Financial Overview (Last 10 Events)</h2>
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4 md:gap-6">
               <Card className="border-l-4 border-l-yellow-500">
                 <CardHeader className="pb-3">
@@ -444,7 +445,7 @@ export default function AnalyticsPage() {
             <CardHeader className="flex flex-row items-center justify-between">
               <div>
                 <CardTitle className="flex items-center gap-2">
-                  <TrendingUp className="h-5 w-5 text-primary" />
+                  <TrendingUp className="h-5 w-5 text-[var(--xiv-blue)]" />
                   Net Profit/Loss by Event (Last 10)
                 </CardTitle>
                 <CardDescription>
@@ -453,7 +454,8 @@ export default function AnalyticsPage() {
               </div>
               <button
                 onClick={exportToCSV}
-                className="flex items-center gap-2 px-3 py-2 text-sm bg-primary text-primary-foreground rounded-md hover:bg-primary/90 transition-colors"
+                className="flex items-center gap-2 px-3 py-2 text-sm rounded-md transition-colors"
+                style={{ background: "var(--xiv-blue)", color: "#070b14" }}
               >
                 <Download className="h-4 w-4" />
                 Export CSV
