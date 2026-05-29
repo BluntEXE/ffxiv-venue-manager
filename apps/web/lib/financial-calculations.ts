@@ -1,5 +1,7 @@
 import { prisma } from "@/lib/prisma"
-import { Decimal } from "@prisma/client/runtime/library"
+import { Prisma } from "@/generated/prisma/client"
+const Decimal = Prisma.Decimal
+type Decimal = InstanceType<typeof Prisma.Decimal>
 
 /**
  * Financial calculation utilities for venue revenue and payroll analysis

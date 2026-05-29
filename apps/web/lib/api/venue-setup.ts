@@ -1,4 +1,4 @@
-import { Prisma, Role } from "@prisma/client"
+import { Prisma, Role } from "@/generated/prisma/client"
 import { prisma as defaultPrisma } from "@/lib/prisma"
 
 /**

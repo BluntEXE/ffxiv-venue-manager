@@ -3,9 +3,11 @@
  * Usage: npx tsx scripts/make-admin.ts <email_or_discord_id>
  */
 
-import { PrismaClient } from "@prisma/client"
+import { PrismaClient } from "../generated/prisma/client"
+import { PrismaPg } from "@prisma/adapter-pg"
 
-const prisma = new PrismaClient()
+const adapter = new PrismaPg({ connectionString: process.env.DATABASE_URL! })
+const prisma = new PrismaClient({ adapter })
 
 async function makeAdmin() {
   const identifier = process.argv[2]

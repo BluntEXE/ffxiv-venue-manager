@@ -3,7 +3,9 @@ import { getServerSession } from "next-auth"
 import { authOptions } from "@/lib/auth"
 import { prisma } from "@/lib/prisma"
 import { withRateLimit } from "@/lib/middleware/with-rate-limit"
-import { Decimal } from "@prisma/client/runtime/library"
+import { Prisma } from "@/generated/prisma/client"
+const Decimal = Prisma.Decimal
+type Decimal = InstanceType<typeof Prisma.Decimal>
 
 // GET /api/venues/[venueId]/payroll - List payroll entries
 export const GET = withRateLimit<{ params: Promise<{ venueId: string }> }>(
