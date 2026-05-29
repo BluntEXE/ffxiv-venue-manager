@@ -202,7 +202,7 @@ export default async function SalesPage({ params }: PageProps) {
         {/* Header */}
         <div className="flex flex-col sm:flex-row sm:justify-between sm:items-start gap-4 mb-6 md:mb-8">
           <div>
-            <h1 className="text-2xl md:text-3xl lg:text-4xl font-bold">Sales & Transactions</h1>
+            <h1 className="font-cinzel text-2xl md:text-3xl lg:text-4xl font-bold tracking-wide">Sales & Transactions</h1>
             <p className="text-sm md:text-base text-muted-foreground mt-1 md:mt-2">
               Log sales and track revenue
             </p>
@@ -213,37 +213,32 @@ export default async function SalesPage({ params }: PageProps) {
         {/* Stats */}
         <div className="grid grid-cols-2 md:grid-cols-3 gap-4 md:gap-6 mb-6 md:mb-8">
           <Card>
-            <CardHeader className="pb-3">
-              <CardTitle className="text-sm font-medium">Total Revenue</CardTitle>
+            <CardHeader className="pb-2">
+              <CardTitle className="text-xs font-medium text-muted-foreground uppercase tracking-wide">Total Revenue</CardTitle>
             </CardHeader>
             <CardContent>
-              <div className="text-3xl font-bold">{totalRevenue.toLocaleString()} gil</div>
-              <p className="text-xs text-muted-foreground mt-1">
-                {transactions.length} transactions
-              </p>
+              <div className="font-cinzel text-3xl font-bold tracking-wide text-[var(--xiv-blue)]">{totalRevenue.toLocaleString()} gil</div>
+              <p className="text-xs text-muted-foreground mt-1">{transactions.length} transactions</p>
             </CardContent>
           </Card>
           <Card>
-            <CardHeader className="pb-3">
-              <CardTitle className="text-sm font-medium">Today's Revenue</CardTitle>
+            <CardHeader className="pb-2">
+              <CardTitle className="text-xs font-medium text-muted-foreground uppercase tracking-wide">Today&apos;s Revenue</CardTitle>
             </CardHeader>
             <CardContent>
-              <div className="text-3xl font-bold text-emerald-500">
-                {todayRevenue.toLocaleString()} gil
-              </div>
-              <p className="text-xs text-muted-foreground mt-1">
-                {todayTransactions.length} transactions
-              </p>
+              <div className="text-3xl font-bold text-emerald-400">{todayRevenue.toLocaleString()} gil</div>
+              <p className="text-xs text-muted-foreground mt-1">{todayTransactions.length} transactions today</p>
             </CardContent>
           </Card>
           <Card>
-            <CardHeader className="pb-3">
-              <CardTitle className="text-sm font-medium">Average Sale</CardTitle>
+            <CardHeader className="pb-2">
+              <CardTitle className="text-xs font-medium text-muted-foreground uppercase tracking-wide">Average Sale</CardTitle>
             </CardHeader>
             <CardContent>
-              <div className="text-3xl font-bold">
+              <div className="font-cinzel text-3xl font-bold tracking-wide text-amber-400">
                 {transactions.length > 0 ? Math.round(totalRevenue / transactions.length).toLocaleString() : 0} gil
               </div>
+              <p className="text-xs text-muted-foreground mt-1">Per transaction</p>
             </CardContent>
           </Card>
         </div>

@@ -94,7 +94,7 @@ export default async function StaffPage({
         {/* Header */}
         <div className="flex flex-col sm:flex-row sm:justify-between sm:items-start gap-4 mb-6 md:mb-8">
           <div>
-            <h1 className="text-2xl md:text-3xl lg:text-4xl font-bold">Staff Management</h1>
+            <h1 className="font-cinzel text-2xl md:text-3xl lg:text-4xl font-bold tracking-wide">Staff Management</h1>
             <p className="text-sm md:text-base text-muted-foreground mt-1 md:mt-2">
               Manage your venue's team members and roles
             </p>
@@ -120,35 +120,39 @@ export default async function StaffPage({
         {/* Stats */}
         <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 md:gap-6 mb-6 md:mb-8">
           <Card>
-            <CardHeader className="pb-3">
-              <CardTitle className="text-sm font-medium">Active Staff</CardTitle>
+            <CardHeader className="pb-2">
+              <CardTitle className="text-xs font-medium text-muted-foreground uppercase tracking-wide">Active Staff</CardTitle>
             </CardHeader>
             <CardContent>
-              <div className="text-3xl font-bold">{activeStaff.length}</div>
+              <div className="font-cinzel text-3xl font-bold tracking-wide text-[var(--xiv-blue)]">{activeStaff.length}</div>
+              <p className="text-xs text-muted-foreground mt-1">Members</p>
             </CardContent>
           </Card>
           <Card>
-            <CardHeader className="pb-3">
-              <CardTitle className="text-sm font-medium">Pending Invites</CardTitle>
+            <CardHeader className="pb-2">
+              <CardTitle className="text-xs font-medium text-muted-foreground uppercase tracking-wide">Pending Invites</CardTitle>
             </CardHeader>
             <CardContent>
-              <div className="text-3xl font-bold">{pendingInvites.length}</div>
+              <div className={`font-cinzel text-3xl font-bold tracking-wide ${pendingInvites.length > 0 ? 'text-amber-400' : 'text-zinc-400'}`}>{pendingInvites.length}</div>
+              <p className="text-xs text-muted-foreground mt-1">Awaiting signup</p>
             </CardContent>
           </Card>
           <Card>
-            <CardHeader className="pb-3">
-              <CardTitle className="text-sm font-medium">Managers</CardTitle>
+            <CardHeader className="pb-2">
+              <CardTitle className="text-xs font-medium text-muted-foreground uppercase tracking-wide">Managers</CardTitle>
             </CardHeader>
             <CardContent>
-              <div className="text-3xl font-bold">{managers.length}</div>
+              <div className="font-cinzel text-3xl font-bold tracking-wide text-[var(--xiv-blue)]">{managers.length}</div>
+              <p className="text-xs text-muted-foreground mt-1">Manager role</p>
             </CardContent>
           </Card>
           <Card>
-            <CardHeader className="pb-3">
-              <CardTitle className="text-sm font-medium">Staff</CardTitle>
+            <CardHeader className="pb-2">
+              <CardTitle className="text-xs font-medium text-muted-foreground uppercase tracking-wide">Staff</CardTitle>
             </CardHeader>
             <CardContent>
-              <div className="text-3xl font-bold">{regularStaff.length}</div>
+              <div className="font-cinzel text-3xl font-bold tracking-wide text-zinc-300">{regularStaff.length}</div>
+              <p className="text-xs text-muted-foreground mt-1">Staff role</p>
             </CardContent>
           </Card>
         </div>
