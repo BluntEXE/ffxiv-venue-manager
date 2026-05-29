@@ -74,6 +74,30 @@ export function LiveDashboard({
     return () => clearInterval(interval)
   }, [event.startTime, isUpcoming])
 
+  // Load historical activity for this event on mount
+  useEffect(() => {
+    if (isUpcoming || !event.id) return
+    fetch(`/api/venues/${venueId}/timeline?eventId=${event.id}&limit=50`)
+      .then((r) => r.json())
+      .then((data) => {
+        if (!Array.isArray(data.items)) return
+        const historical: ActivityItem[] = data.items
+          .map((item: any) => ({
+            id: item.id,
+            type: item.type as ActivityItem["type"],
+            timestamp: item.timestamp,
+            text:
+              item.type === "sale"
+                ? `${item.data?.customerName || "Someone"} - ${Number(item.data?.amount || 0).toLocaleString()} gil${item.data?.staff?.name ? " (by " + item.data.staff.name + ")" : ""}`
+                : item.type === "patron_enter"
+                ? `${item.data?.characterName || "Unknown"} entered`
+                : `${item.data?.characterName || "Unknown"} left`,
+          }))
+        setActivity(historical)
+      })
+      .catch(() => {})
+  }, [venueId, event.id, isUpcoming])
+
   // SSE subscription
   useEffect(() => {
     const eventSource = new EventSource("/api/stream/" + venueId)
