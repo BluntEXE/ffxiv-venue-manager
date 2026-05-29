@@ -1,7 +1,14 @@
 "use client"
 
 import { useRouter, usePathname } from "next/navigation"
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
+import { ChevronDownIcon, Building2 } from "lucide-react"
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu"
+import { Button } from "@/components/ui/button"
 
 interface Venue {
   id: string
@@ -11,20 +18,13 @@ interface Venue {
 
 interface VenueSwitcherProps {
   venues: Venue[]
-  currentSlug?: string
 }
 
-export function VenueSwitcher({ venues, currentSlug }: VenueSwitcherProps) {
+export function VenueSwitcher({ venues }: VenueSwitcherProps) {
   const router = useRouter()
   const pathname = usePathname()
 
   const handleVenueChange = (slug: string) => {
-    // Only swap segment 2 when the current path is already inside a
-    // venue-slug-scoped route (e.g. /dashboard/my-venue/shifts). If we're
-    // on an account-scoped page like /dashboard/account/characters or
-    // /dashboard/api-keys, that segment is NOT a venue slug, and blindly
-    // overwriting it produces a 404 (e.g. /dashboard/my-venue/characters
-    // has no such page). In that case, jump to the venue root instead.
     const knownSlugs = new Set(venues.map((v) => v.slug))
     if (pathname.startsWith("/dashboard/")) {
       const pathParts = pathname.split("/")
@@ -37,25 +37,40 @@ export function VenueSwitcher({ venues, currentSlug }: VenueSwitcherProps) {
     router.push(`/dashboard/${slug}`)
   }
 
-  if (venues.length <= 1) {
-    // Don't show switcher if user only has one venue
-    return null
-  }
+  if (venues.length <= 1) return null
+
+  // Detect current venue from URL
+  const pathParts = pathname?.split("/") || []
+  const currentSlug = pathParts[2] && venues.some((v) => v.slug === pathParts[2])
+    ? pathParts[2]
+    : null
+  const currentVenue = venues.find((v) => v.slug === currentSlug)
 
   return (
-    <div className="w-[200px]">
-      <Select value={currentSlug} onValueChange={handleVenueChange}>
-        <SelectTrigger>
-          <SelectValue placeholder="Select venue" />
-        </SelectTrigger>
-        <SelectContent>
-          {venues.map((venue) => (
-            <SelectItem key={venue.id} value={venue.slug}>
-              {venue.name}
-            </SelectItem>
-          ))}
-        </SelectContent>
-      </Select>
-    </div>
+    <DropdownMenu>
+      <DropdownMenuTrigger asChild>
+        <Button
+          variant="ghost"
+          className="flex items-center gap-1.5 px-2.5 h-9 text-sm font-medium text-foreground/80 hover:text-foreground hover:bg-[rgba(0,180,255,0.06)] border border-transparent hover:border-[rgba(0,180,255,0.2)] rounded-lg transition-all"
+        >
+          <Building2 className="h-3.5 w-3.5 text-[var(--xiv-blue)] opacity-70 shrink-0" />
+          <span className="max-w-[140px] truncate">
+            {currentVenue ? currentVenue.name : "Switch Venue"}
+          </span>
+          <ChevronDownIcon className="h-3.5 w-3.5 opacity-50 shrink-0" />
+        </Button>
+      </DropdownMenuTrigger>
+      <DropdownMenuContent align="center" className="w-48">
+        {venues.map((venue) => (
+          <DropdownMenuItem
+            key={venue.id}
+            onClick={() => handleVenueChange(venue.slug)}
+            className={venue.slug === currentSlug ? "text-[var(--xiv-blue)]" : ""}
+          >
+            {venue.name}
+          </DropdownMenuItem>
+        ))}
+      </DropdownMenuContent>
+    </DropdownMenu>
   )
 }
