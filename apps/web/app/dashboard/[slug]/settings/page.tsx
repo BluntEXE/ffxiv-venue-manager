@@ -815,7 +815,7 @@ export default function SettingsPage({
             {/* Info Card */}
             <Card className="bg-[rgba(0,180,255,0.05)] border-[rgba(0,180,255,0.2)]">
               <CardHeader>
-                <CardTitle className="text-[var(--xiv-blue)]>ℹ️ Important Notes</CardTitle>
+                <CardTitle className="text-[var(--xiv-blue)]">ℹ️ Important Notes</CardTitle>
               </CardHeader>
               <CardContent className="text-sm text-muted-foreground space-y-2">
                 <p>
