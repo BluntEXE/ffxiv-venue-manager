@@ -237,7 +237,7 @@ export function VenueSidebar({
         <div onClick={() => setMobileOpen(false)}>
           <FeedbackDialog />
         </div>
-        <Button asChild variant="ghost" className="w-full text-pink-600 hover:text-pink-700 hover:bg-pink-50" size="sm">
+        <Button asChild variant="ghost" className="w-full text-pink-400 hover:text-pink-300 hover:bg-[rgba(236,72,153,0.08)]" size="sm">
           <Link href="https://ko-fi.com/ehnocure" target="_blank" rel="noopener noreferrer">
             <Heart className="h-4 w-4 mr-2" />
             Support the Project
