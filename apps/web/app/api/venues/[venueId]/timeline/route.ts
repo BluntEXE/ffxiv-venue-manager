@@ -17,6 +17,7 @@ export async function GET(
   const cursor = searchParams.get("cursor")
   const limit = Math.min(parseInt(searchParams.get("limit") || "50"), 100)
   const type = searchParams.get("type") // "sales" | "patrons" | null (all)
+  const eventId = searchParams.get("eventId") // filter to a specific event
 
   // Verify membership
   const membership = await prisma.membership.findFirst({
@@ -36,9 +37,8 @@ export async function GET(
   // Fetch transactions
   if (!type || type === "sales") {
     const where: Record<string, unknown> = { venueId }
-    if (cursor) {
-      where.createdAt = { lt: new Date(cursor) }
-    }
+    if (cursor) where.createdAt = { lt: new Date(cursor) }
+    if (eventId) where.eventId = eventId
 
     const transactions = await prisma.transaction.findMany({
       where,
@@ -84,9 +84,8 @@ export async function GET(
   // Fetch patron logs
   if (!type || type === "patrons") {
     const where: Record<string, unknown> = { venueId }
-    if (cursor) {
-      where.timestamp = { lt: new Date(cursor) }
-    }
+    if (cursor) where.timestamp = { lt: new Date(cursor) }
+    if (eventId) where.eventId = eventId
 
     const patronLogs = await prisma.patronLog.findMany({
       where,
