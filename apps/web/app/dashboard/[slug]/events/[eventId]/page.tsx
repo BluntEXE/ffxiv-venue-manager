@@ -16,9 +16,9 @@ import { renderPartakeProse } from "@/lib/render-partake-prose"
 
 const statusColors = {
   DRAFT: "bg-zinc-500",
-  PUBLISHED: "bg-blue-500",
+  PUBLISHED: "bg-[rgba(0,180,255,0.15)] text-[var(--xiv-blue)] border-[rgba(0,180,255,0.35)]",
   ACTIVE: "bg-emerald-500",
-  COMPLETED: "bg-purple-500",
+  COMPLETED: "bg-zinc-500/15 text-zinc-400 border-zinc-500/30",
   CANCELLED: "bg-red-500",
 }
 
@@ -94,7 +94,7 @@ export default async function EventDetailsPage({
               {typeLabels[event.eventType as keyof typeof typeLabels]}
             </Badge>
             {event.partakeEventId && (
-              <Badge variant="outline" className="border-indigo-500/50 text-indigo-400">
+              <Badge variant="outline" className="border-[rgba(0,180,255,0.4)] text-[var(--xiv-blue)]">
                 Partake
               </Badge>
             )}
@@ -195,7 +195,7 @@ export default async function EventDetailsPage({
               {event.partakeAttendeeCount && (
                 <div>
                   <p className="text-sm text-muted-foreground">Partake RSVPs</p>
-                  <p className="text-2xl font-bold text-indigo-400">
+                  <p className="text-2xl font-bold text-[var(--xiv-blue)]">
                     {event.partakeAttendeeCount}
                   </p>
                   <p className="text-xs text-muted-foreground mt-1">
@@ -264,7 +264,7 @@ export default async function EventDetailsPage({
 
           {/* Partake Source */}
           {event.partakeEventId && (
-            <Card className="border-indigo-500/20 bg-indigo-500/5">
+            <Card className="border-[rgba(0,180,255,0.2)] bg-[rgba(0,180,255,0.05)]">
               <CardHeader>
                 <CardTitle className="text-sm">Synced from Partake</CardTitle>
               </CardHeader>

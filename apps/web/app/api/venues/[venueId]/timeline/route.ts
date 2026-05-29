@@ -16,8 +16,8 @@ export async function GET(
   const { searchParams } = new URL(request.url)
   const cursor = searchParams.get("cursor")
   const limit = Math.min(parseInt(searchParams.get("limit") || "50"), 100)
-  const type = searchParams.get("type")
-  const eventId = searchParams.get("eventId")
+  const type = searchParams.get("type") // "sales" | "patrons" | null (all)
+  const eventId = searchParams.get("eventId") // filter to a specific event
 
   // Verify membership
   const membership = await prisma.membership.findFirst({

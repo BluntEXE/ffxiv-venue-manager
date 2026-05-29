@@ -227,74 +227,68 @@ export function TransactionsList({
         </Button>
       </div>
 
-      <div className="space-y-4">
-        {transactions.map((transaction) => (
-          <div
-            key={transaction.id}
-            className="flex items-center justify-between p-4 border rounded-lg"
-          >
-            <div className="flex-1">
-              <div className="flex items-center gap-2 mb-1">
-                {transaction.service ? (
-                  <p className="font-semibold">{transaction.service.name}</p>
-                ) : (
-                  <p className="font-semibold">Manual Sale</p>
-                )}
-                {transaction.event && (
-                  <Badge variant="outline">{transaction.event.title}</Badge>
+      <div className="space-y-2">
+        {transactions.map((transaction) => {
+          const amount = parseFloat(transaction.amount.toString())
+          const isLarge = amount >= 500000
+          const isMedium = amount >= 50000 && amount < 500000
+          return (
+            <div
+              key={transaction.id}
+              className="xiv-card rounded-xl flex items-center justify-between p-4 gap-4 hover:border-[rgba(0,180,255,0.35)] transition-all"
+            >
+              <div className="flex-1 min-w-0">
+                <div className="flex items-center gap-2 mb-0.5 flex-wrap">
+                  <p className="font-semibold">
+                    {transaction.service ? transaction.service.name : "Manual Sale"}
+                  </p>
+                  {transaction.event && (
+                    <Badge variant="outline" className="text-xs">{transaction.event.title}</Badge>
+                  )}
+                </div>
+                <div className="flex items-center gap-2 flex-wrap text-xs text-muted-foreground">
+                  {transaction.customerName && (
+                    <span className="text-foreground/70">{transaction.customerName}</span>
+                  )}
+                  {transaction.customerName && <span>·</span>}
+                  <span>{formatServerTime(transaction.createdAt, "datetimelong")} {SERVER_TIME_LABEL}</span>
+                  {transaction.staff && (
+                    <>
+                      <span>· {transaction.staff.name}</span>
+                      {transaction.staff.memberships?.[0]?.customRole && (
+                        <RoleBadge
+                          role={transaction.staff.memberships[0].customRole.name}
+                          color={transaction.staff.memberships[0].customRole.color}
+                          className="text-[10px] px-1 py-0 h-4"
+                        />
+                      )}
+                    </>
+                  )}
+                </div>
+                {transaction.notes && (
+                  <p className="text-xs text-muted-foreground mt-0.5 italic">{transaction.notes}</p>
                 )}
               </div>
-              {transaction.customerName && (
-                <p className="text-sm text-muted-foreground">
-                  Customer: {transaction.customerName}
+              <div className="flex items-center gap-2 shrink-0">
+                <p className={`font-bold tabular-nums ${
+                  isLarge ? "text-xl text-emerald-400" :
+                  isMedium ? "text-lg text-[var(--xiv-blue)]" :
+                  "text-base text-foreground/80"
+                }`}>
+                  {amount.toLocaleString()} gil
                 </p>
-              )}
-              {transaction.notes && (
-                <p className="text-sm text-muted-foreground">{transaction.notes}</p>
-              )}
-              <div className="flex items-center gap-2 mt-2 text-xs text-muted-foreground">
-                <span>{formatServerTime(transaction.createdAt, "datetimelong")} {SERVER_TIME_LABEL}</span>
-                {transaction.staff && (
-                  <div className="flex items-center gap-2">
-                    <span>• by {transaction.staff.name}</span>
-                    {transaction.staff.memberships?.[0]?.customRole && (
-                      <RoleBadge
-                        role={transaction.staff.memberships[0].customRole.name}
-                        color={transaction.staff.memberships[0].customRole.color}
-                        className="text-[10px] px-1 py-0 h-5"
-                      />
-                    )}
-                  </div>
-                )}
+                <div className="flex gap-0.5">
+                  <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => openEditDialog(transaction)} aria-label="Edit transaction">
+                    <Edit className="h-3.5 w-3.5" />
+                  </Button>
+                  <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => setDeletingTransaction(transaction)} aria-label="Delete transaction">
+                    <Trash2 className="h-3.5 w-3.5 text-red-400" />
+                  </Button>
+                </div>
               </div>
             </div>
-            <div className="text-right flex items-center gap-4">
-              <p className="text-2xl font-bold">
-                {parseFloat(transaction.amount.toString()).toLocaleString()} gil
-              </p>
-              <div className="flex gap-1">
-                <Button
-                  variant="ghost"
-                  size="icon"
-                  className="min-h-11 min-w-11"
-                  onClick={() => openEditDialog(transaction)}
-                  aria-label="Edit transaction"
-                >
-                  <Edit className="h-4 w-4" />
-                </Button>
-                <Button
-                  variant="ghost"
-                  size="icon"
-                  className="min-h-11 min-w-11"
-                  onClick={() => setDeletingTransaction(transaction)}
-                  aria-label="Delete transaction"
-                >
-                  <Trash2 className="h-4 w-4 text-red-500" />
-                </Button>
-              </div>
-            </div>
-          </div>
-        ))}
+          )
+        })}
       </div>
 
       {/* Load More Button */}

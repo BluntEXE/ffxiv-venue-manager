@@ -14,13 +14,13 @@ interface AttendanceOverviewProps {
 }
 
 export function AttendanceOverview({ data }: AttendanceOverviewProps) {
-    if (!data || data.length === 0) return null // Hide if no historical data
+    if (!data || data.length === 0) return null
 
     return (
         <Card>
             <CardHeader>
                 <CardTitle className="flex items-center gap-2">
-                    <Clock className="h-5 w-5 text-indigo-500" />
+                    <Clock className="h-5 w-5 text-[var(--xiv-blue)]" />
                     Average Hourly Traffic
                 </CardTitle>
                 <CardDescription>
@@ -33,21 +33,21 @@ export function AttendanceOverview({ data }: AttendanceOverviewProps) {
                         <AreaChart data={data} margin={{ top: 10, right: 10, left: 0, bottom: 0 }}>
                             <defs>
                                 <linearGradient id="colorAvg" x1="0" y1="0" x2="0" y2="1">
-                                    <stop offset="5%" stopColor="#6366f1" stopOpacity={0.3} />
-                                    <stop offset="95%" stopColor="#6366f1" stopOpacity={0} />
+                                    <stop offset="5%" stopColor="#00b4ff" stopOpacity={0.3} />
+                                    <stop offset="95%" stopColor="#00b4ff" stopOpacity={0} />
                                 </linearGradient>
                             </defs>
                             <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#313244" />
                             <XAxis
                                 dataKey="time"
-                                stroke="#94a3b8"
+                                stroke="#9399b2"
                                 fontSize={12}
                                 tickLine={false}
                                 axisLine={false}
                                 minTickGap={30}
                             />
                             <YAxis
-                                stroke="#94a3b8"
+                                stroke="#9399b2"
                                 fontSize={12}
                                 tickLine={false}
                                 axisLine={false}
@@ -56,12 +56,12 @@ export function AttendanceOverview({ data }: AttendanceOverviewProps) {
                                 content={({ active, payload, label }) => {
                                     if (active && payload && payload.length) {
                                         return (
-                                            <div className="rounded-lg border bg-background/95 p-2 shadow-sm border-indigo-500/20">
+                                            <div className="rounded-lg border bg-[#0a0f1e] p-2 shadow-lg border-[rgba(0,180,255,0.25)]">
                                                 <div className="flex flex-col">
                                                     <span className="text-[0.70rem] uppercase text-muted-foreground mb-1">
                                                         {label}
                                                     </span>
-                                                    <span className="font-bold text-indigo-400">
+                                                    <span className="font-bold text-[var(--xiv-blue)]">
                                                         ~{payload[0].value} Patrons
                                                     </span>
                                                 </div>
@@ -74,7 +74,7 @@ export function AttendanceOverview({ data }: AttendanceOverviewProps) {
                             <Area
                                 type="monotone"
                                 dataKey="avgCount"
-                                stroke="#6366f1"
+                                stroke="#00b4ff"
                                 strokeWidth={2}
                                 fill="url(#colorAvg)"
                             />

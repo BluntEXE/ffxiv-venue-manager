@@ -358,7 +358,7 @@ export default function ServicesPage({
             {/* Active Services */}
             {activeServices.length > 0 && (
               <div className="mb-8">
-                <h2 className="text-2xl font-bold mb-4">Active Services</h2>
+                <h2 className="font-cinzel text-xl font-semibold tracking-wide mb-4">Active Services</h2>
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                   {activeServices.map((service) => (
                     <Card key={service.id}>
@@ -388,10 +388,10 @@ export default function ServicesPage({
                       </CardHeader>
                       <CardContent>
                         <div className="mb-4">
-                          <p className="text-2xl font-bold">{service.price} gil</p>
+                          <p className="text-2xl font-bold text-[var(--xiv-blue)]">{service.price.toLocaleString()} gil</p>
                           {service._count && (
-                            <p className="text-xs text-muted-foreground mt-1">
-                              {service._count.transactions} sales
+                            <p className={`text-xs mt-1 ${service._count.transactions > 0 ? 'text-emerald-400 font-medium' : 'text-muted-foreground'}`}>
+                              {service._count.transactions} {service._count.transactions === 1 ? 'sale' : 'sales'}
                             </p>
                           )}
                         </div>
@@ -436,7 +436,7 @@ export default function ServicesPage({
             {/* Inactive Services */}
             {inactiveServices.length > 0 && (
               <div className="mb-8">
-                <h2 className="text-2xl font-bold mb-4">Inactive Services</h2>
+                <h2 className="font-cinzel text-xl font-semibold tracking-wide mb-4">Inactive Services</h2>
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 opacity-60">
                   {inactiveServices.map((service) => (
                     <Card key={service.id}>
@@ -466,7 +466,7 @@ export default function ServicesPage({
                       </CardHeader>
                       <CardContent>
                         <div className="mb-4">
-                          <p className="text-2xl font-bold">{service.price} gil</p>
+                          <p className="text-2xl font-bold text-[var(--xiv-blue)]">{service.price.toLocaleString()} gil</p>
                         </div>
                         <div className="flex gap-2">
                           <Button

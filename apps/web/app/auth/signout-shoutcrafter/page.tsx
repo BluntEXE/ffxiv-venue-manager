@@ -8,8 +8,8 @@ export default function SignOutShoutCrafter() {
   }, [])
 
   return (
-    <div className="flex items-center justify-center min-h-screen bg-[#1e1e2e] text-[#cdd6f4]">
-      <p className="text-sm text-[#a6adc8]">Signing out…</p>
+    <div className="flex items-center justify-center min-h-screen">
+      <p className="text-sm text-muted-foreground">Signing out…</p>
     </div>
   )
 }

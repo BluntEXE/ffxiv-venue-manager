@@ -3,8 +3,14 @@ import { authOptions } from "@/lib/auth"
 import { redirect } from "next/navigation"
 import Link from "next/link"
 import { Button } from "@/components/ui/button"
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { prisma } from "@/lib/prisma"
+import { Building2, Users, ChevronRight, Plus } from "lucide-react"
+
+const roleColors: Record<string, string> = {
+  OWNER: "bg-emerald-500/15 text-emerald-400 border-emerald-500/30",
+  MANAGER: "bg-[rgba(0,180,255,0.15)] text-[var(--xiv-blue)] border-[rgba(0,180,255,0.35)]",
+  STAFF: "bg-zinc-500/15 text-zinc-300 border-zinc-500/30",
+}
 
 export default async function DashboardPage() {
   const session = await getServerSession(authOptions)
@@ -13,106 +19,109 @@ export default async function DashboardPage() {
     redirect("/auth/signin")
   }
 
-  // Get user's venues
   const venues = await prisma.venue.findMany({
     where: {
       memberships: {
-        some: {
-          userId: session.user.id,
-        },
+        some: { userId: session.user.id },
       },
     },
     include: {
       memberships: {
-        where: {
-          userId: session.user.id,
-        },
+        where: { userId: session.user.id },
       },
       _count: {
-        select: {
-          events: true,
-          memberships: true,
-        },
+        select: { events: true, memberships: true },
       },
     },
+    orderBy: { name: "asc" },
   })
 
   return (
     <div className="container mx-auto p-4 md:p-6 lg:p-8">
-      <div className="mb-6 md:mb-8">
-        <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-4 mb-4">
-          <div>
-            <h1 className="text-2xl md:text-3xl lg:text-4xl font-bold">Dashboard</h1>
-            <p className="text-sm md:text-base text-muted-foreground mt-1 md:mt-2">
-              Welcome back, {session.user.name || "User"}!
-            </p>
-          </div>
-          <Button asChild size="sm" className="sm:size-default">
-            <Link href="/venues/new">
-              <span className="hidden sm:inline">Create New Venue</span>
-              <span className="sm:hidden">New Venue</span>
-            </Link>
-          </Button>
+      <div className="flex flex-col sm:flex-row sm:justify-between sm:items-start gap-4 mb-8">
+        <div>
+          <h1 className="font-cinzel text-2xl md:text-3xl lg:text-4xl font-bold tracking-wide text-balance">Dashboard</h1>
+          <p className="text-muted-foreground mt-1">Welcome back, {session.user.name || "User"}!</p>
         </div>
+        <Button asChild style={{ background: "var(--xiv-blue)", color: "#070b14" }}>
+          <Link href="/venues/new">
+            <Plus className="h-4 w-4 mr-1.5" />
+            New Venue
+          </Link>
+        </Button>
       </div>
 
       {venues.length === 0 ? (
-        <Card className="text-center py-12">
-          <CardHeader>
-            <CardTitle>No Venues Yet</CardTitle>
-            <CardDescription>
-              Create your first venue to start managing events, staff, and more!
-            </CardDescription>
-          </CardHeader>
-          <CardContent>
-            <Button asChild size="lg">
-              <Link href="/venues/new">
-                Create Your First Venue
-              </Link>
-            </Button>
-          </CardContent>
-        </Card>
+        <div className="xiv-card rounded-2xl p-12 text-center space-y-4">
+          <Building2 className="h-12 w-12 text-[var(--xiv-blue)] mx-auto opacity-60" />
+          <div>
+            <p className="font-cinzel text-lg font-semibold tracking-wide">No Venues Yet</p>
+            <p className="text-muted-foreground text-sm mt-1">Create your first venue to start managing events, staff, and more.</p>
+          </div>
+          <Button asChild style={{ background: "var(--xiv-blue)", color: "#070b14" }}>
+            <Link href="/venues/new">Create Your First Venue</Link>
+          </Button>
+        </div>
       ) : (
+        <>
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 md:gap-6">
-          {venues.map((venue: typeof venues[number]) => (
-            <Card key={venue.id} className="hover:shadow-lg transition-shadow">
-              <CardHeader>
-                <CardTitle>{venue.name}</CardTitle>
-                <CardDescription>
-                  {venue.world} ({venue.dataCenter})
-                </CardDescription>
-              </CardHeader>
-              <CardContent className="space-y-4">
-                {venue.description && (
-                  <p className="text-sm text-muted-foreground line-clamp-2">
-                    {venue.description}
-                  </p>
-                )}
+          {venues.map((venue: typeof venues[number]) => {
+            const role = venue.memberships[0].role
+            const roleClass = roleColors[role] || roleColors.STAFF
+            return (
+              <Link key={venue.id} href={`/dashboard/${venue.slug}`} className="group block">
+                <div className="xiv-card rounded-xl p-5 h-full flex flex-col gap-4 cursor-pointer transition-all duration-200 group-hover:border-[rgba(0,180,255,0.4)] group-hover:shadow-[0_0_28px_rgba(0,180,255,0.1)]">
+                  {/* Header */}
+                  <div className="flex items-start justify-between gap-3">
+                    <div className="min-w-0">
+                      <p className="font-cinzel font-semibold text-base tracking-wide truncate">{venue.name}</p>
+                      <p className="text-xs text-muted-foreground mt-0.5">{venue.world} · {venue.dataCenter}</p>
+                    </div>
+                    <span className={`text-xs font-medium px-2 py-0.5 rounded-full border shrink-0 ${roleClass}`}>
+                      {role}
+                    </span>
+                  </div>
 
-                <div className="flex justify-between text-sm">
-                  <div>
-                    <p className="font-semibold">{venue._count.events}</p>
-                    <p className="text-muted-foreground">Events</p>
+                  {/* Description */}
+                  {venue.description && (
+                    <p className="text-sm text-muted-foreground line-clamp-2 leading-relaxed">{venue.description}</p>
+                  )}
+
+                  {/* Stats */}
+                  <div className="flex gap-4 mt-auto">
+                    <div className="flex items-center gap-1.5 text-sm">
+                      <Building2 className="h-3.5 w-3.5 text-[var(--xiv-blue)] opacity-70" />
+                      <span className="font-semibold">{venue._count.events}</span>
+                      <span className="text-muted-foreground">Events</span>
+                    </div>
+                    <div className="flex items-center gap-1.5 text-sm">
+                      <Users className="h-3.5 w-3.5 text-[var(--xiv-blue)] opacity-70" />
+                      <span className="font-semibold">{venue._count.memberships}</span>
+                      <span className="text-muted-foreground">Staff</span>
+                    </div>
                   </div>
-                  <div>
-                    <p className="font-semibold">{venue._count.memberships}</p>
-                    <p className="text-muted-foreground">Staff</p>
-                  </div>
-                  <div>
-                    <p className="font-semibold">{venue.memberships[0].role}</p>
-                    <p className="text-muted-foreground">Your Role</p>
+
+                  {/* CTA */}
+                  <div className="flex items-center justify-between pt-3 border-t border-[rgba(0,180,255,0.1)]">
+                    <span className="text-sm text-[var(--xiv-blue)] font-medium">Manage Venue</span>
+                    <ChevronRight className="h-4 w-4 text-[var(--xiv-blue)] transition-transform group-hover:translate-x-1" />
                   </div>
                 </div>
-
-                <Button asChild className="w-full">
-                  <Link href={`/dashboard/${venue.slug}`}>
-                    Manage Venue
-                  </Link>
-                </Button>
-              </CardContent>
-            </Card>
-          ))}
+              </Link>
+            )
+          })}
         </div>
+
+        {/* Add venue nudge when user has few venues */}
+        {venues.length < 3 && (
+          <div className="mt-6 flex items-center justify-center">
+            <Link href="/venues/new" className="group flex items-center gap-2 text-sm text-muted-foreground hover:text-[var(--xiv-blue)] transition-colors">
+              <Plus className="h-4 w-4 opacity-50 group-hover:opacity-100 transition-opacity" />
+              Add another venue
+            </Link>
+          </div>
+        )}
+        </>
       )}
     </div>
   )

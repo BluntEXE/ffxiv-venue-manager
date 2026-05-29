@@ -82,6 +82,7 @@ export function LiveDashboard({
       .then((data) => {
         if (!Array.isArray(data.items)) return
         const historical: ActivityItem[] = data.items
+          .filter((item: any) => item.type !== "unknown")
           .map((item: any) => ({
             id: item.id,
             type: item.type as ActivityItem["type"],
@@ -118,7 +119,12 @@ export function LiveDashboard({
           const staffName = data.data.staff?.name
           setActivity((prev) => {
             if (prev.some((a) => a.id === data.id)) return prev
-            return [{ id: data.id, type: "sale" as const, timestamp: data.timestamp, text: name + " - " + amt.toLocaleString() + " gil" + (staffName ? " (by " + staffName + ")" : "") }, ...prev].slice(0, 50)
+            return [{
+              id: data.id,
+              type: "sale" as const,
+              timestamp: data.timestamp,
+              text: name + " - " + amt.toLocaleString() + " gil" + (staffName ? " (by " + staffName + ")" : ""),
+            }, ...prev].slice(0, 50)
           })
         }
 
@@ -126,7 +132,12 @@ export function LiveDashboard({
           setPatronCount((prev) => prev + 1)
           setActivity((prev) => {
             if (prev.some((a) => a.id === data.id)) return prev
-            return [{ id: data.id, type: "patron_enter" as const, timestamp: data.timestamp, text: (data.data.characterName || "Unknown") + " entered" }, ...prev].slice(0, 50)
+            return [{
+              id: data.id,
+              type: "patron_enter" as const,
+              timestamp: data.timestamp,
+              text: (data.data.characterName || "Unknown") + " entered",
+            }, ...prev].slice(0, 50)
           })
         }
 
@@ -134,7 +145,12 @@ export function LiveDashboard({
           setPatronCount((prev) => Math.max(0, prev - 1))
           setActivity((prev) => {
             if (prev.some((a) => a.id === data.id)) return prev
-            return [{ id: data.id, type: "patron_exit" as const, timestamp: data.timestamp, text: (data.data.characterName || "Unknown") + " left" }, ...prev].slice(0, 50)
+            return [{
+              id: data.id,
+              type: "patron_exit" as const,
+              timestamp: data.timestamp,
+              text: (data.data.characterName || "Unknown") + " left",
+            }, ...prev].slice(0, 50)
           })
         }
       } catch {}
@@ -162,12 +178,12 @@ export function LiveDashboard({
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 mb-6">
         <div>
           <div className="flex items-center gap-3">
-            <h1 className="text-2xl md:text-3xl font-bold">{event.title}</h1>
+            <h1 className="font-cinzel text-2xl md:text-3xl font-bold tracking-wide">{event.title}</h1>
             <Badge
               variant="outline"
               className={
                 isUpcoming
-                  ? "bg-blue-500/10 text-blue-500 border-blue-500/20"
+                  ? "bg-[rgba(0,180,255,0.12)] text-[var(--xiv-blue)] border-[rgba(0,180,255,0.35)]"
                   : "bg-emerald-500/10 text-emerald-500 border-emerald-500/20"
               }
             >
@@ -180,12 +196,10 @@ export function LiveDashboard({
           </p>
         </div>
         <div className="flex items-center gap-2">
-          <span
-            className={
-              "inline-block w-2 h-2 rounded-full " +
-              (connected ? "bg-emerald-500" : "bg-zinc-500")
-            }
-          />
+          <span className="relative flex h-2.5 w-2.5">
+            {connected && <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75" />}
+            <span className={"relative inline-flex rounded-full h-2.5 w-2.5 " + (connected ? "bg-emerald-500" : "bg-zinc-500")} />
+          </span>
           <span className="text-xs text-muted-foreground">
             {connected ? "Live" : "Connecting..."}
           </span>
@@ -209,7 +223,7 @@ export function LiveDashboard({
             <CardTitle className="text-sm font-medium">Patrons</CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="text-3xl font-bold">{patronCount}</div>
+            <div className="text-3xl font-bold text-[var(--xiv-blue)]">{patronCount}</div>
             <p className="text-xs text-muted-foreground mt-1">Currently inside</p>
           </CardContent>
         </Card>
@@ -219,7 +233,7 @@ export function LiveDashboard({
             <CardTitle className="text-sm font-medium">Sales</CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="text-3xl font-bold">{saleCount}</div>
+            <div className="text-3xl font-bold text-emerald-400">{saleCount}</div>
             <p className="text-xs text-muted-foreground mt-1">Transactions</p>
           </CardContent>
         </Card>
@@ -257,14 +271,21 @@ export function LiveDashboard({
 
       {/* Live activity feed */}
       <div>
-        <h2 className="text-xl font-semibold mb-4">Live Activity</h2>
+        <h2 className="font-cinzel text-xl font-semibold tracking-wide mb-4">Live Activity</h2>
         {activity.length === 0 ? (
           <Card>
-            <CardContent className="py-8 text-center">
-              <p className="text-muted-foreground">
+            <CardContent className="py-10 text-center space-y-3">
+              {!isUpcoming && (
+                <div className="flex justify-center gap-1.5">
+                  <span className="w-2 h-2 rounded-full bg-[var(--xiv-blue)] opacity-60 animate-bounce [animation-delay:0ms]" />
+                  <span className="w-2 h-2 rounded-full bg-[var(--xiv-blue)] opacity-60 animate-bounce [animation-delay:150ms]" />
+                  <span className="w-2 h-2 rounded-full bg-[var(--xiv-blue)] opacity-60 animate-bounce [animation-delay:300ms]" />
+                </div>
+              )}
+              <p className="text-muted-foreground text-sm">
                 {isUpcoming
                   ? "Activity will appear here once the event starts."
-                  : "Waiting for activity..."}
+                  : "Listening for activity..."}
               </p>
             </CardContent>
           </Card>
@@ -279,8 +300,8 @@ export function LiveDashboard({
                       (item.type === "sale"
                         ? "bg-emerald-500/10 text-emerald-500"
                         : item.type === "patron_enter"
-                          ? "bg-blue-500/10 text-blue-500"
-                          : "bg-zinc-500/10 text-zinc-400")
+                          ? "bg-[rgba(0,180,255,0.12)] text-[var(--xiv-blue)]"
+                          : "bg-[rgba(255,100,100,0.1)] text-rose-400")
                     }
                     aria-label={
                       item.type === "sale"

@@ -11,6 +11,7 @@ import { Breadcrumb } from "@/components/breadcrumb"
 import { DashboardAnalytics } from "@/components/dashboard-analytics"
 import { ServerTimeRange, ServerTime } from "@/components/server-time"
 import { getServerTimezone, getServerTimeLabel } from "@/lib/server-time"
+import { ShoppingBag, Clock, ScrollText, BarChart3, Calendar, Users } from "lucide-react"
 
 export default async function VenueDashboardPage({
   params,
@@ -89,7 +90,7 @@ export default async function VenueDashboardPage({
 
         {/* Header */}
         <div className="mb-6 md:mb-8">
-          <h1 className="text-2xl md:text-3xl lg:text-4xl font-bold mb-2">{venue.name}</h1>
+          <h1 className="font-cinzel text-2xl md:text-3xl lg:text-4xl font-bold tracking-wide mb-2">{venue.name}</h1>
           <p className="text-sm md:text-base text-muted-foreground">
             {venue.world} ({venue.dataCenter}) &bull; {userRole.charAt(0) + userRole.slice(1).toLowerCase()} &bull; Server Time: {tzLabel}
           </p>
@@ -106,7 +107,7 @@ export default async function VenueDashboardPage({
             <Link href={`/dashboard/${venue.slug}/events`}>
               <Card className="hover:shadow-lg hover:border-primary transition-all cursor-pointer">
                 <CardHeader className="pb-3">
-                  <CardTitle className="text-sm font-medium">Events</CardTitle>
+                  <CardTitle className="text-xs font-medium text-muted-foreground uppercase tracking-wide">Events</CardTitle>
                 </CardHeader>
                 <CardContent>
                   <div className="text-3xl font-bold">{venue._count.events}</div>
@@ -117,7 +118,7 @@ export default async function VenueDashboardPage({
             <Link href={`/dashboard/${venue.slug}/staff`}>
               <Card className="hover:shadow-lg hover:border-primary transition-all cursor-pointer">
                 <CardHeader className="pb-3">
-                  <CardTitle className="text-sm font-medium">Staff</CardTitle>
+                  <CardTitle className="text-xs font-medium text-muted-foreground uppercase tracking-wide">Staff</CardTitle>
                 </CardHeader>
                 <CardContent>
                   <div className="text-3xl font-bold">{venue._count.memberships}</div>
@@ -128,7 +129,7 @@ export default async function VenueDashboardPage({
             <Link href={`/dashboard/${venue.slug}/analytics`}>
               <Card className="hover:shadow-lg hover:border-primary transition-all cursor-pointer">
                 <CardHeader className="pb-3">
-                  <CardTitle className="text-sm font-medium">Mobile Followers</CardTitle>
+                  <CardTitle className="text-xs font-medium text-muted-foreground uppercase tracking-wide">Followers</CardTitle>
                 </CardHeader>
                 <CardContent>
                   <div className="text-3xl font-bold">{venue._count.follows}</div>
@@ -139,7 +140,7 @@ export default async function VenueDashboardPage({
             <Link href={`/dashboard/${venue.slug}/tasks`}>
               <Card className="hover:shadow-lg hover:border-primary transition-all cursor-pointer">
                 <CardHeader className="pb-3">
-                  <CardTitle className="text-sm font-medium">Tasks</CardTitle>
+                  <CardTitle className="text-xs font-medium text-muted-foreground uppercase tracking-wide">Tasks</CardTitle>
                 </CardHeader>
                 <CardContent>
                   <div className="text-3xl font-bold">{venue._count.tasks}</div>
@@ -150,7 +151,7 @@ export default async function VenueDashboardPage({
             <Link href={`/dashboard/${venue.slug}/services`}>
               <Card className="hover:shadow-lg hover:border-primary transition-all cursor-pointer">
                 <CardHeader className="pb-3">
-                  <CardTitle className="text-sm font-medium">Services</CardTitle>
+                  <CardTitle className="text-xs font-medium text-muted-foreground uppercase tracking-wide">Services</CardTitle>
                 </CardHeader>
                 <CardContent>
                   <div className="text-3xl font-bold">{venue._count.services}</div>
@@ -164,7 +165,7 @@ export default async function VenueDashboardPage({
         {/* My Shifts - all roles */}
         <div className="mb-6 md:mb-8">
           <div className="flex items-center justify-between mb-4">
-            <h2 className="text-xl font-semibold">My Shifts</h2>
+            <h2 className="font-cinzel text-xl font-semibold tracking-wide">My Shifts</h2>
             <Link href={`/dashboard/${venue.slug}/shifts`} className="text-sm text-muted-foreground hover:text-foreground transition-colors">
               View all
             </Link>
@@ -189,7 +190,7 @@ export default async function VenueDashboardPage({
                           variant="outline"
                           className={isActive
                             ? "bg-emerald-500/10 text-emerald-500 border-emerald-500/20"
-                            : "bg-blue-500/10 text-blue-500 border-blue-500/20"
+                            : "bg-[rgba(0,180,255,0.12)] text-[var(--xiv-blue)] border-[rgba(0,180,255,0.35)]"
                           }
                         >
                           {isActive ? "On Shift" : "Upcoming"}
@@ -212,7 +213,7 @@ export default async function VenueDashboardPage({
         {/* Upcoming Events - all roles */}
         <div className="mb-6 md:mb-8">
           <div className="flex items-center justify-between mb-4">
-            <h2 className="text-xl font-semibold">Upcoming Events</h2>
+            <h2 className="font-cinzel text-xl font-semibold tracking-wide">Upcoming Events</h2>
             <Link href={`/dashboard/${venue.slug}/events`} className="text-sm text-muted-foreground hover:text-foreground transition-colors">
               View all
             </Link>
@@ -251,10 +252,38 @@ export default async function VenueDashboardPage({
           )}
         </div>
 
+        {/* Quick Actions - Staff view only */}
+        {!canManage && (
+          <div className="mb-6 md:mb-8">
+            <h2 className="font-cinzel text-xl font-semibold tracking-wide mb-4">Quick Actions</h2>
+            <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
+              {[
+                { href: `/dashboard/${venue.slug}/sales`, icon: ShoppingBag, label: "Log a Sale", desc: "Record a transaction" },
+                { href: `/dashboard/${venue.slug}/shifts`, icon: Clock, label: "My Shifts", desc: "View your schedule" },
+                { href: `/dashboard/${venue.slug}/timeline`, icon: ScrollText, label: "Timeline", desc: "Live activity feed" },
+                { href: `/dashboard/${venue.slug}/events`, icon: Calendar, label: "Events", desc: "Upcoming events" },
+                { href: `/dashboard/${venue.slug}/tasks`, icon: BarChart3, label: "Tasks", desc: "Your assigned tasks" },
+              ].map(({ href, icon: Icon, label, desc }) => (
+                <Link key={href} href={href} className="group">
+                  <div className="xiv-card rounded-xl p-4 flex items-center gap-3 cursor-pointer transition-all duration-200 group-hover:border-[rgba(0,180,255,0.4)] group-hover:bg-[rgba(0,180,255,0.04)]">
+                    <div className="h-9 w-9 rounded-lg bg-[rgba(0,180,255,0.1)] flex items-center justify-center shrink-0 group-hover:bg-[rgba(0,180,255,0.18)] transition-colors">
+                      <Icon className="h-4 w-4 text-[var(--xiv-blue)]" />
+                    </div>
+                    <div className="min-w-0">
+                      <p className="font-medium text-sm truncate">{label}</p>
+                      <p className="text-xs text-muted-foreground truncate">{desc}</p>
+                    </div>
+                  </div>
+                </Link>
+              ))}
+            </div>
+          </div>
+        )}
+
         {/* Analytics - Owner/Manager only */}
         {canViewReports && (
           <div className="mt-6 md:mt-8">
-            <h2 className="text-xl font-semibold mb-4">Analytics Overview</h2>
+            <h2 className="font-cinzel text-xl font-semibold tracking-wide mb-4">Analytics Overview</h2>
             <DashboardAnalytics venueId={venue.id} />
           </div>
         )}

@@ -10,12 +10,13 @@ import { EventsCalendar } from "@/components/events-calendar"
 import { VenueLayout } from "@/components/venue-layout"
 import { Breadcrumb } from "@/components/breadcrumb"
 import { formatServerTime, SERVER_TIME_LABEL } from "@/lib/server-time"
+import { format } from "date-fns"
 
 const statusColors = {
   DRAFT: "bg-zinc-500",
-  PUBLISHED: "bg-blue-500",
+  PUBLISHED: "bg-[rgba(0,180,255,0.15)] text-[var(--xiv-blue)] border-[rgba(0,180,255,0.35)]",
   ACTIVE: "bg-emerald-500",
-  COMPLETED: "bg-purple-500",
+  COMPLETED: "bg-zinc-500/15 text-zinc-400 border-zinc-500/30",
   CANCELLED: "bg-red-500",
 }
 
@@ -145,114 +146,88 @@ export default async function EventsPage({
       ) : (
         <>
           {/* Upcoming Events */}
-          <div className="mb-8">
-            <h2 className="text-2xl font-bold mb-4">
-              Upcoming Events ({upcomingEvents.length})
+          <div className="mb-10">
+            <h2 className="font-cinzel text-xl font-semibold tracking-wide mb-4">
+              Upcoming Events <span className="text-muted-foreground font-normal text-base">({upcomingEvents.length})</span>
             </h2>
             {upcomingEvents.length === 0 ? (
-              <Card>
-                <CardContent className="py-8 text-center">
-                  <p className="text-muted-foreground">
-                    No events yet. Check back soon or ask your manager about upcoming events.
-                  </p>
-                </CardContent>
-              </Card>
+              <div className="xiv-card rounded-xl p-8 text-center">
+                <p className="text-muted-foreground">No upcoming events. Check back soon or ask your manager.</p>
+              </div>
             ) : (
-              <div className="grid grid-cols-1 gap-4">
+              <div className="grid grid-cols-1 gap-3">
                 {upcomingEvents.map((event: typeof upcomingEvents[number]) => (
-                  <Card key={event.id} className="hover:shadow-lg transition-shadow">
-                    <CardHeader>
-                      <div className="flex justify-between items-start">
-                        <div className="flex-1">
-                          <CardTitle>{event.title}</CardTitle>
-                          <CardDescription className="mt-2">
-                            {formatServerTime(event.startTime, "datelong")} at {formatServerTime(event.startTime, "time")} - {formatServerTime(event.endTime, "time")} {SERVER_TIME_LABEL}
-                          </CardDescription>
-                        </div>
-                        <div className="flex gap-2 flex-wrap">
-                          <Badge className={statusColors[event.status as keyof typeof statusColors]}>
-                            {event.status}
-                          </Badge>
-                          <Badge variant="outline">
-                            {typeLabels[event.eventType as keyof typeof typeLabels]}
-                          </Badge>
-                          {event.partakeEventId && (
-                            <Badge variant="outline" className="border-indigo-500/50 text-indigo-400">
-                              Partake
-                            </Badge>
-                          )}
-                        </div>
-                      </div>
-                    </CardHeader>
-                    <CardContent>
-                      {event.location && (
-                        <p className="text-sm text-muted-foreground mb-4 line-clamp-1">
-                          📍 {event.location}
+                  <div key={event.id} className="xiv-card rounded-xl p-4 transition-all duration-200 hover:border-[rgba(0,180,255,0.4)]">
+                    <div className="flex justify-between items-start gap-4">
+                      <div className="flex-1 min-w-0">
+                        <p className="font-semibold truncate">{event.title}</p>
+                        <p className="text-sm text-muted-foreground mt-0.5">
+                          {formatServerTime(event.startTime, "datelong")} · {formatServerTime(event.startTime, "time")} – {formatServerTime(event.endTime, "time")} {SERVER_TIME_LABEL}
                         </p>
-                      )}
-                      <div className="flex gap-2">
-                        <Button asChild variant="outline" size="sm">
-                          <Link href={`/dashboard/${slug}/events/${event.id}`}>
-                            View Details
-                          </Link>
-                        </Button>
-                        <Button asChild variant="outline" size="sm">
-                          <Link href={`/dashboard/${slug}/events/${event.id}/edit`}>
-                            Edit
-                          </Link>
-                        </Button>
+                        {event.location && <p className="text-xs text-muted-foreground mt-1 truncate">{event.location}</p>}
                       </div>
-                    </CardContent>
-                  </Card>
+                      <div className="flex gap-1.5 flex-wrap shrink-0">
+                        <Badge className={statusColors[event.status as keyof typeof statusColors]}>{event.status}</Badge>
+                        <Badge variant="outline">{typeLabels[event.eventType as keyof typeof typeLabels]}</Badge>
+                        {event.partakeEventId && <Badge variant="outline" className="border-[rgba(0,180,255,0.4)] text-[var(--xiv-blue)]">Partake</Badge>}
+                      </div>
+                    </div>
+                    <div className="flex gap-2 mt-3">
+                      <Button asChild variant="outline" size="sm"><Link href={`/dashboard/${slug}/events/${event.id}`}>View Details</Link></Button>
+                      <Button asChild variant="outline" size="sm"><Link href={`/dashboard/${slug}/events/${event.id}/edit`}>Edit</Link></Button>
+                    </div>
+                  </div>
                 ))}
               </div>
             )}
           </div>
 
-          {/* Past Events */}
-          {pastEvents.length > 0 && (
-            <div>
-              <h2 className="text-2xl font-bold mb-4">
-                Past Events ({pastEvents.length})
-              </h2>
-              <div className="grid grid-cols-1 gap-4">
-                {pastEvents.map((event: typeof pastEvents[number]) => (
-                  <Card key={event.id} className="opacity-75">
-                    <CardHeader>
-                      <div className="flex justify-between items-start">
-                        <div className="flex-1">
-                          <CardTitle>{event.title}</CardTitle>
-                          <CardDescription className="mt-2">
-                            {formatServerTime(event.startTime, "datelong")} at {formatServerTime(event.startTime, "time")} {SERVER_TIME_LABEL}
-                          </CardDescription>
-                        </div>
-                        <div className="flex gap-2 flex-wrap">
-                          <Badge className={statusColors[event.status as keyof typeof statusColors]}>
-                            {event.status}
-                          </Badge>
-                          <Badge variant="outline">
-                            {typeLabels[event.eventType as keyof typeof typeLabels]}
-                          </Badge>
-                          {event.partakeEventId && (
-                            <Badge variant="outline" className="border-indigo-500/50 text-indigo-400">
-                              Partake
-                            </Badge>
-                          )}
-                        </div>
+          {/* Past Events — grouped by month */}
+          {pastEvents.length > 0 && (() => {
+            const grouped = pastEvents.reduce((acc: Record<string, typeof pastEvents>, event) => {
+              const key = format(new Date(event.startTime), "MMMM yyyy")
+              if (!acc[key]) acc[key] = []
+              acc[key].push(event)
+              return acc
+            }, {})
+            return (
+              <div>
+                <h2 className="font-cinzel text-xl font-semibold tracking-wide mb-6">
+                  Past Events <span className="text-muted-foreground font-normal text-base">({pastEvents.length})</span>
+                </h2>
+                <div className="space-y-8">
+                  {Object.entries(grouped).map(([month, monthEvents]) => (
+                    <div key={month}>
+                      <div className="flex items-center gap-3 mb-3">
+                        <span className="text-xs font-semibold text-[var(--xiv-blue)] uppercase tracking-widest">{month}</span>
+                        <div className="flex-1 h-px bg-[rgba(0,180,255,0.15)]" />
+                        <span className="text-xs text-muted-foreground">{monthEvents.length} events</span>
                       </div>
-                    </CardHeader>
-                    <CardContent>
-                      <Button asChild variant="outline" size="sm">
-                        <Link href={`/dashboard/${slug}/events/${event.id}`}>
-                          View Details
-                        </Link>
-                      </Button>
-                    </CardContent>
-                  </Card>
-                ))}
+                      <div className="grid grid-cols-1 gap-2">
+                        {monthEvents.map((event: typeof pastEvents[number]) => (
+                          <Link key={event.id} href={`/dashboard/${slug}/events/${event.id}`} className="group">
+                            <div className="xiv-card rounded-xl p-3.5 flex items-center justify-between gap-4 opacity-70 hover:opacity-100 transition-all duration-200 hover:border-[rgba(0,180,255,0.3)]">
+                              <div className="flex-1 min-w-0">
+                                <p className="font-medium text-sm truncate group-hover:text-[var(--xiv-blue)] transition-colors">{event.title}</p>
+                                <p className="text-xs text-muted-foreground mt-0.5">
+                                  {formatServerTime(event.startTime, "datelong")} · {formatServerTime(event.startTime, "time")} {SERVER_TIME_LABEL}
+                                </p>
+                              </div>
+                              <div className="flex gap-1.5 shrink-0">
+                                <Badge className={statusColors[event.status as keyof typeof statusColors]}>{event.status}</Badge>
+                                <Badge variant="outline">{typeLabels[event.eventType as keyof typeof typeLabels]}</Badge>
+                                {event.partakeEventId && <Badge variant="outline" className="border-[rgba(0,180,255,0.4)] text-[var(--xiv-blue)]">Partake</Badge>}
+                              </div>
+                            </div>
+                          </Link>
+                        ))}
+                      </div>
+                    </div>
+                  ))}
+                </div>
               </div>
-            </div>
-          )}
+            )
+          })()}
         </>
       )}
       </div>

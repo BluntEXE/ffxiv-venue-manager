@@ -547,7 +547,7 @@ export default function SettingsPage({
                 </CardDescription>
               </CardHeader>
               <CardContent className="space-y-6">
-                <div className="text-sm text-muted-foreground bg-blue-500/10 border border-blue-500/20 rounded-lg p-3">
+                <div className="text-sm text-muted-foreground bg-[rgba(0,180,255,0.08)] border border-[rgba(0,180,255,0.2)] rounded-lg p-3">
                   <p>
                     <strong>How to create a webhook:</strong> In Discord, go to Server Settings → Integrations → Webhooks → New Webhook.
                     Copy the webhook URL and paste it below. You can use different channels for different notification types.
@@ -683,7 +683,7 @@ export default function SettingsPage({
                   </div>
 
                   {settings.discordWebhooks.events && (
-                    <div className="space-y-2 pl-4 border-l-2 border-blue-500/30">
+                    <div className="space-y-2 pl-4 border-l-2 border-[rgba(0,180,255,0.4)]">
                       <div className="flex items-center space-x-2">
                         <Checkbox
                           id="webhook-partake-event"
@@ -813,9 +813,9 @@ export default function SettingsPage({
             </div>
 
             {/* Info Card */}
-            <Card className="bg-blue-500/10 border-blue-500/20">
+            <Card className="bg-[rgba(0,180,255,0.05)] border-[rgba(0,180,255,0.2)]">
               <CardHeader>
-                <CardTitle className="text-blue-400">ℹ️ Important Notes</CardTitle>
+                <CardTitle className="text-[var(--xiv-blue)]">ℹ️ Important Notes</CardTitle>
               </CardHeader>
               <CardContent className="text-sm text-muted-foreground space-y-2">
                 <p>

@@ -4,7 +4,6 @@ import { Suspense } from "react"
 import { useSearchParams } from "next/navigation"
 import Link from "next/link"
 import { Button } from "@/components/ui/button"
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { PageLoading } from "@/components/ui/loading-spinner"
 
 function AuthErrorContent() {
@@ -26,33 +25,34 @@ function AuthErrorContent() {
 
   return (
     <div className="container mx-auto flex items-center justify-center min-h-screen p-4">
-      <Card className="w-full max-w-md">
-        <CardHeader className="space-y-1 text-center">
-          <CardTitle className="text-2xl font-bold text-destructive">
+      <div className="xiv-card rounded-2xl w-full max-w-md p-8 space-y-6 border-destructive/30">
+        <div className="text-center space-y-2">
+          <h1 className="font-cinzel text-2xl font-bold tracking-wide text-destructive">
             Authentication Error
-          </CardTitle>
-          <CardDescription>{message}</CardDescription>
-        </CardHeader>
-        <CardContent className="space-y-4">
-          <div className="text-center">
-            <Button asChild>
-              <Link href="/auth/signin">
-                Try Again
-              </Link>
-            </Button>
-          </div>
-          <div className="text-center text-sm text-muted-foreground">
-            <p>If the problem persists, please contact support.</p>
-          </div>
-        </CardContent>
-      </Card>
+          </h1>
+          <p className="text-sm text-muted-foreground">{message}</p>
+        </div>
+
+        <div className="text-center space-y-3">
+          <Button asChild className="xiv-btn-shimmer font-semibold" style={{ background: "var(--xiv-blue)", color: "#070b14", boxShadow: "0 0 24px rgba(0,180,255,0.35)" }}>
+            <Link href="/auth/signin">Try Again</Link>
+          </Button>
+          <p className="text-xs text-muted-foreground">
+            If the problem persists, please contact support.
+          </p>
+        </div>
+      </div>
     </div>
   )
 }
 
 export default function AuthErrorPage() {
   return (
-    <Suspense fallback={<div className="container mx-auto flex items-center justify-center min-h-screen p-4"><PageLoading /></div>}>
+    <Suspense fallback={
+      <div className="container mx-auto flex items-center justify-center min-h-screen p-4">
+        <PageLoading />
+      </div>
+    }>
       <AuthErrorContent />
     </Suspense>
   )

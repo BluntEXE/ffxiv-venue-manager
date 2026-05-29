@@ -155,8 +155,8 @@ export function VenueSidebar({
                 className={cn(
                   "flex items-center gap-3 px-3 py-2 rounded-lg text-sm transition-colors",
                   isActive
-                    ? "bg-primary text-primary-foreground font-medium"
-                    : "hover:bg-accent hover:text-accent-foreground"
+                    ? "bg-primary text-primary-foreground font-medium border-l-2 border-[var(--xiv-blue)] pl-[10px]"
+                    : "hover:bg-accent hover:text-accent-foreground border-l-2 border-transparent pl-[10px]"
                 )}
               >
                 <item.icon className="h-5 w-5 shrink-0" />
@@ -215,8 +215,8 @@ export function VenueSidebar({
                 className={cn(
                   "flex items-center gap-3 px-3 py-2 rounded-lg text-sm transition-colors",
                   isActive
-                    ? "bg-primary text-primary-foreground font-medium"
-                    : "hover:bg-accent hover:text-accent-foreground"
+                    ? "bg-primary text-primary-foreground font-medium border-l-2 border-[var(--xiv-blue)] pl-[10px]"
+                    : "hover:bg-accent hover:text-accent-foreground border-l-2 border-transparent pl-[10px]"
                 )}
               >
                 <item.icon className="h-5 w-5 shrink-0" />
@@ -237,7 +237,7 @@ export function VenueSidebar({
         <div onClick={() => setMobileOpen(false)}>
           <FeedbackDialog />
         </div>
-        <Button asChild variant="ghost" className="w-full text-pink-600 hover:text-pink-700 hover:bg-pink-50" size="sm">
+        <Button asChild variant="ghost" className="w-full text-pink-400 hover:text-pink-300 hover:bg-[rgba(236,72,153,0.08)]" size="sm">
           <Link href="https://ko-fi.com/ehnocure" target="_blank" rel="noopener noreferrer">
             <Heart className="h-4 w-4 mr-2" />
             Support the Project
@@ -256,7 +256,7 @@ export function VenueSidebar({
       <div className="lg:hidden fixed bottom-4 right-4 z-50">
         <Sheet open={mobileOpen} onOpenChange={setMobileOpen}>
           <SheetTrigger asChild>
-            <Button size="lg" className="rounded-full min-h-14 min-w-14 h-14 w-14 shadow-lg" aria-label="Open navigation menu">
+            <Button size="lg" className="rounded-full min-h-14 min-w-14 h-14 w-14 shadow-[0_0_20px_rgba(0,180,255,0.3)] border border-[rgba(0,180,255,0.4)]" aria-label="Open navigation menu">
               <Menu className="h-6 w-6" />
             </Button>
           </SheetTrigger>

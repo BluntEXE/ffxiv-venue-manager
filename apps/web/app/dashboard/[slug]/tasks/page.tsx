@@ -83,17 +83,17 @@ interface Role {
 const TASK_CATEGORIES = ["Setup", "Cleanup", "Promotional", "Maintenance", "Administrative", "Other"]
 
 const statusColors = {
-  PENDING: "bg-yellow-500",
-  IN_PROGRESS: "bg-blue-500",
-  COMPLETED: "bg-emerald-500",
-  CANCELLED: "bg-zinc-500",
+  PENDING: "bg-yellow-500/15 text-yellow-300 border-yellow-500/30",
+  IN_PROGRESS: "bg-[rgba(0,180,255,0.15)] text-[var(--xiv-blue)] border-[rgba(0,180,255,0.35)]",
+  COMPLETED: "bg-emerald-500/15 text-emerald-400 border-emerald-500/30",
+  CANCELLED: "bg-zinc-500/15 text-zinc-400 border-zinc-500/30",
 }
 
 const priorityColors = {
-  LOW: "bg-zinc-400",
-  MEDIUM: "bg-blue-400",
-  HIGH: "bg-orange-500",
-  URGENT: "bg-red-500",
+  LOW: "bg-zinc-400/15 text-zinc-400 border-zinc-400/30",
+  MEDIUM: "bg-[rgba(0,180,255,0.15)] text-[var(--xiv-blue)] border-[rgba(0,180,255,0.35)]",
+  HIGH: "bg-orange-500/15 text-orange-400 border-orange-500/30",
+  URGENT: "bg-red-500/15 text-red-400 border-red-500/30",
 }
 
 export default function TasksPage({
@@ -378,7 +378,7 @@ export default function TasksPage({
         {/* Header */}
         <div className="flex flex-col sm:flex-row sm:justify-between sm:items-start gap-4 mb-6 md:mb-8">
           <div>
-            <h1 className="text-2xl md:text-3xl lg:text-4xl font-bold">Tasks</h1>
+            <h1 className="font-cinzel text-2xl md:text-3xl lg:text-4xl font-bold tracking-wide text-balance">Tasks</h1>
             <p className="text-sm md:text-base text-muted-foreground mt-1 md:mt-2">
               Manage and assign tasks to your team
             </p>
@@ -392,41 +392,45 @@ export default function TasksPage({
         {/* Stats */}
         <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 md:gap-6 mb-6 md:mb-8">
         <Card>
-          <CardHeader className="pb-3">
-            <CardTitle className="text-sm font-medium">Total Tasks</CardTitle>
+          <CardHeader className="pb-2">
+            <CardTitle className="text-xs font-medium text-muted-foreground uppercase tracking-wide">Total Tasks</CardTitle>
           </CardHeader>
           <CardContent>
             <div className="text-3xl font-bold">{tasks.length}</div>
+            <p className="text-xs text-muted-foreground mt-1">All tasks</p>
           </CardContent>
         </Card>
         <Card>
-          <CardHeader className="pb-3">
-            <CardTitle className="text-sm font-medium">Pending</CardTitle>
+          <CardHeader className="pb-2">
+            <CardTitle className="text-xs font-medium text-muted-foreground uppercase tracking-wide">Pending</CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="text-3xl font-bold text-yellow-600">
+            <div className="text-3xl font-bold text-yellow-300">
               {tasks.filter((t) => t.status === "PENDING").length}
             </div>
+            <p className="text-xs text-muted-foreground mt-1">Not started</p>
           </CardContent>
         </Card>
         <Card>
-          <CardHeader className="pb-3">
-            <CardTitle className="text-sm font-medium">In Progress</CardTitle>
+          <CardHeader className="pb-2">
+            <CardTitle className="text-xs font-medium text-muted-foreground uppercase tracking-wide">In Progress</CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="text-3xl font-bold text-blue-600">
+            <div className="text-3xl font-bold text-[var(--xiv-blue)]">
               {tasks.filter((t) => t.status === "IN_PROGRESS").length}
             </div>
+            <p className="text-xs text-muted-foreground mt-1">Active</p>
           </CardContent>
         </Card>
         <Card>
-          <CardHeader className="pb-3">
-            <CardTitle className="text-sm font-medium">Completed</CardTitle>
+          <CardHeader className="pb-2">
+            <CardTitle className="text-xs font-medium text-muted-foreground uppercase tracking-wide">Completed</CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="text-3xl font-bold text-emerald-500">
+            <div className="text-3xl font-bold text-emerald-400">
               {tasks.filter((t) => t.status === "COMPLETED").length}
             </div>
+            <p className="text-xs text-muted-foreground mt-1">Done</p>
           </CardContent>
         </Card>
       </div>
