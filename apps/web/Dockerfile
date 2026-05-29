@@ -1,5 +1,5 @@
-FROM node:20-alpine AS base
-RUN corepack enable && corepack prepare pnpm@10.33.3 --activate
+FROM node:22-alpine AS base
+RUN corepack enable && corepack prepare pnpm@11.4.0 --activate
 
 # Install dependencies
 FROM base AS deps
