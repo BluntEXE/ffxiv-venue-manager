@@ -89,7 +89,7 @@ export default async function VenueDashboardPage({
 
         {/* Header */}
         <div className="mb-6 md:mb-8">
-          <h1 className="text-2xl md:text-3xl lg:text-4xl font-bold mb-2">{venue.name}</h1>
+          <h1 className="font-cinzel text-2xl md:text-3xl lg:text-4xl font-bold tracking-wide mb-2">{venue.name}</h1>
           <p className="text-sm md:text-base text-muted-foreground">
             {venue.world} ({venue.dataCenter}) &bull; {userRole.charAt(0) + userRole.slice(1).toLowerCase()} &bull; Server Time: {tzLabel}
           </p>
