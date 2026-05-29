@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
-import { AreaChart, Area, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from "recharts"
+import { AreaChart, Area, BarChart, Bar, Cell, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from "recharts"
 import { format } from "date-fns"
 import { TrendingUp, CheckCircle2, Calendar } from "lucide-react"
 
@@ -32,29 +32,11 @@ interface UpcomingEvent {
   eventType: string
 }
 
-// Custom Tooltip Component
-const CustomTooltip = ({ active, payload, label }: any) => {
-  if (active && payload && payload.length) {
-    return (
-      <div className="rounded-lg border bg-background/95 p-3 shadow-xl backdrop-blur-sm ring-1 ring-black/5">
-        <p className="mb-1 text-sm font-semibold">{label}</p>
-        {payload.map((entry: any, index: number) => (
-          <div key={index} className="flex items-center gap-2 text-xs text-muted-foreground">
-            <span
-              className="block h-2 w-2 rounded-full"
-              style={{ backgroundColor: entry.color }}
-            />
-            <span className="font-medium text-foreground">
-              {entry.value.toLocaleString()} {entry.name === "amount" ? "gil" : "tasks"}
-            </span>
-            {entry.payload.eventTitle && <span className="text-muted-foreground">({entry.payload.eventTitle})</span>}
-          </div>
-        ))}
-      </div>
-    )
-  }
-  return null
-}
+const TooltipBox = ({ children }: { children: React.ReactNode }) => (
+  <div className="rounded-lg border border-[rgba(0,180,255,0.25)] bg-[#0a0f1e] p-3 shadow-xl">
+    {children}
+  </div>
+)
 
 export function DashboardAnalytics({ venueId }: DashboardAnalyticsProps) {
   const [financialData, setFinancialData] = useState<FinancialData[]>([])
@@ -68,11 +50,9 @@ export function DashboardAnalytics({ venueId }: DashboardAnalyticsProps) {
 
   const fetchAnalytics = async () => {
     try {
-      // Fetch analytics data (includes per-event financial data)
       const analyticsResponse = await fetch(`/api/venues/${venueId}/analytics`)
       const analyticsData = await analyticsResponse.json()
 
-      // Transform to last 7 events for overview chart
       const last7Events = analyticsData.revenueByEvent.slice(-7)
       const financial = last7Events.map((event: any) => ({
         date: format(new Date(event.startTime), "MMM dd"),
@@ -84,11 +64,9 @@ export function DashboardAnalytics({ venueId }: DashboardAnalyticsProps) {
 
       setFinancialData(financial)
 
-      // Fetch all events for upcoming events section
       const eventsResponse = await fetch(`/api/venues/${venueId}/events`)
       const allEvents = await eventsResponse.json()
 
-      // Fetch task statistics
       const tasksResponse = await fetch(`/api/venues/${venueId}/tasks`)
       const tasks = await tasksResponse.json()
 
@@ -99,7 +77,6 @@ export function DashboardAnalytics({ venueId }: DashboardAnalyticsProps) {
         inProgress: tasks.filter((t: any) => t.status === "IN_PROGRESS").length,
       })
 
-      // Get upcoming events
       const upcoming = allEvents
         .filter((e: any) => new Date(e.startTime) > new Date())
         .sort((a: any, b: any) => new Date(a.startTime).getTime() - new Date(b.startTime).getTime())
@@ -130,13 +107,19 @@ export function DashboardAnalytics({ venueId }: DashboardAnalyticsProps) {
     ? Math.round((taskStats.completed / taskStats.total) * 100)
     : 0
 
+  const taskBarData = [
+    { name: "Completed", value: taskStats?.completed || 0, color: "#10b981" },
+    { name: "In Progress", value: taskStats?.inProgress || 0, color: "#00b4ff" },
+    { name: "Pending", value: taskStats?.pending || 0, color: "#f59e0b" },
+  ]
+
   return (
     <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
       {/* Net Profit/Loss Trend */}
       <Card>
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
-            <TrendingUp className="h-5 w-5 text-primary" />
+            <TrendingUp className="h-5 w-5 text-[var(--xiv-blue)]" />
             Net Profit/Loss (Last 7 Events)
           </CardTitle>
           <CardDescription>
@@ -150,61 +133,33 @@ export function DashboardAnalytics({ venueId }: DashboardAnalyticsProps) {
             <ResponsiveContainer width="100%" height="100%">
               <AreaChart data={financialData} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
                 <defs>
-                  <linearGradient id="colorProfit" x1="0" y1="0" x2="0" y2="1">
+                  <linearGradient id="dashColorProfit" x1="0" y1="0" x2="0" y2="1">
                     <stop offset="5%" stopColor="#10b981" stopOpacity={0.3} />
                     <stop offset="95%" stopColor="#10b981" stopOpacity={0} />
                   </linearGradient>
-                  <linearGradient id="colorLoss" x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="5%" stopColor="#ef4444" stopOpacity={0.3} />
-                    <stop offset="95%" stopColor="#ef4444" stopOpacity={0} />
-                  </linearGradient>
                 </defs>
                 <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#313244" />
-                <XAxis
-                  dataKey="date"
-                  axisLine={false}
-                  tickLine={false}
-                  tickMargin={10}
-                  fontSize={12}
-                  tick={{ fill: "#9399b2" }}
-                  stroke="#9399b2"
-                />
-                <YAxis
-                  axisLine={false}
-                  tickLine={false}
-                  fontSize={12}
-                  tick={{ fill: "#9399b2" }}
-                  stroke="#9399b2"
-                  tickFormatter={(value) => `${value >= 0 ? '' : '-'}${Math.abs(value) / 1000}k`}
-                />
+                <XAxis dataKey="date" axisLine={false} tickLine={false} tickMargin={10} fontSize={12} tick={{ fill: "#9399b2" }} stroke="#9399b2" />
+                <YAxis axisLine={false} tickLine={false} fontSize={12} tick={{ fill: "#9399b2" }} stroke="#9399b2" tickFormatter={(v) => `${v >= 0 ? '' : '-'}${Math.abs(v) / 1000}k`} />
                 <Tooltip
+                  cursor={{ stroke: "#10b981", strokeWidth: 1, strokeDasharray: "4 4" }}
                   content={({ active, payload, label }: any) => {
                     if (active && payload && payload.length) {
                       const netProfit = payload[0].payload.netProfit
                       return (
-                        <div className="rounded-lg border bg-background/95 p-3 shadow-xl backdrop-blur-sm ring-1 ring-black/5">
+                        <TooltipBox>
                           <p className="mb-1 text-sm font-semibold">{label}</p>
-                          <p className="text-xs text-muted-foreground mb-2">{payload[0].payload.eventTitle}</p>
-                          <div className="flex items-center gap-2 text-xs">
-                            <span className={`font-medium ${netProfit >= 0 ? 'text-emerald-500' : 'text-red-400'}`}>
-                              {netProfit >= 0 ? 'Profit' : 'Loss'}: {Math.abs(netProfit).toLocaleString()} gil
-                            </span>
-                          </div>
-                        </div>
+                          <p className="text-xs text-muted-foreground mb-1">{payload[0].payload.eventTitle}</p>
+                          <span className={`text-xs font-medium ${netProfit >= 0 ? 'text-emerald-500' : 'text-red-400'}`}>
+                            {netProfit >= 0 ? 'Profit' : 'Loss'}: {Math.abs(netProfit).toLocaleString()} gil
+                          </span>
+                        </TooltipBox>
                       )
                     }
                     return null
                   }}
-                  cursor={{ stroke: "#10b981", strokeWidth: 1, strokeDasharray: "4 4" }}
                 />
-                <Area
-                  type="monotone"
-                  dataKey="netProfit"
-                  stroke="#10b981"
-                  strokeWidth={2}
-                  fillOpacity={1}
-                  fill="url(#colorProfit)"
-                />
+                <Area type="monotone" dataKey="netProfit" stroke="#10b981" strokeWidth={2} fillOpacity={1} fill="url(#dashColorProfit)" />
               </AreaChart>
             </ResponsiveContainer>
           </div>
@@ -225,50 +180,31 @@ export function DashboardAnalytics({ venueId }: DashboardAnalyticsProps) {
         <CardContent>
           <div className="h-[200px] w-full">
             <ResponsiveContainer width="100%" height="100%">
-              <BarChart
-                data={[
-                  { name: "Completed", value: taskStats?.completed || 0, fill: "url(#colorCompleted)" },
-                  { name: "In Progress", value: taskStats?.inProgress || 0, fill: "url(#colorProgress)" },
-                  { name: "Pending", value: taskStats?.pending || 0, fill: "url(#colorPending)" },
-                ]}
-                margin={{ top: 10, right: 10, left: -20, bottom: 0 }}
-              >
-                <defs>
-                  <linearGradient id="colorCompleted" x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="0%" stopColor="#10b981" stopOpacity={0.8} />
-                    <stop offset="95%" stopColor="#10b981" stopOpacity={0.4} />
-                  </linearGradient>
-                  <linearGradient id="colorProgress" x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="0%" stopColor="#f59e0b" stopOpacity={0.8} />
-                    <stop offset="95%" stopColor="#f59e0b" stopOpacity={0.4} />
-                  </linearGradient>
-                  <linearGradient id="colorPending" x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="0%" stopColor="#6366f1" stopOpacity={0.8} />
-                    <stop offset="95%" stopColor="#6366f1" stopOpacity={0.4} />
-                  </linearGradient>
-                </defs>
+              <BarChart data={taskBarData} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
                 <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#313244" />
-                <XAxis
-                  dataKey="name"
-                  axisLine={false}
-                  tickLine={false}
-                  tickMargin={10}
-                  fontSize={12}
-                  tick={{ fill: "#9399b2" }}
-                  stroke="#9399b2"
-                />
-                <YAxis
-                  axisLine={false}
-                  tickLine={false}
-                  fontSize={12}
-                  tick={{ fill: "#9399b2" }}
-                  stroke="#9399b2"
-                />
+                <XAxis dataKey="name" axisLine={false} tickLine={false} tickMargin={10} fontSize={12} tick={{ fill: "#9399b2" }} stroke="#9399b2" />
+                <YAxis axisLine={false} tickLine={false} fontSize={12} tick={{ fill: "#9399b2" }} stroke="#9399b2" allowDecimals={false} />
                 <Tooltip
-                  cursor={{ fill: "#313244", opacity: 0.2 }}
-                  content={<CustomTooltip />}
+                  cursor={{ fill: "rgba(0,180,255,0.06)" }}
+                  content={({ active, payload, label }: any) => {
+                    if (active && payload && payload.length) {
+                      return (
+                        <TooltipBox>
+                          <p className="text-sm font-semibold mb-1">{label}</p>
+                          <span className="text-xs font-medium" style={{ color: payload[0].payload.color }}>
+                            {payload[0].value} tasks
+                          </span>
+                        </TooltipBox>
+                      )
+                    }
+                    return null
+                  }}
                 />
-                <Bar dataKey="value" radius={[4, 4, 0, 0]} />
+                <Bar dataKey="value" radius={[4, 4, 0, 0]}>
+                  {taskBarData.map((entry, index) => (
+                    <Cell key={`cell-${index}`} fill={entry.color} fillOpacity={0.85} />
+                  ))}
+                </Bar>
               </BarChart>
             </ResponsiveContainer>
           </div>
@@ -279,7 +215,7 @@ export function DashboardAnalytics({ venueId }: DashboardAnalyticsProps) {
       <Card className="lg:col-span-2">
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
-            <Calendar className="h-5 w-5 text-blue-500" />
+            <Calendar className="h-5 w-5 text-[var(--xiv-blue)]" />
             Upcoming Events
           </CardTitle>
           <CardDescription>
@@ -296,10 +232,10 @@ export function DashboardAnalytics({ venueId }: DashboardAnalyticsProps) {
               {upcomingEvents.map((event) => (
                 <div
                   key={event.id}
-                  className="flex items-center justify-between p-3 border rounded-lg hover:bg-muted/50 transition-colors group"
+                  className="flex items-center justify-between p-3 border border-[rgba(0,180,255,0.12)] rounded-xl hover:border-[rgba(0,180,255,0.3)] hover:bg-[rgba(0,180,255,0.04)] transition-colors group"
                 >
                   <div className="flex items-center gap-4">
-                    <div className="h-10 w-10 rounded-full bg-blue-100 dark:bg-blue-900/30 flex items-center justify-center text-blue-600 dark:text-blue-400 group-hover:scale-110 transition-transform">
+                    <div className="h-10 w-10 rounded-full bg-[rgba(0,180,255,0.1)] flex items-center justify-center text-[var(--xiv-blue)] group-hover:scale-110 transition-transform">
                       <Calendar className="h-5 w-5" />
                     </div>
                     <div>
@@ -309,7 +245,7 @@ export function DashboardAnalytics({ venueId }: DashboardAnalyticsProps) {
                       </p>
                     </div>
                   </div>
-                  <div className="text-xs font-medium px-2.5 py-0.5 rounded-full bg-secondary text-secondary-foreground">
+                  <div className="text-xs font-medium px-2.5 py-0.5 rounded-full bg-[rgba(0,180,255,0.1)] text-[var(--xiv-blue)] border border-[rgba(0,180,255,0.25)]">
                     {event.eventType}
                   </div>
                 </div>
