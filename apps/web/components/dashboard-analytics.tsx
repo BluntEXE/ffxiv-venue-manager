@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
-import { AreaChart, Area, BarChart, Bar, Cell, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from "recharts"
+import { AreaChart, Area, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from "recharts"
 import { format } from "date-fns"
 import { TrendingUp, CheckCircle2, Calendar } from "lucide-react"
 
@@ -108,9 +108,9 @@ export function DashboardAnalytics({ venueId }: DashboardAnalyticsProps) {
     : 0
 
   const taskBarData = [
-    { name: "Completed", value: taskStats?.completed || 0, color: "#10b981" },
-    { name: "In Progress", value: taskStats?.inProgress || 0, color: "#00b4ff" },
-    { name: "Pending", value: taskStats?.pending || 0, color: "#f59e0b" },
+    { name: "Completed", value: taskStats?.completed || 0, fill: "url(#colorCompleted)" },
+    { name: "In Progress", value: taskStats?.inProgress || 0, fill: "url(#colorProgress)" },
+    { name: "Pending", value: taskStats?.pending || 0, fill: "url(#colorPending)" },
   ]
 
   return (
@@ -181,6 +181,20 @@ export function DashboardAnalytics({ venueId }: DashboardAnalyticsProps) {
           <div className="h-[200px] w-full">
             <ResponsiveContainer width="100%" height="100%">
               <BarChart data={taskBarData} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
+                <defs>
+                  <linearGradient id="colorCompleted" x1="0" y1="0" x2="0" y2="1">
+                    <stop offset="0%" stopColor="#10b981" stopOpacity={0.9} />
+                    <stop offset="95%" stopColor="#10b981" stopOpacity={0.4} />
+                  </linearGradient>
+                  <linearGradient id="colorProgress" x1="0" y1="0" x2="0" y2="1">
+                    <stop offset="0%" stopColor="#00b4ff" stopOpacity={0.9} />
+                    <stop offset="95%" stopColor="#00b4ff" stopOpacity={0.4} />
+                  </linearGradient>
+                  <linearGradient id="colorPending" x1="0" y1="0" x2="0" y2="1">
+                    <stop offset="0%" stopColor="#f59e0b" stopOpacity={0.9} />
+                    <stop offset="95%" stopColor="#f59e0b" stopOpacity={0.4} />
+                  </linearGradient>
+                </defs>
                 <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#313244" />
                 <XAxis dataKey="name" axisLine={false} tickLine={false} tickMargin={10} fontSize={12} tick={{ fill: "#9399b2" }} stroke="#9399b2" />
                 <YAxis axisLine={false} tickLine={false} fontSize={12} tick={{ fill: "#9399b2" }} stroke="#9399b2" allowDecimals={false} />
@@ -188,10 +202,15 @@ export function DashboardAnalytics({ venueId }: DashboardAnalyticsProps) {
                   cursor={{ fill: "rgba(0,180,255,0.06)" }}
                   content={({ active, payload, label }: any) => {
                     if (active && payload && payload.length) {
+                      const colorMap: Record<string, string> = {
+                        Completed: "#10b981",
+                        "In Progress": "#00b4ff",
+                        Pending: "#f59e0b",
+                      }
                       return (
                         <TooltipBox>
                           <p className="text-sm font-semibold mb-1">{label}</p>
-                          <span className="text-xs font-medium" style={{ color: payload[0].payload.color }}>
+                          <span className="text-xs font-medium" style={{ color: colorMap[label] || "#9399b2" }}>
                             {payload[0].value} tasks
                           </span>
                         </TooltipBox>
@@ -200,11 +219,7 @@ export function DashboardAnalytics({ venueId }: DashboardAnalyticsProps) {
                     return null
                   }}
                 />
-                <Bar dataKey="value" radius={[4, 4, 0, 0]}>
-                  {taskBarData.map((entry, index) => (
-                    <Cell key={`cell-${index}`} fill={entry.color} fillOpacity={0.85} />
-                  ))}
-                </Bar>
+                <Bar dataKey="value" radius={[4, 4, 0, 0]} />
               </BarChart>
             </ResponsiveContainer>
           </div>
