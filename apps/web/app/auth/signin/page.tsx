@@ -9,7 +9,7 @@ export default function SignInPage() {
       <div className="flex flex-col items-center gap-8 w-full max-w-md">
         {/* Brand mark */}
         <div className="text-center space-y-3">
-          <div className="inline-flex items-center gap-3 mb-1">
+          <div className="flex justify-center items-center gap-3 mb-1">
             <img src="/xiv-icon.png" alt="XIV Venue Manager" className="h-10 w-10" />
             <span className="font-cinzel text-2xl font-bold tracking-wide">
               <span className="text-[var(--xiv-blue)]">XIV</span>
