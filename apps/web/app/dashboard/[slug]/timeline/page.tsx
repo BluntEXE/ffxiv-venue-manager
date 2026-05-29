@@ -49,7 +49,7 @@ export default async function TimelinePage({
         />
 
         <div className="mb-6 md:mb-8">
-          <h1 className="font-cinzel text-2xl md:text-3xl lg:text-4xl font-bold tracking-wide">Timeline</h1>
+          <h1 className="font-cinzel text-2xl md:text-3xl lg:text-4xl font-bold tracking-wide text-balance">Timeline</h1>
           <p className="text-sm md:text-base text-muted-foreground mt-1 md:mt-2">
             All venue activity in one feed
           </p>

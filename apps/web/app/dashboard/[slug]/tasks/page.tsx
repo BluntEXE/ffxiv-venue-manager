@@ -378,7 +378,7 @@ export default function TasksPage({
         {/* Header */}
         <div className="flex flex-col sm:flex-row sm:justify-between sm:items-start gap-4 mb-6 md:mb-8">
           <div>
-            <h1 className="font-cinzel text-2xl md:text-3xl lg:text-4xl font-bold tracking-wide">Tasks</h1>
+            <h1 className="font-cinzel text-2xl md:text-3xl lg:text-4xl font-bold tracking-wide text-balance">Tasks</h1>
             <p className="text-sm md:text-base text-muted-foreground mt-1 md:mt-2">
               Manage and assign tasks to your team
             </p>

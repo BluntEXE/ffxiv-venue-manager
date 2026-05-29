@@ -40,7 +40,7 @@ export default async function DashboardPage() {
     <div className="container mx-auto p-4 md:p-6 lg:p-8">
       <div className="flex flex-col sm:flex-row sm:justify-between sm:items-start gap-4 mb-8">
         <div>
-          <h1 className="font-cinzel text-2xl md:text-3xl lg:text-4xl font-bold tracking-wide">Dashboard</h1>
+          <h1 className="font-cinzel text-2xl md:text-3xl lg:text-4xl font-bold tracking-wide text-balance">Dashboard</h1>
           <p className="text-muted-foreground mt-1">Welcome back, {session.user.name || "User"}!</p>
         </div>
         <Button asChild style={{ background: "var(--xiv-blue)", color: "#070b14" }}>
@@ -63,6 +63,7 @@ export default async function DashboardPage() {
           </Button>
         </div>
       ) : (
+        <>
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 md:gap-6">
           {venues.map((venue: typeof venues[number]) => {
             const role = venue.memberships[0].role
@@ -110,6 +111,17 @@ export default async function DashboardPage() {
             )
           })}
         </div>
+
+        {/* Add venue nudge when user has few venues */}
+        {venues.length < 3 && (
+          <div className="mt-6 flex items-center justify-center">
+            <Link href="/venues/new" className="group flex items-center gap-2 text-sm text-muted-foreground hover:text-[var(--xiv-blue)] transition-colors">
+              <Plus className="h-4 w-4 opacity-50 group-hover:opacity-100 transition-opacity" />
+              Add another venue
+            </Link>
+          </div>
+        )}
+        </>
       )}
     </div>
   )

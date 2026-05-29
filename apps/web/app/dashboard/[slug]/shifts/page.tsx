@@ -111,7 +111,7 @@ export default async function ShiftsPage({
 
         <div className="flex flex-col sm:flex-row sm:justify-between sm:items-start gap-4 mb-6 md:mb-8">
           <div>
-            <h1 className="font-cinzel text-2xl md:text-3xl lg:text-4xl font-bold tracking-wide">Shifts</h1>
+            <h1 className="font-cinzel text-2xl md:text-3xl lg:text-4xl font-bold tracking-wide text-balance">Shifts</h1>
             <p className="text-sm md:text-base text-muted-foreground mt-1 md:mt-2">
               Schedule and track staff shifts &middot; Times shown in Server Time ({tzLabel})
             </p>
