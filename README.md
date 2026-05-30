@@ -2,7 +2,7 @@
 
 # XIV Venue Manager
 
-**A comprehensive venue management system for Final Fantasy XIV roleplaying venues**
+**A comprehensive venue management system for Final Fantasy XIV roleplaying venues.**
 
 [![Live](https://img.shields.io/badge/live-xivvenuemanager.com-success)](https://xivvenuemanager.com)
 [![Next.js](https://img.shields.io/badge/Next.js-16-000000?logo=next.js)](https://nextjs.org)
