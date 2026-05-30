@@ -19,6 +19,16 @@ export default function StaffGuidePage() {
             </p>
           </header>
 
+          {/* What's New */}
+          <div className="bg-[rgba(0,180,255,0.06)] border border-[rgba(0,180,255,0.2)] rounded-lg p-4 space-y-1.5">
+            <p className="text-xs font-semibold text-[var(--xiv-blue)] uppercase tracking-widest">Recent Updates</p>
+            <ul className="space-y-1 text-sm text-muted-foreground">
+              <li><span className="font-medium text-foreground">Website redesign</span> &mdash; The dashboard and all pages have a new look. Navigation, cards, and layout have been updated.</li>
+              <li><span className="font-medium text-foreground">Plugin UI redesign (v3.8.0)</span> &mdash; The plugin has a new XIV blue design to match the website.</li>
+              <li><span className="font-medium text-foreground">Slash commands renamed</span> &mdash; <code className="bg-[rgba(0,180,255,0.08)] text-[var(--xiv-blue)] px-1.5 py-0.5 rounded text-xs font-mono">/vm</code> is now <code className="bg-[rgba(0,180,255,0.08)] text-[var(--xiv-blue)] px-1.5 py-0.5 rounded text-xs font-mono">/xvm</code> and <code className="bg-[rgba(0,180,255,0.08)] text-[var(--xiv-blue)] px-1.5 py-0.5 rounded text-xs font-mono">/venue</code> is now <code className="bg-[rgba(0,180,255,0.08)] text-[var(--xiv-blue)] px-1.5 py-0.5 rounded text-xs font-mono">/xvenue</code>. Update your macros if you had any.</li>
+            </ul>
+          </div>
+
           {/* Getting Started */}
           <section className="space-y-6">
             <h2 className="font-cinzel text-2xl font-semibold border-b border-[rgba(0,180,255,0.2)] pb-3 tracking-wide">Getting Started</h2>
