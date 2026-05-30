@@ -1,0 +1,64 @@
+name: Discord - Guide Update
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - 'app/guide/staff/**'
+      - 'app/guide/owner/**'
+
+jobs:
+  notify-staff-guide:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 2
+      - name: Check if staff guide changed
+        id: staff
+        run: |
+          if git diff --name-only HEAD~1 HEAD | grep -q 'app/guide/staff'; then
+            echo "changed=true" >> $GITHUB_OUTPUT
+          fi
+      - name: Post staff guide update
+        if: steps.staff.outputs.changed == 'true'
+        run: |
+          curl -X POST "${{ secrets.DISCORD_WEBHOOK }}" \
+            -H "Content-Type: application/json" \
+            -d '{
+              "content": "<@&1359829997803667627>",
+              "embeds": [{
+                "title": "📖 Staff Guide Updated",
+                "description": "The staff guide has been updated. Check it out:",
+                "color": 4751,
+                "fields": [{"name": "🔗 View Guide", "value": "https://xivvenuemanager.com/guide/staff"}]
+              }]
+            }'
+
+  notify-owner-guide:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 2
+      - name: Check if owner guide changed
+        id: owner
+        run: |
+          if git diff --name-only HEAD~1 HEAD | grep -q 'app/guide/owner'; then
+            echo "changed=true" >> $GITHUB_OUTPUT
+          fi
+      - name: Post owner guide update
+        if: steps.owner.outputs.changed == 'true'
+        run: |
+          curl -X POST "${{ secrets.DISCORD_WEBHOOK }}" \
+            -H "Content-Type: application/json" \
+            -d '{
+              "content": "<@&1315005198967767092> <@&1314338421929414732>",
+              "embeds": [{
+                "title": "📖 Owner Guide Updated",
+                "description": "The owner guide has been updated. Check it out:",
+                "color": 4751,
+                "fields": [{"name": "🔗 View Guide", "value": "https://xivvenuemanager.com/guide/owner"}]
+              }]
+            }'

@@ -1,0 +1,30 @@
+name: Discord - Website Update
+
+on:
+  push:
+    branches:
+      - main
+    paths-ignore:
+      - 'app/guide/**'
+
+jobs:
+  notify:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Post to Discord
+        run: |
+          curl -X POST "${{ secrets.DISCORD_WEBHOOK }}" \
+            -H "Content-Type: application/json" \
+            -d '{
+              "embeds": [{
+                "title": "🌐 Website Updated",
+                "description": "A new update has been pushed to the XIV Venue Manager website.",
+                "color": 4751,
+                "fields": [
+                  {
+                    "name": "🔗 Visit",
+                    "value": "https://xivvenuemanager.com"
+                  }
+                ]
+              }]
+            }'
