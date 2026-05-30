@@ -15,7 +15,7 @@ export default function StaffGuidePage() {
           <header className="space-y-3">
             <h1 className="font-cinzel text-4xl font-bold tracking-wide">Staff Guide</h1>
             <p className="text-xl text-muted-foreground">
-              Your guide as an XIV Venue Manager staff member.
+              Everything you need to know as an XIV Venue Manager staff member.
             </p>
           </header>
 
