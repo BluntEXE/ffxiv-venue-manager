@@ -5,8 +5,8 @@ on:
     branches:
       - main
     paths:
-      - 'app/guide/staff/**'
-      - 'app/guide/owner/**'
+      - 'apps/web/app/guide/staff/**'
+      - 'apps/web/app/guide/owner/**'
 
 jobs:
   notify-staff-guide:
@@ -18,7 +18,7 @@ jobs:
       - name: Check if staff guide changed
         id: staff
         run: |
-          if git diff --name-only HEAD~1 HEAD | grep -q 'app/guide/staff'; then
+          if git diff --name-only HEAD~1 HEAD | grep -q 'apps/web/app/guide/staff'; then
             echo "changed=true" >> $GITHUB_OUTPUT
           fi
       - name: Post staff guide update
@@ -45,7 +45,7 @@ jobs:
       - name: Check if owner guide changed
         id: owner
         run: |
-          if git diff --name-only HEAD~1 HEAD | grep -q 'app/guide/owner'; then
+          if git diff --name-only HEAD~1 HEAD | grep -q 'apps/web/app/guide/owner'; then
             echo "changed=true" >> $GITHUB_OUTPUT
           fi
       - name: Post owner guide update
