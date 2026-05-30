@@ -19,6 +19,17 @@ export default function OwnerManagerGuidePage() {
             </p>
           </header>
 
+          {/* What's New */}
+          <div className="bg-[rgba(0,180,255,0.06)] border border-[rgba(0,180,255,0.2)] rounded-lg p-4 space-y-1.5">
+            <p className="text-xs font-semibold text-[var(--xiv-blue)] uppercase tracking-widest">Recent Updates</p>
+            <ul className="space-y-1 text-sm text-muted-foreground">
+              <li><span className="font-medium text-foreground">Website redesign</span> &mdash; The dashboard and all pages have a new look. Navigation, cards, and layout have been updated.</li>
+              <li><span className="font-medium text-foreground">Plugin UI redesign (v3.8.0)</span> &mdash; The plugin has a new XIV blue design to match the website, including a changelog window that opens automatically after updates.</li>
+              <li><span className="font-medium text-foreground">Slash commands renamed</span> &mdash; <code className="bg-[rgba(0,180,255,0.08)] text-[var(--xiv-blue)] px-1.5 py-0.5 rounded text-xs font-mono">/vm</code> is now <code className="bg-[rgba(0,180,255,0.08)] text-[var(--xiv-blue)] px-1.5 py-0.5 rounded text-xs font-mono">/xvm</code> and <code className="bg-[rgba(0,180,255,0.08)] text-[var(--xiv-blue)] px-1.5 py-0.5 rounded text-xs font-mono">/venue</code> is now <code className="bg-[rgba(0,180,255,0.08)] text-[var(--xiv-blue)] px-1.5 py-0.5 rounded text-xs font-mono">/xvenue</code>. Update any macros your team uses.</li>
+              <li><span className="font-medium text-foreground">Auto-greeter (v3.7.0)</span> &mdash; The plugin can now automatically send a <code className="bg-[rgba(0,180,255,0.08)] text-[var(--xiv-blue)] px-1.5 py-0.5 rounded text-xs font-mono">/tell</code> to patrons when they enter your venue. Configure in plugin Settings.</li>
+            </ul>
+          </div>
+
           {/* Initial Setup */}
           <section className="space-y-6">
             <h2 className="font-cinzel text-2xl font-semibold border-b border-[rgba(0,180,255,0.2)] pb-3 tracking-wide">Initial Setup</h2>
@@ -258,6 +269,19 @@ export default function OwnerManagerGuidePage() {
               <li>Create tasks from the Tasks page; optionally assign to a staff member and set a due date</li>
               <li>Staff can view and complete their assigned tasks</li>
               <li><span className="font-medium">Task Visibility</span> (in Settings): <span className="font-medium">All</span> shows every task to all staff; <span className="font-medium">Assigned only</span> shows staff only the tasks assigned to them; <span className="font-medium">Assigned + unassigned</span> shows their tasks plus tasks with no assignee</li>
+            </ul>
+          </section>
+
+          {/* Auto-Greeter */}
+          <section className="space-y-6">
+            <h2 className="font-cinzel text-2xl font-semibold border-b border-[rgba(0,180,255,0.2)] pb-3 tracking-wide">Auto-Greeter</h2>
+
+            <p className="text-sm leading-relaxed">The plugin can automatically send a <code className="bg-[rgba(0,180,255,0.08)] text-[var(--xiv-blue)] px-1.5 py-0.5 rounded text-xs font-mono">/tell</code> to patrons when they enter your venue&apos;s housing plot.</p>
+
+            <ul className="list-disc list-inside space-y-1.5 pl-4 text-sm leading-relaxed">
+              <li>Enable and configure the message in plugin <span className="font-medium">Settings</span></li>
+              <li>Only fires for patrons &mdash; staff on active shifts are not greeted</li>
+              <li>Works alongside patron tracking; the plugin must be running</li>
             </ul>
           </section>
 
