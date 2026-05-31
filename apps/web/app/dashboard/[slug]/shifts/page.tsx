@@ -2,6 +2,7 @@ import { getServerSession } from "next-auth"
 import { authOptions } from "@/lib/auth"
 import { redirect, notFound } from "next/navigation"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
+import { StatReadout } from "@/components/ui/stat-readout"
 import { Badge } from "@/components/ui/badge"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { prisma } from "@/lib/prisma"
@@ -100,7 +101,7 @@ export default async function ShiftsPage({
       venueName={venue.name}
       userRole={userRole}
     >
-      <div className="container mx-auto p-4 md:p-6 lg:p-8">
+      <div className="p-4 md:p-6">
         <Breadcrumb
           items={[
             { label: "Dashboard", href: "/dashboard" },
@@ -111,7 +112,7 @@ export default async function ShiftsPage({
 
         <div className="flex flex-col sm:flex-row sm:justify-between sm:items-start gap-4 mb-6 md:mb-8">
           <div>
-            <h1 className="font-cinzel text-2xl md:text-3xl lg:text-4xl font-bold tracking-wide text-balance">Shifts</h1>
+            <h1 className="font-cinzel text-2xl md:text-3xl font-bold tracking-[0.02em]">Shifts</h1>
             <p className="text-sm md:text-base text-muted-foreground mt-1 md:mt-2">
               Schedule and track staff shifts &middot; Times shown in Server Time ({tzLabel})
             </p>
@@ -122,52 +123,18 @@ export default async function ShiftsPage({
         </div>
 
         {/* Stats */}
-        <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 md:gap-6 mb-6 md:mb-8">
-          <Card>
-            <CardHeader className="pb-2">
-              <CardTitle className="text-xs font-medium text-muted-foreground uppercase tracking-wide">Active Now</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="text-3xl font-bold text-emerald-400">{activeShifts.length}</div>
-              <p className="text-xs text-muted-foreground mt-1">On shift</p>
-            </CardContent>
-          </Card>
-          <Card>
-            <CardHeader className="pb-2">
-              <CardTitle className="text-xs font-medium text-muted-foreground uppercase tracking-wide">Upcoming</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="text-3xl font-bold text-[var(--xiv-blue)]">{upcomingShifts.length}</div>
-              <p className="text-xs text-muted-foreground mt-1">Scheduled</p>
-            </CardContent>
-          </Card>
-          <Card>
-            <CardHeader className="pb-2">
-              <CardTitle className="text-xs font-medium text-muted-foreground uppercase tracking-wide">Completed</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="text-3xl font-bold text-zinc-400">
-                {pastShifts.filter((s) => s.status === "COMPLETED").length}
-              </div>
-              <p className="text-xs text-muted-foreground mt-1">This period</p>
-            </CardContent>
-          </Card>
-          <Card>
-            <CardHeader className="pb-2">
-              <CardTitle className="text-xs font-medium text-muted-foreground uppercase tracking-wide">Staff</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="text-3xl font-bold text-[var(--xiv-blue)]">{activeStaff.length}</div>
-              <p className="text-xs text-muted-foreground mt-1">Active members</p>
-            </CardContent>
-          </Card>
+        <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
+          <Card className="p-4"><StatReadout label="Active now" value={activeShifts.length} subtext="On shift" deltaDirection="up" /></Card>
+          <Card className="p-4"><StatReadout label="Upcoming" value={upcomingShifts.length} subtext="Scheduled" /></Card>
+          <Card className="p-4"><StatReadout label="Completed" value={pastShifts.filter(s => s.status === "COMPLETED").length} subtext="This period" /></Card>
+          <Card className="p-4"><StatReadout label="Staff" value={activeStaff.length} subtext="Active members" /></Card>
         </div>
 
         <div className="space-y-8">
           {/* Active Shifts */}
           {activeShifts.length > 0 && (
             <div>
-              <h2 className="font-cinzel text-xl font-semibold tracking-wide mb-4">On Shift Now</h2>
+              <h2 className="font-cinzel text-lg font-bold tracking-[0.02em] mb-4">On Shift Now</h2>
               <div className="grid grid-cols-1 gap-3">
                 {activeShifts.map((shift) => (
                   <ShiftCard
@@ -187,7 +154,7 @@ export default async function ShiftsPage({
           {/* Upcoming */}
           {upcomingShifts.length > 0 && (
             <div>
-              <h2 className="font-cinzel text-xl font-semibold tracking-wide mb-4">Upcoming</h2>
+              <h2 className="font-cinzel text-lg font-bold tracking-[0.02em] mb-4">Upcoming</h2>
               <div className="grid grid-cols-1 gap-3">
                 {upcomingShifts.map((shift) => (
                   <ShiftCard
@@ -207,7 +174,7 @@ export default async function ShiftsPage({
           {/* Past */}
           {pastShifts.length > 0 && (
             <div>
-              <h2 className="font-cinzel text-xl font-semibold tracking-wide mb-4">Recent</h2>
+              <h2 className="font-cinzel text-lg font-bold tracking-[0.02em] mb-4">Recent</h2>
               <div className="grid grid-cols-1 gap-3">
                 {pastShifts.map((shift) => (
                   <ShiftCard

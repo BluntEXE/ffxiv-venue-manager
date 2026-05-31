@@ -4,6 +4,7 @@ import { redirect, notFound } from "next/navigation"
 import Link from "next/link"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
+import { StatReadout } from "@/components/ui/stat-readout"
 import { Badge } from "@/components/ui/badge"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { prisma } from "@/lib/prisma"
@@ -81,7 +82,7 @@ export default async function StaffPage({
       venueName={venue.name}
       userRole={userRole}
     >
-      <div className="container mx-auto p-4 md:p-6 lg:p-8">
+      <div className="p-4 md:p-6">
         {/* Breadcrumb */}
         <Breadcrumb
           items={[
@@ -94,7 +95,7 @@ export default async function StaffPage({
         {/* Header */}
         <div className="flex flex-col sm:flex-row sm:justify-between sm:items-start gap-4 mb-6 md:mb-8">
           <div>
-            <h1 className="font-cinzel text-2xl md:text-3xl lg:text-4xl font-bold tracking-wide text-balance">Staff Management</h1>
+            <h1 className="font-cinzel text-2xl md:text-3xl font-bold tracking-[0.02em]">Staff Management</h1>
             <p className="text-sm md:text-base text-muted-foreground mt-1 md:mt-2">
               Manage your venue's team members and roles
             </p>
@@ -118,43 +119,11 @@ export default async function StaffPage({
         </div>
 
         {/* Stats */}
-        <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 md:gap-6 mb-6 md:mb-8">
-          <Card>
-            <CardHeader className="pb-2">
-              <CardTitle className="text-xs font-medium text-muted-foreground uppercase tracking-wide">Active Staff</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="font-cinzel text-3xl font-bold tracking-wide text-[var(--xiv-blue)]">{activeStaff.length}</div>
-              <p className="text-xs text-muted-foreground mt-1">Members</p>
-            </CardContent>
-          </Card>
-          <Card>
-            <CardHeader className="pb-2">
-              <CardTitle className="text-xs font-medium text-muted-foreground uppercase tracking-wide">Pending Invites</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className={`font-cinzel text-3xl font-bold tracking-wide ${pendingInvites.length > 0 ? 'text-amber-400' : 'text-zinc-400'}`}>{pendingInvites.length}</div>
-              <p className="text-xs text-muted-foreground mt-1">Awaiting signup</p>
-            </CardContent>
-          </Card>
-          <Card>
-            <CardHeader className="pb-2">
-              <CardTitle className="text-xs font-medium text-muted-foreground uppercase tracking-wide">Managers</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="font-cinzel text-3xl font-bold tracking-wide text-[var(--xiv-blue)]">{managers.length}</div>
-              <p className="text-xs text-muted-foreground mt-1">Manager role</p>
-            </CardContent>
-          </Card>
-          <Card>
-            <CardHeader className="pb-2">
-              <CardTitle className="text-xs font-medium text-muted-foreground uppercase tracking-wide">Staff</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="font-cinzel text-3xl font-bold tracking-wide text-zinc-300">{regularStaff.length}</div>
-              <p className="text-xs text-muted-foreground mt-1">Staff role</p>
-            </CardContent>
-          </Card>
+        <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
+          <Card className="p-4"><StatReadout label="Active staff" value={activeStaff.length} subtext="Members" /></Card>
+          <Card className="p-4"><StatReadout label="Pending invites" value={pendingInvites.length} subtext="Awaiting signup" deltaDirection={pendingInvites.length > 0 ? "up" : "neutral"} /></Card>
+          <Card className="p-4"><StatReadout label="Managers" value={managers.length} subtext="Manager role" /></Card>
+          <Card className="p-4"><StatReadout label="Staff" value={regularStaff.length} subtext="Staff role" /></Card>
         </div>
 
         {/* Staff Lists */}
@@ -177,7 +146,7 @@ export default async function StaffPage({
           {/* Owners */}
           {owners.length > 0 && (
             <div>
-              <h2 className="text-2xl font-bold mb-4">Owners</h2>
+              <h2 className="font-cinzel text-lg font-bold tracking-[0.02em] mb-3">Owners</h2>
               <div className="grid grid-cols-1 gap-4">
                 {owners.map((member: typeof owners[number]) => (
                   <Card key={member.id}>
@@ -224,7 +193,7 @@ export default async function StaffPage({
           {/* Managers */}
           {managers.length > 0 && (
             <div>
-              <h2 className="text-2xl font-bold mb-4">Managers</h2>
+              <h2 className="font-cinzel text-lg font-bold tracking-[0.02em] mb-3">Managers</h2>
               <div className="grid grid-cols-1 gap-4">
                 {managers.map((member: typeof managers[number]) => (
                   <Card key={member.id}>
@@ -271,7 +240,7 @@ export default async function StaffPage({
           {/* Regular Staff */}
           {regularStaff.length > 0 && (
             <div>
-              <h2 className="text-2xl font-bold mb-4">Staff Members</h2>
+              <h2 className="font-cinzel text-lg font-bold tracking-[0.02em] mb-3">Staff Members</h2>
               <div className="grid grid-cols-1 gap-4">
                 {regularStaff.map((member: typeof regularStaff[number]) => (
                   <Card key={member.id}>

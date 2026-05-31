@@ -114,7 +114,7 @@ export default async function PatronLogsPage({
 
   return (
     <VenueLayout venueSlug={venue.slug} venueName={venue.name} userRole={userRole}>
-      <div className="container mx-auto p-4 md:p-6 lg:p-8">
+      <div className="p-4 md:p-6">
         <Breadcrumb
           items={[
             { label: "Dashboard", href: "/dashboard" },
@@ -124,7 +124,7 @@ export default async function PatronLogsPage({
         />
 
         <div className="mb-6 md:mb-8">
-          <h1 className="font-cinzel text-2xl md:text-3xl lg:text-4xl font-bold tracking-wide text-balance">Patron Logs</h1>
+          <h1 className="font-cinzel text-2xl md:text-3xl font-bold tracking-[0.02em]">Patron Logs</h1>
           <p className="text-sm md:text-base text-muted-foreground mt-1 md:mt-2">
             Review and reclassify staff vs. patron visits. Use this when staff forgot to clock in
             or were marked working by mistake.

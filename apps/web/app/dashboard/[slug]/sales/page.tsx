@@ -3,6 +3,7 @@ import { authOptions } from "@/lib/auth"
 import { prisma } from "@/lib/prisma"
 import { redirect } from "next/navigation"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
+import { StatReadout } from "@/components/ui/stat-readout"
 import { VenueLayoutClient } from "@/components/venue-layout-client"
 import { Breadcrumb } from "@/components/breadcrumb"
 import { SalesLogDialog } from "@/components/sales-log-dialog"
@@ -189,7 +190,7 @@ export default async function SalesPage({ params }: PageProps) {
 
   return (
     <VenueLayoutClient slug={slug}>
-      <div className="container mx-auto p-4 md:p-6 lg:p-8">
+      <div className="p-4 md:p-6">
         {/* Breadcrumb */}
         <Breadcrumb
           items={[
@@ -202,7 +203,7 @@ export default async function SalesPage({ params }: PageProps) {
         {/* Header */}
         <div className="flex flex-col sm:flex-row sm:justify-between sm:items-start gap-4 mb-6 md:mb-8">
           <div>
-            <h1 className="font-cinzel text-2xl md:text-3xl lg:text-4xl font-bold tracking-wide text-balance">Sales & Transactions</h1>
+            <h1 className="font-cinzel text-2xl md:text-3xl font-bold tracking-[0.02em]">Sales & Transactions</h1>
             <p className="text-sm md:text-base text-muted-foreground mt-1 md:mt-2">
               Log sales and track revenue
             </p>
@@ -211,36 +212,10 @@ export default async function SalesPage({ params }: PageProps) {
         </div>
 
         {/* Stats */}
-        <div className="grid grid-cols-2 md:grid-cols-3 gap-4 md:gap-6 mb-6 md:mb-8">
-          <Card>
-            <CardHeader className="pb-2">
-              <CardTitle className="text-xs font-medium text-muted-foreground uppercase tracking-wide">Total Revenue</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="font-cinzel text-3xl font-bold tracking-wide text-[var(--xiv-blue)]">{totalRevenue.toLocaleString()} gil</div>
-              <p className="text-xs text-muted-foreground mt-1">{transactions.length} transactions</p>
-            </CardContent>
-          </Card>
-          <Card>
-            <CardHeader className="pb-2">
-              <CardTitle className="text-xs font-medium text-muted-foreground uppercase tracking-wide">Today&apos;s Revenue</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="text-3xl font-bold text-emerald-400">{todayRevenue.toLocaleString()} gil</div>
-              <p className="text-xs text-muted-foreground mt-1">{todayTransactions.length} transactions today</p>
-            </CardContent>
-          </Card>
-          <Card>
-            <CardHeader className="pb-2">
-              <CardTitle className="text-xs font-medium text-muted-foreground uppercase tracking-wide">Average Sale</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="font-cinzel text-3xl font-bold tracking-wide text-amber-400">
-                {transactions.length > 0 ? Math.round(totalRevenue / transactions.length).toLocaleString() : 0} gil
-              </div>
-              <p className="text-xs text-muted-foreground mt-1">Per transaction</p>
-            </CardContent>
-          </Card>
+        <div className="grid grid-cols-2 md:grid-cols-3 gap-4 mb-6">
+          <Card className="p-4"><StatReadout label="Total revenue" value={`${totalRevenue.toLocaleString()} gil`} subtext={`${transactions.length} transactions`} /></Card>
+          <Card className="p-4"><StatReadout label="Today's revenue" value={`${todayRevenue.toLocaleString()} gil`} subtext={`${todayTransactions.length} today`} deltaDirection="up" /></Card>
+          <Card className="p-4"><StatReadout label="Average sale" value={`${transactions.length > 0 ? Math.round(totalRevenue / transactions.length).toLocaleString() : 0} gil`} subtext="Per transaction" /></Card>
         </div>
 
         {/* Transactions List */}
@@ -254,19 +229,15 @@ export default async function SalesPage({ params }: PageProps) {
             </CardContent>
           </Card>
         ) : (
-          <Card>
-            <CardHeader>
-              <CardTitle>Transaction History</CardTitle>
-              <CardDescription>All sales and transactions</CardDescription>
-            </CardHeader>
-            <CardContent>
-              <TransactionsList
-                initialTransactions={transactions as any}
-                initialNextCursor={nextCursor}
-                initialHasMore={hasMore}
-                venueId={venue.id}
-              />
-            </CardContent>
+          <Card className="p-5">
+            <p className="stat-label mb-0.5">Transaction History</p>
+            <p className="text-xs text-muted-foreground mb-4">All sales and transactions</p>
+            <TransactionsList
+              initialTransactions={transactions as any}
+              initialNextCursor={nextCursor}
+              initialHasMore={hasMore}
+              venueId={venue.id}
+            />
           </Card>
         )}
       </div>

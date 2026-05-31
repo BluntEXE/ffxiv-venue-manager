@@ -95,7 +95,7 @@ export default async function EventsPage({
       venueName={venue.name}
       userRole={userRole}
     >
-      <div className="container mx-auto p-4 md:p-6 lg:p-8">
+      <div className="p-4 md:p-6">
         {/* Breadcrumb */}
         <Breadcrumb
           items={[
@@ -108,10 +108,8 @@ export default async function EventsPage({
         {/* Header */}
         <div className="flex flex-col sm:flex-row sm:justify-between sm:items-start gap-4 mb-6 md:mb-8">
           <div>
-            <h1 className="text-2xl md:text-3xl lg:text-4xl font-bold">Events</h1>
-            <p className="text-sm md:text-base text-muted-foreground mt-1 md:mt-2">
-              Manage your venue's events and schedule
-            </p>
+            <h1 className="font-cinzel text-2xl md:text-3xl font-bold tracking-[0.02em]">Events</h1>
+            <p className="text-sm text-muted-foreground mt-1">Manage your venue's events and schedule</p>
           </div>
           <Button asChild size="sm" className="sm:size-default self-start">
             <Link href={`/dashboard/${slug}/events/new`}>
@@ -147,7 +145,7 @@ export default async function EventsPage({
         <>
           {/* Upcoming Events */}
           <div className="mb-10">
-            <h2 className="font-cinzel text-xl font-semibold tracking-wide mb-4">
+            <h2 className="font-cinzel text-lg font-bold tracking-[0.02em] mb-4">
               Upcoming Events <span className="text-muted-foreground font-normal text-base">({upcomingEvents.length})</span>
             </h2>
             {upcomingEvents.length === 0 ? (
@@ -192,7 +190,7 @@ export default async function EventsPage({
             }, {})
             return (
               <div>
-                <h2 className="font-cinzel text-xl font-semibold tracking-wide mb-6">
+                <h2 className="font-cinzel text-lg font-bold tracking-[0.02em] mb-6">
                   Past Events <span className="text-muted-foreground font-normal text-base">({pastEvents.length})</span>
                 </h2>
                 <div className="space-y-8">
