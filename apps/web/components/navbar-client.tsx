@@ -50,11 +50,9 @@ export function NavbarClient({ session, venues }: NavbarClientProps) {
           </span>
         </Link>
 
-        {/* Center - anchor links (logged out) or venue switcher (logged in) */}
+        {/* Center - public nav links only (venue switcher lives in sidebar) */}
         <div className="hidden lg:flex flex-1 justify-center">
-          {session && venues.length > 0 ? (
-            <VenueSwitcher venues={venues} />
-          ) : !session ? (
+          {!session && (
             <div className="flex items-center gap-1">
               <Button asChild variant="ghost" size="sm" className="text-sm text-foreground/60 hover:text-foreground hover:bg-[rgba(0,180,255,0.06)] transition-colors tracking-wide">
                 <Link href="/#features">Features</Link>
@@ -63,7 +61,7 @@ export function NavbarClient({ session, venues }: NavbarClientProps) {
                 <Link href="/#guides">Guides</Link>
               </Button>
             </div>
-          ) : null}
+          )}
         </div>
 
         {/* Right - auth actions */}
