@@ -16,6 +16,7 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card"
+import { StatReadout } from "@/components/ui/stat-readout"
 import {
   Dialog,
   DialogContent,
@@ -348,7 +349,7 @@ export default function TasksPage({
   }
 
   if (!slug) {
-    return <div className="container mx-auto p-4 md:p-8"><PageLoading /></div>
+    return <div className="p-4 md:p-6"><PageLoading /></div>
   }
 
   // Filter tasks by tab
@@ -365,7 +366,7 @@ export default function TasksPage({
 
   return (
     <VenueLayoutClient slug={slug}>
-      <div className="container mx-auto p-4 md:p-6 lg:p-8">
+      <div className="p-4 md:p-6">
         {/* Breadcrumb */}
         <Breadcrumb
           items={[
@@ -378,10 +379,8 @@ export default function TasksPage({
         {/* Header */}
         <div className="flex flex-col sm:flex-row sm:justify-between sm:items-start gap-4 mb-6 md:mb-8">
           <div>
-            <h1 className="font-cinzel text-2xl md:text-3xl lg:text-4xl font-bold tracking-wide text-balance">Tasks</h1>
-            <p className="text-sm md:text-base text-muted-foreground mt-1 md:mt-2">
-              Manage and assign tasks to your team
-            </p>
+            <h1 className="font-cinzel text-2xl md:text-3xl font-bold tracking-[0.02em]">Tasks</h1>
+            <p className="text-sm text-muted-foreground mt-1">Manage and assign tasks to your team</p>
           </div>
           <Button onClick={openCreateDialog} size="sm" className="sm:size-default self-start">
             <span className="hidden sm:inline">Create Task</span>
@@ -390,50 +389,12 @@ export default function TasksPage({
         </div>
 
         {/* Stats */}
-        <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 md:gap-6 mb-6 md:mb-8">
-        <Card>
-          <CardHeader className="pb-2">
-            <CardTitle className="text-xs font-medium text-muted-foreground uppercase tracking-wide">Total Tasks</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="text-3xl font-bold">{tasks.length}</div>
-            <p className="text-xs text-muted-foreground mt-1">All tasks</p>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardHeader className="pb-2">
-            <CardTitle className="text-xs font-medium text-muted-foreground uppercase tracking-wide">Pending</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="text-3xl font-bold text-yellow-300">
-              {tasks.filter((t) => t.status === "PENDING").length}
-            </div>
-            <p className="text-xs text-muted-foreground mt-1">Not started</p>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardHeader className="pb-2">
-            <CardTitle className="text-xs font-medium text-muted-foreground uppercase tracking-wide">In Progress</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="text-3xl font-bold text-[var(--xiv-blue)]">
-              {tasks.filter((t) => t.status === "IN_PROGRESS").length}
-            </div>
-            <p className="text-xs text-muted-foreground mt-1">Active</p>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardHeader className="pb-2">
-            <CardTitle className="text-xs font-medium text-muted-foreground uppercase tracking-wide">Completed</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="text-3xl font-bold text-emerald-400">
-              {tasks.filter((t) => t.status === "COMPLETED").length}
-            </div>
-            <p className="text-xs text-muted-foreground mt-1">Done</p>
-          </CardContent>
-        </Card>
-      </div>
+        <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
+          <Card className="p-4"><StatReadout label="Total tasks" value={tasks.length} subtext="All tasks" /></Card>
+          <Card className="p-4"><StatReadout label="Pending" value={tasks.filter(t => t.status === "PENDING").length} subtext="Not started" /></Card>
+          <Card className="p-4"><StatReadout label="In progress" value={tasks.filter(t => t.status === "IN_PROGRESS").length} subtext="Active" /></Card>
+          <Card className="p-4"><StatReadout label="Completed" value={tasks.filter(t => t.status === "COMPLETED").length} subtext="Done" deltaDirection="up" /></Card>
+        </div>
 
       {/* Error Message */}
       {error && (

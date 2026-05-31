@@ -21,6 +21,7 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card"
+import { StatReadout } from "@/components/ui/stat-readout"
 import {
   Dialog,
   DialogContent,
@@ -274,7 +275,7 @@ export default function ServicesPage({
   }
 
   if (!slug) {
-    return <div className="container mx-auto p-4 md:p-8"><PageLoading /></div>
+    return <div className="p-4 md:p-6"><PageLoading /></div>
   }
 
   const activeServices = services.filter((s) => s.isActive)
@@ -282,7 +283,7 @@ export default function ServicesPage({
 
   return (
     <VenueLayoutClient slug={slug}>
-      <div className="container mx-auto p-4 md:p-6 lg:p-8">
+      <div className="p-4 md:p-6">
         {/* Breadcrumb */}
         <Breadcrumb
           items={[
@@ -295,10 +296,8 @@ export default function ServicesPage({
         {/* Header */}
         <div className="flex flex-col sm:flex-row sm:justify-between sm:items-start gap-4 mb-6 md:mb-8">
           <div>
-            <h1 className="text-2xl md:text-3xl lg:text-4xl font-bold">Service Catalog</h1>
-            <p className="text-sm md:text-base text-muted-foreground mt-1 md:mt-2">
-              Manage your venue's products and services
-            </p>
+            <h1 className="font-cinzel text-2xl md:text-3xl font-bold tracking-[0.02em]">Services</h1>
+            <p className="text-sm text-muted-foreground mt-1">Manage your venue's products and services</p>
           </div>
           <Button onClick={openCreateDialog} size="sm" className="sm:size-default self-start">
             <span className="hidden sm:inline">Add Service</span>
@@ -307,31 +306,10 @@ export default function ServicesPage({
         </div>
 
         {/* Stats */}
-        <div className="grid grid-cols-2 md:grid-cols-3 gap-4 md:gap-6 mb-6 md:mb-8">
-          <Card>
-            <CardHeader className="pb-3">
-              <CardTitle className="text-sm font-medium">Total Services</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="text-3xl font-bold">{services.length}</div>
-            </CardContent>
-          </Card>
-          <Card>
-            <CardHeader className="pb-3">
-              <CardTitle className="text-sm font-medium">Active</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="text-3xl font-bold text-emerald-500">{activeServices.length}</div>
-            </CardContent>
-          </Card>
-          <Card>
-            <CardHeader className="pb-3">
-              <CardTitle className="text-sm font-medium">Inactive</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="text-3xl font-bold text-zinc-400">{inactiveServices.length}</div>
-            </CardContent>
-          </Card>
+        <div className="grid grid-cols-2 md:grid-cols-3 gap-4 mb-6">
+          <Card className="p-4"><StatReadout label="Total services" value={services.length} /></Card>
+          <Card className="p-4"><StatReadout label="Active" value={activeServices.length} deltaDirection="up" /></Card>
+          <Card className="p-4"><StatReadout label="Inactive" value={inactiveServices.length} /></Card>
         </div>
 
         {/* Error Message */}

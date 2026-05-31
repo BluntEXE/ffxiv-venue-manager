@@ -13,6 +13,7 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card"
+import { StatReadout } from "@/components/ui/stat-readout"
 import {
   Dialog,
   DialogContent,
@@ -407,7 +408,7 @@ export default function PayrollPage() {
   if (loading) {
     return (
       <VenueLayoutClient slug={slug}>
-        <div className="container mx-auto p-8">
+        <div className="p-4 md:p-6">
           <PageLoading text="Loading payroll..." />
         </div>
       </VenueLayoutClient>
@@ -426,7 +427,7 @@ export default function PayrollPage() {
 
   return (
     <VenueLayoutClient slug={slug}>
-      <div className="container mx-auto p-4 md:p-6 lg:p-8 space-y-6">
+      <div className="p-4 md:p-6 space-y-6">
         {/* Breadcrumb */}
         <Breadcrumb
           items={[
@@ -439,7 +440,7 @@ export default function PayrollPage() {
         {/* Header */}
         <div className="flex flex-col sm:flex-row sm:justify-between sm:items-start gap-4">
           <div>
-            <h1 className="font-cinzel text-2xl md:text-3xl lg:text-4xl font-bold tracking-wide text-balance">Payroll</h1>
+            <h1 className="font-cinzel text-2xl md:text-3xl font-bold tracking-[0.02em]">Payroll</h1>
             <p className="text-sm md:text-base text-muted-foreground mt-1 md:mt-2">Manage staff compensation and payments</p>
           </div>
 
@@ -822,46 +823,9 @@ export default function PayrollPage() {
 
         {/* Summary Cards */}
         <div className="grid gap-4 md:grid-cols-3">
-          <Card>
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Unpaid</CardTitle>
-              <XCircle className="h-4 w-4 text-muted-foreground" />
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold">{Math.round(unpaidTotal).toLocaleString()} Gil</div>
-              <p className="text-xs text-muted-foreground">
-                {payrollEntries.filter((e) => !e.isPaid).length} entries
-              </p>
-            </CardContent>
-          </Card>
-
-          <Card>
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Paid</CardTitle>
-              <CheckCircle2 className="h-4 w-4 text-muted-foreground" />
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold">{Math.round(paidTotal).toLocaleString()} Gil</div>
-              <p className="text-xs text-muted-foreground">
-                {payrollEntries.filter((e) => e.isPaid).length} entries
-              </p>
-            </CardContent>
-          </Card>
-
-          <Card>
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Total</CardTitle>
-              <DollarSign className="h-4 w-4 text-muted-foreground" />
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold">
-                {Math.round(unpaidTotal + paidTotal).toLocaleString()} Gil
-              </div>
-              <p className="text-xs text-muted-foreground">
-                {payrollEntries.length} entries
-              </p>
-            </CardContent>
-          </Card>
+          <Card className="p-4"><StatReadout label="Unpaid" value={`${Math.round(unpaidTotal).toLocaleString()} gil`} subtext={`${payrollEntries.filter(e => !e.isPaid).length} entries`} deltaDirection="down" /></Card>
+          <Card className="p-4"><StatReadout label="Paid" value={`${Math.round(paidTotal).toLocaleString()} gil`} subtext={`${payrollEntries.filter(e => e.isPaid).length} entries`} deltaDirection="up" /></Card>
+          <Card className="p-4"><StatReadout label="Total" value={`${Math.round(unpaidTotal + paidTotal).toLocaleString()} gil`} subtext={`${payrollEntries.length} entries`} /></Card>
         </div>
 
         {/* Filter Tabs */}
