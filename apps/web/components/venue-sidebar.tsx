@@ -139,7 +139,7 @@ export function VenueSidebar({
         </div>
       )}
 
-      <ScrollArea className="flex-1 py-3">
+      <ScrollArea className="flex-1 py-3 [&>[data-radix-scroll-area-scrollbar]]:hidden">
         <nav className="px-2 space-y-5">
           {navGroups.map((group) => {
             const filtered = filterItems(group.items)
@@ -256,7 +256,7 @@ export function VenueSidebar({
 
       {/* Desktop floating sidebar */}
       <aside
-        className="hidden lg:flex lg:flex-col lg:w-[260px] fixed left-4 top-20 bottom-4 rounded-xl border border-[var(--blue-015)] overflow-hidden"
+        className="hidden lg:flex lg:flex-col lg:w-[260px] fixed left-4 top-20 bottom-4 rounded-xl border border-[var(--blue-015)] overflow-hidden [&_*::-webkit-scrollbar]:hidden [scrollbar-width:none]"
         style={{
           background: "rgba(7,11,20,0.85)",
           backdropFilter: "blur(16px)",

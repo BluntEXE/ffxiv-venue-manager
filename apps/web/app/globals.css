@@ -231,6 +231,11 @@
   h6 {
     font-family: var(--font-heading);
     font-weight: 700;
+  }
+
+  /* Allow font-cinzel utility to override the base heading rule */
+  .font-cinzel, h1.font-cinzel, h2.font-cinzel {
+    font-family: var(--font-cinzel), 'Cinzel', Georgia, serif !important;
     /* Bold headings for better hierarchy */
     /* letter-spacing: -0.025em; Removed fast tracking for better readability */
   }
