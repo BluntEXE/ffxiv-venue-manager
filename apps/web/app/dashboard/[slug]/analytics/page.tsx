@@ -375,7 +375,7 @@ export default function AnalyticsPage() {
               </button>
             </div>
             <div className="h-[300px] w-full">
-                <ResponsiveContainer width="100%" height="100%">
+                <ResponsiveContainer width="100%" height="100%" minWidth={0}>
                   <AreaChart data={financialData} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
                     <defs>
                       <linearGradient id="colorProfit" x1="0" y1="0" x2="0" y2="1">
@@ -450,7 +450,7 @@ export default function AnalyticsPage() {
             <p className="stat-label mb-0.5">Patron Visits</p>
             <p className="text-xs text-muted-foreground mb-4">Peak counts · last 7 events</p>
             <div className="h-[250px] w-full">
-                <ResponsiveContainer width="100%" height="100%">
+                <ResponsiveContainer width="100%" height="100%" minWidth={0}>
                   <BarChart data={patronData} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
                     <defs>
                       <linearGradient id="colorPatron" x1="0" y1="0" x2="0" y2="1">
@@ -491,7 +491,7 @@ export default function AnalyticsPage() {
             <p className="stat-label mb-0.5">Top Services</p>
             <p className="text-xs text-muted-foreground mb-4">Revenue by service type</p>
             <div className="h-[280px]">
-              <ResponsiveContainer width="100%" height="100%">
+              <ResponsiveContainer width="100%" height="100%" minWidth={0}>
                 <PieChart>
                   <Pie
                     data={serviceRevenue}
