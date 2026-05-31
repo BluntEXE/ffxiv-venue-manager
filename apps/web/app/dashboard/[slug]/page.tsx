@@ -129,7 +129,7 @@ export default async function VenueDashboardPage({
     where: {
       venueId: venue.id,
       status: { notIn: ["COMPLETED", "CANCELLED"] },
-      ...(canManage ? {} : { assignedMembershipId: membershipId }),
+      ...(canManage ? {} : { assignedTo: session.user.id }),
     },
     orderBy: { createdAt: "asc" },
     take: 5,
@@ -164,7 +164,7 @@ export default async function VenueDashboardPage({
               {venue.dataCenter} &middot; {venue.world}
             </span>
           </div>
-          <h1 className="font-cinzel text-2xl md:text-3xl font-bold tracking-wide">Overview</h1>
+          <h1 className="font-cinzel text-2xl md:text-3xl font-bold tracking-[0.02em]">Overview</h1>
           <p className="text-sm text-muted-foreground mt-0.5">
             {format(now, "EEEE, d MMM")} &middot; {tzLabel}
           </p>
@@ -192,7 +192,7 @@ export default async function VenueDashboardPage({
             <Card className="p-4">
               <StatReadout
                 label="Revenue this week"
-                value={`${(kpis.revenueThisWeek / 1000).toFixed(0)}k gil`}
+                value={kpis.revenueThisWeek >= 1000 ? `${(kpis.revenueThisWeek / 1000).toFixed(1)}k gil` : `${kpis.revenueThisWeek} gil`}
                 delta={revDelta !== null ? `${revDelta > 0 ? "+" : ""}${revDelta}% vs last` : undefined}
                 deltaDirection={revDelta !== null ? (revDelta >= 0 ? "up" : "down") : "neutral"}
               />
