@@ -301,29 +301,21 @@ export default function AnalyticsPage() {
           <div className="mb-6 md:mb-8">
             <h2 className="font-cinzel text-lg font-bold tracking-[0.02em] mb-3">Mobile App Followers</h2>
             <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
-              <Card>
-                <CardHeader className="pb-3">
-                  <CardTitle className="text-sm font-medium flex items-center gap-2">
-                    <Users className="h-4 w-4" />
-                    Total Followers
-                  </CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <div className="text-2xl font-bold">{analyticsData.followers.total}</div>
-                  <p className="text-xs text-muted-foreground mt-1">App users following this venue</p>
-                </CardContent>
+              <Card className="p-4">
+                <StatReadout
+                  label="Total followers"
+                  value={analyticsData.followers.total}
+                  subtext="app users following"
+                  icon={<Users className="h-3.5 w-3.5" />}
+                />
               </Card>
               {Object.entries(analyticsData.followers.byMonth).map(([month, count]) => (
-                <Card key={month}>
-                  <CardHeader className="pb-3">
-                    <CardTitle className="text-sm font-medium">
-                      {new Date(month + '-01').toLocaleDateString('en-GB', { month: 'short', year: 'numeric' })}
-                    </CardTitle>
-                  </CardHeader>
-                  <CardContent>
-                    <div className="text-2xl font-bold">+{count as number}</div>
-                    <p className="text-xs text-muted-foreground mt-1">New followers</p>
-                  </CardContent>
+                <Card key={month} className="p-4">
+                  <StatReadout
+                    label={new Date(month + '-01').toLocaleDateString('en-GB', { month: 'short', year: 'numeric' })}
+                    value={`+${count as number}`}
+                    subtext="new followers"
+                  />
                 </Card>
               ))}
             </div>
@@ -382,8 +374,7 @@ export default function AnalyticsPage() {
                 Export CSV
               </button>
             </div>
-            <div>
-              <div className="h-[300px] w-full">
+            <div className="h-[300px] w-full">
                 <ResponsiveContainer width="100%" height="100%">
                   <AreaChart data={financialData} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
                     <defs>
@@ -451,7 +442,6 @@ export default function AnalyticsPage() {
                     />
                   </AreaChart>
                 </ResponsiveContainer>
-              </div>
             </div>
           </Card>
 
@@ -459,8 +449,7 @@ export default function AnalyticsPage() {
           <Card className="p-5">
             <p className="stat-label mb-0.5">Patron Visits</p>
             <p className="text-xs text-muted-foreground mb-4">Peak counts · last 7 events</p>
-            <div>
-              <div className="h-[250px] w-full">
+            <div className="h-[250px] w-full">
                 <ResponsiveContainer width="100%" height="100%">
                   <BarChart data={patronData} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
                     <defs>
@@ -494,7 +483,6 @@ export default function AnalyticsPage() {
                     />
                   </BarChart>
                 </ResponsiveContainer>
-              </div>
             </div>
           </Card>
 
@@ -502,8 +490,8 @@ export default function AnalyticsPage() {
           <Card className="p-5">
             <p className="stat-label mb-0.5">Top Services</p>
             <p className="text-xs text-muted-foreground mb-4">Revenue by service type</p>
-            <div>
-              <ResponsiveContainer width="100%" height={280}>
+            <div className="h-[280px]">
+              <ResponsiveContainer width="100%" height="100%">
                 <PieChart>
                   <Pie
                     data={serviceRevenue}
