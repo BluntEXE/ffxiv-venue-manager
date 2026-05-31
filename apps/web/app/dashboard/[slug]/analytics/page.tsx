@@ -23,6 +23,7 @@ import {
 } from "recharts"
 import { format } from "date-fns"
 import { TrendingUp, DollarSign, Users, Calendar, Target, Download } from "lucide-react"
+import { StatReadout } from "@/components/ui/stat-readout"
 import { PageLoading } from "@/components/ui/loading-spinner"
 import { AttendanceOverview } from "@/components/analytics/attendance-overview"
 
@@ -255,83 +256,50 @@ export default function AnalyticsPage() {
         />
 
         <div className="mb-6 md:mb-8">
-          <h1 className="font-cinzel text-2xl md:text-3xl lg:text-4xl font-bold tracking-wide mb-2">Analytics Dashboard</h1>
-          <p className="text-sm md:text-base text-muted-foreground">
-            Comprehensive insights into your venue's performance
-          </p>
+          <h1 className="font-cinzel text-2xl md:text-3xl font-bold tracking-[0.02em] mb-1">Analytics</h1>
+          <p className="text-sm text-muted-foreground">Last 10 events · performance overview</p>
         </div>
 
-        {/* Summary Cards */}
-        <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 md:gap-6 mb-6 md:mb-8">
-          <Card>
-            <CardHeader className="pb-3">
-              <CardTitle className="text-sm font-medium flex items-center gap-2">
-                <DollarSign className="h-4 w-4" />
-                Total Revenue (Last 10 Events)
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold">{totalRevenue.toLocaleString()} gil</div>
-              <p className="text-xs text-muted-foreground mt-1">
-                Avg: {avgDailyRevenue.toLocaleString()} gil/event
-              </p>
-            </CardContent>
+        {/* Summary KPIs */}
+        <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
+          <Card className="p-4">
+            <StatReadout
+              label="Revenue (last 10 events)"
+              value={totalRevenue >= 1000 ? `${(totalRevenue/1000).toFixed(1)}k gil` : `${totalRevenue} gil`}
+              subtext={`avg ${avgDailyRevenue >= 1000 ? (avgDailyRevenue/1000).toFixed(1)+"k" : avgDailyRevenue} gil/event`}
+              icon={<DollarSign className="h-3.5 w-3.5" />}
+            />
           </Card>
-
-          <Card>
-            <CardHeader className="pb-3">
-              <CardTitle className="text-sm font-medium flex items-center gap-2">
-                <Users className="h-4 w-4" />
-                Total Patrons (Last 7 Events)
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold">{totalPatrons.toLocaleString()}</div>
-              <p className="text-xs text-muted-foreground mt-1">
-                Peak attendees
-              </p>
-            </CardContent>
+          <Card className="p-4">
+            <StatReadout
+              label="Patrons (last 7 events)"
+              value={totalPatrons.toLocaleString()}
+              subtext="peak attendees"
+              icon={<Users className="h-3.5 w-3.5" />}
+            />
           </Card>
-
-          <Card>
-            <CardHeader className="pb-3">
-              <CardTitle className="text-sm font-medium flex items-center gap-2">
-                <Calendar className="h-4 w-4" />
-                Events (30d)
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold">{eventStats?.recentCount || 0}</div>
-              <p className="text-xs text-muted-foreground mt-1">
-                {eventStats?.upcoming || 0} upcoming
-              </p>
-            </CardContent>
+          <Card className="p-4">
+            <StatReadout
+              label="Events (30d)"
+              value={eventStats?.recentCount || 0}
+              subtext={`${eventStats?.upcoming || 0} upcoming`}
+              icon={<Calendar className="h-3.5 w-3.5" />}
+            />
           </Card>
-
-          <Card>
-            <CardHeader className="pb-3">
-              <CardTitle className="text-sm font-medium flex items-center gap-2">
-                <Target className="h-4 w-4" />
-                Completion Rate
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold">
-                {(eventStats?.total ?? 0) > 0
-                  ? Math.round(((eventStats?.completed ?? 0) / (eventStats?.total ?? 1)) * 100)
-                  : 0}%
-              </div>
-              <p className="text-xs text-muted-foreground mt-1">
-                {eventStats?.completed || 0} completed
-              </p>
-            </CardContent>
+          <Card className="p-4">
+            <StatReadout
+              label="Completion rate"
+              value={`${(eventStats?.total ?? 0) > 0 ? Math.round(((eventStats?.completed ?? 0) / (eventStats?.total ?? 1)) * 100) : 0}%`}
+              subtext={`${eventStats?.completed || 0} completed`}
+              icon={<Target className="h-3.5 w-3.5" />}
+            />
           </Card>
         </div>
 
         {/* Mobile Followers */}
         {analyticsData?.followers && (
           <div className="mb-6 md:mb-8">
-            <h2 className="font-cinzel text-xl font-semibold mb-4 tracking-wide">Mobile App Followers</h2>
+            <h2 className="font-cinzel text-lg font-bold tracking-[0.02em] mb-3">Mobile App Followers</h2>
             <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
               <Card>
                 <CardHeader className="pb-3">
@@ -365,74 +333,32 @@ export default function AnalyticsPage() {
         {/* Financial Summary Cards */}
         {analyticsData?.financial && (
           <div className="mb-6 md:mb-8">
-            <h2 className="font-cinzel text-xl font-semibold mb-4 tracking-wide">Financial Overview (Last 10 Events)</h2>
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4 md:gap-6">
-              <Card className="border-l-4 border-l-yellow-500">
-                <CardHeader className="pb-3">
-                  <CardTitle className="text-sm font-medium flex items-center gap-2">
-                    <DollarSign className="h-4 w-4 text-yellow-500" />
-                    Payroll Expenses
-                  </CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <div className="text-2xl font-bold">
-                    {Math.round(analyticsData.financial.totalPayroll).toLocaleString()} gil
-                  </div>
-                  <p className="text-xs text-muted-foreground mt-1">
-                    {analyticsData.financial.payrollAsPercentOfRevenue.toFixed(1)}% of revenue
-                  </p>
-                </CardContent>
+            <h2 className="font-cinzel text-lg font-bold tracking-[0.02em] mb-3">Financial Overview</h2>
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+              <Card className="p-4">
+                <StatReadout
+                  label="Payroll expenses"
+                  value={`${Math.round(analyticsData.financial.totalPayroll).toLocaleString()} gil`}
+                  subtext={`${analyticsData.financial.payrollAsPercentOfRevenue.toFixed(1)}% of revenue`}
+                  icon={<DollarSign className="h-3.5 w-3.5" />}
+                />
               </Card>
-
-              <Card className={`border-l-4 ${
-                analyticsData.financial.netProfit >= 0
-                  ? 'border-l-green-500'
-                  : 'border-l-red-500'
-              }`}>
-                <CardHeader className="pb-3">
-                  <CardTitle className="text-sm font-medium flex items-center gap-2">
-                    <TrendingUp className={`h-4 w-4 ${
-                      analyticsData.financial.netProfit >= 0
-                        ? 'text-emerald-500'
-                        : 'text-red-500'
-                    }`} />
-                    Net Profit/Loss
-                  </CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <div className={`text-2xl font-bold ${
-                    analyticsData.financial.netProfit >= 0
-                      ? 'text-emerald-500'
-                      : 'text-red-400'
-                  }`}>
-                    {analyticsData.financial.netProfit >= 0 ? '+' : ''}
-                    {Math.round(analyticsData.financial.netProfit).toLocaleString()} gil
-                  </div>
-                  <p className="text-xs text-muted-foreground mt-1">
-                    Revenue minus paid payroll
-                  </p>
-                </CardContent>
+              <Card className="p-4">
+                <StatReadout
+                  label="Net profit / loss"
+                  value={`${analyticsData.financial.netProfit >= 0 ? "+" : ""}${Math.round(analyticsData.financial.netProfit).toLocaleString()} gil`}
+                  subtext="revenue minus payroll"
+                  deltaDirection={analyticsData.financial.netProfit >= 0 ? "up" : "down"}
+                  icon={<TrendingUp className="h-3.5 w-3.5" />}
+                />
               </Card>
-
-              <Card className="border-l-4 border-l-blue-500">
-                <CardHeader className="pb-3">
-                  <CardTitle className="text-sm font-medium flex items-center gap-2">
-                    <Target className="h-4 w-4 text-[var(--xiv-blue)]" />
-                    Profit Margin
-                  </CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <div className="text-2xl font-bold">
-                    {analyticsData.financial.profitMargin.toFixed(1)}%
-                  </div>
-                  <p className="text-xs text-muted-foreground mt-1">
-                    {analyticsData.financial.profitMargin >= 50
-                      ? 'Healthy margin'
-                      : analyticsData.financial.profitMargin >= 25
-                      ? 'Moderate margin'
-                      : 'Low margin'}
-                  </p>
-                </CardContent>
+              <Card className="p-4">
+                <StatReadout
+                  label="Profit margin"
+                  value={`${analyticsData.financial.profitMargin.toFixed(1)}%`}
+                  subtext={analyticsData.financial.profitMargin >= 50 ? "Healthy" : analyticsData.financial.profitMargin >= 25 ? "Moderate" : "Low"}
+                  icon={<Target className="h-3.5 w-3.5" />}
+                />
               </Card>
             </div>
           </div>
@@ -441,27 +367,22 @@ export default function AnalyticsPage() {
         {/* Charts Grid */}
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
           {/* Net Profit/Loss Chart (Last 10 Events) */}
-          <Card className="lg:col-span-2">
-            <CardHeader className="flex flex-row items-center justify-between">
+          <Card className="lg:col-span-2 p-5">
+            <div className="flex items-center justify-between mb-4">
               <div>
-                <CardTitle className="flex items-center gap-2">
-                  <TrendingUp className="h-5 w-5 text-[var(--xiv-blue)]" />
-                  Net Profit/Loss by Event (Last 10)
-                </CardTitle>
-                <CardDescription>
-                  Revenue minus payroll expenses per event
-                </CardDescription>
+                <p className="stat-label mb-0.5">Net Profit / Loss</p>
+                <p className="text-xs text-muted-foreground">Last 10 events · revenue minus payroll</p>
               </div>
               <button
                 onClick={exportToCSV}
-                className="flex items-center gap-2 px-3 py-2 text-sm rounded-md transition-colors"
-                style={{ background: "var(--xiv-blue)", color: "#070b14" }}
+                className="flex items-center gap-2 px-3 py-1.5 text-xs rounded-lg transition-colors xiv-btn-shimmer"
+                style={{ background: "var(--xiv-blue)", color: "#070b14", fontWeight: 600 }}
               >
-                <Download className="h-4 w-4" />
+                <Download className="h-3.5 w-3.5" />
                 Export CSV
               </button>
-            </CardHeader>
-            <CardContent>
+            </div>
+            <div>
               <div className="h-[300px] w-full">
                 <ResponsiveContainer width="100%" height="100%">
                   <AreaChart data={financialData} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
@@ -531,21 +452,14 @@ export default function AnalyticsPage() {
                   </AreaChart>
                 </ResponsiveContainer>
               </div>
-            </CardContent>
+            </div>
           </Card>
 
           {/* Patron Visit Trends */}
-          <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <Users className="h-5 w-5 text-emerald-500" />
-                Patron Visits (Last 7 Events)
-              </CardTitle>
-              <CardDescription>
-                Peak patron counts per event
-              </CardDescription>
-            </CardHeader>
-            <CardContent>
+          <Card className="p-5">
+            <p className="stat-label mb-0.5">Patron Visits</p>
+            <p className="text-xs text-muted-foreground mb-4">Peak counts · last 7 events</p>
+            <div>
               <div className="h-[250px] w-full">
                 <ResponsiveContainer width="100%" height="100%">
                   <BarChart data={patronData} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
@@ -581,21 +495,14 @@ export default function AnalyticsPage() {
                   </BarChart>
                 </ResponsiveContainer>
               </div>
-            </CardContent>
+            </div>
           </Card>
 
           {/* Top Services by Revenue */}
-          <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <DollarSign className="h-5 w-5 text-[var(--xiv-blue)]" />
-                Top Services
-              </CardTitle>
-              <CardDescription>
-                Revenue by service type
-              </CardDescription>
-            </CardHeader>
-            <CardContent>
+          <Card className="p-5">
+            <p className="stat-label mb-0.5">Top Services</p>
+            <p className="text-xs text-muted-foreground mb-4">Revenue by service type</p>
+            <div>
               <ResponsiveContainer width="100%" height={280}>
                 <PieChart>
                   <Pie
@@ -624,7 +531,7 @@ export default function AnalyticsPage() {
                   />
                 </PieChart>
               </ResponsiveContainer>
-            </CardContent>
+            </div>
           </Card>
 
           {/* Average Traffic Flow - Full Width */}
@@ -633,14 +540,10 @@ export default function AnalyticsPage() {
           </div>
 
           {/* Detailed Financial Table - Full Width */}
-          <Card className="lg:col-span-2">
-            <CardHeader>
-              <CardTitle>Detailed Financial Breakdown</CardTitle>
-              <CardDescription>
-                Revenue, payroll, and profit analysis for each event
-              </CardDescription>
-            </CardHeader>
-            <CardContent>
+          <Card className="lg:col-span-2 p-5">
+            <p className="stat-label mb-0.5">Detailed Financial Breakdown</p>
+            <p className="text-xs text-muted-foreground mb-4">Revenue, payroll, and profit per event</p>
+            <div>
               <div className="rounded-xl border border-[rgba(0,180,255,0.15)] overflow-hidden">
                 <Table>
                   <TableHeader>
@@ -717,7 +620,7 @@ export default function AnalyticsPage() {
                   </TableBody>
                 </Table>
               </div>
-            </CardContent>
+            </div>
           </Card>
         </div>
       </div>
