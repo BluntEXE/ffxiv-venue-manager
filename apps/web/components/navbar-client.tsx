@@ -8,7 +8,7 @@ import { VenueSwitcher } from "./venue-switcher"
 import { UserMenu } from "./user-menu"
 import { FeedbackDialog } from "./feedback-dialog"
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet"
-import { Menu, Heart } from "lucide-react"
+import { Menu, Heart, Bell, Plug } from "lucide-react"
 import { useState } from "react"
 import type { Session } from "next-auth"
 
@@ -70,11 +70,18 @@ export function NavbarClient({ session, venues }: NavbarClientProps) {
         <div className="hidden md:flex items-center gap-1">
           {session ? (
             <>
-              <Button asChild variant="ghost" size="sm" className="text-sm text-foreground/60 hover:text-foreground hover:bg-[rgba(0,180,255,0.06)] transition-colors">
-                <Link href="/dashboard">Dashboard</Link>
+              {/* TODO: wire to api_keys.lastUsedAt — show green only if plugin posted within ~5min */}
+              {isVenuePage && (
+                <div className="flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium border border-[rgba(16,185,129,0.25)] bg-[rgba(16,185,129,0.08)] text-[var(--success-text)] mr-1">
+                  <span className="xiv-live-dot scale-75" />
+                  Plugin synced
+                </div>
+              )}
+              <Button variant="ghost" size="icon" className="text-foreground/60 hover:text-foreground hover:bg-[var(--blue-007)]" aria-label="Notifications">
+                <Bell className="h-4 w-4" />
               </Button>
               <FeedbackDialog />
-              <Button asChild variant="ghost" size="sm" className="text-pink-400 hover:text-pink-300 hover:bg-pink-500/10">
+              <Button asChild variant="ghost" size="sm" className="text-[var(--support-pink)] hover:text-pink-300 hover:bg-[rgba(243,139,168,0.08)]">
                 <Link href="https://ko-fi.com/ehnocure" target="_blank" rel="noopener noreferrer">
                   <Heart className="h-4 w-4 mr-1" />
                   Support
