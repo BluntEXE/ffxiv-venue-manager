@@ -111,6 +111,30 @@ export default async function LivePage({
           ? personalRevenue
           : null
 
+  // Patron roster (recent ENTERs, crude in-venue list)
+  const patronRoster = activeEvent ? await prisma.patronLog.findMany({
+    where: { venueId: venue.id, action: "ENTER", loggedAt: { gte: activeEvent.startTime } },
+    orderBy: { loggedAt: "desc" },
+    take: 20,
+    select: { characterName: true, loggedAt: true },
+  }) : []
+
+  // On-shift staff
+  const activeShifts = await prisma.shift.findMany({
+    where: { venueId: venue.id, status: "ACTIVE" },
+    include: {
+      membership: {
+        include: { user: { select: { name: true, image: true } } },
+      },
+    },
+    take: 10,
+  })
+
+  // New patrons tonight (first visit this event)
+  const newTonightCount = activeEvent ? await prisma.patronLog.count({
+    where: { venueId: venue.id, action: "ENTER", loggedAt: { gte: activeEvent.startTime } },
+  }) : 0
+
   return (
     <VenueLayout
       venueSlug={venue.slug}
@@ -141,16 +165,25 @@ export default async function LivePage({
             initialPatronCount={Math.max(0, patronCount)}
             initialRevenue={revenueDisplay}
             initialSaleCount={activeEvent.transactions.length}
+            initialNewTonight={newTonightCount}
             showRevenue={showRevenue}
             revenueLabel={
               canManage || settings.revenueVisibility === "all"
                 ? "Total Revenue"
                 : "My Sales"
             }
+            patronRoster={patronRoster.map(p => ({
+              name: p.characterName ?? "Unknown",
+              arrivedAt: p.loggedAt.toISOString(),
+            }))}
+            onShiftStaff={activeShifts.map(s => ({
+              name: s.membership?.user?.name ?? s.membership?.invitedName ?? "Staff",
+              role: s.membership?.role ?? "STAFF",
+            }))}
           />
         ) : (
           <div className="mt-8">
-            <h1 className="text-2xl md:text-3xl font-bold mb-4">Live Mode</h1>
+            <h1 className="font-cinzel text-2xl md:text-3xl font-bold tracking-[0.02em] mb-4">Live Mode</h1>
             <Card>
               <CardContent className="py-12 text-center">
                 <p className="text-muted-foreground">
