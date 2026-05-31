@@ -95,11 +95,47 @@
   --xiv-blue-border: rgba(0, 180, 255, 0.25);
   --xiv-navy: #070b14;
 
+  /* Layered blue alphas — workhorses of the HUD look */
+  --blue-004: rgba(0, 180, 255, 0.04);  /* table row hover */
+  --blue-007: rgba(0, 180, 255, 0.07);  /* card hover bg / outer glow */
+  --blue-008: rgba(0, 180, 255, 0.08);  /* hairline borders / row dividers */
+  --blue-010: rgba(0, 180, 255, 0.10);  /* icon badge fill */
+  --blue-012: rgba(0, 180, 255, 0.12);  /* active badge fill */
+  --blue-015: rgba(0, 180, 255, 0.15);  /* card border (subtle) */
+  --blue-018: rgba(0, 180, 255, 0.18);  /* card border (default) */
+  --blue-020: rgba(0, 180, 255, 0.20);  /* card border (strong) */
+  --blue-035: rgba(0, 180, 255, 0.35);  /* card border hover */
+  --blue-045: rgba(0, 180, 255, 0.45);  /* card border hover (strong) */
+
+  /* Semantic aliases */
+  --font-display: var(--font-cinzel), 'Cinzel', Georgia, serif;
+  --font-mono: 'JetBrains Mono', ui-monospace, 'SF Mono', Menlo, monospace;
+  --surface-alt: #060b16;
+  --card-mantle: #181825;
+  --fg-subtle: var(--ctp-subtext1);
+  --fg-faint: var(--ctp-overlay0);
+  --success: #10b981;
+  --success-soft: rgba(16, 185, 129, 0.10);
+  --success-text: #34d399;
+  --destructive-soft: rgba(243, 139, 168, 0.10);
+  --warning: var(--ctp-yellow);
+  --support-pink: #f38ba8;
+  --radius-full: 9999px;
+
+  /* Glows / shadows */
+  --glow-card-hover: 0 0 20px rgba(0, 180, 255, 0.07);
+  --glow-card-inset: inset 0 1px 0 rgba(0, 180, 255, 0.12);
+  --glow-cta: 0 0 28px rgba(0, 180, 255, 0.40);
+  --glow-cta-soft: 0 0 16px rgba(0, 180, 255, 0.25);
+  --glow-fab: 0 0 20px rgba(0, 180, 255, 0.30);
+  --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.3);
+  --shadow-md: 0 4px 12px rgba(0, 0, 0, 0.4);
+
   /* Theme Mappings */
   --background: #070b14;
   --foreground: var(--ctp-text);
 
-  --card: var(--ctp-mantle);
+  --card: #0a0f1e;
   --card-foreground: var(--ctp-text);
 
   --popover: var(--ctp-surface0);
@@ -481,6 +517,102 @@
     font-size: 2rem;
   }
 }
+
+/* ============================================================
+   XIV Design System — Shared Primitives
+   ============================================================ */
+
+/* Stat / overline labels */
+.stat-label,
+.overline {
+  font-family: var(--font-sans);
+  font-size: 0.72rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.12em;
+  color: var(--muted-foreground);
+}
+
+/* Table column headers */
+.xiv-th {
+  color: var(--xiv-blue);
+  font-size: 0.75rem;
+  font-weight: 500;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+/* Code / slash-commands */
+.xiv-command {
+  font-family: var(--font-mono);
+  font-size: 0.875em;
+  color: var(--xiv-blue);
+  background: var(--blue-010);
+  padding: 0.15em 0.45em;
+  border-radius: var(--radius-sm);
+}
+
+/* Glass chrome — navbar / sidebar / dropdowns */
+.xiv-glass {
+  background: rgba(7, 11, 20, 0.85);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.04);
+}
+
+/* Status pills */
+.xiv-status-open {
+  background: rgba(16, 185, 129, 0.12);
+  color: var(--success-text);
+  border: 1px solid rgba(16, 185, 129, 0.25);
+}
+.xiv-status-closed {
+  background: rgba(243, 139, 168, 0.10);
+  color: var(--destructive);
+  border: 1px solid rgba(243, 139, 168, 0.20);
+}
+.xiv-status-soon {
+  background: rgba(249, 226, 175, 0.10);
+  color: var(--warning);
+  border: 1px solid rgba(249, 226, 175, 0.20);
+}
+
+/* Live pinging dot */
+@keyframes xiv-ping {
+  75%, 100% { transform: scale(2); opacity: 0; }
+}
+.xiv-live-dot {
+  position: relative;
+  display: inline-block;
+  width: 0.5rem;
+  height: 0.5rem;
+  border-radius: 50%;
+  background: var(--success);
+}
+.xiv-live-dot::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: 50%;
+  background: var(--success);
+  animation: xiv-ping 1.5s cubic-bezier(0, 0, 0.2, 1) infinite;
+}
+
+/* Bouncing dots — "listening" indicator */
+@keyframes xiv-bounce-dot {
+  0%, 80%, 100% { transform: translateY(0); opacity: 0.4; }
+  40% { transform: translateY(-4px); opacity: 1; }
+}
+.xiv-listening-dot {
+  display: inline-block;
+  width: 4px;
+  height: 4px;
+  border-radius: 50%;
+  background: var(--xiv-blue);
+  animation: xiv-bounce-dot 1.2s ease-in-out infinite;
+}
+.xiv-listening-dot:nth-child(2) { animation-delay: 0.15s; }
+.xiv-listening-dot:nth-child(3) { animation-delay: 0.3s; }
 
 /* Navbar HUD — crystal bottom accent line */
 .xiv-nav::after {
