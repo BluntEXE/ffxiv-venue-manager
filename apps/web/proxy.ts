@@ -18,8 +18,8 @@ function buildCsp(nonce: string): string {
   ].join("; ")
 }
 
-const PUBLIC_PATHS = ["/", "/auth/signin", "/auth/error", "/auth/signout-shoutcrafter", "/test", "/stats"]
-const PUBLIC_PREFIXES = ["/guide/", "/invite/", "/api/invites/", "/api/mobile/", "/api/shout-crafter/", "/api/feedback"]
+const PUBLIC_PATHS = ["/", "/auth/signin", "/auth/error", "/auth/signout-shoutcrafter", "/test", "/stats", "/discover"]
+const PUBLIC_PREFIXES = ["/guide/", "/invite/", "/venues/", "/following", "/api/invites/", "/api/mobile/", "/api/shout-crafter/", "/api/feedback", "/api/stats"]
 
 export async function proxy(req: NextRequest) {
   const nonce = Buffer.from(crypto.randomUUID()).toString("base64")
