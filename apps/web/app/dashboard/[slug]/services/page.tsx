@@ -87,6 +87,7 @@ export default function ServicesPage({
     isActive: true,
   })
   const [formError, setFormError] = useState("")
+  const [categoryFilter, setCategoryFilter] = useState("All")
   const [isSubmitting, setIsSubmitting] = useState(false)
 
   // Unwrap params
@@ -247,6 +248,24 @@ export default function ServicesPage({
     }
   }
 
+  const handleToggleService = async (service: Service) => {
+    try {
+      const venueResponse = await fetch(`/api/venues`)
+      const venues = await venueResponse.json()
+      const venue = venues.find((v: { slug: string }) => v.slug === slug)
+      const response = await fetch(`/api/venues/${venue.id}/services/${service.id}`, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ isActive: !service.isActive }),
+      })
+      if (!response.ok) throw new Error("Failed to toggle service")
+      const updated = await response.json()
+      setServices(services.map((s) => (s.id === updated.id ? updated : s)))
+    } catch (error: unknown) {
+      alert(error instanceof Error ? error.message : "Failed to toggle service")
+    }
+  }
+
   const openEditDialog = (service: Service) => {
     setEditingService(service)
     setFormData({
@@ -309,9 +328,9 @@ export default function ServicesPage({
 
         {/* Stats */}
         <div className="grid grid-cols-2 md:grid-cols-3 gap-4 mb-6">
-          <Card className="p-4"><StatReadout label="Total services" value={services.length} /></Card>
-          <Card className="p-4"><StatReadout label="Active" value={activeServices.length} deltaDirection="up" /></Card>
-          <Card className="p-4"><StatReadout label="Inactive" value={inactiveServices.length} /></Card>
+          <Card className="p-4"><StatReadout label="Total services" value={services.length} icon={<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M6 2L3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z"/><line x1="3" y1="6" x2="21" y2="6"/><path d="M16 10a4 4 0 0 1-8 0"/></svg>} iconVariant="blue" /></Card>
+          <Card className="p-4"><StatReadout label="Available" value={activeServices.length} deltaDirection="up" icon={<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><polyline points="20 6 9 17 4 12"/></svg>} iconVariant="success" /></Card>
+          <Card className="p-4"><StatReadout label="Unavailable" value={inactiveServices.length} icon={<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><circle cx="12" cy="12" r="10"/><line x1="4.93" y1="4.93" x2="19.07" y2="19.07"/></svg>} iconVariant="warning" /></Card>
         </div>
 
         {/* Error Message */}
@@ -334,11 +353,92 @@ export default function ServicesPage({
             </CardContent>
           </Card>
         ) : (
-          <>
-            {/* Active Services */}
-            {activeServices.length > 0 && (
-              <div className="mb-8">
-                <h2 className="font-cinzel text-xl font-semibold tracking-wide mb-4">Active Services</h2>
+          <div>
+            {/* Category filter tabs */}
+            <div className="flex items-center gap-3 mb-5 flex-wrap">
+              <div className="flex gap-1 bg-card border border-[var(--blue-015)] rounded-full p-1">
+                {["All", ...Array.from(new Set(services.map(s => s.category).filter(Boolean)))].map(cat => (
+                  <button key={cat ?? "All"} onClick={() => setCategoryFilter(cat ?? "All")}
+                    className={`text-sm font-semibold px-4 py-1.5 rounded-full transition-colors ${categoryFilter === (cat ?? "All") ? "bg-[var(--xiv-blue)] text-[var(--xiv-navy)]" : "text-muted-foreground hover:text-foreground hover:bg-[var(--blue-007)]"}`}>
+                    {cat ?? "All"}
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            {/* Service catalogue — auto-fill 3-col grid matching prototype svc-grid */}
+            <div className="grid gap-4" style={{ gridTemplateColumns: "repeat(auto-fill, minmax(264px, 1fr))" }}>
+            {services.filter(s => categoryFilter === "All" || s.category === categoryFilter).map((service) => (
+              <div
+                key={service.id}
+                className={`rounded-xl border border-[var(--blue-018)] bg-card overflow-hidden transition-all duration-[250ms] hover:border-[rgba(0,180,255,0.45)] hover:shadow-[0_0_20px_rgba(0,180,255,0.07),inset_0_1px_0_rgba(0,180,255,0.12)] hover:-translate-y-0.5 flex flex-col gap-3 p-5 ${!service.isActive ? "opacity-50" : ""}`}
+              >
+                {/* Top: icon badge + name + category */}
+                <div className="flex items-start gap-3">
+                  <div className="w-11 h-11 rounded-lg bg-[var(--blue-010)] border border-[var(--blue-018)] flex items-center justify-center flex-shrink-0 text-[var(--xiv-blue)]">
+                    <svg className="w-5 h-5" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                      <path d="M6 2L3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z"/><line x1="3" y1="6" x2="21" y2="6"/><path d="M16 10a4 4 0 0 1-8 0"/>
+                    </svg>
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <p className="font-[var(--font-heading)] font-semibold text-base leading-tight">{service.name}</p>
+                    <p className="text-[0.72rem] text-[var(--fg-faint)] mt-0.5">{service.category ?? "Service"}</p>
+                  </div>
+                </div>
+                {/* Description */}
+                {service.description
+                  ? <p className="text-[0.82rem] text-muted-foreground leading-relaxed flex-1">{service.description}</p>
+                  : <div className="flex-1" />
+                }
+                {/* Footer: price + toggle + icon actions */}
+                <div className="flex items-center justify-between border-t border-[var(--blue-008)] pt-3">
+                  <div>
+                    <span className="font-[var(--font-heading)] font-bold text-[1.1rem] text-[var(--xiv-blue)]">
+                      {service.price > 0 ? service.price.toLocaleString() : "Free"}
+                      {service.price > 0 && <span className="text-[0.72rem] text-muted-foreground font-medium ml-1">gil</span>}
+                    </span>
+                    {service._count && service._count.transactions > 0 && (
+                      <p className="text-[0.68rem] text-emerald-400">{service._count.transactions} sales</p>
+                    )}
+                  </div>
+                  <div className="flex items-center gap-1.5">
+                    {/* Toggle */}
+                    <button onClick={() => handleToggleService(service)} title={service.isActive ? "Available" : "Unavailable"}
+                      className={`relative w-[38px] h-[22px] rounded-full border transition-all duration-200 flex-shrink-0 ${service.isActive ? "bg-[var(--xiv-blue)] border-[var(--xiv-blue)]" : "bg-[var(--blue-010)] border-[var(--blue-020)]"}`}>
+                      <span className={`absolute top-[2px] left-[2px] w-4 h-4 rounded-full transition-all duration-200 ${service.isActive ? "translate-x-4 bg-[var(--xiv-navy)]" : "bg-[var(--fg-faint)]"}`} />
+                    </button>
+                    {/* Edit */}
+                    <button onClick={() => openEditDialog(service)} title="Edit" className="text-[var(--fg-faint)] hover:text-[var(--xiv-blue)] transition-colors p-1 rounded">
+                      <svg className="w-4 h-4" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+                    </button>
+                    {/* Delete */}
+                    <AlertDialog>
+                      <AlertDialogTrigger asChild>
+                        <button title="Delete" className="text-[var(--fg-faint)] hover:text-destructive transition-colors p-1 rounded">
+                          <svg className="w-4 h-4" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14H6L5 6"/><path d="M10 11v6m4-6v6"/><path d="M9 6V4h6v2"/></svg>
+                        </button>
+                      </AlertDialogTrigger>
+                      <AlertDialogContent>
+                        <AlertDialogHeader>
+                          <AlertDialogTitle>Delete &quot;{service.name}&quot;?</AlertDialogTitle>
+                          <AlertDialogDescription>This cannot be undone.</AlertDialogDescription>
+                        </AlertDialogHeader>
+                        <AlertDialogFooter>
+                          <AlertDialogCancel>Cancel</AlertDialogCancel>
+                          <AlertDialogAction onClick={() => handleDeleteService(service)}>Delete</AlertDialogAction>
+                        </AlertDialogFooter>
+                      </AlertDialogContent>
+                    </AlertDialog>
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
+          </div>
+
+          {false && activeServices.length > 0 && (
+              <div>
+                <h2>OLD</h2>
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                   {activeServices.map((service) => (
                     <Card key={service.id}>
@@ -484,7 +584,6 @@ export default function ServicesPage({
                 </div>
               </div>
             )}
-          </>
         )}
 
         {/* Create Service Dialog */}
