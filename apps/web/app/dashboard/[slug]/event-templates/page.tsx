@@ -243,9 +243,6 @@ export default function EventTemplatesPage() {
           <div>
             <VenueEyebrow slug={slug} />
             <h1 className="page-h1">Event Templates</h1>
-            <p className="text-sm md:text-base text-muted-foreground mt-1 md:mt-2">
-              Create templates for recurring events
-            </p>
           </div>
           <Button onClick={openCreateDialog}>
             <Plus className="mr-2 h-4 w-4" />

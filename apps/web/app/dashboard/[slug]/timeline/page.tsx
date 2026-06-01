@@ -45,9 +45,6 @@ export default async function TimelinePage({
             <span className="text-[0.72rem] font-semibold uppercase tracking-[0.14em] text-[var(--xiv-blue)]">{venue.name} &middot; {venue.dataCenter} &middot; {venue.world}</span>
           </div>
           <h1 className="page-h1">Timeline</h1>
-          <p className="text-sm md:text-base text-muted-foreground mt-1 md:mt-2">
-            All venue activity in one feed
-          </p>
         </div>
 
         <TimelineFeed venueId={venue.id} initialFilter={initialFilter} />

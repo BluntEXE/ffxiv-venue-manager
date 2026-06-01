@@ -103,7 +103,6 @@ export default async function EventsPage({
               <span className="text-[0.72rem] font-semibold uppercase tracking-[0.14em] text-[var(--xiv-blue)]">{venue.name} &middot; {venue.dataCenter} &middot; {venue.world}</span>
             </div>
             <h1 className="page-h1">Events</h1>
-            <p className="text-sm text-muted-foreground mt-1">Manage your venue's events and schedule</p>
           </div>
           <div className="flex items-center gap-2 self-start flex-wrap">
             {venue.partakeTeamId && (

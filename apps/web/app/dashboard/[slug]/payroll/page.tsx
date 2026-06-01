@@ -454,7 +454,6 @@ export default function PayrollPage() {
           <div>
             <VenueEyebrow slug={slug} />
             <h1 className="page-h1">Payroll</h1>
-            <p className="text-sm md:text-base text-muted-foreground mt-1 md:mt-2">Manage staff compensation and payments</p>
           </div>
 
           <div className="flex flex-col sm:flex-row gap-2">

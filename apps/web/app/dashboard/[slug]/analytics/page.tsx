@@ -224,7 +224,6 @@ export default function AnalyticsPage() {
           <div>
             <VenueEyebrow slug={slug} />
             <h1 className="page-h1">Analytics</h1>
-            <p className="text-sm text-muted-foreground">Performance overview · {period === "30d" ? "last 30 days" : period === "90d" ? "last 90 days" : "all time"}</p>
           </div>
           <div className="flex gap-1 bg-[var(--card)] border border-[var(--blue-015)] rounded-full p-1 self-start">
             {(["30d", "90d", "all"] as const).map((p) => (

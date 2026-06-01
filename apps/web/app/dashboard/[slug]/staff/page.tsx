@@ -100,9 +100,6 @@ export default async function StaffPage({
               <span className="text-[0.72rem] font-semibold uppercase tracking-[0.14em] text-[var(--xiv-blue)]">{venue.name} &middot; {venue.dataCenter} &middot; {venue.world}</span>
             </div>
             <h1 className="page-h1">Staff</h1>
-            <p className="text-sm md:text-base text-muted-foreground mt-1 md:mt-2">
-              Manage your venue's team members and roles
-            </p>
           </div>
           {canManageStaff && (
             <div className="flex gap-2">

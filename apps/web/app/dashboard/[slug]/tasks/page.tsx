@@ -333,7 +333,6 @@ export default function TasksPage({
           <div>
             <VenueEyebrow slug={slug} />
             <h1 className="page-h1">Tasks</h1>
-            <p className="text-sm text-muted-foreground mt-1">Manage and assign tasks to your team</p>
           </div>
           <Button onClick={openCreateDialog} size="sm" className="sm:size-default self-start">
             <span className="hidden sm:inline">Create Task</span>

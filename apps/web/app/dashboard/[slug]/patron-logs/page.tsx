@@ -163,11 +163,6 @@ export default async function PatronLogsPage({
             <span className="text-[0.72rem] font-semibold uppercase tracking-[0.14em] text-[var(--xiv-blue)]">{venue.name} &middot; {venue.dataCenter} &middot; {venue.world}</span>
           </div>
           <h1 className="page-h1">Patron Logs</h1>
-          <p className="text-sm text-muted-foreground mt-1 md:mt-2">
-            {activeTab === "profiles"
-              ? "Patron visit history and engagement overview"
-              : "Review and reclassify staff vs. patron visits"}
-          </p>
         </div>
 
         {/* Tab switcher */}

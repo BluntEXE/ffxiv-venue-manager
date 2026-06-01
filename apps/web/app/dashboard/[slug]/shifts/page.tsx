@@ -186,9 +186,6 @@ export default async function ShiftsPage({
               <span className="text-[0.72rem] font-semibold uppercase tracking-[0.14em] text-[var(--xiv-blue)]">{venue.name} &middot; {venue.dataCenter} &middot; {venue.world}</span>
             </div>
             <h1 className="page-h1">Shifts</h1>
-            <p className="text-sm text-muted-foreground mt-1">
-              Schedule and track staff shifts &middot; Times in Server Time ({tzLabel})
-            </p>
           </div>
           {canManage && (
             <CreateShiftDialog

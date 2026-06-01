@@ -252,10 +252,7 @@ export default function RolesPage({
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-4 mb-6 md:mb-8">
         <div>
-          <h1 className="text-2xl md:text-4xl font-bold">Custom Roles</h1>
-          <p className="text-sm md:text-base text-muted-foreground mt-1 md:mt-2">
-            Create and manage custom roles for your staff
-          </p>
+          <h1 className="page-h1">Custom Roles</h1>
         </div>
         <div className="flex flex-wrap gap-2 sm:gap-4">
           <Button variant="outline" asChild>

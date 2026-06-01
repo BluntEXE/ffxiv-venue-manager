@@ -219,13 +219,7 @@ export default function ApiKeysPage({
     <div className="page-inner max-w-4xl">
       <div className="mb-6 md:mb-8">
         <VenueEyebrow slug={slug} />
-        <h1 className="page-h1">
-          API Keys
-        </h1>
-        <p className="text-sm md:text-base text-muted-foreground mt-1 md:mt-2">
-          Generate keys so the XIV-App Dalamud plugin can send patron visits to{" "}
-          <span className="font-medium">{currentVenue?.name}</span>.
-        </p>
+        <h1 className="page-h1">API Keys</h1>
       </div>
 
       {error && (

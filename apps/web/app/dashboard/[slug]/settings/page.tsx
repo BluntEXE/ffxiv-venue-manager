@@ -234,7 +234,6 @@ export default function SettingsPage({
           <div>
             <VenueEyebrow slug={slug} />
             <h1 className="page-h1">Settings</h1>
-            <p className="text-sm text-muted-foreground mt-1">Manage your venue profile, integrations and permissions</p>
           </div>
           <Button onClick={handleSave} disabled={isSaving} className="self-start shrink-0">
             {isSaving ? "Saving…" : "Save changes"}

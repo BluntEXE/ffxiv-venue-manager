@@ -311,7 +311,6 @@ export default function ServicesPage({
           <div>
             <VenueEyebrow slug={slug} />
             <h1 className="page-h1">Services</h1>
-            <p className="text-sm text-muted-foreground mt-1">Manage your venue's products and services</p>
           </div>
           <Button onClick={openCreateDialog} size="sm" className="sm:size-default self-start">
             <span className="hidden sm:inline">Add Service</span>
