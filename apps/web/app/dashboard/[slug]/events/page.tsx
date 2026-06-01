@@ -71,15 +71,10 @@ export default async function EventsPage({
   const events = await prisma.event.findMany({
     where,
     include: {
-      createdBy: {
-        select: {
-          name: true,
-        },
-      },
+      createdBy: { select: { name: true } },
+      _count: { select: { patronLogs: true } },
     },
-    orderBy: {
-      startTime: "asc",
-    },
+    orderBy: { startTime: "asc" },
   })
 
   // Separate upcoming and past events
@@ -187,6 +182,16 @@ export default async function EventsPage({
                         {format(new Date(event.startTime), "EEE")} · {formatServerTime(event.startTime, "time")}
                         {event.endTime ? ` – ${formatServerTime(event.endTime, "time")} ${SERVER_TIME_LABEL}` : ` ${SERVER_TIME_LABEL}`}
                       </p>
+                      {(event.attendanceCount || event.partakeAttendeeCount || event._count.patronLogs > 0) && (
+                        <p className="text-xs text-muted-foreground mt-1 flex items-center gap-1">
+                          <svg className="w-3 h-3" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+                          {event.attendanceCount
+                            ? `${event.attendanceCount} attended`
+                            : event.partakeAttendeeCount
+                            ? `${event.partakeAttendeeCount} RSVP via Partake`
+                            : `${event._count.patronLogs} patron logs`}
+                        </p>
+                      )}
                       {event.location && <p className="text-xs text-muted-foreground mt-1 truncate">{event.location}</p>}
                       <div className="flex gap-2 mt-3">
                         <Button asChild variant="outline" size="sm"><Link href={`/dashboard/${slug}/events/${event.id}`}>View</Link></Button>

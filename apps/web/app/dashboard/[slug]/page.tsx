@@ -253,30 +253,39 @@ export default async function VenueDashboardPage({
               }
             </Card>
 
-            {/* Next event */}
+            {/* Next event — cinematic card */}
             {nextEvent ? (
-              <Card className="p-5 flex flex-col justify-between">
-                <div>
-                  <p className="stat-label mb-2 text-[var(--xiv-blue)]">Next event</p>
-                  <h3 className="font-cinzel text-lg font-bold tracking-wide mb-1">{nextEvent.title}</h3>
-                  <p className="text-sm text-muted-foreground mb-3">
+              <div className="rounded-xl border border-[var(--blue-018)] bg-card overflow-hidden relative flex flex-col justify-between">
+                {/* Starfield strip */}
+                <div className="absolute top-0 left-0 right-0 h-[88px] overflow-hidden">
+                  <div className="absolute inset-0 opacity-20" style={{ backgroundImage: "url('/starfield.png')", backgroundSize: "cover" }} />
+                  <div className="absolute inset-0" style={{ background: "linear-gradient(180deg, transparent 40%, var(--card) 100%)" }} />
+                </div>
+                <div className="relative p-5 pt-4 flex flex-col gap-3 z-10">
+                  {/* Eyebrow */}
+                  <div className="flex items-center gap-2">
+                    <span className="w-[6px] h-[6px] bg-[rgba(0,180,255,0.7)] rotate-45 shadow-[0_0_8px_rgba(0,180,255,0.5)]" />
+                    <span className="text-[0.66rem] font-semibold uppercase tracking-[0.14em] text-[var(--xiv-blue)]">Next event</span>
+                  </div>
+                  <h3 className="font-cinzel text-xl font-bold tracking-wide leading-tight">{nextEvent.title}</h3>
+                  <div className="flex flex-col gap-2 text-sm text-muted-foreground">
                     <ServerTimeRange start={nextEvent.startTime} end={nextEvent.endTime ?? nextEvent.startTime} timezone={timezone} tzLabel={tzLabel} />
-                  </p>
-                  <div className="mb-4">
-                    <Badge variant="tag" className="text-[10px]">{nextEvent.eventType}</Badge>
+                  </div>
+                  {/* Countdown pill */}
+                  <div className="inline-flex items-center gap-2 text-xs font-semibold text-[var(--xiv-blue)] bg-[var(--blue-010)] border border-[var(--blue-020)] px-3 py-1.5 rounded-full w-fit">
+                    <Clock className="h-3.5 w-3.5" />
+                    {formatDistanceToNow(nextEvent.startTime, { addSuffix: true })}
                   </div>
                 </div>
-                <div className="flex items-center justify-between">
-                  <span className="text-xs text-muted-foreground">
-                    {formatDistanceToNow(nextEvent.startTime, { addSuffix: true })}
-                  </span>
+                <div className="px-5 pb-5 flex items-center justify-between gap-3 relative z-10">
+                  <Badge variant="tag" className="text-[10px]">{nextEvent.eventType}</Badge>
                   <Button asChild variant="outline-blue" size="sm">
                     <Link href={`/dashboard/${slug}/events/${nextEvent.id}`}>
                       <Cog className="h-3.5 w-3.5" /> Manage
                     </Link>
                   </Button>
                 </div>
-              </Card>
+              </div>
             ) : (
               <Card className="p-5 flex flex-col items-center justify-center gap-2 text-center">
                 <Calendar className="h-8 w-8 text-muted-foreground opacity-50" />
