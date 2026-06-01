@@ -5,6 +5,56 @@ import { prisma } from "@/lib/prisma"
 import { withRateLimit } from "@/lib/middleware/with-rate-limit"
 import { invalidateCache, cacheKeys } from "@/lib/redis-cache"
 
+export const PATCH = withRateLimit(
+  async (
+    request: NextRequest,
+    context?: { params: Promise<{ venueId: string }> }
+  ) => {
+    try {
+      const session = await getServerSession(authOptions)
+      if (!session?.user?.id) {
+        return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
+      }
+      if (!context?.params) {
+        return NextResponse.json({ error: "Invalid request" }, { status: 400 })
+      }
+      const { venueId } = await context.params
+      const body = await request.json()
+
+      const venue = await prisma.venue.findUnique({
+        where: { id: venueId },
+        include: { memberships: { where: { userId: session.user.id } } },
+      })
+      if (!venue) return NextResponse.json({ error: "Venue not found" }, { status: 404 })
+      if (!venue.memberships.length || !["OWNER", "MANAGER"].includes(venue.memberships[0].role)) {
+        return NextResponse.json({ error: "Forbidden" }, { status: 403 })
+      }
+
+      const { name, description, location } = body
+      const updated = await prisma.venue.update({
+        where: { id: venueId },
+        data: {
+          ...(name !== undefined && { name: String(name).trim() }),
+          ...(description !== undefined && { description: description ? String(description).trim() : null }),
+          ...(location !== undefined && { location: location ? String(location).trim() : null }),
+        },
+      })
+
+      await Promise.all([
+        invalidateCache(cacheKeys.venue(venueId)),
+        invalidateCache(cacheKeys.venueBySlug(venue.slug)),
+        invalidateCache(cacheKeys.userVenues(session.user.id)),
+      ])
+
+      return NextResponse.json(updated)
+    } catch (error) {
+      console.error("Error updating venue:", error)
+      return NextResponse.json({ error: "Internal server error" }, { status: 500 })
+    }
+  },
+  { requests: 20, window: "1 m" }
+)
+
 export const DELETE = withRateLimit(
   async (
     request: NextRequest,

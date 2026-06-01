@@ -69,6 +69,12 @@ export default function SettingsPage({
     partakeTeamId: null,
     discoverySources: {},
   })
+  // Venue profile DB fields (saved separately)
+  const [venueName, setVenueName] = useState("")
+  const [venueDescription, setVenueDescription] = useState("")
+  const [venueLocation, setVenueLocation] = useState("")
+  const [tagInput, setTagInput] = useState("")
+
   const [isLoading, setIsLoading] = useState(true)
   const [isSaving, setIsSaving] = useState(false)
   const [error, setError] = useState("")
@@ -101,8 +107,11 @@ export default function SettingsPage({
         const venue = venues.find((v: { slug: string }) => v.slug === slug)
         if (!venue) throw new Error("Venue not found")
 
-        // Get user's role for this venue
+        // Set venue profile DB fields
         setVenueId(venue.id)
+        setVenueName(venue.name ?? "")
+        setVenueDescription(venue.description ?? "")
+        setVenueLocation(venue.location ?? "")
         if (venue.memberships?.[0]) {
           setUserRole(venue.memberships[0].role)
         }
@@ -150,20 +159,32 @@ export default function SettingsPage({
     setSuccess(false)
 
     try {
-      // Get venue ID
-      const venueResponse = await fetch(`/api/venues?slug=${slug}`)
-      const venues = await venueResponse.json()
-      const venue = venues.find((v: { slug: string }) => v.slug === slug)
+      if (!venueId) throw new Error("Venue not loaded")
 
-      const response = await fetch(`/api/venues/${venue.id}/settings`, {
+      // Save venue profile DB fields (name, description, location) via PATCH
+      const profileRes = await fetch(`/api/venues/${venueId}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          name: venueName.trim() || undefined,
+          description: venueDescription || null,
+          location: venueLocation || null,
+        }),
+      })
+      if (!profileRes.ok) {
+        const d = await profileRes.json()
+        throw new Error(d.error || "Failed to save venue profile")
+      }
+
+      // Save settings JSON (tagline, tags, hours, permissions, webhooks etc.)
+      const settingsRes = await fetch(`/api/venues/${venueId}/settings`, {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(settings),
       })
-
-      if (!response.ok) {
-        const data = await response.json()
-        throw new Error(data.error || "Failed to save settings")
+      if (!settingsRes.ok) {
+        const d = await settingsRes.json()
+        throw new Error(d.error || "Failed to save settings")
       }
 
       setSuccess(true)
@@ -245,6 +266,128 @@ export default function SettingsPage({
           <PageLoading text="Loading settings…" />
         ) : (
           <div className="space-y-4">
+
+            {/* ── Venue profile ── */}
+            <section className="rounded-xl border border-[var(--blue-018)] bg-card overflow-hidden">
+              <div className="flex items-center gap-2.5 px-5 py-3.5 border-b border-[var(--blue-008)] font-semibold text-[0.95rem]">
+                <svg className="w-4 h-4 text-[var(--xiv-blue)]" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
+                Venue profile
+              </div>
+              <div className="px-5 py-4 space-y-4">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                  <div className="space-y-1.5">
+                    <Label htmlFor="venue-name">Venue name</Label>
+                    <Input id="venue-name" value={venueName} onChange={e => setVenueName(e.target.value)} disabled={isSaving}
+                      className="bg-background border-[var(--blue-015)] focus:border-[var(--blue-035)]" />
+                  </div>
+                  <div className="space-y-1.5">
+                    <Label htmlFor="tagline">Tagline</Label>
+                    <Input id="tagline" placeholder="e.g. A dockside tavern for wayward souls"
+                      value={settings.tagline ?? ""} onChange={e => setSettings({ ...settings, tagline: e.target.value })}
+                      disabled={isSaving} className="bg-background border-[var(--blue-015)] focus:border-[var(--blue-035)]" />
+                  </div>
+                </div>
+                <div className="space-y-1.5">
+                  <Label>Tags</Label>
+                  <div className="flex flex-wrap gap-2 p-2 rounded-lg border border-[var(--blue-015)] bg-background min-h-[42px] items-center">
+                    {(settings.tags ?? []).map((tag: string) => (
+                      <span key={tag} className="inline-flex items-center gap-1.5 text-[0.72rem] font-medium px-2.5 py-1 rounded-full bg-[var(--blue-010)] text-[var(--xiv-blue)] border border-[var(--blue-020)]">
+                        {tag}
+                        <button type="button" onClick={() => setSettings({ ...settings, tags: (settings.tags ?? []).filter((t: string) => t !== tag) })}
+                          className="hover:text-destructive transition-colors text-[var(--fg-faint)]">
+                          <svg className="w-3 h-3" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+                        </button>
+                      </span>
+                    ))}
+                    <input
+                      placeholder="Add tag…"
+                      value={tagInput}
+                      onChange={e => setTagInput(e.target.value)}
+                      onKeyDown={e => {
+                        if ((e.key === "Enter" || e.key === ",") && tagInput.trim()) {
+                          e.preventDefault()
+                          const newTag = tagInput.trim().replace(/,$/, "")
+                          if (newTag && !(settings.tags ?? []).includes(newTag)) {
+                            setSettings({ ...settings, tags: [...(settings.tags ?? []), newTag] })
+                          }
+                          setTagInput("")
+                        }
+                        if (e.key === "Backspace" && !tagInput && (settings.tags ?? []).length) {
+                          setSettings({ ...settings, tags: (settings.tags ?? []).slice(0, -1) })
+                        }
+                      }}
+                      disabled={isSaving}
+                      className="flex-1 min-w-[80px] bg-transparent outline-none text-sm placeholder:text-[var(--fg-faint)]"
+                    />
+                  </div>
+                  <p className="text-[0.68rem] text-[var(--fg-faint)]">Press Enter or comma to add. e.g. 18+, Bar, RP, Live Music</p>
+                </div>
+                <div className="space-y-1.5">
+                  <Label htmlFor="venue-desc">Description</Label>
+                  <textarea id="venue-desc" rows={3}
+                    placeholder="Tell patrons what makes your venue special…"
+                    value={venueDescription}
+                    onChange={e => setVenueDescription(e.target.value)}
+                    disabled={isSaving}
+                    className="w-full text-sm bg-background border border-[var(--blue-015)] focus:border-[var(--blue-035)] rounded-lg px-3 py-2 outline-none resize-y text-foreground placeholder:text-[var(--fg-faint)] transition-colors"
+                  />
+                </div>
+              </div>
+            </section>
+
+            {/* ── Location & hours ── */}
+            <section className="rounded-xl border border-[var(--blue-018)] bg-card overflow-hidden">
+              <div className="flex items-center gap-2.5 px-5 py-3.5 border-b border-[var(--blue-008)] font-semibold text-[0.95rem]">
+                <svg className="w-4 h-4 text-[var(--xiv-blue)]" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>
+                Location &amp; hours
+              </div>
+              <div className="px-5 py-4 space-y-4">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                  <div className="space-y-1.5">
+                    <Label htmlFor="venue-location">Ward &amp; Plot</Label>
+                    <Input id="venue-location" placeholder="e.g. Goblet · W5 P31"
+                      value={venueLocation} onChange={e => setVenueLocation(e.target.value)}
+                      disabled={isSaving} className="bg-background border-[var(--blue-015)] focus:border-[var(--blue-035)]" />
+                  </div>
+                  <div className="space-y-1.5">
+                    <Label>Data Centre &amp; World</Label>
+                    <Input value={`${venueDescription ? "" : ""}${slug}`} disabled
+                      className="bg-background border-[var(--blue-015)] opacity-50 cursor-not-allowed text-[var(--fg-faint)] font-mono text-sm"
+                      placeholder="Set during venue creation" />
+                  </div>
+                </div>
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                  <div className="space-y-1.5">
+                    <Label htmlFor="default-hours">Default hours (ST)</Label>
+                    <Input id="default-hours" placeholder="e.g. 10PM–2AM"
+                      value={settings.defaultHours ?? ""} onChange={e => setSettings({ ...settings, defaultHours: e.target.value })}
+                      disabled={isSaving} className="bg-background border-[var(--blue-015)] focus:border-[var(--blue-035)]" />
+                  </div>
+                  <div className="space-y-1.5">
+                    <Label htmlFor="open-nights">Open nights</Label>
+                    <Input id="open-nights" placeholder="e.g. Fri & Sat"
+                      value={settings.openNights ?? ""} onChange={e => setSettings({ ...settings, openNights: e.target.value })}
+                      disabled={isSaving} className="bg-background border-[var(--blue-015)] focus:border-[var(--blue-035)]" />
+                  </div>
+                </div>
+                <div className="flex items-center justify-between py-1">
+                  <div>
+                    <p className="text-sm font-medium">Adult (18+) venue</p>
+                    <p className="text-xs text-[var(--fg-faint)]">Show the 18+ badge on your public listing.</p>
+                  </div>
+                  <button type="button"
+                    onClick={() => setSettings({ ...settings, isAdult: !settings.isAdult })}
+                    disabled={isSaving}
+                    className={`relative w-[38px] h-[22px] rounded-full border transition-all duration-200 flex-shrink-0 ${
+                      settings.isAdult ? "bg-[var(--xiv-blue)] border-[var(--xiv-blue)]" : "bg-[var(--blue-010)] border-[var(--blue-020)]"
+                    }`}>
+                    <span className={`absolute top-[2px] left-[2px] w-4 h-4 rounded-full transition-all duration-200 ${
+                      settings.isAdult ? "translate-x-4 bg-[var(--xiv-navy)]" : "bg-[var(--fg-faint)]"
+                    }`} />
+                  </button>
+                </div>
+              </div>
+            </section>
 
             {/* ── Integrations ── */}
             <section className="rounded-xl border border-[var(--blue-018)] bg-card overflow-hidden">

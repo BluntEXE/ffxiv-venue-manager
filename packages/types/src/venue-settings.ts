@@ -74,6 +74,13 @@ export interface VenueSettings {
   discordWebhookUrl?: string | null
   /** Partake.gg team integration ID */
   partakeTeamId?: number | null
+  /** Venue profile extras not stored as DB fields */
+  tagline?: string
+  tags?: string[]
+  /** Location & hours */
+  defaultHours?: string   // e.g. "10PM–2AM"
+  openNights?: string     // e.g. "Fri & Sat"
+  isAdult?: boolean       // 18+ venue
   /** How patrons discover the venue — owner-set percentages for analytics panel */
   discoverySources?: {
     partake?: number      // Partake.gg listing
