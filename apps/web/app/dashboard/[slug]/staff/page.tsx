@@ -134,9 +134,14 @@ export default async function StaffPage({
         {/* Stats */}
         <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
           <Card className="p-4"><StatReadout label="Active staff" value={activeStaff.length} subtext="Members" icon={<Users />} iconVariant="blue" /></Card>
-          <Card className="p-4"><StatReadout label="Pending invites" value={pendingInvites.length} subtext="Awaiting signup" deltaDirection={pendingInvites.length > 0 ? "up" : "neutral"} icon={<UserPlus />} iconVariant={pendingInvites.length > 0 ? "warning" : "blue"} /></Card>
+          <Card className="p-4">
+            <div className="flex items-start justify-between">
+              <StatReadout label="On shift now" value={activeShifts.length} subtext={activeShifts.length > 0 ? "clocked in" : "no active shifts"} icon={<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>} iconVariant="success" />
+              {activeShifts.length > 0 && <span className="xiv-live-dot mt-1 shrink-0" />}
+            </div>
+          </Card>
           <Card className="p-4"><StatReadout label="Managers" value={managers.length} subtext="Manager role" icon={<Shield />} iconVariant="success" /></Card>
-          <Card className="p-4"><StatReadout label="Staff" value={regularStaff.length} subtext="Staff role" icon={<Users />} iconVariant="blue" /></Card>
+          <Card className="p-4"><StatReadout label="Staff members" value={regularStaff.length} subtext="Staff role" icon={<Users />} iconVariant="blue" /></Card>
         </div>
 
         {/* Staff table */}

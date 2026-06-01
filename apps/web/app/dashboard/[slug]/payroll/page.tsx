@@ -825,13 +825,15 @@ export default function PayrollPage() {
 
         {/* Summary Cards */}
         {/* KPIs */}
-        <div className="grid gap-4 md:grid-cols-3">
-          <Card className="p-4"><StatReadout label="Unpaid" value={`${Math.round(unpaidTotal).toLocaleString()} gil`} subtext={`${payrollEntries.filter(e => !e.isPaid).length} entries`} deltaDirection="down"
-            icon={<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>} iconVariant="warning" /></Card>
-          <Card className="p-4"><StatReadout label="Paid" value={`${Math.round(paidTotal).toLocaleString()} gil`} subtext={`${payrollEntries.filter(e => e.isPaid).length} entries`} deltaDirection="up"
-            icon={<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><polyline points="20 6 9 17 4 12"/></svg>} iconVariant="success" /></Card>
-          <Card className="p-4"><StatReadout label="Total period" value={`${Math.round(unpaidTotal + paidTotal).toLocaleString()} gil`} subtext={`${payrollEntries.length} entries`}
-            icon={<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>} iconVariant="blue" /></Card>
+        <div className="grid gap-4 md:grid-cols-4">
+          <Card className="p-4"><StatReadout label="Period payout" value={`${Math.round(unpaidTotal + paidTotal).toLocaleString()} gil`} subtext={`${payrollEntries.length} staff`}
+            icon={<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><rect x="2" y="6" width="20" height="12" rx="2"/><circle cx="12" cy="12" r="2"/><path d="M6 12h.01M18 12h.01"/></svg>} iconVariant="blue" /></Card>
+          <Card className="p-4"><StatReadout label="Pending" value={payrollEntries.filter(e => !e.isPaid).length} subtext="awaiting payment" deltaDirection="down"
+            icon={<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M5 2v20M19 2v20M12 2v4M12 18v4M5 12h7M12 12h7M5 2h14M5 22h14"/></svg>} iconVariant="warning" /></Card>
+          <Card className="p-4"><StatReadout label="Unpaid total" value={`${Math.round(unpaidTotal).toLocaleString()} gil`} subtext="to pay out"
+            icon={<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>} iconVariant="warning" /></Card>
+          <Card className="p-4"><StatReadout label="Paid" value={payrollEntries.filter(e => e.isPaid).length} subtext={`${Math.round(paidTotal).toLocaleString()} gil`} deltaDirection="up"
+            icon={<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>} iconVariant="success" /></Card>
         </div>
 
         {/* Filter tabs */}
