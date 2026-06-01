@@ -81,3 +81,7 @@ packages/*/node_modules/
 # Android signing keystores
 *.jks
 *.keystore
+*.apk
+graphify-out/
+app.json
+eas.json

@@ -1,4 +1,5 @@
 import Link from "next/link"
+import Image from "next/image"
 import { getPublicStats } from "@/lib/public-stats"
 
 export const revalidate = 60
