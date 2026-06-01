@@ -390,7 +390,7 @@ export default function TasksPage({
                 {/* Column header */}
                 <div className="flex items-center gap-2 px-4 py-3 border-b border-[var(--blue-008)]">
                   <span className="w-2 h-2 rounded-full flex-shrink-0" style={{ background: dot }} />
-                  <span className="font-[var(--font-heading)] font-semibold text-sm">{label}</span>
+                  <span className="font-[var(--font-outfit)] font-semibold text-sm">{label}</span>
                   <span className="ml-auto text-xs text-[var(--fg-faint)] bg-[var(--blue-010)] px-2 py-0.5 rounded-full">
                     {col.length}
                   </span>

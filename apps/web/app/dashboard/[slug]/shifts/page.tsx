@@ -217,7 +217,7 @@ export default async function ShiftsPage({
                 </span>
                 <div>
                   <p className="text-[0.66rem] uppercase tracking-[0.1em] text-[var(--fg-faint)] font-semibold">{k}</p>
-                  <p className="font-[var(--font-heading)] text-xl font-bold mt-0.5">{v}</p>
+                  <p className="font-[var(--font-outfit)] text-xl font-bold mt-0.5">{v}</p>
                   <p className="text-[0.7rem] text-muted-foreground mt-0.5">{sub}</p>
                 </div>
               </div>

@@ -299,7 +299,7 @@ export default function AnalyticsPage() {
               <Card className="overflow-hidden">
                 {/* chart-head: title | delta | spacer | total */}
                 <div className="flex items-baseline gap-3 px-5 py-4 border-b border-[var(--blue-008)]">
-                  <span className="font-[var(--font-heading)] font-semibold text-[0.95rem]">Revenue</span>
+                  <span className="font-[var(--font-outfit)] font-semibold text-[0.95rem]">Revenue</span>
                   {financialData.length > 1 && (() => {
                     const last = financialData[financialData.length - 1]?.revenue ?? 0
                     const prev = financialData[financialData.length - 2]?.revenue ?? 0
@@ -314,7 +314,7 @@ export default function AnalyticsPage() {
                     ) : null
                   })()}
                   <div className="flex-1" />
-                  <span className="font-[var(--font-heading)] font-bold text-[1.25rem]">
+                  <span className="font-[var(--font-outfit)] font-bold text-[1.25rem]">
                     {totalRev >= 1000 ? `${(totalRev/1000).toFixed(1)}k` : totalRev.toLocaleString()}
                     <span className="text-[0.82rem] font-medium text-muted-foreground ml-1">gil</span>
                   </span>
@@ -352,7 +352,7 @@ export default function AnalyticsPage() {
               return (
                 <Card className="overflow-hidden">
                   <div className="flex items-baseline gap-3 px-5 py-4 border-b border-[var(--blue-008)]">
-                    <span className="font-[var(--font-heading)] font-semibold text-[0.95rem]">Patron Visits</span>
+                    <span className="font-[var(--font-outfit)] font-semibold text-[0.95rem]">Patron Visits</span>
                     <div className="flex-1" />
                     <span className="text-[0.74rem] text-[var(--fg-faint)] font-normal">Peak counts · last {patronData.length}</span>
                   </div>

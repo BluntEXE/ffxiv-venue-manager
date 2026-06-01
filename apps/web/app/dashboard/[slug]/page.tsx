@@ -346,7 +346,7 @@ export default async function VenueDashboardPage({
                       <td className="px-5 py-3.5 text-[0.86rem] text-right tabular-nums text-muted-foreground hidden md:table-cell">
                         {ev.patrons > 0 ? ev.patrons : <span className="text-[var(--fg-faint)]">—</span>}
                       </td>
-                      <td className="px-5 py-3.5 text-right tabular-nums font-[var(--font-heading)] font-semibold text-[0.86rem]">
+                      <td className="px-5 py-3.5 text-right tabular-nums font-[var(--font-outfit)] font-semibold text-[0.86rem]">
                         {ev.revenue > 0 ? `${ev.revenue.toLocaleString()} gil` : <span className="text-[var(--fg-faint)] font-normal">—</span>}
                       </td>
                     </tr>

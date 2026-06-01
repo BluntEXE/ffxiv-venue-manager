@@ -916,7 +916,7 @@ export default function PayrollPage() {
                       </td>
                       {/* Total */}
                       <td className="xiv-td">
-                        <span className="text-sm font-semibold font-[var(--font-heading)] text-[var(--xiv-blue)]">
+                        <span className="text-sm font-semibold font-[var(--font-outfit)] text-[var(--xiv-blue)]">
                           {total.toLocaleString()} gil
                         </span>
                         {entry.bonusAmount && parseFloat(entry.bonusAmount) > 0 && (

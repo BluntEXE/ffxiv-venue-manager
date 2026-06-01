@@ -386,7 +386,7 @@ export default function ServicesPage({
                     </svg>
                   </div>
                   <div className="flex-1 min-w-0">
-                    <p className="font-[var(--font-heading)] font-semibold text-base leading-tight">{service.name}</p>
+                    <p className="font-[var(--font-outfit)] font-semibold text-base leading-tight">{service.name}</p>
                     <p className="text-[0.72rem] text-[var(--fg-faint)] mt-0.5">{service.category ?? "Service"}</p>
                   </div>
                 </div>
@@ -398,7 +398,7 @@ export default function ServicesPage({
                 {/* Footer: price + toggle + icon actions */}
                 <div className="flex items-center justify-between border-t border-[var(--blue-008)] pt-3">
                   <div>
-                    <span className="font-[var(--font-heading)] font-bold text-[1.1rem] text-[var(--xiv-blue)]">
+                    <span className="font-[var(--font-outfit)] font-bold text-[1.1rem] text-[var(--xiv-blue)]">
                       {service.price > 0 ? service.price.toLocaleString() : "Free"}
                       {service.price > 0 && <span className="text-[0.72rem] text-muted-foreground font-medium ml-1">gil</span>}
                     </span>

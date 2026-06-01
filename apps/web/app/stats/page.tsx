@@ -174,7 +174,7 @@ export default async function StatsPage() {
                   }`}>
                     {icon}
                   </div>
-                  <p className="font-[var(--font-heading)] font-bold text-[clamp(1.8rem,2.5vw,2.4rem)] leading-none text-foreground mt-1">{value}</p>
+                  <p className="font-[var(--font-outfit)] font-bold text-[clamp(1.8rem,2.5vw,2.4rem)] leading-none text-foreground mt-1">{value}</p>
                   <p className="text-[0.84rem] text-muted-foreground mt-1.5">{label}</p>
                 </div>
               ))}

@@ -157,11 +157,11 @@ export default async function Home() {
                 {/* Stat cards */}
                 <div className="bg-background border border-[var(--blue-015)] rounded-lg px-4 py-3.5">
                   <p className="text-[0.6rem] font-semibold uppercase tracking-[0.12em] text-[var(--fg-faint)]">In venue now</p>
-                  <p className="font-[var(--font-heading)] font-bold text-[1.4rem] mt-1.5">24</p>
+                  <p className="font-[var(--font-outfit)] font-bold text-[1.4rem] mt-1.5">24</p>
                 </div>
                 <div className="bg-background border border-[var(--blue-015)] rounded-lg px-4 py-3.5">
                   <p className="text-[0.6rem] font-semibold uppercase tracking-[0.12em] text-[var(--fg-faint)]">Sales tonight</p>
-                  <p className="font-[var(--font-heading)] font-bold text-[1.4rem] mt-1.5 text-[var(--xiv-blue)]">47,500 gil</p>
+                  <p className="font-[var(--font-outfit)] font-bold text-[1.4rem] mt-1.5 text-[var(--xiv-blue)]">47,500 gil</p>
                 </div>
                 {/* Activity feed — full width */}
                 <div className="sm:col-span-2 bg-background border border-[var(--blue-015)] rounded-lg overflow-hidden">
@@ -276,7 +276,7 @@ export default async function Home() {
               }`}>
                 <svg className="w-6 h-6" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">{icon}</svg>
               </div>
-              <h3 className="font-[var(--font-heading)] font-semibold text-[1.12rem] mb-2">{title}</h3>
+              <h3 className="font-[var(--font-outfit)] font-semibold text-[1.12rem] mb-2">{title}</h3>
               <p className="text-[0.9rem] text-muted-foreground leading-[1.55]">{desc}</p>
             </div>
           ))}
@@ -322,7 +322,7 @@ export default async function Home() {
                     <svg className="w-5 h-5" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d={iconPath}/></svg>
                   </div>
                   <div>
-                    <p className="font-[var(--font-heading)] font-semibold text-[1.15rem]">{title}</p>
+                    <p className="font-[var(--font-outfit)] font-semibold text-[1.15rem]">{title}</p>
                     <p className="text-[0.78rem] text-[var(--fg-faint)]">{sub}</p>
                   </div>
                 </div>
@@ -356,7 +356,7 @@ export default async function Home() {
               <div key={n} className="grid grid-cols-[5rem_1fr] gap-[22px] py-[22px] border-t border-[var(--blue-008)] items-start">
                 <div className="font-cinzel font-bold text-[2.6rem] text-[rgba(0,180,255,0.2)] leading-none">{n}</div>
                 <div>
-                  <p className="font-[var(--font-heading)] font-semibold text-[1.1rem] mb-1.5">{title}</p>
+                  <p className="font-[var(--font-outfit)] font-semibold text-[1.1rem] mb-1.5">{title}</p>
                   <p className="text-[0.92rem] text-muted-foreground leading-[1.55]">{desc}</p>
                 </div>
               </div>

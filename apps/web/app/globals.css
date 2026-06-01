@@ -108,7 +108,7 @@
   --blue-045: rgba(0, 180, 255, 0.45);  /* card border hover (strong) */
 
   /* Semantic aliases */
-  --font-display: var(--font-cinzel), 'Cinzel', Georgia, serif;
+  --font-display: var(--font-cinzel-var), 'Cinzel', Georgia, serif;
   --font-mono: var(--font-jetbrains), 'JetBrains Mono', ui-monospace, 'SF Mono', Menlo, monospace;
   --surface-alt: #060b16;
   --card-mantle: #181825;
@@ -234,7 +234,7 @@
 
   /* H1/H2 — Cinzel (font-display), matches prototype h1/h2 spec */
   h1, h2 {
-    font-family: var(--font-display);
+    font-family: var(--font-cinzel-var), 'Cinzel', Georgia, serif;
     font-weight: 700;
     letter-spacing: 0.02em;
     line-height: 1.1;
@@ -242,14 +242,14 @@
 
   /* H3–H6 — Outfit semibold (font-heading), matches prototype h3/h4/h5/h6 spec */
   h3, h4, h5, h6 {
-    font-family: var(--font-heading);
+    font-family: var(--font-outfit), system-ui, sans-serif;
     font-weight: 600;
     line-height: 1.3;
   }
 
   /* Allow font-cinzel utility to override when explicitly needed */
   .font-cinzel {
-    font-family: var(--font-cinzel), 'Cinzel', Georgia, serif !important;
+    font-family: var(--font-cinzel-var), 'Cinzel', Georgia, serif !important;
   }
 }
 
@@ -490,7 +490,7 @@
 
 /* XIV Brand Utilities */
 .font-cinzel {
-  font-family: var(--font-cinzel), 'Cinzel', serif;
+  font-family: var(--font-cinzel-var), 'Cinzel', serif;
 }
 
 .xiv-glow-text {
@@ -589,7 +589,7 @@
   border-bottom: 1px solid rgba(0,180,255,0.08);
 }
 .xiv-feature-num {
-  font-family: var(--font-cinzel), 'Cinzel', serif;
+  font-family: var(--font-cinzel-var), 'Cinzel', serif;
   font-size: 3rem;
   font-weight: 700;
   line-height: 1;
@@ -680,7 +680,7 @@
   padding: 14px 22px;
   border-bottom: 1px solid var(--blue-008);
 }
-.introw .iname { font-family: var(--font-heading); font-weight: 600; font-size: 0.9rem; }
+.introw .iname { font-family: var(--font-outfit), system-ui, sans-serif; font-weight: 600; font-size: 0.9rem; }
 .introw .idesc { font-size: 0.78rem; color: var(--muted-foreground); margin-top: 2px; }
 
 .setrow {
@@ -695,7 +695,7 @@
 
 /* Code / slash-commands */
 .xiv-command {
-  font-family: var(--font-mono);
+  font-family: var(--font-jetbrains), 'JetBrains Mono', ui-monospace, monospace;
   font-size: 0.875em;
   color: var(--xiv-blue);
   background: var(--blue-010);
@@ -802,7 +802,7 @@
 
 /* ── Page H1 — matches prototype .page-head h1 ── */
 .page-h1 {
-  font-family: var(--font-cinzel), 'Cinzel', Georgia, serif;
+  font-family: var(--font-cinzel-var), 'Cinzel', Georgia, serif;
   font-size: clamp(1.9rem, 3vw, 2.5rem);
   font-weight: 700;
   letter-spacing: 0.02em;
@@ -819,7 +819,7 @@
 /* ── Timeline ── */
 .tl-day { font-size: 0.66rem; text-transform: uppercase; letter-spacing: 0.12em; color: var(--fg-faint); font-weight: 600; margin: 18px 0 6px; padding: 0 22px; }
 .tl-item { display: grid; grid-template-columns: 70px 1fr; gap: 14px; padding: 2px 22px; }
-.tl-item .tl-time { font-size: 0.72rem; color: var(--fg-faint); text-align: right; padding-top: 12px; font-variant-numeric: tabular-nums; white-space: nowrap; font-family: var(--font-mono); }
+.tl-item .tl-time { font-size: 0.72rem; color: var(--fg-faint); text-align: right; padding-top: 12px; font-variant-numeric: tabular-nums; white-space: nowrap; font-family: var(--font-jetbrains), 'JetBrains Mono', ui-monospace, monospace; }
 .tl-item .tl-node { position: relative; padding-left: 24px; padding-top: 11px; padding-bottom: 11px; }
 .tl-item .tl-node::before { content: ""; position: absolute; left: 4px; top: 14px; width: 9px; height: 9px; border-radius: 999px; background: var(--xiv-blue); box-shadow: 0 0 0 3px var(--blue-010); z-index: 1; }
 .tl-item:not(:last-child) .tl-node::after { content: ""; position: absolute; left: 8px; top: 18px; bottom: -4px; width: 1px; background: var(--blue-015); }
