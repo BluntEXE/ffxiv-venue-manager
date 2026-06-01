@@ -121,6 +121,59 @@ export default async function Home() {
               Sign in with Discord to get started.
             </p>
           </div>
+
+          {/* Product preview frame */}
+          <div className="mt-14 max-w-[840px] mx-auto w-full xiv-fade-up-delay-2">
+            <div className="rounded-xl overflow-hidden border border-[rgba(0,180,255,0.2)] bg-card shadow-[0_30px_80px_rgba(0,0,0,0.5),0_0_60px_rgba(0,180,255,0.08)]">
+              {/* Browser chrome bar */}
+              <div className="flex items-center gap-2 px-4 py-2.5 border-b border-[var(--blue-008)] bg-[rgba(7,11,20,0.6)]">
+                <span className="w-2.5 h-2.5 rounded-full bg-[var(--border)]" />
+                <span className="w-2.5 h-2.5 rounded-full bg-[var(--border)]" />
+                <span className="w-2.5 h-2.5 rounded-full bg-[var(--border)]" />
+                <span className="ml-3 font-mono text-[0.74rem] text-[var(--fg-faint)]">xivvenuemanager.com / live</span>
+              </div>
+              {/* Preview body */}
+              <div className="p-5 grid grid-cols-1 sm:grid-cols-[1.3fr_1fr] gap-4">
+                {/* Session bar — full width */}
+                <div className="sm:col-span-2 flex items-center gap-4 flex-wrap px-4 py-3.5 rounded-lg border border-[var(--blue-015)]"
+                  style={{ background: "linear-gradient(180deg, rgba(0,180,255,0.05), var(--background))" }}>
+                  <span className="inline-flex items-center gap-2 text-[0.68rem] font-bold uppercase tracking-[0.12em] text-[var(--success-text)]">
+                    <span className="xiv-live-dot scale-90" />Live now
+                  </span>
+                  <span className="font-cinzel font-bold text-[1.15rem]">Open Mic Night</span>
+                  <div className="flex-1" />
+                  <span className="font-mono text-[1.1rem]">01:23:47</span>
+                </div>
+                {/* Stat cards */}
+                <div className="bg-background border border-[var(--blue-015)] rounded-lg px-4 py-3.5">
+                  <p className="text-[0.6rem] font-semibold uppercase tracking-[0.12em] text-[var(--fg-faint)]">In venue now</p>
+                  <p className="font-[var(--font-heading)] font-bold text-[1.4rem] mt-1.5">24</p>
+                </div>
+                <div className="bg-background border border-[var(--blue-015)] rounded-lg px-4 py-3.5">
+                  <p className="text-[0.6rem] font-semibold uppercase tracking-[0.12em] text-[var(--fg-faint)]">Sales tonight</p>
+                  <p className="font-[var(--font-heading)] font-bold text-[1.4rem] mt-1.5 text-[var(--xiv-blue)]">47,500 gil</p>
+                </div>
+                {/* Activity feed — full width */}
+                <div className="sm:col-span-2 bg-background border border-[var(--blue-015)] rounded-lg overflow-hidden">
+                  {[
+                    { icon: "enter", label: <><strong>Seraphine Valois</strong> entered the venue</>, time: "just now", blue: false },
+                    { icon: "sale",  label: <>K&apos;tani logged a sale — <span className="text-[var(--xiv-blue)] font-semibold">500 gil</span></>, time: "1m ago", blue: true },
+                  ].map(({ icon, label, time, blue }, i) => (
+                    <div key={i} className={`flex items-center gap-2.5 px-4 py-2.5 text-[0.8rem] ${i > 0 ? "border-t border-[var(--blue-008)]" : ""}`}>
+                      <span className={`w-[26px] h-[26px] rounded flex items-center justify-center flex-shrink-0 ${blue ? "bg-[var(--blue-010)] text-[var(--xiv-blue)] border border-[var(--blue-018)]" : "bg-[var(--success-soft)] text-[var(--success-text)] border border-[rgba(16,185,129,0.25)]"}`}>
+                        {blue
+                          ? <svg className="w-3.5 h-3.5" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>
+                          : <svg className="w-3.5 h-3.5" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M15 3h4a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-4"/><polyline points="10 17 15 12 10 7"/><line x1="15" y1="12" x2="3" y2="12"/></svg>
+                        }
+                      </span>
+                      <span className="flex-1">{label}</span>
+                      <span className="text-[0.72rem] text-[var(--fg-faint)] ml-auto">{time}</span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </div>
+          </div>
         </div>
       </section>
 
