@@ -3,6 +3,9 @@
 import { useState } from "react"
 import { Input } from "@/components/ui/input"
 import { formatServerTime } from "@/lib/server-time"
+import { StatReadout } from "@/components/ui/stat-readout"
+import { Card } from "@/components/ui/card"
+import { History, Repeat, UserPlus, Crown } from "lucide-react"
 
 export type PatronProfile = {
   characterName: string
@@ -56,18 +59,10 @@ export function PatronProfilesTable({ profiles }: { profiles: PatronProfile[] })
     <div>
       {/* KPIs */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 mb-6">
-        {[
-          { k: "Unique patrons", v: profiles.length,        sub: "all time" },
-          { k: "Regulars",       v: counts.regular,          sub: "3+ visits" },
-          { k: "New this period", v: counts.new,             sub: "1–2 visits" },
-          { k: "VIPs",           v: counts.vip,              sub: "10+ visits" },
-        ].map(({ k, v, sub }) => (
-          <div key={k} className="rounded-xl border border-[var(--blue-018)] bg-card p-4">
-            <p className="text-[0.66rem] uppercase tracking-[0.1em] text-[var(--fg-faint)] font-semibold">{k}</p>
-            <p className="font-[var(--font-heading)] text-2xl font-bold mt-1">{v.toLocaleString()}</p>
-            <p className="text-[0.7rem] text-muted-foreground mt-0.5">{sub}</p>
-          </div>
-        ))}
+        <Card className="p-4"><StatReadout label="Unique patrons" value={profiles.length} subtext="all time" icon={<History />} iconVariant="blue" /></Card>
+        <Card className="p-4"><StatReadout label="Regulars" value={counts.regular} subtext="3+ visits" icon={<Repeat />} iconVariant="blue" /></Card>
+        <Card className="p-4"><StatReadout label="New this period" value={counts.new} subtext="1–2 visits" icon={<UserPlus />} iconVariant="success" /></Card>
+        <Card className="p-4"><StatReadout label="VIPs" value={counts.vip} subtext="10+ visits" icon={<Crown />} iconVariant="warning" /></Card>
       </div>
 
       {/* Filters */}
