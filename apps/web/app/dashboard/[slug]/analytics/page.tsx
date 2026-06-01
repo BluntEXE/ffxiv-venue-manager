@@ -72,6 +72,11 @@ interface AnalyticsData {
     time: string
     avgCount: number
   }>
+  patronMix?: {
+    new: number; regular: number; vip: number; total: number
+    newPct: number; regularPct: number; vipPct: number
+  }
+  busiestNights?: Array<{ day: string; count: number; pct: number }>
 }
 
 const CustomTooltip = ({ active, payload, label }: any) => {
@@ -611,6 +616,75 @@ export default function AnalyticsPage() {
             </div>
           </Card>
         </div>
+
+        {/* Patron mix + Busiest nights */}
+        {(analyticsData?.patronMix || analyticsData?.busiestNights) && (
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mt-6">
+
+            {/* Patron mix */}
+            {analyticsData.patronMix && analyticsData.patronMix.total > 1 && (
+              <div className="rounded-xl border border-[var(--blue-018)] bg-card overflow-hidden">
+                <div className="flex items-center gap-2 px-5 py-3.5 border-b border-[var(--blue-008)] font-semibold text-sm">
+                  <svg className="w-4 h-4 text-[var(--xiv-blue)]" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M21.21 15.89A10 10 0 1 1 8 2.83"/><path d="M22 12A10 10 0 0 0 12 2v10z"/></svg>
+                  Patron mix
+                  <span className="ml-auto text-[0.68rem] text-[var(--fg-faint)] font-normal">30 days</span>
+                </div>
+                <div className="py-2">
+                  {[
+                    { label: "New",     pct: analyticsData.patronMix.newPct,     count: analyticsData.patronMix.new,     color: "var(--xiv-blue)" },
+                    { label: "Regular", pct: analyticsData.patronMix.regularPct, count: analyticsData.patronMix.regular, color: "var(--success-text)" },
+                    { label: "VIP",     pct: analyticsData.patronMix.vipPct,     count: analyticsData.patronMix.vip,     color: "var(--warning)" },
+                  ].map(({ label, pct, count, color }) => (
+                    <div key={label} className="flex items-center gap-3 px-5 py-2.5">
+                      <div className="flex items-center gap-2 w-24 flex-shrink-0">
+                        <span className="w-2.5 h-2.5 rounded-[3px] flex-shrink-0" style={{ background: color }} />
+                        <span className="text-sm">{label}</span>
+                      </div>
+                      <div className="flex-1 h-2.5 rounded-full bg-[var(--blue-010)] overflow-hidden">
+                        <div className="h-full rounded-full transition-all" style={{ width: `${pct}%`, background: color }} />
+                      </div>
+                      <div className="flex items-center gap-1.5 w-16 flex-shrink-0 justify-end">
+                        <span className="text-sm text-muted-foreground tabular-nums">{pct}%</span>
+                        <span className="text-[0.68rem] text-[var(--fg-faint)]">({count})</span>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {/* Busiest nights */}
+            {analyticsData.busiestNights && (
+              <div className="rounded-xl border border-[var(--blue-018)] bg-card overflow-hidden">
+                <div className="flex items-center gap-2 px-5 py-3.5 border-b border-[var(--blue-008)] font-semibold text-sm">
+                  <svg className="w-4 h-4 text-[var(--xiv-blue)]" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M3 9h18M9 21V9"/></svg>
+                  Busiest nights
+                  <span className="ml-auto text-[0.68rem] text-[var(--fg-faint)] font-normal">avg attendance</span>
+                </div>
+                <div className="px-5 pt-4 pb-5">
+                  <div className="flex items-end gap-2 h-[120px]">
+                    {analyticsData.busiestNights.map(({ day, pct, count }) => (
+                      <div key={day} className="flex-1 flex flex-col items-center gap-1.5" title={`${day}: ${count} entries`}>
+                        <div className="w-full flex flex-col justify-end" style={{ height: 96 }}>
+                          <div
+                            className="w-full rounded-t-sm transition-all"
+                            style={{
+                              height: `${Math.max(pct, 4)}%`,
+                              background: pct > 70
+                                ? "var(--xiv-blue)"
+                                : "rgba(0,180,255,0.35)",
+                            }}
+                          />
+                        </div>
+                        <span className="text-[0.65rem] text-muted-foreground font-medium">{day.charAt(0)}</span>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              </div>
+            )}
+          </div>
+        )}
       </div>
     </VenueLayoutClient>
   )

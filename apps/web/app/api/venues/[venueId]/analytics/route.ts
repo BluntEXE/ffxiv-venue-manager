@@ -59,7 +59,7 @@ export const GET = withRateLimit<{ params: Promise<{ venueId: string }> }>(
       const past30Days = subDays(now, 30)
 
       // Fetch all data in parallel for better performance
-      const [allEvents, allTransactions, allPatronLogs, allPayrollEntries, followerCount, followersByMonth] = await Promise.all([
+      const [allEvents, allTransactions, allPatronLogs, allPayrollEntries, followerCount, followersByMonth, patronVisits] = await Promise.all([
         // Get all events with basic info
         prisma.event.findMany({
           where: { venueId: venue.id },
@@ -129,6 +129,20 @@ export const GET = withRateLimit<{ params: Promise<{ venueId: string }> }>(
           },
           select: { createdAt: true },
           orderBy: { createdAt: "asc" },
+        }),
+
+        // Patron visit counts per character (for New/Regular/VIP mix)
+        prisma.patronLog.groupBy({
+          by: ["characterName"],
+          where: {
+            venueId: venue.id,
+            characterName: { not: null },
+            wasWorking: false,
+            action: "ENTER",
+          },
+          _count: { _all: true },
+          orderBy: { characterName: "asc" },
+          take: 2000,
         }),
       ])
 
@@ -302,6 +316,27 @@ export const GET = withRateLimit<{ params: Promise<{ venueId: string }> }>(
         recentCount: recentEvents.length,
       }
 
+      // Patron mix — categorise by visit count
+      const mixNew     = patronVisits.filter(p => p._count._all <= 2).length
+      const mixRegular = patronVisits.filter(p => p._count._all >= 3 && p._count._all <= 9).length
+      const mixVip     = patronVisits.filter(p => p._count._all >= 10).length
+      const mixTotal   = patronVisits.length || 1 // avoid /0
+
+      // Busiest nights — day-of-week distribution from patron ENTER logs
+      const DAY_NAMES = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"]
+      const dayTotals = new Array(7).fill(0)
+      for (const log of allPatronLogs) {
+        if (log.countChange && log.countChange > 0) {
+          dayTotals[new Date(log.timestamp).getUTCDay()]++
+        }
+      }
+      const maxDay = Math.max(...dayTotals, 1)
+      const busiestNights = DAY_NAMES.map((name, i) => ({
+        day: name,
+        count: dayTotals[i],
+        pct: Math.round((dayTotals[i] / maxDay) * 100),
+      }))
+
       // Calculate totals
       const totalRevenue = revenueByEvent.reduce((sum, e) => sum + e.revenue, 0)
       const totalPatrons = patronByEvent.reduce((sum, e) => sum + e.peakPatrons, 0)
@@ -347,6 +382,18 @@ export const GET = withRateLimit<{ params: Promise<{ venueId: string }> }>(
         serviceRevenue,
         patronByEvent,
         attendanceByHour,
+
+        // Patron mix & engagement
+        patronMix: {
+          new:     mixNew,
+          regular: mixRegular,
+          vip:     mixVip,
+          total:   mixTotal,
+          newPct:     Math.round((mixNew     / mixTotal) * 100),
+          regularPct: Math.round((mixRegular / mixTotal) * 100),
+          vipPct:     Math.round((mixVip     / mixTotal) * 100),
+        },
+        busiestNights,
 
         // Metadata
         fetchedAt: new Date().toISOString(),

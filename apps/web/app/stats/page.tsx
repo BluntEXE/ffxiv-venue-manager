@@ -12,7 +12,6 @@ import {
   CheckCircle2,
   Link2,
   Coins,
-  Globe2,
   Sparkles,
   ArrowRight,
 } from "lucide-react"
@@ -118,24 +117,31 @@ export default async function StatsPage() {
 
   return (
     <div className="min-h-screen">
-      {/* Hero */}
-      <section className="container mx-auto px-4 py-16 md:py-20">
-        <div className="flex flex-col items-center text-center space-y-6">
-          <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-emerald-500/10 text-emerald-400 text-sm font-medium">
-            <span className="relative flex h-2 w-2">
-              <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75" />
-              <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-400" />
-            </span>
-            Live data
+      {/* Hero — starfield background */}
+      <section className="xiv-hero-bg overflow-hidden relative border-b border-[var(--blue-008)]">
+        <div className="container mx-auto px-4 py-20 md:py-28 relative z-10">
+          <div className="flex flex-col items-center text-center">
+            {/* Crystal row ornament */}
+            <div className="flex items-center justify-center gap-3 mb-5">
+              <div className="h-px w-14 bg-gradient-to-r from-transparent to-[var(--xiv-blue)]" />
+              <div className="w-2 h-2 rotate-45 bg-[rgba(0,180,255,0.7)] shadow-[0_0_12px_rgba(0,180,255,0.5)]" />
+              <div className="h-px w-14 bg-gradient-to-l from-transparent to-[var(--xiv-blue)]" />
+            </div>
+            <p className="text-[0.72rem] font-semibold uppercase tracking-[0.16em] text-[var(--xiv-blue)] mb-4">
+              Community stats
+            </p>
+            <h1 className="font-cinzel text-4xl md:text-6xl font-bold tracking-wide max-w-3xl text-balance mb-4">
+              The realm, <span className="xiv-glow-text">by the numbers</span>
+            </h1>
+            <p className="text-lg text-muted-foreground max-w-2xl">
+              Every venue running on XIV Venue Manager, tracked live across the data centres.
+            </p>
+            {/* Live pill */}
+            <div className="mt-6 inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-emerald-500/10 text-emerald-400 text-sm font-medium border border-emerald-500/20">
+              <span className="xiv-live-dot scale-75" />
+              Live data
+            </div>
           </div>
-          <h1 className="font-cinzel text-4xl md:text-6xl font-bold tracking-wide max-w-3xl text-balance">
-            Real venues. <span className="text-[var(--xiv-blue)] xiv-glow-text">Real usage.</span>
-          </h1>
-          <p className="text-lg md:text-xl text-muted-foreground max-w-2xl">
-            Aggregate stats from the XIV Venue Manager community. No names, no
-            individual venues — just the numbers that prove the platform is in
-            use right now.
-          </p>
         </div>
       </section>
 
@@ -175,34 +181,28 @@ export default async function StatsPage() {
         </div>
       </section>
 
-      {/* Footer */}
-      <section className="container mx-auto px-4 py-12">
-        <div className="xiv-card rounded-xl p-8 border-[rgba(0,180,255,0.25)]">
-          <div className="flex flex-col md:flex-row items-center justify-between gap-6 text-center md:text-left">
-            <div className="flex items-center gap-4">
-              <div className="inline-flex items-center justify-center w-12 h-12 rounded-lg bg-[rgba(0,180,255,0.1)] text-[var(--xiv-blue)] flex-shrink-0">
-                <Globe2 className="h-6 w-6" aria-hidden="true" />
-              </div>
-              <div>
-                <p className="font-semibold text-lg">
-                  Active across {stats.dataCenters} data centers
-                  {firstVenueLabel ? ` · running since ${firstVenueLabel}` : ""}
-                </p>
-                <p className="text-sm text-muted-foreground">
-                  Stats refresh every 5 minutes. Aggregate-only — no
-                  individual venues are listed.
-                </p>
-              </div>
-            </div>
-            <Button asChild size="lg" className="xiv-btn-shimmer group">
-              <Link href="/auth/signin">
-                <Sparkles className="mr-2 h-4 w-4" aria-hidden="true" />
-                Add your venue
-                <ArrowRight className="ml-2 h-4 w-4 transition-transform group-hover:translate-x-1" />
-              </Link>
-            </Button>
-          </div>
+      {/* CTA */}
+      <section className="container mx-auto px-4 py-16 text-center">
+        <div className="flex items-center justify-center gap-3 mb-5">
+          <div className="h-px w-14 bg-gradient-to-r from-transparent to-[var(--xiv-blue)]" />
+          <div className="w-2 h-2 rotate-45 bg-[rgba(0,180,255,0.7)] shadow-[0_0_12px_rgba(0,180,255,0.5)]" />
+          <div className="h-px w-14 bg-gradient-to-l from-transparent to-[var(--xiv-blue)]" />
         </div>
+        <h2 className="font-cinzel text-2xl md:text-3xl font-bold tracking-wide mb-3">
+          Add your venue to the count
+        </h2>
+        <p className="text-muted-foreground mb-8 max-w-md mx-auto">
+          Join the venues already running on XIV Venue Manager. Free, forever.
+          Active across {stats.dataCenters} data centres
+          {firstVenueLabel ? ` · running since ${firstVenueLabel}` : ""}.
+        </p>
+        <Button asChild size="lg" variant="cta" className="group">
+          <Link href="/auth/signin">
+            <Sparkles className="mr-2 h-4 w-4" aria-hidden="true" />
+            Get Started Free
+            <ArrowRight className="ml-2 h-4 w-4 transition-transform group-hover:translate-x-1" />
+          </Link>
+        </Button>
       </section>
     </div>
   )
