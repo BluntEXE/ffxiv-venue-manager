@@ -144,7 +144,7 @@ export default async function StaffPage({
           members={activeStaff.map(m => ({
             id: m.id,
             role: m.role as "OWNER" | "MANAGER" | "STAFF",
-            customRole: m.customRole ? { name: m.customRole.name, color: m.customRole.color } : null,
+            customRole: m.customRole ? { name: m.customRole.name, color: m.customRole.color ?? "#9399b2" } : null,
             joinedAt: m.createdAt.toISOString(),
             isOnShift: onShiftIds.has(m.id),
             user: m.user ? { id: m.user.id, name: m.user.name, image: m.user.image } : null,

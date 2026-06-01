@@ -349,9 +349,9 @@ export default function SettingsPage({
                     value: settings.discordWebhooks.staff,
                     onChange: (v: string) => setSettings({ ...settings, discordWebhooks: { ...settings.discordWebhooks, staff: v } }),
                     checks: [
-                      { id: "task-created",  label: "Task created",  val: settings.webhooks.taskCreated,  set: (v: boolean) => setSettings({ ...settings, webhooks: { ...settings.webhooks, taskCreated: v } }) },
-                      { id: "task-done",     label: "Task completed", val: settings.webhooks.taskCompleted, set: (v: boolean) => setSettings({ ...settings, webhooks: { ...settings.webhooks, taskCompleted: v } }) },
-                      { id: "staff-joined", label: "Staff joined",   val: settings.webhooks.staffJoined,  set: (v: boolean) => setSettings({ ...settings, webhooks: { ...settings.webhooks, staffJoined: v } }) },
+                      { id: "task-created",  label: "Task created",  val: settings.webhooks.taskCreated,  set: (v: boolean) => setSettings({ ...settings, webhooks: { ...settings.webhooks, taskCreated: v } }),  disabled: false },
+                      { id: "task-done",     label: "Task completed", val: settings.webhooks.taskCompleted, set: (v: boolean) => setSettings({ ...settings, webhooks: { ...settings.webhooks, taskCompleted: v } }), disabled: false },
+                      { id: "staff-joined", label: "Staff joined",   val: settings.webhooks.staffJoined,  set: (v: boolean) => setSettings({ ...settings, webhooks: { ...settings.webhooks, staffJoined: v } }),  disabled: false },
                     ],
                   },
                   {
@@ -367,8 +367,8 @@ export default function SettingsPage({
                     value: settings.discordWebhooks.revenue,
                     onChange: (v: string) => setSettings({ ...settings, discordWebhooks: { ...settings.discordWebhooks, revenue: v } }),
                     checks: [
-                      { id: "sale-logged",   label: "Sale logged",        val: settings.webhooks.saleLogged,      set: (v: boolean) => setSettings({ ...settings, webhooks: { ...settings.webhooks, saleLogged: v } }) },
-                      { id: "daily-summary", label: "Daily sales summary", val: settings.webhooks.dailySalesSummary, set: (v: boolean) => setSettings({ ...settings, webhooks: { ...settings.webhooks, dailySalesSummary: v } }) },
+                      { id: "sale-logged",   label: "Sale logged",        val: settings.webhooks.saleLogged,       set: (v: boolean) => setSettings({ ...settings, webhooks: { ...settings.webhooks, saleLogged: v } }),       disabled: false },
+                      { id: "daily-summary", label: "Daily sales summary", val: settings.webhooks.dailySalesSummary, set: (v: boolean) => setSettings({ ...settings, webhooks: { ...settings.webhooks, dailySalesSummary: v } }), disabled: false },
                     ],
                   },
                 ].map((wh) => (

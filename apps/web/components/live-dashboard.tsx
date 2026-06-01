@@ -277,6 +277,7 @@ export function LiveDashboard({
               ))}
             </div>
           )}
+          </div>
         </Card>
 
         {/* Roster panels */}

@@ -224,7 +224,7 @@ export default function AnalyticsPage() {
           <div className="text-center text-red-500">
             <p>Error loading analytics: {error}</p>
             <button
-              onClick={fetchAnalytics}
+              onClick={() => fetchAnalytics()}
               className="mt-4 px-4 py-2 rounded-md transition-colors"
               style={{ background: "var(--xiv-blue)", color: "#070b14" }}
             >
@@ -401,7 +401,6 @@ export default function AnalyticsPage() {
               </button>
             </div>
             <div className="p-5">
-            </div>
             <div className="h-[300px] w-full">
                 <ResponsiveContainer width="100%" height="100%" minWidth={0}>
                   <AreaChart data={financialData} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
@@ -482,7 +481,6 @@ export default function AnalyticsPage() {
               <span className="ml-auto text-xs text-[var(--fg-faint)] font-normal">Peak counts</span>
             </div>
             <div className="p-5">
-            <p className="text-xs text-muted-foreground mb-4">Peak counts · last 7 events</p>
             <div className="h-[250px] w-full">
                 <ResponsiveContainer width="100%" height="100%" minWidth={0}>
                   <BarChart data={patronData} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
