@@ -5,7 +5,6 @@ import { useSession } from "next-auth/react"
 import { useParams, useRouter } from "next/navigation"
 import { Button } from "@/components/ui/button"
 import { VenueLayoutClient } from "@/components/venue-layout-client"
-import { Breadcrumb } from "@/components/breadcrumb"
 import { VenueEyebrow } from "@/components/venue-eyebrow"
 import {
   Card,
@@ -430,14 +429,6 @@ export default function PayrollPage() {
     <VenueLayoutClient slug={slug}>
       <div className="p-4 md:p-6 space-y-6">
         {/* Breadcrumb */}
-        <Breadcrumb
-          items={[
-            { label: "Dashboard", href: "/dashboard" },
-            { label: "Venue", href: `/dashboard/${slug}` },
-            { label: "Payroll" },
-          ]}
-        />
-
         {/* Header */}
         <div className="flex flex-col sm:flex-row sm:justify-between sm:items-start gap-4">
           <div>

@@ -8,7 +8,6 @@ import { Badge } from "@/components/ui/badge"
 import { prisma } from "@/lib/prisma"
 import { EventsCalendar } from "@/components/events-calendar"
 import { VenueLayout } from "@/components/venue-layout"
-import { Breadcrumb } from "@/components/breadcrumb"
 import { formatServerTime, SERVER_TIME_LABEL } from "@/lib/server-time"
 import { format } from "date-fns"
 import { SyncPartakeButton } from "@/components/sync-partake-button"
@@ -93,14 +92,6 @@ export default async function EventsPage({
     >
       <div className="p-4 md:p-6">
         {/* Breadcrumb */}
-        <Breadcrumb
-          items={[
-            { label: "Dashboard", href: "/dashboard" },
-            { label: venue.name, href: `/dashboard/${slug}` },
-            { label: "Events" },
-          ]}
-        />
-
         {/* Header */}
         <div className="flex flex-col sm:flex-row sm:justify-between sm:items-start gap-4 mb-6 md:mb-8">
           <div>

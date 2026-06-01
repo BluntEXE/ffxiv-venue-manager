@@ -5,7 +5,6 @@ import { useRouter } from "next/navigation"
 import Link from "next/link"
 import { Button } from "@/components/ui/button"
 import { VenueLayoutClient } from "@/components/venue-layout-client"
-import { Breadcrumb } from "@/components/breadcrumb"
 import { VenueEyebrow } from "@/components/venue-eyebrow"
 import { Label } from "@/components/ui/label"
 import { Input } from "@/components/ui/input"
@@ -230,14 +229,6 @@ export default function SettingsPage({
   return (
     <VenueLayoutClient slug={slug}>
       <div className="p-4 md:p-6 max-w-3xl">
-        <Breadcrumb
-          items={[
-            { label: "Dashboard", href: "/dashboard" },
-            { label: "Venue", href: `/dashboard/${slug}` },
-            { label: "Settings" },
-          ]}
-        />
-
         {/* Header */}
         <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-4 mb-6 md:mb-8">
           <div>

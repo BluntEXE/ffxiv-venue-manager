@@ -2,7 +2,6 @@
 
 import { useEffect, useMemo, useState } from "react"
 import Link from "next/link"
-import { Breadcrumb } from "@/components/breadcrumb"
 import { VenueLayoutClient } from "@/components/venue-layout-client"
 import { VenueEyebrow } from "@/components/venue-eyebrow"
 import { Button } from "@/components/ui/button"
@@ -207,12 +206,6 @@ export default function ApiKeysPage({
     return (
       <VenueLayoutClient slug={slug}>
         <div className="p-4 md:p-6 max-w-4xl">
-          <Breadcrumb items={[
-            { label: "Dashboard", href: "/dashboard" },
-            { label: "Venue", href: `/dashboard/${slug}` },
-            { label: "Settings", href: `/dashboard/${slug}/settings` },
-            { label: "API Keys" },
-          ]} />
           <Alert variant="destructive" className="mt-6">
             <AlertDescription>Only active venue members can manage API keys for the Dalamud plugin.</AlertDescription>
           </Alert>
@@ -224,15 +217,6 @@ export default function ApiKeysPage({
   return (
     <VenueLayoutClient slug={slug}>
     <div className="p-4 md:p-6 max-w-4xl">
-      <Breadcrumb
-        items={[
-          { label: "Dashboard", href: "/dashboard" },
-          { label: "Venue", href: `/dashboard/${slug}` },
-          { label: "Settings", href: `/dashboard/${slug}/settings` },
-          { label: "API Keys" },
-        ]}
-      />
-
       <div className="mb-6 md:mb-8">
         <VenueEyebrow slug={slug} />
         <h1 className="page-h1">

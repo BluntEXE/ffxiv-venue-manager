@@ -5,7 +5,6 @@ import { useParams, useRouter } from "next/navigation"
 import { useSession } from "next-auth/react"
 import { Button } from "@/components/ui/button"
 import { VenueLayoutClient } from "@/components/venue-layout-client"
-import { Breadcrumb } from "@/components/breadcrumb"
 import { VenueEyebrow } from "@/components/venue-eyebrow"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
@@ -239,13 +238,6 @@ export default function EventTemplatesPage() {
     <VenueLayoutClient slug={slug}>
       <div className="container mx-auto p-4 md:p-6 lg:p-8">
         {/* Breadcrumb */}
-        <Breadcrumb
-          items={[
-            { label: "Dashboard", href: `/dashboard/${slug}` },
-            { label: "Event Templates", href: `/dashboard/${slug}/event-templates` },
-          ]}
-        />
-
         {/* Header */}
         <div className="flex flex-col sm:flex-row sm:justify-between sm:items-start gap-4 mb-6">
           <div>

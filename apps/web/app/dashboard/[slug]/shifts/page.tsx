@@ -4,7 +4,6 @@ import { redirect, notFound } from "next/navigation"
 import Link from "next/link"
 import { prisma } from "@/lib/prisma"
 import { VenueLayout } from "@/components/venue-layout"
-import { Breadcrumb } from "@/components/breadcrumb"
 import { CreateShiftDialog } from "@/components/create-shift-dialog"
 import { getServerTimezone, getServerTimeLabel, formatServerTime } from "@/lib/server-time"
 import { DeleteShiftButton } from "@/components/delete-shift-button"
@@ -179,14 +178,6 @@ export default async function ShiftsPage({
   return (
     <VenueLayout venueSlug={venue.slug} venueName={venue.name} userRole={userRole}>
       <div className="p-4 md:p-6">
-        <Breadcrumb
-          items={[
-            { label: "Dashboard", href: "/dashboard" },
-            { label: venue.name, href: `/dashboard/${slug}` },
-            { label: "Shifts" },
-          ]}
-        />
-
         {/* Header */}
         <div className="flex flex-col sm:flex-row sm:justify-between sm:items-start gap-4 mb-6 md:mb-8">
           <div>

@@ -3,7 +3,6 @@
 import { useEffect, useState } from "react"
 import { useParams } from "next/navigation"
 import { VenueLayoutClient } from "@/components/venue-layout-client"
-import { Breadcrumb } from "@/components/breadcrumb"
 import { VenueEyebrow } from "@/components/venue-eyebrow"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
@@ -218,14 +217,6 @@ export default function AnalyticsPage() {
   return (
     <VenueLayoutClient slug={slug}>
       <div className="container mx-auto p-4 md:p-6 lg:p-8">
-        <Breadcrumb
-          items={[
-            { label: "Dashboard", href: "/dashboard" },
-            { label: "Venue", href: `/dashboard/${slug}` },
-            { label: "Analytics" },
-          ]}
-        />
-
         <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-4 mb-6 md:mb-8">
           <div>
             <VenueEyebrow slug={slug} />

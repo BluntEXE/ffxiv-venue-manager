@@ -13,7 +13,6 @@ import { Users, UserPlus, Shield, AlertTriangle } from "lucide-react"
 import { PendingInvites } from "@/components/pending-invites"
 import { StaffTable } from "@/components/staff-table"
 import { VenueLayout } from "@/components/venue-layout"
-import { Breadcrumb } from "@/components/breadcrumb"
 
 import { RoleBadge } from "@/components/role-badge"
 
@@ -93,14 +92,6 @@ export default async function StaffPage({
     >
       <div className="p-4 md:p-6">
         {/* Breadcrumb */}
-        <Breadcrumb
-          items={[
-            { label: "Dashboard", href: "/dashboard" },
-            { label: venue.name, href: `/dashboard/${slug}` },
-            { label: "Staff" },
-          ]}
-        />
-
         {/* Header */}
         <div className="flex flex-col sm:flex-row sm:justify-between sm:items-start gap-4 mb-6 md:mb-8">
           <div>

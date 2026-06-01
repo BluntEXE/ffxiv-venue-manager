@@ -5,7 +5,6 @@ import { useRouter } from "next/navigation"
 import Link from "next/link"
 import { Button } from "@/components/ui/button"
 import { VenueLayoutClient } from "@/components/venue-layout-client"
-import { Breadcrumb } from "@/components/breadcrumb"
 import { VenueEyebrow } from "@/components/venue-eyebrow"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
@@ -305,14 +304,6 @@ export default function ServicesPage({
     <VenueLayoutClient slug={slug}>
       <div className="p-4 md:p-6">
         {/* Breadcrumb */}
-        <Breadcrumb
-          items={[
-            { label: "Dashboard", href: "/dashboard" },
-            { label: "Venue", href: `/dashboard/${slug}` },
-            { label: "Services" },
-          ]}
-        />
-
         {/* Header */}
         <div className="flex flex-col sm:flex-row sm:justify-between sm:items-start gap-4 mb-6 md:mb-8">
           <div>

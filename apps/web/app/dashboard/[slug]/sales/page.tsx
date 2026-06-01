@@ -6,7 +6,6 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { BarChart3, Zap, TrendingUp } from "lucide-react"
 import { StatReadout } from "@/components/ui/stat-readout"
 import { VenueLayoutClient } from "@/components/venue-layout-client"
-import { Breadcrumb } from "@/components/breadcrumb"
 import { VenueEyebrow } from "@/components/venue-eyebrow"
 import { SalesLogDialog } from "@/components/sales-log-dialog"
 import { TransactionsList } from "@/components/transactions-list"
@@ -218,14 +217,6 @@ export default async function SalesPage({ params }: PageProps) {
   return (
     <VenueLayoutClient slug={slug}>
       <div className="p-4 md:p-6">
-        <Breadcrumb
-          items={[
-            { label: "Dashboard", href: "/dashboard" },
-            { label: "Venue", href: `/dashboard/${slug}` },
-            { label: "Sales" },
-          ]}
-        />
-
         {/* Header */}
         <div className="flex flex-col sm:flex-row sm:justify-between sm:items-start gap-4 mb-6 md:mb-8">
           <div>

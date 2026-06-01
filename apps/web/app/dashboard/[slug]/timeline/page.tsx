@@ -3,7 +3,6 @@ import { authOptions } from "@/lib/auth"
 import { redirect, notFound } from "next/navigation"
 import { prisma } from "@/lib/prisma"
 import { VenueLayout } from "@/components/venue-layout"
-import { Breadcrumb } from "@/components/breadcrumb"
 import { TimelineFeed } from "@/components/timeline-feed"
 
 export default async function TimelinePage({
@@ -40,14 +39,6 @@ export default async function TimelinePage({
       userRole={userRole}
     >
       <div className="p-4 md:p-6">
-        <Breadcrumb
-          items={[
-            { label: "Dashboard", href: "/dashboard" },
-            { label: venue.name, href: `/dashboard/${slug}` },
-            { label: "Timeline" },
-          ]}
-        />
-
         <div className="mb-6 md:mb-8">
           <div className="flex items-center gap-2 mb-1.5">
             <span className="w-[7px] h-[7px] bg-[rgba(0,180,255,0.7)] rotate-45 shadow-[0_0_10px_rgba(0,180,255,0.5)] flex-shrink-0" />

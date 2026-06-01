@@ -4,7 +4,6 @@ import { redirect, notFound } from "next/navigation"
 import { Card, CardContent } from "@/components/ui/card"
 import { prisma } from "@/lib/prisma"
 import { VenueLayout } from "@/components/venue-layout"
-import { Breadcrumb } from "@/components/breadcrumb"
 import { LiveDashboard } from "@/components/live-dashboard"
 
 export default async function LivePage({
@@ -142,14 +141,6 @@ export default async function LivePage({
       userRole={userRole}
     >
       <div className="container mx-auto p-4 md:p-6 lg:p-8">
-        <Breadcrumb
-          items={[
-            { label: "Dashboard", href: "/dashboard" },
-            { label: venue.name, href: "/dashboard/" + slug },
-            { label: "Live" },
-          ]}
-        />
-
         {/* Eyebrow */}
         <div className="flex items-center gap-2 mb-4">
           <span className="w-[7px] h-[7px] bg-[rgba(0,180,255,0.7)] rotate-45 shadow-[0_0_10px_rgba(0,180,255,0.5)] flex-shrink-0" />
