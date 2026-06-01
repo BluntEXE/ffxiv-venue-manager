@@ -16,7 +16,7 @@ import { OverviewTasks } from "@/components/overview-tasks"
 import { format, subDays, subWeeks, formatDistanceToNow } from "date-fns"
 import {
   Radio, ArrowRight, Users, TrendingUp, Calendar,
-  Heart, BarChart3, Cog, ChevronRight,
+  Heart, BarChart3, Cog, ChevronRight, Clock,
 } from "lucide-react"
 
 export default async function VenueDashboardPage({
@@ -366,9 +366,10 @@ export default async function VenueDashboardPage({
         {/* My shifts (all roles) */}
         {myShifts.length > 0 && (
           <div>
-            <div className="flex items-center justify-between mb-3">
-              <p className="stat-label">My shifts</p>
-              <Link href={`/dashboard/${slug}/shifts`} className="text-xs text-[var(--xiv-blue)] hover:underline">View all</Link>
+            <div className="flex items-center gap-2 mb-3">
+              <Clock className="w-4 h-4 text-[var(--xiv-blue)]" />
+              <span className="text-sm font-semibold">My shifts</span>
+              <Link href={`/dashboard/${slug}/shifts`} className="ml-auto text-xs text-[var(--xiv-blue)] hover:underline">View all</Link>
             </div>
             <div className="space-y-2">
               {myShifts.map(shift => (
@@ -388,7 +389,10 @@ export default async function VenueDashboardPage({
         {/* Staff quick actions */}
         {!canManage && (
           <div>
-            <p className="stat-label mb-3">Quick actions</p>
+            <div className="flex items-center gap-2 mb-3">
+              <svg className="w-4 h-4 text-[var(--xiv-blue)]" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>
+              <span className="text-sm font-semibold">Quick actions</span>
+            </div>
             <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
               {[
                 { href: `/dashboard/${slug}/sales`, icon: BarChart3, label: "Log a Sale" },
