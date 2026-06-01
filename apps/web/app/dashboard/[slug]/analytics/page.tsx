@@ -19,6 +19,9 @@ interface AnalyticsData {
     totalRevenue: number
     avgRevenuePerEvent: number
     totalPatrons: number
+    avgSpend: number
+    repeatRate: number
+    totalTransactions: number
     total: number
     upcoming: number
     completed: number
@@ -240,105 +243,51 @@ export default function AnalyticsPage() {
           </div>
         </div>
 
-        {/* Summary KPIs */}
+        {/* Summary KPIs — matches reference: Revenue / Patrons / Avg Spend / Repeat Rate */}
         <div className="kpis mb-6">
           <Card className="p-4">
             <StatReadout
-              label="Revenue (last 10 events)"
-              value={totalRevenue >= 1000 ? `${(totalRevenue/1000).toFixed(1)}k gil` : `${totalRevenue} gil`}
-              subtext={`avg ${avgDailyRevenue >= 1000 ? (avgDailyRevenue/1000).toFixed(1)+"k" : avgDailyRevenue} gil/event`}
-              icon={<DollarSign className="h-3.5 w-3.5" />}
+              label="Revenue"
+              value={totalRevenue >= 1000000 ? `${(totalRevenue/1000000).toFixed(2)}m gil` : totalRevenue >= 1000 ? `${(totalRevenue/1000).toFixed(1)}k gil` : `${totalRevenue} gil`}
+              subtext={`${eventStats?.recentCount || 0} events tracked`}
+              icon={<DollarSign />}
+              iconVariant="blue"
             />
           </Card>
           <Card className="p-4">
             <StatReadout
-              label="Patrons (last 7 events)"
+              label="Patrons"
               value={totalPatrons.toLocaleString()}
-              subtext="peak attendees"
-              icon={<Users className="h-3.5 w-3.5" />}
+              subtext="unique visitors"
+              icon={<Users />}
+              iconVariant="blue"
             />
           </Card>
           <Card className="p-4">
             <StatReadout
-              label="Events (30d)"
-              value={eventStats?.recentCount || 0}
-              subtext={`${eventStats?.upcoming || 0} upcoming`}
-              icon={<Calendar className="h-3.5 w-3.5" />}
+              label="Avg spend"
+              value={eventStats?.avgSpend && eventStats.avgSpend > 0
+                ? `${eventStats.avgSpend.toLocaleString()} gil`
+                : avgDailyRevenue > 0 ? `${avgDailyRevenue.toLocaleString()} gil` : "—"}
+              subtext="per transaction"
+              icon={<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>}
+              iconVariant="success"
             />
           </Card>
           <Card className="p-4">
             <StatReadout
-              label="Completion rate"
-              value={`${(eventStats?.total ?? 0) > 0 ? Math.round(((eventStats?.completed ?? 0) / (eventStats?.total ?? 1)) * 100) : 0}%`}
-              subtext={`${eventStats?.completed || 0} completed`}
-              icon={<Target className="h-3.5 w-3.5" />}
+              label="Repeat rate"
+              value={eventStats?.repeatRate !== undefined
+                ? `${eventStats.repeatRate}%`
+                : analyticsData?.patronMix
+                  ? `${Math.round(((analyticsData.patronMix.regular + analyticsData.patronMix.vip) / (analyticsData.patronMix.total || 1)) * 100)}%`
+                  : "—"}
+              subtext="3+ visits"
+              icon={<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><polyline points="23 4 23 10 17 10"/><polyline points="1 20 1 14 7 14"/><path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10"/><path d="M1 14l4.64 4.36A9 9 0 0 0 20.49 15"/></svg>}
+              iconVariant="warning"
             />
           </Card>
         </div>
-
-        {/* Mobile Followers */}
-        {analyticsData?.followers && (
-          <div className="mb-6 md:mb-8">
-            <div className="flex items-center gap-2 mb-3">
-              <svg className="w-4 h-4 text-[var(--xiv-blue)]" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg>
-              <h2 className="font-cinzel text-lg font-bold tracking-[0.02em]">Followers</h2>
-            </div>
-            <div className="kpis">
-              <Card className="p-4">
-                <StatReadout
-                  label="Total followers"
-                  value={analyticsData.followers.total}
-                  subtext="app users following"
-                  icon={<Users />}
-                  iconVariant="blue"
-                />
-              </Card>
-              {Object.entries(analyticsData.followers.byMonth).map(([month, count]) => (
-                <Card key={month} className="p-4">
-                  <StatReadout
-                    label={new Date(month + '-01').toLocaleDateString('en-GB', { month: 'short', year: 'numeric' })}
-                    value={`+${count as number}`}
-                    subtext="new followers"
-                  />
-                </Card>
-              ))}
-            </div>
-          </div>
-        )}
-
-        {/* Financial Summary Cards */}
-        {analyticsData?.financial && (
-          <div className="mb-6 md:mb-8">
-            <h2 className="font-cinzel text-lg font-bold tracking-[0.02em] mb-3">Financial Overview</h2>
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-              <Card className="p-4">
-                <StatReadout
-                  label="Payroll expenses"
-                  value={`${Math.round(analyticsData.financial.totalPayroll).toLocaleString()} gil`}
-                  subtext={`${analyticsData.financial.payrollAsPercentOfRevenue.toFixed(1)}% of revenue`}
-                  icon={<DollarSign className="h-3.5 w-3.5" />}
-                />
-              </Card>
-              <Card className="p-4">
-                <StatReadout
-                  label="Net profit / loss"
-                  value={`${analyticsData.financial.netProfit >= 0 ? "+" : ""}${Math.round(analyticsData.financial.netProfit).toLocaleString()} gil`}
-                  subtext="revenue minus payroll"
-                  deltaDirection={analyticsData.financial.netProfit >= 0 ? "up" : "down"}
-                  icon={<TrendingUp className="h-3.5 w-3.5" />}
-                />
-              </Card>
-              <Card className="p-4">
-                <StatReadout
-                  label="Profit margin"
-                  value={`${analyticsData.financial.profitMargin.toFixed(1)}%`}
-                  subtext={analyticsData.financial.profitMargin >= 50 ? "Healthy" : analyticsData.financial.profitMargin >= 25 ? "Moderate" : "Low"}
-                  icon={<Target className="h-3.5 w-3.5" />}
-                />
-              </Card>
-            </div>
-          </div>
-        )}
 
         {/* Charts */}
         <div className="space-y-6">
@@ -713,6 +662,39 @@ export default function AnalyticsPage() {
                 </div>
               </div>
             )}
+          </div>
+        )}
+
+        {/* Financial Overview — below charts */}
+        {analyticsData?.financial && (
+          <div className="mt-6 space-y-4">
+            <div className="flex items-center gap-2">
+              <svg className="w-4 h-4 text-[var(--xiv-blue)]" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>
+              <h2 className="font-cinzel text-lg font-bold tracking-[0.02em]">Financial Overview</h2>
+            </div>
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+              <Card className="p-4"><StatReadout label="Payroll expenses" value={`${Math.round(analyticsData.financial.totalPayroll).toLocaleString()} gil`} subtext={`${analyticsData.financial.payrollAsPercentOfRevenue.toFixed(1)}% of revenue`} icon={<DollarSign />} iconVariant="blue" /></Card>
+              <Card className="p-4"><StatReadout label="Net profit / loss" value={`${analyticsData.financial.netProfit >= 0 ? "+" : ""}${Math.round(analyticsData.financial.netProfit).toLocaleString()} gil`} subtext="revenue minus payroll" deltaDirection={analyticsData.financial.netProfit >= 0 ? "up" : "down"} icon={<TrendingUp />} iconVariant={analyticsData.financial.netProfit >= 0 ? "success" : "warning"} /></Card>
+              <Card className="p-4"><StatReadout label="Profit margin" value={`${analyticsData.financial.profitMargin.toFixed(1)}%`} subtext={analyticsData.financial.profitMargin >= 50 ? "Healthy" : analyticsData.financial.profitMargin >= 25 ? "Moderate" : "Low"} icon={<Target />} iconVariant="blue" /></Card>
+            </div>
+          </div>
+        )}
+
+        {/* Followers — below charts */}
+        {analyticsData?.followers && (
+          <div className="mt-6">
+            <div className="flex items-center gap-2 mb-3">
+              <svg className="w-4 h-4 text-[var(--xiv-blue)]" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg>
+              <h2 className="font-cinzel text-lg font-bold tracking-[0.02em]">Followers</h2>
+            </div>
+            <div className="kpis">
+              <Card className="p-4"><StatReadout label="Total followers" value={analyticsData.followers.total} subtext="app users following" icon={<Users />} iconVariant="blue" /></Card>
+              {Object.entries(analyticsData.followers.byMonth).map(([month, count]) => (
+                <Card key={month} className="p-4">
+                  <StatReadout label={new Date(month + '-01').toLocaleDateString('en-GB', { month: 'short', year: 'numeric' })} value={`+${count as number}`} subtext="new followers" />
+                </Card>
+              ))}
+            </div>
           </div>
         )}
       </div>

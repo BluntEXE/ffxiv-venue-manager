@@ -350,6 +350,12 @@ export const GET = withRateLimit<{ params: Promise<{ venueId: string }> }>(
       // Calculate totals
       const totalRevenue = revenueByEvent.reduce((sum, e) => sum + e.revenue, 0)
       const totalPatrons = patronByEvent.reduce((sum, e) => sum + e.peakPatrons, 0)
+      const totalTransactions = allTransactions.length
+      const avgSpend = totalTransactions > 0 ? Math.round(totalRevenue / totalTransactions) : 0
+      // Repeat rate: patrons with 3+ visits / total unique patrons
+      const repeatRate = mixTotal > 1
+        ? Math.round(((mixRegular + mixVip) / mixTotal) * 100)
+        : 0
 
       // Calculate financial summary (revenue vs payroll for last 10 events)
       const financialSummary = await getRecentEventsFinancialSummary(venue.id, 10)
@@ -365,6 +371,9 @@ export const GET = withRateLimit<{ params: Promise<{ venueId: string }> }>(
             ? Math.round(totalRevenue / revenueByEvent.length)
             : 0,
           totalPatrons,
+          avgSpend,
+          repeatRate,
+          totalTransactions,
           ...eventStats,
         },
 
