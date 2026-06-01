@@ -383,10 +383,10 @@ export default function AnalyticsPage() {
           </div>
         )}
 
-        {/* Charts Grid */}
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        {/* Charts */}
+        <div className="space-y-6">
           {/* Net Profit/Loss Chart (Last 10 Events) */}
-          <Card className="lg:col-span-2 overflow-hidden">
+          <Card className="overflow-hidden">
             <div className="flex items-center gap-2 px-5 py-3.5 border-b border-[var(--blue-008)] font-semibold text-sm">
               <TrendingUp className="w-4 h-4 text-[var(--xiv-blue)]" />
               Net Profit / Loss
@@ -473,100 +473,128 @@ export default function AnalyticsPage() {
           </div>
           </Card>
 
-          {/* Patron Visit Trends */}
-          <Card className="overflow-hidden">
-            <div className="flex items-center gap-2 px-5 py-3.5 border-b border-[var(--blue-008)] font-semibold text-sm">
-              <Users className="w-4 h-4 text-[var(--xiv-blue)]" />
-              Patron Visits
-              <span className="ml-auto text-xs text-[var(--fg-faint)] font-normal">Peak counts</span>
-            </div>
-            <div className="p-5">
-            <div className="h-[250px] w-full">
-                <ResponsiveContainer width="100%" height="100%" minWidth={0}>
-                  <BarChart data={patronData} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
-                    <defs>
-                      <linearGradient id="colorPatron" x1="0" y1="0" x2="0" y2="1">
-                        <stop offset="0%" stopColor="#00b4ff" stopOpacity={0.8} />
-                        <stop offset="95%" stopColor="#00b4ff" stopOpacity={0.2} />
-                      </linearGradient>
-                    </defs>
-                    <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#313244" />
-                    <XAxis
-                      dataKey="date"
-                      axisLine={false}
-                      tickLine={false}
-                      tickMargin={10}
-                      fontSize={12}
-                      tick={{ fill: "#9399b2" }}
-                      stroke="#9399b2"
-                    />
-                    <YAxis
-                      axisLine={false}
-                      tickLine={false}
-                      fontSize={12}
-                      tick={{ fill: "#9399b2" }}
-                      stroke="#9399b2"
-                    />
-                    <Tooltip content={<CustomTooltip />} cursor={{ fill: "rgba(0,180,255,0.06)" }} />
-                    <Bar
-                      dataKey="patrons"
-                      fill="url(#colorPatron)"
-                      radius={[4, 4, 0, 0]}
-                    />
-                  </BarChart>
-                </ResponsiveContainer>
+          {/* Mid section: patron visits left, insights right */}
+          <div className="grid grid-cols-1 lg:grid-cols-[1fr_270px] gap-6 items-start">
+
+            {/* Left: Patron Visits */}
+            <Card className="overflow-hidden">
+              <div className="flex items-center gap-2 px-5 py-3.5 border-b border-[var(--blue-008)] font-semibold text-sm">
+                <Users className="w-4 h-4 text-[var(--xiv-blue)]" />
+                Patron Visits
+                <span className="ml-auto text-xs text-[var(--fg-faint)] font-normal">Peak counts</span>
+              </div>
+              <div className="p-5">
+              <div className="h-[250px] w-full">
+                  <ResponsiveContainer width="100%" height="100%" minWidth={0}>
+                    <BarChart data={patronData} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
+                      <defs>
+                        <linearGradient id="colorPatron" x1="0" y1="0" x2="0" y2="1">
+                          <stop offset="0%" stopColor="#00b4ff" stopOpacity={0.8} />
+                          <stop offset="95%" stopColor="#00b4ff" stopOpacity={0.2} />
+                        </linearGradient>
+                      </defs>
+                      <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#313244" />
+                      <XAxis dataKey="date" axisLine={false} tickLine={false} tickMargin={10} fontSize={12} tick={{ fill: "#9399b2" }} stroke="#9399b2" />
+                      <YAxis axisLine={false} tickLine={false} fontSize={12} tick={{ fill: "#9399b2" }} stroke="#9399b2" />
+                      <Tooltip content={<CustomTooltip />} cursor={{ fill: "rgba(0,180,255,0.06)" }} />
+                      <Bar dataKey="patrons" fill="url(#colorPatron)" radius={[4, 4, 0, 0]} />
+                    </BarChart>
+                  </ResponsiveContainer>
+              </div>
+              </div>
+            </Card>
+
+            {/* Right: Patron mix + Busiest nights + Top services */}
+            <div className="space-y-4">
+
+              {/* Patron mix */}
+              {analyticsData.patronMix && analyticsData.patronMix.total > 1 && (
+                <div className="rounded-xl border border-[var(--blue-018)] bg-card overflow-hidden">
+                  <div className="flex items-center gap-2 px-5 py-3 border-b border-[var(--blue-008)] font-semibold text-sm">
+                    <svg className="w-4 h-4 text-[var(--xiv-blue)]" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M21.21 15.89A10 10 0 1 1 8 2.83"/><path d="M22 12A10 10 0 0 0 12 2v10z"/></svg>
+                    Patron mix
+                    <span className="ml-auto text-[0.68rem] text-[var(--fg-faint)] font-normal">30 days</span>
+                  </div>
+                  <div className="py-1">
+                    {[
+                      { label: "New",     pct: analyticsData.patronMix.newPct,     count: analyticsData.patronMix.new,     color: "var(--xiv-blue)" },
+                      { label: "Regular", pct: analyticsData.patronMix.regularPct, count: analyticsData.patronMix.regular, color: "var(--success-text)" },
+                      { label: "VIP",     pct: analyticsData.patronMix.vipPct,     count: analyticsData.patronMix.vip,     color: "var(--warning)" },
+                    ].map(({ label, pct, count, color }) => (
+                      <div key={label} className="flex items-center gap-2 px-4 py-2">
+                        <div className="flex items-center gap-1.5 w-20 flex-shrink-0">
+                          <span className="w-2 h-2 rounded-[2px] flex-shrink-0" style={{ background: color }} />
+                          <span className="text-xs">{label}</span>
+                        </div>
+                        <div className="flex-1 h-2 rounded-full bg-[var(--blue-010)] overflow-hidden">
+                          <div className="h-full rounded-full" style={{ width: `${pct}%`, background: color }} />
+                        </div>
+                        <span className="text-xs text-muted-foreground w-8 text-right tabular-nums">{pct}%</span>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {/* Busiest nights */}
+              {analyticsData.busiestNights && (
+                <div className="rounded-xl border border-[var(--blue-018)] bg-card overflow-hidden">
+                  <div className="flex items-center gap-2 px-5 py-3 border-b border-[var(--blue-008)] font-semibold text-sm">
+                    <svg className="w-4 h-4 text-[var(--xiv-blue)]" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M3 9h18M9 21V9"/></svg>
+                    Busiest nights
+                    <span className="ml-auto text-[0.68rem] text-[var(--fg-faint)] font-normal">avg</span>
+                  </div>
+                  <div className="px-4 pt-3 pb-4">
+                    <div className="flex items-end gap-1.5 h-[80px]">
+                      {analyticsData.busiestNights.map(({ day, pct, count }) => (
+                        <div key={day} className="flex-1 flex flex-col items-center gap-1" title={`${day}: ${count}`}>
+                          <div className="w-full flex flex-col justify-end" style={{ height: 64 }}>
+                            <div className="w-full rounded-t-sm" style={{ height: `${Math.max(pct, 4)}%`, background: pct > 70 ? "var(--xiv-blue)" : "rgba(0,180,255,0.3)" }} />
+                          </div>
+                          <span className="text-[0.6rem] text-muted-foreground">{day.charAt(0)}</span>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              {/* Top services */}
+              <div className="rounded-xl border border-[var(--blue-018)] bg-card overflow-hidden">
+                <div className="flex items-center gap-2 px-5 py-3 border-b border-[var(--blue-008)] font-semibold text-sm">
+                  <svg className="w-4 h-4 text-[var(--xiv-blue)]" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg>
+                  Top services
+                  <span className="ml-auto text-[0.68rem] text-[var(--fg-faint)] font-normal">by revenue</span>
+                </div>
+                {serviceRevenue.length === 0 ? (
+                  <p className="text-xs text-muted-foreground px-4 py-4">No service data yet.</p>
+                ) : (
+                  <div className="px-4 py-3 space-y-2.5">
+                    {serviceRevenue.slice(0, 5).map((s, i) => (
+                      <div key={s.name}>
+                        <div className="flex items-center justify-between text-xs mb-1">
+                          <span className="font-medium truncate mr-2">{s.name}</span>
+                          <span className="text-[var(--xiv-blue)] font-semibold shrink-0 tabular-nums">{s.value.toLocaleString()}</span>
+                        </div>
+                        <div className="h-1.5 rounded-full bg-[var(--blue-008)] overflow-hidden">
+                          <div className="h-full rounded-full" style={{ width: `${Math.round((s.value / (serviceRevenue[0]?.value || 1)) * 100)}%`, background: COLORS[i % COLORS.length] }} />
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+
             </div>
           </div>
-          </Card>
 
-          {/* Top Services by Revenue */}
-          <Card className="overflow-hidden">
-            <div className="flex items-center gap-2 px-5 py-3.5 border-b border-[var(--blue-008)] font-semibold text-sm">
-              <svg className="w-4 h-4 text-[var(--xiv-blue)]" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg>
-              Top Services
-              <span className="ml-auto text-xs text-[var(--fg-faint)] font-normal">by revenue</span>
-            </div>
-            <div className="p-5">
-            <div className="h-[280px]">
-              <ResponsiveContainer width="100%" height="100%" minWidth={0}>
-                <PieChart>
-                  <Pie
-                    data={serviceRevenue}
-                    cx="50%"
-                    cy="45%"
-                    innerRadius={60}
-                    outerRadius={80}
-                    paddingAngle={2}
-                    dataKey="value"
-                    strokeWidth={0}
-                  >
-                    {serviceRevenue.map((entry, index) => (
-                      <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
-                    ))}
-                  </Pie>
-                  <Tooltip content={<CustomTooltip />} />
-                  <Legend
-                    verticalAlign="bottom"
-                    height={36}
-                    wrapperStyle={{ paddingTop: "20px" }}
-                    formatter={(value: string, entry: any) => {
-                      const percent = ((entry.payload.value / serviceRevenue.reduce((sum, s) => sum + s.value, 0)) * 100).toFixed(0)
-                      return <span className="text-muted-foreground">{value} ({percent}%)</span>
-                    }}
-                  />
-                </PieChart>
-              </ResponsiveContainer>
-            </div>
-            </div>
-          </Card>
-
-          {/* Average Traffic Flow - Full Width */}
-          <div className="lg:col-span-2">
+          {/* Average Traffic Flow */}
+          <div>
             <AttendanceOverview data={analyticsData?.attendanceByHour || []} />
           </div>
 
-          {/* Detailed Financial Table - Full Width */}
-          <Card className="lg:col-span-2 overflow-hidden">
+          {/* Detailed Financial Table */}
+          <Card className="overflow-hidden">
             <div className="flex items-center gap-2 px-5 py-3.5 border-b border-[var(--blue-008)] font-semibold text-sm">
               <svg className="w-4 h-4 text-[var(--xiv-blue)]" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/></svg>
               Detailed Financial Breakdown
@@ -655,9 +683,9 @@ export default function AnalyticsPage() {
           </Card>
         </div>
 
-        {/* Patron mix + Busiest nights */}
-        {(analyticsData?.patronMix || analyticsData?.busiestNights) && (
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mt-6">
+        {/* (patron mix + busiest nights now in sidebar above) */}
+        {false && (
+          <div className="hidden">
 
             {/* Patron mix */}
             {analyticsData.patronMix && analyticsData.patronMix.total > 1 && (

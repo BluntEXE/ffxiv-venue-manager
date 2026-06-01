@@ -105,7 +105,8 @@ export default async function VenueDashboardPage({
     })
   ) : []
 
-  // Patron counts per recent event for avg attendance
+  // Patron counts per recent event for avg attendance + table
+  const patronsPerEvent: number[] = []
   if (canManage && recentEvents.length > 0) {
     const patPerEvent = await Promise.all(
       recentEvents.map(ev =>
@@ -114,8 +115,16 @@ export default async function VenueDashboardPage({
         })
       )
     )
+    patronsPerEvent.push(...patPerEvent)
     kpis.avgAttendance = patPerEvent.length > 0 ? Math.round(patPerEvent.reduce((a, b) => a + b, 0) / patPerEvent.length) : 0
   }
+
+  // Combine events with revenue (chartData reversed = newest first, same order as recentEvents)
+  const recentEventsWithData = recentEvents.map((ev, i) => ({
+    ...ev,
+    revenue: chartData[chartData.length - 1 - i]?.revenue ?? 0,
+    patrons: patronsPerEvent[i] ?? 0,
+  }))
 
   // Next upcoming event
   const nextEvent = await prisma.event.findFirst({
@@ -311,29 +320,40 @@ export default async function VenueDashboardPage({
                   View all <ChevronRight className="h-3 w-3" />
                 </Link>
               </div>
-              <div className="p-5">
-              <div className="space-y-0">
-                <div className="grid grid-cols-[1fr_auto_auto] gap-4 pb-2 border-b border-[var(--blue-008)]">
-                  <span className="xiv-th">Event</span>
-                  <span className="xiv-th text-right">Date</span>
-                  <span className="xiv-th text-right">Status</span>
-                </div>
-                {recentEvents.length > 0 ? recentEvents.map(ev => (
-                  <Link key={ev.id} href={`/dashboard/${slug}/events/${ev.id}`}
-                    className="grid grid-cols-[1fr_auto_auto] gap-4 py-2.5 border-b border-[var(--blue-008)] hover:bg-[var(--blue-004)] -mx-5 px-5 transition-colors last:border-0">
-                    <span className="text-sm truncate">{ev.title}</span>
-                    <span className="text-sm text-muted-foreground whitespace-nowrap">{format(ev.startTime, "d MMM")}</span>
-                    <span>
-                      {ev.status === "ACTIVE"
-                        ? <Badge variant="live" className="text-[10px]">Live</Badge>
-                        : <Badge variant="tag" className="text-[10px]">{ev.status.charAt(0) + ev.status.slice(1).toLowerCase()}</Badge>
-                      }
-                    </span>
-                  </Link>
-                )) : (
-                  <p className="text-sm text-muted-foreground py-6 text-center">No events yet</p>
-                )}
-              </div>
+              <div className="overflow-x-auto">
+              <table className="w-full border-collapse min-w-[420px]">
+                <thead>
+                  <tr>
+                    {["Event", "Date", "Patrons", "Revenue", "Status"].map((h, i) => (
+                      <th key={h} className={`xiv-th px-5 py-3 border-b border-[var(--blue-008)] text-left ${i >= 2 ? "text-right" : ""} ${i === 2 ? "hidden sm:table-cell" : ""}`}>{h}</th>
+                    ))}
+                  </tr>
+                </thead>
+                <tbody>
+                  {recentEventsWithData.length > 0 ? recentEventsWithData.map(ev => (
+                    <tr key={ev.id} className="border-b border-[var(--blue-008)] last:border-0 hover:bg-[var(--blue-004)] transition-colors">
+                      <td className="px-5 py-2.5">
+                        <Link href={`/dashboard/${slug}/events/${ev.id}`} className="text-sm font-medium hover:text-[var(--xiv-blue)] transition-colors truncate block max-w-[160px]">{ev.title}</Link>
+                      </td>
+                      <td className="px-5 py-2.5 text-sm text-muted-foreground whitespace-nowrap">{format(ev.startTime, "d MMM")}</td>
+                      <td className="px-5 py-2.5 text-sm text-right hidden sm:table-cell tabular-nums">
+                        {ev.patrons > 0 ? ev.patrons : <span className="text-[var(--fg-faint)]">—</span>}
+                      </td>
+                      <td className="px-5 py-2.5 text-sm text-right tabular-nums text-[var(--xiv-blue)] font-medium">
+                        {ev.revenue > 0 ? `${ev.revenue.toLocaleString()} g` : <span className="text-[var(--fg-faint)]">—</span>}
+                      </td>
+                      <td className="px-5 py-2.5 text-right">
+                        {ev.status === "ACTIVE"
+                          ? <Badge variant="live" className="text-[10px]">Live</Badge>
+                          : <Badge variant="tag" className="text-[10px]">{ev.status.charAt(0) + ev.status.slice(1).toLowerCase()}</Badge>
+                        }
+                      </td>
+                    </tr>
+                  )) : (
+                    <tr><td colSpan={5} className="px-5 py-6 text-center text-sm text-muted-foreground">No events yet</td></tr>
+                  )}
+                </tbody>
+              </table>
               </div>
             </Card>
 

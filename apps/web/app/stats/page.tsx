@@ -181,6 +181,29 @@ export default async function StatsPage() {
         </div>
       </section>
 
+      {/* Across the realm — datacenter breakdown */}
+      {stats.dcBreakdown.length > 0 && (
+        <section className="container mx-auto px-4 py-10">
+          <h2 className="font-cinzel text-xl font-bold mb-6 text-center tracking-wide">Across the realm</h2>
+          <div className="max-w-lg mx-auto space-y-3">
+            {stats.dcBreakdown.map(({ dataCenter, count }) => (
+              <div key={dataCenter} className="flex items-center gap-3">
+                <span className="text-sm font-medium w-28 shrink-0">{dataCenter}</span>
+                <div className="flex-1 h-2.5 rounded-full bg-[var(--blue-008)] overflow-hidden">
+                  <div
+                    className="h-full rounded-full bg-[var(--xiv-blue)]"
+                    style={{ width: `${Math.round((count / (stats.dcBreakdown[0]?.count || 1)) * 100)}%` }}
+                  />
+                </div>
+                <span className="text-sm text-muted-foreground tabular-nums w-16 text-right">
+                  {count} venue{count !== 1 ? "s" : ""}
+                </span>
+              </div>
+            ))}
+          </div>
+        </section>
+      )}
+
       {/* CTA */}
       <section className="container mx-auto px-4 py-16 text-center">
         <div className="flex items-center justify-center gap-3 mb-5">

@@ -13,6 +13,7 @@ export interface PublicStats {
   partakeEventsSynced: number
   gilTracked: number
   dataCenters: number
+  dcBreakdown: Array<{ dataCenter: string; count: number }>
   firstVenueAt: string | null
   lastActivityAt: string | null
   generatedAt: string
@@ -32,6 +33,7 @@ async function computeStats(): Promise<PublicStats> {
     tasksCompleted,
     partakeEventsSynced,
     dcRows,
+    dcCounts,
     firstVenue,
     lastSale,
     lastPatron,
@@ -60,6 +62,13 @@ async function computeStats(): Promise<PublicStats> {
       select: { dataCenter: true },
       distinct: ["dataCenter"],
     }),
+    // Per-DC breakdown
+    prisma.venue.groupBy({
+      by: ["dataCenter"],
+      where: { isActive: true },
+      _count: { _all: true },
+      orderBy: { _count: { dataCenter: "desc" } },
+    }),
     prisma.venue.findFirst({
       where: { isActive: true },
       orderBy: { createdAt: "asc" },
@@ -85,6 +94,7 @@ async function computeStats(): Promise<PublicStats> {
     partakeEventsSynced,
     gilTracked: Number(salesAgg._sum.amount ?? 0),
     dataCenters: dcRows.length,
+    dcBreakdown: dcCounts.map(r => ({ dataCenter: r.dataCenter, count: r._count._all })),
     firstVenueAt: firstVenue?.createdAt.toISOString() ?? null,
     lastActivityAt: lastActivity ? lastActivity.toISOString() : null,
     generatedAt: new Date().toISOString(),
