@@ -6,6 +6,7 @@ import { useSession } from "next-auth/react"
 import { Button } from "@/components/ui/button"
 import { VenueLayoutClient } from "@/components/venue-layout-client"
 import { Breadcrumb } from "@/components/breadcrumb"
+import { VenueEyebrow } from "@/components/venue-eyebrow"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import {
@@ -248,7 +249,8 @@ export default function EventTemplatesPage() {
         {/* Header */}
         <div className="flex flex-col sm:flex-row sm:justify-between sm:items-start gap-4 mb-6">
           <div>
-            <h1 className="text-2xl md:text-3xl lg:text-4xl font-bold">Event Templates</h1>
+            <VenueEyebrow slug={slug} />
+            <h1 className="font-cinzel text-2xl md:text-3xl font-bold tracking-[0.02em]">Event Templates</h1>
             <p className="text-sm md:text-base text-muted-foreground mt-1 md:mt-2">
               Create templates for recurring events
             </p>
