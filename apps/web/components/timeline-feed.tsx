@@ -3,9 +3,6 @@
 import { useState, useEffect, useCallback, useRef } from "react"
 import { formatServerTime, SERVER_TIME_LABEL } from "@/lib/server-time"
 import { Button } from "@/components/ui/button"
-import { Badge } from "@/components/ui/badge"
-import { Card, CardContent } from "@/components/ui/card"
-import { LogIn, LogOut } from "lucide-react"
 
 type TimelineFilter = "all" | "sales" | "patrons"
 
@@ -112,9 +109,23 @@ export function TimelineFeed({ venueId, initialFilter = "all" }: TimelineFeedPro
 
   const visibleItems = items.filter((item) => matchesFilter(item, filter))
 
+  // Group by UTC day for day headers
+  const grouped = visibleItems.reduce<{ day: string; items: TimelineItem[] }[]>((acc, item) => {
+    const day = new Date(item.timestamp).toLocaleDateString("en-GB", {
+      timeZone: "UTC",
+      weekday: "long",
+      day: "numeric",
+      month: "short",
+    })
+    const last = acc[acc.length - 1]
+    if (last && last.day === day) last.items.push(item)
+    else acc.push({ day, items: [item] })
+    return acc
+  }, [])
+
   return (
     <div>
-      {/* Filter chips */}
+      {/* Filter tabs */}
       <div className="flex items-center gap-3 mb-6 flex-wrap">
         <div className="flex gap-1 bg-card border border-[var(--blue-015)] rounded-full p-1">
           {(Object.keys(filterLabels) as TimelineFilter[]).map((f) => (
@@ -140,29 +151,30 @@ export function TimelineFeed({ venueId, initialFilter = "all" }: TimelineFeedPro
 
       {/* Timeline */}
       {loading ? (
-        <div className="text-center py-12 text-muted-foreground">Loading...</div>
+        <div className="text-center py-12 text-muted-foreground">Loading…</div>
       ) : visibleItems.length === 0 ? (
-        <Card>
-          <CardContent className="py-12 text-center">
-            <p className="text-muted-foreground">
-              No activity yet.{filter !== "all" ? " Try a different filter." : ""}
-            </p>
-          </CardContent>
-        </Card>
+        <div className="rounded-xl border border-[var(--blue-018)] bg-card py-12 text-center">
+          <p className="text-sm text-muted-foreground">
+            No activity yet.{filter !== "all" ? " Try a different filter." : ""}
+          </p>
+        </div>
       ) : (
-        <div className="space-y-2">
-          {visibleItems.map((item) => (
-            <TimelineRow key={item.id} item={item} />
-          ))}
+        <div className="rounded-xl border border-[var(--blue-018)] bg-card overflow-hidden">
+          <div className="py-2">
+            {grouped.map(({ day, items: dayItems }) => (
+              <div key={day}>
+                <div className="tl-day">{day}</div>
+                {dayItems.map((item, idx) => (
+                  <TimelineRow key={item.id} item={item} isLast={idx === dayItems.length - 1} />
+                ))}
+              </div>
+            ))}
+          </div>
 
           {hasMore && (
-            <div className="text-center pt-4">
-              <Button
-                variant="outline"
-                onClick={loadMore}
-                disabled={loadingMore}
-              >
-                {loadingMore ? "Loading..." : "Load more"}
+            <div className="text-center py-4 border-t border-[var(--blue-008)]">
+              <Button variant="outline" onClick={loadMore} disabled={loadingMore}>
+                {loadingMore ? "Loading…" : "Load more"}
               </Button>
             </div>
           )}
@@ -172,31 +184,26 @@ export function TimelineFeed({ venueId, initialFilter = "all" }: TimelineFeedPro
   )
 }
 
-function TimelineRow({ item }: { item: TimelineItem }) {
-  const time = formatServerTime(item.timestamp, "datetime") + " " + SERVER_TIME_LABEL
+function TimelineRow({ item, isLast }: { item: TimelineItem; isLast: boolean }) {
+  const timeStr = formatServerTime(item.timestamp, "time") + " " + SERVER_TIME_LABEL
 
   if (item.type === "sale") {
-    const { amount, customerName, service, staff, notes } = item.data
+    const { amount, customerName, service, staff } = item.data
     return (
-      <div className="flex items-center gap-3 px-4 py-3 rounded-xl border border-[var(--blue-008)] hover:border-[var(--blue-018)] hover:bg-[var(--blue-004)] transition-all">
-        <div className="w-8 h-8 rounded-lg bg-emerald-500/10 border border-emerald-500/20 flex items-center justify-center flex-shrink-0">
-          <svg className="w-4 h-4 text-emerald-400" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>
-        </div>
-        <div className="flex-1 min-w-0">
-          <div className="flex items-center gap-2 flex-wrap">
-            <span className="text-sm font-semibold text-emerald-400">{Number(amount).toLocaleString()} gil</span>
-            {service && (
-              <span className="text-[0.68rem] font-medium px-2 py-0.5 rounded-full bg-[var(--blue-010)] text-[var(--xiv-blue)] border border-[var(--blue-018)]">
-                {(service as { name: string }).name}
-              </span>
-            )}
+      <div className={`tl-item${isLast ? " last" : ""}`}>
+        <div className="tl-time">{timeStr}</div>
+        <div className="tl-node em">
+          <div className="tl-title">
+            <strong>Sale logged</strong>
+            {service && <> — {(service as { name: string }).name}</>}
+            {" "}<span className="gil">{Number(amount).toLocaleString()} gil</span>
           </div>
-          <p className="text-xs text-muted-foreground mt-0.5">
-            {customerName && <span>{String(customerName)} &middot; </span>}
-            {staff && (staff as { name?: string }).name && <span>by {(staff as { name: string }).name} &middot; </span>}
-            {time}
-          </p>
-          {notes && <p className="text-xs text-[var(--fg-faint)] mt-0.5">{String(notes)}</p>}
+          {(customerName || (staff && (staff as { name?: string }).name)) && (
+            <div className="tl-desc">
+              {customerName && <>{String(customerName)}</>}
+              {staff && (staff as { name?: string }).name && <>{customerName ? " · " : ""}by {(staff as { name: string }).name}</>}
+            </div>
+          )}
         </div>
       </div>
     )
@@ -206,33 +213,15 @@ function TimelineRow({ item }: { item: TimelineItem }) {
   const isEnter = item.type === "patron_enter"
 
   return (
-    <div className={`flex items-center gap-3 px-4 py-3 rounded-xl border hover:bg-[var(--blue-004)] transition-all ${
-      isEnter ? "border-[rgba(0,180,255,0.15)]" : "border-[var(--blue-008)]"
-    }`}>
-      <div className={`w-8 h-8 rounded-lg flex items-center justify-center flex-shrink-0 ${
-        isEnter
-          ? "bg-[rgba(0,180,255,0.10)] border border-[rgba(0,180,255,0.25)]"
-          : "bg-[rgba(108,112,134,0.10)] border border-[var(--border)]"
-      }`}>
-        {isEnter
-          ? <LogIn className="h-4 w-4 text-[var(--xiv-blue)]" />
-          : <LogOut className="h-4 w-4 text-muted-foreground" />
-        }
-      </div>
-      <div className="flex-1 min-w-0">
-        <p className="text-sm font-medium">
-          {characterName ? String(characterName) : "Unknown"}
+    <div className={`tl-item${isLast ? " last" : ""}`}>
+      <div className="tl-time">{timeStr}</div>
+      <div className={`tl-node${isEnter ? "" : " am"}`}>
+        <div className="tl-title">
+          <strong>{characterName ? String(characterName) : "Unknown"}</strong>
           {world ? <span className="text-muted-foreground font-normal"> · {String(world)}</span> : null}
-        </p>
-        <p className="text-xs text-muted-foreground">{isEnter ? "Entered" : "Left"} · {time}</p>
+          {" "}{isEnter ? "entered the venue" : "left the venue"}
+        </div>
       </div>
-      <span className={`text-[0.68rem] font-semibold uppercase tracking-[0.05em] px-2.5 py-1 rounded-full ${
-        isEnter
-          ? "bg-[rgba(0,180,255,0.10)] text-[var(--xiv-blue)] border border-[rgba(0,180,255,0.28)]"
-          : "bg-[rgba(108,112,134,0.10)] text-[var(--fg-faint)] border border-[var(--border)]"
-      }`}>
-        {isEnter ? "Enter" : "Exit"}
-      </span>
     </div>
   )
 }

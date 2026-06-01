@@ -619,6 +619,19 @@
 .xiv-listening-dot:nth-child(2) { animation-delay: 0.15s; }
 .xiv-listening-dot:nth-child(3) { animation-delay: 0.3s; }
 
+/* ── Timeline ── */
+.tl-day { font-size: 0.66rem; text-transform: uppercase; letter-spacing: 0.12em; color: var(--fg-faint); font-weight: 600; margin: 18px 0 6px; padding: 0 22px; }
+.tl-item { display: grid; grid-template-columns: 70px 1fr; gap: 14px; padding: 2px 22px; }
+.tl-item .tl-time { font-size: 0.72rem; color: var(--fg-faint); text-align: right; padding-top: 12px; font-variant-numeric: tabular-nums; white-space: nowrap; font-family: var(--font-mono); }
+.tl-item .tl-node { position: relative; padding-left: 24px; padding-top: 11px; padding-bottom: 11px; }
+.tl-item .tl-node::before { content: ""; position: absolute; left: 4px; top: 14px; width: 9px; height: 9px; border-radius: 999px; background: var(--xiv-blue); box-shadow: 0 0 0 3px var(--blue-010); z-index: 1; }
+.tl-item:not(:last-child) .tl-node::after { content: ""; position: absolute; left: 8px; top: 18px; bottom: -4px; width: 1px; background: var(--blue-015); }
+.tl-item .tl-node.em::before { background: var(--success-text); box-shadow: 0 0 0 3px var(--success-soft); }
+.tl-item .tl-node.am::before { background: var(--warning); box-shadow: 0 0 0 3px rgba(249,226,175,0.12); }
+.tl-item .tl-title { font-size: 0.88rem; color: var(--foreground); }
+.tl-item .tl-title .gil { color: var(--xiv-blue); font-weight: 600; }
+.tl-item .tl-desc { font-size: 0.78rem; color: var(--muted-foreground); margin-top: 3px; }
+
 /* Navbar HUD — crystal bottom accent line */
 .xiv-nav::after {
   content: '';
