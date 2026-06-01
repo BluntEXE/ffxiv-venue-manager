@@ -35,7 +35,12 @@ export default async function FollowingPage() {
     <div className="min-h-screen p-4 md:p-8 max-w-4xl mx-auto">
       <div className="mb-8 text-center xiv-fade-up">
         <CrystalDivider className="mb-4" />
-        <h1 className="font-cinzel text-3xl md:text-4xl font-bold tracking-[0.02em] mb-2">Following</h1>
+        <div className="flex items-center justify-center gap-2 mb-2">
+          <span className="w-[6px] h-[6px] bg-[rgba(0,180,255,0.7)] rotate-45 shadow-[0_0_8px_rgba(0,180,255,0.5)]" />
+          <span className="text-[0.72rem] font-semibold uppercase tracking-[0.14em] text-[var(--xiv-blue)]">Explore</span>
+          <span className="w-[6px] h-[6px] bg-[rgba(0,180,255,0.7)] rotate-45 shadow-[0_0_8px_rgba(0,180,255,0.5)]" />
+        </div>
+        <h1 className="font-cinzel text-3xl md:text-4xl font-bold tracking-[0.02em] mb-2 xiv-glow-text">Following</h1>
         <p className="text-muted-foreground">Venues you follow across the realm</p>
       </div>
 

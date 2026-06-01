@@ -11,6 +11,7 @@ import { VenueLayout } from "@/components/venue-layout"
 import { Breadcrumb } from "@/components/breadcrumb"
 import { formatServerTime, SERVER_TIME_LABEL } from "@/lib/server-time"
 import { format } from "date-fns"
+import { SyncPartakeButton } from "@/components/sync-partake-button"
 
 const statusColors = {
   DRAFT: "bg-zinc-500",
@@ -110,12 +111,17 @@ export default async function EventsPage({
             <h1 className="font-cinzel text-2xl md:text-3xl font-bold tracking-[0.02em]">Events</h1>
             <p className="text-sm text-muted-foreground mt-1">Manage your venue's events and schedule</p>
           </div>
-          <Button asChild size="sm" className="sm:size-default self-start">
-            <Link href={`/dashboard/${slug}/events/new`}>
-              <span className="hidden sm:inline">Create Event</span>
-              <span className="sm:hidden">New Event</span>
-            </Link>
-          </Button>
+          <div className="flex items-center gap-2 self-start flex-wrap">
+            {venue.partakeTeamId && (
+              <SyncPartakeButton venueId={venue.id} />
+            )}
+            <Button asChild size="sm">
+              <Link href={`/dashboard/${slug}/events/new`}>
+                <span className="hidden sm:inline">Create Event</span>
+                <span className="sm:hidden">New</span>
+              </Link>
+            </Button>
+          </div>
         </div>
 
       {/* View Tabs */}
