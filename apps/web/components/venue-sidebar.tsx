@@ -3,13 +3,12 @@
 import Link from "next/link"
 import { usePathname } from "next/navigation"
 import { Button } from "@/components/ui/button"
-import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet"
 import { ScrollArea } from "@/components/ui/scroll-area"
 import { VenueSwitcher } from "./venue-switcher"
 import { FeedbackDialog } from "./feedback-dialog"
+import { useSidebar } from "./sidebar-context"
 import { cn } from "@/lib/utils"
 import {
-  Menu,
   Heart,
   Home,
   BarChart3,
@@ -28,7 +27,6 @@ import {
   BookHeart,
   type LucideIcon,
 } from "lucide-react"
-import { useState } from "react"
 
 interface VenueSidebarProps {
   venueSlug: string
@@ -63,7 +61,7 @@ export function VenueSidebar({
   livePatronCount,
 }: VenueSidebarProps) {
   const pathname = usePathname()
-  const [mobileOpen, setMobileOpen] = useState(false)
+  const { open, setOpen } = useSidebar()
 
   const navGroups: NavGroup[] = [
     {
@@ -130,6 +128,8 @@ export function VenueSidebar({
   const filterItems = (items: NavItem[]) =>
     items.filter((item) => !item.roles || item.roles.includes(userRole))
 
+  const close = () => setOpen(false)
+
   const NavContent = ({ onNavigate }: { onNavigate?: () => void }) => (
     <div className="flex flex-col h-full">
       {/* Venue switcher */}
@@ -140,13 +140,13 @@ export function VenueSidebar({
       )}
 
       <ScrollArea className="flex-1 py-3 [&>[data-radix-scroll-area-scrollbar]]:hidden">
-        <nav className="px-2 space-y-5">
+        <nav className="px-[14px] space-y-5">
           {navGroups.map((group) => {
             const filtered = filterItems(group.items)
             if (!filtered.length) return null
             return (
               <div key={group.label}>
-                <p className="stat-label px-3 mb-1.5">{group.label}</p>
+                <p className="grp-label px-3 mb-[8px]">{group.label}</p>
                 <div className="space-y-0.5">
                   {filtered.map((item) => {
                     const active = isActive(item.href)
@@ -156,19 +156,19 @@ export function VenueSidebar({
                         href={item.href}
                         onClick={onNavigate}
                         className={cn(
-                          "flex items-center gap-3 px-3 py-2 rounded-lg text-sm transition-colors relative",
+                          "flex items-center gap-3 px-3 py-[9px] rounded-lg text-[0.875rem] font-medium transition-colors border-l-2",
                           active
-                            ? "bg-[var(--xiv-blue)] text-[#070b14] font-semibold border-l-2 border-[var(--xiv-blue)]"
-                            : "text-foreground/70 hover:text-foreground hover:bg-[var(--blue-007)] border-l-2 border-transparent"
+                            ? "bg-[var(--xiv-blue)] text-[var(--xiv-navy)] font-semibold border-[var(--xiv-blue)] shadow-[var(--glow-cta-soft)]"
+                            : "text-foreground hover:bg-[var(--blue-007)] border-transparent"
                         )}
                       >
-                        <item.icon className="h-4 w-4 shrink-0" />
+                        <item.icon className={cn("h-[18px] w-[18px] shrink-0 transition-colors", active ? "text-[var(--xiv-navy)]" : "text-muted-foreground")} />
                         <span className="flex-1">{item.label}</span>
                         {item.badge !== undefined && item.badge !== null && (
                           <span className={cn(
-                            "text-[10px] font-semibold px-1.5 py-0.5 rounded-full min-w-[1.25rem] text-center",
+                            "text-[0.7rem] font-semibold px-2 py-px rounded-full min-w-[1.25rem] text-center",
                             active
-                              ? "bg-[rgba(7,11,20,0.25)] text-[#070b14]"
+                              ? "bg-[rgba(7,11,20,0.25)] text-[var(--xiv-navy)]"
                               : "bg-[var(--blue-012)] text-[var(--xiv-blue)]"
                           )}>
                             {item.badge}
@@ -184,31 +184,33 @@ export function VenueSidebar({
         </nav>
       </ScrollArea>
 
-      {/* Settings + bottom */}
-      <div className="border-t border-[var(--blue-008)] p-2 space-y-0.5">
+      {/* Settings */}
+      <div className="border-t border-[var(--blue-008)] p-[8px] space-y-0.5">
         <Link
           href={`/dashboard/${venueSlug}/settings`}
           onClick={onNavigate}
           className={cn(
-            "flex items-center gap-3 px-3 py-2 rounded-lg text-sm transition-colors border-l-2",
+            "flex items-center gap-3 px-3 py-[9px] rounded-lg text-[0.875rem] font-medium transition-colors border-l-2",
             isActive(`/dashboard/${venueSlug}/settings`)
-              ? "bg-[var(--xiv-blue)] text-[#070b14] font-semibold border-[var(--xiv-blue)]"
-              : "text-foreground/70 hover:text-foreground hover:bg-[var(--blue-007)] border-transparent"
+              ? "bg-[var(--xiv-blue)] text-[var(--xiv-navy)] font-semibold border-[var(--xiv-blue)]"
+              : "text-foreground hover:bg-[var(--blue-007)] border-transparent"
           )}
         >
-          <Settings className="h-4 w-4 shrink-0" />
+          <Settings className={cn("h-[18px] w-[18px] shrink-0", isActive(`/dashboard/${venueSlug}/settings`) ? "text-[var(--xiv-navy)]" : "text-muted-foreground")} />
           <span>Settings</span>
         </Link>
       </div>
 
-      {/* Legal disclaimer */}
-      <p className="px-4 pb-3 text-[10px] text-[var(--fg-faint)] leading-relaxed">
-        XIV Venue Manager is not affiliated with SQUARE ENIX CO., LTD.
-      </p>
+      {/* Footer */}
+      <div className="px-4 pb-[14px] pt-[12px] border-t border-[var(--blue-008)]">
+        <p className="text-[0.62rem] leading-[1.5] text-[var(--fg-faint)]">
+          XIV Venue Manager is not affiliated with SQUARE ENIX CO., LTD.
+        </p>
+      </div>
     </div>
   )
 
-  const MobileFooter = ({ onNavigate }: { onNavigate: () => void }) => (
+  const MobileBottom = ({ onNavigate }: { onNavigate: () => void }) => (
     <div className="p-3 border-t border-[var(--blue-008)] space-y-2">
       {userName && (
         <div className="pb-2 border-b border-[var(--blue-008)]">
@@ -231,39 +233,33 @@ export function VenueSidebar({
 
   return (
     <>
-      {/* Mobile FAB */}
-      <div className="lg:hidden fixed bottom-4 right-4 z-50">
-        <Sheet open={mobileOpen} onOpenChange={setMobileOpen}>
-          <SheetTrigger asChild>
-            <Button
-              size="lg"
-              className="rounded-full h-14 w-14 shadow-[var(--glow-fab)] border border-[var(--blue-035)]"
-              aria-label="Open navigation menu"
-            >
-              <Menu className="h-6 w-6" />
-            </Button>
-          </SheetTrigger>
-          <SheetContent
-            side="left"
-            className="w-[280px] p-0 flex flex-col border-r border-[var(--blue-015)]"
-            style={{ background: "rgba(7,11,20,0.97)" }}
-          >
-            <NavContent onNavigate={() => setMobileOpen(false)} />
-            <MobileFooter onNavigate={() => setMobileOpen(false)} />
-          </SheetContent>
-        </Sheet>
-      </div>
+      {/* Scrim overlay — mobile only when open */}
+      {open && (
+        <div
+          className="[@media(min-width:1081px)]:hidden fixed inset-0 bg-[rgba(7,11,20,0.6)] backdrop-blur-[2px] z-[39]"
+          onClick={close}
+          aria-hidden="true"
+        />
+      )}
 
-      {/* Desktop floating sidebar */}
+      {/* Sidebar */}
       <aside
-        className="hidden lg:flex lg:flex-col lg:w-[260px] fixed left-4 top-20 bottom-4 rounded-xl border border-[var(--blue-015)] overflow-hidden [&_*::-webkit-scrollbar]:hidden [scrollbar-width:none]"
-        style={{
-          background: "rgba(7,11,20,0.85)",
-          backdropFilter: "blur(16px)",
-          WebkitBackdropFilter: "blur(16px)",
-        }}
+        className={cn(
+          "fixed z-40 flex flex-col overflow-hidden",
+          "top-[80px] left-5 bottom-5 w-[260px]",
+          "rounded-xl border border-[rgba(255,255,255,0.06)]",
+          "xiv-sidebar-glass",
+          // Desktop: always visible; mobile: slides in/out
+          "[@media(min-width:1081px)]:translate-x-0",
+          open
+            ? "translate-x-0 transition-transform duration-[280ms] ease-[cubic-bezier(0.4,0,0.2,1)]"
+            : "[@media(max-width:1080px)]:-translate-x-[calc(100%+24px)] transition-transform duration-[280ms] ease-[cubic-bezier(0.4,0,0.2,1)]"
+        )}
       >
-        <NavContent />
+        <NavContent onNavigate={close} />
+        <div className="[@media(min-width:1081px)]:hidden">
+          <MobileBottom onNavigate={close} />
+        </div>
       </aside>
     </>
   )

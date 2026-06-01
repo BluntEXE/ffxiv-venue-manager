@@ -19,7 +19,6 @@ export async function VenueLayout({
 }: VenueLayoutProps) {
   const session = await getServerSession(authOptions)
 
-  // Fetch all user's venues for venue switcher
   const venues = await prisma.venue.findMany({
     where: {
       memberships: {
@@ -38,7 +37,7 @@ export async function VenueLayout({
   })
 
   return (
-    <div className="flex min-h-[calc(100vh-4rem)]">
+    <div className="relative min-h-screen">
       <VenueSidebar
         venueSlug={venueSlug}
         venueName={venueName}
@@ -47,7 +46,8 @@ export async function VenueLayout({
         userEmail={session?.user?.email || undefined}
         venues={venues}
       />
-      <main className="flex-1 lg:ml-[292px] p-4 transition-all duration-300">
+      {/* main: matches prototype .main { margin-left: calc(260px + 20px*2); padding: ... } */}
+      <main className="[@media(min-width:1081px)]:ml-[300px] px-[18px] [@media(min-width:1081px)]:px-[24px] pt-[24px] pb-[80px] [@media(min-width:1081px)]:pb-[80px] relative z-[1]">
         {children}
       </main>
     </div>

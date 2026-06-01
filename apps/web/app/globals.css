@@ -619,6 +619,23 @@
   border-bottom: 1px solid rgba(255, 255, 255, 0.04);
 }
 
+/* Sidebar glass — slightly different from navbar (no bottom border, has box-shadow) */
+.xiv-sidebar-glass {
+  background: rgba(7, 11, 20, 0.88);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4);
+}
+
+/* Sidebar group label */
+.grp-label {
+  font-size: 0.64rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.16em;
+  color: var(--fg-faint);
+}
+
 /* Status pills */
 .xiv-status-open {
   background: rgba(16, 185, 129, 0.12);

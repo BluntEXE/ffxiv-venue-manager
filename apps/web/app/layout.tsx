@@ -4,6 +4,7 @@ import "./globals.css"
 import { Navbar } from "@/components/navbar"
 import { SessionProvider } from "@/components/session-provider"
 import { VenueProvider } from "@/components/venue-context"
+import { SidebarProvider } from "@/components/sidebar-context"
 
 const inter = Inter({
   variable: "--font-inter",
@@ -57,6 +58,7 @@ export default function RootLayout({
         className={`${inter.variable} ${outfit.variable} ${cinzel.variable} ${jetbrainsMono.variable} antialiased font-sans`}
       >
         <SessionProvider>
+          <SidebarProvider>
           <VenueProvider>
             {/* Skip Navigation Link for Accessibility */}
             <a
@@ -70,6 +72,7 @@ export default function RootLayout({
               {children}
             </main>
           </VenueProvider>
+          </SidebarProvider>
         </SessionProvider>
       </body>
     </html>
