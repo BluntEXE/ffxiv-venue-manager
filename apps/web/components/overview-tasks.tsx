@@ -1,7 +1,7 @@
 "use client"
 
 import { useState } from "react"
-import { CheckCircle2, Circle } from "lucide-react"
+import { CheckCircle2, Circle, ListTodo } from "lucide-react"
 import { cn } from "@/lib/utils"
 
 interface Task {
@@ -25,9 +25,10 @@ export function OverviewTasks({ tasks, venueSlug }: { tasks: Task[]; venueSlug: 
 
   return (
     <div className="space-y-1">
-      <div className="flex items-center justify-between mb-3">
-        <span className="stat-label">Open tasks</span>
-        <span className="text-xs text-muted-foreground">{open.length} open</span>
+      <div className="flex items-center gap-2 -mx-5 -mt-5 px-5 py-3 mb-4 border-b border-[var(--blue-008)] font-semibold text-sm">
+        <ListTodo className="w-4 h-4 text-[var(--xiv-blue)]" />
+        Open tasks
+        <span className="ml-auto text-xs text-[var(--fg-faint)] font-normal">{open.length} open</span>
       </div>
       {tasks.map(t => {
         const checked = done.has(t.id)

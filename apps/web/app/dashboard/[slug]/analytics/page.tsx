@@ -382,20 +382,21 @@ export default function AnalyticsPage() {
         {/* Charts Grid */}
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
           {/* Net Profit/Loss Chart (Last 10 Events) */}
-          <Card className="lg:col-span-2 p-5">
-            <div className="flex items-center justify-between mb-4">
-              <div>
-                <p className="stat-label mb-0.5">Net Profit / Loss</p>
-                <p className="text-xs text-muted-foreground">Last 10 events · revenue minus payroll</p>
-              </div>
+          <Card className="lg:col-span-2 overflow-hidden">
+            <div className="flex items-center gap-2 px-5 py-3.5 border-b border-[var(--blue-008)] font-semibold text-sm">
+              <TrendingUp className="w-4 h-4 text-[var(--xiv-blue)]" />
+              Net Profit / Loss
+              <span className="ml-1 text-xs text-[var(--fg-faint)] font-normal">Revenue minus payroll</span>
               <button
                 onClick={exportToCSV}
-                className="flex items-center gap-2 px-3 py-1.5 text-xs rounded-lg transition-colors xiv-btn-shimmer"
-                style={{ background: "var(--xiv-blue)", color: "#070b14", fontWeight: 600 }}
+                className="ml-auto flex items-center gap-1.5 px-3 py-1 text-xs rounded-lg transition-colors xiv-btn-shimmer font-semibold"
+                style={{ background: "var(--xiv-blue)", color: "#070b14" }}
               >
-                <Download className="h-3.5 w-3.5" />
+                <Download className="h-3 w-3" />
                 Export CSV
               </button>
+            </div>
+            <div className="p-5">
             </div>
             <div className="h-[300px] w-full">
                 <ResponsiveContainer width="100%" height="100%" minWidth={0}>
@@ -466,11 +467,17 @@ export default function AnalyticsPage() {
                   </AreaChart>
                 </ResponsiveContainer>
             </div>
+          </div>
           </Card>
 
           {/* Patron Visit Trends */}
-          <Card className="p-5">
-            <p className="stat-label mb-0.5">Patron Visits</p>
+          <Card className="overflow-hidden">
+            <div className="flex items-center gap-2 px-5 py-3.5 border-b border-[var(--blue-008)] font-semibold text-sm">
+              <Users className="w-4 h-4 text-[var(--xiv-blue)]" />
+              Patron Visits
+              <span className="ml-auto text-xs text-[var(--fg-faint)] font-normal">Peak counts</span>
+            </div>
+            <div className="p-5">
             <p className="text-xs text-muted-foreground mb-4">Peak counts · last 7 events</p>
             <div className="h-[250px] w-full">
                 <ResponsiveContainer width="100%" height="100%" minWidth={0}>
@@ -507,12 +514,17 @@ export default function AnalyticsPage() {
                   </BarChart>
                 </ResponsiveContainer>
             </div>
+          </div>
           </Card>
 
           {/* Top Services by Revenue */}
-          <Card className="p-5">
-            <p className="stat-label mb-0.5">Top Services</p>
-            <p className="text-xs text-muted-foreground mb-4">Revenue by service type</p>
+          <Card className="overflow-hidden">
+            <div className="flex items-center gap-2 px-5 py-3.5 border-b border-[var(--blue-008)] font-semibold text-sm">
+              <svg className="w-4 h-4 text-[var(--xiv-blue)]" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg>
+              Top Services
+              <span className="ml-auto text-xs text-[var(--fg-faint)] font-normal">by revenue</span>
+            </div>
+            <div className="p-5">
             <div className="h-[280px]">
               <ResponsiveContainer width="100%" height="100%" minWidth={0}>
                 <PieChart>
@@ -543,6 +555,7 @@ export default function AnalyticsPage() {
                 </PieChart>
               </ResponsiveContainer>
             </div>
+            </div>
           </Card>
 
           {/* Average Traffic Flow - Full Width */}
@@ -551,9 +564,13 @@ export default function AnalyticsPage() {
           </div>
 
           {/* Detailed Financial Table - Full Width */}
-          <Card className="lg:col-span-2 p-5">
-            <p className="stat-label mb-0.5">Detailed Financial Breakdown</p>
-            <p className="text-xs text-muted-foreground mb-4">Revenue, payroll, and profit per event</p>
+          <Card className="lg:col-span-2 overflow-hidden">
+            <div className="flex items-center gap-2 px-5 py-3.5 border-b border-[var(--blue-008)] font-semibold text-sm">
+              <svg className="w-4 h-4 text-[var(--xiv-blue)]" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/></svg>
+              Detailed Financial Breakdown
+              <span className="ml-auto text-xs text-[var(--fg-faint)] font-normal">Revenue · payroll · profit per event</span>
+            </div>
+            <div className="p-5">
             <div>
               <div className="rounded-xl border border-[rgba(0,180,255,0.15)] overflow-hidden">
                 <Table>
@@ -631,6 +648,7 @@ export default function AnalyticsPage() {
                   </TableBody>
                 </Table>
               </div>
+            </div>
             </div>
           </Card>
         </div>

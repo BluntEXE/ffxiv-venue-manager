@@ -224,22 +224,24 @@ export function LiveDashboard({
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
 
         {/* Activity feed */}
-        <Card className="lg:col-span-2 p-5">
-          <div className="flex items-center justify-between mb-4">
-            <p className="stat-label">Live activity</p>
-            <div className="flex items-center gap-1.5">
+        <Card className="lg:col-span-2 overflow-hidden">
+          <div className="flex items-center gap-2 px-5 py-3.5 border-b border-[var(--blue-008)] font-semibold text-sm">
+            <Radio className="w-4 h-4 text-[var(--xiv-blue)]" />
+            Live activity
+            <div className="ml-auto flex items-center gap-1.5">
               {connected ? (
                 <>
-                  <span className="text-xs text-muted-foreground">Listening</span>
+                  <span className="text-xs text-muted-foreground font-normal">Listening</span>
                   <span className="xiv-listening-dot" />
                   <span className="xiv-listening-dot" />
                   <span className="xiv-listening-dot" />
                 </>
               ) : (
-                <span className="text-xs text-muted-foreground">Connecting...</span>
+                <span className="text-xs text-muted-foreground font-normal">Connecting…</span>
               )}
             </div>
           </div>
+          <div className="p-5">
 
           {activity.length === 0 ? (
             <div className="py-10 text-center space-y-3">
@@ -281,13 +283,14 @@ export function LiveDashboard({
         <div className="space-y-4">
 
           {/* In venue now */}
-          <Card className="p-5">
-            <div className="flex items-center justify-between mb-3">
-              <p className="stat-label">In venue now</p>
-              <span className="text-xs text-muted-foreground">{patronCount} patrons</span>
+          <Card className="overflow-hidden">
+            <div className="flex items-center gap-2 px-4 py-3 border-b border-[var(--blue-008)] font-semibold text-sm">
+              <Users className="w-4 h-4 text-[var(--xiv-blue)]" />
+              In venue now
+              <span className="ml-auto text-xs text-[var(--fg-faint)] font-normal">{patronCount} patrons</span>
             </div>
             {roster.length > 0 ? (
-              <div className="space-y-2 max-h-[180px] overflow-y-auto">
+              <div className="space-y-2 max-h-[180px] overflow-y-auto p-4">
                 {roster.slice(0, 10).map((p, i) => (
                   <div key={i} className="flex items-center justify-between text-sm">
                     <div className="flex items-center gap-2">
@@ -306,16 +309,18 @@ export function LiveDashboard({
                 )}
               </div>
             ) : (
-              <p className="text-sm text-muted-foreground">No patrons yet</p>
+              <p className="text-sm text-muted-foreground px-4 py-3">No patrons yet</p>
             )}
           </Card>
 
           {/* On shift */}
-          <Card className="p-5">
-            <div className="flex items-center justify-between mb-3">
-              <p className="stat-label">On shift</p>
-              <span className="text-xs text-muted-foreground">{onShiftStaff.length} clocked in</span>
+          <Card className="overflow-hidden">
+            <div className="flex items-center gap-2 px-4 py-3 border-b border-[var(--blue-008)] font-semibold text-sm">
+              <Clock className="w-4 h-4 text-[var(--xiv-blue)]" />
+              On shift
+              <span className="ml-auto text-xs text-[var(--fg-faint)] font-normal">{onShiftStaff.length} clocked in</span>
             </div>
+            <div className="p-4">
             {onShiftStaff.length > 0 ? (
               <div className="space-y-2">
                 {onShiftStaff.map((s, i) => (
@@ -331,6 +336,7 @@ export function LiveDashboard({
             ) : (
               <p className="text-sm text-muted-foreground">No staff clocked in</p>
             )}
+            </div>
           </Card>
 
           {/* Command hints */}

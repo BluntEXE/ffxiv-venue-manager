@@ -237,20 +237,21 @@ export default async function VenueDashboardPage({
         {canManage && (
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
             {/* Chart */}
-            <Card className="lg:col-span-2 p-5">
-              <div className="flex items-center justify-between mb-4">
-                <div>
-                  <p className="stat-label mb-0.5">Revenue</p>
-                  <p className="text-xs text-muted-foreground">Last {chartData.length} events</p>
-                </div>
-                <Link href={`/dashboard/${slug}/analytics`} className="text-xs text-[var(--xiv-blue)] hover:underline flex items-center gap-1">
-                  Full analytics <ChevronRight className="h-3 w-3" />
+            <Card className="lg:col-span-2 overflow-hidden">
+              <div className="flex items-center gap-2 px-5 py-3.5 border-b border-[var(--blue-008)] font-semibold text-sm">
+                <BarChart3 className="w-4 h-4 text-[var(--xiv-blue)]" />
+                Revenue
+                <span className="ml-1 text-xs text-[var(--fg-faint)] font-normal">last {chartData.length} events</span>
+                <Link href={`/dashboard/${slug}/analytics`} className="ml-auto text-xs text-[var(--xiv-blue)] hover:underline flex items-center gap-1 font-normal">
+                  Analytics <ChevronRight className="h-3 w-3" />
                 </Link>
               </div>
+              <div className="p-5">
               {chartData.length > 0
                 ? <OverviewRevenueChart data={chartData} />
                 : <p className="text-sm text-muted-foreground py-8 text-center">No event data yet</p>
               }
+              </div>
             </Card>
 
             {/* Next event — cinematic card */}
@@ -302,13 +303,15 @@ export default async function VenueDashboardPage({
         {canManage && (
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
             {/* Events table */}
-            <Card className="lg:col-span-2 p-5">
-              <div className="flex items-center justify-between mb-4">
-                <p className="stat-label">Recent events</p>
-                <Link href={`/dashboard/${slug}/events`} className="text-xs text-[var(--xiv-blue)] hover:underline flex items-center gap-1">
+            <Card className="lg:col-span-2 overflow-hidden">
+              <div className="flex items-center gap-2 px-5 py-3.5 border-b border-[var(--blue-008)] font-semibold text-sm">
+                <Calendar className="w-4 h-4 text-[var(--xiv-blue)]" />
+                Recent events
+                <Link href={`/dashboard/${slug}/events`} className="ml-auto text-xs text-[var(--xiv-blue)] hover:underline flex items-center gap-1 font-normal">
                   View all <ChevronRight className="h-3 w-3" />
                 </Link>
               </div>
+              <div className="p-5">
               <div className="space-y-0">
                 <div className="grid grid-cols-[1fr_auto_auto] gap-4 pb-2 border-b border-[var(--blue-008)]">
                   <span className="xiv-th">Event</span>
@@ -330,6 +333,7 @@ export default async function VenueDashboardPage({
                 )) : (
                   <p className="text-sm text-muted-foreground py-6 text-center">No events yet</p>
                 )}
+              </div>
               </div>
             </Card>
 
