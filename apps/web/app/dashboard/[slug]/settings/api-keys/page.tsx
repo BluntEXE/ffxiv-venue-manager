@@ -3,6 +3,8 @@
 import { useEffect, useMemo, useState } from "react"
 import Link from "next/link"
 import { Breadcrumb } from "@/components/breadcrumb"
+import { VenueLayoutClient } from "@/components/venue-layout-client"
+import { VenueEyebrow } from "@/components/venue-eyebrow"
 import { Button } from "@/components/ui/button"
 import {
   Card,
@@ -195,34 +197,33 @@ export default function ApiKeysPage({
 
   if (isLoading) {
     return (
-      <div className="container mx-auto p-4 md:p-8">
-        <p>Loading...</p>
-      </div>
+      <VenueLayoutClient slug={slug}>
+        <div className="p-4 md:p-6"><p className="text-muted-foreground text-sm">Loading…</p></div>
+      </VenueLayoutClient>
     )
   }
 
   if (notOwner) {
     return (
-      <div className="container mx-auto p-4 md:p-6 lg:p-8 max-w-4xl">
-        <Breadcrumb
-          items={[
+      <VenueLayoutClient slug={slug}>
+        <div className="p-4 md:p-6 max-w-4xl">
+          <Breadcrumb items={[
             { label: "Dashboard", href: "/dashboard" },
             { label: "Venue", href: `/dashboard/${slug}` },
             { label: "Settings", href: `/dashboard/${slug}/settings` },
             { label: "API Keys" },
-          ]}
-        />
-        <Alert variant="destructive" className="mt-6">
-          <AlertDescription>
-            Only active venue members can manage API keys for the Dalamud plugin.
-          </AlertDescription>
-        </Alert>
-      </div>
+          ]} />
+          <Alert variant="destructive" className="mt-6">
+            <AlertDescription>Only active venue members can manage API keys for the Dalamud plugin.</AlertDescription>
+          </Alert>
+        </div>
+      </VenueLayoutClient>
     )
   }
 
   return (
-    <div className="container mx-auto p-4 md:p-6 lg:p-8 max-w-4xl">
+    <VenueLayoutClient slug={slug}>
+    <div className="p-4 md:p-6 max-w-4xl">
       <Breadcrumb
         items={[
           { label: "Dashboard", href: "/dashboard" },
@@ -233,7 +234,8 @@ export default function ApiKeysPage({
       />
 
       <div className="mb-6 md:mb-8">
-        <h1 className="text-2xl md:text-3xl lg:text-4xl font-bold">
+        <VenueEyebrow slug={slug} />
+        <h1 className="font-cinzel text-2xl md:text-3xl font-bold tracking-[0.02em]">
           API Keys
         </h1>
         <p className="text-sm md:text-base text-muted-foreground mt-1 md:mt-2">
@@ -257,15 +259,12 @@ export default function ApiKeysPage({
       )}
 
       {/* Create New Key */}
-      <Card className="mb-6">
-        <CardHeader>
-          <CardTitle>Create New API Key</CardTitle>
-          <CardDescription>
-            Generates a key scoped to{" "}
-            <span className="font-medium">{currentVenue?.name}</span>. The full
-            key is shown only once - copy it immediately.
-          </CardDescription>
-        </CardHeader>
+      <Card className="mb-6 overflow-hidden">
+        <div className="flex items-center gap-2 px-5 py-3.5 border-b border-[var(--blue-008)] font-semibold text-sm">
+          <svg className="w-4 h-4 text-[var(--xiv-blue)]" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M21 2l-2 2m-7.61 7.61a5.5 5.5 0 1 1-7.778 7.778 5.5 5.5 0 0 1 7.777-7.777zm0 0L15.5 7.5m0 0l3 3L22 7l-3-3m-3.5 3.5L19 4"/></svg>
+          Create new API key
+          <span className="ml-auto text-xs text-[var(--fg-faint)] font-normal">Shown once — copy immediately</span>
+        </div>
         <CardContent>
           <div className="flex flex-col md:flex-row gap-3 md:gap-4 md:items-end">
             <div className="flex-1">
@@ -418,13 +417,12 @@ export default function ApiKeysPage({
       )}
 
       {/* Existing Keys */}
-      <Card>
-        <CardHeader>
-          <CardTitle>Active Keys</CardTitle>
-          <CardDescription>
-            Keys currently active for {currentVenue?.name}
-          </CardDescription>
-        </CardHeader>
+      <Card className="overflow-hidden">
+        <div className="flex items-center gap-2 px-5 py-3.5 border-b border-[var(--blue-008)] font-semibold text-sm">
+          <svg className="w-4 h-4 text-[var(--xiv-blue)]" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+          Active keys
+          <span className="ml-auto text-xs text-[var(--fg-faint)] font-normal">{venueKeys.length} key{venueKeys.length !== 1 ? "s" : ""}</span>
+        </div>
         <CardContent>
           {venueKeys.length === 0 ? (
             <p className="text-muted-foreground text-center py-8">
@@ -488,5 +486,6 @@ export default function ApiKeysPage({
         </Link>
       </div>
     </div>
+    </VenueLayoutClient>
   )
 }
