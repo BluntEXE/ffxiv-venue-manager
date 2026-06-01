@@ -4,6 +4,7 @@ import { useEffect, useState } from "react"
 import { useParams } from "next/navigation"
 import { VenueLayoutClient } from "@/components/venue-layout-client"
 import { Breadcrumb } from "@/components/breadcrumb"
+import { VenueEyebrow } from "@/components/venue-eyebrow"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
 import {
@@ -261,6 +262,7 @@ export default function AnalyticsPage() {
         />
 
         <div className="mb-6 md:mb-8">
+          <VenueEyebrow slug={slug} />
           <h1 className="font-cinzel text-2xl md:text-3xl font-bold tracking-[0.02em] mb-1">Analytics</h1>
           <p className="text-sm text-muted-foreground">Last 10 events · performance overview</p>
         </div>

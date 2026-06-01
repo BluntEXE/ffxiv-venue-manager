@@ -6,6 +6,7 @@ import { useParams, useRouter } from "next/navigation"
 import { Button } from "@/components/ui/button"
 import { VenueLayoutClient } from "@/components/venue-layout-client"
 import { Breadcrumb } from "@/components/breadcrumb"
+import { VenueEyebrow } from "@/components/venue-eyebrow"
 import {
   Card,
   CardContent,
@@ -440,6 +441,7 @@ export default function PayrollPage() {
         {/* Header */}
         <div className="flex flex-col sm:flex-row sm:justify-between sm:items-start gap-4">
           <div>
+            <VenueEyebrow slug={slug} />
             <h1 className="font-cinzel text-2xl md:text-3xl font-bold tracking-[0.02em]">Payroll</h1>
             <p className="text-sm md:text-base text-muted-foreground mt-1 md:mt-2">Manage staff compensation and payments</p>
           </div>

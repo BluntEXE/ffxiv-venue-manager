@@ -7,6 +7,7 @@ import { BarChart3, Zap, TrendingUp } from "lucide-react"
 import { StatReadout } from "@/components/ui/stat-readout"
 import { VenueLayoutClient } from "@/components/venue-layout-client"
 import { Breadcrumb } from "@/components/breadcrumb"
+import { VenueEyebrow } from "@/components/venue-eyebrow"
 import { SalesLogDialog } from "@/components/sales-log-dialog"
 import { TransactionsList } from "@/components/transactions-list"
 import { Alert, AlertDescription } from "@/components/ui/alert"
@@ -228,6 +229,7 @@ export default async function SalesPage({ params }: PageProps) {
         {/* Header */}
         <div className="flex flex-col sm:flex-row sm:justify-between sm:items-start gap-4 mb-6 md:mb-8">
           <div>
+            <VenueEyebrow slug={slug} />
             <h1 className="font-cinzel text-2xl md:text-3xl font-bold tracking-[0.02em]">Sales &amp; Transactions</h1>
             <p className="text-sm text-muted-foreground mt-1">Log sales and track revenue</p>
           </div>

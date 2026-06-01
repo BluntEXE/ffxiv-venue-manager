@@ -6,6 +6,7 @@ import Link from "next/link"
 import { Button } from "@/components/ui/button"
 import { VenueLayoutClient } from "@/components/venue-layout-client"
 import { Breadcrumb } from "@/components/breadcrumb"
+import { VenueEyebrow } from "@/components/venue-eyebrow"
 import { Label } from "@/components/ui/label"
 import { Input } from "@/components/ui/input"
 import { Checkbox } from "@/components/ui/checkbox"
@@ -217,6 +218,7 @@ export default function SettingsPage({
         {/* Header */}
         <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-4 mb-6 md:mb-8">
           <div>
+            <VenueEyebrow slug={slug} />
             <h1 className="font-cinzel text-2xl md:text-3xl font-bold tracking-[0.02em]">Settings</h1>
             <p className="text-sm text-muted-foreground mt-1">Manage your venue profile, integrations and permissions</p>
           </div>
