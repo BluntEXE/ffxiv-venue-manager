@@ -113,7 +113,7 @@ export function DiscoverClient({
       {featured && (
         <>
           <div className="section-label">
-            <span className="overline">Featured tonight</span>
+            <span className="sl-label">Featured tonight</span>
             <span className="ln" />
           </div>
           <FeaturedCard venue={featured} isAuthed={isAuthed} />
@@ -124,7 +124,7 @@ export function DiscoverClient({
       {rest.length > 0 && (
         <>
           <div className="section-label">
-            <span className="overline muted">All venues</span>
+            <span className="sl-label muted">All venues</span>
             <span className="ln" />
             <span className="count">
               {restOpen > 0 ? `${restOpen} open` : ""}{restOpen > 0 && restClosed > 0 ? " · " : ""}{restClosed > 0 ? `${restClosed} closed` : ""}

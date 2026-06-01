@@ -93,7 +93,7 @@ export function FollowingClient({
           {(tab === "open" || tab === "all") && open.length > 0 && (
             <>
               <div className="section-label">
-                <span className="overline">Open now</span>
+                <span className="sl-label">Open now</span>
                 <span className="ln" />
                 <span className="count">{open.length} of {followCount} open</span>
               </div>
@@ -107,7 +107,7 @@ export function FollowingClient({
           {tab === "all" && closed.length > 0 && (
             <>
               <div className="section-label">
-                <span className="overline muted">Closed</span>
+                <span className="sl-label muted">Closed</span>
                 <span className="ln" />
               </div>
               <div className="space-y-2">

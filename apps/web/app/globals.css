@@ -647,7 +647,7 @@
   gap: 12px;
   margin: 36px 0 18px;
 }
-.section-label .overline {
+.section-label .sl-label {
   font-size: 0.72rem;
   font-weight: 600;
   text-transform: uppercase;
@@ -655,7 +655,7 @@
   color: var(--xiv-blue);
   white-space: nowrap;
 }
-.section-label .overline.muted { color: var(--muted-foreground); }
+.section-label .sl-label.muted { color: var(--muted-foreground); }
 .section-label .ln { flex: 1; height: 1px; background: var(--blue-008); }
 .section-label .count { font-size: 0.78rem; color: var(--fg-faint); }
 

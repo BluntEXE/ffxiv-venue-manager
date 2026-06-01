@@ -2,6 +2,7 @@ import { getServerSession } from "next-auth"
 import { authOptions } from "@/lib/auth"
 import { prisma } from "@/lib/prisma"
 import { DiscoverClient, type DiscoverVenue } from "@/components/discover-client"
+import { ExploreLayout } from "@/components/explore-layout"
 
 export const revalidate = 60
 
@@ -74,6 +75,10 @@ export default async function DiscoverPage() {
     return 0
   })
 
-  return <DiscoverClient venues={cards} isAuthed={!!session?.user} totalCount={venues.length} />
+  return (
+    <ExploreLayout>
+      <DiscoverClient venues={cards} isAuthed={!!session?.user} totalCount={venues.length} />
+    </ExploreLayout>
+  )
 
 }

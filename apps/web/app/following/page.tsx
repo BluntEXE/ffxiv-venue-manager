@@ -3,6 +3,7 @@ import { authOptions } from "@/lib/auth"
 import { redirect } from "next/navigation"
 import { prisma } from "@/lib/prisma"
 import { FollowingClient } from "@/components/following-client"
+import { ExploreLayout } from "@/components/explore-layout"
 
 export const dynamic = "force-dynamic"
 
@@ -45,5 +46,9 @@ export default async function FollowingPage() {
     activeEvent: f.venue.events[0] ?? null,
   }))
 
-  return <FollowingClient venues={venues} followCount={follows.length} />
+  return (
+    <ExploreLayout>
+      <FollowingClient venues={venues} followCount={follows.length} />
+    </ExploreLayout>
+  )
 }
