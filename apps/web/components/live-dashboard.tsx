@@ -7,7 +7,7 @@ import { Card, CardContent } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { StatReadout } from "@/components/ui/stat-readout"
-import { Coins, UserPlus, UserMinus, Users, Clock, Pause, StopCircle, Terminal } from "lucide-react"
+import { Coins, UserPlus, UserMinus, Users, Clock, Pause, StopCircle, Terminal, Radio } from "lucide-react"
 import { formatDistanceToNowStrict } from "date-fns"
 
 function formatDuration(ms: number): string {
@@ -155,9 +155,11 @@ export function LiveDashboard({
     <div className="p-4 md:p-6 space-y-4">
 
       {/* Session bar */}
-      <div className="rounded-xl border border-[var(--blue-018)] overflow-hidden"
-        style={{ background: "linear-gradient(to right, rgba(0,180,255,0.06), rgba(7,11,20,0.8))" }}>
-        <div className="px-5 py-4 flex flex-col sm:flex-row sm:items-center gap-3">
+      <div className="rounded-xl border border-[var(--blue-018)] overflow-hidden relative">
+        {/* Starfield background */}
+        <div className="absolute inset-0 opacity-[0.18]" style={{ backgroundImage: "url('/starfield.png')", backgroundSize: "cover", backgroundPosition: "center" }} />
+        <div className="absolute inset-0" style={{ background: "linear-gradient(to right, rgba(0,180,255,0.06), rgba(7,11,20,0.85))" }} />
+        <div className="px-5 py-4 flex flex-col sm:flex-row sm:items-center gap-3 relative z-10">
           <div className="flex items-center gap-3 flex-1 min-w-0">
             <Badge variant={isUpcoming ? "status-soon" : "live"}>
               {isUpcoming ? "Starting Soon" : "Live Now"}
@@ -188,13 +190,16 @@ export function LiveDashboard({
       {/* Stat readouts */}
       <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3">
         <Card className="p-4">
-          <div className="flex items-start justify-between">
-            <StatReadout label="In venue now" value={patronCount} />
-            {connected && <span className="xiv-live-dot mt-1 shrink-0" />}
-          </div>
+          <StatReadout
+            label="In venue now"
+            value={patronCount}
+            icon={<Users />}
+            iconVariant={connected ? "success" : "blue"}
+            subtext={connected ? "Live" : undefined}
+          />
         </Card>
         <Card className="p-4">
-          <StatReadout label="New tonight" value={newTonight} />
+          <StatReadout label="New tonight" value={newTonight} icon={<UserPlus />} iconVariant="blue" />
         </Card>
         {showRevenue && (
           <Card className="p-4">
@@ -202,18 +207,16 @@ export function LiveDashboard({
               label="Sales tonight"
               value={`${revenue.toLocaleString()} gil`}
               subtext={revenueLabel}
+              icon={<Coins />}
+              iconVariant="success"
             />
           </Card>
         )}
         <Card className="p-4">
-          <StatReadout label="Transactions" value={saleCount} />
+          <StatReadout label="Transactions" value={saleCount} icon={<Radio />} iconVariant="blue" />
         </Card>
         <Card className="p-4">
-          <StatReadout
-            label="On shift"
-            value={onShiftStaff.length}
-            icon={<Clock className="h-3.5 w-3.5" />}
-          />
+          <StatReadout label="On shift" value={onShiftStaff.length} icon={<Clock />} iconVariant="warning" />
         </Card>
       </div>
 
@@ -331,25 +334,26 @@ export function LiveDashboard({
           </Card>
 
           {/* Command hints */}
-          <Card className="p-5">
-            <div className="flex items-center gap-2 mb-3">
-              <Terminal className="h-3.5 w-3.5 text-[var(--xiv-blue)]" />
-              <p className="stat-label">In-game commands</p>
+          <div className="rounded-xl border border-[var(--blue-018)] bg-card overflow-hidden">
+            <div className="flex items-center gap-2 px-4 py-3 border-b border-[var(--blue-008)] font-semibold text-sm">
+              <Terminal className="h-4 w-4 text-[var(--xiv-blue)]" />
+              In-game commands
             </div>
-            <div className="space-y-1.5 font-mono text-xs">
+            <p className="px-4 pt-3 pb-1 text-xs text-muted-foreground">Log directly from the Dalamud plugin chat.</p>
+            <div className="px-4 pb-4 pt-2 space-y-2">
               {[
                 ["/xvm sale <amount>", "Log a sale"],
                 ["/xvm start", "Start event"],
                 ["/xvm end", "End event"],
-                ["/xvm help", "Show commands"],
+                ["/xvm help", "Show all commands"],
               ].map(([cmd, desc]) => (
-                <div key={cmd} className="flex items-center justify-between gap-2">
-                  <span className="xiv-command">{cmd}</span>
-                  <span className="text-muted-foreground">{desc}</span>
+                <div key={cmd} className="flex items-center justify-between gap-2 font-mono text-xs bg-background rounded-lg px-3 py-2 border border-[var(--blue-012)]">
+                  <span className="text-[var(--xiv-blue)]">{cmd}</span>
+                  <span className="text-[var(--fg-faint)] font-sans">{desc}</span>
                 </div>
               ))}
             </div>
-          </Card>
+          </div>
 
         </div>
       </div>

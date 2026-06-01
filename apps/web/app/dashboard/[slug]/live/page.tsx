@@ -150,6 +150,12 @@ export default async function LivePage({
           ]}
         />
 
+        {/* Eyebrow */}
+        <div className="flex items-center gap-2 mb-4">
+          <span className="w-[7px] h-[7px] bg-[rgba(0,180,255,0.7)] rotate-45 shadow-[0_0_10px_rgba(0,180,255,0.5)] flex-shrink-0" />
+          <span className="text-[0.72rem] font-semibold uppercase tracking-[0.14em] text-[var(--xiv-blue)]">{venue.name} &middot; {venue.dataCenter} &middot; {venue.world}</span>
+        </div>
+
         {activeEvent ? (
           <LiveDashboard
             venueId={venue.id}
@@ -182,7 +188,7 @@ export default async function LivePage({
             }))}
           />
         ) : (
-          <div className="mt-8">
+          <div className="mt-2">
             <h1 className="font-cinzel text-2xl md:text-3xl font-bold tracking-[0.02em] mb-4">Live Mode</h1>
             <Card>
               <CardContent className="py-12 text-center">
