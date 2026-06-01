@@ -356,6 +356,30 @@
 /* Brand "XIV" text color — replaces inline style={{color}} */
 .text-xiv { color: var(--xiv-blue); }
 
+/* User chip pill — navbar avatar + name + chevron */
+.user-chip {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 4px 10px 4px 5px;
+  border-radius: 9999px;
+  border: 1px solid rgba(0,180,255,0.18);
+  background: rgba(0,180,255,0.05);
+  cursor: pointer;
+  transition: border-color 150ms, background 150ms;
+  outline: none;
+}
+.user-chip:hover { border-color: rgba(0,180,255,0.35); background: rgba(0,180,255,0.09); }
+.user-chip:focus-visible { outline: 2px solid var(--xiv-blue); outline-offset: 2px; }
+.user-chip-name {
+  font-size: 0.8125rem;
+  font-weight: 500;
+  max-width: 120px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
 /* Product preview session bar gradient */
 .pv-sess-bg { background: linear-gradient(180deg, rgba(0,180,255,0.05), var(--background)); }
 
@@ -661,7 +685,7 @@
 /* ── KPI grid — matches prototype .kpis auto-fit layout ── */
 .kpis {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+  grid-template-columns: repeat(auto-fit, minmax(190px, 1fr));
   gap: 14px;
 }
 

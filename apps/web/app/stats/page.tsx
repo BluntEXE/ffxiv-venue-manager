@@ -14,6 +14,7 @@ import {
   Coins,
   Sparkles,
   ArrowRight,
+  Radio,
 } from "lucide-react"
 import { getPublicStats, type PublicStats } from "@/lib/public-stats"
 

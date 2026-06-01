@@ -12,6 +12,7 @@ import {
 } from "@/components/ui/dropdown-menu"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { Button } from "@/components/ui/button"
+import { ChevronDown } from "lucide-react"
 
 interface UserMenuProps {
   user: {
@@ -33,12 +34,14 @@ export function UserMenu({ user }: UserMenuProps) {
   return (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
-        <Button variant="ghost" className="relative h-11 w-11 rounded-full" aria-label="Open user menu">
-          <Avatar>
+        <button className="user-chip" aria-label="Open user menu">
+          <Avatar className="h-7 w-7 flex-shrink-0">
             <AvatarImage src={user.image || undefined} alt={user.name || "User"} />
-            <AvatarFallback>{initials}</AvatarFallback>
+            <AvatarFallback className="text-xs">{initials}</AvatarFallback>
           </Avatar>
-        </Button>
+          <span className="user-chip-name">{user.name || "User"}</span>
+          <ChevronDown className="h-3.5 w-3.5 text-foreground/40 flex-shrink-0" />
+        </button>
       </DropdownMenuTrigger>
       <DropdownMenuContent align="end" className="w-56">
         <DropdownMenuLabel>

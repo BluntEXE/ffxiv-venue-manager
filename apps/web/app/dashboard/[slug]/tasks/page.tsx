@@ -406,7 +406,7 @@ export default function TasksPage({
                   {col.map((task) => (
                     <div
                       key={task.id}
-                      className={`rounded-lg border bg-background px-3 py-3 cursor-pointer transition-all hover:-translate-y-px hover:border-[var(--blue-035)] ${
+                      className={`rounded-lg border bg-background px-[13px] py-3 cursor-pointer transition-all hover:-translate-y-px hover:border-[var(--blue-035)] ${
                         key === "COMPLETED"
                           ? "border-[var(--blue-008)] opacity-70"
                           : "border-[var(--blue-012)]"

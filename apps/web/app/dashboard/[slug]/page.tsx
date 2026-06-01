@@ -182,10 +182,10 @@ export default async function VenueDashboardPage({
 
         {/* Live now banner */}
         {liveEvent && (
-          <div className="flex items-center justify-between gap-4 px-4 py-3 rounded-xl border border-[rgba(16,185,129,0.25)] bg-[rgba(16,185,129,0.07)]">
+          <div className="flex items-center justify-between gap-4 px-4 py-3 rounded-xl border border-[rgba(16,185,129,0.25)] bg-[rgba(16,185,129,0.07)] shadow-[0_0_20px_rgba(16,185,129,0.06)]">
             <div className="flex items-center gap-3">
               <span className="xiv-live-dot" />
-              <span className="text-sm font-semibold text-[var(--success-text)] uppercase tracking-wide">Live now</span>
+              <span className="text-[0.72rem] font-bold tracking-[0.12em] text-[var(--success-text)] uppercase">Live now</span>
               <span className="text-sm text-foreground/80 hidden sm:inline">{liveEvent.title} in progress</span>
             </div>
             <Button asChild variant="outline-blue" size="sm">

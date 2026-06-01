@@ -96,6 +96,17 @@ export default async function Home() {
       <section className="xiv-hero-bg overflow-hidden">
         <div className="container mx-auto px-4 pt-[120px] pb-[70px]">
           <div className="flex flex-col items-center text-center space-y-8">
+            {/* Crystal row + eyebrow — matching prototype mk-hero structure */}
+            <div className="flex flex-col items-center gap-3 xiv-fade-up">
+              <div className="flex items-center justify-center gap-3.5">
+                <span className="h-px w-16 bg-gradient-to-r from-transparent to-[var(--xiv-blue)]" />
+                <span className="w-[9px] h-[9px] bg-[rgba(0,180,255,0.7)] rotate-45 shadow-[0_0_12px_rgba(0,180,255,0.5)]" />
+                <span className="h-px w-16 bg-gradient-to-l from-transparent to-[var(--xiv-blue)]" />
+              </div>
+              <p className="text-[0.74rem] font-semibold uppercase tracking-[0.16em] text-[var(--xiv-blue)]">
+                For FFXIV roleplay venue hosts
+              </p>
+            </div>
             <h1 className="xiv-fade-up font-cinzel font-bold text-hero max-w-[16ch] leading-[1.08] tracking-[0.01em]">
               Venue management built for{" "}
               <span className="xiv-glow-text">FFXIV</span>

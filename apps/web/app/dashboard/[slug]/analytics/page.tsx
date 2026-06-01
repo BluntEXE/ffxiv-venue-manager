@@ -318,7 +318,7 @@ export default function AnalyticsPage() {
                     {totalRev >= 1000 ? `${(totalRev/1000).toFixed(1)}k` : totalRev.toLocaleString()}
                     <span className="text-[0.82rem] font-medium text-muted-foreground ml-1">gil</span>
                   </span>
-                  <button onClick={exportToCSV} className="ml-2 flex items-center gap-1 px-2.5 py-1 text-[0.72rem] rounded-lg xiv-btn-shimmer font-semibold" className="xiv-cta">
+                  <button onClick={exportToCSV} className="ml-2 flex items-center gap-1 px-2.5 py-1 text-[0.72rem] rounded-lg xiv-btn-shimmer font-semibold xiv-cta">
                     <Download className="h-3 w-3" /> CSV
                   </button>
                 </div>
@@ -673,9 +673,9 @@ export default function AnalyticsPage() {
               <h2 className="font-cinzel text-lg font-bold tracking-[0.02em]">Financial Overview</h2>
             </div>
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-              <Card className="p-4"><StatReadout label="Payroll expenses" value={`${Math.round(analyticsData.financial.totalPayroll).toLocaleString()} gil`} subtext={`${analyticsData.financial.payrollAsPercentOfRevenue.toFixed(1)}% of revenue`} icon={<DollarSign />} iconVariant="blue" /></Card>
-              <Card className="p-4"><StatReadout label="Net profit / loss" value={`${analyticsData.financial.netProfit >= 0 ? "+" : ""}${Math.round(analyticsData.financial.netProfit).toLocaleString()} gil`} subtext="revenue minus payroll" deltaDirection={analyticsData.financial.netProfit >= 0 ? "up" : "down"} icon={<TrendingUp />} iconVariant={analyticsData.financial.netProfit >= 0 ? "success" : "warning"} /></Card>
-              <Card className="p-4"><StatReadout label="Profit margin" value={`${analyticsData.financial.profitMargin.toFixed(1)}%`} subtext={analyticsData.financial.profitMargin >= 50 ? "Healthy" : analyticsData.financial.profitMargin >= 25 ? "Moderate" : "Low"} icon={<Target />} iconVariant="blue" /></Card>
+              <Card className="px-[18px] py-4"><StatReadout label="Payroll expenses" value={`${Math.round(analyticsData.financial.totalPayroll).toLocaleString()} gil`} subtext={`${analyticsData.financial.payrollAsPercentOfRevenue.toFixed(1)}% of revenue`} icon={<DollarSign />} iconVariant="blue" /></Card>
+              <Card className="px-[18px] py-4"><StatReadout label="Net profit / loss" value={`${analyticsData.financial.netProfit >= 0 ? "+" : ""}${Math.round(analyticsData.financial.netProfit).toLocaleString()} gil`} subtext="revenue minus payroll" deltaDirection={analyticsData.financial.netProfit >= 0 ? "up" : "down"} icon={<TrendingUp />} iconVariant={analyticsData.financial.netProfit >= 0 ? "success" : "warning"} /></Card>
+              <Card className="px-[18px] py-4"><StatReadout label="Profit margin" value={`${analyticsData.financial.profitMargin.toFixed(1)}%`} subtext={analyticsData.financial.profitMargin >= 50 ? "Healthy" : analyticsData.financial.profitMargin >= 25 ? "Moderate" : "Low"} icon={<Target />} iconVariant="blue" /></Card>
             </div>
           </div>
         )}
@@ -688,7 +688,7 @@ export default function AnalyticsPage() {
               <h2 className="font-cinzel text-lg font-bold tracking-[0.02em]">Followers</h2>
             </div>
             <div className="kpis">
-              <Card className="p-4"><StatReadout label="Total followers" value={analyticsData.followers.total} subtext="app users following" icon={<Users />} iconVariant="blue" /></Card>
+              <Card className="px-[18px] py-4"><StatReadout label="Total followers" value={analyticsData.followers.total} subtext="app users following" icon={<Users />} iconVariant="blue" /></Card>
               {Object.entries(analyticsData.followers.byMonth).map(([month, count]) => (
                 <Card key={month} className="p-4">
                   <StatReadout label={new Date(month + '-01').toLocaleDateString('en-GB', { month: 'short', year: 'numeric' })} value={`+${count as number}`} subtext="new followers" />

@@ -27,7 +27,7 @@ export function NavbarClient({ session, venues }: NavbarClientProps) {
 
   return (
     <nav className="sticky top-0 z-50 w-full xiv-nav xiv-glass relative">
-      <div className="container mx-auto px-6 h-14 flex items-center justify-between gap-6">
+      <div className="container mx-auto px-6 h-[60px] flex items-center justify-between gap-6">
         {/* Logo */}
         <Link href="/" className="flex items-center gap-2.5 md:gap-3 group">
           <Image

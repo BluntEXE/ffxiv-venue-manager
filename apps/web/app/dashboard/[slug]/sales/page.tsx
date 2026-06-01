@@ -229,9 +229,9 @@ export default async function SalesPage({ params }: PageProps) {
 
         {/* KPIs */}
         <div className="grid grid-cols-2 md:grid-cols-3 gap-4 mb-6">
-          <Card className="p-4"><StatReadout label="Total revenue" value={`${totalRevenue.toLocaleString()} gil`} subtext={`${transactions.length} transactions`} icon={<BarChart3 />} iconVariant="blue" /></Card>
-          <Card className="p-4"><StatReadout label="Today's revenue" value={`${todayRevenue.toLocaleString()} gil`} subtext={`${todayTransactions.length} today`} deltaDirection="up" icon={<Zap />} iconVariant="success" /></Card>
-          <Card className="p-4"><StatReadout label="Average sale" value={`${transactions.length > 0 ? Math.round(totalRevenue / transactions.length).toLocaleString() : 0} gil`} subtext="Per transaction" icon={<TrendingUp />} iconVariant="blue" /></Card>
+          <Card className="px-[18px] py-4"><StatReadout label="Total revenue" value={`${totalRevenue.toLocaleString()} gil`} subtext={`${transactions.length} transactions`} icon={<BarChart3 />} iconVariant="blue" /></Card>
+          <Card className="px-[18px] py-4"><StatReadout label="Today's revenue" value={`${todayRevenue.toLocaleString()} gil`} subtext={`${todayTransactions.length} today`} deltaDirection="up" icon={<Zap />} iconVariant="success" /></Card>
+          <Card className="px-[18px] py-4"><StatReadout label="Average sale" value={`${transactions.length > 0 ? Math.round(totalRevenue / transactions.length).toLocaleString() : 0} gil`} subtext="Per transaction" icon={<TrendingUp />} iconVariant="blue" /></Card>
         </div>
 
         {/* 2-col body */}

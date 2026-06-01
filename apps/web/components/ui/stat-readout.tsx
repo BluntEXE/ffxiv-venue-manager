@@ -1,5 +1,5 @@
 import * as React from "react"
-import { TrendingUp, TrendingDown, Minus } from "lucide-react"
+import { ArrowUp, ArrowDown, Minus } from "lucide-react"
 import { cn } from "@/lib/utils"
 
 type IconVariant = "blue" | "success" | "warning" | "default"
@@ -33,8 +33,8 @@ function StatReadout({
   className,
 }: StatReadoutProps) {
   const DeltaIcon =
-    deltaDirection === "up" ? TrendingUp :
-    deltaDirection === "down" ? TrendingDown :
+    deltaDirection === "up" ? ArrowUp :
+    deltaDirection === "down" ? ArrowDown :
     Minus
 
   const deltaColor =
@@ -47,14 +47,14 @@ function StatReadout({
       {icon && (
         <div className="mb-1">
           <span className={cn(
-            "w-8 h-8 rounded-lg flex items-center justify-center [&>svg]:w-4 [&>svg]:h-4",
+            "w-[30px] h-[30px] rounded-[calc(0.75rem-4px)] flex items-center justify-center [&>svg]:w-4 [&>svg]:h-4",
             iconBadgeClass[iconVariant]
           )}>
             {icon}
           </span>
         </div>
       )}
-      <span className="text-[0.64rem] font-semibold uppercase tracking-[0.12em] text-[var(--fg-faint)]">{label}</span>
+      <span className="text-[0.64rem] font-semibold uppercase tracking-[0.12em] text-[var(--fg-faint)] mt-[14px] block">{label}</span>
       <div className="font-[var(--font-heading)] font-bold text-[1.7rem] leading-none mt-1">
         {value}
       </div>

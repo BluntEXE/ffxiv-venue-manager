@@ -837,13 +837,13 @@ export default function PayrollPage() {
         {/* Summary Cards */}
         {/* KPIs — matches prototype: Period payout / Pending / Tips pooled / Paid */}
         <div className="kpis">
-          <Card className="p-4"><StatReadout label="Period payout" value={`${Math.round(unpaidTotal + paidTotal).toLocaleString()} gil`} subtext={`${payrollEntries.length} staff`}
+          <Card className="px-[18px] py-4"><StatReadout label="Period payout" value={`${Math.round(unpaidTotal + paidTotal).toLocaleString()} gil`} subtext={`${payrollEntries.length} staff`}
             icon={<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><rect x="2" y="6" width="20" height="12" rx="2"/><circle cx="12" cy="12" r="2"/><path d="M6 12h.01M18 12h.01"/></svg>} iconVariant="blue" /></Card>
-          <Card className="p-4"><StatReadout label="Pending" value={payrollEntries.filter(e => !e.isPaid).length} subtext="awaiting run" deltaDirection="down"
+          <Card className="px-[18px] py-4"><StatReadout label="Pending" value={payrollEntries.filter(e => !e.isPaid).length} subtext="awaiting run" deltaDirection="down"
             icon={<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M5 2v20M19 2v20M12 2v4M12 18v4M5 12h7M12 12h7M5 2h14M5 22h14"/></svg>} iconVariant="warning" /></Card>
-          <Card className="p-4"><StatReadout label="Tips pooled" value={tipsTotal > 0 ? `${tipsTotal.toLocaleString()} gil` : "—"} subtext="split by hours"
+          <Card className="px-[18px] py-4"><StatReadout label="Tips pooled" value={tipsTotal > 0 ? `${tipsTotal.toLocaleString()} gil` : "—"} subtext="split by hours"
             icon={<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg>} iconVariant="warning" /></Card>
-          <Card className="p-4"><StatReadout label="Paid" value={payrollEntries.filter(e => e.isPaid).length} subtext={`${Math.round(paidTotal).toLocaleString()} gil`} deltaDirection="up"
+          <Card className="px-[18px] py-4"><StatReadout label="Paid" value={payrollEntries.filter(e => e.isPaid).length} subtext={`${Math.round(paidTotal).toLocaleString()} gil`} deltaDirection="up"
             icon={<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>} iconVariant="success" /></Card>
         </div>
 
