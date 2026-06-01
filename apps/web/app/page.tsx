@@ -237,123 +237,156 @@ export default async function Home() {
       </section>
 
       {/* Features Grid */}
-      <section id="features" className="container mx-auto px-4 py-16 md:py-24">
-        <div className="text-center mb-16">
+      {/* Features — 3x2 feat-card grid matching prototype */}
+      <section id="features" className="container mx-auto px-4 py-20 md:py-24">
+        <div className="text-center mb-14">
           <div className="xiv-divider">
             <svg width="12" height="12" viewBox="0 0 12 12" fill="none" aria-hidden="true"><rect x="6" y="0" width="8.485" height="8.485" transform="rotate(45 6 0)" fill="rgba(0,180,255,0.7)"/></svg>
           </div>
-          <h2 className="font-cinzel text-3xl md:text-4xl font-bold tracking-wide">
-            Tools built for FFXIV venues
+          <h2 className="font-cinzel text-3xl md:text-4xl font-bold tracking-wide mt-4">
+            Everything your venue needs
           </h2>
+          <p className="text-muted-foreground mt-4 max-w-[52ch] mx-auto leading-relaxed">
+            Replace the tangle of spreadsheets, Discord bots and calendars with one platform made for FFXIV roleplay venues.
+          </p>
         </div>
 
-        {/* Editorial feature rows — numbered, full-width, premium */}
-        <div className="max-w-4xl mx-auto">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-[18px]">
+          {[
+            {
+              icon: <><path d="M15 3h4a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-4"/><polyline points="10 17 15 12 10 7"/><line x1="15" y1="12" x2="3" y2="12"/></>,
+              color: "em",
+              title: "Live patron tracking",
+              desc: "See who's in your venue in real time — arrivals, departures and headcount stream in live as the night unfolds.",
+            },
+            {
+              icon: <><rect x="6" y="2" width="12" height="20" rx="2"/><line x1="12" y1="18" x2="12" y2="18"/></>,
+              color: "",
+              title: "Dalamud plugin sync",
+              desc: "Log sales and clock shifts without leaving the game. /xvm sale 500 syncs to your dashboard instantly.",
+            },
+            {
+              icon: <><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></>,
+              color: "",
+              title: "Partake.gg events",
+              desc: "Import and publish events to the community calendar, and build /shout adverts straight from them.",
+            },
+            {
+              icon: <><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></>,
+              color: "",
+              title: "Staff & shifts",
+              desc: "Schedule shifts, track clock-ins and keep your hosts, bartenders and DJs organised in one roster.",
+            },
+            {
+              icon: <><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></>,
+              color: "",
+              title: "Sales & payroll",
+              desc: "Tally gil, pool tips and run payroll by the hour — every sale tied to the staff member who made it.",
+            },
+            {
+              icon: <><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></>,
+              color: "pink",
+              title: "Free & community-built",
+              desc: "Made by venue owners, for venue owners. No paid tiers, no upsells — just a tool the community keeps alive.",
+            },
+          ].map(({ icon, color, title, desc }) => (
+            <div
+              key={title}
+              className="rounded-xl border border-[var(--blue-018)] bg-card p-6 transition-all duration-[250ms] hover:border-[rgba(0,180,255,0.45)] hover:shadow-[0_0_20px_rgba(0,180,255,0.07),inset_0_1px_0_rgba(0,180,255,0.12)] hover:-translate-y-0.5 xiv-scroll-reveal"
+            >
+              <div className={`w-[52px] h-[52px] rounded-xl flex items-center justify-center mb-[18px] ${
+                color === "em" ? "bg-[var(--success-soft)] border border-[rgba(16,185,129,0.25)] text-[var(--success-text)]"
+                : color === "pink" ? "bg-[rgba(243,139,168,0.10)] border border-[rgba(243,139,168,0.25)] text-[var(--support-pink)]"
+                : "bg-[var(--blue-010)] border border-[var(--blue-018)] text-[var(--xiv-blue)]"
+              }`}>
+                <svg className="w-6 h-6" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">{icon}</svg>
+              </div>
+              <h3 className="font-[var(--font-heading)] font-semibold text-[1.12rem] mb-2">{title}</h3>
+              <p className="text-[0.9rem] text-muted-foreground leading-[1.55]">{desc}</p>
+            </div>
+          ))}
+        </div>
+      </section>
 
-          <div className="xiv-feature-row xiv-scroll-reveal">
-            <span className="xiv-feature-num" aria-hidden="true">01</span>
-            <div className="flex flex-col sm:flex-row gap-6">
-              <div className="flex-1">
-                <div className="flex items-center gap-3 mb-3">
-                  <IconBadge><Calendar className="h-6 w-6" aria-hidden="true" /></IconBadge>
-                  <h3 className="font-cinzel font-bold text-xl tracking-wide">Event Management</h3>
+      {/* How it works — two halves + steps matching prototype */}
+      <section id="how" className="border-y border-[var(--blue-008)] bg-[#060b16] py-20 md:py-24">
+        <div className="container mx-auto px-4">
+          <div className="text-center mb-14">
+            <div className="flex items-center justify-center gap-3 mb-5">
+              <div className="h-px w-14 bg-gradient-to-r from-transparent to-[var(--xiv-blue)]" />
+              <div className="w-2 h-2 rotate-45 bg-[rgba(0,180,255,0.7)] shadow-[0_0_12px_rgba(0,180,255,0.5)]" />
+              <div className="h-px w-14 bg-gradient-to-l from-transparent to-[var(--xiv-blue)]" />
+            </div>
+            <h2 className="font-cinzel text-3xl md:text-4xl font-bold tracking-wide">
+              Two halves that sync in real time
+            </h2>
+            <p className="text-muted-foreground mt-4 max-w-[52ch] mx-auto leading-relaxed">
+              The web dashboard and the in-game plugin talk to each other constantly, so what happens in Eorzea shows up on your screen.
+            </p>
+          </div>
+
+          {/* Halves */}
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-[18px] mb-10">
+            {[
+              {
+                iconPath: "M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z M9 22V12h6v10",
+                title: "Web dashboard",
+                sub: "Next.js · any browser",
+                items: ["Plan events, manage staff & shifts", "Live mode: watch the room in real time", "Sales, tips, payroll & patron history", "Analytics on your busiest nights"],
+              },
+              {
+                iconPath: "M9 3H5a2 2 0 0 0-2 2v4m6-6h10a2 2 0 0 1 2 2v4M9 3v11m0 0h10m-10 0H5m14 0v4a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2v-4m14 0H5",
+                title: "Dalamud plugin",
+                sub: "Runs inside FFXIV",
+                items: ["Captures patrons as they enter & leave", "Log a sale with /xvm sale 500", "Clock in and out of shifts in-game", "Everything syncs to the dashboard live"],
+              },
+            ].map(({ iconPath, title, sub, items }) => (
+              <div key={title} className="rounded-xl border border-[var(--blue-018)] bg-card p-7">
+                <div className="flex items-center gap-3 mb-4">
+                  <div className="w-11 h-11 rounded-lg bg-[var(--blue-010)] border border-[var(--blue-018)] flex items-center justify-center text-[var(--xiv-blue)] flex-shrink-0">
+                    <svg className="w-5 h-5" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d={iconPath}/></svg>
+                  </div>
+                  <div>
+                    <p className="font-[var(--font-heading)] font-semibold text-[1.15rem]">{title}</p>
+                    <p className="text-[0.78rem] text-[var(--fg-faint)]">{sub}</p>
+                  </div>
                 </div>
-                <p className="text-muted-foreground mb-4 leading-relaxed">Full-featured scheduling: draft, publish, run. Revenue and attendance tracked per event with Discord announcements on autopilot.</p>
-                <ul className="grid grid-cols-1 sm:grid-cols-2 gap-x-6 gap-y-2 text-sm text-muted-foreground">
-                  <FeatureCheck>Recurring templates</FeatureCheck>
-                  <FeatureCheck>Partake.gg auto-sync</FeatureCheck>
-                  <FeatureCheck>Draft / Published / Active states</FeatureCheck>
-                  <FeatureCheck>Discord webhooks</FeatureCheck>
+                <ul className="flex flex-col gap-[11px]">
+                  {items.map(item => (
+                    <li key={item} className="flex items-start gap-2.5 text-[0.92rem] text-[var(--fg-subtle)] leading-[1.5]">
+                      <svg className="w-[17px] h-[17px] text-[var(--xiv-blue)] flex-shrink-0 mt-0.5" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><polyline points="20 6 9 17 4 12"/></svg>
+                      {item.includes("/xvm") ? (
+                        <span>Log a sale with <code className="font-mono text-[0.82em] text-[var(--xiv-blue)] bg-[var(--blue-010)] px-1.5 py-0.5 rounded">/xvm sale 500</code></span>
+                      ) : item}
+                    </li>
+                  ))}
                 </ul>
               </div>
-            </div>
+            ))}
           </div>
 
-          <div className="xiv-feature-row xiv-scroll-reveal">
-            <span className="xiv-feature-num" aria-hidden="true">02</span>
-            <div className="flex-1">
-              <div className="flex items-center gap-3 mb-3">
-                <IconBadge tone="emerald"><Radio className="h-6 w-6" aria-hidden="true" /></IconBadge>
-                <h3 className="font-cinzel font-bold text-xl tracking-wide">Live Mode</h3>
+          {/* Sync note */}
+          <p className="text-center text-[0.92rem] text-muted-foreground flex items-center justify-center gap-2 mb-12">
+            <svg className="w-4 h-4 text-[var(--success-text)]" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M23 4v6h-6"/><path d="M1 20v-6h6"/><path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10"/><path d="M1 14l4.64 4.36A9 9 0 0 0 20.49 15"/></svg>
+            Changes sync both ways, instantly.
+          </p>
+
+          {/* Steps */}
+          <div className="flex flex-col gap-1 max-w-[760px] mx-auto">
+            {[
+              { n: "01", title: "Sign in with Discord", desc: "Create your venue in 30 seconds — no forms, no credit card. Your Discord account is all you need." },
+              { n: "02", title: "Install the Dalamud plugin", desc: "Add the plugin from inside FFXIV to start capturing patrons and logging sales with slash commands." },
+              { n: "03", title: "Run your venue from the dashboard", desc: "Open Live Mode on event night and watch sales, patrons and shifts roll in — then manage it all from one place." },
+            ].map(({ n, title, desc }) => (
+              <div key={n} className="grid grid-cols-[5rem_1fr] gap-[22px] py-[22px] border-t border-[var(--blue-008)] items-start">
+                <div className="font-cinzel font-bold text-[2.6rem] text-[rgba(0,180,255,0.2)] leading-none">{n}</div>
+                <div>
+                  <p className="font-[var(--font-heading)] font-semibold text-[1.1rem] mb-1.5">{title}</p>
+                  <p className="text-[0.92rem] text-muted-foreground leading-[1.55]">{desc}</p>
+                </div>
               </div>
-              <p className="text-muted-foreground mb-4 leading-relaxed">A real-time command centre during your open events. Patron count, running gil total, and every sale pushed live via server-sent events.</p>
-              <ul className="grid grid-cols-1 sm:grid-cols-2 gap-x-6 gap-y-2 text-sm text-muted-foreground">
-                <FeatureCheck>Live patron count and sales</FeatureCheck>
-                <FeatureCheck>Running revenue total</FeatureCheck>
-                <FeatureCheck>Activity feed via SSE</FeatureCheck>
-                <FeatureCheck>No refresh needed</FeatureCheck>
-              </ul>
-            </div>
+            ))}
           </div>
-
-          <div className="xiv-feature-row xiv-scroll-reveal">
-            <span className="xiv-feature-num" aria-hidden="true">03</span>
-            <div className="flex-1">
-              <div className="flex items-center gap-3 mb-3">
-                <IconBadge><Users className="h-6 w-6" aria-hidden="true" /></IconBadge>
-                <h3 className="font-cinzel font-bold text-xl tracking-wide">Staff Management</h3>
-              </div>
-              <p className="text-muted-foreground mb-4 leading-relaxed">Roles, permissions, and onboarding built for venue teams of any size. Control what each person can see and do.</p>
-              <ul className="grid grid-cols-1 sm:grid-cols-2 gap-x-6 gap-y-2 text-sm text-muted-foreground">
-                <FeatureCheck>Owner, Manager, Staff roles</FeatureCheck>
-                <FeatureCheck>Custom roles (DJ, Bartender…)</FeatureCheck>
-                <FeatureCheck>Invite links</FeatureCheck>
-                <FeatureCheck>Granular visibility controls</FeatureCheck>
-              </ul>
-            </div>
-          </div>
-
-          <div className="xiv-feature-row xiv-scroll-reveal">
-            <span className="xiv-feature-num" aria-hidden="true">04</span>
-            <div className="flex-1">
-              <div className="flex items-center gap-3 mb-3">
-                <IconBadge><Coins className="h-6 w-6" aria-hidden="true" /></IconBadge>
-                <h3 className="font-cinzel font-bold text-xl tracking-wide">Sales &amp; Timeline</h3>
-              </div>
-              <p className="text-muted-foreground mb-4 leading-relaxed">Every gil accounted for. Log from in-game with a slash command or on the web — it lands in the timeline in real time.</p>
-              <ul className="grid grid-cols-1 sm:grid-cols-2 gap-x-6 gap-y-2 text-sm text-muted-foreground">
-                <FeatureCheck>Log in-game or on the web</FeatureCheck>
-                <FeatureCheck>Staff sales attribution</FeatureCheck>
-                <FeatureCheck>Live timeline feed</FeatureCheck>
-                <FeatureCheck>Filter by type</FeatureCheck>
-              </ul>
-            </div>
-          </div>
-
-          <div className="xiv-feature-row xiv-scroll-reveal">
-            <span className="xiv-feature-num" aria-hidden="true">05</span>
-            <div className="flex-1">
-              <div className="flex items-center gap-3 mb-3">
-                <IconBadge tone="emerald"><Clock className="h-6 w-6" aria-hidden="true" /></IconBadge>
-                <h3 className="font-cinzel font-bold text-xl tracking-wide">Shift Scheduling</h3>
-              </div>
-              <p className="text-muted-foreground mb-4 leading-relaxed">Assign shifts before the event, then staff clock in and out without leaving FFXIV. Hours are tracked automatically.</p>
-              <ul className="grid grid-cols-1 sm:grid-cols-2 gap-x-6 gap-y-2 text-sm text-muted-foreground">
-                <FeatureCheck>Create and assign shifts</FeatureCheck>
-                <FeatureCheck>In-game clock in/out</FeatureCheck>
-                <FeatureCheck>FFXIV Server Time display</FeatureCheck>
-                <FeatureCheck>Hours summary per staff</FeatureCheck>
-              </ul>
-            </div>
-          </div>
-
-          <div className="xiv-feature-row xiv-scroll-reveal">
-            <span className="xiv-feature-num" aria-hidden="true">06</span>
-            <div className="flex-1">
-              <div className="flex items-center gap-3 mb-3">
-                <IconBadge><BarChart3 className="h-6 w-6" aria-hidden="true" /></IconBadge>
-                <h3 className="font-cinzel font-bold text-xl tracking-wide">Analytics</h3>
-              </div>
-              <p className="text-muted-foreground mb-4 leading-relaxed">Visualise your venue&apos;s performance over time. Revenue trends, patron visit heatmaps, and per-event breakdowns.</p>
-              <ul className="grid grid-cols-1 sm:grid-cols-2 gap-x-6 gap-y-2 text-sm text-muted-foreground">
-                <FeatureCheck>Revenue trends</FeatureCheck>
-                <FeatureCheck>Patron visit tracking</FeatureCheck>
-                <FeatureCheck>Per-event performance</FeatureCheck>
-                <FeatureCheck>Export-ready data</FeatureCheck>
-              </ul>
-            </div>
-          </div>
-
         </div>
       </section>
 
