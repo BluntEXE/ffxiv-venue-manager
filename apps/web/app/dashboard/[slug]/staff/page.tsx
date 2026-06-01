@@ -77,11 +77,30 @@ export default async function StaffPage({
 
   const canManageStaff = ["OWNER", "MANAGER"].includes(userRole)
 
-  // Active shifts for on-shift status
-  const activeShifts = await prisma.shift.findMany({
-    where: { venueId: venue.id, status: "ACTIVE" },
-    select: { membershipId: true },
-  })
+  const weekAgo = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000)
+
+  // Active shifts + weekly stats
+  const [activeShifts, weeklyShifts, weeklyTips] = await Promise.all([
+    prisma.shift.findMany({
+      where: { venueId: venue.id, status: "ACTIVE" },
+      select: { membershipId: true },
+    }),
+    prisma.shift.findMany({
+      where: { venueId: venue.id, scheduledStart: { gte: weekAgo }, status: { in: ["COMPLETED", "ACTIVE"] } },
+      select: { scheduledStart: true, scheduledEnd: true },
+    }),
+    prisma.transaction.aggregate({
+      where: { venueId: venue.id, createdAt: { gte: weekAgo }, type: "TIP" },
+      _sum: { amount: true },
+    }),
+  ])
+
+  const hoursThisWeek = weeklyShifts.reduce((sum, s) => {
+    if (!s.scheduledEnd) return sum
+    return sum + (s.scheduledEnd.getTime() - s.scheduledStart.getTime()) / (1000 * 60 * 60)
+  }, 0)
+  const tipsThisWeek = Number(weeklyTips._sum.amount ?? 0)
+
   const onShiftIds = new Set(activeShifts.map(s => s.membershipId))
 
   return (
@@ -128,8 +147,8 @@ export default async function StaffPage({
               {activeShifts.length > 0 && <span className="xiv-live-dot mt-1 shrink-0" />}
             </div>
           </Card>
-          <Card className="px-[18px] py-4"><StatReadout label="Managers" value={managers.length} subtext="Manager role" icon={<Shield />} iconVariant="success" /></Card>
-          <Card className="px-[18px] py-4"><StatReadout label="Staff members" value={regularStaff.length} subtext="Staff role" icon={<Users />} iconVariant="blue" /></Card>
+          <Card className="px-[18px] py-4"><StatReadout label="Hours this week" value={Math.round(hoursThisWeek)} subtext="h" icon={<Shield />} iconVariant="blue" /></Card>
+          <Card className="px-[18px] py-4"><StatReadout label="Tips pool (wk)" value={tipsThisWeek > 0 ? `${Math.round(tipsThisWeek / 1000)}k` : "0"} subtext="gil" icon={<Users />} iconVariant="warning" /></Card>
         </div>
 
         {/* Staff table */}

@@ -995,3 +995,21 @@
   grid-template-columns: repeat(auto-fill, minmax(264px, 1fr));
   gap: 16px;
 }
+
+/* ── Table avatar + cell utilities from prototype ── */
+.av-sm {
+  width: 32px;
+  height: 32px;
+  border-radius: 999px;
+  display: grid;
+  place-items: center;
+  font-size: 0.74rem;
+  font-weight: 600;
+  color: var(--xiv-navy);
+  flex-shrink: 0;
+  background: linear-gradient(135deg, #00b4ff, #0072b4);
+}
+.av-sm.staff { background: linear-gradient(135deg, #34d399, #10b981); }
+.dtable .cellrow { display: flex; align-items: center; gap: 11px; }
+.dtable .t-strong { font-family: var(--font-outfit), system-ui, sans-serif; font-weight: 600; }
+.status.paid { background: var(--success-soft); color: var(--success-text); border: 1px solid rgba(16,185,129,0.25); }
