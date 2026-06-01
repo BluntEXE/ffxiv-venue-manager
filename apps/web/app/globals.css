@@ -1013,3 +1013,59 @@
 .dtable .cellrow { display: flex; align-items: center; gap: 11px; }
 .dtable .t-strong { font-family: var(--font-outfit), system-ui, sans-serif; font-weight: 600; }
 .status.paid { background: var(--success-soft); color: var(--success-text); border: 1px solid rgba(16,185,129,0.25); }
+
+/* ── Event row — matches prototype .event-row spec ── */
+.event-row {
+  display: flex;
+  align-items: center;
+  gap: 18px;
+  padding: 16px 20px;
+}
+.datebox {
+  width: 58px;
+  flex-shrink: 0;
+  text-align: center;
+  border-radius: var(--radius-md);
+  border: 1px solid var(--blue-018);
+  background: var(--blue-007);
+  padding: 8px 0;
+}
+.datebox.off { background: rgba(108,112,134,0.08); border-color: var(--border); }
+.datebox .mo {
+  font-size: 0.62rem;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  color: var(--xiv-blue);
+  font-weight: 700;
+}
+.datebox.off .mo { color: var(--fg-faint); }
+.datebox .dy {
+  font-family: var(--font-outfit), system-ui, sans-serif;
+  font-weight: 700;
+  font-size: 1.5rem;
+  color: var(--foreground);
+  line-height: 1.1;
+}
+.event-row .ev-mid { flex: 1; min-width: 0; }
+.event-row .ev-title {
+  font-family: var(--font-outfit), system-ui, sans-serif;
+  font-weight: 600;
+  font-size: 1.05rem;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+.event-row .ev-sub { display: flex; align-items: center; gap: 16px; margin-top: 7px; flex-wrap: wrap; }
+.event-row .ev-right { display: flex; align-items: center; gap: 18px; flex-shrink: 0; }
+.event-row .ev-rsvp { text-align: right; font-size: 0.78rem; color: var(--muted-foreground); }
+.event-row .ev-rsvp strong {
+  display: block;
+  font-family: var(--font-outfit), system-ui, sans-serif;
+  font-size: 1.1rem;
+  color: var(--foreground);
+}
+@media (max-width: 760px) {
+  .event-row { flex-wrap: wrap; }
+  .event-row .ev-right { width: 100%; justify-content: space-between; }
+}
