@@ -1,7 +1,6 @@
 import { getServerSession } from "next-auth"
 import { authOptions } from "@/lib/auth"
 import { prisma } from "@/lib/prisma"
-import { CrystalDivider } from "@/components/ui/crystal-divider"
 import { DiscoverClient, type DiscoverVenue } from "@/components/discover-client"
 
 export const revalidate = 60
@@ -75,19 +74,6 @@ export default async function DiscoverPage() {
     return 0
   })
 
-  return (
-    <div className="min-h-screen p-4 md:p-8 max-w-6xl mx-auto">
-      <div className="mb-8 text-center xiv-fade-up">
-        <CrystalDivider className="mb-4" />
-        <h1 className="font-cinzel text-3xl md:text-4xl font-bold tracking-[0.02em] mb-2 xiv-glow-text">
-          Discover Venues
-        </h1>
-        <p className="text-muted-foreground">
-          Find roleplay taverns, lounges and clubs across the realm
-        </p>
-      </div>
+  return <DiscoverClient venues={cards} isAuthed={!!session?.user} totalCount={venues.length} />
 
-      <DiscoverClient venues={cards} isAuthed={!!session?.user} />
-    </div>
-  )
 }

@@ -863,3 +863,59 @@
   position: relative;
   z-index: 1;
 }
+/* ── Venue card primitives — matches prototype .vcard .c3 .c4 ── */
+.vcard {
+  background: var(--card);
+  border: 1px solid var(--blue-018);
+  border-radius: var(--radius-xl);
+  overflow: hidden;
+  transition: border-color 250ms ease, box-shadow 250ms ease, transform 250ms ease;
+  position: relative;
+}
+.vcard:hover {
+  border-color: var(--blue-045);
+  box-shadow: 0 0 20px rgba(0,180,255,0.07), inset 0 1px 0 rgba(0,180,255,0.12);
+  transform: translateY(-2px);
+}
+.iconbadge {
+  display: grid;
+  place-items: center;
+  background: var(--blue-010);
+  color: var(--xiv-blue);
+  border: 1px solid var(--blue-018);
+  border-radius: var(--radius-lg);
+}
+.meta {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  color: var(--muted-foreground);
+  font-size: 0.82rem;
+}
+.meta svg { color: var(--xiv-blue); flex-shrink: 0; }
+
+/* Status pills — matches prototype .status */
+.status {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  font-size: 0.74rem;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  padding: 4px 11px;
+  border-radius: 9999px;
+  text-transform: uppercase;
+  white-space: nowrap;
+}
+.status.open   { background: var(--success-soft); color: var(--success-text); border: 1px solid rgba(16,185,129,0.25); }
+.status.closed { background: rgba(108,112,134,0.12); color: var(--fg-faint); border: 1px solid var(--border); }
+.status.soon   { background: var(--blue-012); color: var(--xiv-blue); border: 1px solid var(--blue-035); }
+.status .dot   { width: 7px; height: 7px; border-radius: 999px; background: currentColor; position: relative; }
+.status.open .dot::after {
+  content: "";
+  position: absolute; inset: -3px;
+  border-radius: 999px;
+  background: var(--success-text);
+  opacity: 0.5;
+  animation: ping 1.8s cubic-bezier(0,0,.2,1) infinite;
+}

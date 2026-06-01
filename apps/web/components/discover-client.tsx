@@ -2,11 +2,7 @@
 
 import { useState } from "react"
 import Link from "next/link"
-import { Button } from "@/components/ui/button"
-import { Badge } from "@/components/ui/badge"
-import { Input } from "@/components/ui/input"
-import { CrystalDivider } from "@/components/ui/crystal-divider"
-import { MapPin, ArrowRight, Heart, Radio } from "lucide-react"
+import { MapPin, ArrowRight, Heart, Radio, Moon, Building2, Users } from "lucide-react"
 import { VenueFollowButton } from "@/components/venue-follow-button"
 
 export type DiscoverVenue = {
@@ -30,272 +26,237 @@ type Tab = "open" | "tonight" | "all"
 export function DiscoverClient({
   venues,
   isAuthed,
+  totalCount,
 }: {
   venues: DiscoverVenue[]
   isAuthed: boolean
+  totalCount: number
 }) {
-  const [tab, setTab] = useState<Tab>("all")
+  const [tab, setTab] = useState<Tab>("open")
   const [search, setSearch] = useState("")
 
-  const openCount = venues.filter((v) => v.isOpenNow).length
-  const tonightCount = venues.filter((v) => v.isTonightOpen).length
+  const openCount    = venues.filter(v => v.isOpenNow).length
+  const tonightCount = venues.filter(v => v.isTonightOpen).length
 
-  const filtered = venues.filter((v) => {
-    if (tab === "open" && !v.isOpenNow) return false
+  const filtered = venues.filter(v => {
+    if (tab === "open"    && !v.isOpenNow)    return false
     if (tab === "tonight" && !v.isTonightOpen) return false
     if (search) {
       const q = search.toLowerCase()
-      const haystack = [v.name, v.dataCenter, v.world, v.location ?? ""].join(" ").toLowerCase()
-      if (!haystack.includes(q)) return false
+      return [v.name, v.dataCenter, v.world, v.location ?? ""].join(" ").toLowerCase().includes(q)
     }
     return true
   })
 
-  const featured = filtered.find((v) => v.isOpenNow || v.isTonightOpen) ?? filtered[0]
-  const rest = filtered.filter((v) => v.id !== featured?.id)
+  const featured = filtered.find(v => v.isOpenNow || v.isTonightOpen) ?? filtered[0]
+  const rest      = filtered.filter(v => v.id !== featured?.id)
+  const restOpen   = rest.filter(v => v.isOpenNow).length
+  const restClosed = rest.filter(v => !v.isOpenNow).length
 
-  const openVenueCount = filtered.filter((v) => v.isOpenNow).length
-  const closedVenueCount = filtered.filter((v) => !v.isOpenNow).length
-
-  const tabs: { key: Tab; icon: React.ReactNode; label: string; count: number }[] = [
-    {
-      key: "open",
-      icon: <svg className="w-3.5 h-3.5" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="3"/></svg>,
-      label: "Open now",
-      count: openCount,
-    },
-    {
-      key: "tonight",
-      icon: <svg className="w-3.5 h-3.5" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>,
-      label: "Tonight",
-      count: tonightCount,
-    },
-    {
-      key: "all",
-      icon: null,
-      label: "All",
-      count: venues.length,
-    },
+  const tabs = [
+    { key: "open"    as Tab, icon: <Radio className="w-3.5 h-3.5" />, label: "Open now" },
+    { key: "tonight" as Tab, icon: <Moon  className="w-3.5 h-3.5" />, label: "Tonight" },
+    { key: "all"     as Tab, icon: null,                                label: "All" },
   ]
 
   return (
-    <div>
+    <div className="page-inner" style={{ maxWidth: 940 }}>
+      {/* Page header */}
+      <div className="page-head mb-[6px]">
+        <div className="flex items-center gap-2 mb-3">
+          <span className="w-[7px] h-[7px] bg-[rgba(0,180,255,0.7)] rotate-45 shadow-[0_0_10px_rgba(0,180,255,0.5)] flex-shrink-0" />
+          <span className="text-[0.72rem] font-semibold uppercase tracking-[0.14em] text-[var(--xiv-blue)]">Discover</span>
+        </div>
+        <h1 className="page-h1">Find a venue tonight</h1>
+        <p className="text-[0.95rem] text-muted-foreground mt-[10px] max-w-[560px] leading-[1.6]">
+          Roleplay taverns, lounges and clubs open across the realm right now.
+        </p>
+      </div>
+
       {/* Filter bar */}
-      <div className="flex items-center gap-3 mb-6 flex-wrap">
+      <div className="flex items-center gap-[14px] mt-[30px] mb-3 flex-wrap">
         <div className="flex gap-1 bg-[var(--card)] border border-[var(--blue-015)] rounded-full p-1">
-          {tabs.map(({ key, icon, label, count }) => (
+          {tabs.map(({ key, icon, label }) => (
             <button
               key={key}
               onClick={() => setTab(key)}
-              className={`flex items-center gap-1.5 text-sm font-semibold px-4 py-1.5 rounded-full transition-colors ${
+              className={`flex items-center gap-[7px] text-[0.85rem] font-semibold px-4 py-[7px] rounded-full transition-colors ${
                 tab === key
                   ? "bg-[var(--xiv-blue)] text-[var(--xiv-navy)]"
                   : "text-muted-foreground hover:text-foreground hover:bg-[var(--blue-007)]"
               }`}
             >
-              {icon}
-              {label}
-              {count > 0 && (
-                <span className={`text-[0.65rem] ${tab === key ? "opacity-70" : "text-[var(--fg-faint)]"}`}>
-                  {count}
-                </span>
-              )}
+              {icon}{label}
             </button>
           ))}
         </div>
-
-        <div className="relative flex items-center flex-1 min-w-[200px]">
-          <svg className="absolute left-3 w-4 h-4 text-[var(--fg-faint)] pointer-events-none" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
-          <Input
-            className="pl-9 bg-[var(--card)] border-[var(--blue-015)] focus:border-[var(--blue-035)] h-9 text-sm"
-            placeholder="Search venues, worlds…"
+        <div className="flex-1 min-w-[200px] relative flex items-center">
+          <svg className="absolute left-[14px] w-4 h-4 text-[var(--fg-faint)] pointer-events-none" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
+          <input
             value={search}
-            onChange={(e) => setSearch(e.target.value)}
+            onChange={e => setSearch(e.target.value)}
+            placeholder="Search venues, worlds, tags…"
+            className="w-full bg-[var(--card)] border border-[var(--blue-015)] rounded-[var(--radius-md)] py-[10px] pl-10 pr-[14px] text-[0.88rem] text-foreground placeholder:text-[var(--fg-faint)] outline-none focus:border-[var(--blue-035)] transition-colors"
           />
         </div>
       </div>
 
-      {/* Empty state */}
+      {/* Empty */}
       {filtered.length === 0 && (
-        <div className="text-center py-20">
-          <Radio className="h-10 w-10 text-muted-foreground opacity-30 mx-auto mb-4" />
-          <p className="text-muted-foreground text-sm">
-            {tab === "open"
-              ? "No venues open right now."
-              : tab === "tonight"
-              ? "No venues scheduled for tonight."
-              : "No venues found."}
-          </p>
-          {search && (
-            <button
-              className="mt-2 text-xs text-[var(--xiv-blue)] hover:underline"
-              onClick={() => setSearch("")}
-            >
-              Clear search
-            </button>
-          )}
-        </div>
+        <p className="text-center text-muted-foreground py-16">
+          {tab === "open" ? "No venues open right now." : tab === "tonight" ? "No venues scheduled tonight." : "No venues found."}
+          {search && <button className="ml-2 text-[var(--xiv-blue)] hover:underline text-sm" onClick={() => setSearch("")}>Clear</button>}
+        </p>
       )}
 
-      {/* Featured hero */}
+      {/* Featured */}
       {featured && (
-        <div className="mb-8">
-          <div className="flex items-center gap-3 mb-3">
-            <span className="text-[0.72rem] font-semibold uppercase tracking-[0.14em] text-[var(--xiv-blue)]">
-              Featured tonight
-            </span>
-            <div className="flex-1 h-px bg-[var(--blue-008)]" />
+        <>
+          <div className="section-label">
+            <span className="overline">Featured tonight</span>
+            <span className="ln" />
           </div>
-
-          <div
-            className="rounded-xl border border-[var(--blue-018)] overflow-hidden transition-all hover:border-[var(--blue-035)]"
-            className="featured-gradient"
-          >
-            <div className="p-6 md:p-8">
-              <div className="flex flex-col md:flex-row md:items-start gap-4">
-                <div className="h-16 w-16 rounded-xl bg-[var(--blue-010)] border border-[var(--blue-018)] flex items-center justify-center shrink-0 text-2xl font-cinzel font-bold text-[var(--xiv-blue)]">
-                  {featured.name.charAt(0)}
-                </div>
-                <div className="flex-1 min-w-0">
-                  <div className="flex items-start justify-between gap-4 flex-wrap">
-                    <div>
-                      <h2 className="font-cinzel text-2xl md:text-3xl font-bold tracking-[0.02em] mb-1">
-                        {featured.name}
-                      </h2>
-                      <p className="text-sm text-muted-foreground">
-                        {featured.dataCenter} · {featured.world}
-                        {featured.location && ` · ${featured.location}`}
-                      </p>
-                    </div>
-                    <div className="flex items-center gap-2 shrink-0">
-                      {featured.isOpenNow ? (
-                        <Badge variant="live">Live Now</Badge>
-                      ) : featured.isTonightOpen ? (
-                        <Badge variant="tag">Opening Soon</Badge>
-                      ) : (
-                        <Badge variant="status-closed">Closed</Badge>
-                      )}
-                      <span className="text-sm text-muted-foreground flex items-center gap-1">
-                        <Heart className="h-3.5 w-3.5" /> {featured.followCount}
-                      </span>
-                    </div>
-                  </div>
-
-                  {(featured.activeEvent || featured.upcomingEvent) && (
-                    <div className="mt-4 pt-4 border-t border-[var(--blue-008)] grid grid-cols-2 sm:grid-cols-3 gap-4">
-                      <div>
-                        <p className="stat-label mb-0.5">Tonight</p>
-                        <p className="text-sm font-medium text-[var(--xiv-blue)]">
-                          {(featured.activeEvent ?? featured.upcomingEvent)!.title}
-                        </p>
-                      </div>
-                      {featured.isOpenNow && (
-                        <div>
-                          <p className="stat-label mb-0.5">Status</p>
-                          <p className="text-sm font-medium flex items-center gap-1.5">
-                            <span className="xiv-live-dot scale-75" /> Active
-                          </p>
-                        </div>
-                      )}
-                    </div>
-                  )}
-
-                  {featured.description && (
-                    <p className="text-sm text-muted-foreground mt-3 line-clamp-2">
-                      {featured.description}
-                    </p>
-                  )}
-
-                  <div className="flex items-center gap-3 mt-4">
-                    <Button asChild variant="cta" size="sm">
-                      <Link href={`/venues/${featured.slug}`}>
-                        Visit Venue <ArrowRight className="h-3.5 w-3.5" />
-                      </Link>
-                    </Button>
-                    {isAuthed && (
-                      <VenueFollowButton
-                        venueId={featured.id}
-                        isFollowing={featured.isFollowed}
-                        followCount={featured.followCount}
-                      />
-                    )}
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
+          <FeaturedCard venue={featured} isAuthed={isAuthed} />
+        </>
       )}
 
       {/* Browse list */}
       {rest.length > 0 && (
-        <div>
-          <div className="flex items-center gap-3 mb-3">
-            <span className="text-[0.72rem] font-semibold uppercase tracking-[0.14em] text-muted-foreground">
-              All venues
-            </span>
-            <div className="flex-1 h-px bg-[var(--blue-008)]" />
-            <span className="text-xs text-muted-foreground">
-              {openVenueCount > 0 && `${openVenueCount} open`}
-              {openVenueCount > 0 && closedVenueCount > 0 && " · "}
-              {closedVenueCount > 0 && `${closedVenueCount} closed`}
+        <>
+          <div className="section-label">
+            <span className="overline muted">All venues</span>
+            <span className="ln" />
+            <span className="count">
+              {restOpen > 0 ? `${restOpen} open` : ""}{restOpen > 0 && restClosed > 0 ? " · " : ""}{restClosed > 0 ? `${restClosed} closed` : ""}
             </span>
           </div>
-
           <div className="space-y-2">
-            {rest.map((venue) => (
-              <div
-                key={venue.id}
-                className="flex items-center gap-4 px-4 py-3 rounded-xl border border-[var(--blue-008)] hover:border-[var(--blue-018)] hover:bg-[var(--blue-004)] transition-all"
-              >
-                <div className={`h-10 w-10 rounded-lg flex items-center justify-center text-sm font-cinzel font-bold shrink-0 ${
-                  venue.isOpenNow
-                    ? "bg-[var(--blue-010)] text-[var(--xiv-blue)] border border-[var(--blue-018)]"
-                    : "bg-[rgba(108,112,134,0.10)] text-[var(--fg-faint)] border border-[var(--border)]"
-                }`}>
-                  {venue.name.charAt(0)}
-                </div>
-                <div className="flex-1 min-w-0">
-                  <div className="flex items-center gap-2 flex-wrap">
-                    <span className={`font-semibold text-sm truncate ${!venue.isOpenNow ? "text-[var(--fg-subtle)]" : ""}`}>
-                      {venue.name}
-                    </span>
-                    {venue.activeEvent && (
-                      <span className="text-[0.68rem] text-[var(--xiv-blue)] bg-[var(--blue-010)] px-2 py-0.5 rounded-full border border-[var(--blue-018)] hidden sm:inline">
-                        {venue.activeEvent.title}
-                      </span>
-                    )}
-                  </div>
-                  <p className="text-xs text-muted-foreground flex items-center gap-1 mt-0.5">
-                    <MapPin className="h-3 w-3 shrink-0" />
-                    {venue.dataCenter} · {venue.world}
-                    {venue.location && ` · ${venue.location}`}
-                  </p>
-                </div>
-                <div className="flex items-center gap-2 shrink-0">
-                  {venue.isOpenNow ? (
-                    <Badge variant="status-open" className="text-[10px]">Open</Badge>
-                  ) : venue.isTonightOpen ? (
-                    <Badge variant="tag" className="text-[10px]">Soon</Badge>
-                  ) : (
-                    <Badge variant="status-closed" className="text-[10px]">Closed</Badge>
-                  )}
-                  <Button
-                    asChild
-                    variant="outline-blue"
-                    size="sm"
-                    className={!venue.isOpenNow && !venue.isTonightOpen ? "opacity-40 pointer-events-none" : ""}
-                  >
-                    <Link href={`/venues/${venue.slug}`}>
-                      Visit <ArrowRight className="h-3 w-3" />
-                    </Link>
-                  </Button>
-                </div>
-              </div>
-            ))}
+            {rest.map(v => <VenueC3Card key={v.id} venue={v} dimmed={!v.isOpenNow && !v.isTonightOpen} isAuthed={isAuthed} />)}
+          </div>
+        </>
+      )}
+    </div>
+  )
+}
+
+function FeaturedCard({ venue, isAuthed }: { venue: DiscoverVenue; isAuthed: boolean }) {
+  return (
+    <div className="vcard featured c4 rounded-xl border border-[var(--blue-018)] overflow-hidden relative">
+      {/* HUD banner */}
+      <div className="absolute inset-x-0 top-0 h-[116px] overflow-hidden pointer-events-none">
+        <div className="absolute inset-0 bg-cover bg-center opacity-40" style={{ backgroundImage: "url('/starfield.png')" }} />
+        <div className="absolute inset-0" style={{ background: "linear-gradient(180deg, rgba(0,180,255,0.05), var(--card) 92%)" }} />
+      </div>
+
+      {/* Head */}
+      <div className="relative z-[1] flex gap-[18px] px-7 pt-6 pb-[18px] items-start">
+        <div className="iconbadge w-16 h-16 flex-shrink-0 rounded-[var(--radius-lg)] grid place-items-center">
+          <Building2 className="w-[30px] h-[30px]" />
+        </div>
+        <div className="flex-1 min-w-0 pt-0.5">
+          <div className="vname text-[clamp(1.5rem,2.2vw,1.85rem)]">{venue.name}</div>
+          <div className="font-mono text-[0.8rem] text-[var(--xiv-blue)] mt-[7px]">
+            {venue.dataCenter} · {venue.world}{venue.location ? ` · ${venue.location}` : ""}
           </div>
         </div>
-      )}
+        <div className="flex flex-col items-end gap-[10px] flex-shrink-0">
+          {venue.isOpenNow ? (
+            <span className="status open"><span className="dot" />Open</span>
+          ) : venue.isTonightOpen ? (
+            <span className="status soon"><span className="dot" />Soon</span>
+          ) : (
+            <span className="status closed"><span className="dot" />Closed</span>
+          )}
+          <span className="text-[0.78rem] text-muted-foreground flex items-center gap-1.5">
+            <Heart className="h-[14px] w-[14px] text-[var(--support-pink)]" />
+            {venue.followCount.toLocaleString()} following
+          </span>
+        </div>
+      </div>
+
+      {/* Crystal divider */}
+      <div className="flex items-center gap-[10px] px-7">
+        <div className="flex-1 h-px bg-[var(--blue-008)]" />
+        <span className="w-[7px] h-[7px] bg-[rgba(0,180,255,0.7)] rotate-45" />
+        <div className="flex-1 h-px bg-[var(--blue-008)]" />
+      </div>
+
+      {/* Readouts */}
+      <div className="grid grid-cols-2 sm:grid-cols-4 my-[18px] border-t border-b border-[var(--blue-008)]" style={{ gap: "1px", background: "var(--blue-008)" }}>
+        {[
+          { k: "Tonight", v: venue.activeEvent?.title ?? venue.upcomingEvent?.title ?? "—", blue: true },
+          { k: "Followers", v: venue.followCount.toLocaleString() },
+          { k: "Status", v: venue.isOpenNow ? "Live" : venue.isTonightOpen ? "Opening soon" : "Closed" },
+          { k: "Data Centre", v: venue.dataCenter },
+        ].map(({ k, v, blue }) => (
+          <div key={k} className="bg-[var(--card)] px-7 py-[15px]">
+            <div className="text-[0.66rem] uppercase tracking-[0.12em] text-[var(--fg-faint)] font-semibold">{k}</div>
+            <div className={`font-[var(--font-outfit)] font-semibold text-[1rem] mt-[6px] ${blue ? "text-[var(--xiv-blue)]" : ""}`}>{v}</div>
+          </div>
+        ))}
+      </div>
+
+      {/* Footer */}
+      <div className="flex items-center justify-between gap-4 px-7 pb-[26px] flex-wrap">
+        <div className="tags flex flex-wrap gap-[7px]">
+          {venue.description && (
+            <span className="tag">{venue.description.slice(0, 30)}{venue.description.length > 30 ? "…" : ""}</span>
+          )}
+        </div>
+        <div className="flex gap-[10px]">
+          {isAuthed && (
+            <VenueFollowButton venueId={venue.id} isFollowing={venue.isFollowed} followCount={venue.followCount} />
+          )}
+          <Link
+            href={`/venues/${venue.slug}`}
+            className="btn-primary flex items-center gap-2 px-[18px] py-[10px] rounded-[var(--radius-md)] text-[0.9rem] font-semibold text-[var(--xiv-navy)] bg-[var(--xiv-blue)] hover:brightness-110 transition-all xiv-btn-shimmer"
+          >
+            Visit Venue <ArrowRight className="w-4 h-4" />
+          </Link>
+        </div>
+      </div>
+    </div>
+  )
+}
+
+function VenueC3Card({ venue, dimmed, isAuthed }: { venue: DiscoverVenue; dimmed?: boolean; isAuthed: boolean }) {
+  const isOpen = venue.isOpenNow
+  const isSoon = venue.isTonightOpen && !venue.isOpenNow
+
+  return (
+    <div className={`vcard c3 flex items-center gap-4 px-[18px] py-4 ${dimmed ? "opacity-70" : ""}`}>
+      <div className={`iconbadge flex-shrink-0 rounded-[var(--radius-lg)] w-[54px] h-[54px] grid place-items-center ${dimmed ? "bg-[rgba(108,112,134,0.10)] border-[var(--border)] text-[var(--fg-faint)]" : ""}`}>
+        <Building2 className="w-[25px] h-[25px]" />
+      </div>
+      <div className="flex-1 min-w-0">
+        <div className="flex items-center gap-[10px] flex-wrap">
+          <span className={`vname text-[1.18rem] ${dimmed ? "text-[var(--fg-subtle)]" : ""}`}>{venue.name}</span>
+        </div>
+        <div className="flex items-center gap-[18px] mt-[7px] flex-wrap">
+          <span className="meta">
+            <MapPin className="w-[15px] h-[15px]" />
+            {venue.dataCenter} · {venue.world}{venue.location ? ` · ${venue.location}` : ""}
+          </span>
+          {venue.activeEvent && (
+            <span className="meta text-[var(--xiv-blue)]">{venue.activeEvent.title}</span>
+          )}
+        </div>
+      </div>
+      <div className="flex flex-col items-end gap-[10px] flex-shrink-0">
+        {isOpen ? (
+          <span className="status open"><span className="dot" />Open</span>
+        ) : isSoon ? (
+          <span className="status soon"><span className="dot" />Soon</span>
+        ) : (
+          <span className="status closed"><span className="dot" />Closed</span>
+        )}
+        <Link
+          href={`/venues/${venue.slug}`}
+          className={`btn btn-outline flex items-center gap-2 px-4 py-[7px] text-[0.85rem] rounded-[var(--radius-md)] border border-[var(--blue-018)] bg-[rgba(7,11,20,0.5)] hover:border-[var(--blue-045)] hover:bg-[var(--blue-007)] transition-colors ${dimmed ? "opacity-40 pointer-events-none" : ""}`}
+        >
+          Visit <ArrowRight className="w-4 h-4" />
+        </Link>
+      </div>
     </div>
   )
 }
