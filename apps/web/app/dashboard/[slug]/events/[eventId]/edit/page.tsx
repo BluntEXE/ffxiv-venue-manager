@@ -146,7 +146,7 @@ export default function EditEventPage() {
   if (isLoading) {
     return (
       <VenueLayoutClient slug={slug}>
-        <div className="p-4 md:p-6"><PageLoading text="Loading event..." /></div>
+        <div className="page-inner"><PageLoading text="Loading event..." /></div>
       </VenueLayoutClient>
     )
   }
@@ -161,7 +161,7 @@ export default function EditEventPage() {
 
   return (
     <VenueLayoutClient slug={slug}>
-    <div className="p-4 md:p-6 max-w-3xl">
+    <div className="page-inner max-w-3xl">
       <Card>
         <CardHeader>
           <CardTitle>Edit Event</CardTitle>

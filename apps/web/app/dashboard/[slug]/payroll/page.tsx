@@ -428,7 +428,7 @@ export default function PayrollPage() {
   if (loading) {
     return (
       <VenueLayoutClient slug={slug}>
-        <div className="p-4 md:p-6">
+        <div className="page-inner">
           <PageLoading text="Loading payroll..." />
         </div>
       </VenueLayoutClient>
@@ -447,7 +447,7 @@ export default function PayrollPage() {
 
   return (
     <VenueLayoutClient slug={slug}>
-      <div className="p-4 md:p-6 space-y-6">
+      <div className="page-inner space-y-6">
         {/* Breadcrumb */}
         {/* Header */}
         <div className="flex flex-col sm:flex-row sm:justify-between sm:items-start gap-4">

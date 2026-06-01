@@ -177,7 +177,7 @@ export default async function ShiftsPage({
 
   return (
     <VenueLayout venueSlug={venue.slug} venueName={venue.name} userRole={userRole}>
-      <div className="p-4 md:p-6">
+      <div className="page-inner">
         {/* Header */}
         <div className="flex flex-col sm:flex-row sm:justify-between sm:items-start gap-4 mb-6 md:mb-8">
           <div>

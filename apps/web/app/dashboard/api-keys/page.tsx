@@ -179,7 +179,7 @@ export default function UnifiedApiKeysPage() {
 
   if (isLoading) {
     return (
-      <div className="container mx-auto p-4 md:p-8">
+      <div className="page-inner">
         <p>Loading...</p>
       </div>
     )

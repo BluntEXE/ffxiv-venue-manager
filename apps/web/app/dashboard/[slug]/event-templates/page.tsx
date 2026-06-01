@@ -227,7 +227,7 @@ export default function EventTemplatesPage() {
   if (loading) {
     return (
       <VenueLayoutClient slug={slug}>
-        <div className="container mx-auto p-6">
+        <div className="page-inner">
           <div className="animate-pulse">Loading templates...</div>
         </div>
       </VenueLayoutClient>
@@ -236,7 +236,7 @@ export default function EventTemplatesPage() {
 
   return (
     <VenueLayoutClient slug={slug}>
-      <div className="container mx-auto p-4 md:p-6 lg:p-8">
+      <div className="page-inner">
         {/* Breadcrumb */}
         {/* Header */}
         <div className="flex flex-col sm:flex-row sm:justify-between sm:items-start gap-4 mb-6">

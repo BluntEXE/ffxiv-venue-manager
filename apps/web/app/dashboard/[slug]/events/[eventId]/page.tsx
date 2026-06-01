@@ -83,7 +83,7 @@ export default async function EventDetailsPage({
 
   return (
     <VenueLayout venueSlug={venue.slug} venueName={venue.name} userRole={userRole}>
-    <div className="p-4 md:p-6 max-w-4xl">
+    <div className="page-inner max-w-4xl">
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:justify-between sm:items-start gap-4 mb-6 md:mb-8">
         <div className="flex-1 min-w-0">

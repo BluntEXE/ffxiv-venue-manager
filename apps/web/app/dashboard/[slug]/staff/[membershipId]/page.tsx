@@ -225,13 +225,13 @@ export default function ManageStaffMemberPage({
   }
 
   if (!slug || !membershipId) {
-    return <VenueLayoutClient slug={slug}><div className="p-4 md:p-6"><PageLoading /></div></VenueLayoutClient>
+    return <VenueLayoutClient slug={slug}><div className="page-inner"><PageLoading /></div></VenueLayoutClient>
   }
 
   if (isLoading) {
     return (
       <VenueLayoutClient slug={slug}>
-        <div className="p-4 md:p-6"><PageLoading text="Loading staff member..." /></div>
+        <div className="page-inner"><PageLoading text="Loading staff member..." /></div>
       </VenueLayoutClient>
     )
   }
@@ -239,7 +239,7 @@ export default function ManageStaffMemberPage({
   if (!staffMember) {
     return (
       <VenueLayoutClient slug={slug}>
-        <div className="p-4 md:p-6">
+        <div className="page-inner">
           <Alert className="bg-destructive/10 border-destructive/20">
             <AlertDescription className="text-destructive">Staff member not found</AlertDescription>
           </Alert>
@@ -253,7 +253,7 @@ export default function ManageStaffMemberPage({
 
   return (
     <VenueLayoutClient slug={slug}>
-    <div className="p-4 md:p-6 max-w-3xl">
+    <div className="page-inner max-w-3xl">
       {/* Header */}
       <div className="mb-6 md:mb-8">
         <h1 className="text-2xl md:text-4xl font-bold">Manage Staff Member</h1>

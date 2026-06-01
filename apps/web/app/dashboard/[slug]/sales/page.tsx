@@ -36,7 +36,7 @@ export default async function SalesPage({ params }: PageProps) {
 
   if (!venue) {
     return (
-      <div className="container mx-auto p-4 md:p-8">
+      <div className="page-inner">
         <Alert className="bg-destructive/10 border-destructive/20">
           <AlertDescription className="text-destructive">Venue not found</AlertDescription>
         </Alert>
@@ -54,7 +54,7 @@ export default async function SalesPage({ params }: PageProps) {
 
   if (!membership) {
     return (
-      <div className="container mx-auto p-4 md:p-8">
+      <div className="page-inner">
         <Alert className="bg-destructive/10 border-destructive/20">
           <AlertDescription className="text-destructive">
             You don't have access to this venue
@@ -73,7 +73,7 @@ export default async function SalesPage({ params }: PageProps) {
     if (salesVisibility === "none") {
       return (
         <VenueLayoutClient slug={slug}>
-          <div className="container mx-auto p-4 md:p-8">
+          <div className="page-inner">
             <Alert className="bg-destructive/10 border-destructive/20">
               <AlertDescription className="text-destructive">
                 You don't have permission to view sales data
@@ -216,7 +216,7 @@ export default async function SalesPage({ params }: PageProps) {
 
   return (
     <VenueLayoutClient slug={slug}>
-      <div className="p-4 md:p-6">
+      <div className="page-inner">
         {/* Header */}
         <div className="flex flex-col sm:flex-row sm:justify-between sm:items-start gap-4 mb-6 md:mb-8">
           <div>

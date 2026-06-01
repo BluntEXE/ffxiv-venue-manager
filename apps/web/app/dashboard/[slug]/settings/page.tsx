@@ -228,7 +228,7 @@ export default function SettingsPage({
 
   return (
     <VenueLayoutClient slug={slug}>
-      <div className="p-4 md:p-6 max-w-3xl">
+      <div className="page-inner max-w-3xl">
         {/* Header */}
         <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-4 mb-6 md:mb-8">
           <div>

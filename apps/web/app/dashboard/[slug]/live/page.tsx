@@ -140,7 +140,7 @@ export default async function LivePage({
       venueName={venue.name}
       userRole={userRole}
     >
-      <div className="container mx-auto p-4 md:p-6 lg:p-8">
+      <div className="page-inner">
         {/* Eyebrow */}
         <div className="flex items-center gap-2 mb-4">
           <span className="w-[7px] h-[7px] bg-[rgba(0,180,255,0.7)] rotate-45 shadow-[0_0_10px_rgba(0,180,255,0.5)] flex-shrink-0" />

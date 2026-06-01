@@ -194,7 +194,7 @@ export default function NewEventPage() {
 
   return (
     <VenueLayoutClient slug={slug}>
-    <div className="p-4 md:p-6 max-w-3xl">
+    <div className="page-inner max-w-3xl">
       <Card>
         <CardHeader>
           <CardTitle>Create New Event</CardTitle>

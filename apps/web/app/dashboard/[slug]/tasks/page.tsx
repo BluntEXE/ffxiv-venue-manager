@@ -321,12 +321,12 @@ export default function TasksPage({
   }
 
   if (!slug) {
-    return <div className="p-4 md:p-6"><PageLoading /></div>
+    return <div className="page-inner"><PageLoading /></div>
   }
 
   return (
     <VenueLayoutClient slug={slug}>
-      <div className="p-4 md:p-6">
+      <div className="page-inner">
         {/* Breadcrumb */}
         {/* Header */}
         <div className="flex flex-col sm:flex-row sm:justify-between sm:items-start gap-4 mb-6 md:mb-8">

@@ -147,7 +147,7 @@ export default function InviteStaffPage({
 
   if (inviteUrl) {
     return (
-      <VenueLayoutClient slug={slug}><div className="p-4 md:p-6 max-w-2xl">
+      <VenueLayoutClient slug={slug}><div className="page-inner max-w-2xl">
         {/* Header */}
         <div className="mb-8">
           <h1 className="text-2xl md:text-4xl font-bold">Invite Link Created!</h1>
@@ -265,7 +265,7 @@ export default function InviteStaffPage({
   }
 
   return (
-    <VenueLayoutClient slug={slug}><div className="p-4 md:p-6 max-w-2xl">
+    <VenueLayoutClient slug={slug}><div className="page-inner max-w-2xl">
       {/* Header */}
       <div className="mb-8">
         <h1 className="text-2xl md:text-4xl font-bold">Create Staff Invite</h1>

@@ -164,7 +164,7 @@ export default async function VenueDashboardPage({
 
   return (
     <VenueLayout venueSlug={venue.slug} venueName={venue.name} userRole={userRole}>
-      <div className="p-4 md:p-6 space-y-6">
+      <div className="page-inner space-y-6">
 
         {/* Page header */}
         <div>

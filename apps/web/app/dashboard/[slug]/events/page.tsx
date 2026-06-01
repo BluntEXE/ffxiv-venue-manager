@@ -93,7 +93,7 @@ export default async function EventsPage({
       venueName={venue.name}
       userRole={userRole}
     >
-      <div className="p-4 md:p-6">
+      <div className="page-inner">
         {/* Breadcrumb */}
         {/* Header */}
         <div className="flex flex-col sm:flex-row sm:justify-between sm:items-start gap-4 mb-6 md:mb-8">

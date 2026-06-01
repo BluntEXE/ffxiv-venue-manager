@@ -232,23 +232,24 @@
     z-index: 0;
   }
 
-  /* Modern Headings */
-  /* Modern Headings */
-  h1,
-  h2,
-  h3,
-  h4,
-  h5,
-  h6 {
-    font-family: var(--font-heading);
+  /* H1/H2 — Cinzel (font-display), matches prototype h1/h2 spec */
+  h1, h2 {
+    font-family: var(--font-display);
     font-weight: 700;
+    letter-spacing: 0.02em;
+    line-height: 1.1;
   }
 
-  /* Allow font-cinzel utility to override the base heading rule */
-  .font-cinzel, h1.font-cinzel, h2.font-cinzel {
+  /* H3–H6 — Outfit semibold (font-heading), matches prototype h3/h4/h5/h6 spec */
+  h3, h4, h5, h6 {
+    font-family: var(--font-heading);
+    font-weight: 600;
+    line-height: 1.3;
+  }
+
+  /* Allow font-cinzel utility to override when explicitly needed */
+  .font-cinzel {
     font-family: var(--font-cinzel), 'Cinzel', Georgia, serif !important;
-    /* Bold headings for better hierarchy */
-    /* letter-spacing: -0.025em; Removed fast tracking for better readability */
   }
 }
 
@@ -786,6 +787,18 @@
 }
 .xiv-listening-dot:nth-child(2) { animation-delay: 0.15s; }
 .xiv-listening-dot:nth-child(3) { animation-delay: 0.3s; }
+
+/* ── Page content wrapper — matches prototype .main padding + .content max-width ── */
+/* Usage: wrap page body in <div className="page-inner"> */
+.page-inner {
+  padding: 24px 18px 80px;
+  max-width: 940px;
+}
+@media (min-width: 1081px) {
+  .page-inner {
+    padding: 36px 44px 80px 24px;
+  }
+}
 
 /* ── Page H1 — matches prototype .page-head h1 ── */
 .page-h1 {

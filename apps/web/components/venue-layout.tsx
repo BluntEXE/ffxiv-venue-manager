@@ -46,8 +46,8 @@ export async function VenueLayout({
         userEmail={session?.user?.email || undefined}
         venues={venues}
       />
-      {/* main: matches prototype .main { margin-left: calc(260px + 20px*2); padding: ... } */}
-      <main className="[@media(min-width:1081px)]:ml-[300px] px-[18px] [@media(min-width:1081px)]:px-[24px] pt-[24px] pb-[80px] [@media(min-width:1081px)]:pb-[80px] relative z-[1]">
+      {/* margin matches prototype: calc(260px + 20px × 2) = 300px */}
+      <main className="[@media(min-width:1081px)]:ml-[300px] relative z-[1]">
         {children}
       </main>
     </div>

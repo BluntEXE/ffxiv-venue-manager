@@ -197,7 +197,7 @@ export default function ApiKeysPage({
   if (isLoading) {
     return (
       <VenueLayoutClient slug={slug}>
-        <div className="p-4 md:p-6"><p className="text-muted-foreground text-sm">Loading…</p></div>
+        <div className="page-inner"><p className="text-muted-foreground text-sm">Loading…</p></div>
       </VenueLayoutClient>
     )
   }
@@ -205,7 +205,7 @@ export default function ApiKeysPage({
   if (notOwner) {
     return (
       <VenueLayoutClient slug={slug}>
-        <div className="p-4 md:p-6 max-w-4xl">
+        <div className="page-inner max-w-4xl">
           <Alert variant="destructive" className="mt-6">
             <AlertDescription>Only active venue members can manage API keys for the Dalamud plugin.</AlertDescription>
           </Alert>
@@ -216,7 +216,7 @@ export default function ApiKeysPage({
 
   return (
     <VenueLayoutClient slug={slug}>
-    <div className="p-4 md:p-6 max-w-4xl">
+    <div className="page-inner max-w-4xl">
       <div className="mb-6 md:mb-8">
         <VenueEyebrow slug={slug} />
         <h1 className="page-h1">

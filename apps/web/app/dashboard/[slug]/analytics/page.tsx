@@ -178,7 +178,7 @@ export default function AnalyticsPage() {
   if (isLoading) {
     return (
       <VenueLayoutClient slug={slug}>
-        <div className="container mx-auto p-4 md:p-8">
+        <div className="page-inner">
           <PageLoading text="Loading analytics..." />
         </div>
       </VenueLayoutClient>
@@ -188,7 +188,7 @@ export default function AnalyticsPage() {
   if (error) {
     return (
       <VenueLayoutClient slug={slug}>
-        <div className="container mx-auto p-4 md:p-8">
+        <div className="page-inner">
           <div className="text-center text-red-500">
             <p>Error loading analytics: {error}</p>
             <button
@@ -219,7 +219,7 @@ export default function AnalyticsPage() {
 
   return (
     <VenueLayoutClient slug={slug}>
-      <div className="container mx-auto p-4 md:p-6 lg:p-8">
+      <div className="page-inner">
         <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-4 mb-6 md:mb-8">
           <div>
             <VenueEyebrow slug={slug} />

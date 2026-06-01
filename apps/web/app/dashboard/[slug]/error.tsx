@@ -18,7 +18,7 @@ export default function VenueError({
   }, [error])
 
   return (
-    <div className="container mx-auto p-4 md:p-6 lg:p-8">
+    <div className="page-inner">
       <Card className="max-w-md mx-auto">
         <CardHeader className="text-center">
           <div className="mx-auto mb-4 flex h-12 w-12 items-center justify-center rounded-full bg-destructive/10">
