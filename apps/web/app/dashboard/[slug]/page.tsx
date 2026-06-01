@@ -321,36 +321,36 @@ export default async function VenueDashboardPage({
                 </Link>
               </div>
               <div className="overflow-x-auto">
-              <table className="w-full border-collapse min-w-[420px]">
+              <table className="w-full border-collapse min-w-[380px]">
                 <thead>
                   <tr>
-                    {["Event", "Date", "Patrons", "Revenue", "Status"].map((h, i) => (
-                      <th key={h} className={`xiv-th px-5 py-3 border-b border-[var(--blue-008)] text-left ${i >= 2 ? "text-right" : ""} ${i === 2 ? "hidden sm:table-cell" : ""}`}>{h}</th>
-                    ))}
+                    <th className="xiv-th px-5 py-3 border-b border-[var(--blue-008)] text-left">Event</th>
+                    <th className="xiv-th px-5 py-3 border-b border-[var(--blue-008)] text-left hidden sm:table-cell">Date</th>
+                    <th className="xiv-th px-5 py-3 border-b border-[var(--blue-008)] text-right hidden md:table-cell">Attendance</th>
+                    <th className="xiv-th px-5 py-3 border-b border-[var(--blue-008)] text-right">Revenue</th>
                   </tr>
                 </thead>
                 <tbody>
                   {recentEventsWithData.length > 0 ? recentEventsWithData.map(ev => (
                     <tr key={ev.id} className="border-b border-[var(--blue-008)] last:border-0 hover:bg-[var(--blue-004)] transition-colors">
-                      <td className="px-5 py-2.5">
-                        <Link href={`/dashboard/${slug}/events/${ev.id}`} className="text-sm font-medium hover:text-[var(--xiv-blue)] transition-colors truncate block max-w-[160px]">{ev.title}</Link>
+                      <td className="px-5 py-3.5 text-[0.86rem]">
+                        <div className="flex items-center gap-2 flex-wrap">
+                          <Link href={`/dashboard/${slug}/events/${ev.id}`} className="font-medium text-foreground hover:text-[var(--xiv-blue)] transition-colors">{ev.title}</Link>
+                          {ev.status === "ACTIVE" && (
+                            <span className="text-[0.68rem] font-semibold px-2 py-0.5 rounded-full uppercase tracking-[0.03em] bg-[var(--success-soft)] text-[var(--success-text)] border border-[rgba(16,185,129,0.25)]">Live</span>
+                          )}
+                        </div>
                       </td>
-                      <td className="px-5 py-2.5 text-sm text-muted-foreground whitespace-nowrap">{format(ev.startTime, "d MMM")}</td>
-                      <td className="px-5 py-2.5 text-sm text-right hidden sm:table-cell tabular-nums">
+                      <td className="px-5 py-3.5 text-[0.86rem] text-muted-foreground whitespace-nowrap tabular-nums hidden sm:table-cell">{format(ev.startTime, "d MMM")}</td>
+                      <td className="px-5 py-3.5 text-[0.86rem] text-right tabular-nums text-muted-foreground hidden md:table-cell">
                         {ev.patrons > 0 ? ev.patrons : <span className="text-[var(--fg-faint)]">—</span>}
                       </td>
-                      <td className="px-5 py-2.5 text-sm text-right tabular-nums text-[var(--xiv-blue)] font-medium">
-                        {ev.revenue > 0 ? `${ev.revenue.toLocaleString()} g` : <span className="text-[var(--fg-faint)]">—</span>}
-                      </td>
-                      <td className="px-5 py-2.5 text-right">
-                        {ev.status === "ACTIVE"
-                          ? <Badge variant="live" className="text-[10px]">Live</Badge>
-                          : <Badge variant="tag" className="text-[10px]">{ev.status.charAt(0) + ev.status.slice(1).toLowerCase()}</Badge>
-                        }
+                      <td className="px-5 py-3.5 text-right tabular-nums font-[var(--font-heading)] font-semibold text-[0.86rem]">
+                        {ev.revenue > 0 ? `${ev.revenue.toLocaleString()} gil` : <span className="text-[var(--fg-faint)] font-normal">—</span>}
                       </td>
                     </tr>
                   )) : (
-                    <tr><td colSpan={5} className="px-5 py-6 text-center text-sm text-muted-foreground">No events yet</td></tr>
+                    <tr><td colSpan={4} className="px-5 py-6 text-center text-sm text-muted-foreground">No events yet</td></tr>
                   )}
                 </tbody>
               </table>

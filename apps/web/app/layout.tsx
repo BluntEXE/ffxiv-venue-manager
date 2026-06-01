@@ -1,5 +1,5 @@
 import type { Metadata } from "next"
-import { Inter, Outfit, Cinzel } from "next/font/google"
+import { Inter, Outfit, Cinzel, JetBrains_Mono } from "next/font/google"
 import "./globals.css"
 import { Navbar } from "@/components/navbar"
 import { SessionProvider } from "@/components/session-provider"
@@ -19,6 +19,12 @@ const cinzel = Cinzel({
   variable: "--font-cinzel-var",
   subsets: ["latin"],
   weight: ["400", "600", "700"],
+})
+
+const jetbrainsMono = JetBrains_Mono({
+  variable: "--font-jetbrains",
+  subsets: ["latin"],
+  weight: ["400", "500", "600"],
 })
 
 export const dynamic = "force-dynamic"
@@ -48,7 +54,7 @@ export default function RootLayout({
   return (
     <html lang="en">
       <body
-        className={`${inter.variable} ${outfit.variable} ${cinzel.variable} antialiased font-sans`}
+        className={`${inter.variable} ${outfit.variable} ${cinzel.variable} ${jetbrainsMono.variable} antialiased font-sans`}
       >
         <SessionProvider>
           <VenueProvider>

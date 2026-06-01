@@ -54,8 +54,8 @@ function StatReadout({
           </span>
         </div>
       )}
-      <span className="stat-label">{label}</span>
-      <div className="text-2xl font-semibold font-[var(--font-heading)] leading-none">
+      <span className="text-[0.64rem] font-semibold uppercase tracking-[0.12em] text-[var(--fg-faint)]">{label}</span>
+      <div className="font-[var(--font-heading)] font-bold text-[1.7rem] leading-none mt-1">
         {value}
       </div>
       {(delta || subtext) && (

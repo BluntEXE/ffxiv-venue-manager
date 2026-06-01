@@ -109,7 +109,7 @@
 
   /* Semantic aliases */
   --font-display: var(--font-cinzel), 'Cinzel', Georgia, serif;
-  --font-mono: 'JetBrains Mono', ui-monospace, 'SF Mono', Menlo, monospace;
+  --font-mono: var(--font-jetbrains), 'JetBrains Mono', ui-monospace, 'SF Mono', Menlo, monospace;
   --surface-alt: #060b16;
   --card-mantle: #181825;
   --fg-subtle: var(--ctp-subtext1);

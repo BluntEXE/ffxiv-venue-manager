@@ -129,6 +129,7 @@ export default async function EventsPage({
         <div className="flex gap-1 bg-card border border-[var(--blue-015)] rounded-full p-1">
           {([
             { key: "list", label: "Upcoming" },
+            { key: "past", label: "Past" },
             { key: "calendar", label: "Calendar" },
           ] as const).map(({ key, label }) => (
             <Link
@@ -150,6 +151,55 @@ export default async function EventsPage({
 
       {view === "calendar" ? (
         <EventsCalendar events={events} venueSlug={slug} />
+      ) : view === "past" ? (
+        <>
+          {pastEvents.length === 0 ? (
+            <div className="xiv-card rounded-xl p-8 text-center">
+              <p className="text-muted-foreground">No past events yet.</p>
+            </div>
+          ) : (
+            (() => {
+              const grouped = pastEvents.reduce((acc: Record<string, typeof pastEvents>, event) => {
+                const key = format(new Date(event.startTime), "MMMM yyyy")
+                if (!acc[key]) acc[key] = []
+                acc[key].push(event)
+                return acc
+              }, {})
+              return (
+                <div className="space-y-8">
+                  {Object.entries(grouped).map(([month, monthEvents]) => (
+                    <div key={month}>
+                      <div className="flex items-center gap-3 mb-3">
+                        <span className="text-xs font-semibold text-[var(--xiv-blue)] uppercase tracking-widest">{month}</span>
+                        <div className="flex-1 h-px bg-[rgba(0,180,255,0.15)]" />
+                        <span className="text-xs text-muted-foreground">{monthEvents.length}</span>
+                      </div>
+                      <div className="grid grid-cols-1 gap-2">
+                        {monthEvents.map((event: typeof pastEvents[number]) => (
+                          <Link key={event.id} href={`/dashboard/${slug}/events/${event.id}`} className="group">
+                            <div className="xiv-card rounded-xl p-3.5 flex items-center gap-4 opacity-70 hover:opacity-100 transition-all hover:border-[rgba(0,180,255,0.3)]">
+                              <div className="w-10 flex-shrink-0 text-center">
+                                <div className="text-[0.58rem] font-semibold uppercase tracking-wide text-[var(--xiv-blue)]">{formatServerTime(event.startTime, "date").split(" ")[0]}</div>
+                                <div className="font-cinzel text-xl font-bold leading-none mt-0.5">{new Date(event.startTime).getUTCDate()}</div>
+                              </div>
+                              <div className="flex-1 min-w-0">
+                                <p className="font-medium text-sm truncate group-hover:text-[var(--xiv-blue)] transition-colors">{event.title}</p>
+                                <p className="text-xs text-muted-foreground mt-0.5">{formatServerTime(event.startTime, "time")} {SERVER_TIME_LABEL}</p>
+                              </div>
+                              <div className="flex gap-1.5 shrink-0">
+                                <Badge className={statusColors[event.status as keyof typeof statusColors]}>{event.status}</Badge>
+                              </div>
+                            </div>
+                          </Link>
+                        ))}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )
+            })()
+          )}
+        </>
       ) : (
         <>
           {/* Upcoming Events */}
