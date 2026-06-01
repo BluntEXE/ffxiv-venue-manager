@@ -1,14 +1,17 @@
 import { getServerSession } from "next-auth"
 import { authOptions } from "@/lib/auth"
 import { redirect, notFound } from "next/navigation"
+import Link from "next/link"
 import { prisma } from "@/lib/prisma"
 import { VenueLayout } from "@/components/venue-layout"
 import { Breadcrumb } from "@/components/breadcrumb"
 import { PatronLogsManager } from "@/components/patron-logs-manager"
+import { PatronProfilesTable, type PatronProfile } from "@/components/patron-profiles-table"
 
 const PAGE_LIMIT = 200
 
 type SearchParams = {
+  tab?: string
   eventId?: string
   from?: string
   to?: string
@@ -41,13 +44,42 @@ export default async function PatronLogsPage({
   const userRole = venue.memberships[0].role
   if (!["OWNER", "MANAGER"].includes(userRole)) notFound()
 
-  // Default range: last 7 days
+  const activeTab = sp.tab === "log" ? "log" : "profiles"
+
+  // ── Profiles tab: aggregate patron visits ────────────────────────────
+  let patronProfiles: PatronProfile[] = []
+
+  if (activeTab === "profiles") {
+    const grouped = await prisma.patronLog.groupBy({
+      by: ["characterName", "world"],
+      where: {
+        venueId: venue.id,
+        characterName: { not: null },
+        wasWorking: false,
+        action: "ENTER",
+      },
+      _count: { _all: true },
+      _max: { timestamp: true },
+      orderBy: { characterName: "asc" },
+      take: 500,
+    })
+    patronProfiles = grouped
+      .filter((r) => r.characterName)
+      .sort((a, b) => b._count._all - a._count._all)
+      .map((r) => ({
+        characterName: r.characterName!,
+        world: r.world ?? "",
+        visits: r._count._all,
+        lastSeen: (r._max.timestamp ?? new Date()).toISOString(),
+      }))
+  }
+
+  // ── Log tab: existing filtered query ─────────────────────────────────
   const now = new Date()
   const defaultFrom = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000)
   const from = sp.from ? new Date(sp.from) : defaultFrom
   const to = sp.to ? new Date(sp.to) : now
 
-  // Build query
   const where: {
     venueId: string
     eventId?: string
@@ -60,11 +92,7 @@ export default async function PatronLogsPage({
   if (sp.character) where.characterName = sp.character
   if (sp.classification === "staff") where.wasWorking = true
   if (sp.classification === "patron") where.wasWorking = false
-
-  // Event filter overrides date range (event has its own window)
-  if (!sp.eventId) {
-    where.timestamp = { gte: from, lte: to }
-  }
+  if (!sp.eventId) where.timestamp = { gte: from, lte: to }
 
   const [logs, events, staff, distinctCharacters] = await Promise.all([
     prisma.patronLog.findMany({
@@ -80,9 +108,7 @@ export default async function PatronLogsPage({
     prisma.event.findMany({
       where: {
         venueId: venue.id,
-        startTime: {
-          gte: new Date(now.getTime() - 90 * 24 * 60 * 60 * 1000),
-        },
+        startTime: { gte: new Date(now.getTime() - 90 * 24 * 60 * 60 * 1000) },
       },
       orderBy: { startTime: "desc" },
       select: { id: true, title: true, startTime: true, endTime: true },
@@ -102,14 +128,18 @@ export default async function PatronLogsPage({
     }),
   ])
 
-  // Suggested staff per character (UserCharacter links)
   const characterUserMap = await prisma.userCharacter.findMany({
     where: {
       OR: logs
         .filter((l) => l.characterName && l.world)
         .map((l) => ({ characterName: l.characterName!, world: l.world! })),
     },
-    select: { characterName: true, world: true, userId: true, user: { select: { name: true } } },
+    select: {
+      characterName: true,
+      world: true,
+      userId: true,
+      user: { select: { name: true } },
+    },
   })
 
   return (
@@ -125,54 +155,83 @@ export default async function PatronLogsPage({
 
         <div className="mb-6 md:mb-8">
           <h1 className="font-cinzel text-2xl md:text-3xl font-bold tracking-[0.02em]">Patron Logs</h1>
-          <p className="text-sm md:text-base text-muted-foreground mt-1 md:mt-2">
-            Review and reclassify staff vs. patron visits. Use this when staff forgot to clock in
-            or were marked working by mistake.
+          <p className="text-sm text-muted-foreground mt-1 md:mt-2">
+            {activeTab === "profiles"
+              ? "Patron visit history and engagement overview"
+              : "Review and reclassify staff vs. patron visits"}
           </p>
         </div>
 
-        <PatronLogsManager
-          venueId={venue.id}
-          logs={logs.map((l) => ({
-            id: l.id,
-            timestamp: l.timestamp.toISOString(),
-            characterName: l.characterName,
-            world: l.world,
-            action: l.action,
-            wasWorking: l.wasWorking,
-            workingUser: l.workingUser,
-            event: l.event,
-            reclassifiedAt: l.reclassifiedAt?.toISOString() ?? null,
-            reclassifiedBy: l.reclassifiedBy,
-            reclassifyReason: l.reclassifyReason,
-          }))}
-          events={events.map((e) => ({
-            id: e.id,
-            title: e.title,
-            startTime: e.startTime.toISOString(),
-            endTime: e.endTime?.toISOString() ?? null,
-          }))}
-          staff={staff
-            .filter((m) => m.user)
-            .map((m) => ({ id: m.user!.id, name: m.user!.name ?? "(no name)" }))}
-          characters={distinctCharacters
-            .filter((c) => c.characterName)
-            .map((c) => ({ name: c.characterName!, world: c.world ?? "" }))}
-          characterUserMap={characterUserMap.map((c) => ({
-            characterName: c.characterName,
-            world: c.world,
-            userId: c.userId,
-            userName: c.user?.name ?? "(no name)",
-          }))}
-          initialFilters={{
-            eventId: sp.eventId ?? "",
-            from: from.toISOString().slice(0, 10),
-            to: to.toISOString().slice(0, 10),
-            character: sp.character ?? "",
-            classification: sp.classification ?? "all",
-          }}
-          limitHit={logs.length === PAGE_LIMIT}
-        />
+        {/* Tab switcher */}
+        <div className="flex gap-1 bg-card border border-[var(--blue-015)] rounded-full p-1 w-fit mb-6">
+          <Link
+            href={`/dashboard/${slug}/patron-logs`}
+            className={`text-sm font-semibold px-5 py-1.5 rounded-full transition-colors ${
+              activeTab === "profiles"
+                ? "bg-[var(--xiv-blue)] text-[var(--xiv-navy)]"
+                : "text-muted-foreground hover:text-foreground hover:bg-[var(--blue-007)]"
+            }`}
+          >
+            Patron Profiles
+          </Link>
+          <Link
+            href={`/dashboard/${slug}/patron-logs?tab=log`}
+            className={`text-sm font-semibold px-5 py-1.5 rounded-full transition-colors ${
+              activeTab === "log"
+                ? "bg-[var(--xiv-blue)] text-[var(--xiv-navy)]"
+                : "text-muted-foreground hover:text-foreground hover:bg-[var(--blue-007)]"
+            }`}
+          >
+            Log &amp; Reclassify
+          </Link>
+        </div>
+
+        {activeTab === "profiles" ? (
+          <PatronProfilesTable profiles={patronProfiles} />
+        ) : (
+          <PatronLogsManager
+            venueId={venue.id}
+            logs={logs.map((l) => ({
+              id: l.id,
+              timestamp: l.timestamp.toISOString(),
+              characterName: l.characterName,
+              world: l.world,
+              action: l.action,
+              wasWorking: l.wasWorking,
+              workingUser: l.workingUser,
+              event: l.event,
+              reclassifiedAt: l.reclassifiedAt?.toISOString() ?? null,
+              reclassifiedBy: l.reclassifiedBy,
+              reclassifyReason: l.reclassifyReason,
+            }))}
+            events={events.map((e) => ({
+              id: e.id,
+              title: e.title,
+              startTime: e.startTime.toISOString(),
+              endTime: e.endTime?.toISOString() ?? null,
+            }))}
+            staff={staff
+              .filter((m) => m.user)
+              .map((m) => ({ id: m.user!.id, name: m.user!.name ?? "(no name)" }))}
+            characters={distinctCharacters
+              .filter((c) => c.characterName)
+              .map((c) => ({ name: c.characterName!, world: c.world ?? "" }))}
+            characterUserMap={characterUserMap.map((c) => ({
+              characterName: c.characterName,
+              world: c.world,
+              userId: c.userId,
+              userName: c.user?.name ?? "(no name)",
+            }))}
+            initialFilters={{
+              eventId: sp.eventId ?? "",
+              from: from.toISOString().slice(0, 10),
+              to: to.toISOString().slice(0, 10),
+              character: sp.character ?? "",
+              classification: sp.classification ?? "all",
+            }}
+            limitHit={logs.length === PAGE_LIMIT}
+          />
+        )}
       </div>
     </VenueLayout>
   )

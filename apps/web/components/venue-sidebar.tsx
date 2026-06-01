@@ -36,7 +36,7 @@ interface VenueSidebarProps {
   userRole: string
   userName?: string
   userEmail?: string
-  venues?: Array<{ id: string; name: string; slug: string }>
+  venues?: Array<{ id: string; name: string; slug: string; dataCenter?: string; world?: string }>
   livePatronCount?: number
 }
 

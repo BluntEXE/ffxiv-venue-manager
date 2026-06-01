@@ -7,6 +7,8 @@ interface Venue {
   id: string
   name: string
   slug: string
+  dataCenter?: string
+  world?: string
   memberships?: Array<{ role: string }>
 }
 

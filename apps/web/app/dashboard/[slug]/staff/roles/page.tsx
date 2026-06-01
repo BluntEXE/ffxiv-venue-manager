@@ -37,6 +37,7 @@ import {
 import { Alert, AlertDescription } from "@/components/ui/alert"
 import { Badge } from "@/components/ui/badge"
 import { PageLoading } from "@/components/ui/loading-spinner"
+import { VenueLayoutClient } from "@/components/venue-layout-client"
 
 // Preset colors for quick selection
 const PRESET_COLORS = [
@@ -242,11 +243,12 @@ export default function RolesPage({
   }
 
   if (!slug) {
-    return <div className="container mx-auto p-4 md:p-8"><PageLoading /></div>
+    return <VenueLayoutClient slug=""><div className="p-4 md:p-6"><PageLoading /></div></VenueLayoutClient>
   }
 
   return (
-    <div className="container mx-auto p-4 md:p-8">
+    <VenueLayoutClient slug={slug}>
+    <div className="p-4 md:p-6">
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-4 mb-6 md:mb-8">
         <div>
@@ -583,5 +585,6 @@ export default function RolesPage({
         </DialogContent>
       </Dialog>
     </div>
+    </VenueLayoutClient>
   )
 }

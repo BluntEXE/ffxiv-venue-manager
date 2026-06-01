@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react"
 import { useRouter, useParams } from "next/navigation"
 import { Button } from "@/components/ui/button"
+import { VenueLayoutClient } from "@/components/venue-layout-client"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
@@ -144,22 +145,23 @@ export default function EditEventPage() {
 
   if (isLoading) {
     return (
-      <div className="container mx-auto p-4 md:p-8">
-        <PageLoading text="Loading event..." />
-      </div>
+      <VenueLayoutClient slug={slug}>
+        <div className="p-4 md:p-6"><PageLoading text="Loading event..." /></div>
+      </VenueLayoutClient>
     )
   }
 
   if (!event) {
     return (
-      <div className="container mx-auto p-4 md:p-8 text-center">
-        <p className="text-destructive">Event not found</p>
-      </div>
+      <VenueLayoutClient slug={slug}>
+        <div className="p-4 md:p-6 text-center"><p className="text-destructive">Event not found</p></div>
+      </VenueLayoutClient>
     )
   }
 
   return (
-    <div className="container mx-auto p-4 md:p-8 max-w-3xl">
+    <VenueLayoutClient slug={slug}>
+    <div className="p-4 md:p-6 max-w-3xl">
       <Card>
         <CardHeader>
           <CardTitle>Edit Event</CardTitle>
@@ -292,5 +294,6 @@ export default function EditEventPage() {
         </CardContent>
       </Card>
     </div>
+    </VenueLayoutClient>
   )
 }

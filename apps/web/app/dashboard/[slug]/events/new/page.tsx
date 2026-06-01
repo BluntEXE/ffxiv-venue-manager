@@ -9,6 +9,7 @@ import { Label } from "@/components/ui/label"
 import { Textarea } from "@/components/ui/textarea"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { DateTimePicker } from "@/components/ui/date-time-picker"
+import { VenueLayoutClient } from "@/components/venue-layout-client"
 
 interface EventTemplate {
   id: string
@@ -192,7 +193,8 @@ export default function NewEventPage() {
   }
 
   return (
-    <div className="container mx-auto p-4 md:p-6 lg:p-8 max-w-3xl">
+    <VenueLayoutClient slug={slug}>
+    <div className="p-4 md:p-6 max-w-3xl">
       <Card>
         <CardHeader>
           <CardTitle>Create New Event</CardTitle>
@@ -337,5 +339,6 @@ export default function NewEventPage() {
         </CardContent>
       </Card>
     </div>
+    </VenueLayoutClient>
   )
 }

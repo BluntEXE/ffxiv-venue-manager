@@ -32,6 +32,8 @@ export async function VenueLayout({
       id: true,
       name: true,
       slug: true,
+      dataCenter: true,
+      world: true,
     },
   })
 

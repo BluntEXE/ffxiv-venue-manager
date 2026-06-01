@@ -8,7 +8,8 @@ import { VenueSwitcher } from "./venue-switcher"
 import { UserMenu } from "./user-menu"
 import { FeedbackDialog } from "./feedback-dialog"
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet"
-import { Menu, Heart, Bell, Plug } from "lucide-react"
+import { Menu, Heart, Bell, Plug, CheckCheck } from "lucide-react"
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover"
 import { useState } from "react"
 import type { Session } from "next-auth"
 
@@ -75,9 +76,24 @@ export function NavbarClient({ session, venues }: NavbarClientProps) {
                   Plugin synced
                 </div>
               )}
-              <Button variant="ghost" size="icon" className="text-foreground/60 hover:text-foreground hover:bg-[var(--blue-007)]" aria-label="Notifications">
-                <Bell className="h-4 w-4" />
-              </Button>
+              <Popover>
+                <PopoverTrigger asChild>
+                  <Button variant="ghost" size="icon" className="text-foreground/60 hover:text-foreground hover:bg-[var(--blue-007)] relative" aria-label="Notifications">
+                    <Bell className="h-4 w-4" />
+                  </Button>
+                </PopoverTrigger>
+                <PopoverContent align="end" className="w-72 p-0 border-[var(--blue-018)] bg-card" style={{ background: "rgba(7,11,20,0.96)", backdropFilter: "blur(16px)" }}>
+                  <div className="flex items-center justify-between px-4 py-3 border-b border-[var(--blue-008)]">
+                    <span className="font-semibold text-sm">Notifications</span>
+                    <CheckCheck className="h-3.5 w-3.5 text-[var(--fg-faint)]" />
+                  </div>
+                  <div className="flex flex-col items-center justify-center py-10 px-4 text-center">
+                    <Bell className="h-8 w-8 text-[var(--fg-faint)] mb-3 opacity-30" />
+                    <p className="text-sm text-muted-foreground">No new notifications</p>
+                    <p className="text-xs text-[var(--fg-faint)] mt-1">Activity from events, sales and staff will appear here</p>
+                  </div>
+                </PopoverContent>
+              </Popover>
               <FeedbackDialog />
               <Button asChild variant="ghost" size="sm" className="text-[var(--support-pink)] hover:text-pink-300 hover:bg-[rgba(243,139,168,0.08)]">
                 <Link href="https://ko-fi.com/ehnocure" target="_blank" rel="noopener noreferrer">

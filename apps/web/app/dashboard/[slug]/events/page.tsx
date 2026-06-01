@@ -120,23 +120,27 @@ export default async function EventsPage({
         </div>
 
       {/* View Tabs */}
-      <div className="flex gap-2 mb-6">
-        <Button
-          variant={view === "list" ? "default" : "outline"}
-          asChild
-        >
-          <Link href={`/dashboard/${slug}/events?view=list`}>
-            List View
-          </Link>
-        </Button>
-        <Button
-          variant={view === "calendar" ? "default" : "outline"}
-          asChild
-        >
-          <Link href={`/dashboard/${slug}/events?view=calendar`}>
-            Calendar View
-          </Link>
-        </Button>
+      <div className="flex items-center gap-3 mb-6 flex-wrap">
+        <div className="flex gap-1 bg-card border border-[var(--blue-015)] rounded-full p-1">
+          {([
+            { key: "list", label: "Upcoming" },
+            { key: "calendar", label: "Calendar" },
+          ] as const).map(({ key, label }) => (
+            <Link
+              key={key}
+              href={`/dashboard/${slug}/events?view=${key}`}
+              className={`text-sm font-semibold px-4 py-1.5 rounded-full transition-colors ${
+                view === key
+                  ? "bg-[var(--xiv-blue)] text-[var(--xiv-navy)]"
+                  : "text-muted-foreground hover:text-foreground hover:bg-[var(--blue-007)]"
+              }`}
+            >
+              {label}
+            </Link>
+          ))}
+        </div>
+        <div className="flex-1" />
+        <span className="text-xs text-muted-foreground">{upcomingEvents.length} upcoming · {pastEvents.length} past</span>
       </div>
 
       {view === "calendar" ? (
@@ -155,24 +159,35 @@ export default async function EventsPage({
             ) : (
               <div className="grid grid-cols-1 gap-3">
                 {upcomingEvents.map((event: typeof upcomingEvents[number]) => (
-                  <div key={event.id} className="xiv-card rounded-xl p-4 transition-all duration-200 hover:border-[rgba(0,180,255,0.4)]">
-                    <div className="flex justify-between items-start gap-4">
-                      <div className="flex-1 min-w-0">
-                        <p className="font-semibold truncate">{event.title}</p>
-                        <p className="text-sm text-muted-foreground mt-0.5">
-                          {formatServerTime(event.startTime, "datelong")} · {formatServerTime(event.startTime, "time")} – {formatServerTime(event.endTime, "time")} {SERVER_TIME_LABEL}
-                        </p>
-                        {event.location && <p className="text-xs text-muted-foreground mt-1 truncate">{event.location}</p>}
+                  <div key={event.id} className="xiv-card rounded-xl p-4 transition-all duration-200 hover:border-[rgba(0,180,255,0.4)] flex gap-4">
+                    {/* Datebox */}
+                    <div className="w-10 flex-shrink-0 text-center pt-0.5">
+                      <div className="text-[0.58rem] font-semibold uppercase tracking-wide text-[var(--xiv-blue)]">
+                        {formatServerTime(event.startTime, "date").split(" ")[0]}
                       </div>
-                      <div className="flex gap-1.5 flex-wrap shrink-0">
-                        <Badge className={statusColors[event.status as keyof typeof statusColors]}>{event.status}</Badge>
-                        <Badge variant="outline">{typeLabels[event.eventType as keyof typeof typeLabels]}</Badge>
-                        {event.partakeEventId && <Badge variant="outline" className="border-[rgba(0,180,255,0.4)] text-[var(--xiv-blue)]">Partake</Badge>}
+                      <div className="font-cinzel text-xl font-bold leading-none mt-0.5">
+                        {new Date(event.startTime).getUTCDate()}
                       </div>
                     </div>
-                    <div className="flex gap-2 mt-3">
-                      <Button asChild variant="outline" size="sm"><Link href={`/dashboard/${slug}/events/${event.id}`}>View Details</Link></Button>
-                      <Button asChild variant="outline" size="sm"><Link href={`/dashboard/${slug}/events/${event.id}/edit`}>Edit</Link></Button>
+                    <div className="flex-1 min-w-0">
+                      <div className="flex justify-between items-start gap-3 flex-wrap">
+                        <p className="font-semibold truncate">{event.title}</p>
+                        <div className="flex gap-1.5 flex-wrap shrink-0">
+                          <Badge className={statusColors[event.status as keyof typeof statusColors]}>{event.status}</Badge>
+                          <Badge variant="outline">{typeLabels[event.eventType as keyof typeof typeLabels]}</Badge>
+                          {event.partakeEventId && <Badge variant="outline" className="border-[rgba(0,180,255,0.4)] text-[var(--xiv-blue)]">Partake</Badge>}
+                        </div>
+                      </div>
+                      <p className="text-xs text-muted-foreground mt-0.5 flex items-center gap-1">
+                        <svg className="w-3 h-3" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+                        {format(new Date(event.startTime), "EEE")} · {formatServerTime(event.startTime, "time")}
+                        {event.endTime ? ` – ${formatServerTime(event.endTime, "time")} ${SERVER_TIME_LABEL}` : ` ${SERVER_TIME_LABEL}`}
+                      </p>
+                      {event.location && <p className="text-xs text-muted-foreground mt-1 truncate">{event.location}</p>}
+                      <div className="flex gap-2 mt-3">
+                        <Button asChild variant="outline" size="sm"><Link href={`/dashboard/${slug}/events/${event.id}`}>View</Link></Button>
+                        <Button asChild variant="outline" size="sm"><Link href={`/dashboard/${slug}/events/${event.id}/edit`}>Edit</Link></Button>
+                      </div>
                     </div>
                   </div>
                 ))}

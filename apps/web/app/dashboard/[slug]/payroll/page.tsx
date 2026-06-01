@@ -822,156 +822,129 @@ export default function PayrollPage() {
         </div>
 
         {/* Summary Cards */}
+        {/* KPIs */}
         <div className="grid gap-4 md:grid-cols-3">
-          <Card className="p-4"><StatReadout label="Unpaid" value={`${Math.round(unpaidTotal).toLocaleString()} gil`} subtext={`${payrollEntries.filter(e => !e.isPaid).length} entries`} deltaDirection="down" /></Card>
-          <Card className="p-4"><StatReadout label="Paid" value={`${Math.round(paidTotal).toLocaleString()} gil`} subtext={`${payrollEntries.filter(e => e.isPaid).length} entries`} deltaDirection="up" /></Card>
-          <Card className="p-4"><StatReadout label="Total" value={`${Math.round(unpaidTotal + paidTotal).toLocaleString()} gil`} subtext={`${payrollEntries.length} entries`} /></Card>
+          <Card className="p-4"><StatReadout label="Unpaid" value={`${Math.round(unpaidTotal).toLocaleString()} gil`} subtext={`${payrollEntries.filter(e => !e.isPaid).length} entries`} deltaDirection="down"
+            icon={<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>} iconVariant="warning" /></Card>
+          <Card className="p-4"><StatReadout label="Paid" value={`${Math.round(paidTotal).toLocaleString()} gil`} subtext={`${payrollEntries.filter(e => e.isPaid).length} entries`} deltaDirection="up"
+            icon={<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><polyline points="20 6 9 17 4 12"/></svg>} iconVariant="success" /></Card>
+          <Card className="p-4"><StatReadout label="Total period" value={`${Math.round(unpaidTotal + paidTotal).toLocaleString()} gil`} subtext={`${payrollEntries.length} entries`}
+            icon={<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>} iconVariant="blue" /></Card>
         </div>
 
-        {/* Filter Tabs */}
-        <div className="flex space-x-2">
-          <Button
-            variant={filter === "all" ? "default" : "outline"}
-            onClick={() => setFilter("all")}
-          >
-            All
-          </Button>
-          <Button
-            variant={filter === "unpaid" ? "default" : "outline"}
-            onClick={() => setFilter("unpaid")}
-          >
-            Unpaid
-          </Button>
-          <Button
-            variant={filter === "paid" ? "default" : "outline"}
-            onClick={() => setFilter("paid")}
-          >
-            Paid
-          </Button>
+        {/* Filter tabs */}
+        <div className="flex gap-1 bg-card border border-[var(--blue-015)] rounded-full p-1 w-fit">
+          {(["all", "unpaid", "paid"] as const).map((f) => (
+            <button
+              key={f}
+              onClick={() => setFilter(f)}
+              className={`text-sm font-semibold px-4 py-1.5 rounded-full transition-colors capitalize ${
+                filter === f
+                  ? "bg-[var(--xiv-blue)] text-[var(--xiv-navy)]"
+                  : "text-muted-foreground hover:text-foreground hover:bg-[var(--blue-007)]"
+              }`}
+            >
+              {f === "all" ? "All" : f.charAt(0).toUpperCase() + f.slice(1)}
+              <span className={`ml-1.5 text-[0.68rem] ${filter === f ? "opacity-70" : "text-[var(--fg-faint)]"}`}>
+                {f === "all" ? payrollEntries.length : f === "paid" ? payrollEntries.filter(e => e.isPaid).length : payrollEntries.filter(e => !e.isPaid).length}
+              </span>
+            </button>
+          ))}
         </div>
 
-        {/* Payroll Entries List */}
-        <div className="space-y-4">
+        {/* Payroll table */}
+        <div className="rounded-xl border border-[var(--blue-018)] bg-card overflow-hidden">
           {filteredEntries.length === 0 ? (
-            <Card>
-              <CardContent className="p-8 text-center text-muted-foreground">
-                No payroll entries found. Click "Add Payroll Entry" to create one.
-              </CardContent>
-            </Card>
+            <p className="text-center text-sm text-muted-foreground py-10">No payroll entries found.</p>
           ) : (
-            filteredEntries.map((entry) => (
-              <Card key={entry.id}>
-                <CardContent className="p-6">
-                  <div className="flex items-start justify-between">
-                    <div className="flex items-start space-x-4">
-                      <Avatar>
-                        <AvatarImage src={entry.isManualEntry ? undefined : entry.membership?.user?.image || undefined} />
-                        <AvatarFallback>
-                          {entry.isManualEntry
-                            ? (entry.manualEntryName || "?")[0].toUpperCase()
-                            : (entry.membership?.user?.displayName ||
-                                entry.membership?.user?.name ||
-                                "?")[0].toUpperCase()}
-                        </AvatarFallback>
-                      </Avatar>
-
-                      <div className="space-y-1">
-                        <div className="flex items-center space-x-2">
-                          <h3 className="font-semibold">
-                            {entry.isManualEntry
-                              ? entry.manualEntryName || "Unknown"
-                              : entry.membership?.user?.displayName ||
-                                entry.membership?.user?.name ||
-                                "Unknown"}
-                          </h3>
-                          {entry.isManualEntry && (
-                            <Badge variant="outline" className="bg-[rgba(0,180,255,0.12)] text-[var(--xiv-blue)] border-[rgba(0,180,255,0.35)]">
-                              Manual
-                            </Badge>
-                          )}
-                          <Badge variant={entry.isPaid ? "default" : "secondary"}>
-                            {entry.isPaid ? "Paid" : "Unpaid"}
-                          </Badge>
-                          {entry.paymentType === "HOURLY" && (
-                            <Badge variant="outline">
-                              <Clock className="mr-1 h-3 w-3" />
-                              Hourly
-                            </Badge>
-                          )}
+            <table className="w-full border-collapse">
+              <thead>
+                <tr>
+                  {["Staff", "Period", "Hours", "Total", "Status", ""].map((h, i) => (
+                    <th key={h || i} className={`text-left text-[0.68rem] font-medium uppercase tracking-[0.06em] text-[var(--xiv-blue)] px-5 py-3 border-b border-[var(--blue-008)] whitespace-nowrap ${
+                      i === 2 ? "hidden md:table-cell" : ""
+                    } ${i === 5 ? "text-right" : ""}`}>
+                      {h}
+                    </th>
+                  ))}
+                </tr>
+              </thead>
+              <tbody>
+                {filteredEntries.map((entry) => {
+                  const name = entry.isManualEntry
+                    ? entry.manualEntryName || "Unknown"
+                    : entry.membership?.user?.displayName || entry.membership?.user?.name || "Unknown"
+                  const initials = name.charAt(0).toUpperCase()
+                  const total = Math.round(parseFloat(entry.totalAmount))
+                  return (
+                    <tr key={entry.id} className="border-b border-[var(--blue-008)] last:border-0 hover:bg-[var(--blue-004)] transition-colors">
+                      {/* Staff */}
+                      <td className="px-5 py-3.5">
+                        <div className="flex items-center gap-3">
+                          <Avatar className="w-8 h-8">
+                            <AvatarImage src={entry.membership?.user?.image || undefined} />
+                            <AvatarFallback className="text-[0.65rem] font-bold bg-gradient-to-br from-[var(--xiv-blue)] to-blue-700 text-white">{initials}</AvatarFallback>
+                          </Avatar>
+                          <div>
+                            <p className="text-sm font-medium">{name}</p>
+                            {entry.isManualEntry && <p className="text-[0.68rem] text-[var(--fg-faint)]">Manual</p>}
+                          </div>
                         </div>
-
-                        <p className="text-sm text-muted-foreground">
-                          {format(new Date(entry.periodStart), "MMM d, yyyy")} -{" "}
-                          {format(new Date(entry.periodEnd), "MMM d, yyyy")}
-                        </p>
-
-                        {entry.paymentType === "HOURLY" && entry.hoursWorked && (
-                          <p className="text-sm">
-                            {entry.hoursWorked} hours @ {entry.baseRate} Gil/hr
-                          </p>
-                        )}
-
+                      </td>
+                      {/* Period */}
+                      <td className="px-5 py-3.5 text-sm text-muted-foreground whitespace-nowrap">
+                        {format(new Date(entry.periodStart), "d MMM")} – {format(new Date(entry.periodEnd), "d MMM")}
+                      </td>
+                      {/* Hours */}
+                      <td className="px-5 py-3.5 text-sm text-muted-foreground hidden md:table-cell">
+                        {entry.hoursWorked ? `${entry.hoursWorked}h` : "—"}
+                      </td>
+                      {/* Total */}
+                      <td className="px-5 py-3.5">
+                        <span className="text-sm font-semibold font-[var(--font-heading)] text-[var(--xiv-blue)]">
+                          {total.toLocaleString()} gil
+                        </span>
                         {entry.bonusAmount && parseFloat(entry.bonusAmount) > 0 && (
-                          <p className="text-sm text-emerald-400">
-                            + {entry.bonusAmount} Gil bonus
-                          </p>
+                          <p className="text-[0.68rem] text-emerald-400">+{parseFloat(entry.bonusAmount).toLocaleString()} bonus</p>
                         )}
-
-                        {entry.notes && (
-                          <p className="text-sm text-muted-foreground italic">{entry.notes}</p>
+                      </td>
+                      {/* Status */}
+                      <td className="px-5 py-3.5">
+                        {entry.isPaid ? (
+                          <span className="text-[0.7rem] font-semibold uppercase tracking-[0.04em] px-2.5 py-1 rounded-full bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">Paid</span>
+                        ) : (
+                          <span className="text-[0.7rem] font-semibold uppercase tracking-[0.04em] px-2.5 py-1 rounded-full bg-amber-500/10 text-amber-400 border border-amber-500/20">Pending</span>
                         )}
-
-                        {entry.isPaid && entry.paidAt && (
-                          <p className="text-xs text-muted-foreground">
-                            Paid on {format(new Date(entry.paidAt), "MMM d, yyyy")} by{" "}
-                            {entry.paidByUser?.displayName || entry.paidByUser?.name || "Unknown"}
-                          </p>
-                        )}
-                      </div>
-                    </div>
-
-                    <div className="flex flex-col items-end space-y-2">
-                      <div className="text-2xl font-bold">
-                        {Math.round(parseFloat(entry.totalAmount)).toLocaleString()} Gil
-                      </div>
-
-                      <div className="flex items-center gap-2">
-                        <Button
-                          variant={entry.isPaid ? "outline" : "default"}
-                          size="sm"
-                          onClick={() => handleMarkAsPaid(entry.id, entry.isPaid)}
-                          disabled={updatingId === entry.id}
-                        >
-                          {updatingId === entry.id ? (
-                            "Updating..."
-                          ) : entry.isPaid ? (
-                            <>
-                              <XCircle className="mr-2 h-4 w-4" />
-                              Mark Unpaid
-                            </>
-                          ) : (
-                            <>
-                              <CheckCircle2 className="mr-2 h-4 w-4" />
-                              Mark as Paid
-                            </>
-                          )}
-                        </Button>
-                        <Button
-                          variant="ghost"
-                          size="sm"
-                          className="text-destructive hover:text-destructive"
-                          onClick={() => handleDeleteEntry(entry.id, entry.isPaid)}
-                          disabled={updatingId === entry.id}
-                          aria-label="Delete payroll entry"
-                        >
-                          <Trash2 className="h-4 w-4" />
-                        </Button>
-                      </div>
-                    </div>
-                  </div>
-                </CardContent>
-              </Card>
-            ))
+                      </td>
+                      {/* Actions */}
+                      <td className="px-5 py-3.5 text-right">
+                        <div className="flex items-center justify-end gap-2">
+                          <Button
+                            variant={entry.isPaid ? "outline" : "default"}
+                            size="sm"
+                            onClick={() => handleMarkAsPaid(entry.id, entry.isPaid)}
+                            disabled={updatingId === entry.id}
+                            className="text-xs"
+                          >
+                            {updatingId === entry.id ? "…" : entry.isPaid ? "Mark unpaid" : "Mark paid"}
+                          </Button>
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            className="text-[var(--fg-faint)] hover:text-destructive"
+                            onClick={() => handleDeleteEntry(entry.id, entry.isPaid)}
+                            disabled={updatingId === entry.id}
+                            aria-label="Delete"
+                          >
+                            <Trash2 className="h-4 w-4" />
+                          </Button>
+                        </div>
+                      </td>
+                    </tr>
+                  )
+                })}
+              </tbody>
+            </table>
           )}
         </div>
       </div>

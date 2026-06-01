@@ -9,7 +9,9 @@ import { Badge } from "@/components/ui/badge"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { prisma } from "@/lib/prisma"
 import { format } from "date-fns"
+import { Users, UserPlus, Shield, AlertTriangle } from "lucide-react"
 import { PendingInvites } from "@/components/pending-invites"
+import { StaffTable } from "@/components/staff-table"
 import { VenueLayout } from "@/components/venue-layout"
 import { Breadcrumb } from "@/components/breadcrumb"
 
@@ -76,6 +78,13 @@ export default async function StaffPage({
 
   const canManageStaff = ["OWNER", "MANAGER"].includes(userRole)
 
+  // Active shifts for on-shift status
+  const activeShifts = await prisma.shift.findMany({
+    where: { venueId: venue.id, status: "ACTIVE" },
+    select: { membershipId: true },
+  })
+  const onShiftIds = new Set(activeShifts.map(s => s.membershipId))
+
   return (
     <VenueLayout
       venueSlug={venue.slug}
@@ -120,14 +129,28 @@ export default async function StaffPage({
 
         {/* Stats */}
         <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
-          <Card className="p-4"><StatReadout label="Active staff" value={activeStaff.length} subtext="Members" /></Card>
-          <Card className="p-4"><StatReadout label="Pending invites" value={pendingInvites.length} subtext="Awaiting signup" deltaDirection={pendingInvites.length > 0 ? "up" : "neutral"} /></Card>
-          <Card className="p-4"><StatReadout label="Managers" value={managers.length} subtext="Manager role" /></Card>
-          <Card className="p-4"><StatReadout label="Staff" value={regularStaff.length} subtext="Staff role" /></Card>
+          <Card className="p-4"><StatReadout label="Active staff" value={activeStaff.length} subtext="Members" icon={<Users />} iconVariant="blue" /></Card>
+          <Card className="p-4"><StatReadout label="Pending invites" value={pendingInvites.length} subtext="Awaiting signup" deltaDirection={pendingInvites.length > 0 ? "up" : "neutral"} icon={<UserPlus />} iconVariant={pendingInvites.length > 0 ? "warning" : "blue"} /></Card>
+          <Card className="p-4"><StatReadout label="Managers" value={managers.length} subtext="Manager role" icon={<Shield />} iconVariant="success" /></Card>
+          <Card className="p-4"><StatReadout label="Staff" value={regularStaff.length} subtext="Staff role" icon={<Users />} iconVariant="blue" /></Card>
         </div>
 
-        {/* Staff Lists */}
-        <div className="space-y-8">
+        {/* Staff table */}
+        <StaffTable
+          members={activeStaff.map(m => ({
+            id: m.id,
+            role: m.role as "OWNER" | "MANAGER" | "STAFF",
+            customRole: m.customRole ? { name: m.customRole.name, color: m.customRole.color } : null,
+            joinedAt: m.createdAt.toISOString(),
+            isOnShift: onShiftIds.has(m.id),
+            user: m.user ? { id: m.user.id, name: m.user.name, image: m.user.image } : null,
+          }))}
+          slug={slug}
+          canManage={canManageStaff}
+        />
+
+        {/* Pending + individual edit sections */}
+        <div className="space-y-8 mt-6">
           {/* Pending Invites */}
           <PendingInvites
             invites={pendingInvites.map((invite: typeof pendingInvites[number]) => ({
@@ -143,163 +166,6 @@ export default async function StaffPage({
             canManageStaff={canManageStaff}
           />
 
-          {/* Owners */}
-          {owners.length > 0 && (
-            <div>
-              <h2 className="font-cinzel text-lg font-bold tracking-[0.02em] mb-3">Owners</h2>
-              <div className="grid grid-cols-1 gap-4">
-                {owners.map((member: typeof owners[number]) => (
-                  <Card key={member.id}>
-                    <CardContent className="p-6">
-                      <div className="flex items-center justify-between">
-                        <div className="flex items-center gap-4">
-                          <Avatar className="h-12 w-12">
-                            <AvatarImage src={member.user?.image || undefined} />
-                            <AvatarFallback>
-                              {member.user?.name?.substring(0, 2).toUpperCase() || "??"}
-                            </AvatarFallback>
-                          </Avatar>
-                          <div>
-                            <p className="font-semibold">{member.user?.name || "Unknown"}</p>
-                            <p className="text-xs text-muted-foreground">
-                              Joined {format(new Date(member.createdAt), "PPP")}
-                            </p>
-                          </div>
-                        </div>
-                        <div className="flex items-center gap-3">
-                          <RoleBadge role={member.role} />
-                          {member.customRole && (
-                            <RoleBadge
-                              role={member.customRole.name}
-                              color={member.customRole.color}
-                            />
-                          )}
-                          {userRole === "OWNER" && (
-                            <Button variant="outline" size="sm" asChild>
-                              <Link href={`/dashboard/${slug}/staff/${member.id}`}>
-                                Edit Role
-                              </Link>
-                            </Button>
-                          )}
-                        </div>
-                      </div>
-                    </CardContent>
-                  </Card>
-                ))}
-              </div>
-            </div>
-          )}
-
-          {/* Managers */}
-          {managers.length > 0 && (
-            <div>
-              <h2 className="font-cinzel text-lg font-bold tracking-[0.02em] mb-3">Managers</h2>
-              <div className="grid grid-cols-1 gap-4">
-                {managers.map((member: typeof managers[number]) => (
-                  <Card key={member.id}>
-                    <CardContent className="p-6">
-                      <div className="flex items-center justify-between">
-                        <div className="flex items-center gap-4">
-                          <Avatar className="h-12 w-12">
-                            <AvatarImage src={member.user?.image || undefined} />
-                            <AvatarFallback>
-                              {member.user?.name?.substring(0, 2).toUpperCase() || "??"}
-                            </AvatarFallback>
-                          </Avatar>
-                          <div>
-                            <p className="font-semibold">{member.user?.name || "Unknown"}</p>
-                            <p className="text-xs text-muted-foreground">
-                              Joined {format(new Date(member.createdAt), "PPP")}
-                            </p>
-                          </div>
-                        </div>
-                        <div className="flex items-center gap-3">
-                          <RoleBadge role={member.role} />
-                          {member.customRole && (
-                            <RoleBadge
-                              role={member.customRole.name}
-                              color={member.customRole.color}
-                            />
-                          )}
-                          {canManageStaff && (
-                            <Button variant="outline" size="sm" asChild>
-                              <Link href={`/dashboard/${slug}/staff/${member.id}`}>
-                                Edit Role
-                              </Link>
-                            </Button>
-                          )}
-                        </div>
-                      </div>
-                    </CardContent>
-                  </Card>
-                ))}
-              </div>
-            </div>
-          )}
-
-          {/* Regular Staff */}
-          {regularStaff.length > 0 && (
-            <div>
-              <h2 className="font-cinzel text-lg font-bold tracking-[0.02em] mb-3">Staff Members</h2>
-              <div className="grid grid-cols-1 gap-4">
-                {regularStaff.map((member: typeof regularStaff[number]) => (
-                  <Card key={member.id}>
-                    <CardContent className="p-6">
-                      <div className="flex items-center justify-between">
-                        <div className="flex items-center gap-4">
-                          <Avatar className="h-12 w-12">
-                            <AvatarImage src={member.user?.image || undefined} />
-                            <AvatarFallback>
-                              {member.user?.name?.substring(0, 2).toUpperCase() || "??"}
-                            </AvatarFallback>
-                          </Avatar>
-                          <div>
-                            <p className="font-semibold">{member.user?.name || "Unknown"}</p>
-                            <p className="text-xs text-muted-foreground">
-                              Joined {format(new Date(member.createdAt), "PPP")}
-                            </p>
-                          </div>
-                        </div>
-                        <div className="flex items-center gap-3">
-                          <RoleBadge role={member.role} />
-                          {member.customRole && (
-                            <RoleBadge
-                              role={member.customRole.name}
-                              color={member.customRole.color}
-                            />
-                          )}
-                          {canManageStaff && (
-                            <Button variant="outline" size="sm" asChild>
-                              <Link href={`/dashboard/${slug}/staff/${member.id}`}>
-                                Edit Role
-                              </Link>
-                            </Button>
-                          )}
-                        </div>
-                      </div>
-                    </CardContent>
-                  </Card>
-                ))}
-              </div>
-            </div>
-          )}
-
-          {staff.length === 1 && (
-            <Card className="text-center py-12">
-              <CardContent>
-                <p className="text-muted-foreground mb-4">
-                  You're the only team member. Invite staff to help manage your venue!
-                </p>
-                {canManageStaff && (
-                  <Button asChild>
-                    <Link href={`/dashboard/${slug}/staff/invite`}>
-                      Invite Your First Staff Member
-                    </Link>
-                  </Button>
-                )}
-              </CardContent>
-            </Card>
-          )}
         </div>
       </div>
     </VenueLayout>

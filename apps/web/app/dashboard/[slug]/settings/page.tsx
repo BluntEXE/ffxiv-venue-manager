@@ -205,8 +205,7 @@ export default function SettingsPage({
 
   return (
     <VenueLayoutClient slug={slug}>
-      <div className="container mx-auto p-4 md:p-6 lg:p-8 max-w-4xl">
-        {/* Breadcrumb */}
+      <div className="p-4 md:p-6 max-w-3xl">
         <Breadcrumb
           items={[
             { label: "Dashboard", href: "/dashboard" },
@@ -216,680 +215,299 @@ export default function SettingsPage({
         />
 
         {/* Header */}
-        <div className="mb-6 md:mb-8">
-          <h1 className="text-2xl md:text-3xl lg:text-4xl font-bold">Venue Settings</h1>
-          <p className="text-sm md:text-base text-muted-foreground mt-1 md:mt-2">
-            Control what your staff can see and access
-          </p>
+        <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-4 mb-6 md:mb-8">
+          <div>
+            <h1 className="font-cinzel text-2xl md:text-3xl font-bold tracking-[0.02em]">Settings</h1>
+            <p className="text-sm text-muted-foreground mt-1">Manage your venue profile, integrations and permissions</p>
+          </div>
+          <Button onClick={handleSave} disabled={isSaving} className="self-start shrink-0">
+            {isSaving ? "Saving…" : "Save changes"}
+          </Button>
         </div>
 
-        {/* Sub-pages */}
-        <Card className="mb-6">
-          <CardHeader>
-            <CardTitle>Integrations</CardTitle>
-            <CardDescription>Manage external connections for this venue</CardDescription>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            <div>
-              <Link
-                href={`/dashboard/${slug}/settings/api-keys`}
-                className="inline-flex items-center gap-2 text-sm font-medium text-primary hover:underline"
-              >
-                Dalamud Plugin API Keys &rarr;
-              </Link>
-              <p className="text-xs text-muted-foreground mt-1">
-                Generate keys so the XIV-App Dalamud plugin can sync patron visits.
-              </p>
-            </div>
-
-            {/* Partake Integration */}
-            <div className="border rounded-lg p-4 bg-gradient-to-r from-indigo-500/10 to-transparent">
-              <Label htmlFor="partake-team-id" className="text-base font-semibold flex items-center gap-2">
-                Partake.gg Event Sync
-              </Label>
-              <p className="text-sm text-muted-foreground mt-1 mb-3">
-                Link your Partake team to automatically sync events. Find your Team ID on your{" "}
-                <a href="https://partake.gg" target="_blank" rel="noopener noreferrer" className="text-primary hover:underline">
-                  Partake.gg
-                </a>{" "}
-                team dashboard URL (e.g. partake.gg/team/<strong>123</strong>).
-              </p>
-              <div className="flex gap-2 items-end">
-                <div className="flex-1">
-                  <Input
-                    id="partake-team-id"
-                    type="number"
-                    placeholder="e.g. 123"
-                    value={settings.partakeTeamId ?? ""}
-                    onChange={(e) => {
-                      const val = e.target.value
-                      setSettings({
-                        ...settings,
-                        partakeTeamId: val ? parseInt(val, 10) : null,
-                      })
-                    }}
-                    disabled={isSaving}
-                    min={1}
-                  />
-                </div>
-                {settings.partakeTeamId && (
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    disabled={isSyncing}
-                    onClick={async () => {
-                      setIsSyncing(true)
-                      setSyncResult("")
-                      try {
-                        const res = await fetch(`/api/venues/${venueId}/sync-partake`, {
-                          method: "POST",
-                        })
-                        if (!res.ok) {
-                          const data = await res.json()
-                          throw new Error(data.error || "Sync failed")
-                        }
-                        const data = await res.json()
-                        setSyncResult(`Synced: ${data.results.created} new, ${data.results.updated} updated, ${data.results.skipped} unchanged`)
-                        setTimeout(() => setSyncResult(""), 5000)
-                      } catch (err: unknown) {
-                        setSyncResult(err instanceof Error ? err.message : "Sync failed")
-                      } finally {
-                        setIsSyncing(false)
-                      }
-                    }}
-                  >
-                    {isSyncing ? "Syncing..." : "Sync Now"}
-                  </Button>
-                )}
-              </div>
-              {syncResult && (
-                <p className="text-sm text-emerald-400 mt-2">{syncResult}</p>
-              )}
-              {settings.partakeTeamId && (
-                <p className="text-xs text-muted-foreground mt-2">
-                  Events sync automatically every hour. Use &quot;Sync Now&quot; to pull events immediately.
-                </p>
-              )}
-            </div>
-          </CardContent>
-        </Card>
-
-        {/* Success Message */}
+        {/* Alerts */}
         {success && (
-          <Alert className="mb-6 bg-emerald-500/10 border-green-500/20">
-            <AlertDescription className="text-emerald-400">
-              Settings saved successfully!
-            </AlertDescription>
+          <Alert className="mb-4 bg-emerald-500/10 border-emerald-500/20">
+            <AlertDescription className="text-emerald-400">Settings saved.</AlertDescription>
           </Alert>
         )}
-
-        {/* Error Message */}
         {error && (
-          <Alert className="mb-6 bg-destructive/10 border-destructive/20">
-            <AlertDescription className="text-destructive-foreground">{error}</AlertDescription>
+          <Alert className="mb-4 bg-destructive/10 border-destructive/20">
+            <AlertDescription className="text-destructive">{error}</AlertDescription>
           </Alert>
         )}
 
         {isLoading ? (
-          <PageLoading text="Loading settings..." />
+          <PageLoading text="Loading settings…" />
         ) : (
-          <div className="space-y-6">
-            {/* Task Visibility Settings */}
-            <Card>
-              <CardHeader>
-                <CardTitle>Task Visibility</CardTitle>
-                <CardDescription>
-                  Control which tasks staff members can see
-                </CardDescription>
-              </CardHeader>
-              <CardContent className="space-y-4">
-                <div className="space-y-2">
-                  <Label htmlFor="task-visibility">Staff can see:</Label>
-                  <Select
-                    value={settings.taskVisibility}
-                    onValueChange={(value: string) =>
-                      setSettings({ ...settings, taskVisibility: value as "all" | "assigned" | "assigned_unassigned" })
-                    }
-                    disabled={isSaving}
-                  >
-                    <SelectTrigger id="task-visibility">
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="all">
-                        All Tasks (Full Transparency)
-                      </SelectItem>
-                      <SelectItem value="assigned">
-                        Only Assigned Tasks (Privacy Mode)
-                      </SelectItem>
-                      <SelectItem value="assigned_unassigned">
-                        Assigned + Unassigned Tasks (Hybrid)
-                      </SelectItem>
-                    </SelectContent>
-                  </Select>
-                  <div className="text-sm text-muted-foreground mt-2">
-                    {settings.taskVisibility === "all" && (
-                      <p>
-                        ✅ <strong>Full Transparency:</strong> All staff can see all tasks,
-                        promoting teamwork and awareness of venue operations.
-                      </p>
-                    )}
-                    {settings.taskVisibility === "assigned" && (
-                      <p>
-                        🔒 <strong>Privacy Mode:</strong> Staff only see tasks assigned
-                        to them. Good for focused work and privacy.
-                      </p>
-                    )}
-                    {settings.taskVisibility === "assigned_unassigned" && (
-                      <p>
-                        ⚖️ <strong>Hybrid Mode:</strong> Staff see their tasks plus
-                        unassigned tasks they can claim. Balanced approach.
-                      </p>
-                    )}
-                  </div>
+          <div className="space-y-4">
+
+            {/* ── Integrations ── */}
+            <section className="rounded-xl border border-[var(--blue-018)] bg-card overflow-hidden">
+              <div className="flex items-center gap-2.5 px-5 py-3.5 border-b border-[var(--blue-008)] font-semibold text-[0.95rem]">
+                <svg className="w-4 h-4 text-[var(--xiv-blue)]" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg>
+                Integrations
+              </div>
+
+              {/* Dalamud */}
+              <div className="flex items-center gap-4 px-5 py-3.5 border-b border-[var(--blue-008)]">
+                <div className="w-10 h-10 rounded-lg bg-emerald-500/10 border border-emerald-500/20 flex items-center justify-center shrink-0">
+                  <svg className="w-5 h-5 text-emerald-400" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><rect x="6" y="2" width="12" height="20" rx="2"/><line x1="12" y1="18" x2="12" y2="18"/></svg>
                 </div>
-              </CardContent>
-            </Card>
-
-            {/* Sales Visibility Settings */}
-            <Card>
-              <CardHeader>
-                <CardTitle>Sales Data Visibility</CardTitle>
-                <CardDescription>
-                  Control which sales transactions staff can see
-                </CardDescription>
-              </CardHeader>
-              <CardContent className="space-y-4">
-                <div className="space-y-2">
-                  <Label htmlFor="sales-visibility">Staff can see:</Label>
-                  <Select
-                    value={settings.salesVisibility}
-                    onValueChange={(value: string) =>
-                      setSettings({ ...settings, salesVisibility: value as "all" | "own" | "none" })
-                    }
-                    disabled={isSaving}
-                  >
-                    <SelectTrigger id="sales-visibility">
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="all">All Transactions</SelectItem>
-                      <SelectItem value="own">Their Own Transactions Only</SelectItem>
-                      <SelectItem value="none">No Access to Sales Page</SelectItem>
-                    </SelectContent>
-                  </Select>
-                  <div className="text-sm text-muted-foreground mt-2">
-                    {settings.salesVisibility === "all" && (
-                      <p>
-                        ✅ <strong>Full Access:</strong> Staff can see all sales
-                        transactions. Good for team accountability.
-                      </p>
-                    )}
-                    {settings.salesVisibility === "own" && (
-                      <p>
-                        🔒 <strong>Own Only:</strong> Staff only see sales they
-                        logged. Good for commission tracking.
-                      </p>
-                    )}
-                    {settings.salesVisibility === "none" && (
-                      <p>
-                        ❌ <strong>No Access:</strong> Staff cannot access the sales
-                        page at all. Managers only.
-                      </p>
-                    )}
-                  </div>
+                <div className="flex-1 min-w-0">
+                  <p className="text-sm font-semibold">Dalamud Plugin</p>
+                  <p className="text-xs text-muted-foreground mt-0.5">In-game sales, clock-in and patron capture</p>
                 </div>
-              </CardContent>
-            </Card>
+                <Link
+                  href={`/dashboard/${slug}/settings/api-keys`}
+                  className="text-xs font-semibold text-[var(--xiv-blue)] hover:underline shrink-0"
+                >
+                  Manage API Keys →
+                </Link>
+              </div>
 
-            {/* Revenue Visibility Settings */}
-            <Card>
-              <CardHeader>
-                <CardTitle>Revenue Visibility</CardTitle>
-                <CardDescription>
-                  Control whether staff can see revenue statistics
-                </CardDescription>
-              </CardHeader>
-              <CardContent className="space-y-4">
-                <div className="space-y-2">
-                  <Label htmlFor="revenue-visibility">Staff can see:</Label>
-                  <Select
-                    value={settings.revenueVisibility}
-                    onValueChange={(value: string) =>
-                      setSettings({ ...settings, revenueVisibility: value as "all" | "hide" | "own" })
-                    }
-                    disabled={isSaving}
-                  >
-                    <SelectTrigger id="revenue-visibility">
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="all">All Revenue Statistics</SelectItem>
-                      <SelectItem value="own">Only Their Own Revenue</SelectItem>
-                      <SelectItem value="hide">Hide All Revenue</SelectItem>
-                    </SelectContent>
-                  </Select>
-                  <div className="text-sm text-muted-foreground mt-2">
-                    {settings.revenueVisibility === "all" && (
-                      <p>
-                        ✅ <strong>Full Stats:</strong> Staff can see total revenue,
-                        today's revenue, and averages.
-                      </p>
-                    )}
-                    {settings.revenueVisibility === "own" && (
-                      <p>
-                        📊 <strong>Personal Stats:</strong> Staff only see revenue
-                        from their own sales.
-                      </p>
-                    )}
-                    {settings.revenueVisibility === "hide" && (
-                      <p>
-                        🔒 <strong>Hidden:</strong> All revenue statistics are hidden
-                        from staff.
-                      </p>
-                    )}
+              {/* Partake */}
+              <div className="px-5 py-4 border-b border-[var(--blue-008)]">
+                <div className="flex items-center gap-4 mb-3">
+                  <div className="w-10 h-10 rounded-lg bg-[var(--blue-010)] border border-[var(--blue-018)] flex items-center justify-center shrink-0">
+                    <svg className="w-5 h-5 text-[var(--xiv-blue)]" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
                   </div>
-                </div>
-              </CardContent>
-            </Card>
-
-            {/* Event Visibility Settings */}
-            <Card>
-              <CardHeader>
-                <CardTitle>Event Visibility</CardTitle>
-                <CardDescription>
-                  Control which events staff can see
-                </CardDescription>
-              </CardHeader>
-              <CardContent className="space-y-4">
-                <div className="space-y-2">
-                  <Label htmlFor="event-visibility">Staff can see:</Label>
-                  <Select
-                    value={settings.eventVisibility}
-                    onValueChange={(value: string) =>
-                      setSettings({ ...settings, eventVisibility: value as "all" | "published" })
-                    }
-                    disabled={isSaving}
-                  >
-                    <SelectTrigger id="event-visibility">
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="all">All Events (Including Drafts)</SelectItem>
-                      <SelectItem value="published">Published Events Only</SelectItem>
-                    </SelectContent>
-                  </Select>
-                  <div className="text-sm text-muted-foreground mt-2">
-                    {settings.eventVisibility === "all" && (
-                      <p>
-                        ✅ <strong>All Events:</strong> Staff can see draft events and
-                        help with planning.
-                      </p>
-                    )}
-                    {settings.eventVisibility === "published" && (
-                      <p>
-                        📅 <strong>Published Only:</strong> Staff only see confirmed
-                        events. Drafts are hidden.
-                      </p>
-                    )}
+                  <div className="flex-1 min-w-0">
+                    <p className="text-sm font-semibold">Partake.gg</p>
+                    <p className="text-xs text-muted-foreground mt-0.5">Publish events to the community calendar</p>
                   </div>
-                </div>
-              </CardContent>
-            </Card>
-
-            {/* Discord Webhooks Settings */}
-            <Card>
-              <CardHeader>
-                <CardTitle>Discord Webhooks</CardTitle>
-                <CardDescription>
-                  Receive automated notifications in different Discord channels.
-                  Set up separate webhooks for different types of notifications.
-                </CardDescription>
-              </CardHeader>
-              <CardContent className="space-y-6">
-                <div className="text-sm text-muted-foreground bg-[rgba(0,180,255,0.08)] border border-[rgba(0,180,255,0.2)] rounded-lg p-3">
-                  <p>
-                    <strong>How to create a webhook:</strong> In Discord, go to Server Settings → Integrations → Webhooks → New Webhook.
-                    Copy the webhook URL and paste it below. You can use different channels for different notification types.
-                  </p>
-                </div>
-
-                {/* Staff Operations Webhook */}
-                <div className="space-y-3 border rounded-lg p-4 bg-gradient-to-r from-purple-500/10 to-transparent">
-                  <div className="space-y-2">
-                    <Label htmlFor="webhook-staff" className="text-base font-semibold flex items-center gap-2">
-                      👥 Staff Operations Channel
-                    </Label>
-                    <Input
-                      id="webhook-staff"
-                      type="url"
-                      placeholder="https://discord.com/api/webhooks/..."
-                      value={settings.discordWebhooks.staff}
-                      onChange={(e) =>
-                        setSettings({
-                          ...settings,
-                          discordWebhooks: {
-                            ...settings.discordWebhooks,
-                            staff: e.target.value,
-                          },
-                        })
-                      }
-                      disabled={isSaving}
-                    />
-                    <p className="text-sm text-muted-foreground">
-                      Notifications related to tasks and staff management
-                    </p>
-                  </div>
-
-                  {settings.discordWebhooks.staff && (
-                    <div className="space-y-2 pl-4 border-l-2 border-purple-500/30">
-                      <div className="flex items-center space-x-2">
-                        <Checkbox
-                          id="webhook-task-created"
-                          checked={settings.webhooks.taskCreated}
-                          onCheckedChange={(checked) =>
-                            setSettings({
-                              ...settings,
-                              webhooks: {
-                                ...settings.webhooks,
-                                taskCreated: checked as boolean,
-                              },
-                            })
-                          }
-                          disabled={isSaving}
-                        />
-                        <label
-                          htmlFor="webhook-task-created"
-                          className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
-                        >
-                          📋 Task Created
-                        </label>
-                      </div>
-
-                      <div className="flex items-center space-x-2">
-                        <Checkbox
-                          id="webhook-task-completed"
-                          checked={settings.webhooks.taskCompleted}
-                          onCheckedChange={(checked) =>
-                            setSettings({
-                              ...settings,
-                              webhooks: {
-                                ...settings.webhooks,
-                                taskCompleted: checked as boolean,
-                              },
-                            })
-                          }
-                          disabled={isSaving}
-                        />
-                        <label
-                          htmlFor="webhook-task-completed"
-                          className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
-                        >
-                          ✅ Task Completed
-                        </label>
-                      </div>
-
-                      <div className="flex items-center space-x-2">
-                        <Checkbox
-                          id="webhook-staff-joined"
-                          checked={settings.webhooks.staffJoined}
-                          onCheckedChange={(checked) =>
-                            setSettings({
-                              ...settings,
-                              webhooks: {
-                                ...settings.webhooks,
-                                staffJoined: checked as boolean,
-                              },
-                            })
-                          }
-                          disabled={isSaving}
-                        />
-                        <label
-                          htmlFor="webhook-staff-joined"
-                          className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
-                        >
-                          👥 Staff Joined
-                        </label>
-                      </div>
-                    </div>
+                  {settings.partakeTeamId && (
+                    <span className="text-[0.7rem] font-semibold px-2.5 py-1 rounded-full bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 shrink-0">
+                      Connected
+                    </span>
                   )}
                 </div>
-
-                {/* Events Webhook */}
-                <div className="space-y-3 border rounded-lg p-4 bg-gradient-to-r from-blue-500/10 to-transparent">
-                  <div className="space-y-2">
-                    <Label htmlFor="webhook-events" className="text-base font-semibold flex items-center gap-2">
-                      📅 Events Channel
-                    </Label>
-                    <Input
-                      id="webhook-events"
-                      type="url"
-                      placeholder="https://discord.com/api/webhooks/..."
-                      value={settings.discordWebhooks.events}
-                      onChange={(e) =>
-                        setSettings({
-                          ...settings,
-                          discordWebhooks: {
-                            ...settings.discordWebhooks,
-                            events: e.target.value,
-                          },
-                        })
-                      }
-                      disabled={isSaving}
-                    />
-                    <p className="text-sm text-muted-foreground">
-                      Notifications about venue events and schedules
-                    </p>
-                  </div>
-
-                  {settings.discordWebhooks.events && (
-                    <div className="space-y-2 pl-4 border-l-2 border-[rgba(0,180,255,0.4)]">
-                      <div className="flex items-center space-x-2">
-                        <Checkbox
-                          id="webhook-partake-event"
-                          checked={settings.webhooks.partakeEvent}
-                          onCheckedChange={(checked) =>
-                            setSettings({
-                              ...settings,
-                              webhooks: {
-                                ...settings.webhooks,
-                                partakeEvent: checked as boolean,
-                              },
-                            })
-                          }
-                          disabled={isSaving || !settings.partakeTeamId}
-                        />
-                        <label
-                          htmlFor="webhook-partake-event"
-                          className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
-                        >
-                          📅 Partake Event Mirror
-                        </label>
-                      </div>
-                      <p className="text-xs text-muted-foreground pl-6">
-                        Mirrors Partake events to this Discord channel when they fall within 7 days of start.
-                        Posts include flyer images and a Partake link. Edits and cancellations are kept in sync automatically.
-                        Requires a linked Partake team.
-                      </p>
-                    </div>
+                <div className="flex gap-2 items-center">
+                  <Input
+                    type="number"
+                    placeholder="Partake team ID (e.g. 123)"
+                    value={settings.partakeTeamId ?? ""}
+                    onChange={(e) => {
+                      const val = e.target.value
+                      setSettings({ ...settings, partakeTeamId: val ? parseInt(val, 10) : null })
+                    }}
+                    disabled={isSaving}
+                    min={1}
+                    className="flex-1 bg-background border-[var(--blue-015)] focus:border-[var(--blue-035)] text-sm h-9"
+                  />
+                  {settings.partakeTeamId && (
+                    <Button variant="outline" size="sm" disabled={isSyncing} onClick={async () => {
+                      setIsSyncing(true); setSyncResult("")
+                      try {
+                        const res = await fetch(`/api/venues/${venueId}/sync-partake`, { method: "POST" })
+                        if (!res.ok) { const d = await res.json(); throw new Error(d.error || "Sync failed") }
+                        const d = await res.json()
+                        setSyncResult(`Synced: ${d.results.created} new, ${d.results.updated} updated`)
+                        setTimeout(() => setSyncResult(""), 5000)
+                      } catch (err: unknown) {
+                        setSyncResult(err instanceof Error ? err.message : "Sync failed")
+                      } finally { setIsSyncing(false) }
+                    }}>
+                      {isSyncing ? "Syncing…" : "Sync now"}
+                    </Button>
                   )}
                 </div>
+                {syncResult && <p className="text-xs text-emerald-400 mt-2">{syncResult}</p>}
+                {settings.partakeTeamId && <p className="text-xs text-[var(--fg-faint)] mt-1.5">Syncs automatically every hour.</p>}
+              </div>
 
-                {/* Revenue Webhook */}
-                <div className="space-y-3 border rounded-lg p-4 bg-gradient-to-r from-green-500/10 to-transparent">
-                  <div className="space-y-2">
-                    <Label htmlFor="webhook-revenue" className="text-base font-semibold flex items-center gap-2">
-                      💰 Revenue Channel
+              {/* Discord */}
+              <div className="flex items-center gap-4 px-5 py-3.5">
+                <div className="w-10 h-10 rounded-lg bg-[var(--blue-010)] border border-[var(--blue-018)] flex items-center justify-center shrink-0">
+                  <svg className="w-5 h-5 text-[var(--xiv-blue)]" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+                </div>
+                <div className="flex-1 min-w-0">
+                  <p className="text-sm font-semibold">Discord</p>
+                  <p className="text-xs text-muted-foreground mt-0.5">OAuth sign-in and event webhooks</p>
+                </div>
+                <span className="text-[0.7rem] font-semibold px-2.5 py-1 rounded-full bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 shrink-0">
+                  Connected
+                </span>
+              </div>
+            </section>
+
+            {/* ── Discord Webhooks ── */}
+            <section className="rounded-xl border border-[var(--blue-018)] bg-card overflow-hidden">
+              <div className="flex items-center gap-2.5 px-5 py-3.5 border-b border-[var(--blue-008)] font-semibold text-[0.95rem]">
+                <svg className="w-4 h-4 text-[var(--xiv-blue)]" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>
+                Discord Webhooks
+              </div>
+              <div className="p-5 space-y-5">
+                <p className="text-xs text-[var(--fg-faint)]">
+                  Server Settings → Integrations → Webhooks → New Webhook. Paste the URL below.
+                </p>
+                {[
+                  {
+                    id: "webhook-staff", label: "Staff operations", desc: "Task and staff notifications",
+                    value: settings.discordWebhooks.staff,
+                    onChange: (v: string) => setSettings({ ...settings, discordWebhooks: { ...settings.discordWebhooks, staff: v } }),
+                    checks: [
+                      { id: "task-created",  label: "Task created",  val: settings.webhooks.taskCreated,  set: (v: boolean) => setSettings({ ...settings, webhooks: { ...settings.webhooks, taskCreated: v } }) },
+                      { id: "task-done",     label: "Task completed", val: settings.webhooks.taskCompleted, set: (v: boolean) => setSettings({ ...settings, webhooks: { ...settings.webhooks, taskCompleted: v } }) },
+                      { id: "staff-joined", label: "Staff joined",   val: settings.webhooks.staffJoined,  set: (v: boolean) => setSettings({ ...settings, webhooks: { ...settings.webhooks, staffJoined: v } }) },
+                    ],
+                  },
+                  {
+                    id: "webhook-events", label: "Events channel", desc: "Event announcements and Partake mirrors",
+                    value: settings.discordWebhooks.events,
+                    onChange: (v: string) => setSettings({ ...settings, discordWebhooks: { ...settings.discordWebhooks, events: v } }),
+                    checks: [
+                      { id: "partake-mirror", label: "Partake event mirror", val: settings.webhooks.partakeEvent, set: (v: boolean) => setSettings({ ...settings, webhooks: { ...settings.webhooks, partakeEvent: v } }), disabled: !settings.partakeTeamId },
+                    ],
+                  },
+                  {
+                    id: "webhook-revenue", label: "Revenue channel", desc: "Sales and daily summaries",
+                    value: settings.discordWebhooks.revenue,
+                    onChange: (v: string) => setSettings({ ...settings, discordWebhooks: { ...settings.discordWebhooks, revenue: v } }),
+                    checks: [
+                      { id: "sale-logged",   label: "Sale logged",        val: settings.webhooks.saleLogged,      set: (v: boolean) => setSettings({ ...settings, webhooks: { ...settings.webhooks, saleLogged: v } }) },
+                      { id: "daily-summary", label: "Daily sales summary", val: settings.webhooks.dailySalesSummary, set: (v: boolean) => setSettings({ ...settings, webhooks: { ...settings.webhooks, dailySalesSummary: v } }) },
+                    ],
+                  },
+                ].map((wh) => (
+                  <div key={wh.id}>
+                    <Label htmlFor={wh.id} className="text-xs font-semibold text-muted-foreground uppercase tracking-wide mb-1.5 block">
+                      {wh.label}
                     </Label>
                     <Input
-                      id="webhook-revenue"
+                      id={wh.id}
                       type="url"
-                      placeholder="https://discord.com/api/webhooks/..."
-                      value={settings.discordWebhooks.revenue}
-                      onChange={(e) =>
-                        setSettings({
-                          ...settings,
-                          discordWebhooks: {
-                            ...settings.discordWebhooks,
-                            revenue: e.target.value,
-                          },
-                        })
-                      }
+                      placeholder="https://discord.com/api/webhooks/…"
+                      value={wh.value}
+                      onChange={(e) => wh.onChange(e.target.value)}
                       disabled={isSaving}
+                      className="bg-background border-[var(--blue-015)] focus:border-[var(--blue-035)] text-sm h-9 mb-1"
                     />
-                    <p className="text-sm text-muted-foreground">
-                      Notifications about sales and financial data
-                    </p>
+                    <p className="text-xs text-[var(--fg-faint)] mb-2">{wh.desc}</p>
+                    {wh.value && (
+                      <div className="flex flex-wrap gap-x-4 gap-y-1.5 pl-2 border-l-2 border-[var(--blue-015)]">
+                        {wh.checks.map((c) => (
+                          <label key={c.id} className={`flex items-center gap-2 text-xs cursor-pointer ${c.disabled ? "opacity-40 cursor-not-allowed" : ""}`}>
+                            <Checkbox
+                              checked={c.val}
+                              onCheckedChange={(v) => c.set(v as boolean)}
+                              disabled={isSaving || c.disabled}
+                              className="w-3.5 h-3.5"
+                            />
+                            {c.label}
+                          </label>
+                        ))}
+                      </div>
+                    )}
                   </div>
+                ))}
+              </div>
+            </section>
 
-                  {settings.discordWebhooks.revenue && (
-                    <div className="space-y-2 pl-4 border-l-2 border-green-500/30">
-                      <div className="flex items-center space-x-2">
-                        <Checkbox
-                          id="webhook-sale-logged"
-                          checked={settings.webhooks.saleLogged}
-                          onCheckedChange={(checked) =>
-                            setSettings({
-                              ...settings,
-                              webhooks: {
-                                ...settings.webhooks,
-                                saleLogged: checked as boolean,
-                              },
-                            })
-                          }
-                          disabled={isSaving}
-                        />
-                        <label
-                          htmlFor="webhook-sale-logged"
-                          className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
-                        >
-                          💰 Sale Logged
-                        </label>
-                      </div>
-
-                      <div className="flex items-center space-x-2">
-                        <Checkbox
-                          id="webhook-daily-sales-summary"
-                          checked={settings.webhooks.dailySalesSummary}
-                          onCheckedChange={(checked) =>
-                            setSettings({
-                              ...settings,
-                              webhooks: {
-                                ...settings.webhooks,
-                                dailySalesSummary: checked as boolean,
-                              },
-                            })
-                          }
-                          disabled={isSaving}
-                        />
-                        <label
-                          htmlFor="webhook-daily-sales-summary"
-                          className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
-                        >
-                          📊 Daily Sales Summary
-                        </label>
-                      </div>
+            {/* ── Staff permissions ── */}
+            <section className="rounded-xl border border-[var(--blue-018)] bg-card overflow-hidden">
+              <div className="flex items-center gap-2.5 px-5 py-3.5 border-b border-[var(--blue-008)] font-semibold text-[0.95rem]">
+                <svg className="w-4 h-4 text-[var(--xiv-blue)]" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+                Staff permissions
+              </div>
+              <p className="px-5 pt-3 text-xs text-[var(--fg-faint)]">Owners and managers always have full access. These settings apply to staff only.</p>
+              <div className="divide-y divide-[var(--blue-008)] mt-3">
+                {[
+                  {
+                    id: "task-vis", label: "Tasks", desc: "Which tasks staff can see",
+                    value: settings.taskVisibility,
+                    onChange: (v: string) => setSettings({ ...settings, taskVisibility: v as "all" | "assigned" | "assigned_unassigned" }),
+                    options: [
+                      { value: "all", label: "All tasks" },
+                      { value: "assigned", label: "Assigned only" },
+                      { value: "assigned_unassigned", label: "Assigned + unassigned" },
+                    ],
+                  },
+                  {
+                    id: "sales-vis", label: "Sales", desc: "Which transactions staff can see",
+                    value: settings.salesVisibility,
+                    onChange: (v: string) => setSettings({ ...settings, salesVisibility: v as "all" | "own" | "none" }),
+                    options: [
+                      { value: "all", label: "All transactions" },
+                      { value: "own", label: "Their own only" },
+                      { value: "none", label: "No access" },
+                    ],
+                  },
+                  {
+                    id: "rev-vis", label: "Revenue", desc: "Revenue statistics visibility",
+                    value: settings.revenueVisibility,
+                    onChange: (v: string) => setSettings({ ...settings, revenueVisibility: v as "all" | "hide" | "own" }),
+                    options: [
+                      { value: "all", label: "All statistics" },
+                      { value: "own", label: "Personal only" },
+                      { value: "hide", label: "Hidden" },
+                    ],
+                  },
+                  {
+                    id: "event-vis", label: "Events", desc: "Which events staff can see",
+                    value: settings.eventVisibility,
+                    onChange: (v: string) => setSettings({ ...settings, eventVisibility: v as "all" | "published" }),
+                    options: [
+                      { value: "all", label: "All (including drafts)" },
+                      { value: "published", label: "Published only" },
+                    ],
+                  },
+                ].map((row) => (
+                  <div key={row.id} className="flex items-center gap-4 px-5 py-3">
+                    <div className="flex-1 min-w-0">
+                      <p className="text-sm font-medium">{row.label}</p>
+                      <p className="text-xs text-[var(--fg-faint)]">{row.desc}</p>
                     </div>
-                  )}
-                </div>
+                    <Select value={row.value} onValueChange={row.onChange} disabled={isSaving}>
+                      <SelectTrigger className="w-[180px] h-8 text-xs bg-background border-[var(--blue-015)]">
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {row.options.map((o) => (
+                          <SelectItem key={o.value} value={o.value} className="text-xs">{o.label}</SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+                ))}
+              </div>
+            </section>
 
-                <div className="text-sm text-muted-foreground bg-amber-500/10 border border-amber-500/20 rounded-lg p-3">
-                  <p>
-                    <strong>💡 Tip:</strong> You can use the same webhook URL for all channels if you want all notifications in one place,
-                    or set up different channels to organize your notifications. Uncheck individual notification types to disable them.
-                  </p>
-                </div>
-              </CardContent>
-            </Card>
-
-            {/* Save Button */}
-            <div className="flex gap-4">
-              <Button onClick={handleSave} disabled={isSaving}>
-                {isSaving ? "Saving..." : "Save Settings"}
-              </Button>
-              <Button variant="outline" asChild disabled={isSaving}>
-                <Link href={`/dashboard/${slug}`}>Cancel</Link>
-              </Button>
-            </div>
-
-            {/* Info Card */}
-            <Card className="bg-[rgba(0,180,255,0.05)] border-[rgba(0,180,255,0.2)]">
-              <CardHeader>
-                <CardTitle className="text-[var(--xiv-blue)]">ℹ️ Important Notes</CardTitle>
-              </CardHeader>
-              <CardContent className="text-sm text-muted-foreground space-y-2">
-                <p>
-                  • <strong>Owners and Managers</strong> always have full access to
-                  everything regardless of these settings.
-                </p>
-                <p>
-                  • These settings only affect <strong>STAFF members</strong>.
-                </p>
-                <p>
-                  • Changes take effect immediately after saving.
-                </p>
-                <p>
-                  • Staff will not be notified of permission changes.
-                </p>
-              </CardContent>
-            </Card>
-
-            {/* Danger Zone - Only show for owners */}
+            {/* ── Danger zone ── */}
             {userRole === "OWNER" && (
-              <Card className="bg-destructive/10 border-destructive/20">
-                <CardHeader>
-                  <CardTitle className="text-destructive">⚠️ Danger Zone</CardTitle>
-                  <CardDescription className="text-destructive/80">
-                    Irreversible actions that will permanently delete data
-                  </CardDescription>
-                </CardHeader>
-                <CardContent className="space-y-4">
-                  <div className="space-y-2">
-                    <p className="text-sm text-destructive-foreground">
-                      Deleting a venue will permanently remove:
-                    </p>
-                    <ul className="text-sm text-destructive-foreground list-disc list-inside space-y-1 ml-2">
-                      <li>All events and event history</li>
-                      <li>All staff members and their roles</li>
-                      <li>All tasks and assignments</li>
-                      <li>All sales transactions and financial data</li>
-                      <li>All services and offerings</li>
-                      <li>All venue settings and configurations</li>
-                    </ul>
-                    <p className="text-sm text-destructive font-semibold mt-4">
-                      ⚠️ This action cannot be undone. All data will be permanently lost.
-                    </p>
+              <section className="rounded-xl border border-[rgba(243,139,168,0.3)] bg-card overflow-hidden">
+                <div className="flex items-center gap-2.5 px-5 py-3.5 border-b border-[rgba(243,139,168,0.18)] font-semibold text-[0.95rem] text-[var(--destructive)]">
+                  <svg className="w-4 h-4" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M10.29 3.86 1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0zM12 9v4m0 4h.01"/></svg>
+                  Danger zone
+                </div>
+                <div className="px-5 py-4 flex items-center justify-between gap-4">
+                  <div>
+                    <p className="text-sm font-medium">Delete venue</p>
+                    <p className="text-xs text-[var(--fg-faint)] mt-0.5">Permanently removes the venue and all associated data. Cannot be undone.</p>
                   </div>
-
                   <AlertDialog>
                     <AlertDialogTrigger asChild>
-                      <Button variant="destructive" disabled={isDeleting}>
-                        {isDeleting ? "Deleting..." : "Delete Venue"}
+                      <Button variant="destructive" size="sm" disabled={isDeleting}>
+                        {isDeleting ? "Deleting…" : "Delete venue"}
                       </Button>
                     </AlertDialogTrigger>
                     <AlertDialogContent>
                       <AlertDialogHeader>
-                        <AlertDialogTitle>Are you absolutely sure?</AlertDialogTitle>
+                        <AlertDialogTitle>Delete this venue?</AlertDialogTitle>
                         <AlertDialogDescription>
-                          This will permanently delete this venue and all associated data.
-                          This action cannot be undone.
-                          <br /><br />
-                          All events, staff, tasks, sales, services, and settings will be permanently removed.
+                          All events, staff, tasks, sales and settings will be permanently removed. This cannot be undone.
                         </AlertDialogDescription>
                       </AlertDialogHeader>
                       <AlertDialogFooter>
                         <AlertDialogCancel>Cancel</AlertDialogCancel>
-                        <AlertDialogAction
-                          onClick={handleDeleteVenue}
-                          className="bg-destructive text-white hover:bg-destructive/90"
-                        >
+                        <AlertDialogAction onClick={handleDeleteVenue} className="bg-destructive text-white hover:bg-destructive/90">
                           Yes, delete permanently
                         </AlertDialogAction>
                       </AlertDialogFooter>
                     </AlertDialogContent>
                   </AlertDialog>
-                </CardContent>
-              </Card>
+                </div>
+              </section>
             )}
           </div>
         )}

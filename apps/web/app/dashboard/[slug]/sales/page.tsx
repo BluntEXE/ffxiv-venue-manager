@@ -3,6 +3,7 @@ import { authOptions } from "@/lib/auth"
 import { prisma } from "@/lib/prisma"
 import { redirect } from "next/navigation"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
+import { BarChart3, Zap, TrendingUp } from "lucide-react"
 import { StatReadout } from "@/components/ui/stat-readout"
 import { VenueLayoutClient } from "@/components/venue-layout-client"
 import { Breadcrumb } from "@/components/breadcrumb"
@@ -188,10 +189,34 @@ export default async function SalesPage({ params }: PageProps) {
   )
   const todayRevenue = todayTransactions.reduce((sum, t) => sum + Number(t.amount), 0)
 
+  // Top services by revenue
+  const serviceMap = new Map<string, { name: string; total: number; count: number }>()
+  for (const t of transactions) {
+    if (t.service) {
+      if (!serviceMap.has(t.service.id))
+        serviceMap.set(t.service.id, { name: t.service.name, total: 0, count: 0 })
+      const s = serviceMap.get(t.service.id)!
+      s.total += Number(t.amount); s.count++
+    }
+  }
+  const topServices = [...serviceMap.values()].sort((a, b) => b.total - a.total).slice(0, 5)
+  const maxServiceTotal = topServices[0]?.total || 1
+
+  // Top earners by revenue
+  const earnerMap = new Map<string, { name: string; total: number; count: number }>()
+  for (const t of transactions) {
+    if (t.staff) {
+      if (!earnerMap.has(t.staff.id))
+        earnerMap.set(t.staff.id, { name: t.staff.name || "Unknown", total: 0, count: 0 })
+      const e = earnerMap.get(t.staff.id)!
+      e.total += Number(t.amount); e.count++
+    }
+  }
+  const topEarners = [...earnerMap.values()].sort((a, b) => b.total - a.total).slice(0, 5)
+
   return (
     <VenueLayoutClient slug={slug}>
       <div className="p-4 md:p-6">
-        {/* Breadcrumb */}
         <Breadcrumb
           items={[
             { label: "Dashboard", href: "/dashboard" },
@@ -203,43 +228,96 @@ export default async function SalesPage({ params }: PageProps) {
         {/* Header */}
         <div className="flex flex-col sm:flex-row sm:justify-between sm:items-start gap-4 mb-6 md:mb-8">
           <div>
-            <h1 className="font-cinzel text-2xl md:text-3xl font-bold tracking-[0.02em]">Sales & Transactions</h1>
-            <p className="text-sm md:text-base text-muted-foreground mt-1 md:mt-2">
-              Log sales and track revenue
-            </p>
+            <h1 className="font-cinzel text-2xl md:text-3xl font-bold tracking-[0.02em]">Sales &amp; Transactions</h1>
+            <p className="text-sm text-muted-foreground mt-1">Log sales and track revenue</p>
           </div>
           <SalesLogDialog venueId={venue.id} services={servicesWithNumberPrices} events={activeEvents} />
         </div>
 
-        {/* Stats */}
+        {/* KPIs */}
         <div className="grid grid-cols-2 md:grid-cols-3 gap-4 mb-6">
-          <Card className="p-4"><StatReadout label="Total revenue" value={`${totalRevenue.toLocaleString()} gil`} subtext={`${transactions.length} transactions`} /></Card>
-          <Card className="p-4"><StatReadout label="Today's revenue" value={`${todayRevenue.toLocaleString()} gil`} subtext={`${todayTransactions.length} today`} deltaDirection="up" /></Card>
-          <Card className="p-4"><StatReadout label="Average sale" value={`${transactions.length > 0 ? Math.round(totalRevenue / transactions.length).toLocaleString() : 0} gil`} subtext="Per transaction" /></Card>
+          <Card className="p-4"><StatReadout label="Total revenue" value={`${totalRevenue.toLocaleString()} gil`} subtext={`${transactions.length} transactions`} icon={<BarChart3 />} iconVariant="blue" /></Card>
+          <Card className="p-4"><StatReadout label="Today's revenue" value={`${todayRevenue.toLocaleString()} gil`} subtext={`${todayTransactions.length} today`} deltaDirection="up" icon={<Zap />} iconVariant="success" /></Card>
+          <Card className="p-4"><StatReadout label="Average sale" value={`${transactions.length > 0 ? Math.round(totalRevenue / transactions.length).toLocaleString() : 0} gil`} subtext="Per transaction" icon={<TrendingUp />} iconVariant="blue" /></Card>
         </div>
 
-        {/* Transactions List */}
-        {transactions.length === 0 ? (
-          <Card className="text-center py-12">
-            <CardContent>
-              <p className="text-muted-foreground mb-4">
-                No sales recorded yet.
-              </p>
-              <SalesLogDialog venueId={venue.id} services={servicesWithNumberPrices} events={activeEvents} />
-            </CardContent>
-          </Card>
-        ) : (
-          <Card className="p-5">
-            <p className="stat-label mb-0.5">Transaction History</p>
-            <p className="text-xs text-muted-foreground mb-4">All sales and transactions</p>
-            <TransactionsList
-              initialTransactions={transactions as any}
-              initialNextCursor={nextCursor}
-              initialHasMore={hasMore}
-              venueId={venue.id}
-            />
-          </Card>
-        )}
+        {/* 2-col body */}
+        <div className="grid grid-cols-1 lg:grid-cols-[1fr_260px] gap-6 items-start">
+
+          {/* Left — transactions */}
+          <div>
+            {transactions.length === 0 ? (
+              <Card className="text-center py-12">
+                <CardContent>
+                  <p className="text-muted-foreground mb-4">No sales recorded yet.</p>
+                  <SalesLogDialog venueId={venue.id} services={servicesWithNumberPrices} events={activeEvents} />
+                </CardContent>
+              </Card>
+            ) : (
+              <Card className="p-5">
+                <p className="stat-label mb-0.5">Transaction History</p>
+                <p className="text-xs text-muted-foreground mb-4">All sales and transactions</p>
+                <TransactionsList
+                  initialTransactions={transactions as any}
+                  initialNextCursor={nextCursor}
+                  initialHasMore={hasMore}
+                  venueId={venue.id}
+                />
+              </Card>
+            )}
+          </div>
+
+          {/* Right — top services + top earners */}
+          <div className="space-y-4">
+
+            {/* Top services */}
+            {topServices.length > 0 && (
+              <div className="rounded-xl border border-[var(--blue-018)] bg-card overflow-hidden">
+                <div className="flex items-center gap-2 px-4 py-3 border-b border-[var(--blue-008)] font-semibold text-sm">
+                  <svg className="w-4 h-4 text-[var(--xiv-blue)]" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg>
+                  Top services
+                </div>
+                <div className="px-4 py-3 space-y-3">
+                  {topServices.map((s) => (
+                    <div key={s.name}>
+                      <div className="flex items-center justify-between text-xs mb-1">
+                        <span className="font-medium truncate mr-2">{s.name}</span>
+                        <span className="text-[var(--xiv-blue)] font-semibold shrink-0">{s.total.toLocaleString()} gil</span>
+                      </div>
+                      <div className="h-1.5 rounded-full bg-[var(--blue-008)] overflow-hidden">
+                        <div
+                          className="h-full rounded-full bg-[var(--xiv-blue)] transition-all"
+                          style={{ width: `${Math.round((s.total / maxServiceTotal) * 100)}%` }}
+                        />
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {/* Top earners */}
+            {topEarners.length > 0 && (
+              <div className="rounded-xl border border-[var(--blue-018)] bg-card overflow-hidden">
+                <div className="flex items-center gap-2 px-4 py-3 border-b border-[var(--blue-008)] font-semibold text-sm">
+                  <svg className="w-4 h-4 text-[var(--xiv-blue)]" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+                  Top earners
+                </div>
+                <div className="divide-y divide-[var(--blue-008)]">
+                  {topEarners.map((e) => (
+                    <div key={e.name} className="flex items-center gap-3 px-4 py-2.5">
+                      <span className="w-7 h-7 rounded-full bg-gradient-to-br from-[var(--xiv-blue)] to-blue-700 flex items-center justify-center text-[0.62rem] font-bold text-white flex-shrink-0">
+                        {e.name.charAt(0).toUpperCase()}
+                      </span>
+                      <span className="flex-1 text-sm font-medium truncate">{e.name}</span>
+                      <span className="text-xs text-[var(--xiv-blue)] font-semibold shrink-0">{e.total.toLocaleString()} gil</span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+          </div>
+        </div>
       </div>
     </VenueLayoutClient>
   )

@@ -1,22 +1,12 @@
 "use client"
 
 import { useEffect, useState } from "react"
-import { useRouter } from "next/navigation"
-import Link from "next/link"
 import { Button } from "@/components/ui/button"
 import { VenueLayoutClient } from "@/components/venue-layout-client"
 import { Breadcrumb } from "@/components/breadcrumb"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Textarea } from "@/components/ui/textarea"
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card"
-import { StatReadout } from "@/components/ui/stat-readout"
 import {
   Dialog,
   DialogContent,
@@ -44,10 +34,7 @@ import {
   SelectValue,
 } from "@/components/ui/select"
 import { Alert, AlertDescription } from "@/components/ui/alert"
-import { Badge } from "@/components/ui/badge"
-import { Checkbox } from "@/components/ui/checkbox"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { format } from "date-fns"
 import { PageLoading } from "@/components/ui/loading-spinner"
 
@@ -83,26 +70,11 @@ interface Role {
 
 const TASK_CATEGORIES = ["Setup", "Cleanup", "Promotional", "Maintenance", "Administrative", "Other"]
 
-const statusColors = {
-  PENDING: "bg-yellow-500/15 text-yellow-300 border-yellow-500/30",
-  IN_PROGRESS: "bg-[rgba(0,180,255,0.15)] text-[var(--xiv-blue)] border-[rgba(0,180,255,0.35)]",
-  COMPLETED: "bg-emerald-500/15 text-emerald-400 border-emerald-500/30",
-  CANCELLED: "bg-zinc-500/15 text-zinc-400 border-zinc-500/30",
-}
-
-const priorityColors = {
-  LOW: "bg-zinc-400/15 text-zinc-400 border-zinc-400/30",
-  MEDIUM: "bg-[rgba(0,180,255,0.15)] text-[var(--xiv-blue)] border-[rgba(0,180,255,0.35)]",
-  HIGH: "bg-orange-500/15 text-orange-400 border-orange-500/30",
-  URGENT: "bg-red-500/15 text-red-400 border-red-500/30",
-}
-
 export default function TasksPage({
   params,
 }: {
   params: Promise<{ slug: string }>
 }) {
-  const router = useRouter()
   const [slug, setSlug] = useState<string>("")
   const [tasks, setTasks] = useState<Task[]>([])
   const [roles, setRoles] = useState<Role[]>([])
@@ -124,8 +96,8 @@ export default function TasksPage({
   const [formError, setFormError] = useState("")
   const [isSubmitting, setIsSubmitting] = useState(false)
 
-  // Filter state
-  const [activeTab, setActiveTab] = useState("all")
+  // Search state
+  const [search, setSearch] = useState("")
 
   // Unwrap params
   useEffect(() => {
@@ -352,18 +324,6 @@ export default function TasksPage({
     return <div className="p-4 md:p-6"><PageLoading /></div>
   }
 
-  // Filter tasks by tab
-  const filteredTasks =
-    activeTab === "all"
-      ? tasks
-      : activeTab === "pending"
-      ? tasks.filter((t) => t.status === "PENDING")
-      : activeTab === "in_progress"
-      ? tasks.filter((t) => t.status === "IN_PROGRESS")
-      : activeTab === "completed"
-      ? tasks.filter((t) => t.status === "COMPLETED")
-      : tasks
-
   return (
     <VenueLayoutClient slug={slug}>
       <div className="p-4 md:p-6">
@@ -388,170 +348,178 @@ export default function TasksPage({
           </Button>
         </div>
 
-        {/* Stats */}
-        <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
-          <Card className="p-4"><StatReadout label="Total tasks" value={tasks.length} subtext="All tasks" /></Card>
-          <Card className="p-4"><StatReadout label="Pending" value={tasks.filter(t => t.status === "PENDING").length} subtext="Not started" /></Card>
-          <Card className="p-4"><StatReadout label="In progress" value={tasks.filter(t => t.status === "IN_PROGRESS").length} subtext="Active" /></Card>
-          <Card className="p-4"><StatReadout label="Completed" value={tasks.filter(t => t.status === "COMPLETED").length} subtext="Done" deltaDirection="up" /></Card>
+        {/* Toolbar */}
+        <div className="flex items-center gap-3 mb-6 flex-wrap">
+          <p className="text-xs text-muted-foreground flex items-center gap-2">
+            <span>Click a card to mark it complete</span>
+          </p>
+          <div className="flex-1" />
+          <div className="relative flex items-center" style={{ maxWidth: 280, flex: "0 1 280px" }}>
+            <svg className="absolute left-3 w-4 h-4 text-[var(--fg-faint)] pointer-events-none" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
+            <Input
+              className="pl-9 bg-card border-[var(--blue-015)] focus:border-[var(--blue-035)] h-9 text-sm"
+              placeholder="Search tasks…"
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+            />
+          </div>
         </div>
 
-      {/* Error Message */}
+      {/* Error */}
       {error && (
         <Alert className="mb-6 bg-destructive/10 border-destructive/20">
           <AlertDescription className="text-destructive">{error}</AlertDescription>
         </Alert>
       )}
 
-      {/* Tasks Tabs */}
-      <Tabs value={activeTab} onValueChange={setActiveTab} className="mb-6">
-        <TabsList>
-          <TabsTrigger value="all">All Tasks ({tasks.length})</TabsTrigger>
-          <TabsTrigger value="pending">
-            Pending ({tasks.filter((t) => t.status === "PENDING").length})
-          </TabsTrigger>
-          <TabsTrigger value="in_progress">
-            In Progress ({tasks.filter((t) => t.status === "IN_PROGRESS").length})
-          </TabsTrigger>
-          <TabsTrigger value="completed">
-            Completed ({tasks.filter((t) => t.status === "COMPLETED").length})
-          </TabsTrigger>
-        </TabsList>
+      {/* Kanban */}
+      {isLoading ? (
+        <PageLoading text="Loading tasks..." />
+      ) : (
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 items-start">
+          {(
+            [
+              { key: "PENDING",     label: "To do",      dot: "var(--xiv-blue)",    next: "IN_PROGRESS" as const, nextLabel: "Start"    },
+              { key: "IN_PROGRESS", label: "In progress", dot: "var(--warning)",     next: "COMPLETED"   as const, nextLabel: "Complete" },
+              { key: "COMPLETED",   label: "Done",        dot: "var(--success-text)", next: "PENDING"    as const, nextLabel: "Reopen"  },
+            ] as const
+          ).map(({ key, label, dot, next, nextLabel }) => {
+            const col = tasks.filter(
+              (t) =>
+                t.status === key &&
+                (!search || t.title.toLowerCase().includes(search.toLowerCase()))
+            )
+            return (
+              <div
+                key={key}
+                className="rounded-2xl border border-[var(--blue-015)] bg-card overflow-hidden"
+              >
+                {/* Column header */}
+                <div className="flex items-center gap-2 px-4 py-3 border-b border-[var(--blue-008)]">
+                  <span className="w-2 h-2 rounded-full flex-shrink-0" style={{ background: dot }} />
+                  <span className="font-[var(--font-heading)] font-semibold text-sm">{label}</span>
+                  <span className="ml-auto text-xs text-[var(--fg-faint)] bg-[var(--blue-010)] px-2 py-0.5 rounded-full">
+                    {col.length}
+                  </span>
+                </div>
 
-        <TabsContent value={activeTab} className="mt-6">
-          {isLoading ? (
-            <PageLoading text="Loading tasks..." />
-          ) : filteredTasks.length === 0 ? (
-            <Card className="text-center py-12">
-              <CardContent>
-                <p className="text-muted-foreground mb-4">
-                  {activeTab === "all"
-                    ? "No tasks yet. Create your first task!"
-                    : `No ${activeTab.replace("_", " ")} tasks.`}
-                </p>
-                {activeTab === "all" && (
-                  <Button onClick={openCreateDialog}>Create Your First Task</Button>
-                )}
-              </CardContent>
-            </Card>
-          ) : (
-            <div className="grid grid-cols-1 gap-4">
-              {filteredTasks.map((task) => (
-                <Card key={task.id}>
-                  <CardContent className="p-6">
-                    <div className="flex items-start justify-between">
-                      <div className="flex-1">
-                        <div className="flex items-center gap-2 mb-2">
-                          <h3 className="text-xl font-semibold">{task.title}</h3>
-                          <Badge className={priorityColors[task.priority]}>
-                            {task.priority}
-                          </Badge>
-                          <Badge className={statusColors[task.status]}>
-                            {task.status.replace("_", " ")}
-                          </Badge>
-                          {task.category && (
-                            <Badge variant="outline">{task.category}</Badge>
-                          )}
-                        </div>
-                        {task.description && (
-                          <p className="text-muted-foreground mb-3">
-                            {task.description}
-                          </p>
-                        )}
-                        <div className="flex items-center gap-4 text-sm text-muted-foreground">
-                          {task.assignedRole && (
-                            <div className="flex items-center gap-2">
-                              <Badge 
-                                variant="outline"
-                                style={{ borderColor: task.assignedRole.color, color: task.assignedRole.color }}
-                              >
-                                {task.assignedRole.name}
-                              </Badge>
-                              <span className="text-muted-foreground">role</span>
-                            </div>
-                          )}
-                          {task.dueDate && (
-                            <span>
-                              Due {format(new Date(task.dueDate), "PPP")}
-                            </span>
-                          )}
-                          <span>
-                            Created {format(new Date(task.createdAt), "PPP")}
+                {/* Cards */}
+                <div className="flex flex-col gap-2 p-2 min-h-10">
+                  {col.length === 0 && (
+                    <p className="text-xs text-[var(--fg-faint)] text-center py-6">
+                      {key === "PENDING" && tasks.length === 0 ? "No tasks yet" : "Empty"}
+                    </p>
+                  )}
+                  {col.map((task) => (
+                    <div
+                      key={task.id}
+                      className={`rounded-lg border bg-background px-3 py-3 cursor-pointer transition-all hover:-translate-y-px hover:border-[var(--blue-035)] ${
+                        key === "COMPLETED"
+                          ? "border-[var(--blue-008)] opacity-70"
+                          : "border-[var(--blue-012)]"
+                      }`}
+                      onClick={() => handleStatusUpdate(task.id, next)}
+                      title={`Click to move to ${nextLabel === "Start" ? "In Progress" : nextLabel === "Complete" ? "Done" : "To Do"}`}
+                    >
+                      <p className={`text-sm leading-snug mb-3 ${key === "COMPLETED" ? "line-through text-[var(--fg-faint)]" : "text-foreground"}`}>
+                        {task.title}
+                      </p>
+                      <div className="flex items-center gap-2">
+                        {/* Priority dot */}
+                        <span
+                          className="w-2 h-2 rounded-full flex-shrink-0"
+                          title={task.priority}
+                          style={{
+                            background:
+                              task.priority === "URGENT" ? "var(--destructive)" :
+                              task.priority === "HIGH"   ? "var(--warning)" :
+                              task.priority === "MEDIUM" ? "var(--xiv-blue)" :
+                                                           "var(--fg-faint)",
+                          }}
+                        />
+                        {/* Due date */}
+                        {task.dueDate ? (
+                          <span className={`text-[0.68rem] flex items-center gap-1 ${
+                            new Date(task.dueDate) < new Date() && key !== "COMPLETED"
+                              ? "text-[var(--warning)]"
+                              : "text-[var(--fg-faint)]"
+                          }`}>
+                            <svg className="w-3 h-3" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+                            {format(new Date(task.dueDate), "d MMM")}
                           </span>
-                          {task.completedAt && task.completer && (
-                            <span>
-                              Completed by {task.completer.name} on{" "}
-                              {format(new Date(task.completedAt), "PPP")}
-                            </span>
-                          )}
-                        </div>
-                      </div>
-                      <div className="flex gap-2 ml-4">
-                        {task.status === "PENDING" && (
-                          <Button
-                            size="sm"
-                            variant="outline"
-                            onClick={() => handleStatusUpdate(task.id, "IN_PROGRESS")}
+                        ) : key === "COMPLETED" ? (
+                          <span className="text-[0.68rem] text-[var(--fg-faint)] flex items-center gap-1">
+                            <svg className="w-3 h-3" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><polyline points="20 6 9 17 4 12"/></svg>
+                            Done
+                          </span>
+                        ) : null}
+                        <div className="flex-1" />
+                        {/* Assignee avatar */}
+                        {task.assignee ? (
+                          <Avatar className="w-6 h-6 text-[0.6rem]">
+                            <AvatarImage src={task.assignee.image ?? undefined} />
+                            <AvatarFallback className="text-[0.6rem] bg-gradient-to-br from-emerald-400 to-emerald-600 text-[var(--xiv-navy)] font-bold">
+                              {task.assignee.name?.slice(0, 2).toUpperCase() ?? "?"}
+                            </AvatarFallback>
+                          </Avatar>
+                        ) : task.assignedRole ? (
+                          <span
+                            className="text-[0.65rem] font-medium px-2 py-0.5 rounded-full border"
+                            style={{ color: task.assignedRole.color, borderColor: task.assignedRole.color + "55", background: task.assignedRole.color + "18" }}
                           >
-                            Start
-                          </Button>
-                        )}
-                        {task.status === "IN_PROGRESS" && (
-                          <Button
-                            size="sm"
-                            variant="default"
-                            onClick={() => handleStatusUpdate(task.id, "COMPLETED")}
-                          >
-                            Complete
-                          </Button>
-                        )}
-                        {task.status === "COMPLETED" && (
-                          <Button
-                            size="sm"
-                            variant="outline"
-                            onClick={() => handleStatusUpdate(task.id, "PENDING")}
-                          >
-                            Reopen
-                          </Button>
-                        )}
-                        <Button
-                          size="sm"
-                          variant="outline"
-                          onClick={() => openEditDialog(task)}
+                            {task.assignedRole.name}
+                          </span>
+                        ) : null}
+                        {/* Edit / delete */}
+                        <button
+                          className="text-[var(--fg-faint)] hover:text-foreground transition-colors p-0.5 rounded"
+                          onClick={(e) => { e.stopPropagation(); openEditDialog(task) }}
+                          title="Edit"
                         >
-                          Edit
-                        </Button>
+                          <svg className="w-3.5 h-3.5" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+                        </button>
                         <AlertDialog>
                           <AlertDialogTrigger asChild>
-                            <Button size="sm" variant="outline">
-                              Delete
-                            </Button>
+                            <button
+                              className="text-[var(--fg-faint)] hover:text-destructive transition-colors p-0.5 rounded"
+                              onClick={(e) => e.stopPropagation()}
+                              title="Delete"
+                            >
+                              <svg className="w-3.5 h-3.5" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14H6L5 6"/><path d="M10 11v6"/><path d="M14 11v6"/><path d="M9 6V4h6v2"/></svg>
+                            </button>
                           </AlertDialogTrigger>
                           <AlertDialogContent>
                             <AlertDialogHeader>
                               <AlertDialogTitle>Delete Task?</AlertDialogTitle>
                               <AlertDialogDescription>
-                                Are you sure you want to delete "{task.title}"? This action
-                                cannot be undone.
+                                Are you sure you want to delete &quot;{task.title}&quot;? This cannot be undone.
                               </AlertDialogDescription>
                             </AlertDialogHeader>
                             <AlertDialogFooter>
                               <AlertDialogCancel>Cancel</AlertDialogCancel>
-                              <AlertDialogAction onClick={() => handleDeleteTask(task.id)}>
-                                Delete
-                              </AlertDialogAction>
+                              <AlertDialogAction onClick={() => handleDeleteTask(task.id)}>Delete</AlertDialogAction>
                             </AlertDialogFooter>
                           </AlertDialogContent>
                         </AlertDialog>
                       </div>
                     </div>
-                  </CardContent>
-                </Card>
-              ))}
-            </div>
-          )}
-        </TabsContent>
-      </Tabs>
+                  ))}
+
+                  {/* New task shortcut on To Do column */}
+                  {key === "PENDING" && (
+                    <button
+                      className="w-full text-xs text-[var(--fg-faint)] hover:text-[var(--xiv-blue)] border border-dashed border-[var(--blue-010)] hover:border-[var(--blue-035)] rounded-lg py-2 transition-colors mt-1"
+                      onClick={openCreateDialog}
+                    >
+                      + New task
+                    </button>
+                  )}
+                </div>
+              </div>
+            )
+          })}
+        </div>
+      )}
 
       {/* Create Task Dialog */}
       <Dialog open={isCreateDialogOpen} onOpenChange={setIsCreateDialogOpen}>

@@ -22,6 +22,7 @@ import {
 } from "@/components/ui/card"
 import { Alert, AlertDescription } from "@/components/ui/alert"
 import { CheckCircle2, Copy, Link as LinkIcon, Share2 } from "lucide-react"
+import { VenueLayoutClient } from "@/components/venue-layout-client"
 
 export default function InviteStaffPage({
   params,
@@ -146,7 +147,7 @@ export default function InviteStaffPage({
 
   if (inviteUrl) {
     return (
-      <div className="container mx-auto p-4 md:p-6 lg:p-8 max-w-2xl">
+      <VenueLayoutClient slug={slug}><div className="p-4 md:p-6 max-w-2xl">
         {/* Header */}
         <div className="mb-8">
           <h1 className="text-2xl md:text-4xl font-bold">Invite Link Created!</h1>
@@ -259,12 +260,12 @@ export default function InviteStaffPage({
             </p>
           </CardContent>
         </Card>
-      </div>
+      </div></VenueLayoutClient>
     )
   }
 
   return (
-    <div className="container mx-auto p-4 md:p-6 lg:p-8 max-w-2xl">
+    <VenueLayoutClient slug={slug}><div className="p-4 md:p-6 max-w-2xl">
       {/* Header */}
       <div className="mb-8">
         <h1 className="text-2xl md:text-4xl font-bold">Create Staff Invite</h1>
@@ -403,6 +404,6 @@ export default function InviteStaffPage({
           </p>
         </CardContent>
       </Card>
-    </div>
+    </div></VenueLayoutClient>
   )
 }

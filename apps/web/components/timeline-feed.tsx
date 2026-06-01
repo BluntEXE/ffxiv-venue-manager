@@ -115,23 +115,25 @@ export function TimelineFeed({ venueId, initialFilter = "all" }: TimelineFeedPro
   return (
     <div>
       {/* Filter chips */}
-      <div className="flex items-center gap-2 mb-6">
-        {(Object.keys(filterLabels) as TimelineFilter[]).map((f) => (
-          <button
-            key={f}
-            onClick={() => { setFilter(f); setLiveCount(0) }}
-            className={"px-3 py-1.5 rounded-full text-sm font-medium transition-colors " + (
-              filter === f
-                ? "bg-primary text-primary-foreground"
-                : "bg-muted text-muted-foreground hover:text-foreground"
-            )}
-          >
-            {filterLabels[f]}
-          </button>
-        ))}
+      <div className="flex items-center gap-3 mb-6 flex-wrap">
+        <div className="flex gap-1 bg-card border border-[var(--blue-015)] rounded-full p-1">
+          {(Object.keys(filterLabels) as TimelineFilter[]).map((f) => (
+            <button
+              key={f}
+              onClick={() => { setFilter(f); setLiveCount(0) }}
+              className={`text-sm font-semibold px-4 py-1.5 rounded-full transition-colors ${
+                filter === f
+                  ? "bg-[var(--xiv-blue)] text-[var(--xiv-navy)]"
+                  : "text-muted-foreground hover:text-foreground hover:bg-[var(--blue-007)]"
+              }`}
+            >
+              {filterLabels[f]}
+            </button>
+          ))}
+        </div>
         {liveCount > 0 && (
-          <span className="text-xs text-emerald-500 ml-2">
-            +{liveCount} live
+          <span className="flex items-center gap-1.5 text-xs font-semibold text-emerald-400">
+            <span className="xiv-live-dot scale-75" />+{liveCount} live
           </span>
         )}
       </div>
@@ -176,67 +178,61 @@ function TimelineRow({ item }: { item: TimelineItem }) {
   if (item.type === "sale") {
     const { amount, customerName, service, staff, notes } = item.data
     return (
-      <Card>
-        <CardContent className="p-4">
-          <div className="flex items-center gap-3">
-            <div className="flex-shrink-0 w-8 h-8 rounded-full bg-emerald-500/10 flex items-center justify-center">
-              <span className="text-emerald-500 text-sm">G</span>
-            </div>
-            <div className="flex-1 min-w-0">
-              <div className="flex items-center gap-2">
-                <span className="font-medium">{Number(amount).toLocaleString()} gil</span>
-                {service && (
-                  <Badge variant="outline" className="text-xs">{service.name}</Badge>
-                )}
-              </div>
-              <p className="text-sm text-muted-foreground">
-                {customerName && <span>{customerName} &middot; </span>}
-                {staff?.name && <span>by {staff.name} &middot; </span>}
-                {time}
-              </p>
-              {notes && <p className="text-xs text-muted-foreground mt-0.5">{notes}</p>}
-            </div>
+      <div className="flex items-center gap-3 px-4 py-3 rounded-xl border border-[var(--blue-008)] hover:border-[var(--blue-018)] hover:bg-[var(--blue-004)] transition-all">
+        <div className="w-8 h-8 rounded-lg bg-emerald-500/10 border border-emerald-500/20 flex items-center justify-center flex-shrink-0">
+          <svg className="w-4 h-4 text-emerald-400" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>
+        </div>
+        <div className="flex-1 min-w-0">
+          <div className="flex items-center gap-2 flex-wrap">
+            <span className="text-sm font-semibold text-emerald-400">{Number(amount).toLocaleString()} gil</span>
+            {service && (
+              <span className="text-[0.68rem] font-medium px-2 py-0.5 rounded-full bg-[var(--blue-010)] text-[var(--xiv-blue)] border border-[var(--blue-018)]">
+                {(service as { name: string }).name}
+              </span>
+            )}
           </div>
-        </CardContent>
-      </Card>
+          <p className="text-xs text-muted-foreground mt-0.5">
+            {customerName && <span>{String(customerName)} &middot; </span>}
+            {staff && (staff as { name?: string }).name && <span>by {(staff as { name: string }).name} &middot; </span>}
+            {time}
+          </p>
+          {notes && <p className="text-xs text-[var(--fg-faint)] mt-0.5">{String(notes)}</p>}
+        </div>
+      </div>
     )
   }
 
-  // Patron enter/exit
   const { characterName, world } = item.data
   const isEnter = item.type === "patron_enter"
 
   return (
-    <Card className={isEnter ? "border-[rgba(0,180,255,0.2)]" : "border-[rgba(255,100,100,0.15)]"}>
-      <CardContent className="p-4">
-        <div className="flex items-center gap-3">
-          <div className={"flex-shrink-0 w-8 h-8 rounded-full flex items-center justify-center " + (
-            isEnter ? "bg-[rgba(0,180,255,0.12)]" : "bg-[rgba(255,100,100,0.1)]"
-          )}>
-            {isEnter
-              ? <LogIn className="h-4 w-4 text-[var(--xiv-blue)]" />
-              : <LogOut className="h-4 w-4 text-rose-400" />
-            }
-          </div>
-          <div className="flex-1 min-w-0">
-            <p className="font-medium">
-              {characterName || "Unknown"}{world ? " (" + world + ")" : ""}
-            </p>
-            <p className="text-sm text-muted-foreground">
-              {isEnter ? "Entered" : "Left"} &middot; {time}
-            </p>
-          </div>
-          <Badge
-            variant="outline"
-            className={isEnter
-              ? "bg-[rgba(0,180,255,0.12)] text-[var(--xiv-blue)] border-[rgba(0,180,255,0.35)]"
-              : "bg-[rgba(255,100,100,0.1)] text-rose-400 border-rose-500/30"
-            }
-          >
-            {isEnter ? "Entered" : "Left"}
-          </Badge>
-        </div>
-      </CardContent>
-    </Card>
+    <div className={`flex items-center gap-3 px-4 py-3 rounded-xl border hover:bg-[var(--blue-004)] transition-all ${
+      isEnter ? "border-[rgba(0,180,255,0.15)]" : "border-[var(--blue-008)]"
+    }`}>
+      <div className={`w-8 h-8 rounded-lg flex items-center justify-center flex-shrink-0 ${
+        isEnter
+          ? "bg-[rgba(0,180,255,0.10)] border border-[rgba(0,180,255,0.25)]"
+          : "bg-[rgba(108,112,134,0.10)] border border-[var(--border)]"
+      }`}>
+        {isEnter
+          ? <LogIn className="h-4 w-4 text-[var(--xiv-blue)]" />
+          : <LogOut className="h-4 w-4 text-muted-foreground" />
+        }
+      </div>
+      <div className="flex-1 min-w-0">
+        <p className="text-sm font-medium">
+          {characterName ? String(characterName) : "Unknown"}
+          {world ? <span className="text-muted-foreground font-normal"> · {String(world)}</span> : null}
+        </p>
+        <p className="text-xs text-muted-foreground">{isEnter ? "Entered" : "Left"} · {time}</p>
+      </div>
+      <span className={`text-[0.68rem] font-semibold uppercase tracking-[0.05em] px-2.5 py-1 rounded-full ${
+        isEnter
+          ? "bg-[rgba(0,180,255,0.10)] text-[var(--xiv-blue)] border border-[rgba(0,180,255,0.28)]"
+          : "bg-[rgba(108,112,134,0.10)] text-[var(--fg-faint)] border border-[var(--border)]"
+      }`}>
+        {isEnter ? "Enter" : "Exit"}
+      </span>
+    </div>
   )
 }

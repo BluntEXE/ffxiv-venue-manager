@@ -158,7 +158,7 @@ export default async function VenueDashboardPage({
       <div className="p-4 md:p-6 space-y-6">
 
         {/* Page header */}
-        <div>
+        <div className="xiv-hero-bg overflow-hidden rounded-xl px-5 py-5">
           <div className="flex items-center gap-2 mb-1">
             <span className="stat-label text-[var(--xiv-blue)]">
               {venue.dataCenter} &middot; {venue.world}
@@ -195,6 +195,7 @@ export default async function VenueDashboardPage({
                 value={kpis.revenueThisWeek >= 1000 ? `${(kpis.revenueThisWeek / 1000).toFixed(1)}k gil` : `${kpis.revenueThisWeek} gil`}
                 delta={revDelta !== null ? `${revDelta > 0 ? "+" : ""}${revDelta}% vs last` : undefined}
                 deltaDirection={revDelta !== null ? (revDelta >= 0 ? "up" : "down") : "neutral"}
+                icon={<BarChart3 />} iconVariant="blue"
               />
             </Card>
             <Card className="p-4">
@@ -203,6 +204,7 @@ export default async function VenueDashboardPage({
                 value={kpis.patronsThisWeek.toLocaleString()}
                 delta={patDelta !== null ? `${patDelta > 0 ? "+" : ""}${patDelta}% vs last` : undefined}
                 deltaDirection={patDelta !== null ? (patDelta >= 0 ? "up" : "down") : "neutral"}
+                icon={<Users />} iconVariant="blue"
               />
             </Card>
             <Card className="p-4">
@@ -210,6 +212,7 @@ export default async function VenueDashboardPage({
                 label="Avg attendance"
                 value={kpis.avgAttendance}
                 subtext="per event"
+                icon={<TrendingUp />} iconVariant="success"
               />
             </Card>
             <Card className="p-4">
@@ -217,13 +220,14 @@ export default async function VenueDashboardPage({
                 label="Upcoming events"
                 value={kpis.upcomingCount}
                 subtext={nextEvent ? `next ${formatDistanceToNow(nextEvent.startTime, { addSuffix: true })}` : undefined}
+                icon={<Calendar />} iconVariant="blue"
               />
             </Card>
             <Card className="p-4">
               <StatReadout
                 label="Followers"
                 value={kpis.newFollowers.toLocaleString()}
-                icon={<Heart className="h-3.5 w-3.5" />}
+                icon={<Heart />} iconVariant="warning"
               />
             </Card>
           </div>

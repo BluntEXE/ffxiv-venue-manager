@@ -3,6 +3,7 @@ import { authOptions } from "@/lib/auth"
 import { redirect, notFound } from "next/navigation"
 import Link from "next/link"
 import { Button } from "@/components/ui/button"
+import { VenueLayout } from "@/components/venue-layout"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { prisma } from "@/lib/prisma"
@@ -81,7 +82,8 @@ export default async function EventDetailsPage({
   const canEdit = ["OWNER", "MANAGER"].includes(userRole)
 
   return (
-    <div className="container mx-auto p-4 md:p-8 max-w-4xl">
+    <VenueLayout venueSlug={venue.slug} venueName={venue.name} userRole={userRole}>
+    <div className="p-4 md:p-6 max-w-4xl">
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:justify-between sm:items-start gap-4 mb-6 md:mb-8">
         <div className="flex-1 min-w-0">
@@ -300,5 +302,6 @@ export default async function EventDetailsPage({
         </div>
       </div>
     </div>
+    </VenueLayout>
   )
 }

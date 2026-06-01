@@ -35,6 +35,7 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { Badge } from "@/components/ui/badge"
 import { format } from "date-fns"
 import { PageLoading } from "@/components/ui/loading-spinner"
+import { VenueLayoutClient } from "@/components/venue-layout-client"
 
 interface StaffMember {
   id: string
@@ -224,34 +225,35 @@ export default function ManageStaffMemberPage({
   }
 
   if (!slug || !membershipId) {
-    return <div className="container mx-auto p-4 md:p-8"><PageLoading /></div>
+    return <VenueLayoutClient slug={slug}><div className="p-4 md:p-6"><PageLoading /></div></VenueLayoutClient>
   }
 
   if (isLoading) {
     return (
-      <div className="container mx-auto p-4 md:p-8">
-        <PageLoading text="Loading staff member..." />
-      </div>
+      <VenueLayoutClient slug={slug}>
+        <div className="p-4 md:p-6"><PageLoading text="Loading staff member..." /></div>
+      </VenueLayoutClient>
     )
   }
 
   if (!staffMember) {
     return (
-      <div className="container mx-auto p-4 md:p-8">
-        <Alert className="bg-destructive/10 border-destructive/20">
-          <AlertDescription className="text-destructive">
-            Staff member not found
-          </AlertDescription>
-        </Alert>
-        <Button asChild className="mt-4">
-          <Link href={`/dashboard/${slug}/staff`}>← Back to Staff</Link>
-        </Button>
-      </div>
+      <VenueLayoutClient slug={slug}>
+        <div className="p-4 md:p-6">
+          <Alert className="bg-destructive/10 border-destructive/20">
+            <AlertDescription className="text-destructive">Staff member not found</AlertDescription>
+          </Alert>
+          <Button asChild className="mt-4">
+            <Link href={`/dashboard/${slug}/staff`}>← Back to Staff</Link>
+          </Button>
+        </div>
+      </VenueLayoutClient>
     )
   }
 
   return (
-    <div className="container mx-auto p-4 md:p-8 max-w-3xl">
+    <VenueLayoutClient slug={slug}>
+    <div className="p-4 md:p-6 max-w-3xl">
       {/* Header */}
       <div className="mb-6 md:mb-8">
         <h1 className="text-2xl md:text-4xl font-bold">Manage Staff Member</h1>
@@ -449,5 +451,6 @@ export default function ManageStaffMemberPage({
         </Button>
       </div>
     </div>
+    </VenueLayoutClient>
   )
 }
