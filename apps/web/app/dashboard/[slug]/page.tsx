@@ -167,10 +167,11 @@ export default async function VenueDashboardPage({
       <div className="p-4 md:p-6 space-y-6">
 
         {/* Page header */}
-        <div className="xiv-hero-bg overflow-hidden rounded-xl px-5 py-5">
-          <div className="flex items-center gap-2 mb-1">
-            <span className="stat-label text-[var(--xiv-blue)]">
-              {venue.dataCenter} &middot; {venue.world}
+        <div>
+          <div className="flex items-center gap-2 mb-1.5">
+            <span className="w-[7px] h-[7px] bg-[rgba(0,180,255,0.7)] rotate-45 shadow-[0_0_10px_rgba(0,180,255,0.5)] flex-shrink-0" />
+            <span className="text-[0.72rem] font-semibold uppercase tracking-[0.14em] text-[var(--xiv-blue)]">
+              {venue.name} &middot; {venue.dataCenter} &middot; {venue.world}
             </span>
           </div>
           <h1 className="page-h1">Overview</h1>

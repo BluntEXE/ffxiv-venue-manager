@@ -61,9 +61,11 @@ export default async function EventsPage({
     notFound()
   }
 
-  // Build where clause
+  // Build where clause — drafts view filters by DRAFT status
   const where: any = { venueId: venue.id }
-  if (status) {
+  if (view === "drafts") {
+    where.status = "DRAFT"
+  } else if (status) {
     where.status = status
   }
 
@@ -77,10 +79,11 @@ export default async function EventsPage({
     orderBy: { startTime: "asc" },
   })
 
-  // Separate upcoming and past events
+  // Separate upcoming, past, and draft events
   const now = new Date()
-  const upcomingEvents = events.filter((e: typeof events[number]) => new Date(e.startTime) >= now)
-  const pastEvents = events.filter((e: typeof events[number]) => new Date(e.startTime) < now)
+  const upcomingEvents = events.filter((e: typeof events[number]) => new Date(e.startTime) >= now && e.status !== "DRAFT")
+  const pastEvents = events.filter((e: typeof events[number]) => new Date(e.startTime) < now && e.status !== "DRAFT")
+  const draftEvents = events.filter((e: typeof events[number]) => e.status === "DRAFT")
 
   const userRole = venue.memberships[0].role
 
@@ -119,8 +122,9 @@ export default async function EventsPage({
       <div className="flex items-center gap-3 mb-6 flex-wrap">
         <div className="flex gap-1 bg-card border border-[var(--blue-015)] rounded-full p-1">
           {([
-            { key: "list", label: "Upcoming" },
-            { key: "past", label: "Past" },
+            { key: "list",     label: "Upcoming" },
+            { key: "past",     label: "Past" },
+            { key: "drafts",   label: `Drafts${draftEvents.length > 0 ? ` (${draftEvents.length})` : ""}` },
             { key: "calendar", label: "Calendar" },
           ] as const).map(({ key, label }) => (
             <Link
@@ -137,11 +141,44 @@ export default async function EventsPage({
           ))}
         </div>
         <div className="flex-1" />
-        <span className="text-xs text-muted-foreground">{upcomingEvents.length} upcoming · {pastEvents.length} past</span>
+        <span className="text-xs text-muted-foreground">{upcomingEvents.length} upcoming · {pastEvents.length} past · {draftEvents.length} drafts</span>
       </div>
 
       {view === "calendar" ? (
         <EventsCalendar events={events} venueSlug={slug} />
+      ) : view === "drafts" ? (
+        <>
+          {draftEvents.length === 0 ? (
+            <div className="xiv-card rounded-xl p-8 text-center">
+              <p className="text-muted-foreground">No draft events. Drafts are created when you save an event without publishing.</p>
+            </div>
+          ) : (
+            <div className="grid grid-cols-1 gap-3">
+              {draftEvents.map((event: typeof draftEvents[number]) => (
+                <div key={event.id} className="xiv-card rounded-xl p-4 flex gap-4 transition-all hover:border-[rgba(0,180,255,0.4)]">
+                  <div className="w-10 flex-shrink-0 text-center pt-0.5">
+                    <div className="text-[0.58rem] font-semibold uppercase tracking-wide text-[var(--fg-faint)]">{formatServerTime(event.startTime, "date").split(" ")[0]}</div>
+                    <div className="font-cinzel text-xl font-bold leading-none mt-0.5 text-[var(--fg-faint)]">{new Date(event.startTime).getUTCDate()}</div>
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <div className="flex justify-between items-start gap-3 flex-wrap">
+                      <p className="font-semibold truncate text-[var(--fg-subtle)]">{event.title}</p>
+                      <div className="flex gap-1.5 shrink-0">
+                        <Badge className={statusColors[event.status as keyof typeof statusColors]}>{event.status}</Badge>
+                        <Badge variant="outline">{typeLabels[event.eventType as keyof typeof typeLabels]}</Badge>
+                      </div>
+                    </div>
+                    <p className="text-xs text-muted-foreground mt-0.5">{formatServerTime(event.startTime, "datelong")} · {formatServerTime(event.startTime, "time")} {SERVER_TIME_LABEL}</p>
+                    <div className="flex gap-2 mt-3">
+                      <Button asChild variant="cta" size="sm"><Link href={`/dashboard/${slug}/events/${event.id}/edit`}>Edit draft</Link></Button>
+                      <Button asChild variant="outline" size="sm"><Link href={`/dashboard/${slug}/events/${event.id}`}>Preview</Link></Button>
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+        </>
       ) : view === "past" ? (
         <>
           {pastEvents.length === 0 ? (
