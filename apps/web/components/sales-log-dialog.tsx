@@ -50,6 +50,7 @@ export function SalesLogDialog({ venueId, services, events }: SalesLogDialogProp
   const [formData, setFormData] = useState({
     serviceId: "",
     eventId: "",
+    type: "SALE" as "SALE" | "TIP" | "COVER_CHARGE" | "OTHER",
     amount: "",
     customerName: "",
     notes: "",
@@ -91,6 +92,7 @@ export function SalesLogDialog({ venueId, services, events }: SalesLogDialogProp
         body: JSON.stringify({
           serviceId: formData.serviceId || undefined,
           eventId: formData.eventId || undefined,
+          type: formData.type,
           amount: parseFloat(formData.amount),
           customerName: formData.customerName || undefined,
           notes: formData.notes || undefined,
@@ -103,7 +105,7 @@ export function SalesLogDialog({ venueId, services, events }: SalesLogDialogProp
       }
 
       setIsOpen(false)
-      setFormData({ serviceId: "", eventId: "", amount: "", customerName: "", notes: "" })
+      setFormData({ serviceId: "", eventId: "", type: "SALE", amount: "", customerName: "", notes: "" })
       router.refresh() // Trigger server-side data refresh
     } catch (error: unknown) {
       setFormError(error instanceof Error ? error.message : "Failed to log sale")
@@ -189,18 +191,38 @@ export function SalesLogDialog({ venueId, services, events }: SalesLogDialogProp
                 </SelectContent>
               </Select>
             </div>
-            <div className="space-y-2">
-              <Label htmlFor="amount">Amount (gil) *</Label>
-              <Input
-                id="amount"
-                type="number"
-                min="0"
-                step="1"
-                placeholder="1000"
-                value={formData.amount}
-                onChange={(e) => setFormData({ ...formData, amount: e.target.value })}
-                disabled={isSubmitting}
-              />
+            <div className="grid grid-cols-2 gap-3">
+              <div className="space-y-2">
+                <Label htmlFor="amount">Amount (gil) *</Label>
+                <Input
+                  id="amount"
+                  type="number"
+                  min="0"
+                  step="1"
+                  placeholder="1000"
+                  value={formData.amount}
+                  onChange={(e) => setFormData({ ...formData, amount: e.target.value })}
+                  disabled={isSubmitting}
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="tx-type">Type</Label>
+                <Select
+                  value={formData.type}
+                  onValueChange={(v) => setFormData({ ...formData, type: v as typeof formData.type })}
+                  disabled={isSubmitting}
+                >
+                  <SelectTrigger id="tx-type">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="SALE">Sale</SelectItem>
+                    <SelectItem value="TIP">Tip</SelectItem>
+                    <SelectItem value="COVER_CHARGE">Cover charge</SelectItem>
+                    <SelectItem value="OTHER">Other</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
             </div>
             <div className="space-y-2">
               <Label htmlFor="customer">Customer Name (Optional)</Label>

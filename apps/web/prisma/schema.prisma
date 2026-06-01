@@ -415,6 +415,15 @@ model Service {
   @@map("services")
 }
 
+enum TransactionType {
+  SALE
+  TIP
+  COVER_CHARGE
+  OTHER
+
+  @@map("transaction_type")
+}
+
 model Transaction {
   id        String  @id @default(cuid())
   venueId   String
@@ -423,6 +432,7 @@ model Transaction {
   staffId   String?
 
   // Transaction details
+  type         TransactionType @default(SALE)
   amount       Decimal @db.Decimal(10, 2)
   customerName String?
   notes        String? @db.Text

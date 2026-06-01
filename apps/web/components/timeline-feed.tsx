@@ -4,11 +4,11 @@ import { useState, useEffect, useCallback, useRef } from "react"
 import { formatServerTime, SERVER_TIME_LABEL } from "@/lib/server-time"
 import { Button } from "@/components/ui/button"
 
-type TimelineFilter = "all" | "sales" | "patrons"
+type TimelineFilter = "all" | "sales" | "patrons" | "staff"
 
 interface TimelineItem {
   id: string
-  type: "sale" | "patron_enter" | "patron_exit"
+  type: "sale" | "patron_enter" | "patron_exit" | "shift_start" | "shift_end"
   timestamp: string
   data: Record<string, any>
 }
@@ -22,13 +22,16 @@ const filterLabels: Record<TimelineFilter, string> = {
   all: "All",
   sales: "Sales",
   patrons: "Patrons",
+  staff: "Staff",
 }
 
 
 function matchesFilter(item: TimelineItem, filter: TimelineFilter): boolean {
   if (filter === "all") return true
   if (filter === "sales") return item.type === "sale"
-  return item.type === "patron_enter" || item.type === "patron_exit"
+  if (filter === "patrons") return item.type === "patron_enter" || item.type === "patron_exit"
+  if (filter === "staff") return item.type === "shift_start" || item.type === "shift_end"
+  return true
 }
 
 export function TimelineFeed({ venueId, initialFilter = "all" }: TimelineFeedProps) {
@@ -204,6 +207,24 @@ function TimelineRow({ item, isLast }: { item: TimelineItem; isLast: boolean }) 
               {staff && (staff as { name?: string }).name && <>{customerName ? " · " : ""}by {(staff as { name: string }).name}</>}
             </div>
           )}
+        </div>
+      </div>
+    )
+  }
+
+  // Shift events
+  if (item.type === "shift_start" || item.type === "shift_end") {
+    const { staffName, roleName } = item.data
+    const isStart = item.type === "shift_start"
+    return (
+      <div className={`tl-item${isLast ? " last" : ""}`}>
+        <div className="tl-time">{timeStr}</div>
+        <div className="tl-node">
+          <div className="tl-title">
+            <strong>{String(staffName ?? "Staff")}</strong>
+            {" "}{isStart ? "clocked in" : "clocked out"}
+            {roleName ? <span className="text-muted-foreground font-normal"> — {String(roleName)}</span> : null}
+          </div>
         </div>
       </div>
     )

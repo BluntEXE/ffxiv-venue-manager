@@ -20,6 +20,7 @@ import { invalidateCache } from "@/lib/redis-cache"
 export const createTransactionSchema = z.object({
   serviceId: z.string().optional(),
   eventId: z.string().optional(),
+  type: z.enum(["SALE", "TIP", "COVER_CHARGE", "OTHER"]).optional().default("SALE"),
   amount: validators.amount,
   customerName: validators.customerName,
   notes: validators.transactionNotes,
@@ -44,6 +45,7 @@ export async function createTransaction(
       serviceId: input.serviceId,
       eventId: input.eventId,
       staffId: staffUserId,
+      type: input.type ?? "SALE",
       amount: input.amount,
       customerName: input.customerName,
       notes: input.notes,

@@ -16,7 +16,7 @@ export async function GET(
   const { searchParams } = new URL(request.url)
   const cursor = searchParams.get("cursor")
   const limit = Math.min(parseInt(searchParams.get("limit") || "50"), 100)
-  const type = searchParams.get("type") // "sales" | "patrons" | null (all)
+  const type = searchParams.get("type") // "sales" | "patrons" | "staff" | null (all)
   const eventId = searchParams.get("eventId") // filter to a specific event
 
   // Verify membership
@@ -29,7 +29,7 @@ export async function GET(
 
   const items: Array<{
     id: string
-    type: "sale" | "patron_enter" | "patron_exit"
+    type: "sale" | "patron_enter" | "patron_exit" | "shift_start" | "shift_end"
     timestamp: Date
     data: Record<string, unknown>
   }> = []
@@ -111,6 +111,54 @@ export async function GET(
           loggedBy: p.staff,
         },
       })
+    }
+  }
+
+  // Fetch shift events (clock-in / clock-out)
+  if (!type || type === "staff") {
+    const shiftWhere: Record<string, unknown> = {
+      venueId,
+      status: { in: ["ACTIVE", "COMPLETED", "MISSED"] },
+      actualStart: { not: null },
+    }
+    if (cursor) shiftWhere.actualStart = { lt: new Date(cursor), not: null }
+
+    const shifts = await prisma.shift.findMany({
+      where: shiftWhere as any,
+      include: {
+        membership: {
+          include: {
+            user: { select: { id: true, name: true, image: true } },
+            customRole: { select: { name: true, color: true } },
+          },
+        },
+      },
+      orderBy: { actualStart: "desc" },
+      take: limit,
+    })
+
+    for (const s of shifts) {
+      const staffName = s.membership?.user?.name ?? "Unknown"
+      const roleName = s.membership?.customRole?.name ?? s.membership?.role ?? "Staff"
+
+      // Clock-in event
+      if (s.actualStart) {
+        items.push({
+          id: `shift_start_${s.id}`,
+          type: "shift_start",
+          timestamp: s.actualStart,
+          data: { staffName, roleName, shiftId: s.id },
+        })
+      }
+      // Clock-out event
+      if (s.actualEnd) {
+        items.push({
+          id: `shift_end_${s.id}`,
+          type: "shift_end",
+          timestamp: s.actualEnd,
+          data: { staffName, roleName, shiftId: s.id },
+        })
+      }
     }
   }
 
