@@ -3,7 +3,7 @@ import { authOptions } from "@/lib/auth"
 import { prisma } from "@/lib/prisma"
 import { redirect } from "next/navigation"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
-import { BarChart3, Zap, TrendingUp } from "lucide-react"
+import { BarChart3, Zap, TrendingUp, Hash } from "lucide-react"
 import { StatReadout } from "@/components/ui/stat-readout"
 import { VenueLayoutClient } from "@/components/venue-layout-client"
 import { VenueEyebrow } from "@/components/venue-eyebrow"
@@ -221,20 +221,21 @@ export default async function SalesPage({ params }: PageProps) {
         <div className="flex flex-col sm:flex-row sm:justify-between sm:items-start gap-4 mb-6 md:mb-8">
           <div>
             <VenueEyebrow slug={slug} />
-            <h1 className="page-h1">Sales &amp; Transactions</h1>
+            <h1 className="page-h1">Sales</h1>
           </div>
           <SalesLogDialog venueId={venue.id} services={servicesWithNumberPrices} events={activeEvents} />
         </div>
 
-        {/* KPIs */}
-        <div className="grid grid-cols-2 md:grid-cols-3 gap-4 mb-6">
-          <Card className="px-[18px] py-4"><StatReadout label="Total revenue" value={`${totalRevenue.toLocaleString()} gil`} subtext={`${transactions.length} transactions`} icon={<BarChart3 />} iconVariant="blue" /></Card>
-          <Card className="px-[18px] py-4"><StatReadout label="Today's revenue" value={`${todayRevenue.toLocaleString()} gil`} subtext={`${todayTransactions.length} today`} deltaDirection="up" icon={<Zap />} iconVariant="success" /></Card>
-          <Card className="px-[18px] py-4"><StatReadout label="Average sale" value={`${transactions.length > 0 ? Math.round(totalRevenue / transactions.length).toLocaleString() : 0} gil`} subtext="Per transaction" icon={<TrendingUp />} iconVariant="blue" /></Card>
+        {/* KPIs — 4 stats matching prototype */}
+        <div className="kpis mb-6">
+          <Card className="px-[18px] py-4"><StatReadout label="Sales tonight" value={`${todayRevenue.toLocaleString()}`} subtext="gil" icon={<Zap />} iconVariant="success" deltaDirection={todayRevenue > 0 ? "up" : undefined} /></Card>
+          <Card className="px-[18px] py-4"><StatReadout label="This week" value={`${totalRevenue.toLocaleString()}`} subtext="gil" icon={<BarChart3 />} iconVariant="blue" /></Card>
+          <Card className="px-[18px] py-4"><StatReadout label="Avg sale" value={`${transactions.length > 0 ? Math.round(totalRevenue / transactions.length).toLocaleString() : 0}`} subtext="gil" icon={<TrendingUp />} iconVariant="blue" /></Card>
+          <Card className="px-[18px] py-4"><StatReadout label="Transactions" value={transactions.length} subtext="total" icon={<Hash />} iconVariant="blue" /></Card>
         </div>
 
-        {/* 2-col body */}
-        <div className="grid grid-cols-1 lg:grid-cols-[1fr_260px] gap-6 items-start">
+        {/* 2-col body — matches prototype .cols-2 */}
+        <div className="cols-2 items-start">
 
           {/* Left — transactions */}
           <div>

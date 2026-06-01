@@ -935,3 +935,63 @@
   border-radius: var(--radius-xl);
   overflow: hidden;
 }
+
+/* ── Layout utilities from prototype ── */
+
+/* .cols-2 — two equal columns, matches prototype usage */
+.cols-2 {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 18px;
+  align-items: start;
+}
+@media (max-width: 768px) {
+  .cols-2 { grid-template-columns: 1fr; }
+}
+
+/* .head-row — page head + actions on same row */
+.head-row {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 16px;
+  flex-wrap: wrap;
+  margin-bottom: 24px;
+}
+
+/* .stack — vertical flex column for sidebar panels */
+.stack { display: flex; flex-direction: column; gap: 18px; }
+
+/* .dtable — data table matching prototype .dtable spec */
+.dtable { width: 100%; border-collapse: collapse; }
+.dtable th {
+  text-align: left;
+  font-size: 0.68rem;
+  font-weight: 500;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--xiv-blue);
+  padding: 12px 20px;
+  border-bottom: 1px solid var(--blue-008);
+}
+.dtable th.t-num, .dtable td.t-num { text-align: right; }
+.dtable td {
+  padding: 13px 20px;
+  font-size: 0.88rem;
+  border-bottom: 1px solid var(--blue-008);
+  vertical-align: middle;
+}
+.dtable tbody tr:last-child td { border-bottom: none; }
+.dtable tbody tr:hover td { background: var(--blue-004); }
+.dtable .t-muted { color: var(--muted-foreground); }
+.dtable .t-name { font-weight: 500; }
+.dtable .gil { color: var(--xiv-blue); font-weight: 600; }
+.dtable .hide { display: none; }
+@media (min-width: 640px) { .dtable .hide { display: table-cell; } }
+
+/* .svc-grid — service card auto-fill grid */
+.svc-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(264px, 1fr));
+  gap: 16px;
+}
