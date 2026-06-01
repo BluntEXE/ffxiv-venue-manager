@@ -219,7 +219,7 @@ export default function SettingsPage({
         <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-4 mb-6 md:mb-8">
           <div>
             <VenueEyebrow slug={slug} />
-            <h1 className="font-cinzel text-2xl md:text-3xl font-bold tracking-[0.02em]">Settings</h1>
+            <h1 className="page-h1">Settings</h1>
             <p className="text-sm text-muted-foreground mt-1">Manage your venue profile, integrations and permissions</p>
           </div>
           <Button onClick={handleSave} disabled={isSaving} className="self-start shrink-0">

@@ -341,7 +341,7 @@ export default function TasksPage({
         <div className="flex flex-col sm:flex-row sm:justify-between sm:items-start gap-4 mb-6 md:mb-8">
           <div>
             <VenueEyebrow slug={slug} />
-            <h1 className="font-cinzel text-2xl md:text-3xl font-bold tracking-[0.02em]">Tasks</h1>
+            <h1 className="page-h1">Tasks</h1>
             <p className="text-sm text-muted-foreground mt-1">Manage and assign tasks to your team</p>
           </div>
           <Button onClick={openCreateDialog} size="sm" className="sm:size-default self-start">

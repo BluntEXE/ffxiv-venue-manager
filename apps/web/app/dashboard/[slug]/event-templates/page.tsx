@@ -250,7 +250,7 @@ export default function EventTemplatesPage() {
         <div className="flex flex-col sm:flex-row sm:justify-between sm:items-start gap-4 mb-6">
           <div>
             <VenueEyebrow slug={slug} />
-            <h1 className="font-cinzel text-2xl md:text-3xl font-bold tracking-[0.02em]">Event Templates</h1>
+            <h1 className="page-h1">Event Templates</h1>
             <p className="text-sm md:text-base text-muted-foreground mt-1 md:mt-2">
               Create templates for recurring events
             </p>

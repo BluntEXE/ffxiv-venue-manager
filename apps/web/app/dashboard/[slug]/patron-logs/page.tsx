@@ -158,7 +158,7 @@ export default async function PatronLogsPage({
             <span className="w-[7px] h-[7px] bg-[rgba(0,180,255,0.7)] rotate-45 shadow-[0_0_10px_rgba(0,180,255,0.5)] flex-shrink-0" />
             <span className="text-[0.72rem] font-semibold uppercase tracking-[0.14em] text-[var(--xiv-blue)]">{venue.name} &middot; {venue.dataCenter} &middot; {venue.world}</span>
           </div>
-          <h1 className="font-cinzel text-2xl md:text-3xl font-bold tracking-[0.02em]">Patron Logs</h1>
+          <h1 className="page-h1">Patron Logs</h1>
           <p className="text-sm text-muted-foreground mt-1 md:mt-2">
             {activeTab === "profiles"
               ? "Patron visit history and engagement overview"

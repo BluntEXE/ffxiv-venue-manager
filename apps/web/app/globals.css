@@ -619,6 +619,15 @@
 .xiv-listening-dot:nth-child(2) { animation-delay: 0.15s; }
 .xiv-listening-dot:nth-child(3) { animation-delay: 0.3s; }
 
+/* ── Page H1 — matches prototype .page-head h1 ── */
+.page-h1 {
+  font-family: var(--font-cinzel), 'Cinzel', Georgia, serif;
+  font-size: clamp(1.9rem, 3vw, 2.5rem);
+  font-weight: 700;
+  letter-spacing: 0.02em;
+  line-height: 1.1;
+}
+
 /* ── KPI grid — matches prototype .kpis auto-fit layout ── */
 .kpis {
   display: grid;

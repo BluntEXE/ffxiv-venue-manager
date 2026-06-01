@@ -173,7 +173,7 @@ export default async function VenueDashboardPage({
               {venue.dataCenter} &middot; {venue.world}
             </span>
           </div>
-          <h1 className="font-cinzel text-2xl md:text-3xl font-bold tracking-[0.02em]">Overview</h1>
+          <h1 className="page-h1">Overview</h1>
           <p className="text-sm text-muted-foreground mt-0.5">
             {format(now, "EEEE, d MMM")} &middot; {tzLabel}
           </p>

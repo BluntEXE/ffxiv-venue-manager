@@ -230,7 +230,7 @@ export default async function SalesPage({ params }: PageProps) {
         <div className="flex flex-col sm:flex-row sm:justify-between sm:items-start gap-4 mb-6 md:mb-8">
           <div>
             <VenueEyebrow slug={slug} />
-            <h1 className="font-cinzel text-2xl md:text-3xl font-bold tracking-[0.02em]">Sales &amp; Transactions</h1>
+            <h1 className="page-h1">Sales &amp; Transactions</h1>
             <p className="text-sm text-muted-foreground mt-1">Log sales and track revenue</p>
           </div>
           <SalesLogDialog venueId={venue.id} services={servicesWithNumberPrices} events={activeEvents} />
