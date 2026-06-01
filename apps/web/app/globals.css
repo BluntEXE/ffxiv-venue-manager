@@ -919,3 +919,19 @@
   opacity: 0.5;
   animation: ping 1.8s cubic-bezier(0,0,.2,1) infinite;
 }
+
+/* ── Detail card (venue profile sidebar) — matches prototype .dcard ── */
+.dcard {
+  background: var(--card);
+  border: 1px solid var(--blue-018);
+  border-radius: var(--radius-xl);
+  overflow: hidden;
+}
+
+/* ── Panel (live mode + venue profile) — matches prototype .panel ── */
+.panel {
+  background: var(--card);
+  border: 1px solid var(--blue-018);
+  border-radius: var(--radius-xl);
+  overflow: hidden;
+}
