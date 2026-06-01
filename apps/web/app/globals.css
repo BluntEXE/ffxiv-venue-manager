@@ -704,8 +704,15 @@
   background: rgba(7, 11, 20, 0.88);
   backdrop-filter: blur(16px);
   -webkit-backdrop-filter: blur(16px);
-  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4);
+  box-shadow: 0 4px 24px rgba(0, 0, 0, 0.32);
 }
+
+/* Sidebar scroll area — hide native scrollbar, show thin thumb on hover */
+.sidebar-scroll { scrollbar-width: thin; scrollbar-color: var(--blue-015) transparent; }
+.sidebar-scroll::-webkit-scrollbar { width: 4px; }
+.sidebar-scroll::-webkit-scrollbar-track { background: transparent; }
+.sidebar-scroll::-webkit-scrollbar-thumb { background: var(--blue-015); border-radius: 999px; }
+.sidebar-scroll:hover::-webkit-scrollbar-thumb { background: var(--blue-035); }
 
 /* Sidebar group label */
 .grp-label {

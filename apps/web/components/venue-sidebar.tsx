@@ -3,7 +3,6 @@
 import Link from "next/link"
 import { usePathname } from "next/navigation"
 import { Button } from "@/components/ui/button"
-import { ScrollArea } from "@/components/ui/scroll-area"
 import { VenueSwitcher } from "./venue-switcher"
 import { FeedbackDialog } from "./feedback-dialog"
 import { useSidebar } from "./sidebar-context"
@@ -139,7 +138,7 @@ export function VenueSidebar({
         </div>
       )}
 
-      <ScrollArea className="flex-1 py-3 [&>[data-radix-scroll-area-scrollbar]]:hidden">
+      <div className="flex-1 py-3 overflow-y-auto sidebar-scroll">
         <nav className="px-[14px] space-y-5">
           {navGroups.map((group) => {
             const filtered = filterItems(group.items)
@@ -182,7 +181,7 @@ export function VenueSidebar({
             )
           })}
         </nav>
-      </ScrollArea>
+      </div>
 
       {/* Settings */}
       <div className="border-t border-[var(--blue-008)] p-[8px] space-y-0.5">
