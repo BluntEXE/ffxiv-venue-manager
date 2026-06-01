@@ -223,10 +223,10 @@ export default function AnalyticsPage() {
         <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-4 mb-6 md:mb-8">
           <div>
             <VenueEyebrow slug={slug} />
-            <h1 className="font-cinzel text-2xl md:text-3xl font-bold tracking-[0.02em] mb-1">Analytics</h1>
+            <h1 className="page-h1">Analytics</h1>
             <p className="text-sm text-muted-foreground">Performance overview · {period === "30d" ? "last 30 days" : period === "90d" ? "last 90 days" : "all time"}</p>
           </div>
-          <div className="flex gap-1 bg-card border border-[var(--blue-015)] rounded-full p-1 self-start">
+          <div className="flex gap-1 bg-[var(--card)] border border-[var(--blue-015)] rounded-full p-1 self-start">
             {(["30d", "90d", "all"] as const).map((p) => (
               <button
                 key={p}
@@ -380,7 +380,7 @@ export default function AnalyticsPage() {
 
               {/* Patron mix */}
               {analyticsData.patronMix && analyticsData.patronMix.total > 1 && (
-                <div className="rounded-xl border border-[var(--blue-018)] bg-card overflow-hidden">
+                <div className="rounded-xl border border-[var(--blue-018)] bg-[var(--card)] overflow-hidden">
                   <div className="flex items-center gap-2 px-5 py-3 border-b border-[var(--blue-008)] font-semibold text-sm">
                     <svg className="w-4 h-4 text-[var(--xiv-blue)]" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M21.21 15.89A10 10 0 1 1 8 2.83"/><path d="M22 12A10 10 0 0 0 12 2v10z"/></svg>
                     Patron mix
@@ -409,7 +409,7 @@ export default function AnalyticsPage() {
 
               {/* Busiest nights */}
               {analyticsData.busiestNights && (
-                <div className="rounded-xl border border-[var(--blue-018)] bg-card overflow-hidden">
+                <div className="rounded-xl border border-[var(--blue-018)] bg-[var(--card)] overflow-hidden">
                   <div className="flex items-center gap-2 px-5 py-3 border-b border-[var(--blue-008)] font-semibold text-sm">
                     <svg className="w-4 h-4 text-[var(--xiv-blue)]" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M3 9h18M9 21V9"/></svg>
                     Busiest nights
@@ -431,7 +431,7 @@ export default function AnalyticsPage() {
               )}
 
               {/* Top services */}
-              <div className="rounded-xl border border-[var(--blue-018)] bg-card overflow-hidden">
+              <div className="rounded-xl border border-[var(--blue-018)] bg-[var(--card)] overflow-hidden">
                 <div className="flex items-center gap-2 px-5 py-3 border-b border-[var(--blue-008)] font-semibold text-sm">
                   <svg className="w-4 h-4 text-[var(--xiv-blue)]" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg>
                   Top services
@@ -476,7 +476,7 @@ export default function AnalyticsPage() {
                     ]
 
                 return (
-                  <div className="rounded-xl border border-[var(--blue-018)] bg-card overflow-hidden">
+                  <div className="rounded-xl border border-[var(--blue-018)] bg-[var(--card)] overflow-hidden">
                     <div className="flex items-center gap-2 px-5 py-3 border-b border-[var(--blue-008)] font-semibold text-sm">
                       <svg className="w-4 h-4 text-[var(--xiv-blue)]" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></svg>
                       Where patrons find you
@@ -602,7 +602,7 @@ export default function AnalyticsPage() {
 
             {/* Patron mix */}
             {analyticsData.patronMix && analyticsData.patronMix.total > 1 && (
-              <div className="rounded-xl border border-[var(--blue-018)] bg-card overflow-hidden">
+              <div className="rounded-xl border border-[var(--blue-018)] bg-[var(--card)] overflow-hidden">
                 <div className="flex items-center gap-2 px-[22px] py-[13px] border-b border-[var(--blue-008)] font-semibold text-sm">
                   <svg className="w-4 h-4 text-[var(--xiv-blue)]" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M21.21 15.89A10 10 0 1 1 8 2.83"/><path d="M22 12A10 10 0 0 0 12 2v10z"/></svg>
                   Patron mix
@@ -634,7 +634,7 @@ export default function AnalyticsPage() {
 
             {/* Busiest nights */}
             {analyticsData.busiestNights && (
-              <div className="rounded-xl border border-[var(--blue-018)] bg-card overflow-hidden">
+              <div className="rounded-xl border border-[var(--blue-018)] bg-[var(--card)] overflow-hidden">
                 <div className="flex items-center gap-2 px-[22px] py-[13px] border-b border-[var(--blue-008)] font-semibold text-sm">
                   <svg className="w-4 h-4 text-[var(--xiv-blue)]" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M3 9h18M9 21V9"/></svg>
                   Busiest nights

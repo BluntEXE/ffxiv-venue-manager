@@ -31,11 +31,11 @@ export function VenueLayoutClient({ children, slug }: VenueLayoutClientProps) {
   }, [slug, getVenueBySlug, isLoading])
 
   if (!venueData) {
-    return <div className="flex-1">{children}</div>
+    return <div className="[@media(min-width:1081px)]:ml-[300px] relative z-[1]">{children}</div>
   }
 
   return (
-    <div className="flex min-h-[calc(100vh-4rem)]">
+    <div className="relative min-h-screen">
       <VenueSidebar
         venueSlug={slug}
         venueName={venueData.name}
@@ -44,7 +44,7 @@ export function VenueLayoutClient({ children, slug }: VenueLayoutClientProps) {
         userEmail={session?.user?.email || undefined}
         venues={venues}
       />
-      <main className="flex-1 lg:ml-[292px] p-4 transition-all duration-300">
+      <main className="[@media(min-width:1081px)]:ml-[300px] relative z-[1]">
         {children}
       </main>
     </div>

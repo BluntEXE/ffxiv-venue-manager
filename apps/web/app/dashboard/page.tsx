@@ -40,7 +40,7 @@ export default async function DashboardPage() {
     <div className="page-inner">
       <div className="flex flex-col sm:flex-row sm:justify-between sm:items-start gap-4 mb-8">
         <div>
-          <h1 className="font-cinzel text-2xl md:text-3xl lg:text-4xl font-bold tracking-wide text-balance">Dashboard</h1>
+          <h1 className="page-h1">Dashboard</h1>
           <p className="text-muted-foreground mt-1">Welcome back, {session.user.name || "User"}!</p>
         </div>
         <Button asChild className="xiv-cta">

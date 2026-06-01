@@ -180,7 +180,7 @@ export default async function LivePage({
           />
         ) : (
           <div className="mt-2">
-            <h1 className="font-cinzel text-2xl md:text-3xl font-bold tracking-[0.02em] mb-4">Live Mode</h1>
+            <h1 className="page-h1 mb-4">Live Mode</h1>
             <Card>
               <CardContent className="py-12 text-center">
                 <p className="text-muted-foreground">

@@ -80,7 +80,7 @@ export function StaffTable({
     <div>
       {/* Filter bar */}
       <div className="flex items-center gap-3 mb-4 flex-wrap">
-        <div className="flex gap-1 bg-card border border-[var(--blue-015)] rounded-full p-1">
+        <div className="flex gap-1 bg-[var(--card)] border border-[var(--blue-015)] rounded-full p-1">
           {tabs.map(({ key, label }) => (
             <button
               key={key}
@@ -101,7 +101,7 @@ export function StaffTable({
         <div className="relative flex items-center flex-1 min-w-[160px] max-w-xs">
           <svg className="absolute left-3 w-4 h-4 text-[var(--fg-faint)] pointer-events-none" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
           <Input
-            className="pl-9 bg-card border-[var(--blue-015)] focus:border-[var(--blue-035)] h-9 text-sm"
+            className="pl-9 bg-[var(--card)] border-[var(--blue-015)] focus:border-[var(--blue-035)] h-9 text-sm"
             placeholder="Search staff…"
             value={search}
             onChange={e => setSearch(e.target.value)}
@@ -110,7 +110,7 @@ export function StaffTable({
       </div>
 
       {/* Table */}
-      <div className="rounded-xl border border-[var(--blue-018)] bg-card overflow-hidden">
+      <div className="rounded-xl border border-[var(--blue-018)] bg-[var(--card)] overflow-hidden">
         {visible.length === 0 ? (
           <p className="text-center text-sm text-muted-foreground py-10">No staff found.</p>
         ) : (

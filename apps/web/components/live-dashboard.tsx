@@ -341,7 +341,7 @@ export function LiveDashboard({
           </Card>
 
           {/* Command hints */}
-          <div className="rounded-xl border border-[var(--blue-018)] bg-card overflow-hidden">
+          <div className="rounded-xl border border-[var(--blue-018)] bg-[var(--card)] overflow-hidden">
             <div className="flex items-center gap-2 px-4 py-3 border-b border-[var(--blue-008)] font-semibold text-sm">
               <Terminal className="h-4 w-4 text-[var(--xiv-blue)]" />
               In-game commands

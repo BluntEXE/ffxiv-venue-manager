@@ -259,7 +259,7 @@ export default function SettingsPage({
           <div className="space-y-4">
 
             {/* ── Venue profile ── */}
-            <section className="rounded-xl border border-[var(--blue-018)] bg-card overflow-hidden">
+            <section className="rounded-xl border border-[var(--blue-018)] bg-[var(--card)] overflow-hidden">
               <div className="flex items-center gap-2.5 px-[22px] py-[13px] border-b border-[var(--blue-008)] font-semibold text-[0.95rem]">
                 <svg className="w-4 h-4 text-[var(--xiv-blue)]" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
                 Venue profile
@@ -327,7 +327,7 @@ export default function SettingsPage({
             </section>
 
             {/* ── Location & hours ── */}
-            <section className="rounded-xl border border-[var(--blue-018)] bg-card overflow-hidden">
+            <section className="rounded-xl border border-[var(--blue-018)] bg-[var(--card)] overflow-hidden">
               <div className="flex items-center gap-2.5 px-[22px] py-[13px] border-b border-[var(--blue-008)] font-semibold text-[0.95rem]">
                 <svg className="w-4 h-4 text-[var(--xiv-blue)]" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>
                 Location &amp; hours
@@ -381,7 +381,7 @@ export default function SettingsPage({
             </section>
 
             {/* ── Integrations ── */}
-            <section className="rounded-xl border border-[var(--blue-018)] bg-card overflow-hidden">
+            <section className="rounded-xl border border-[var(--blue-018)] bg-[var(--card)] overflow-hidden">
               <div className="flex items-center gap-2.5 px-[22px] py-[13px] border-b border-[var(--blue-008)] font-semibold text-[0.95rem]">
                 <svg className="w-4 h-4 text-[var(--xiv-blue)]" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg>
                 Integrations
@@ -470,7 +470,7 @@ export default function SettingsPage({
             </section>
 
             {/* ── Discord Webhooks ── */}
-            <section className="rounded-xl border border-[var(--blue-018)] bg-card overflow-hidden">
+            <section className="rounded-xl border border-[var(--blue-018)] bg-[var(--card)] overflow-hidden">
               <div className="flex items-center gap-2.5 px-[22px] py-[13px] border-b border-[var(--blue-008)] font-semibold text-[0.95rem]">
                 <svg className="w-4 h-4 text-[var(--xiv-blue)]" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>
                 Discord Webhooks
@@ -543,7 +543,7 @@ export default function SettingsPage({
             </section>
 
             {/* ── How patrons find you ── */}
-            <section className="rounded-xl border border-[var(--blue-018)] bg-card overflow-hidden">
+            <section className="rounded-xl border border-[var(--blue-018)] bg-[var(--card)] overflow-hidden">
               <div className="flex items-center gap-2.5 px-[22px] py-[13px] border-b border-[var(--blue-008)] font-semibold text-[0.95rem]">
                 <svg className="w-4 h-4 text-[var(--xiv-blue)]" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></svg>
                 How patrons find you
@@ -596,7 +596,7 @@ export default function SettingsPage({
             </section>
 
             {/* ── Staff permissions ── */}
-            <section className="rounded-xl border border-[var(--blue-018)] bg-card overflow-hidden">
+            <section className="rounded-xl border border-[var(--blue-018)] bg-[var(--card)] overflow-hidden">
               <div className="flex items-center gap-2.5 px-[22px] py-[13px] border-b border-[var(--blue-008)] font-semibold text-[0.95rem]">
                 <svg className="w-4 h-4 text-[var(--xiv-blue)]" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
                 Staff permissions
@@ -666,7 +666,7 @@ export default function SettingsPage({
 
             {/* ── Danger zone ── */}
             {userRole === "OWNER" && (
-              <section className="rounded-xl border border-[rgba(243,139,168,0.3)] bg-card overflow-hidden">
+              <section className="rounded-xl border border-[rgba(243,139,168,0.3)] bg-[var(--card)] overflow-hidden">
                 <div className="flex items-center gap-2.5 px-5 py-3.5 border-b border-[rgba(243,139,168,0.18)] font-semibold text-[0.95rem] text-[var(--destructive)]">
                   <svg className="w-4 h-4" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M10.29 3.86 1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0zM12 9v4m0 4h.01"/></svg>
                   Danger zone

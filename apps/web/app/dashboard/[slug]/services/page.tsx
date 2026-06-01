@@ -349,7 +349,7 @@ export default function ServicesPage({
           <div>
             {/* Category filter tabs + search — matches prototype .filters pattern */}
             <div className="flex items-center gap-3 mb-5 flex-wrap">
-              <div className="flex gap-1 bg-card border border-[var(--blue-015)] rounded-full p-1">
+              <div className="flex gap-1 bg-[var(--card)] border border-[var(--blue-015)] rounded-full p-1">
                 {["All", ...Array.from(new Set(services.map(s => s.category).filter(Boolean) as string[]))].map(cat => (
                   <button key={cat} onClick={() => setCategoryFilter(cat)}
                     className={`text-sm font-semibold px-4 py-1.5 rounded-full transition-colors ${categoryFilter === cat ? "bg-[var(--xiv-blue)] text-[var(--xiv-navy)]" : "text-muted-foreground hover:text-foreground hover:bg-[var(--blue-007)]"}`}>
@@ -360,7 +360,7 @@ export default function ServicesPage({
               <div className="relative flex items-center flex-1 min-w-[160px] max-w-xs">
                 <svg className="absolute left-3 w-4 h-4 text-[var(--fg-faint)] pointer-events-none" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
                 <Input
-                  className="pl-9 bg-card border-[var(--blue-015)] focus:border-[var(--blue-035)] h-9 text-sm"
+                  className="pl-9 bg-[var(--card)] border-[var(--blue-015)] focus:border-[var(--blue-035)] h-9 text-sm"
                   placeholder="Search services…"
                   value={search}
                   onChange={e => setSearch(e.target.value)}
@@ -376,7 +376,7 @@ export default function ServicesPage({
               .map((service) => (
               <div
                 key={service.id}
-                className={`rounded-xl border border-[var(--blue-018)] bg-card overflow-hidden transition-all duration-[250ms] hover:border-[rgba(0,180,255,0.45)] hover:shadow-[0_0_20px_rgba(0,180,255,0.07),inset_0_1px_0_rgba(0,180,255,0.12)] hover:-translate-y-0.5 flex flex-col gap-3 p-5 ${!service.isActive ? "opacity-50" : ""}`}
+                className={`rounded-xl border border-[var(--blue-018)] bg-[var(--card)] overflow-hidden transition-all duration-[250ms] hover:border-[rgba(0,180,255,0.45)] hover:shadow-[0_0_20px_rgba(0,180,255,0.07),inset_0_1px_0_rgba(0,180,255,0.12)] hover:-translate-y-0.5 flex flex-col gap-3 p-5 ${!service.isActive ? "opacity-50" : ""}`}
               >
                 {/* Top: icon badge + name + category */}
                 <div className="flex items-start gap-3">

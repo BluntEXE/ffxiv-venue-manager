@@ -266,7 +266,7 @@ export default async function VenueDashboardPage({
 
             {/* Next event — cinematic card */}
             {nextEvent ? (
-              <div className="rounded-xl border border-[var(--blue-018)] bg-card overflow-hidden relative flex flex-col justify-between">
+              <div className="rounded-xl border border-[var(--blue-018)] bg-[var(--card)] overflow-hidden relative flex flex-col justify-between">
                 {/* Starfield strip */}
                 <div className="absolute top-0 left-0 right-0 h-[88px] overflow-hidden">
                   <div className="absolute inset-0 opacity-20 bg-[url('/starfield.png')] bg-cover" />

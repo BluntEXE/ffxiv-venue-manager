@@ -350,7 +350,7 @@ export default function TasksPage({
           <div className="relative flex items-center" style={{ maxWidth: 280, flex: "0 1 280px" }}>
             <svg className="absolute left-3 w-4 h-4 text-[var(--fg-faint)] pointer-events-none" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
             <Input
-              className="pl-9 bg-card border-[var(--blue-015)] focus:border-[var(--blue-035)] h-9 text-sm"
+              className="pl-9 bg-[var(--card)] border-[var(--blue-015)] focus:border-[var(--blue-035)] h-9 text-sm"
               placeholder="Search tasks…"
               value={search}
               onChange={(e) => setSearch(e.target.value)}
@@ -385,7 +385,7 @@ export default function TasksPage({
             return (
               <div
                 key={key}
-                className="rounded-2xl border border-[var(--blue-015)] bg-card overflow-hidden"
+                className="rounded-2xl border border-[var(--blue-015)] bg-[var(--card)] overflow-hidden"
               >
                 {/* Column header */}
                 <div className="flex items-center gap-2 px-4 py-3 border-b border-[var(--blue-008)]">

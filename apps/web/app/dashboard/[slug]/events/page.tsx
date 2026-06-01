@@ -120,7 +120,7 @@ export default async function EventsPage({
 
       {/* View Tabs */}
       <div className="flex items-center gap-3 mb-6 flex-wrap">
-        <div className="flex gap-1 bg-card border border-[var(--blue-015)] rounded-full p-1">
+        <div className="flex gap-1 bg-[var(--card)] border border-[var(--blue-015)] rounded-full p-1">
           {([
             { key: "list",     label: "Upcoming" },
             { key: "past",     label: "Past" },

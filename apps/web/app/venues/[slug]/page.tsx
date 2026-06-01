@@ -247,7 +247,7 @@ export default async function VenueProfilePage({
           <div className="flex flex-col gap-4">
 
             {/* Hours */}
-            <div className="rounded-xl border border-[var(--blue-018)] bg-card overflow-hidden">
+            <div className="rounded-xl border border-[var(--blue-018)] bg-[var(--card)] overflow-hidden">
               <div className="flex items-center gap-2.5 px-5 py-3.5 border-b border-[var(--blue-008)] font-semibold text-[0.95rem]">
                 <Clock className="w-4 h-4 text-[var(--xiv-blue)]" />
                 Hours
@@ -279,7 +279,7 @@ export default async function VenueProfilePage({
             </div>
 
             {/* Location */}
-            <div className="rounded-xl border border-[var(--blue-018)] bg-card overflow-hidden">
+            <div className="rounded-xl border border-[var(--blue-018)] bg-[var(--card)] overflow-hidden">
               <div className="flex items-center gap-2.5 px-5 py-3.5 border-b border-[var(--blue-008)] font-semibold text-[0.95rem]">
                 <MapPin className="w-4 h-4 text-[var(--xiv-blue)]" />
                 Location
@@ -300,7 +300,7 @@ export default async function VenueProfilePage({
 
             {/* Hosted by */}
             {owner && (
-              <div className="rounded-xl border border-[var(--blue-018)] bg-card overflow-hidden">
+              <div className="rounded-xl border border-[var(--blue-018)] bg-[var(--card)] overflow-hidden">
                 <div className="flex items-center gap-2.5 px-5 py-3.5 border-b border-[var(--blue-008)] font-semibold text-[0.95rem]">
                   <Crown className="w-4 h-4 text-[var(--xiv-blue)]" />
                   Hosted by

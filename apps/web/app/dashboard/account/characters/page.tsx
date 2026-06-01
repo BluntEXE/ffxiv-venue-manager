@@ -143,7 +143,7 @@ export default function CharactersPage() {
       />
 
       <div className="mb-6 md:mb-8">
-        <h1 className="font-cinzel text-2xl md:text-3xl lg:text-4xl font-bold tracking-wide text-balance">
+        <h1 className="page-h1">
           My Characters
         </h1>
         <p className="text-sm md:text-base text-muted-foreground mt-1 md:mt-2">
@@ -231,7 +231,7 @@ export default function CharactersPage() {
               {characters.map((c) => (
                 <li
                   key={c.id}
-                  className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 rounded-md border border-border bg-card p-4"
+                  className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 rounded-md border border-border bg-[var(--card)] p-4"
                 >
                   <div className="flex flex-col sm:flex-row sm:items-center gap-2">
                     <span className="font-medium">{c.characterName}</span>

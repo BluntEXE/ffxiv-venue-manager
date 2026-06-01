@@ -166,7 +166,7 @@ export default async function StatsPage() {
                   tone: "blue" as const,
                 },
               ].map(({ icon, value, label, tone }) => (
-                <div key={label} className="bg-card border border-[var(--blue-018)] rounded-xl p-5 transition-all duration-[250ms] hover:border-[rgba(0,180,255,0.45)] hover:shadow-[0_0_20px_rgba(0,180,255,0.07),inset_0_1px_0_rgba(0,180,255,0.12)] hover:-translate-y-0.5 text-left">
+                <div key={label} className="bg-[var(--card)] border border-[var(--blue-018)] rounded-xl p-5 transition-all duration-[250ms] hover:border-[rgba(0,180,255,0.45)] hover:shadow-[0_0_20px_rgba(0,180,255,0.07),inset_0_1px_0_rgba(0,180,255,0.12)] hover:-translate-y-0.5 text-left">
                   <div className={`w-10 h-10 rounded-lg flex items-center justify-center mb-3 ${
                     tone === "emerald"
                       ? "bg-[var(--success-soft)] border border-[rgba(16,185,129,0.25)] text-[var(--success-text)]"

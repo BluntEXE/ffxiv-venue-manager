@@ -135,7 +135,7 @@ export default async function Home() {
 
           {/* Product preview frame */}
           <div className="mt-14 max-w-[840px] mx-auto w-full xiv-fade-up-delay-2">
-            <div className="rounded-xl overflow-hidden border border-[rgba(0,180,255,0.2)] bg-card shadow-[0_30px_80px_rgba(0,0,0,0.5),0_0_60px_rgba(0,180,255,0.08)]">
+            <div className="rounded-xl overflow-hidden border border-[rgba(0,180,255,0.2)] bg-[var(--card)] shadow-[0_30px_80px_rgba(0,0,0,0.5),0_0_60px_rgba(0,180,255,0.08)]">
               {/* Browser chrome bar */}
               <div className="flex items-center gap-2 px-4 py-2.5 border-b border-[var(--blue-008)] bg-[rgba(7,11,20,0.6)]">
                 <span className="w-2.5 h-2.5 rounded-full bg-[var(--border)]" />
@@ -267,7 +267,7 @@ export default async function Home() {
           ].map(({ icon, color, title, desc }) => (
             <div
               key={title}
-              className="rounded-xl border border-[var(--blue-018)] bg-card p-6 transition-all duration-[250ms] hover:border-[rgba(0,180,255,0.45)] hover:shadow-[0_0_20px_rgba(0,180,255,0.07),inset_0_1px_0_rgba(0,180,255,0.12)] hover:-translate-y-0.5 xiv-scroll-reveal"
+              className="rounded-xl border border-[var(--blue-018)] bg-[var(--card)] p-6 transition-all duration-[250ms] hover:border-[rgba(0,180,255,0.45)] hover:shadow-[0_0_20px_rgba(0,180,255,0.07),inset_0_1px_0_rgba(0,180,255,0.12)] hover:-translate-y-0.5 xiv-scroll-reveal"
             >
               <div className={`w-[52px] h-[52px] rounded-xl flex items-center justify-center mb-[18px] ${
                 color === "em" ? "bg-[var(--success-soft)] border border-[rgba(16,185,129,0.25)] text-[var(--success-text)]"
@@ -316,7 +316,7 @@ export default async function Home() {
                 items: ["Captures patrons as they enter & leave", "Log a sale with /xvm sale 500", "Clock in and out of shifts in-game", "Everything syncs to the dashboard live"],
               },
             ].map(({ iconPath, title, sub, items }) => (
-              <div key={title} className="rounded-xl border border-[var(--blue-018)] bg-card p-7">
+              <div key={title} className="rounded-xl border border-[var(--blue-018)] bg-[var(--card)] p-7">
                 <div className="flex items-center gap-3 mb-4">
                   <div className="w-11 h-11 rounded-lg bg-[var(--blue-010)] border border-[var(--blue-018)] flex items-center justify-center text-[var(--xiv-blue)] flex-shrink-0">
                     <svg className="w-5 h-5" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d={iconPath}/></svg>

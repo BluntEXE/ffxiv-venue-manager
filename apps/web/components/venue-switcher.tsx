@@ -47,7 +47,7 @@ export function VenueSwitcher({ venues }: VenueSwitcherProps) {
   if (!current) return null
 
   const trigger = (
-    <button className="w-full flex items-center gap-3 px-3 py-2.5 rounded-lg border border-[var(--blue-015)] bg-card hover:border-[var(--blue-035)] transition-colors cursor-pointer group">
+    <button className="w-full flex items-center gap-3 px-3 py-2.5 rounded-lg border border-[var(--blue-015)] bg-[var(--card)] hover:border-[var(--blue-035)] transition-colors cursor-pointer group">
       {/* Icon badge */}
       <span className="w-9 h-9 rounded-lg bg-[var(--blue-010)] border border-[var(--blue-018)] flex items-center justify-center flex-shrink-0 group-hover:border-[var(--blue-035)] transition-colors">
         <Store className="w-5 h-5 text-[var(--xiv-blue)]" />

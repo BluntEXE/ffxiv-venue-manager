@@ -227,7 +227,7 @@ export default async function ShiftsPage({
 
         {/* Week nav toolbar */}
         <div className="flex items-center gap-3 mb-4 flex-wrap">
-          <div className="flex items-center gap-1 bg-card border border-[var(--blue-015)] rounded-full px-1 py-1">
+          <div className="flex items-center gap-1 bg-[var(--card)] border border-[var(--blue-015)] rounded-full px-1 py-1">
             <Link
               href={`/dashboard/${slug}/shifts?w=${prevWeekParam}`}
               className="w-8 h-7 flex items-center justify-center rounded-full text-muted-foreground hover:text-foreground hover:bg-[var(--blue-007)] transition-colors"

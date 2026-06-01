@@ -171,7 +171,7 @@ export default async function PatronLogsPage({
         </div>
 
         {/* Tab switcher */}
-        <div className="flex gap-1 bg-card border border-[var(--blue-015)] rounded-full p-1 w-fit mb-6">
+        <div className="flex gap-1 bg-[var(--card)] border border-[var(--blue-015)] rounded-full p-1 w-fit mb-6">
           <Link
             href={`/dashboard/${slug}/patron-logs`}
             className={`text-sm font-semibold px-5 py-1.5 rounded-full transition-colors ${

@@ -848,7 +848,7 @@ export default function PayrollPage() {
         </div>
 
         {/* Filter tabs */}
-        <div className="flex gap-1 bg-card border border-[var(--blue-015)] rounded-full p-1 w-fit">
+        <div className="flex gap-1 bg-[var(--card)] border border-[var(--blue-015)] rounded-full p-1 w-fit">
           {(["all", "unpaid", "paid"] as const).map((f) => (
             <button
               key={f}
@@ -868,7 +868,7 @@ export default function PayrollPage() {
         </div>
 
         {/* Payroll table */}
-        <div className="rounded-xl border border-[var(--blue-018)] bg-card overflow-hidden">
+        <div className="rounded-xl border border-[var(--blue-018)] bg-[var(--card)] overflow-hidden">
           {filteredEntries.length === 0 ? (
             <p className="text-center text-sm text-muted-foreground py-10">No payroll entries found.</p>
           ) : (

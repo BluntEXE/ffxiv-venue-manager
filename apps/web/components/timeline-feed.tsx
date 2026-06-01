@@ -130,7 +130,7 @@ export function TimelineFeed({ venueId, initialFilter = "all" }: TimelineFeedPro
     <div>
       {/* Filter tabs */}
       <div className="flex items-center gap-3 mb-6 flex-wrap">
-        <div className="flex gap-1 bg-card border border-[var(--blue-015)] rounded-full p-1">
+        <div className="flex gap-1 bg-[var(--card)] border border-[var(--blue-015)] rounded-full p-1">
           {(Object.keys(filterLabels) as TimelineFilter[]).map((f) => (
             <button
               key={f}
@@ -156,13 +156,13 @@ export function TimelineFeed({ venueId, initialFilter = "all" }: TimelineFeedPro
       {loading ? (
         <div className="text-center py-12 text-muted-foreground">Loading…</div>
       ) : visibleItems.length === 0 ? (
-        <div className="rounded-xl border border-[var(--blue-018)] bg-card py-12 text-center">
+        <div className="rounded-xl border border-[var(--blue-018)] bg-[var(--card)] py-12 text-center">
           <p className="text-sm text-muted-foreground">
             No activity yet.{filter !== "all" ? " Try a different filter." : ""}
           </p>
         </div>
       ) : (
-        <div className="rounded-xl border border-[var(--blue-018)] bg-card overflow-hidden">
+        <div className="rounded-xl border border-[var(--blue-018)] bg-[var(--card)] overflow-hidden">
           <div className="py-2">
             {grouped.map(({ day, items: dayItems }) => (
               <div key={day}>
