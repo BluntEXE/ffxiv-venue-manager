@@ -19,8 +19,52 @@ export default function OwnerManagerGuidePage() {
         </div>
       </div>
 
-      <div className="container mx-auto px-4 py-12 max-w-3xl">
-        <article className="space-y-8">
+      <div className="container mx-auto px-4 py-12 max-w-5xl">
+        <div className="grid grid-cols-1 lg:grid-cols-[240px_1fr] gap-10 items-start">
+
+          {/* Sticky TOC sidebar */}
+          <aside className="hidden lg:block sticky top-20">
+            <div className="rounded-xl border border-[var(--blue-018)] bg-card overflow-hidden">
+              <div className="flex items-center gap-2 px-4 py-3 border-b border-[var(--blue-008)] font-semibold text-sm">
+                <svg className="w-3.5 h-3.5 text-[var(--xiv-blue)]" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/></svg>
+                On this page
+              </div>
+              <nav className="py-1">
+                {[
+                  { id: "setup",       label: "Initial Setup" },
+                  { id: "staff",       label: "Managing Staff" },
+                  { id: "services",    label: "Services" },
+                  { id: "events",      label: "Event Management" },
+                  { id: "shifts",      label: "Shift Scheduling" },
+                  { id: "sales",       label: "Sales & Revenue" },
+                  { id: "payroll",     label: "Payroll" },
+                  { id: "tasks",       label: "Tasks" },
+                  { id: "auto-greeter",label: "Auto-Greeter" },
+                  { id: "patron-logs", label: "Patron Logs" },
+                  { id: "webhooks",    label: "Discord Webhooks" },
+                  { id: "server-time", label: "Server Time" },
+                  { id: "tips",        label: "Tips" },
+                ].map(({ id, label }) => (
+                  <a
+                    key={id}
+                    href={`#${id}`}
+                    className="flex items-center gap-2 px-4 py-2 text-[0.8rem] text-muted-foreground hover:text-[var(--xiv-blue)] hover:bg-[var(--blue-007)] transition-colors"
+                  >
+                    <span className="w-1 h-1 rounded-full bg-[var(--blue-035)] flex-shrink-0" />
+                    {label}
+                  </a>
+                ))}
+              </nav>
+              <div className="border-t border-[var(--blue-008)] p-3">
+                <Link href="/guide/staff" className="flex items-center gap-2 text-[0.78rem] text-muted-foreground hover:text-[var(--xiv-blue)] transition-colors">
+                  <svg className="w-3.5 h-3.5" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+                  Staff guide →
+                </Link>
+              </div>
+            </div>
+          </aside>
+
+          <article className="space-y-8 min-w-0">
           <header className="sr-only">
             <h1>Owner &amp; Manager Guide</h1>
           </header>
@@ -38,7 +82,7 @@ export default function OwnerManagerGuidePage() {
 
           {/* Initial Setup */}
           <section className="space-y-6">
-            <h2 className="font-cinzel text-2xl font-semibold border-b border-[rgba(0,180,255,0.2)] pb-3 tracking-wide">Initial Setup</h2>
+            <h2 id="setup" className="font-cinzel text-2xl font-semibold border-b border-[rgba(0,180,255,0.2)] pb-3 tracking-wide">Initial Setup</h2>
 
             <div className="space-y-3">
               <h3 className="text-base font-semibold text-foreground/80">1. Create Your Venue</h3>
@@ -84,7 +128,7 @@ export default function OwnerManagerGuidePage() {
 
           {/* Managing Staff */}
           <section className="space-y-6">
-            <h2 className="font-cinzel text-2xl font-semibold border-b border-[rgba(0,180,255,0.2)] pb-3 tracking-wide">Managing Staff</h2>
+            <h2 id="staff" className="font-cinzel text-2xl font-semibold border-b border-[rgba(0,180,255,0.2)] pb-3 tracking-wide">Managing Staff</h2>
 
             <div className="space-y-3">
               <h3 className="text-base font-semibold text-foreground/80">Inviting Staff</h3>
@@ -120,7 +164,7 @@ export default function OwnerManagerGuidePage() {
 
           {/* Services */}
           <section className="space-y-6">
-            <h2 className="font-cinzel text-2xl font-semibold border-b border-[rgba(0,180,255,0.2)] pb-3 tracking-wide">Services</h2>
+            <h2 id="services" className="font-cinzel text-2xl font-semibold border-b border-[rgba(0,180,255,0.2)] pb-3 tracking-wide">Services</h2>
 
             <p className="text-sm leading-relaxed">Services are the offerings your staff sell — drinks, dances, lap dances, etc. They appear as selectable items when staff log a sale in the plugin or website.</p>
 
@@ -137,7 +181,7 @@ export default function OwnerManagerGuidePage() {
 
           {/* Event Management */}
           <section className="space-y-6">
-            <h2 className="font-cinzel text-2xl font-semibold border-b border-[rgba(0,180,255,0.2)] pb-3 tracking-wide">Event Management</h2>
+            <h2 id="events" className="font-cinzel text-2xl font-semibold border-b border-[rgba(0,180,255,0.2)] pb-3 tracking-wide">Event Management</h2>
 
             <div className="space-y-3">
               <h3 className="text-base font-semibold text-foreground/80">Creating Events</h3>
@@ -176,7 +220,7 @@ export default function OwnerManagerGuidePage() {
 
           {/* Shift Scheduling */}
           <section className="space-y-6">
-            <h2 className="font-cinzel text-2xl font-semibold border-b border-[rgba(0,180,255,0.2)] pb-3 tracking-wide">Shift Scheduling</h2>
+            <h2 id="shifts" className="font-cinzel text-2xl font-semibold border-b border-[rgba(0,180,255,0.2)] pb-3 tracking-wide">Shift Scheduling</h2>
 
             <div className="space-y-3">
               <h3 className="text-base font-semibold text-foreground/80">Creating Shifts</h3>
@@ -214,7 +258,7 @@ export default function OwnerManagerGuidePage() {
 
           {/* Sales & Revenue */}
           <section className="space-y-6">
-            <h2 className="font-cinzel text-2xl font-semibold border-b border-[rgba(0,180,255,0.2)] pb-3 tracking-wide">Sales &amp; Revenue</h2>
+            <h2 id="sales" className="font-cinzel text-2xl font-semibold border-b border-[rgba(0,180,255,0.2)] pb-3 tracking-wide">Sales &amp; Revenue</h2>
 
             <p className="text-sm leading-relaxed">Sales come from two places: the <span className="font-medium">plugin</span> (<code className="bg-[rgba(0,180,255,0.08)] text-[var(--xiv-blue)] px-1.5 py-0.5 rounded text-xs font-mono">/xvm sale</code> commands or Sales tab) and the <span className="font-medium">website</span> (Sales page). Both create identical records with amount, customer, service, event, and staff attribution.</p>
 
@@ -253,7 +297,7 @@ export default function OwnerManagerGuidePage() {
 
           {/* Payroll */}
           <section className="space-y-6">
-            <h2 className="font-cinzel text-2xl font-semibold border-b border-[rgba(0,180,255,0.2)] pb-3 tracking-wide">Payroll</h2>
+            <h2 id="payroll" className="font-cinzel text-2xl font-semibold border-b border-[rgba(0,180,255,0.2)] pb-3 tracking-wide">Payroll</h2>
 
             <p className="text-sm leading-relaxed">The Payroll page calculates staff compensation based on completed shift hours. Managers and Owners see a breakdown of each staff member&apos;s hours worked and recommended payment amounts rounded to the nearest whole number.</p>
 
@@ -267,7 +311,7 @@ export default function OwnerManagerGuidePage() {
 
           {/* Tasks */}
           <section className="space-y-6">
-            <h2 className="font-cinzel text-2xl font-semibold border-b border-[rgba(0,180,255,0.2)] pb-3 tracking-wide">Tasks</h2>
+            <h2 id="tasks" className="font-cinzel text-2xl font-semibold border-b border-[rgba(0,180,255,0.2)] pb-3 tracking-wide">Tasks</h2>
 
             <p className="text-sm leading-relaxed">Tasks let you assign and track to-dos for your team &mdash; prep items before an event, follow-ups, recurring duties, etc.</p>
 
@@ -280,7 +324,7 @@ export default function OwnerManagerGuidePage() {
 
           {/* Auto-Greeter */}
           <section className="space-y-6">
-            <h2 className="font-cinzel text-2xl font-semibold border-b border-[rgba(0,180,255,0.2)] pb-3 tracking-wide">Auto-Greeter</h2>
+            <h2 id="auto-greeter" className="font-cinzel text-2xl font-semibold border-b border-[rgba(0,180,255,0.2)] pb-3 tracking-wide">Auto-Greeter</h2>
 
             <p className="text-sm leading-relaxed">The plugin can automatically send a <code className="bg-[rgba(0,180,255,0.08)] text-[var(--xiv-blue)] px-1.5 py-0.5 rounded text-xs font-mono">/tell</code> to patrons when they enter your venue&apos;s housing plot.</p>
 
@@ -293,7 +337,7 @@ export default function OwnerManagerGuidePage() {
 
           {/* Patron Logs */}
           <section className="space-y-6">
-            <h2 className="font-cinzel text-2xl font-semibold border-b border-[rgba(0,180,255,0.2)] pb-3 tracking-wide">Patron Logs</h2>
+            <h2 id="patron-logs" className="font-cinzel text-2xl font-semibold border-b border-[rgba(0,180,255,0.2)] pb-3 tracking-wide">Patron Logs</h2>
 
             <p className="text-sm leading-relaxed">The Patron Logs page (Owners and Managers only) gives you a full historical view of every patron visit. Filter by:</p>
             <ul className="list-disc list-inside space-y-1.5 pl-4 text-sm text-muted-foreground">
@@ -306,7 +350,7 @@ export default function OwnerManagerGuidePage() {
 
           {/* Discord Webhooks */}
           <section className="space-y-6">
-            <h2 className="font-cinzel text-2xl font-semibold border-b border-[rgba(0,180,255,0.2)] pb-3 tracking-wide">Discord Webhooks</h2>
+            <h2 id="webhooks" className="font-cinzel text-2xl font-semibold border-b border-[rgba(0,180,255,0.2)] pb-3 tracking-wide">Discord Webhooks</h2>
 
             <p className="text-sm leading-relaxed">Set up webhooks in Settings to auto-post to Discord:</p>
             <ul className="list-disc list-inside space-y-1.5 pl-4 text-sm leading-relaxed">
@@ -319,7 +363,7 @@ export default function OwnerManagerGuidePage() {
 
           {/* Server Time */}
           <section className="space-y-6">
-            <h2 className="font-cinzel text-2xl font-semibold border-b border-[rgba(0,180,255,0.2)] pb-3 tracking-wide">Server Time (ST)</h2>
+            <h2 id="server-time" className="font-cinzel text-2xl font-semibold border-b border-[rgba(0,180,255,0.2)] pb-3 tracking-wide">Server Time (ST)</h2>
 
             <p className="text-sm leading-relaxed">All times are displayed in <span className="font-medium">Server Time (ST)</span>:</p>
             <ul className="list-disc list-inside space-y-1.5 pl-4 text-sm leading-relaxed">
@@ -332,7 +376,7 @@ export default function OwnerManagerGuidePage() {
 
           {/* Tips */}
           <section className="space-y-6">
-            <h2 className="font-cinzel text-2xl font-semibold border-b border-[rgba(0,180,255,0.2)] pb-3 tracking-wide">Tips</h2>
+            <h2 id="tips" className="font-cinzel text-2xl font-semibold border-b border-[rgba(0,180,255,0.2)] pb-3 tracking-wide">Tips</h2>
 
             <ul className="space-y-2.5 pl-2 text-sm leading-relaxed">
               <li className="flex items-start gap-2">
@@ -361,7 +405,8 @@ export default function OwnerManagerGuidePage() {
               </li>
             </ul>
           </section>
-        </article>
+          </article>
+        </div>
       </div>
     </div>
   )
