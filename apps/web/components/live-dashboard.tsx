@@ -151,216 +151,193 @@ export function LiveDashboard({
     return () => es.close()
   }, [venueId, showRevenue])
 
-  return (
-    <div className="p-4 md:p-6 space-y-4">
+  const fiClass = (type: ActivityItem["type"]) => {
+    if (type === "patron_enter") return "bg-[var(--success-soft)] border-[rgba(16,185,129,0.25)] text-[var(--success-text)]"
+    if (type === "patron_exit")  return "bg-[rgba(108,112,134,0.12)] border-[var(--border)] text-[var(--fg-faint)]"
+    if (type === "sale")         return "bg-[var(--blue-010)] border-[var(--blue-018)] text-[var(--xiv-blue)]"
+    return "bg-[var(--blue-010)] border-[var(--blue-018)] text-[var(--xiv-blue)]"
+  }
 
-      {/* Session bar */}
-      <div className="rounded-xl border border-[var(--blue-018)] overflow-hidden relative">
-        {/* Starfield background */}
-        <div className="absolute inset-0 opacity-[0.18] bg-[url('/starfield.png')] bg-cover bg-center" />
-        <div className="absolute inset-0 sess-gradient" />
-        <div className="px-5 py-4 flex flex-col sm:flex-row sm:items-center gap-3 relative z-10">
-          <div className="flex items-center gap-3 flex-1 min-w-0">
-            <Badge variant={isUpcoming ? "status-soon" : "live"}>
-              {isUpcoming ? "Starting Soon" : "Live Now"}
-            </Badge>
-            <h1 className="font-cinzel text-xl md:text-2xl font-bold tracking-[0.02em] truncate">{event.title}</h1>
-          </div>
-          <div className="flex items-center gap-4">
-            {!isUpcoming && elapsed && (
-              <div className="text-right">
-                <p className="stat-label">Session elapsed</p>
-                <p className="font-mono text-lg font-semibold tabular-nums text-[var(--xiv-blue)]">{elapsed}</p>
-              </div>
-            )}
+  return (
+    <div className="page-inner" style={{ maxWidth: 1160 }}>
+
+      {/* Session bar — matches prototype .session-bar */}
+      <div className="rounded-xl border border-[var(--blue-018)] overflow-hidden relative flex items-center gap-7 flex-wrap px-[26px] py-5 bg-[var(--card)]">
+        <div className="absolute inset-0 bg-[url('/starfield.png')] bg-cover bg-center opacity-[0.18] pointer-events-none" />
+        <div className="absolute inset-0 sess-gradient pointer-events-none" />
+
+        {/* Main event info */}
+        <div className="relative z-10 flex flex-col gap-2 flex-1 min-w-0">
+          <span className={isUpcoming ? "status soon w-fit" : "status open w-fit"}>
+            <span className="dot" />{isUpcoming ? "Starting soon" : "Live now"}
+          </span>
+          <div className="font-[var(--font-cinzel-var)] font-bold text-[1.45rem] tracking-[0.02em] leading-tight">{event.title}</div>
+          <div className="text-[0.84rem] text-muted-foreground flex items-center gap-2">
+            <Clock className="w-[14px] h-[14px] text-[var(--xiv-blue)]" />
+            Started {formatServerTime(event.startTime, "time")} {SERVER_TIME_LABEL}
             {!isUpcoming && (
-              <div className="flex gap-2">
-                <Button variant="outline-blue" size="sm">
-                  <Pause className="h-3.5 w-3.5" /> Pause
-                </Button>
-                <Button variant="destructive" size="sm" className="opacity-80 hover:opacity-100">
-                  <StopCircle className="h-3.5 w-3.5" /> End
-                </Button>
+              <div className="flex gap-2 ml-4">
+                <Button variant="outline-blue" size="sm"><Pause className="h-3.5 w-3.5" /> Pause</Button>
+                <Button variant="destructive" size="sm" className="opacity-80 hover:opacity-100"><StopCircle className="h-3.5 w-3.5" /> End</Button>
               </div>
             )}
           </div>
         </div>
+
+        {/* Timer */}
+        {!isUpcoming && elapsed && (
+          <div className="relative z-10 text-right flex-shrink-0">
+            <div className="text-[0.64rem] uppercase tracking-[0.14em] text-[var(--fg-faint)] font-semibold">Session elapsed</div>
+            <div className="font-[var(--font-jetbrains)] text-[1.9rem] font-semibold tabular-nums mt-1 leading-none">{elapsed}</div>
+          </div>
+        )}
       </div>
 
-      {/* Stat readouts */}
-      <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3">
-        <Card className="p-4">
-          <StatReadout
-            label="In venue now"
-            value={patronCount}
-            icon={<Users />}
-            iconVariant={connected ? "success" : "blue"}
-            subtext={connected ? "Live" : undefined}
-          />
+      {/* Stat grid — matches prototype .stat-grid repeat(5,1fr) */}
+      <div className="stat-grid mt-4">
+        <Card className="px-[18px] py-4">
+          <StatReadout label="In venue now" value={patronCount} icon={<Users />} iconVariant={connected ? "success" : "blue"} />
         </Card>
-        <Card className="p-4">
+        <Card className="px-[18px] py-4">
           <StatReadout label="New tonight" value={newTonight} icon={<UserPlus />} iconVariant="blue" />
         </Card>
         {showRevenue && (
-          <Card className="p-4">
-            <StatReadout
-              label="Sales tonight"
-              value={`${revenue.toLocaleString()} gil`}
-              subtext={revenueLabel}
-              icon={<Coins />}
-              iconVariant="success"
-            />
+          <Card className="px-[18px] py-4">
+            <StatReadout label="Sales tonight" value={`${revenue.toLocaleString()}`} subtext="gil" icon={<Coins />} iconVariant="success" />
           </Card>
         )}
-        <Card className="p-4">
+        <Card className="px-[18px] py-4">
           <StatReadout label="Transactions" value={saleCount} icon={<Radio />} iconVariant="blue" />
         </Card>
-        <Card className="p-4">
+        <Card className="px-[18px] py-4">
           <StatReadout label="On shift" value={onShiftStaff.length} icon={<Clock />} iconVariant="warning" />
         </Card>
       </div>
 
-      {/* Feed + rosters */}
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
+      {/* Live grid: feed (1.65fr) + side (1fr) — matches prototype .live-grid */}
+      <div className="grid grid-cols-1 lg:grid-cols-[1.65fr_1fr] gap-[18px] mt-[18px] items-start">
 
-        {/* Activity feed */}
-        <Card className="lg:col-span-2 overflow-hidden">
-          <div className="flex items-center gap-2 px-5 py-3.5 border-b border-[var(--blue-008)] font-semibold text-sm">
-            <Radio className="w-4 h-4 text-[var(--xiv-blue)]" />
-            Live activity
-            <div className="ml-auto flex items-center gap-1.5">
+        {/* Activity feed — matches prototype .panel .fitem */}
+        <section className="panel">
+          <div className="ph flex items-center gap-3 px-5 py-4 border-b border-[var(--blue-008)]">
+            <span className="pt font-[var(--font-outfit)] font-semibold text-[0.95rem] flex items-center gap-2">
+              <Radio className="w-[17px] h-[17px] text-[var(--xiv-blue)]" /> Live activity
+            </span>
+            <div className="flex-1" />
+            <span className="listening flex items-center gap-2 text-[0.74rem] text-[var(--success-text)] font-medium">
               {connected ? (
-                <>
-                  <span className="text-xs text-muted-foreground font-normal">Listening</span>
-                  <span className="xiv-listening-dot" />
-                  <span className="xiv-listening-dot" />
-                  <span className="xiv-listening-dot" />
-                </>
-              ) : (
-                <span className="text-xs text-muted-foreground font-normal">Connecting…</span>
-              )}
-            </div>
+                <><span>Listening</span><div className="flex gap-0.5"><span className="xiv-listening-dot" /><span className="xiv-listening-dot" /><span className="xiv-listening-dot" /></div></>
+              ) : "Connecting…"}
+            </span>
           </div>
-          <div className="p-5">
 
           {activity.length === 0 ? (
-            <div className="py-10 text-center space-y-3">
-              {!isUpcoming && connected && (
-                <div className="flex justify-center gap-1.5">
-                  <span className="xiv-listening-dot" />
-                  <span className="xiv-listening-dot" />
-                  <span className="xiv-listening-dot" />
-                </div>
-              )}
+            <div className="py-14 text-center">
               <p className="text-sm text-muted-foreground">
-                {isUpcoming ? "Activity will appear once the event starts." : "Waiting for activity..."}
+                {isUpcoming ? "Activity will appear once the event starts." : "Waiting for activity…"}
               </p>
             </div>
           ) : (
-            <div className="space-y-1 max-h-[420px] overflow-y-auto">
+            <div className="max-h-[480px] overflow-y-auto sidebar-scroll">
               {activity.map(item => (
-                <div key={item.id} className="flex items-center gap-3 py-2.5 border-b border-[var(--blue-008)] last:border-0">
-                  <div className={`shrink-0 w-7 h-7 rounded-lg flex items-center justify-center ${
-                    item.type === "sale" ? "bg-[var(--success-soft)] text-[var(--success-text)]"
-                    : item.type === "patron_enter" ? "bg-[var(--blue-010)] text-[var(--xiv-blue)]"
-                    : "bg-[var(--destructive-soft)] text-[var(--destructive)]"
-                  }`}>
-                    {item.type === "sale" ? <Coins className="h-3.5 w-3.5" />
-                      : item.type === "patron_enter" ? <UserPlus className="h-3.5 w-3.5" />
-                      : <UserMinus className="h-3.5 w-3.5" />}
-                  </div>
-                  <span className="flex-1 text-sm min-w-0 truncate">{item.text}</span>
-                  <span className="text-xs text-muted-foreground shrink-0">
-                    {formatServerTime(item.timestamp, "time")} {SERVER_TIME_LABEL}
+                <div key={item.id} className="fitem flex gap-[14px] px-5 py-[13px] items-start border-t border-[var(--blue-008)] first:border-t-0 hover:bg-[var(--blue-004)] transition-colors">
+                  <span className={`fi w-[34px] h-[34px] rounded-[var(--radius-sm)] grid place-items-center flex-shrink-0 border ${fiClass(item.type)}`}>
+                    {item.type === "patron_enter" ? <UserPlus className="w-4 h-4" />
+                      : item.type === "patron_exit" ? <UserMinus className="w-4 h-4" />
+                      : <Coins className="w-4 h-4" />}
                   </span>
+                  <div className="fbody flex-1 min-w-0">
+                    <div className="ftext text-[0.88rem] leading-[1.45]">{item.text}</div>
+                    <div className="fmeta text-[0.72rem] text-[var(--fg-faint)] mt-1">
+                      {formatServerTime(item.timestamp, "time")} {SERVER_TIME_LABEL}
+                    </div>
+                  </div>
                 </div>
               ))}
             </div>
           )}
-          </div>
-        </Card>
+        </section>
 
-        {/* Roster panels */}
-        <div className="space-y-4">
+        {/* Side column */}
+        <div className="live-side flex flex-col gap-[18px]">
 
           {/* In venue now */}
-          <Card className="overflow-hidden">
-            <div className="flex items-center gap-2 px-4 py-3 border-b border-[var(--blue-008)] font-semibold text-sm">
-              <Users className="w-4 h-4 text-[var(--xiv-blue)]" />
-              In venue now
-              <span className="ml-auto text-xs text-[var(--fg-faint)] font-normal">{patronCount} patrons</span>
+          <section className="panel">
+            <div className="ph flex items-center gap-3 px-5 py-4 border-b border-[var(--blue-008)]">
+              <span className="pt font-[var(--font-outfit)] font-semibold text-[0.95rem] flex items-center gap-2">
+                <Users className="w-[17px] h-[17px] text-[var(--xiv-blue)]" /> In venue now
+              </span>
+              <div className="flex-1" />
+              <span className="pcount text-[0.74rem] text-[var(--fg-faint)] font-medium">{patronCount} patrons</span>
             </div>
-            {roster.length > 0 ? (
-              <div className="space-y-2 max-h-[180px] overflow-y-auto p-4">
-                {roster.slice(0, 10).map((p, i) => (
-                  <div key={i} className="flex items-center justify-between text-sm">
-                    <div className="flex items-center gap-2">
-                      <div className="w-6 h-6 rounded-full bg-[var(--blue-010)] flex items-center justify-center text-[10px] font-semibold text-[var(--xiv-blue)] shrink-0">
-                        {p.name.charAt(0).toUpperCase()}
-                      </div>
-                      <span className="truncate">{p.name}</span>
-                    </div>
-                    <span className="text-xs text-muted-foreground shrink-0 ml-2">
-                      {formatDistanceToNowStrict(new Date(p.arrivedAt), { addSuffix: false })}
-                    </span>
+            <div className="py-1.5">
+              {roster.length > 0 ? roster.slice(0, 10).map((p, i) => (
+                <div key={i} className="rrow flex items-center gap-3 px-5 py-2.5 border-b border-[var(--blue-008)] last:border-0">
+                  <div className="av w-[30px] h-[30px] rounded-full bg-gradient-to-br from-[#5865F2] to-[var(--xiv-blue)] grid place-items-center text-[0.7rem] font-bold text-white flex-shrink-0">
+                    {p.name.slice(0, 2).toUpperCase()}
                   </div>
-                ))}
-                {roster.length > 10 && (
-                  <p className="text-xs text-muted-foreground text-center pt-1">+{roster.length - 10} more</p>
-                )}
-              </div>
-            ) : (
-              <p className="text-sm text-muted-foreground px-4 py-3">No patrons yet</p>
-            )}
-          </Card>
+                  <div className="rinfo flex-1 min-w-0">
+                    <div className="rn text-[0.86rem] font-medium truncate">{p.name}</div>
+                    <div className="rt text-[0.72rem] text-[var(--fg-faint)]">
+                      {formatDistanceToNowStrict(new Date(p.arrivedAt), { addSuffix: false })}
+                    </div>
+                  </div>
+                </div>
+              )) : <p className="text-sm text-muted-foreground px-5 py-4">No patrons yet</p>}
+              {roster.length > 10 && (
+                <p className="text-xs text-muted-foreground text-center py-2">+{roster.length - 10} more</p>
+              )}
+            </div>
+          </section>
 
           {/* On shift */}
-          <Card className="overflow-hidden">
-            <div className="flex items-center gap-2 px-4 py-3 border-b border-[var(--blue-008)] font-semibold text-sm">
-              <Clock className="w-4 h-4 text-[var(--xiv-blue)]" />
-              On shift
-              <span className="ml-auto text-xs text-[var(--fg-faint)] font-normal">{onShiftStaff.length} clocked in</span>
+          <section className="panel">
+            <div className="ph flex items-center gap-3 px-5 py-4 border-b border-[var(--blue-008)]">
+              <span className="pt font-[var(--font-outfit)] font-semibold text-[0.95rem] flex items-center gap-2">
+                <Clock className="w-[17px] h-[17px] text-[var(--xiv-blue)]" /> On shift
+              </span>
+              <div className="flex-1" />
+              <span className="pcount text-[0.74rem] text-[var(--fg-faint)] font-medium">{onShiftStaff.length} clocked in</span>
             </div>
-            <div className="p-4">
-            {onShiftStaff.length > 0 ? (
-              <div className="space-y-2">
-                {onShiftStaff.map((s, i) => (
-                  <div key={i} className="flex items-center gap-2 text-sm">
-                    <div className="w-6 h-6 rounded-full bg-[var(--blue-010)] flex items-center justify-center text-[10px] font-semibold text-[var(--xiv-blue)] shrink-0">
-                      {s.name.charAt(0).toUpperCase()}
-                    </div>
-                    <span className="flex-1 truncate">{s.name}</span>
-                    <Badge variant="tag" className="text-[10px] shrink-0">{s.role}</Badge>
+            <div className="py-1.5">
+              {onShiftStaff.length > 0 ? onShiftStaff.map((s, i) => (
+                <div key={i} className="rrow flex items-center gap-3 px-5 py-2.5 border-b border-[var(--blue-008)] last:border-0">
+                  <div className="av w-[30px] h-[30px] rounded-full bg-[var(--blue-010)] border border-[var(--blue-018)] grid place-items-center text-[0.7rem] font-bold text-[var(--xiv-blue)] flex-shrink-0">
+                    {s.name.slice(0, 2).toUpperCase()}
+                  </div>
+                  <div className="rinfo flex-1 min-w-0">
+                    <div className="rn text-[0.86rem] font-medium truncate">{s.name}</div>
+                  </div>
+                  <span className="role text-[0.7rem] font-semibold px-2 py-0.5 rounded-full bg-[var(--blue-012)] text-[var(--xiv-blue)] flex-shrink-0">{s.role}</span>
+                </div>
+              )) : <p className="text-sm text-muted-foreground px-5 py-4">No staff clocked in</p>}
+            </div>
+          </section>
+
+          {/* Command hints */}
+          <section className="panel">
+            <div className="ph flex items-center gap-3 px-5 py-4 border-b border-[var(--blue-008)]">
+              <span className="pt font-[var(--font-outfit)] font-semibold text-[0.9rem] flex items-center gap-2">
+                <Terminal className="w-4 h-4 text-[var(--xiv-blue)]" /> In-game commands
+              </span>
+            </div>
+            <div className="cmd-hint px-5 py-[18px]">
+              <p className="text-[0.78rem] text-muted-foreground mb-[14px]">Log directly from the Dalamud plugin chat.</p>
+              <div className="cmd-list flex flex-col gap-2">
+                {([
+                  ["/xvm sale <amount>", "Log a sale"],
+                  ["/xvm start",         "Start event"],
+                  ["/xvm end",           "End event"],
+                  ["/xvm help",          "All commands"],
+                ] as [string, string][]).map(([cmd, desc]) => (
+                  <div key={cmd} className="cmd flex items-center justify-between gap-2 font-mono text-[0.8rem] text-[var(--xiv-blue)] bg-[var(--blue-010)] border border-[var(--blue-015)] px-3 py-2 rounded-[var(--radius-md)]">
+                    <span>{cmd}</span>
+                    <span className="text-[var(--fg-faint)] font-sans text-[0.72rem]">{desc}</span>
                   </div>
                 ))}
               </div>
-            ) : (
-              <p className="text-sm text-muted-foreground">No staff clocked in</p>
-            )}
             </div>
-          </Card>
-
-          {/* Command hints */}
-          <div className="rounded-xl border border-[var(--blue-018)] bg-[var(--card)] overflow-hidden">
-            <div className="flex items-center gap-2 px-4 py-3 border-b border-[var(--blue-008)] font-semibold text-sm">
-              <Terminal className="h-4 w-4 text-[var(--xiv-blue)]" />
-              In-game commands
-            </div>
-            <p className="px-4 pt-3 pb-1 text-xs text-muted-foreground">Log directly from the Dalamud plugin chat.</p>
-            <div className="px-4 pb-4 pt-2 space-y-2">
-              {[
-                ["/xvm sale <amount>", "Log a sale"],
-                ["/xvm start", "Start event"],
-                ["/xvm end", "End event"],
-                ["/xvm help", "Show all commands"],
-              ].map(([cmd, desc]) => (
-                <div key={cmd} className="flex items-center justify-between gap-2 font-mono text-xs bg-background rounded-lg px-3 py-2 border border-[var(--blue-012)]">
-                  <span className="text-[var(--xiv-blue)]">{cmd}</span>
-                  <span className="text-[var(--fg-faint)] font-sans">{desc}</span>
-                </div>
-              ))}
-            </div>
-          </div>
+          </section>
 
         </div>
       </div>
