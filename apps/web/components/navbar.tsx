@@ -8,7 +8,7 @@ export async function Navbar() {
 
   let venues: Array<{ id: string; name: string; slug: string; role: string }> = []
   if (session?.user?.id) {
-    const memberships = await prisma.venueMembership.findMany({
+    const memberships = await prisma.membership.findMany({
       where: { userId: session.user.id },
       select: {
         role: true,
