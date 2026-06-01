@@ -38,11 +38,17 @@ export function StaffTable({
   const [filter, setFilter] = useState<Filter>("all")
   const [search, setSearch] = useState("")
 
+  // Extract unique custom role names for additional filter tabs
+  const customRoleNames = Array.from(
+    new Set(members.map(m => m.customRole?.name).filter(Boolean) as string[])
+  ).sort()
+
   const counts = {
     all:     members.length,
     owner:   members.filter(m => m.role === "OWNER").length,
     manager: members.filter(m => m.role === "MANAGER").length,
     staff:   members.filter(m => m.role === "STAFF").length,
+    ...Object.fromEntries(customRoleNames.map(name => [name, members.filter(m => m.customRole?.name === name).length])),
   }
 
   const visible = members
@@ -50,6 +56,8 @@ export function StaffTable({
       if (filter === "owner"   && m.role !== "OWNER")   return false
       if (filter === "manager" && m.role !== "MANAGER") return false
       if (filter === "staff"   && m.role !== "STAFF")   return false
+      // Custom role filter
+      if (customRoleNames.includes(filter) && m.customRole?.name !== filter) return false
       if (search) {
         const q = search.toLowerCase()
         if (!(m.user?.name ?? "").toLowerCase().includes(q) &&
@@ -64,6 +72,8 @@ export function StaffTable({
     { key: "owner",   label: "Owners" },
     { key: "manager", label: "Managers" },
     { key: "staff",   label: "Staff" },
+    // Add custom role tabs matching prototype (Hosts, Bar, DJ, etc.)
+    ...customRoleNames.map(name => ({ key: name as Filter, label: name })),
   ]
 
   return (

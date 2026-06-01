@@ -12,6 +12,7 @@ export type PatronProfile = {
   world: string
   visits: number
   lastSeen: string // ISO
+  totalSpent?: number
 }
 
 function tag(visits: number): "vip" | "regular" | "new" {
@@ -104,12 +105,12 @@ export function PatronProfilesTable({ profiles }: { profiles: PatronProfile[] })
           <table className="w-full border-collapse">
             <thead>
               <tr>
-                {["Patron", "World", "Visits", "Last seen", "Tags"].map((h, i) => (
+                {["Patron", "World", "Visits", "Last seen", "Total spent", "Tags"].map((h, i) => (
                   <th
                     key={h}
                     className={`text-left text-[0.68rem] font-medium uppercase tracking-[0.06em] text-[var(--xiv-blue)] px-5 py-3 border-b border-[var(--blue-008)] whitespace-nowrap ${
-                      i === 2 ? "text-right" : ""
-                    } ${i === 1 || i === 3 ? "hidden md:table-cell" : ""}`}
+                      i === 2 || i === 4 ? "text-right" : ""
+                    } ${i === 1 || i === 3 || i === 4 ? "hidden md:table-cell" : ""}`}
                   >
                     {h}
                   </th>
@@ -141,6 +142,12 @@ export function PatronProfilesTable({ profiles }: { profiles: PatronProfile[] })
                     </td>
                     <td className="px-5 py-3.5 text-sm text-muted-foreground hidden md:table-cell whitespace-nowrap">
                       {formatServerTime(p.lastSeen, "datetime")}
+                    </td>
+                    <td className="px-5 py-3.5 text-sm text-right tabular-nums hidden md:table-cell">
+                      {p.totalSpent && p.totalSpent > 0
+                        ? <span className="text-[var(--xiv-blue)] font-semibold">{p.totalSpent.toLocaleString()} gil</span>
+                        : <span className="text-[var(--fg-faint)]">—</span>
+                      }
                     </td>
                     <td className="px-5 py-3.5">
                       <div className="flex items-center gap-1.5 flex-wrap">

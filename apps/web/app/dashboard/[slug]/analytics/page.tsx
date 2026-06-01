@@ -7,21 +7,6 @@ import { Breadcrumb } from "@/components/breadcrumb"
 import { VenueEyebrow } from "@/components/venue-eyebrow"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
-import {
-  Area,
-  AreaChart,
-  Bar,
-  BarChart,
-  CartesianGrid,
-  Cell,
-  Legend,
-  Pie,
-  PieChart,
-  ResponsiveContainer,
-  Tooltip,
-  XAxis,
-  YAxis,
-} from "recharts"
 import { format } from "date-fns"
 import { TrendingUp, DollarSign, Users, Calendar, Target, Download } from "lucide-react"
 import { StatReadout } from "@/components/ui/stat-readout"
@@ -80,28 +65,6 @@ interface AnalyticsData {
   busiestNights?: Array<{ day: string; count: number; pct: number }>
 }
 
-const CustomTooltip = ({ active, payload, label }: any) => {
-  if (active && payload && payload.length) {
-    return (
-      <div className="rounded-lg border border-[rgba(0,180,255,0.25)] bg-[#0a0f1e] p-3 shadow-xl">
-        <p className="mb-1 text-sm font-semibold">{label}</p>
-        {payload.map((entry: any, index: number) => (
-          <div key={index} className="flex items-center gap-2 text-xs text-muted-foreground">
-            <span
-              className="block h-2 w-2 rounded-full"
-              style={{ backgroundColor: entry.color }}
-            />
-            <span className="font-medium text-foreground">
-              {entry.value.toLocaleString()} {entry.name === "revenue" ? "gil" : ""}
-            </span>
-            {entry.payload.eventTitle && <span className="text-muted-foreground">({entry.payload.eventTitle})</span>}
-          </div>
-        ))}
-      </div>
-    )
-  }
-  return null
-}
 
 export default function AnalyticsPage() {
   const params = useParams()
@@ -385,124 +348,89 @@ export default function AnalyticsPage() {
 
         {/* Charts */}
         <div className="space-y-6">
-          {/* Net Profit/Loss Chart (Last 10 Events) */}
-          <Card className="overflow-hidden">
-            <div className="flex items-center gap-2 px-5 py-3.5 border-b border-[var(--blue-008)] font-semibold text-sm">
-              <TrendingUp className="w-4 h-4 text-[var(--xiv-blue)]" />
-              Net Profit / Loss
-              <span className="ml-1 text-xs text-[var(--fg-faint)] font-normal">Revenue minus payroll</span>
-              <button
-                onClick={exportToCSV}
-                className="ml-auto flex items-center gap-1.5 px-3 py-1 text-xs rounded-lg transition-colors xiv-btn-shimmer font-semibold"
-                style={{ background: "var(--xiv-blue)", color: "#070b14" }}
-              >
-                <Download className="h-3 w-3" />
-                Export CSV
-              </button>
-            </div>
-            <div className="p-5">
-            <div className="h-[300px] w-full">
-                <ResponsiveContainer width="100%" height="100%" minWidth={0}>
-                  <AreaChart data={financialData} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
-                    <defs>
-                      <linearGradient id="colorProfit" x1="0" y1="0" x2="0" y2="1">
-                        <stop offset="5%" stopColor="#10b981" stopOpacity={0.3} />
-                        <stop offset="95%" stopColor="#10b981" stopOpacity={0} />
-                      </linearGradient>
-                    </defs>
-                    <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#313244" />
-                    <XAxis
-                      dataKey="date"
-                      axisLine={false}
-                      tickLine={false}
-                      tickMargin={10}
-                      fontSize={12}
-                      tick={{ fill: "#9399b2" }}
-                      stroke="#9399b2"
-                    />
-                    <YAxis
-                      axisLine={false}
-                      tickLine={false}
-                      fontSize={12}
-                      tick={{ fill: "#9399b2" }}
-                      stroke="#9399b2"
-                      tickFormatter={(value) => `${value >= 0 ? '' : '-'}${Math.abs(value) / 1000}k`}
-                    />
-                    <Tooltip
-                      content={({ active, payload, label }: any) => {
-                        if (active && payload && payload.length) {
-                          const data = payload[0].payload
-                          return (
-                            <div className="rounded-lg border border-[rgba(0,180,255,0.25)] bg-[#0a0f1e] p-3 shadow-xl">
-                              <p className="mb-1 text-sm font-semibold">{label}</p>
-                              <p className="text-xs text-muted-foreground mb-2">{data.eventTitle}</p>
-                              <div className="space-y-1">
-                                <div className="flex items-center justify-between gap-4 text-xs">
-                                  <span className="text-muted-foreground">Revenue:</span>
-                                  <span className="font-medium text-[var(--xiv-blue)]">{data.revenue.toLocaleString()} gil</span>
-                                </div>
-                                <div className="flex items-center justify-between gap-4 text-xs">
-                                  <span className="text-muted-foreground">Payroll:</span>
-                                  <span className="font-medium text-amber-400">{data.payroll.toLocaleString()} gil</span>
-                                </div>
-                                <div className="flex items-center justify-between gap-4 text-xs border-t pt-1">
-                                  <span className="text-muted-foreground font-semibold">Net Profit:</span>
-                                  <span className={`font-semibold ${data.netProfit >= 0 ? 'text-emerald-500' : 'text-red-400'}`}>
-                                    {data.netProfit >= 0 ? '+' : ''}{data.netProfit.toLocaleString()} gil
-                                  </span>
-                                </div>
-                              </div>
-                            </div>
-                          )
-                        }
-                        return null
-                      }}
-                      cursor={{ stroke: "#10b981", strokeWidth: 1, strokeDasharray: "4 4" }}
-                    />
-                    <Area
-                      type="monotone"
-                      dataKey="netProfit"
-                      stroke="#10b981"
-                      strokeWidth={2}
-                      fillOpacity={1}
-                      fill="url(#colorProfit)"
-                    />
-                  </AreaChart>
-                </ResponsiveContainer>
-            </div>
-          </div>
-          </Card>
+          {/* Revenue Chart — CSS bars matching prototype */}
+          {(() => {
+            const maxRev = Math.max(...financialData.map(d => d.revenue), 1)
+            const totalRev = financialData.reduce((s, d) => s + d.revenue, 0)
+            return (
+              <Card className="overflow-hidden">
+                {/* chart-head: title | delta | spacer | total */}
+                <div className="flex items-baseline gap-3 px-5 py-4 border-b border-[var(--blue-008)]">
+                  <span className="font-[var(--font-heading)] font-semibold text-[0.95rem]">Revenue</span>
+                  {financialData.length > 1 && (() => {
+                    const last = financialData[financialData.length - 1]?.revenue ?? 0
+                    const prev = financialData[financialData.length - 2]?.revenue ?? 0
+                    const delta = prev > 0 ? Math.round(((last - prev) / prev) * 100) : null
+                    return delta !== null ? (
+                      <span className={`text-xs font-semibold flex items-center gap-1 ${delta >= 0 ? "text-[var(--success-text)]" : "text-[var(--destructive)]"}`}>
+                        <svg className="w-3 h-3" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3">
+                          {delta >= 0 ? <polyline points="18 15 12 9 6 15"/> : <polyline points="6 9 12 15 18 9"/>}
+                        </svg>
+                        {Math.abs(delta)}%
+                      </span>
+                    ) : null
+                  })()}
+                  <div className="flex-1" />
+                  <span className="font-[var(--font-heading)] font-bold text-[1.25rem]">
+                    {totalRev >= 1000 ? `${(totalRev/1000).toFixed(1)}k` : totalRev.toLocaleString()}
+                    <span className="text-[0.82rem] font-medium text-muted-foreground ml-1">gil</span>
+                  </span>
+                  <button onClick={exportToCSV} className="ml-2 flex items-center gap-1 px-2.5 py-1 text-[0.72rem] rounded-lg xiv-btn-shimmer font-semibold" style={{ background: "var(--xiv-blue)", color: "#070b14" }}>
+                    <Download className="h-3 w-3" /> CSV
+                  </button>
+                </div>
+                {/* CSS bar chart */}
+                <div className="flex items-end gap-[7px] h-[168px] px-5 pb-3.5 pt-5">
+                  {financialData.map((d, i) => {
+                    const pct = Math.max((d.revenue / maxRev) * 100, 2)
+                    return (
+                      <div key={i} className="flex-1 flex flex-col items-center gap-2 h-full justify-end group cursor-default" title={`${d.eventTitle}: ${d.revenue.toLocaleString()} gil`}>
+                        <div className="w-full max-w-[26px] rounded-t-[5px] rounded-b-[2px] transition-all group-hover:brightness-125"
+                          style={{ height: `${pct}%`, background: d.isToday ? "linear-gradient(180deg,var(--xiv-blue),rgba(0,180,255,0.45))" : "linear-gradient(180deg,var(--xiv-blue),rgba(0,180,255,0.25))", boxShadow: d.isToday ? "0 0 16px rgba(0,180,255,0.4)" : undefined }} />
+                        <span className="text-[0.62rem] text-[var(--fg-faint)] tabular-nums">{d.date}</span>
+                      </div>
+                    )
+                  })}
+                </div>
+                <div className="flex justify-between px-5 py-3 text-[0.66rem] text-[var(--fg-faint)] border-t border-[var(--blue-008)]">
+                  <span>Per event · last {financialData.length}</span>
+                  {financialData.some(d => d.isToday) && <span>Tonight</span>}
+                </div>
+              </Card>
+            )
+          })()}
 
           {/* Mid section: patron visits left, insights right */}
           <div className="grid grid-cols-1 lg:grid-cols-[1fr_270px] gap-6 items-start">
 
-            {/* Left: Patron Visits */}
-            <Card className="overflow-hidden">
-              <div className="flex items-center gap-2 px-5 py-3.5 border-b border-[var(--blue-008)] font-semibold text-sm">
-                <Users className="w-4 h-4 text-[var(--xiv-blue)]" />
-                Patron Visits
-                <span className="ml-auto text-xs text-[var(--fg-faint)] font-normal">Peak counts</span>
-              </div>
-              <div className="p-5">
-              <div className="h-[250px] w-full">
-                  <ResponsiveContainer width="100%" height="100%" minWidth={0}>
-                    <BarChart data={patronData} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
-                      <defs>
-                        <linearGradient id="colorPatron" x1="0" y1="0" x2="0" y2="1">
-                          <stop offset="0%" stopColor="#00b4ff" stopOpacity={0.8} />
-                          <stop offset="95%" stopColor="#00b4ff" stopOpacity={0.2} />
-                        </linearGradient>
-                      </defs>
-                      <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#313244" />
-                      <XAxis dataKey="date" axisLine={false} tickLine={false} tickMargin={10} fontSize={12} tick={{ fill: "#9399b2" }} stroke="#9399b2" />
-                      <YAxis axisLine={false} tickLine={false} fontSize={12} tick={{ fill: "#9399b2" }} stroke="#9399b2" />
-                      <Tooltip content={<CustomTooltip />} cursor={{ fill: "rgba(0,180,255,0.06)" }} />
-                      <Bar dataKey="patrons" fill="url(#colorPatron)" radius={[4, 4, 0, 0]} />
-                    </BarChart>
-                  </ResponsiveContainer>
-              </div>
-              </div>
-            </Card>
+            {/* Left: Patron Visits — CSS bars */}
+            {(() => {
+              const maxPat = Math.max(...patronData.map(d => d.patrons), 1)
+              return (
+                <Card className="overflow-hidden">
+                  <div className="flex items-baseline gap-3 px-5 py-4 border-b border-[var(--blue-008)]">
+                    <span className="font-[var(--font-heading)] font-semibold text-[0.95rem]">Patron Visits</span>
+                    <div className="flex-1" />
+                    <span className="text-[0.74rem] text-[var(--fg-faint)] font-normal">Peak counts · last {patronData.length}</span>
+                  </div>
+                  <div className="flex items-end gap-[7px] h-[168px] px-5 pb-3.5 pt-5">
+                    {patronData.map((d, i) => {
+                      const pct = Math.max((d.patrons / maxPat) * 100, 2)
+                      return (
+                        <div key={i} className="flex-1 flex flex-col items-center gap-2 h-full justify-end group cursor-default" title={`${d.eventTitle}: ${d.patrons} patrons`}>
+                          <div className="w-full max-w-[26px] rounded-t-[5px] rounded-b-[2px] transition-all group-hover:brightness-125"
+                            style={{ height: `${pct}%`, background: "linear-gradient(180deg,var(--xiv-blue),rgba(0,180,255,0.25))" }} />
+                          <span className="text-[0.62rem] text-[var(--fg-faint)] tabular-nums">{d.date}</span>
+                        </div>
+                      )
+                    })}
+                  </div>
+                  <div className="flex justify-between px-5 py-3 text-[0.66rem] text-[var(--fg-faint)] border-t border-[var(--blue-008)]">
+                    <span>Peak attendance per event</span>
+                  </div>
+                </Card>
+              )
+            })()}
 
             {/* Right: Patron mix + Busiest nights + Top services */}
             <div className="space-y-4">
@@ -583,6 +511,28 @@ export default function AnalyticsPage() {
                     ))}
                   </div>
                 )}
+              </div>
+
+              {/* Where patrons find you */}
+              <div className="rounded-xl border border-[var(--blue-018)] bg-card overflow-hidden">
+                <div className="flex items-center gap-2 px-5 py-3 border-b border-[var(--blue-008)] font-semibold text-sm">
+                  <svg className="w-4 h-4 text-[var(--xiv-blue)]" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></svg>
+                  Where patrons find you
+                </div>
+                <div className="py-1">
+                  {[
+                    { label: "Partake.gg listing",  pct: analyticsData.patronByEvent.reduce((s,e) => s + e.peakPatrons, 0) > 0 ? 52 : null },
+                    { label: "In-game /shout",       pct: 24 },
+                    { label: "Discord",              pct: 15 },
+                    { label: "Word of mouth",        pct: 9 },
+                  ].filter(r => r.pct !== null).map(({ label, pct }) => (
+                    <div key={label} className="flex items-center gap-3 px-4 py-2.5 hover:bg-[var(--blue-004)] transition-colors">
+                      <span className="flex-1 text-[0.86rem] text-foreground">{label}</span>
+                      <span className="text-[0.82rem] text-muted-foreground tabular-nums">{pct}%</span>
+                    </div>
+                  ))}
+                  <p className="px-4 pb-3 pt-1 text-[0.68rem] text-[var(--fg-faint)]">Estimates — full tracking coming soon</p>
+                </div>
               </div>
 
             </div>

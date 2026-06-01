@@ -63,6 +63,17 @@ export default async function PatronLogsPage({
       orderBy: { characterName: "asc" },
       take: 500,
     })
+    // Total spent: match transaction.customerName to characterName (fuzzy)
+    const spendGroups = await prisma.transaction.groupBy({
+      by: ["customerName"],
+      where: { venueId: venue.id, customerName: { not: null } },
+      _sum: { amount: true },
+      take: 2000,
+    })
+    const spendMap = new Map(
+      spendGroups.map(s => [s.customerName!.toLowerCase().trim(), Number(s._sum.amount ?? 0)])
+    )
+
     patronProfiles = grouped
       .filter((r) => r.characterName)
       .sort((a, b) => b._count._all - a._count._all)
@@ -71,6 +82,7 @@ export default async function PatronLogsPage({
         world: r.world ?? "",
         visits: r._count._all,
         lastSeen: (r._max.timestamp ?? new Date()).toISOString(),
+        totalSpent: spendMap.get(r.characterName!.toLowerCase().trim()) ?? 0,
       }))
   }
 
