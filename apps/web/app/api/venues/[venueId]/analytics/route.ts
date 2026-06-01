@@ -405,6 +405,9 @@ export const GET = withRateLimit<{ params: Promise<{ venueId: string }> }>(
         },
         busiestNights,
 
+        // Owner-configured discovery sources (from Settings)
+        discoverySources: (venue.settings as any)?.discoverySources ?? null,
+
         // Metadata
         fetchedAt: new Date().toISOString(),
       })

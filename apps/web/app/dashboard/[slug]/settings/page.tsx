@@ -67,6 +67,7 @@ export default function SettingsPage({
       revenue: "",
     },
     partakeTeamId: null,
+    discoverySources: {},
   })
   const [isLoading, setIsLoading] = useState(true)
   const [isSaving, setIsSaving] = useState(false)
@@ -130,6 +131,7 @@ export default function SettingsPage({
               revenue: "",
             },
             partakeTeamId: settingsData.partakeTeamId ?? null,
+            discoverySources: settingsData.discoverySources ?? {},
           })
         }
       } catch (error: unknown) {
@@ -403,6 +405,59 @@ export default function SettingsPage({
                     )}
                   </div>
                 ))}
+              </div>
+            </section>
+
+            {/* ── How patrons find you ── */}
+            <section className="rounded-xl border border-[var(--blue-018)] bg-card overflow-hidden">
+              <div className="flex items-center gap-2.5 px-5 py-3.5 border-b border-[var(--blue-008)] font-semibold text-[0.95rem]">
+                <svg className="w-4 h-4 text-[var(--xiv-blue)]" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></svg>
+                How patrons find you
+                <span className="ml-auto text-xs text-[var(--fg-faint)] font-normal">Shown in Analytics</span>
+              </div>
+              <div className="p-5 space-y-4">
+                <p className="text-xs text-muted-foreground">
+                  Estimate how patrons typically discover your venue. These percentages appear in your Analytics dashboard.
+                  They don&apos;t need to add up to 100%.
+                </p>
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                  {[
+                    { key: "partake",     label: "Partake.gg listing",  placeholder: "e.g. 50" },
+                    { key: "shout",       label: "In-game /shout",      placeholder: "e.g. 25" },
+                    { key: "discord",     label: "Discord",             placeholder: "e.g. 15" },
+                    { key: "wordOfMouth", label: "Word of mouth",       placeholder: "e.g. 10" },
+                    { key: "other",       label: "Other",               placeholder: "e.g. 0"  },
+                  ].map(({ key, label, placeholder }) => {
+                    const val = (settings.discoverySources as Record<string, number | undefined> | undefined)?.[key] ?? ""
+                    return (
+                      <div key={key} className="flex items-center gap-3">
+                        <Label className="flex-1 text-sm">{label}</Label>
+                        <div className="flex items-center gap-1.5">
+                          <Input
+                            type="number"
+                            min={0}
+                            max={100}
+                            placeholder={placeholder}
+                            value={val}
+                            onChange={(e) => {
+                              const num = e.target.value === "" ? undefined : Math.min(100, Math.max(0, parseInt(e.target.value, 10) || 0))
+                              setSettings({
+                                ...settings,
+                                discoverySources: {
+                                  ...settings.discoverySources,
+                                  [key]: num,
+                                },
+                              })
+                            }}
+                            disabled={isSaving}
+                            className="w-20 h-8 text-sm bg-background border-[var(--blue-015)] text-right"
+                          />
+                          <span className="text-xs text-muted-foreground w-4">%</span>
+                        </div>
+                      </div>
+                    )
+                  })}
+                </div>
               </div>
             </section>
 

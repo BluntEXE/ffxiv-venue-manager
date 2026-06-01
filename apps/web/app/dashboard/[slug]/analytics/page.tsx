@@ -63,6 +63,9 @@ interface AnalyticsData {
     newPct: number; regularPct: number; vipPct: number
   }
   busiestNights?: Array<{ day: string; count: number; pct: number }>
+  discoverySources?: {
+    partake?: number; shout?: number; discord?: number; wordOfMouth?: number; other?: number
+  } | null
 }
 
 
@@ -514,26 +517,46 @@ export default function AnalyticsPage() {
               </div>
 
               {/* Where patrons find you */}
-              <div className="rounded-xl border border-[var(--blue-018)] bg-card overflow-hidden">
-                <div className="flex items-center gap-2 px-5 py-3 border-b border-[var(--blue-008)] font-semibold text-sm">
-                  <svg className="w-4 h-4 text-[var(--xiv-blue)]" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></svg>
-                  Where patrons find you
-                </div>
-                <div className="py-1">
-                  {[
-                    { label: "Partake.gg listing",  pct: analyticsData.patronByEvent.reduce((s,e) => s + e.peakPatrons, 0) > 0 ? 52 : null },
-                    { label: "In-game /shout",       pct: 24 },
-                    { label: "Discord",              pct: 15 },
-                    { label: "Word of mouth",        pct: 9 },
-                  ].filter(r => r.pct !== null).map(({ label, pct }) => (
-                    <div key={label} className="flex items-center gap-3 px-4 py-2.5 hover:bg-[var(--blue-004)] transition-colors">
-                      <span className="flex-1 text-[0.86rem] text-foreground">{label}</span>
-                      <span className="text-[0.82rem] text-muted-foreground tabular-nums">{pct}%</span>
+              {(() => {
+                const ds = analyticsData.discoverySources
+                const hasRealData = ds && Object.values(ds).some(v => v && v > 0)
+
+                const rows = hasRealData
+                  ? [
+                      { label: "Partake.gg listing", pct: ds?.partake },
+                      { label: "In-game /shout",     pct: ds?.shout },
+                      { label: "Discord",            pct: ds?.discord },
+                      { label: "Word of mouth",      pct: ds?.wordOfMouth },
+                      { label: "Other",              pct: ds?.other },
+                    ].filter(r => r.pct && r.pct > 0)
+                  : [
+                      { label: "In-game /shout",  pct: 24 },
+                      { label: "Discord",         pct: 15 },
+                      { label: "Word of mouth",   pct: 9  },
+                    ]
+
+                return (
+                  <div className="rounded-xl border border-[var(--blue-018)] bg-card overflow-hidden">
+                    <div className="flex items-center gap-2 px-5 py-3 border-b border-[var(--blue-008)] font-semibold text-sm">
+                      <svg className="w-4 h-4 text-[var(--xiv-blue)]" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></svg>
+                      Where patrons find you
                     </div>
-                  ))}
-                  <p className="px-4 pb-3 pt-1 text-[0.68rem] text-[var(--fg-faint)]">Estimates — full tracking coming soon</p>
-                </div>
-              </div>
+                    <div className="py-1">
+                      {rows.map(({ label, pct }) => (
+                        <div key={label} className="flex items-center gap-3 px-4 py-2.5 hover:bg-[var(--blue-004)] transition-colors">
+                          <span className="flex-1 text-[0.86rem] text-foreground">{label}</span>
+                          <span className="text-[0.82rem] text-muted-foreground tabular-nums">{pct}%</span>
+                        </div>
+                      ))}
+                      <p className="px-4 pb-3 pt-1 text-[0.68rem] text-[var(--fg-faint)]">
+                        {hasRealData
+                          ? "Your data · update in Settings"
+                          : "Estimates — set your own in Settings"}
+                      </p>
+                    </div>
+                  </div>
+                )
+              })()}
 
             </div>
           </div>

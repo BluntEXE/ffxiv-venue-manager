@@ -74,6 +74,14 @@ export interface VenueSettings {
   discordWebhookUrl?: string | null
   /** Partake.gg team integration ID */
   partakeTeamId?: number | null
+  /** How patrons discover the venue — owner-set percentages for analytics panel */
+  discoverySources?: {
+    partake?: number      // Partake.gg listing
+    shout?: number        // In-game /shout
+    discord?: number      // Discord
+    wordOfMouth?: number  // Word of mouth
+    other?: number        // Other
+  }
 }
 
 /**
