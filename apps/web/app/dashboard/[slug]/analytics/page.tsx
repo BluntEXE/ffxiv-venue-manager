@@ -189,7 +189,7 @@ export default function AnalyticsPage() {
             <button
               onClick={() => fetchAnalytics()}
               className="mt-4 px-4 py-2 rounded-md transition-colors"
-              style={{ background: "var(--xiv-blue)", color: "#070b14" }}
+              className="xiv-cta"
             >
               Retry
             </button>
@@ -375,7 +375,7 @@ export default function AnalyticsPage() {
                     {totalRev >= 1000 ? `${(totalRev/1000).toFixed(1)}k` : totalRev.toLocaleString()}
                     <span className="text-[0.82rem] font-medium text-muted-foreground ml-1">gil</span>
                   </span>
-                  <button onClick={exportToCSV} className="ml-2 flex items-center gap-1 px-2.5 py-1 text-[0.72rem] rounded-lg xiv-btn-shimmer font-semibold" style={{ background: "var(--xiv-blue)", color: "#070b14" }}>
+                  <button onClick={exportToCSV} className="ml-2 flex items-center gap-1 px-2.5 py-1 text-[0.72rem] rounded-lg xiv-btn-shimmer font-semibold" className="xiv-cta">
                     <Download className="h-3 w-3" /> CSV
                   </button>
                 </div>

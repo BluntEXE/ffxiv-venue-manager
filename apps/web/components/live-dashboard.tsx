@@ -157,8 +157,8 @@ export function LiveDashboard({
       {/* Session bar */}
       <div className="rounded-xl border border-[var(--blue-018)] overflow-hidden relative">
         {/* Starfield background */}
-        <div className="absolute inset-0 opacity-[0.18]" style={{ backgroundImage: "url('/starfield.png')", backgroundSize: "cover", backgroundPosition: "center" }} />
-        <div className="absolute inset-0" style={{ background: "linear-gradient(to right, rgba(0,180,255,0.06), rgba(7,11,20,0.85))" }} />
+        <div className="absolute inset-0 opacity-[0.18] bg-[url('/starfield.png')] bg-cover bg-center" />
+        <div className="absolute inset-0 sess-gradient" />
         <div className="px-5 py-4 flex flex-col sm:flex-row sm:items-center gap-3 relative z-10">
           <div className="flex items-center gap-3 flex-1 min-w-0">
             <Badge variant={isUpcoming ? "status-soon" : "live"}>

@@ -268,8 +268,8 @@ export default async function VenueDashboardPage({
               <div className="rounded-xl border border-[var(--blue-018)] bg-card overflow-hidden relative flex flex-col justify-between">
                 {/* Starfield strip */}
                 <div className="absolute top-0 left-0 right-0 h-[88px] overflow-hidden">
-                  <div className="absolute inset-0 opacity-20" style={{ backgroundImage: "url('/starfield.png')", backgroundSize: "cover" }} />
-                  <div className="absolute inset-0" style={{ background: "linear-gradient(180deg, transparent 40%, var(--card) 100%)" }} />
+                  <div className="absolute inset-0 opacity-20 bg-[url('/starfield.png')] bg-cover" />
+                  <div className="absolute inset-0 ne-gradient" />
                 </div>
                 <div className="relative p-5 pt-4 flex flex-col gap-3 z-10">
                   {/* Eyebrow */}

@@ -269,7 +269,7 @@ export default function EventTemplatesPage() {
               <p className="font-cinzel font-semibold tracking-wide">No Templates Yet</p>
               <p className="text-sm text-muted-foreground mt-1">Save time by templating your recurring events.</p>
             </div>
-            <Button onClick={openCreateDialog} style={{ background: "var(--xiv-blue)", color: "#070b14" }}>
+            <Button onClick={openCreateDialog} className="xiv-cta">
               <Plus className="mr-2 h-4 w-4" />
               Create Template
             </Button>

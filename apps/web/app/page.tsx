@@ -94,9 +94,9 @@ export default async function Home() {
     <div className="min-h-screen">
       {/* Hero Section */}
       <section className="xiv-hero-bg overflow-hidden">
-        <div className="container mx-auto px-4 py-16 md:py-28">
+        <div className="container mx-auto px-4 pt-[120px] pb-[70px]">
           <div className="flex flex-col items-center text-center space-y-8">
-            <h1 className="xiv-fade-up font-cinzel font-bold tracking-wide max-w-4xl leading-tight" style={{fontSize: 'var(--text-hero)'}}>
+            <h1 className="xiv-fade-up font-cinzel font-bold text-hero max-w-[16ch] leading-[1.08] tracking-[0.01em]">
               Venue management built for{" "}
               <span className="xiv-glow-text">FFXIV</span>
             </h1>
@@ -106,7 +106,7 @@ export default async function Home() {
             </p>
 
             <div className="xiv-fade-up-delay-2 flex flex-col sm:flex-row gap-4 mt-4">
-              <Button asChild size="lg" className="xiv-btn-shimmer text-lg px-8 py-6 group font-semibold" style={{background: 'var(--xiv-blue)', color: '#070b14', boxShadow: '0 0 28px rgba(0,180,255,0.4)'}}>
+              <Button asChild size="lg" className="xiv-btn-shimmer xiv-cta text-lg px-8 py-6 group font-semibold">
                 <Link href="/auth/signin">
                   Get Started Free
                   <ArrowRight className="ml-2 h-5 w-5 transition-transform group-hover:translate-x-1" />
@@ -135,8 +135,7 @@ export default async function Home() {
               {/* Preview body */}
               <div className="p-5 grid grid-cols-1 sm:grid-cols-[1.3fr_1fr] gap-4">
                 {/* Session bar — full width */}
-                <div className="sm:col-span-2 flex items-center gap-4 flex-wrap px-4 py-3.5 rounded-lg border border-[var(--blue-015)]"
-                  style={{ background: "linear-gradient(180deg, rgba(0,180,255,0.05), var(--background))" }}>
+                <div className="sm:col-span-2 flex items-center gap-4 flex-wrap px-4 py-3.5 rounded-lg border border-[var(--blue-015)] pv-sess-bg">
                   <span className="inline-flex items-center gap-2 text-[0.68rem] font-bold uppercase tracking-[0.12em] text-[var(--success-text)]">
                     <span className="xiv-live-dot scale-90" />Live now
                   </span>
@@ -210,7 +209,7 @@ export default async function Home() {
               <Gamepad2 className="h-10 w-10" aria-hidden="true" />
             </IconBadge>
           </div>
-          <h2 className="font-cinzel text-3xl md:text-4xl font-bold tracking-wide">In-Game Dalamud Plugin</h2>
+          <h2 className="font-cinzel text-section font-bold tracking-wide">In-Game Dalamud Plugin</h2>
           <div className="flex justify-center">
             <LatestPluginVersion />
           </div>
@@ -221,7 +220,7 @@ export default async function Home() {
           </p>
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 pt-4">
             <div className="p-5 rounded-lg xiv-card flex flex-col gap-2">
-              <p className="font-mono text-sm font-semibold" style={{color: 'var(--xiv-blue)'}}>/xvm sale 500</p>
+              <p className="font-mono text-sm font-semibold text-xiv">/xvm sale 500</p>
               <p className="text-sm text-muted-foreground leading-snug">Log sales with slash commands</p>
             </div>
             <div className="p-5 rounded-lg xiv-card flex flex-col gap-2">
@@ -243,7 +242,7 @@ export default async function Home() {
           <div className="xiv-divider">
             <svg width="12" height="12" viewBox="0 0 12 12" fill="none" aria-hidden="true"><rect x="6" y="0" width="8.485" height="8.485" transform="rotate(45 6 0)" fill="rgba(0,180,255,0.7)"/></svg>
           </div>
-          <h2 className="font-cinzel text-3xl md:text-4xl font-bold tracking-wide mt-4">
+          <h2 className="font-cinzel text-section font-bold tracking-wide mt-4">
             Everything your venue needs
           </h2>
           <p className="text-muted-foreground mt-4 max-w-[52ch] mx-auto leading-relaxed">
@@ -317,7 +316,7 @@ export default async function Home() {
               <div className="w-2 h-2 rotate-45 bg-[rgba(0,180,255,0.7)] shadow-[0_0_12px_rgba(0,180,255,0.5)]" />
               <div className="h-px w-14 bg-gradient-to-l from-transparent to-[var(--xiv-blue)]" />
             </div>
-            <h2 className="font-cinzel text-3xl md:text-4xl font-bold tracking-wide">
+            <h2 className="font-cinzel text-section font-bold tracking-wide">
               Two halves that sync in real time
             </h2>
             <p className="text-muted-foreground mt-4 max-w-[52ch] mx-auto leading-relaxed">
@@ -397,7 +396,7 @@ export default async function Home() {
             <div className="xiv-divider">
               <svg width="12" height="12" viewBox="0 0 12 12" fill="none" aria-hidden="true"><rect x="6" y="0" width="8.485" height="8.485" transform="rotate(45 6 0)" fill="rgba(0,180,255,0.7)"/></svg>
             </div>
-            <h2 className="font-cinzel text-3xl md:text-4xl font-bold mb-4 tracking-wide">Included</h2>
+            <h2 className="font-cinzel text-section font-bold mb-4 tracking-wide">Included</h2>
           </div>
 
           <div className="grid grid-cols-2 md:grid-cols-4 gap-6 text-center">
@@ -435,7 +434,7 @@ export default async function Home() {
             <div className="xiv-divider">
               <svg width="12" height="12" viewBox="0 0 12 12" fill="none" aria-hidden="true"><rect x="6" y="0" width="8.485" height="8.485" transform="rotate(45 6 0)" fill="rgba(0,180,255,0.7)"/></svg>
             </div>
-            <h2 className="font-cinzel text-3xl md:text-4xl font-bold mb-4 tracking-wide">
+            <h2 className="font-cinzel text-section font-bold mb-4 tracking-wide">
               Start with a guide
             </h2>
             <p className="text-lg text-muted-foreground">
@@ -490,14 +489,14 @@ export default async function Home() {
             <div className="xiv-divider">
               <svg width="12" height="12" viewBox="0 0 12 12" fill="none" aria-hidden="true"><rect x="6" y="0" width="8.485" height="8.485" transform="rotate(45 6 0)" fill="rgba(0,180,255,0.7)"/></svg>
             </div>
-            <h2 className="font-cinzel text-3xl md:text-4xl font-bold tracking-wide">
+            <h2 className="font-cinzel text-section font-bold tracking-wide">
               Get your venue running.
             </h2>
             <p className="text-xl text-muted-foreground max-w-2xl mx-auto">
               Your sales, staff hours, and patron counts. One dashboard.
             </p>
             <div className="flex flex-col items-center gap-2">
-              <Button asChild size="lg" className="text-lg px-8 py-6 group" style={{background: 'var(--xiv-blue)', color: '#070b14', boxShadow: '0 0 24px rgba(0,180,255,0.35)'}}>
+              <Button asChild size="lg" className="xiv-btn-shimmer xiv-cta text-lg px-8 py-6 group">
                 <Link href="/auth/signin">
                   Start Managing Your Venue
                   <ArrowRight className="ml-2 h-5 w-5 transition-transform group-hover:translate-x-1" />
@@ -519,7 +518,7 @@ export default async function Home() {
               <Link href="/" className="flex items-center gap-2.5 mb-4">
                 <Image src="/xiv-icon.png" alt="XIV Venue Manager" width={28} height={28} className="object-contain" />
                 <span className="font-cinzel font-bold tracking-wide text-sm">
-                  <span style={{ color: "var(--xiv-blue)" }}>XIV</span>{" "}
+                  <span className="text-xiv">XIV</span>{" "}
                   <span className="text-foreground/80">Venue Manager</span>
                 </span>
               </Link>

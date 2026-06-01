@@ -40,8 +40,8 @@ async function fetchLatest(): Promise<{ tag: string; title: string }> {
 export async function LatestPluginVersion() {
   const { title } = await fetchLatest()
   return (
-    <span className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full text-xs font-medium" style={{background: 'rgba(0,180,255,0.08)', border: '1px solid rgba(0,180,255,0.22)', color: 'var(--xiv-blue)'}}>
-      <span className="inline-block h-1.5 w-1.5 rounded-full" style={{background: 'var(--xiv-blue)'}} />
+    <span className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full text-xs font-medium bg-[var(--blue-010)] border border-[var(--blue-020)] text-xiv">
+      <span className="inline-block h-1.5 w-1.5 rounded-full bg-[var(--xiv-blue)]" />
       {title}
     </span>
   )

@@ -341,6 +341,36 @@
   --text-card:    clamp(1rem, 1vw + 0.5rem, 1.25rem);
 }
 
+/* Fluid type utility classes — use these instead of inline style={{fontSize}} */
+.text-hero    { font-size: var(--text-hero); line-height: 1.08; letter-spacing: 0.01em; }
+.text-section { font-size: var(--text-section); }
+
+/* Primary CTA button — replaces inline style={{background/color/boxShadow}} */
+.xiv-cta {
+  background: var(--xiv-blue) !important;
+  color: var(--xiv-navy) !important;
+  box-shadow: var(--glow-cta-soft);
+}
+.xiv-cta:hover { box-shadow: var(--glow-cta); }
+
+/* Brand "XIV" text color — replaces inline style={{color}} */
+.text-xiv { color: var(--xiv-blue); }
+
+/* Product preview session bar gradient */
+.pv-sess-bg { background: linear-gradient(180deg, rgba(0,180,255,0.05), var(--background)); }
+
+/* Next event card starfield overlay gradient */
+.ne-gradient { background: linear-gradient(180deg, transparent 40%, var(--card) 100%); }
+
+/* Live Mode session bar gradient */
+.sess-gradient { background: linear-gradient(to right, rgba(0,180,255,0.06), rgba(7,11,20,0.85)); }
+
+/* Discover featured venue card gradient */
+.featured-gradient { background: linear-gradient(135deg, rgba(0,180,255,0.06) 0%, rgba(7,11,20,0.95) 60%); }
+
+/* Crystal divider diamond glow */
+.crystal-glow { box-shadow: 0 0 8px rgba(0,180,255,0.6); }
+
 /* Bento grid for features */
 .xiv-bento {
   display: grid;

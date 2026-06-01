@@ -80,7 +80,7 @@ export function VenueSwitcher({ venues }: VenueSwitcherProps) {
         align="start"
         side="bottom"
         className="w-[240px] border-[var(--blue-018)]"
-        style={{ background: "rgba(7,11,20,0.97)", backdropFilter: "blur(16px)" }}
+        className="bg-[rgba(7,11,20,0.97)] backdrop-blur-2xl"
       >
         <p className="px-3 pt-2 pb-1 text-[0.65rem] font-semibold uppercase tracking-[0.1em] text-[var(--fg-faint)]">
           Switch venue

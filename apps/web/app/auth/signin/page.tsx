@@ -34,7 +34,7 @@ export default function SignInPage() {
             onClick={() => signIn("discord", { callbackUrl: "/dashboard" })}
             className="w-full xiv-btn-shimmer font-semibold"
             size="lg"
-            style={{ background: "var(--xiv-blue)", color: "#070b14", boxShadow: "0 0 24px rgba(0,180,255,0.35)" }}
+            className="xiv-cta"
           >
             <svg
               className="mr-2 h-5 w-5"

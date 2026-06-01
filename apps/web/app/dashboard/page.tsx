@@ -43,7 +43,7 @@ export default async function DashboardPage() {
           <h1 className="font-cinzel text-2xl md:text-3xl lg:text-4xl font-bold tracking-wide text-balance">Dashboard</h1>
           <p className="text-muted-foreground mt-1">Welcome back, {session.user.name || "User"}!</p>
         </div>
-        <Button asChild style={{ background: "var(--xiv-blue)", color: "#070b14" }}>
+        <Button asChild className="xiv-cta">
           <Link href="/venues/new">
             <Plus className="h-4 w-4 mr-1.5" />
             New Venue
@@ -58,7 +58,7 @@ export default async function DashboardPage() {
             <p className="font-cinzel text-lg font-semibold tracking-wide">No Venues Yet</p>
             <p className="text-muted-foreground text-sm mt-1">Create your first venue to start managing events, staff, and more.</p>
           </div>
-          <Button asChild style={{ background: "var(--xiv-blue)", color: "#070b14" }}>
+          <Button asChild className="xiv-cta">
             <Link href="/venues/new">Create Your First Venue</Link>
           </Button>
         </div>

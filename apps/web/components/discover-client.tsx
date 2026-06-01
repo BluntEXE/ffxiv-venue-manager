@@ -149,7 +149,7 @@ export function DiscoverClient({
 
           <div
             className="rounded-xl border border-[var(--blue-018)] overflow-hidden transition-all hover:border-[var(--blue-035)]"
-            style={{ background: "linear-gradient(135deg, rgba(0,180,255,0.06) 0%, rgba(7,11,20,0.95) 60%)" }}
+            className="featured-gradient"
           >
             <div className="p-6 md:p-8">
               <div className="flex flex-col md:flex-row md:items-start gap-4">

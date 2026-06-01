@@ -34,7 +34,7 @@ function AuthErrorContent() {
         </div>
 
         <div className="text-center space-y-3">
-          <Button asChild className="xiv-btn-shimmer font-semibold" style={{ background: "var(--xiv-blue)", color: "#070b14", boxShadow: "0 0 24px rgba(0,180,255,0.35)" }}>
+          <Button asChild className="xiv-btn-shimmer font-semibold" className="xiv-cta">
             <Link href="/auth/signin">Try Again</Link>
           </Button>
           <p className="text-xs text-muted-foreground">
