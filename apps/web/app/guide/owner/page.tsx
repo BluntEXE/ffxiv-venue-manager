@@ -15,7 +15,16 @@ export default function OwnerManagerGuidePage() {
             <span className="text-[0.72rem] font-semibold uppercase tracking-[0.14em] text-[var(--xiv-blue)]">Documentation</span>
           </div>
           <h1 className="font-cinzel text-4xl font-bold tracking-wide xiv-glow-text mb-3">Owner &amp; Manager Guide</h1>
-          <p className="text-lg text-muted-foreground">Setup and management reference for XIV Venue Manager.</p>
+          <p className="text-lg text-muted-foreground mb-6">Setup and management reference for XIV Venue Manager.</p>
+          {/* Audience role switcher — matches prototype */}
+          <div className="flex gap-1 bg-[rgba(7,11,20,0.6)] border border-[var(--blue-015)] rounded-full p-1 w-fit">
+            <span className="text-sm font-semibold px-4 py-1.5 rounded-full bg-[var(--xiv-blue)] text-[var(--xiv-navy)]">
+              Owners &amp; managers
+            </span>
+            <Link href="/guide/staff" className="text-sm font-semibold px-4 py-1.5 rounded-full text-muted-foreground hover:text-foreground hover:bg-[var(--blue-007)] transition-colors">
+              Staff
+            </Link>
+          </div>
         </div>
       </div>
 

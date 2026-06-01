@@ -19,7 +19,7 @@ interface TimelineFeedProps {
 }
 
 const filterLabels: Record<TimelineFilter, string> = {
-  all: "All Activity",
+  all: "All",
   sales: "Sales",
   patrons: "Patrons",
 }
