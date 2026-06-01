@@ -210,7 +210,7 @@ export default async function ShiftsPage({
         </div>
 
         {/* KPIs */}
-        <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 mb-6">
+        <div className="kpis mb-6">
           {[
             { k: "Shifts this week", v: weekShifts.length,  sub: fmtWeekLabel(weekStart) + "–" + fmtWeekLabel(addUTCDays(weekStart, 6)), icon: "M12 2a10 10 0 1 1 0 20A10 10 0 0 1 12 2zm0 2v8l4 2" },
             { k: "Open slots",       v: openSlots,           sub: "needs cover",     icon: "M10.29 3.86 1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0zM12 9v4m0 4h.01" },

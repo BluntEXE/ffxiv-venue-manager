@@ -132,7 +132,7 @@ export default async function StaffPage({
         </div>
 
         {/* Stats */}
-        <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
+        <div className="kpis mb-6">
           <Card className="p-4"><StatReadout label="Active staff" value={activeStaff.length} subtext="Members" icon={<Users />} iconVariant="blue" /></Card>
           <Card className="p-4">
             <div className="flex items-start justify-between">
