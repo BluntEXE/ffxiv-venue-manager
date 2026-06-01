@@ -201,41 +201,6 @@ export default async function Home() {
         </div>
       </section>
 
-      {/* Plugin Callout */}
-      <section className="container mx-auto px-4 py-16 md:py-20 xiv-scroll-reveal">
-        <div className="max-w-3xl mx-auto text-center space-y-6">
-          <div className="flex justify-center">
-            <IconBadge size="xl">
-              <Gamepad2 className="h-10 w-10" aria-hidden="true" />
-            </IconBadge>
-          </div>
-          <h2 className="font-cinzel text-section font-bold tracking-wide">In-Game Dalamud Plugin</h2>
-          <div className="flex justify-center">
-            <LatestPluginVersion />
-          </div>
-          <p className="text-lg text-muted-foreground">
-            Log sales, track patrons, and manage shifts without leaving
-            the game. The plugin runs inside FFXIV, syncing every sale and
-            patron visit to your dashboard as it happens.
-          </p>
-          <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 pt-4">
-            <div className="p-5 rounded-lg xiv-card flex flex-col gap-2">
-              <p className="font-mono text-sm font-semibold text-xiv">/xvm sale 500</p>
-              <p className="text-sm text-muted-foreground leading-snug">Log sales with slash commands</p>
-            </div>
-            <div className="p-5 rounded-lg xiv-card flex flex-col gap-2">
-              <p className="text-sm font-semibold text-foreground">Auto-Sync Patrons</p>
-              <p className="text-sm text-muted-foreground leading-snug">Enter/leave tracked automatically</p>
-            </div>
-            <div className="p-5 rounded-lg xiv-card flex flex-col gap-2">
-              <p className="text-sm font-semibold text-foreground">Shift Clock In/Out</p>
-              <p className="text-sm text-muted-foreground leading-snug">Start and end shifts in-game</p>
-            </div>
-          </div>
-        </div>
-      </section>
-
-      {/* Features Grid */}
       {/* Features — 3x2 feat-card grid matching prototype */}
       <section id="features" className="container mx-auto px-4 py-20 md:py-24">
         <div className="text-center mb-14">
@@ -422,88 +387,39 @@ export default async function Home() {
         </div>
       </section>
 
-      {/* Guides Section */}
-      <section id="guides" className="container mx-auto px-4 py-16 md:py-20">
-        <div className="max-w-3xl mx-auto">
-          <div className="text-center mb-10">
-            <div className="flex justify-center mb-4">
-              <IconBadge size="lg">
-                <BookOpen className="h-8 w-8" aria-hidden="true" />
-              </IconBadge>
-            </div>
-            <div className="xiv-divider">
-              <svg width="12" height="12" viewBox="0 0 12 12" fill="none" aria-hidden="true"><rect x="6" y="0" width="8.485" height="8.485" transform="rotate(45 6 0)" fill="rgba(0,180,255,0.7)"/></svg>
-            </div>
-            <h2 className="font-cinzel text-section font-bold mb-4 tracking-wide">
-              Start with a guide
-            </h2>
-            <p className="text-lg text-muted-foreground">
-              Pick a guide for your role and start.
-            </p>
+      {/* Free band — matches reference exactly */}
+      <section className="container mx-auto px-4 py-20 md:py-24">
+        <div className="text-center">
+          <div className="flex items-center justify-center gap-3 mb-5">
+            <div className="h-px w-14 bg-gradient-to-r from-transparent to-[var(--xiv-blue)]" />
+            <div className="w-2 h-2 rotate-45 bg-[rgba(0,180,255,0.7)] crystal-glow" />
+            <div className="h-px w-14 bg-gradient-to-l from-transparent to-[var(--xiv-blue)]" />
           </div>
-
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
+          <h2 className="font-cinzel text-section font-bold tracking-wide mt-4">
+            Free for the whole community
+          </h2>
+          <p className="text-muted-foreground text-[1.05rem] leading-relaxed max-w-[50ch] mx-auto mt-4 mb-6">
+            XIV Venue Manager is built and maintained by venue owners. It&apos;s free to use,
+            with no paid tiers — if it helps your venue, you can support the project on Ko-fi.
+          </p>
+          <div className="flex gap-3 justify-center flex-wrap">
+            <Button asChild size="lg" className="xiv-btn-shimmer xiv-cta text-lg px-8 py-6 group">
+              <Link href="/auth/signin">
+                Start Managing Your Venue
+                <ArrowRight className="ml-2 h-5 w-5 transition-transform group-hover:translate-x-1" />
+              </Link>
+            </Button>
             <Link
-              href="/guide/owner"
-              className="group block rounded-xl p-6 xiv-card"
+              href="https://ko-fi.com/ehnocure"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="inline-flex items-center gap-2 text-[var(--support-pink)] hover:text-pink-300 border border-[rgba(243,139,168,0.28)] bg-[rgba(243,139,168,0.08)] hover:bg-[rgba(243,139,168,0.16)] hover:border-[rgba(243,139,168,0.5)] transition-colors rounded-lg px-6 py-3 text-[1rem] font-semibold"
             >
-              <div className="mb-3">
-                <IconBadge>
-                  <Crown className="h-6 w-6" aria-hidden="true" />
-                </IconBadge>
-              </div>
-              <h3 className="text-xl font-semibold mb-2 transition-colors group-hover:text-[var(--xiv-blue)]">
-                Owner &amp; Manager Guide
-              </h3>
-              <p className="text-sm text-muted-foreground">
-                Venue setup, staff management, event scheduling, Partake.gg
-                sync, shifts, analytics, Discord webhooks, and payroll.
-              </p>
+              <svg className="w-4 h-4 fill-current" viewBox="0 0 24 24" aria-hidden="true">
+                <path d="M12 21s-7.5-4.6-10-9.3C.4 8.4 1.9 5 5.2 5c2 0 3.3 1.2 3.8 2.2C9.5 6.2 10.8 5 12.8 5 16.1 5 17.6 8.4 16 11.7 13.5 16.4 12 21 12 21z"/>
+              </svg>
+              Support on Ko-fi
             </Link>
-
-            <Link
-              href="/guide/staff"
-              className="group block rounded-xl p-6 xiv-card"
-            >
-              <div className="mb-3">
-                <IconBadge>
-                  <Drama className="h-6 w-6" aria-hidden="true" />
-                </IconBadge>
-              </div>
-              <h3 className="text-xl font-semibold mb-2 transition-colors group-hover:text-[var(--xiv-blue)]">
-                Staff Guide
-              </h3>
-              <p className="text-sm text-muted-foreground">
-                Logging sales, plugin commands, shift clock-in/out,
-                patron tracking, timeline, and live mode.
-              </p>
-            </Link>
-          </div>
-        </div>
-      </section>
-
-      {/* CTA Section */}
-      <section className="border-t border-[rgba(0,180,255,0.1)] bg-[#060b16]">
-        <div className="container mx-auto px-4 py-16 md:py-24">
-          <div className="text-center space-y-8">
-            <div className="xiv-divider">
-              <svg width="12" height="12" viewBox="0 0 12 12" fill="none" aria-hidden="true"><rect x="6" y="0" width="8.485" height="8.485" transform="rotate(45 6 0)" fill="rgba(0,180,255,0.7)"/></svg>
-            </div>
-            <h2 className="font-cinzel text-section font-bold tracking-wide">
-              Get your venue running.
-            </h2>
-            <p className="text-xl text-muted-foreground max-w-2xl mx-auto">
-              Your sales, staff hours, and patron counts. One dashboard.
-            </p>
-            <div className="flex flex-col items-center gap-2">
-              <Button asChild size="lg" className="xiv-btn-shimmer xiv-cta text-lg px-8 py-6 group">
-                <Link href="/auth/signin">
-                  Start Managing Your Venue
-                  <ArrowRight className="ml-2 h-5 w-5 transition-transform group-hover:translate-x-1" />
-                </Link>
-              </Button>
-              <p className="text-sm text-muted-foreground">Sign in with Discord in 30 seconds.</p>
-            </div>
           </div>
         </div>
       </section>
