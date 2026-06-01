@@ -117,51 +117,76 @@ export default async function StatsPage() {
 
   return (
     <div className="min-h-screen">
-      {/* Hero — starfield background */}
+      {/* Hero — starfield background with 4 bignums */}
       <section className="xiv-hero-bg overflow-hidden relative border-b border-[var(--blue-008)]">
-        <div className="container mx-auto px-4 py-20 md:py-28 relative z-10">
+        <div className="container mx-auto px-4 pt-20 pb-14 md:pt-28 md:pb-16 relative z-10">
           <div className="flex flex-col items-center text-center">
             {/* Crystal row ornament */}
             <div className="flex items-center justify-center gap-3 mb-5">
               <div className="h-px w-14 bg-gradient-to-r from-transparent to-[var(--xiv-blue)]" />
-              <div className="w-2 h-2 rotate-45 bg-[rgba(0,180,255,0.7)] shadow-[0_0_12px_rgba(0,180,255,0.5)]" />
+              <div className="w-2 h-2 rotate-45 bg-[rgba(0,180,255,0.7)] crystal-glow" />
               <div className="h-px w-14 bg-gradient-to-l from-transparent to-[var(--xiv-blue)]" />
             </div>
             <p className="text-[0.72rem] font-semibold uppercase tracking-[0.16em] text-[var(--xiv-blue)] mb-4">
               Community stats
             </p>
-            <h1 className="font-cinzel text-4xl md:text-6xl font-bold tracking-wide max-w-3xl text-balance mb-4">
+            <h1 className="font-cinzel text-hero font-bold tracking-wide max-w-3xl text-balance mb-3">
               The realm, <span className="xiv-glow-text">by the numbers</span>
             </h1>
-            <p className="text-lg text-muted-foreground max-w-2xl">
+            <p className="text-lg text-muted-foreground max-w-2xl mb-8">
               Every venue running on XIV Venue Manager, tracked live across the data centres.
             </p>
-            {/* Live pill */}
-            <div className="mt-6 inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-emerald-500/10 text-emerald-400 text-sm font-medium border border-emerald-500/20">
-              <span className="xiv-live-dot scale-75" />
-              Live data
+
+            {/* 4 bignums grid — inside the hero matching prototype */}
+            <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 w-full max-w-4xl mt-4">
+              {[
+                {
+                  icon: <Building2 className="w-5 h-5" />,
+                  value: fmt(stats.venuesTotal),
+                  label: "Venues",
+                  tone: "blue" as const,
+                },
+                {
+                  icon: <><span className="xiv-live-dot scale-75 mr-0.5" /><Radio className="w-5 h-5" /></>,
+                  value: fmt(stats.venuesActive30d),
+                  label: "Active this month",
+                  tone: "emerald" as const,
+                },
+                {
+                  icon: <Users className="w-5 h-5" />,
+                  value: fmtCompact(stats.patronEntriesTotal),
+                  label: "Patrons tracked",
+                  tone: "blue" as const,
+                },
+                {
+                  icon: <Coins className="w-5 h-5" />,
+                  value: fmtCompact(stats.gilTracked),
+                  label: "Gil logged",
+                  tone: "blue" as const,
+                },
+              ].map(({ icon, value, label, tone }) => (
+                <div key={label} className="bg-card border border-[var(--blue-018)] rounded-xl p-5 transition-all duration-[250ms] hover:border-[rgba(0,180,255,0.45)] hover:shadow-[0_0_20px_rgba(0,180,255,0.07),inset_0_1px_0_rgba(0,180,255,0.12)] hover:-translate-y-0.5 text-left">
+                  <div className={`w-10 h-10 rounded-lg flex items-center justify-center mb-3 ${
+                    tone === "emerald"
+                      ? "bg-[var(--success-soft)] border border-[rgba(16,185,129,0.25)] text-[var(--success-text)]"
+                      : "bg-[var(--blue-010)] border border-[var(--blue-018)] text-[var(--xiv-blue)]"
+                  }`}>
+                    {icon}
+                  </div>
+                  <p className="font-[var(--font-heading)] font-bold text-[clamp(1.8rem,2.5vw,2.4rem)] leading-none text-foreground mt-1">{value}</p>
+                  <p className="text-[0.84rem] text-muted-foreground mt-1.5">{label}</p>
+                </div>
+              ))}
             </div>
           </div>
         </div>
       </section>
 
-      {/* Live row */}
-      <section className="container mx-auto px-4 pb-8">
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-          <StatCard
-            icon={Activity}
-            tone="emerald"
-            value={relTime(stats.lastActivityAt)}
-            label="Last activity"
-            hint="Most recent sale or patron logged across all venues"
-          />
-          <StatCard
-            icon={Building2}
-            tone="emerald"
-            value={fmt(stats.venuesActive30d)}
-            label="Active venues"
-            hint="Logged a sale, event, or patron in the last 30 days"
-          />
+      {/* Live activity strip */}
+      <section className="container mx-auto px-4 py-6">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <StatCard icon={Activity} tone="emerald" value={relTime(stats.lastActivityAt)} label="Last activity" hint="Most recent sale or patron logged across all venues" />
+          <StatCard icon={Building2} tone="emerald" value={fmt(stats.eventsTotal)} label="Events tracked" hint="All-time events across every venue" />
         </div>
       </section>
 
