@@ -435,7 +435,7 @@ export default function ServicesPage({
             ))}
           </div>
           </div>
-
+        )}
 
         {/* Create Service Dialog */}
         <Dialog open={isCreateDialogOpen} onOpenChange={setIsCreateDialogOpen}>
