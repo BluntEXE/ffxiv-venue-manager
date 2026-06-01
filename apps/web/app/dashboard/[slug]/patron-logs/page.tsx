@@ -68,6 +68,7 @@ export default async function PatronLogsPage({
       by: ["customerName"],
       where: { venueId: venue.id, customerName: { not: null } },
       _sum: { amount: true },
+      orderBy: { customerName: "asc" },
       take: 2000,
     })
     const spendMap = new Map(
