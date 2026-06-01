@@ -6,6 +6,7 @@ import Link from "next/link"
 import { Button } from "@/components/ui/button"
 import { VenueLayoutClient } from "@/components/venue-layout-client"
 import { Breadcrumb } from "@/components/breadcrumb"
+import { VenueEyebrow } from "@/components/venue-eyebrow"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Textarea } from "@/components/ui/textarea"
@@ -296,6 +297,7 @@ export default function ServicesPage({
         {/* Header */}
         <div className="flex flex-col sm:flex-row sm:justify-between sm:items-start gap-4 mb-6 md:mb-8">
           <div>
+            <VenueEyebrow slug={slug} />
             <h1 className="font-cinzel text-2xl md:text-3xl font-bold tracking-[0.02em]">Services</h1>
             <p className="text-sm text-muted-foreground mt-1">Manage your venue's products and services</p>
           </div>

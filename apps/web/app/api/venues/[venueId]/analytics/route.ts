@@ -58,11 +58,20 @@ export const GET = withRateLimit<{ params: Promise<{ venueId: string }> }>(
       const now = new Date()
       const past30Days = subDays(now, 30)
 
+      // Period filter from query string
+      const { searchParams } = new URL(request.url)
+      const period = searchParams.get("period") ?? "30d"
+      const periodStart = period === "90d" ? subDays(now, 90) : period === "all" ? undefined : subDays(now, 30)
+      const eventLimit  = period === "all" ? 100 : period === "90d" ? 40 : 20
+
       // Fetch all data in parallel for better performance
       const [allEvents, allTransactions, allPatronLogs, allPayrollEntries, followerCount, followersByMonth, patronVisits] = await Promise.all([
         // Get all events with basic info
         prisma.event.findMany({
-          where: { venueId: venue.id },
+          where: {
+            venueId: venue.id,
+            ...(periodStart ? { startTime: { gte: periodStart } } : {}),
+          },
           select: {
             id: true,
             title: true,
@@ -71,6 +80,7 @@ export const GET = withRateLimit<{ params: Promise<{ venueId: string }> }>(
             endTime: true,
           },
           orderBy: { startTime: "desc" },
+          take: eventLimit,
         }),
 
         // Get all transactions with service info

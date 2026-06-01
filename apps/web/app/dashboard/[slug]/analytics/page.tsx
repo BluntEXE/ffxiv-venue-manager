@@ -110,18 +110,17 @@ export default function AnalyticsPage() {
   const [analyticsData, setAnalyticsData] = useState<AnalyticsData | null>(null)
   const [isLoading, setIsLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
+  const [period, setPeriod] = useState<"30d" | "90d" | "all">("30d")
 
   useEffect(() => {
-    if (slug) {
-      fetchAnalytics()
-    }
-  }, [slug])
+    if (slug) fetchAnalytics(period)
+  }, [slug, period])
 
-  const fetchAnalytics = async () => {
+  const fetchAnalytics = async (p = period) => {
     try {
       setError(null)
-      // Single API call to get all analytics data
-      const response = await fetch(`/api/venues/${slug}/analytics`)
+      setIsLoading(true)
+      const response = await fetch(`/api/venues/${slug}/analytics?period=${p}`)
 
       if (!response.ok) {
         const data = await response.json()
@@ -261,10 +260,27 @@ export default function AnalyticsPage() {
           ]}
         />
 
-        <div className="mb-6 md:mb-8">
-          <VenueEyebrow slug={slug} />
-          <h1 className="font-cinzel text-2xl md:text-3xl font-bold tracking-[0.02em] mb-1">Analytics</h1>
-          <p className="text-sm text-muted-foreground">Last 10 events · performance overview</p>
+        <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-4 mb-6 md:mb-8">
+          <div>
+            <VenueEyebrow slug={slug} />
+            <h1 className="font-cinzel text-2xl md:text-3xl font-bold tracking-[0.02em] mb-1">Analytics</h1>
+            <p className="text-sm text-muted-foreground">Performance overview · {period === "30d" ? "last 30 days" : period === "90d" ? "last 90 days" : "all time"}</p>
+          </div>
+          <div className="flex gap-1 bg-card border border-[var(--blue-015)] rounded-full p-1 self-start">
+            {(["30d", "90d", "all"] as const).map((p) => (
+              <button
+                key={p}
+                onClick={() => setPeriod(p)}
+                className={`text-xs font-semibold px-3 py-1.5 rounded-full transition-colors ${
+                  period === p
+                    ? "bg-[var(--xiv-blue)] text-[var(--xiv-navy)]"
+                    : "text-muted-foreground hover:text-foreground hover:bg-[var(--blue-007)]"
+                }`}
+              >
+                {p === "30d" ? "30 days" : p === "90d" ? "90 days" : "All time"}
+              </button>
+            ))}
+          </div>
         </div>
 
         {/* Summary KPIs */}
