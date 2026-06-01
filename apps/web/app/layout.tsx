@@ -53,10 +53,8 @@ export default function RootLayout({
   children: React.ReactNode
 }>) {
   return (
-    <html lang="en">
-      <body
-        className={`${inter.variable} ${outfit.variable} ${cinzel.variable} ${jetbrainsMono.variable} antialiased font-sans`}
-      >
+    <html lang="en" className={`${inter.variable} ${outfit.variable} ${cinzel.variable} ${jetbrainsMono.variable}`}>
+      <body className="antialiased font-sans">
         <SessionProvider>
           <SidebarProvider>
           <VenueProvider>
