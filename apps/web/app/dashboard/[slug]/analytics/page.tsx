@@ -508,7 +508,7 @@ export default function AnalyticsPage() {
 
           {/* Detailed Financial Table */}
           <Card className="overflow-hidden">
-            <div className="flex items-center gap-2 px-5 py-3.5 border-b border-[var(--blue-008)] font-semibold text-sm">
+            <div className="flex items-center gap-2 px-[22px] py-[13px] border-b border-[var(--blue-008)] font-semibold text-sm">
               <svg className="w-4 h-4 text-[var(--xiv-blue)]" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/></svg>
               Detailed Financial Breakdown
               <span className="ml-auto text-xs text-[var(--fg-faint)] font-normal">Revenue · payroll · profit per event</span>
@@ -603,7 +603,7 @@ export default function AnalyticsPage() {
             {/* Patron mix */}
             {analyticsData.patronMix && analyticsData.patronMix.total > 1 && (
               <div className="rounded-xl border border-[var(--blue-018)] bg-card overflow-hidden">
-                <div className="flex items-center gap-2 px-5 py-3.5 border-b border-[var(--blue-008)] font-semibold text-sm">
+                <div className="flex items-center gap-2 px-[22px] py-[13px] border-b border-[var(--blue-008)] font-semibold text-sm">
                   <svg className="w-4 h-4 text-[var(--xiv-blue)]" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M21.21 15.89A10 10 0 1 1 8 2.83"/><path d="M22 12A10 10 0 0 0 12 2v10z"/></svg>
                   Patron mix
                   <span className="ml-auto text-[0.68rem] text-[var(--fg-faint)] font-normal">30 days</span>
@@ -635,7 +635,7 @@ export default function AnalyticsPage() {
             {/* Busiest nights */}
             {analyticsData.busiestNights && (
               <div className="rounded-xl border border-[var(--blue-018)] bg-card overflow-hidden">
-                <div className="flex items-center gap-2 px-5 py-3.5 border-b border-[var(--blue-008)] font-semibold text-sm">
+                <div className="flex items-center gap-2 px-[22px] py-[13px] border-b border-[var(--blue-008)] font-semibold text-sm">
                   <svg className="w-4 h-4 text-[var(--xiv-blue)]" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M3 9h18M9 21V9"/></svg>
                   Busiest nights
                   <span className="ml-auto text-[0.68rem] text-[var(--fg-faint)] font-normal">avg attendance</span>

@@ -894,7 +894,7 @@ export default function PayrollPage() {
                   return (
                     <tr key={entry.id} className="border-b border-[var(--blue-008)] last:border-0 hover:bg-[var(--blue-004)] transition-colors">
                       {/* Staff */}
-                      <td className="px-5 py-3.5">
+                      <td className="xiv-td">
                         <div className="flex items-center gap-3">
                           <Avatar className="w-8 h-8">
                             <AvatarImage src={entry.membership?.user?.image || undefined} />
@@ -915,7 +915,7 @@ export default function PayrollPage() {
                         {entry.hoursWorked ? `${entry.hoursWorked}h` : "—"}
                       </td>
                       {/* Total */}
-                      <td className="px-5 py-3.5">
+                      <td className="xiv-td">
                         <span className="text-sm font-semibold font-[var(--font-heading)] text-[var(--xiv-blue)]">
                           {total.toLocaleString()} gil
                         </span>
@@ -924,7 +924,7 @@ export default function PayrollPage() {
                         )}
                       </td>
                       {/* Status */}
-                      <td className="px-5 py-3.5">
+                      <td className="xiv-td">
                         {entry.isPaid ? (
                           <span className="text-[0.7rem] font-semibold uppercase tracking-[0.04em] px-2.5 py-1 rounded-full bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">Paid</span>
                         ) : (

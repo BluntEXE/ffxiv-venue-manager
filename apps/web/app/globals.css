@@ -360,19 +360,21 @@
 .user-chip {
   display: flex;
   align-items: center;
-  gap: 8px;
-  padding: 4px 10px 4px 5px;
+  gap: 9px;
+  padding: 4px 5px 4px 4px;
   border-radius: 9999px;
-  border: 1px solid rgba(0,180,255,0.18);
-  background: rgba(0,180,255,0.05);
+  border: 1px solid var(--blue-015);
+  background: var(--card);
   cursor: pointer;
-  transition: border-color 150ms, background 150ms;
+  transition: border-color 200ms;
   outline: none;
 }
-.user-chip:hover { border-color: rgba(0,180,255,0.35); background: rgba(0,180,255,0.09); }
+.user-chip:hover { border-color: var(--blue-035); }
 .user-chip:focus-visible { outline: 2px solid var(--xiv-blue); outline-offset: 2px; }
+/* Avatar fallback inside chip — gradient matching prototype .av */
+.user-chip-av { background: linear-gradient(135deg, #5865F2, #00b4ff) !important; }
 .user-chip-name {
-  font-size: 0.8125rem;
+  font-size: 0.82rem;
   font-weight: 500;
   max-width: 120px;
   overflow: hidden;
@@ -592,14 +594,76 @@
   color: var(--muted-foreground);
 }
 
-/* Table column headers */
+/* Table column headers — matches prototype .evtable th */
 .xiv-th {
   color: var(--xiv-blue);
-  font-size: 0.75rem;
+  font-size: 0.68rem;
   font-weight: 500;
   text-transform: uppercase;
-  letter-spacing: 0.04em;
+  letter-spacing: 0.06em;
+  padding: 12px 22px;
+  border-bottom: 1px solid var(--blue-008);
 }
+
+/* Table cell — matches prototype .evtable td */
+.xiv-td {
+  padding: 14px 22px;
+  font-size: 0.86rem;
+  border-bottom: 1px solid var(--blue-008);
+}
+
+/* Section label — horizontal rule with overline text */
+.section-label {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin: 36px 0 18px;
+}
+.section-label .overline {
+  font-size: 0.72rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.14em;
+  color: var(--xiv-blue);
+  white-space: nowrap;
+}
+.section-label .overline.muted { color: var(--muted-foreground); }
+.section-label .ln { flex: 1; height: 1px; background: var(--blue-008); }
+.section-label .count { font-size: 0.78rem; color: var(--fg-faint); }
+
+/* Card body padding — matches prototype .pbody */
+.pbody { padding: 20px 22px; }
+
+/* Settings field label */
+.field-label {
+  display: block;
+  font-size: 0.78rem;
+  font-weight: 600;
+  color: var(--foreground);
+  margin-bottom: 7px;
+}
+.field-hint { font-size: 0.74rem; color: var(--fg-faint); margin-top: 6px; }
+
+/* Settings/integration row items */
+.introw {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 14px 22px;
+  border-bottom: 1px solid var(--blue-008);
+}
+.introw .iname { font-family: var(--font-heading); font-weight: 600; font-size: 0.9rem; }
+.introw .idesc { font-size: 0.78rem; color: var(--muted-foreground); margin-top: 2px; }
+
+.setrow {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 13px 22px;
+  border-bottom: 1px solid var(--blue-008);
+}
+.setrow .stitle { font-size: 0.86rem; color: var(--foreground); }
+.setrow .sdesc { font-size: 0.75rem; color: var(--fg-faint); margin-top: 2px; }
 
 /* Code / slash-commands */
 .xiv-command {

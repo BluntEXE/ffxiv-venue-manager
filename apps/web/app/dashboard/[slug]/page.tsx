@@ -248,7 +248,7 @@ export default async function VenueDashboardPage({
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
             {/* Chart */}
             <Card className="lg:col-span-2 overflow-hidden">
-              <div className="flex items-center gap-2 px-5 py-3.5 border-b border-[var(--blue-008)] font-semibold text-sm">
+              <div className="flex items-center gap-2 px-[22px] py-[13px] border-b border-[var(--blue-008)] font-semibold text-sm">
                 <BarChart3 className="w-4 h-4 text-[var(--xiv-blue)]" />
                 Revenue
                 <span className="ml-1 text-xs text-[var(--fg-faint)] font-normal">last {chartData.length} events</span>
@@ -314,7 +314,7 @@ export default async function VenueDashboardPage({
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
             {/* Events table */}
             <Card className="lg:col-span-2 overflow-hidden">
-              <div className="flex items-center gap-2 px-5 py-3.5 border-b border-[var(--blue-008)] font-semibold text-sm">
+              <div className="flex items-center gap-2 px-[22px] py-[13px] border-b border-[var(--blue-008)] font-semibold text-sm">
                 <Calendar className="w-4 h-4 text-[var(--xiv-blue)]" />
                 Recent events
                 <Link href={`/dashboard/${slug}/events`} className="ml-auto text-xs text-[var(--xiv-blue)] hover:underline flex items-center gap-1 font-normal">
@@ -325,10 +325,10 @@ export default async function VenueDashboardPage({
               <table className="w-full border-collapse min-w-[380px]">
                 <thead>
                   <tr>
-                    <th className="xiv-th px-5 py-3 border-b border-[var(--blue-008)] text-left">Event</th>
-                    <th className="xiv-th px-5 py-3 border-b border-[var(--blue-008)] text-left hidden sm:table-cell">Date</th>
-                    <th className="xiv-th px-5 py-3 border-b border-[var(--blue-008)] text-right hidden md:table-cell">Attendance</th>
-                    <th className="xiv-th px-5 py-3 border-b border-[var(--blue-008)] text-right">Revenue</th>
+                    <th className="xiv-th text-left">Event</th>
+                    <th className="xiv-th text-left hidden sm:table-cell">Date</th>
+                    <th className="xiv-th text-right hidden md:table-cell">Attendance</th>
+                    <th className="xiv-th text-right">Revenue</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -342,7 +342,7 @@ export default async function VenueDashboardPage({
                           )}
                         </div>
                       </td>
-                      <td className="px-5 py-3.5 text-[0.86rem] text-muted-foreground whitespace-nowrap tabular-nums hidden sm:table-cell">{format(ev.startTime, "d MMM")}</td>
+                      <td className="xiv-td text-muted-foreground whitespace-nowrap tabular-nums hidden sm:table-cell">{format(ev.startTime, "d MMM")}</td>
                       <td className="px-5 py-3.5 text-[0.86rem] text-right tabular-nums text-muted-foreground hidden md:table-cell">
                         {ev.patrons > 0 ? ev.patrons : <span className="text-[var(--fg-faint)]">—</span>}
                       </td>

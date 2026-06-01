@@ -260,7 +260,7 @@ export default function SettingsPage({
 
             {/* ── Venue profile ── */}
             <section className="rounded-xl border border-[var(--blue-018)] bg-card overflow-hidden">
-              <div className="flex items-center gap-2.5 px-5 py-3.5 border-b border-[var(--blue-008)] font-semibold text-[0.95rem]">
+              <div className="flex items-center gap-2.5 px-[22px] py-[13px] border-b border-[var(--blue-008)] font-semibold text-[0.95rem]">
                 <svg className="w-4 h-4 text-[var(--xiv-blue)]" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
                 Venue profile
               </div>
@@ -328,7 +328,7 @@ export default function SettingsPage({
 
             {/* ── Location & hours ── */}
             <section className="rounded-xl border border-[var(--blue-018)] bg-card overflow-hidden">
-              <div className="flex items-center gap-2.5 px-5 py-3.5 border-b border-[var(--blue-008)] font-semibold text-[0.95rem]">
+              <div className="flex items-center gap-2.5 px-[22px] py-[13px] border-b border-[var(--blue-008)] font-semibold text-[0.95rem]">
                 <svg className="w-4 h-4 text-[var(--xiv-blue)]" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>
                 Location &amp; hours
               </div>
@@ -382,13 +382,13 @@ export default function SettingsPage({
 
             {/* ── Integrations ── */}
             <section className="rounded-xl border border-[var(--blue-018)] bg-card overflow-hidden">
-              <div className="flex items-center gap-2.5 px-5 py-3.5 border-b border-[var(--blue-008)] font-semibold text-[0.95rem]">
+              <div className="flex items-center gap-2.5 px-[22px] py-[13px] border-b border-[var(--blue-008)] font-semibold text-[0.95rem]">
                 <svg className="w-4 h-4 text-[var(--xiv-blue)]" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg>
                 Integrations
               </div>
 
               {/* Dalamud */}
-              <div className="flex items-center gap-4 px-5 py-3.5 border-b border-[var(--blue-008)]">
+              <div className="introw">
                 <div className="w-10 h-10 rounded-lg bg-emerald-500/10 border border-emerald-500/20 flex items-center justify-center shrink-0">
                   <svg className="w-5 h-5 text-emerald-400" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><rect x="6" y="2" width="12" height="20" rx="2"/><line x1="12" y1="18" x2="12" y2="18"/></svg>
                 </div>
@@ -471,7 +471,7 @@ export default function SettingsPage({
 
             {/* ── Discord Webhooks ── */}
             <section className="rounded-xl border border-[var(--blue-018)] bg-card overflow-hidden">
-              <div className="flex items-center gap-2.5 px-5 py-3.5 border-b border-[var(--blue-008)] font-semibold text-[0.95rem]">
+              <div className="flex items-center gap-2.5 px-[22px] py-[13px] border-b border-[var(--blue-008)] font-semibold text-[0.95rem]">
                 <svg className="w-4 h-4 text-[var(--xiv-blue)]" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>
                 Discord Webhooks
               </div>
@@ -544,7 +544,7 @@ export default function SettingsPage({
 
             {/* ── How patrons find you ── */}
             <section className="rounded-xl border border-[var(--blue-018)] bg-card overflow-hidden">
-              <div className="flex items-center gap-2.5 px-5 py-3.5 border-b border-[var(--blue-008)] font-semibold text-[0.95rem]">
+              <div className="flex items-center gap-2.5 px-[22px] py-[13px] border-b border-[var(--blue-008)] font-semibold text-[0.95rem]">
                 <svg className="w-4 h-4 text-[var(--xiv-blue)]" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></svg>
                 How patrons find you
                 <span className="ml-auto text-xs text-[var(--fg-faint)] font-normal">Shown in Analytics</span>
@@ -597,7 +597,7 @@ export default function SettingsPage({
 
             {/* ── Staff permissions ── */}
             <section className="rounded-xl border border-[var(--blue-018)] bg-card overflow-hidden">
-              <div className="flex items-center gap-2.5 px-5 py-3.5 border-b border-[var(--blue-008)] font-semibold text-[0.95rem]">
+              <div className="flex items-center gap-2.5 px-[22px] py-[13px] border-b border-[var(--blue-008)] font-semibold text-[0.95rem]">
                 <svg className="w-4 h-4 text-[var(--xiv-blue)]" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
                 Staff permissions
               </div>

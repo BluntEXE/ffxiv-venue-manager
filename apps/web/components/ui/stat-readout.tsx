@@ -16,10 +16,10 @@ interface StatReadoutProps {
 }
 
 const iconBadgeClass: Record<IconVariant, string> = {
-  blue:    "bg-[var(--blue-010)] border border-[var(--blue-018)] text-[var(--xiv-blue)]",
+  blue:    "bg-[var(--blue-010)] border border-[var(--blue-015)] text-[var(--xiv-blue)]",
   success: "bg-[var(--success-soft)] border border-[rgba(16,185,129,0.25)] text-[var(--success-text)]",
   warning: "bg-[rgba(249,226,175,0.08)] border border-[rgba(249,226,175,0.25)] text-[var(--warning)]",
-  default: "bg-[var(--blue-010)] border border-[var(--blue-018)] text-[var(--xiv-blue)]",
+  default: "bg-[var(--blue-010)] border border-[var(--blue-015)] text-[var(--xiv-blue)]",
 }
 
 function StatReadout({
