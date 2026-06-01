@@ -6,22 +6,16 @@ import { NavbarClient } from "./navbar-client"
 export async function Navbar() {
   const session = await getServerSession(authOptions)
 
-  let venues: Array<{ id: string; name: string; slug: string }> = []
+  let venues: Array<{ id: string; name: string; slug: string; role: string }> = []
   if (session?.user?.id) {
-    venues = await prisma.venue.findMany({
-      where: {
-        memberships: {
-          some: {
-            userId: session.user.id,
-          },
-        },
-      },
+    const memberships = await prisma.venueMembership.findMany({
+      where: { userId: session.user.id },
       select: {
-        id: true,
-        name: true,
-        slug: true,
+        role: true,
+        venue: { select: { id: true, name: true, slug: true } },
       },
     })
+    venues = memberships.map((m) => ({ ...m.venue, role: m.role }))
   }
 
   return <NavbarClient session={session} venues={venues} />

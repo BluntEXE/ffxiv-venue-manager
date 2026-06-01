@@ -13,7 +13,7 @@ import type { Session } from "next-auth"
 
 interface NavbarClientProps {
   session: Session | null
-  venues: Array<{ id: string; name: string; slug: string }>
+  venues: Array<{ id: string; name: string; slug: string; role: string }>
 }
 
 export function NavbarClient({ session, venues }: NavbarClientProps) {
@@ -21,6 +21,10 @@ export function NavbarClient({ session, venues }: NavbarClientProps) {
   const pathname = usePathname()
 
   const isVenuePage = !!(pathname?.match(/^\/dashboard\/[^/]+(?:\/|$)/) && pathname !== "/dashboard")
+
+  // Current venue context for user chip subtitle
+  const currentSlug = pathname?.match(/^\/dashboard\/([^/]+)/)?.[1]
+  const currentVenue = currentSlug ? venues.find((v) => v.slug === currentSlug) : undefined
 
   return (
     <nav className="sticky top-0 z-50 w-full xiv-nav xiv-glass relative">
@@ -97,7 +101,11 @@ export function NavbarClient({ session, venues }: NavbarClientProps) {
                 </Link>
               </Button>
 
-              <UserMenu user={session.user} />
+              <UserMenu
+                user={session.user}
+                currentVenueName={currentVenue?.name}
+                currentVenueRole={currentVenue?.role}
+              />
             </>
           ) : (
             <>
