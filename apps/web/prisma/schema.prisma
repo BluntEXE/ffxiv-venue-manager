@@ -49,8 +49,26 @@ model User {
   notificationPreference   NotificationPreference?
   venueFollows             VenueFollow[]
   shoutTemplates           ShoutTemplate[]
+  notifications            Notification[]
 
   @@map("users")
+}
+
+model Notification {
+  id        String   @id @default(cuid())
+  userId    String
+  type      String   // NEW_FOLLOWER | STAFF_JOINED | TASK_ASSIGNED | TASK_COMPLETED
+  title     String
+  body      String
+  link      String?
+  read      Boolean  @default(false)
+  createdAt DateTime @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId, read])
+  @@index([userId, createdAt(sort: Desc)])
+  @@map("notifications")
 }
 
 model ShoutTemplate {

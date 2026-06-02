@@ -8,6 +8,7 @@ import {
   getWebhookUrlForType,
   type VenueWebhookConfig,
 } from "@/lib/discord-webhook"
+import { notifyVenueOwners } from "@/lib/notify"
 
 export async function POST(
   request: Request,
@@ -101,6 +102,14 @@ export async function POST(
         },
       },
     })
+
+    // Web notification to venue owners
+    notifyVenueOwners(membership.venueId, {
+      type: "STAFF_JOINED",
+      title: "New staff member",
+      body: `${session.user.name ?? "Someone"} joined ${membership.venue.name} as ${membership.role.toLowerCase()}.`,
+      link: `/dashboard/${membership.venue.slug}/staff`,
+    }).catch(() => {})
 
     // Send Discord webhook notification if configured
     const webhookConfig: VenueWebhookConfig = {

@@ -23,6 +23,9 @@ export function NavbarClient({ session, venues }: NavbarClientProps) {
   const { toggle } = useSidebar()
   const pathname = usePathname()
   const [pluginSynced, setPluginSynced] = useState(false)
+  const [notifications, setNotifications] = useState<Array<{ id: string; type: string; title: string; body: string; link?: string; read: boolean; createdAt: string }>>([])
+  const [unreadCount, setUnreadCount] = useState(0)
+  const [notifOpen, setNotifOpen] = useState(false)
 
   // True for any page that has a sidebar: venue dashboard pages, discover, following
   // Excludes /dashboard/account/* (personal pages with no sidebar)
@@ -52,6 +55,33 @@ export function NavbarClient({ session, venues }: NavbarClientProps) {
     const interval = setInterval(check, 30_000)
     return () => { cancelled = true; clearInterval(interval) }
   }, [isVenuePage, currentVenue?.id])
+
+  // Fetch notifications on mount + every 60s
+  useEffect(() => {
+    if (!session) return
+    let cancelled = false
+    const fetchNotifs = async () => {
+      try {
+        const res = await fetch("/api/notifications")
+        if (!res.ok || cancelled) return
+        const data = await res.json()
+        if (!cancelled) {
+          setNotifications(data.notifications)
+          setUnreadCount(data.unreadCount)
+        }
+      } catch { /* silent */ }
+    }
+    fetchNotifs()
+    const interval = setInterval(fetchNotifs, 60_000)
+    return () => { cancelled = true; clearInterval(interval) }
+  }, [session])
+
+  const markAllRead = async () => {
+    if (unreadCount === 0) return
+    setUnreadCount(0)
+    setNotifications(n => n.map(x => ({ ...x, read: true })))
+    await fetch("/api/notifications", { method: "PATCH", headers: { "Content-Type": "application/json" }, body: JSON.stringify({}) })
+  }
 
   return (
     <nav className="sticky top-0 z-50 w-full xiv-nav xiv-glass relative">
@@ -99,22 +129,50 @@ export function NavbarClient({ session, venues }: NavbarClientProps) {
               )}
 
               {/* Bell */}
-              <Popover>
+              <Popover open={notifOpen} onOpenChange={(o) => { setNotifOpen(o); if (o) markAllRead() }}>
                 <PopoverTrigger asChild>
                   <button className="relative p-[7px] rounded-[var(--radius-md)] text-muted-foreground hover:text-foreground hover:bg-[var(--blue-007)] transition-colors" aria-label="Notifications">
                     <Bell className="h-[19px] w-[19px]" />
-                    <span className="absolute top-[5px] right-[5px] w-[7px] h-[7px] rounded-full bg-[var(--xiv-blue)] border-2 border-background" />
+                    {unreadCount > 0 && (
+                      <span className="absolute top-[5px] right-[5px] min-w-[7px] h-[7px] rounded-full bg-[var(--xiv-blue)] border-2 border-background" />
+                    )}
                   </button>
                 </PopoverTrigger>
-                <PopoverContent align="end" className="w-72 p-0 border-[var(--blue-018)] bg-[rgba(7,11,20,0.96)] backdrop-blur-2xl">
+                <PopoverContent align="end" className="w-80 p-0 border-[var(--blue-018)] bg-[rgba(7,11,20,0.97)] backdrop-blur-2xl">
                   <div className="flex items-center justify-between px-4 py-3 border-b border-[var(--blue-008)]">
                     <span className="font-semibold text-sm">Notifications</span>
-                    <CheckCheck className="h-3.5 w-3.5 text-[var(--fg-faint)]" />
+                    {unreadCount > 0 && (
+                      <button onClick={markAllRead} className="flex items-center gap-1.5 text-xs text-[var(--xiv-blue)] hover:underline">
+                        <CheckCheck className="h-3 w-3" /> Mark all read
+                      </button>
+                    )}
                   </div>
-                  <div className="flex flex-col items-center justify-center py-10 px-4 text-center">
-                    <Bell className="h-8 w-8 text-[var(--fg-faint)] mb-3 opacity-30" />
-                    <p className="text-sm text-muted-foreground">No new notifications</p>
-                    <p className="text-xs text-[var(--fg-faint)] mt-1">Activity from events, sales and staff will appear here</p>
+                  <div className="max-h-[400px] overflow-y-auto">
+                    {notifications.length === 0 ? (
+                      <div className="flex flex-col items-center justify-center py-10 px-4 text-center">
+                        <Bell className="h-8 w-8 text-[var(--fg-faint)] mb-3 opacity-30" />
+                        <p className="text-sm text-muted-foreground">No notifications yet</p>
+                        <p className="text-xs text-[var(--fg-faint)] mt-1">Followers, staff joins, and task assignments appear here</p>
+                      </div>
+                    ) : (
+                      notifications.map((n) => (
+                        <a
+                          key={n.id}
+                          href={n.link ?? "#"}
+                          onClick={() => setNotifOpen(false)}
+                          className={`flex gap-3 px-4 py-3 border-b border-[var(--blue-008)] last:border-b-0 hover:bg-[var(--blue-007)] transition-colors ${n.read ? "opacity-60" : ""}`}
+                        >
+                          <span className={`mt-0.5 w-2 h-2 rounded-full flex-shrink-0 ${n.read ? "bg-transparent" : "bg-[var(--xiv-blue)]"}`} />
+                          <div className="flex-1 min-w-0">
+                            <p className="text-sm font-medium leading-tight">{n.title}</p>
+                            <p className="text-xs text-muted-foreground mt-0.5 leading-snug">{n.body}</p>
+                            <p className="text-[0.68rem] text-[var(--fg-faint)] mt-1">
+                              {new Date(n.createdAt).toLocaleDateString(undefined, { month: "short", day: "numeric", hour: "2-digit", minute: "2-digit" })}
+                            </p>
+                          </div>
+                        </a>
+                      ))
+                    )}
                   </div>
                 </PopoverContent>
               </Popover>

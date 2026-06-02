@@ -10,6 +10,7 @@ import {
   type VenueWebhookConfig,
 } from "@/lib/discord-webhook"
 import { withRateLimit } from "@/lib/middleware/with-rate-limit"
+import { notify } from "@/lib/notify"
 
 const createTaskSchema = z.object({
   title: z.string().min(1, "Task title is required").max(200),
@@ -193,6 +194,17 @@ export const POST = withRateLimit<{ params: Promise<{ venueId: string }> }>(
         },
       },
     })
+    // Notify assignee if there is one and it's not the creator
+    if (newTask.assignee?.id && newTask.assignee.id !== session.user.id) {
+      notify({
+        userId: newTask.assignee.id,
+        type: "TASK_ASSIGNED",
+        title: "Task assigned to you",
+        body: `"${newTask.title}" was assigned to you.`,
+        link: `/dashboard/${venueId}/tasks`,
+      }).catch(() => {})
+    }
+
     // Send Discord webhook notification if enabled
     const venue = await prisma.venue.findUnique({
       where: { id: venueId },
