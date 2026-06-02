@@ -204,19 +204,22 @@ export default async function VenueProfilePage({
       {/* ── Body ── */}
       <section className="prof-body pt-[44px] pb-[70px]">
         <div className="max-w-[1080px] mx-auto px-8">
-          <div className="prof-grid grid grid-cols-1 lg:grid-cols-[1.6fr_1fr] gap-[30px] items-start">
+          {(() => {
+            const hasMain = !!(venue.description || upcomingEvents.length > 0 || (venue.galleryImages && venue.galleryImages.length > 0))
+            return (
+          <div className={hasMain ? "prof-grid grid grid-cols-1 lg:grid-cols-[1.6fr_1fr] gap-[30px] items-start" : "flex justify-end"}>
 
-            {/* ── Main column ── */}
+            {/* ── Main column — only render when there's content ── */}
+            {hasMain && (
             <div className="prof-main flex flex-col gap-[34px]">
 
               {/* About */}
+              {venue.description && (
               <div className="about">
                 <div className="block-title"><Scroll /> About</div>
-                {venue.description
-                  ? <p className="text-[0.96rem] text-[var(--fg-subtle)] leading-[1.7]">{venue.description}</p>
-                  : <p className="text-[0.9rem] text-[var(--fg-faint)] italic">The owner hasn&apos;t added a description yet.</p>
-                }
+                <p className="text-[0.96rem] text-[var(--fg-subtle)] leading-[1.7]">{venue.description}</p>
               </div>
+              )}
 
               {/* Upcoming events */}
               {upcomingEvents.length > 0 && (
@@ -262,6 +265,7 @@ export default async function VenueProfilePage({
                 </div>
               )}
             </div>
+            )}
 
             {/* ── Side column ── */}
             <div className="prof-side flex flex-col gap-[18px]">
@@ -344,6 +348,8 @@ export default async function VenueProfilePage({
             </div>
 
           </div>
+            )
+          })()}
         </div>
       </section>
 
