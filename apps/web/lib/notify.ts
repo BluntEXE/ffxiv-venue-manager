@@ -1,5 +1,5 @@
 import { prisma } from "@/lib/prisma"
-import type { Prisma } from "@prisma/client"
+import type { MembershipRole } from "../generated/prisma/enums"
 
 export type NotificationType = "NEW_FOLLOWER" | "STAFF_JOINED" | "TASK_ASSIGNED" | "TASK_COMPLETED"
 
@@ -20,7 +20,7 @@ export async function notify(input: CreateNotificationInput): Promise<void> {
 export async function notifyVenueOwners(
   venueId: string,
   input: Omit<CreateNotificationInput, "userId">,
-  roles: Prisma.EnumMembershipRoleFilter["in"] = ["OWNER"]
+  roles: MembershipRole[] = ["OWNER"]
 ): Promise<void> {
   const members = await prisma.membership.findMany({
     where: { venueId, role: { in: roles }, status: "active", userId: { not: null } },

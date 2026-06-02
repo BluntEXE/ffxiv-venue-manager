@@ -4,7 +4,8 @@ import DiscordProvider from "next-auth/providers/discord"
 import { prisma } from "@/lib/prisma"
 
 export const authOptions: NextAuthOptions = {
-  adapter: PrismaAdapter(prisma as Parameters<typeof PrismaAdapter>[0]),
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  adapter: PrismaAdapter(prisma as any),
   providers: [
     DiscordProvider({
       clientId: process.env.DISCORD_CLIENT_ID!,
