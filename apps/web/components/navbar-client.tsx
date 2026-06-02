@@ -29,7 +29,6 @@ export function NavbarClient({ session, venues }: NavbarClientProps) {
   const isVenuePage = !!(
     pathname?.match(/^\/dashboard\/(?!account)[^/]+(?:\/|$)/) ||
     pathname === "/discover" ||
-    pathname?.startsWith("/discover?") ||
     pathname === "/following"
   )
 

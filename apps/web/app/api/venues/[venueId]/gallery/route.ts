@@ -11,7 +11,14 @@ export async function POST(req: Request, { params }: { params: Promise<{ venueId
 
   const { venueId } = await params
   const { url } = await req.json()
-  if (!url) return NextResponse.json({ error: "url required" }, { status: 400 })
+  if (!url || typeof url !== "string") return NextResponse.json({ error: "url required" }, { status: 400 })
+
+  // Only allow URLs from the configured MinIO bucket
+  const allowedBase = process.env.MINIO_PUBLIC_URL ?? process.env.MINIO_ENDPOINT ?? ""
+  const bucket = process.env.MINIO_BUCKET ?? "xiv-venues"
+  if (allowedBase && !url.startsWith(`${allowedBase}/${bucket}/`)) {
+    return NextResponse.json({ error: "Invalid image URL" }, { status: 400 })
+  }
 
   const membership = await prisma.membership.findFirst({
     where: { venueId, userId: session.user.id, role: { in: ["OWNER", "MANAGER"] } },

@@ -48,5 +48,9 @@ export async function POST(req: Request) {
   const key  = `venues/${session.user.id}/${randomBytes(8).toString("hex")}${ext}`
   const uploadUrl = await getUploadUrl(key, contentType)
 
-  return NextResponse.json({ uploadUrl, key })
+  // Return the public URL separately so the client never needs to derive it from the presigned URL
+  const base = process.env.MINIO_PUBLIC_URL ?? process.env.MINIO_ENDPOINT ?? "http://localhost:9000"
+  const storedUrl = `${base}/${BUCKET}/${key}`
+
+  return NextResponse.json({ uploadUrl, key, storedUrl })
 }

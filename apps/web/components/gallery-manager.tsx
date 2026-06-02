@@ -25,14 +25,14 @@ export function GalleryManager({ venueId, initialImages }: GalleryManagerProps) 
         body: JSON.stringify({ filename: file.name, contentType: file.type, size: file.size }),
       })
       if (!res.ok) { const d = await res.json(); throw new Error(d.error || "Failed to get upload URL") }
-      const { uploadUrl, key } = await res.json()
+      const { uploadUrl, storedUrl } = await res.json()
 
       // 2. PUT directly to MinIO
       const put = await fetch(uploadUrl, { method: "PUT", body: file, headers: { "Content-Type": file.type } })
       if (!put.ok) throw new Error("Upload failed")
 
-      // 3. Build the public URL and register it with the venue
-      const publicUrl = uploadUrl.split("?")[0] // strip query string = public URL
+      // 3. Register the public URL (returned by the server, not derived from the presigned URL)
+      const publicUrl = storedUrl
       const reg = await fetch(`/api/venues/${venueId}/gallery`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
