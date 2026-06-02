@@ -78,29 +78,32 @@ export function StaffTable({
 
   return (
     <div>
-      {/* Filter bar — tabs scrollable, search on own line */}
-      <div className="mb-4 space-y-2">
-        <div className="overflow-x-auto scrollbar-hide">
-          <div className="flex gap-1 bg-[var(--card)] border border-[var(--blue-015)] rounded-full p-1 w-max min-w-full">
-            {tabs.map(({ key, label }) => (
-              <button
-                key={key}
-                onClick={() => setFilter(key)}
-                className={`text-sm font-semibold px-4 py-1.5 rounded-full transition-colors whitespace-nowrap ${
-                  filter === key
-                    ? "bg-[var(--xiv-blue)] text-[var(--xiv-navy)]"
-                    : "text-muted-foreground hover:text-foreground hover:bg-[var(--blue-007)]"
-                }`}
-              >
-                {label}
-                <span className={`ml-1.5 text-[0.68rem] ${filter === key ? "opacity-70" : "text-[var(--fg-faint)]"}`}>
-                  {counts[key]}
-                </span>
-              </button>
-            ))}
-          </div>
-        </div>
-        <div className="relative flex items-center max-w-xs">
+      {/* Filter bar — role select + search on one line */}
+      <div className="flex items-center gap-3 mb-4">
+        <select
+          value={filter}
+          onChange={e => setFilter(e.target.value as Filter)}
+          style={{
+            flexShrink: 0,
+            width: 180,
+            fontFamily: "var(--font-sans)",
+            fontSize: "0.88rem",
+            color: "var(--foreground)",
+            background: "var(--card)",
+            border: "1px solid var(--blue-015)",
+            borderRadius: "var(--radius-md)",
+            padding: "0 11px",
+            height: 36,
+            outline: "none",
+          }}
+        >
+          {tabs.map(({ key, label }) => (
+            <option key={key} value={key}>
+              {label} ({counts[key] ?? 0})
+            </option>
+          ))}
+        </select>
+        <div className="relative flex items-center flex-1 min-w-0 max-w-xs">
           <svg className="absolute left-3 w-4 h-4 text-[var(--fg-faint)] pointer-events-none" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
           <Input
             className="pl-9 bg-[var(--card)] border-[var(--blue-015)] focus:border-[var(--blue-035)] h-9 text-sm"
