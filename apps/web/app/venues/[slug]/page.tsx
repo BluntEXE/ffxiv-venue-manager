@@ -7,11 +7,20 @@ import { prisma } from "@/lib/prisma"
 
 export async function generateMetadata({ params }: { params: Promise<{ slug: string }> }): Promise<Metadata> {
   const { slug } = await params
-  const venue = await prisma.venue.findUnique({ where: { slug, isActive: true }, select: { name: true, description: true, dataCenter: true, world: true } })
+  const venue = await prisma.venue.findUnique({ where: { slug, isActive: true }, select: { name: true, description: true, dataCenter: true, world: true, bannerUrl: true } })
   if (!venue) return { title: "Venue — XIV Venue Manager" }
+  const desc = venue.description ?? `${venue.name} is an FFXIV roleplay venue on ${venue.dataCenter} - ${venue.world}. Follow to stay updated on events.`
+  const ogImage = venue.bannerUrl ?? "/og-image.png"
   return {
-    title: `${venue.name} — XIV Venue Manager`,
-    description: venue.description ?? `${venue.name} is an FFXIV roleplay venue on ${venue.dataCenter} · ${venue.world}. Follow to stay updated on events.`,
+    title: venue.name,
+    description: desc,
+    alternates: { canonical: `https://xivvenuemanager.com/venues/${slug}` },
+    openGraph: {
+      title: `${venue.name} | XIV Venue Manager`,
+      description: desc,
+      url: `https://xivvenuemanager.com/venues/${slug}`,
+      images: [{ url: ogImage, width: 1200, height: 630, alt: venue.name }],
+    },
   }
 }
 import { format } from "date-fns"
@@ -115,8 +124,29 @@ export default async function VenueProfilePage({
 
   const openDays = parseOpenDays(openNights)
 
+  const jsonLd = {
+    "@context": "https://schema.org",
+    "@type": "LocalBusiness",
+    name: venue.name,
+    description: venue.description ?? `${venue.name} is an FFXIV roleplay venue on ${venue.dataCenter} - ${venue.world}.`,
+    url: `https://xivvenuemanager.com/venues/${venue.slug}`,
+    ...(venue.bannerUrl ? { image: venue.bannerUrl } : {}),
+    address: {
+      "@type": "PostalAddress",
+      addressLocality: venue.world,
+      addressRegion: venue.dataCenter,
+      addressCountry: "Virtual",
+    },
+  }
+  // Escape HTML-unsafe chars so venue names can't break out of the JSON-LD block
+  const safeJsonLd = JSON.stringify(jsonLd)
+    .replace(/</g, "\\u003c")
+    .replace(/>/g, "\\u003e")
+    .replace(/\//g, "\\u002f")
+
   return (
     <div className="min-h-screen bg-[var(--background)]">
+      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: safeJsonLd }} />
 
       {/* ── Hero banner ── */}
       <section className="profile-hero relative mt-[60px] h-[340px] overflow-hidden border-b border-[var(--blue-008)]">
