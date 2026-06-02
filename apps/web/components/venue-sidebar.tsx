@@ -66,8 +66,8 @@ export function VenueSidebar({
     {
       label: "Explore",
       items: [
-        { href: `/discover?from=${venueSlug}`, label: "Discover", icon: Compass },
-        { href: `/following?from=${venueSlug}`, label: "Following", icon: BookHeart },
+        { href: "/discover", label: "Discover", icon: Compass },
+        { href: "/following", label: "Following", icon: BookHeart },
       ],
     },
     {

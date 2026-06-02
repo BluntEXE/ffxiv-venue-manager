@@ -4,6 +4,7 @@ import { ReactNode, useEffect, useState } from "react"
 import { useSession } from "next-auth/react"
 import { VenueSidebar } from "./venue-sidebar"
 import { useVenues } from "./venue-context"
+import { ActiveVenueTracker } from "./active-venue-tracker"
 
 interface VenueLayoutClientProps {
   children: ReactNode
@@ -36,6 +37,7 @@ export function VenueLayoutClient({ children, slug }: VenueLayoutClientProps) {
 
   return (
     <div className="relative min-h-screen">
+      <ActiveVenueTracker slug={slug} />
       <VenueSidebar
         venueSlug={slug}
         venueName={venueData.name}

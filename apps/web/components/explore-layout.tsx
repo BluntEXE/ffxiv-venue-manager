@@ -2,42 +2,21 @@ import { ReactNode } from "react"
 import { getServerSession } from "next-auth"
 import { authOptions } from "@/lib/auth"
 import { prisma } from "@/lib/prisma"
+import { cookies } from "next/headers"
 import { VenueSidebar } from "./venue-sidebar"
 
-export async function ExploreLayout({ children, fromSlug }: { children: ReactNode; fromSlug?: string }) {
+export async function ExploreLayout({ children }: { children: ReactNode }) {
   const session = await getServerSession(authOptions)
 
-  // Get sidebar venue context — prefer the venue the user navigated from (`fromSlug`)
   let venueSlug = ""
   let venueName = ""
   let userRole  = "STAFF"
   let venues: Array<{ id: string; name: string; slug: string; dataCenter: string; world: string }> = []
 
   if (session?.user?.id) {
-    // Use the referred venue if provided, otherwise fall back to oldest membership
-    const membership = fromSlug
-      ? await prisma.membership.findFirst({
-          where: { userId: session.user.id, venue: { slug: fromSlug } },
-          select: { role: true, venue: { select: { id: true, name: true, slug: true, dataCenter: true, world: true } } },
-        }) ?? await prisma.membership.findFirst({
-          where: { userId: session.user.id },
-          orderBy: { createdAt: "asc" },
-          select: { role: true, venue: { select: { id: true, name: true, slug: true, dataCenter: true, world: true } } },
-        })
-      : await prisma.membership.findFirst({
-          where: { userId: session.user.id },
-          orderBy: { createdAt: "asc" },
-      select: {
-        role: true,
-        venue: { select: { id: true, name: true, slug: true, dataCenter: true, world: true } },
-      },
-    })
-
-    if (membership) {
-      venueSlug = membership.venue.slug
-      venueName = membership.venue.name
-      userRole  = membership.role
-    }
+    // Read last-active venue from cookie set by VenueLayout/VenueLayoutClient
+    const cookieStore = await cookies()
+    const activeSlug = cookieStore.get("xiv-active-venue")?.value
 
     const allMemberships = await prisma.membership.findMany({
       where: { userId: session.user.id },
@@ -48,6 +27,18 @@ export async function ExploreLayout({ children, fromSlug }: { children: ReactNod
       },
     })
     venues = allMemberships.map(m => m.venue)
+
+    // Prefer cookie (last visited dashboard venue), fall back to oldest
+    const preferred = activeSlug
+      ? allMemberships.find(m => m.venue.slug === activeSlug)
+      : null
+    const membership = preferred ?? allMemberships[0]
+
+    if (membership) {
+      venueSlug = membership.venue.slug
+      venueName = membership.venue.name
+      userRole  = membership.role
+    }
   }
 
   return (

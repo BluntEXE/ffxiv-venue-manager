@@ -1,4 +1,5 @@
 import { VenueSidebar } from "./venue-sidebar"
+import { ActiveVenueTracker } from "./active-venue-tracker"
 import { ReactNode } from "react"
 import { getServerSession } from "next-auth"
 import { authOptions } from "@/lib/auth"
@@ -38,6 +39,7 @@ export async function VenueLayout({
 
   return (
     <div className="relative min-h-screen">
+      <ActiveVenueTracker slug={venueSlug} />
       <VenueSidebar
         venueSlug={venueSlug}
         venueName={venueName}
