@@ -36,7 +36,7 @@ function slugify(name: string) {
 const STEP_META = [
   { label: "Venue basics",     sub: "Tell patrons who you are. You can change all of this later in Settings." },
   { label: "Location & hours", sub: "Where to find you in Eorzea, and when your doors are open." },
-  { label: "Review & create",  sub: "A quick look before we set things up." },
+  { label: "Review & create",  sub: "Check your details before we create the venue." },
 ]
 
 // ── Component ────────────────────────────────────────────────────
@@ -145,7 +145,7 @@ export function GetStartedWizard({ userName }: { userName: string }) {
               </div>
               <h1 className="font-cinzel" style={{ fontWeight: 700, fontSize: "1.7rem", letterSpacing: "0.02em" }}>{name} is live</h1>
               <p style={{ color: "var(--muted-foreground)", fontSize: "0.96rem", lineHeight: 1.6, margin: "14px auto 26px", maxWidth: "36ch" }}>
-                Welcome aboard. Open your dashboard to plan events, invite staff and go live on your next event night.
+                Your venue is ready. Open the dashboard to schedule events, invite staff, and go live.
               </p>
               <button
                 onClick={() => router.push(`/dashboard/${createdSlug}`)}
@@ -285,7 +285,7 @@ export function GetStartedWizard({ userName }: { userName: string }) {
                   </div>
                 ))}
                 <p style={{ color: "var(--muted-foreground)", fontSize: "0.9rem", marginTop: 16, lineHeight: 1.55 }}>
-                  Looks good? Create your venue and head to the dashboard. You can install the Dalamud plugin and invite staff next.
+                  Ready? We'll create your venue and take you straight to the dashboard. Install the Dalamud plugin and invite staff from there.
                 </p>
               </>
             )}

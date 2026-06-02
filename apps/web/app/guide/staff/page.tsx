@@ -55,9 +55,9 @@ export default function StaffGuidePage() {
           <div className="bg-[rgba(0,180,255,0.06)] border border-[rgba(0,180,255,0.2)] rounded-lg p-4 space-y-1.5">
             <p className="text-xs font-semibold text-[var(--xiv-blue)] uppercase tracking-widest">Recent Updates</p>
             <ul className="space-y-1 text-sm text-muted-foreground">
-              <li><span className="font-medium text-foreground">Website redesign</span> &mdash; The dashboard and all pages have a new look. Navigation, cards, and layout have been updated.</li>
-              <li><span className="font-medium text-foreground">Plugin UI redesign (v3.8.0)</span> &mdash; The plugin has a new XIV blue design to match the website.</li>
-              <li><span className="font-medium text-foreground">Slash commands renamed</span> &mdash; <code className="bg-[rgba(0,180,255,0.08)] text-[var(--xiv-blue)] px-1.5 py-0.5 rounded text-xs font-mono">/vm</code> is now <code className="bg-[rgba(0,180,255,0.08)] text-[var(--xiv-blue)] px-1.5 py-0.5 rounded text-xs font-mono">/xvm</code> and <code className="bg-[rgba(0,180,255,0.08)] text-[var(--xiv-blue)] px-1.5 py-0.5 rounded text-xs font-mono">/venue</code> is now <code className="bg-[rgba(0,180,255,0.08)] text-[var(--xiv-blue)] px-1.5 py-0.5 rounded text-xs font-mono">/xvenue</code>. Update your macros if you had any.</li>
+              <li><span className="font-medium text-foreground">Website redesign</span>: The dashboard and every page has a new look. Navigation, cards, and layout are all updated.</li>
+              <li><span className="font-medium text-foreground">Plugin UI redesign (v3.8.0)</span>: The plugin has a new XIV blue design to match the website.</li>
+              <li><span className="font-medium text-foreground">Slash commands renamed</span>: <code className="bg-[rgba(0,180,255,0.08)] text-[var(--xiv-blue)] px-1.5 py-0.5 rounded text-xs font-mono">/vm</code> is now <code className="bg-[rgba(0,180,255,0.08)] text-[var(--xiv-blue)] px-1.5 py-0.5 rounded text-xs font-mono">/xvm</code> and <code className="bg-[rgba(0,180,255,0.08)] text-[var(--xiv-blue)] px-1.5 py-0.5 rounded text-xs font-mono">/venue</code> is now <code className="bg-[rgba(0,180,255,0.08)] text-[var(--xiv-blue)] px-1.5 py-0.5 rounded text-xs font-mono">/xvenue</code>. Update your macros if you had any.</li>
             </ul>
           </div>
 
@@ -98,8 +98,8 @@ export default function StaffGuidePage() {
 
             <p className="text-sm leading-relaxed">Your venue dashboard shows:</p>
             <ul className="space-y-2 pl-2 text-sm leading-relaxed">
-              <li><span className="font-medium">My Shifts</span> &mdash; Your upcoming and active shifts</li>
-              <li><span className="font-medium">Upcoming Events</span> &mdash; Events happening soon at your venue. Some events may be auto-synced from <a href="https://partake.gg" target="_blank" rel="noopener noreferrer" className="text-[var(--xiv-blue)] underline underline-offset-2 hover:opacity-80">Partake.gg</a>; these show a <span className="font-medium text-[var(--xiv-blue)]">Partake</span> badge and update automatically.</li>
+              <li><span className="font-medium">My Shifts</span>: Your upcoming and active shifts</li>
+              <li><span className="font-medium">Upcoming Events</span>: Events happening soon at your venue. Some events may be auto-synced from <a href="https://partake.gg" target="_blank" rel="noopener noreferrer" className="text-[var(--xiv-blue)] underline underline-offset-2 hover:opacity-80">Partake.gg</a>; these show a <span className="font-medium text-[var(--xiv-blue)]">Partake</span> badge and update automatically.</li>
             </ul>
           </section>
 
@@ -155,8 +155,8 @@ export default function StaffGuidePage() {
             <div className="space-y-3">
               <h3 className="text-base font-semibold text-foreground/80">Viewing Your Shifts</h3>
               <ul className="space-y-2 pl-2 text-sm leading-relaxed">
-                <li><span className="font-medium">Plugin</span> &mdash; Open <code className="bg-[rgba(0,180,255,0.08)] text-[var(--xiv-blue)] px-1.5 py-0.5 rounded text-xs font-mono">/xvm</code> and go to the My Shift tab</li>
-                <li><span className="font-medium">Website</span> &mdash; Check the Shifts page or your dashboard home</li>
+                <li><span className="font-medium">Plugin</span>: Open <code className="bg-[rgba(0,180,255,0.08)] text-[var(--xiv-blue)] px-1.5 py-0.5 rounded text-xs font-mono">/xvm</code> and go to the My Shift tab</li>
+                <li><span className="font-medium">Website</span>: Check the Shifts page or your dashboard home</li>
               </ul>
             </div>
 
@@ -186,7 +186,7 @@ export default function StaffGuidePage() {
           <section id="tasks" className="space-y-6 scroll-mt-[84px]">
             <h2 className="font-cinzel text-2xl font-semibold border-b border-[rgba(0,180,255,0.2)] pb-3 tracking-wide">Tasks</h2>
 
-            <p className="text-sm leading-relaxed">Your manager may assign you tasks on the Tasks page &mdash; prep items, event duties, follow-ups, etc. Depending on your venue&apos;s task visibility setting, you may also see unassigned tasks or all tasks.</p>
+            <p className="text-sm leading-relaxed">Your manager assigns tasks on the Tasks page: prep items, event duties, follow-ups. Depending on your venue&apos;s task visibility setting, you may also see unassigned tasks or all tasks.</p>
             <p className="text-sm leading-relaxed text-muted-foreground">Mark tasks complete from the Tasks page when you&apos;re done.</p>
           </section>
 
@@ -196,9 +196,9 @@ export default function StaffGuidePage() {
 
             <p className="text-sm leading-relaxed">The Timeline shows a live feed of venue activity: sales and patron visits. Filter by:</p>
             <ul className="list-disc list-inside space-y-1.5 pl-4 text-sm text-muted-foreground">
-              <li><span className="font-medium text-foreground">All Activity</span> &mdash; Everything</li>
-              <li><span className="font-medium text-foreground">Sales</span> &mdash; Just transactions</li>
-              <li><span className="font-medium text-foreground">Patrons</span> &mdash; Just enter/leave events</li>
+              <li><span className="font-medium text-foreground">All Activity</span>: Everything</li>
+              <li><span className="font-medium text-foreground">Sales</span>: Just transactions</li>
+              <li><span className="font-medium text-foreground">Patrons</span>: Just enter/leave events</li>
             </ul>
             <p className="text-sm leading-relaxed text-muted-foreground">New entries appear without refreshing.</p>
           </section>

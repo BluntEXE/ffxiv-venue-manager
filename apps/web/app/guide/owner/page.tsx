@@ -59,10 +59,10 @@ export default function OwnerManagerGuidePage() {
           <div className="bg-[rgba(0,180,255,0.06)] border border-[rgba(0,180,255,0.2)] rounded-lg p-4 space-y-1.5">
             <p className="text-xs font-semibold text-[var(--xiv-blue)] uppercase tracking-widest">Recent Updates</p>
             <ul className="space-y-1 text-sm text-muted-foreground">
-              <li><span className="font-medium text-foreground">Website redesign</span> &mdash; The dashboard and all pages have a new look. Navigation, cards, and layout have been updated.</li>
-              <li><span className="font-medium text-foreground">Plugin UI redesign (v3.8.0)</span> &mdash; The plugin has a new XIV blue design to match the website, including a changelog window that opens automatically after updates.</li>
-              <li><span className="font-medium text-foreground">Slash commands renamed</span> &mdash; <code className="bg-[rgba(0,180,255,0.08)] text-[var(--xiv-blue)] px-1.5 py-0.5 rounded text-xs font-mono">/vm</code> is now <code className="bg-[rgba(0,180,255,0.08)] text-[var(--xiv-blue)] px-1.5 py-0.5 rounded text-xs font-mono">/xvm</code> and <code className="bg-[rgba(0,180,255,0.08)] text-[var(--xiv-blue)] px-1.5 py-0.5 rounded text-xs font-mono">/venue</code> is now <code className="bg-[rgba(0,180,255,0.08)] text-[var(--xiv-blue)] px-1.5 py-0.5 rounded text-xs font-mono">/xvenue</code>. Update any macros your team uses.</li>
-              <li><span className="font-medium text-foreground">Auto-greeter (v3.7.0)</span> &mdash; The plugin can now automatically send a <code className="bg-[rgba(0,180,255,0.08)] text-[var(--xiv-blue)] px-1.5 py-0.5 rounded text-xs font-mono">/tell</code> to patrons when they enter your venue. Configure in plugin Settings.</li>
+              <li><span className="font-medium text-foreground">Website redesign</span>: The dashboard and every page has a new look. Navigation, cards, and layout are all updated.</li>
+              <li><span className="font-medium text-foreground">Plugin UI redesign (v3.8.0)</span>: The plugin has a new XIV blue design to match the website, including a changelog window that opens automatically after updates.</li>
+              <li><span className="font-medium text-foreground">Slash commands renamed</span>: <code className="bg-[rgba(0,180,255,0.08)] text-[var(--xiv-blue)] px-1.5 py-0.5 rounded text-xs font-mono">/vm</code> is now <code className="bg-[rgba(0,180,255,0.08)] text-[var(--xiv-blue)] px-1.5 py-0.5 rounded text-xs font-mono">/xvm</code> and <code className="bg-[rgba(0,180,255,0.08)] text-[var(--xiv-blue)] px-1.5 py-0.5 rounded text-xs font-mono">/venue</code> is now <code className="bg-[rgba(0,180,255,0.08)] text-[var(--xiv-blue)] px-1.5 py-0.5 rounded text-xs font-mono">/xvenue</code>. Update any macros your team uses.</li>
+              <li><span className="font-medium text-foreground">Auto-greeter (v3.7.0)</span>: The plugin can now automatically send a <code className="bg-[rgba(0,180,255,0.08)] text-[var(--xiv-blue)] px-1.5 py-0.5 rounded text-xs font-mono">/tell</code> to patrons when they enter your venue. Configure in plugin Settings.</li>
             </ul>
           </div>
 
@@ -101,13 +101,13 @@ export default function OwnerManagerGuidePage() {
               <p className="text-sm leading-relaxed">In venue Settings:</p>
               <ul className="space-y-3 pl-2 text-sm leading-relaxed">
                 <li className="space-y-1.5">
-                  <span className="font-medium">Visibility Controls</span> &mdash; Control what staff can see:
+                  <span className="font-medium">Visibility Controls</span>: Control what staff can see:
                   <ul className="list-disc list-inside pl-4 space-y-1 mt-1.5 text-muted-foreground">
                     <li><code className="bg-[rgba(0,180,255,0.08)] text-[var(--xiv-blue)] px-1.5 py-0.5 rounded text-xs font-mono">salesVisibility</code>: <code className="bg-[rgba(0,180,255,0.08)] text-[var(--xiv-blue)] px-1.5 py-0.5 rounded text-xs font-mono">all</code> (everyone sees all sales), <code className="bg-[rgba(0,180,255,0.08)] text-[var(--xiv-blue)] px-1.5 py-0.5 rounded text-xs font-mono">own</code> (staff see only their own), <code className="bg-[rgba(0,180,255,0.08)] text-[var(--xiv-blue)] px-1.5 py-0.5 rounded text-xs font-mono">none</code></li>
-                    <li><code className="bg-[rgba(0,180,255,0.08)] text-[var(--xiv-blue)] px-1.5 py-0.5 rounded text-xs font-mono">revenueVisibility</code>: Same options &mdash; controls revenue numbers in analytics and Live Mode</li>
+                    <li><code className="bg-[rgba(0,180,255,0.08)] text-[var(--xiv-blue)] px-1.5 py-0.5 rounded text-xs font-mono">revenueVisibility</code>: same options; controls revenue numbers in Analytics and Live Mode</li>
                   </ul>
                 </li>
-                <li><span className="font-medium">Discord Webhooks</span> &mdash; Separate webhook URLs for staff, events, and revenue channels</li>
+                <li><span className="font-medium">Discord Webhooks</span>: Separate webhook URLs for staff, events, and revenue channels</li>
               </ul>
             </div>
           </section>
@@ -124,9 +124,9 @@ export default function OwnerManagerGuidePage() {
             <div className="space-y-3">
               <h3 className="text-base font-semibold text-foreground/80">Roles</h3>
               <ul className="space-y-2 pl-2 text-sm leading-relaxed">
-                <li><span className="font-medium">Owner</span> &mdash; Full access to everything</li>
-                <li><span className="font-medium">Manager</span> &mdash; Can manage events, tasks, shifts, services, staff, and view analytics</li>
-                <li><span className="font-medium">Staff</span> &mdash; Can log sales, view their shifts, see events. Visibility depends on settings.</li>
+                <li><span className="font-medium">Owner</span>: Full access to everything</li>
+                <li><span className="font-medium">Manager</span>: Can manage events, tasks, shifts, services, staff, and view analytics</li>
+                <li><span className="font-medium">Staff</span>: Can log sales, view their shifts, see events. Visibility depends on settings.</li>
               </ul>
             </div>
 
@@ -152,14 +152,14 @@ export default function OwnerManagerGuidePage() {
           <section id="services" className="space-y-6 scroll-mt-[84px]">
             <h2 className="font-cinzel text-2xl font-semibold border-b border-[rgba(0,180,255,0.2)] pb-3 tracking-wide">Services</h2>
 
-            <p className="text-sm leading-relaxed">Services are the offerings your staff sell — drinks, dances, lap dances, etc. They appear as selectable items when staff log a sale in the plugin or website.</p>
+            <p className="text-sm leading-relaxed">Services are the offerings your staff sell: drinks, dances, lap dances. They appear as selectable items when staff log a sale in the plugin or on the website.</p>
 
             <div className="space-y-3">
               <h3 className="text-base font-semibold text-foreground/80">Creating Services</h3>
               <ol className="list-decimal list-inside space-y-1.5 pl-2 text-sm leading-relaxed">
                 <li>Go to Services and click &quot;Add Service&quot;</li>
                 <li>Set a name, optional description, and default price</li>
-                <li>Assign to one or more custom roles (optional) &mdash; staff only see services linked to their role(s), keeping the plugin clean</li>
+                <li>Assign to custom roles (optional). Staff only see services linked to their roles, keeping the plugin list clean.</li>
                 <li>Toggle active/inactive to hide services without deleting them</li>
               </ol>
             </div>
@@ -299,7 +299,7 @@ export default function OwnerManagerGuidePage() {
           <section id="tasks" className="space-y-6 scroll-mt-[84px]">
             <h2 className="font-cinzel text-2xl font-semibold border-b border-[rgba(0,180,255,0.2)] pb-3 tracking-wide">Tasks</h2>
 
-            <p className="text-sm leading-relaxed">Tasks let you assign and track to-dos for your team &mdash; prep items before an event, follow-ups, recurring duties, etc.</p>
+            <p className="text-sm leading-relaxed">Tasks let you assign and track to-dos for your team: event prep, follow-ups, recurring duties.</p>
 
             <ul className="list-disc list-inside space-y-1.5 pl-4 text-sm leading-relaxed">
               <li>Create tasks from the Tasks page; optionally assign to a staff member and set a due date</li>
@@ -316,7 +316,7 @@ export default function OwnerManagerGuidePage() {
 
             <ul className="list-disc list-inside space-y-1.5 pl-4 text-sm leading-relaxed">
               <li>Enable and configure the message in plugin <span className="font-medium">Settings</span></li>
-              <li>Only fires for patrons &mdash; staff on active shifts are not greeted</li>
+              <li>Only fires for patrons. Staff on active shifts are not greeted.</li>
               <li>Works alongside patron tracking; the plugin must be running</li>
             </ul>
           </section>
@@ -327,10 +327,10 @@ export default function OwnerManagerGuidePage() {
 
             <p className="text-sm leading-relaxed">The Patron Logs page (Owners and Managers only) gives you a full historical view of every patron visit. Filter by:</p>
             <ul className="list-disc list-inside space-y-1.5 pl-4 text-sm text-muted-foreground">
-              <li><span className="font-medium text-foreground">Event</span> &mdash; see all visits for a specific event</li>
-              <li><span className="font-medium text-foreground">Date range</span> &mdash; defaults to the last 7 days</li>
-              <li><span className="font-medium text-foreground">Character name</span> &mdash; look up a specific visitor</li>
-              <li><span className="font-medium text-foreground">Classification</span> &mdash; patron, staff, or all (the plugin separates staff on active shifts from patrons)</li>
+              <li><span className="font-medium text-foreground">Event</span>: see all visits for a specific event</li>
+              <li><span className="font-medium text-foreground">Date range</span>: defaults to the last 7 days</li>
+              <li><span className="font-medium text-foreground">Character name</span>: look up a specific visitor</li>
+              <li><span className="font-medium text-foreground">Classification</span>: patron, staff, or all (the plugin separates staff on active shifts from patrons)</li>
             </ul>
           </section>
 

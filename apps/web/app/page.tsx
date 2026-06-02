@@ -167,7 +167,7 @@ export default async function Home() {
                 <div className="sm:col-span-2 bg-background border border-[var(--blue-015)] rounded-lg overflow-hidden">
                   {[
                     { icon: "enter", label: <><strong>Seraphine Valois</strong> entered the venue</>, time: "just now", blue: false },
-                    { icon: "sale",  label: <>K&apos;tani logged a sale — <span className="text-[var(--xiv-blue)] font-semibold">500 gil</span></>, time: "1m ago", blue: true },
+                    { icon: "sale",  label: <>K&apos;tani logged a sale: <span className="text-[var(--xiv-blue)] font-semibold">500 gil</span></>, time: "1m ago", blue: true },
                   ].map(({ icon, label, time, blue }, i) => (
                     <div key={i} className={`flex items-center gap-2.5 px-4 py-2.5 text-[0.8rem] ${i > 0 ? "border-t border-[var(--blue-008)]" : ""}`}>
                       <span className={`w-[26px] h-[26px] rounded flex items-center justify-center flex-shrink-0 ${blue ? "bg-[var(--blue-010)] text-[var(--xiv-blue)] border border-[var(--blue-018)]" : "bg-[var(--success-soft)] text-[var(--success-text)] border border-[rgba(16,185,129,0.25)]"}`}>
@@ -232,7 +232,7 @@ export default async function Home() {
               icon: <><path d="M15 3h4a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-4"/><polyline points="10 17 15 12 10 7"/><line x1="15" y1="12" x2="3" y2="12"/></>,
               color: "em",
               title: "Live patron tracking",
-              desc: "See who's in your venue in real time — arrivals, departures and headcount stream in live as the night unfolds.",
+              desc: "See who's in your venue in real time. Arrivals, departures, and headcount stream in as the night unfolds.",
             },
             {
               icon: <><rect x="6" y="2" width="12" height="20" rx="2"/><line x1="12" y1="18" x2="12" y2="18"/></>,
@@ -256,13 +256,13 @@ export default async function Home() {
               icon: <><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></>,
               color: "",
               title: "Sales & payroll",
-              desc: "Tally gil, pool tips and run payroll by the hour — every sale tied to the staff member who made it.",
+              desc: "Tally gil, pool tips, and run payroll by the hour. Every sale is tied to the staff member who logged it.",
             },
             {
               icon: <><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></>,
               color: "pink",
               title: "Free & community-built",
-              desc: "Made by venue owners, for venue owners. No paid tiers, no upsells — just a tool the community keeps alive.",
+              desc: "Made by venue owners, for venue owners. No paid tiers, no upsells. Support it on Ko-fi if it helps.",
             },
           ].map(({ icon, color, title, desc }) => (
             <div
@@ -349,9 +349,9 @@ export default async function Home() {
           {/* Steps */}
           <div className="flex flex-col gap-1 max-w-[760px] mx-auto">
             {[
-              { n: "01", title: "Sign in with Discord", desc: "Create your venue in 30 seconds — no forms, no credit card. Your Discord account is all you need." },
+              { n: "01", title: "Sign in with Discord", desc: "Create your venue in 30 seconds. No forms, no credit card. Your Discord account is all you need." },
               { n: "02", title: "Install the Dalamud plugin", desc: "Add the plugin from inside FFXIV to start capturing patrons and logging sales with slash commands." },
-              { n: "03", title: "Run your venue from the dashboard", desc: "Open Live Mode on event night and watch sales, patrons and shifts roll in — then manage it all from one place." },
+              { n: "03", title: "Run your venue from the dashboard", desc: "Open Live Mode on event night. Watch sales, patrons, and shifts in real time and manage everything from one place." },
             ].map(({ n, title, desc }) => (
               <div key={n} className="grid grid-cols-[5rem_1fr] gap-[22px] py-[22px] border-t border-[var(--blue-008)] items-start xiv-scroll-reveal">
                 <div className="font-cinzel font-bold text-[2.6rem] text-[rgba(0,180,255,0.2)] leading-none">{n}</div>
@@ -411,7 +411,7 @@ export default async function Home() {
           </h2>
           <p className="text-muted-foreground text-[1.05rem] leading-relaxed max-w-[50ch] mx-auto mt-4 mb-6">
             XIV Venue Manager is built and maintained by venue owners. It&apos;s free to use,
-            with no paid tiers — if it helps your venue, you can support the project on Ko-fi.
+            with no paid tiers. If it helps your venue, you can support the project on Ko-fi.
           </p>
           <div className="flex gap-3 justify-center flex-wrap">
             <Button asChild size="lg" className="xiv-btn-shimmer xiv-cta text-lg px-8 py-6 group">
@@ -514,7 +514,7 @@ export default async function Home() {
           {/* Footer bottom */}
           <div className="flex flex-col sm:flex-row items-center justify-between gap-4 pt-6 border-t border-[var(--blue-008)]">
             <p className="text-[0.72rem] text-[var(--fg-faint)] leading-relaxed text-center sm:text-left max-w-[52ch]">
-              &copy; {new Date().getFullYear()} XIV Venue Manager. A community fan tool — not affiliated with SQUARE ENIX CO., LTD. FINAL FANTASY is a registered trademark of Square Enix Holdings Co., Ltd.
+              &copy; {new Date().getFullYear()} XIV Venue Manager. A community fan tool, not affiliated with SQUARE ENIX CO., LTD. FINAL FANTASY is a registered trademark of Square Enix Holdings Co., Ltd.
             </p>
             {/* Social icons */}
             <div className="flex items-center gap-2">
