@@ -201,19 +201,21 @@ export default async function EventsPage({
                         <div className="flex-1 h-px bg-[rgba(0,180,255,0.15)]" />
                         <span className="text-xs text-muted-foreground">{monthEvents.length}</span>
                       </div>
-                      <div className="grid grid-cols-1 gap-2">
+                      <div className="panel">
                         {monthEvents.map((event: typeof pastEvents[number]) => (
-                          <Link key={event.id} href={`/dashboard/${slug}/events/${event.id}`} className="group">
-                            <div className="xiv-card rounded-xl p-3.5 flex items-center gap-4 opacity-70 hover:opacity-100 transition-all hover:border-[rgba(0,180,255,0.3)]">
-                              <div className="w-10 flex-shrink-0 text-center">
-                                <div className="text-[0.58rem] font-semibold uppercase tracking-wide text-[var(--xiv-blue)]">{formatServerTime(event.startTime, "date").split(" ")[0]}</div>
-                                <div className="font-cinzel text-xl font-bold leading-none mt-0.5">{new Date(event.startTime).getUTCDate()}</div>
+                          <Link key={event.id} href={`/dashboard/${slug}/events/${event.id}`} className="block border-b border-[var(--blue-008)] last:border-b-0 hover:bg-[var(--blue-004)] transition-colors">
+                            <div className="event-row opacity-75 hover:opacity-100 transition-opacity">
+                              <div className="datebox off">
+                                <div className="mo">{formatServerTime(event.startTime, "date").split(" ")[0]}</div>
+                                <div className="dy">{new Date(event.startTime).getUTCDate()}</div>
                               </div>
-                              <div className="flex-1 min-w-0">
-                                <p className="font-medium text-sm truncate group-hover:text-[var(--xiv-blue)] transition-colors">{event.title}</p>
-                                <p className="text-xs text-muted-foreground mt-0.5">{formatServerTime(event.startTime, "time")} {SERVER_TIME_LABEL}</p>
+                              <div className="ev-mid">
+                                <div className="ev-title">{event.title}</div>
+                                <div className="ev-sub">
+                                  <span className="meta">{formatServerTime(event.startTime, "time")} {SERVER_TIME_LABEL}</span>
+                                </div>
                               </div>
-                              <div className="flex gap-1.5 shrink-0">
+                              <div className="ev-right">
                                 <Badge className={statusColors[event.status as keyof typeof statusColors]}>{event.status}</Badge>
                               </div>
                             </div>
@@ -239,47 +241,40 @@ export default async function EventsPage({
                 <p className="text-muted-foreground">No upcoming events. Check back soon or ask your manager.</p>
               </div>
             ) : (
-              <div className="grid grid-cols-1 gap-3">
+              <div className="panel">
                 {upcomingEvents.map((event: typeof upcomingEvents[number]) => (
-                  <div key={event.id} className="xiv-card rounded-xl p-4 transition-all duration-200 hover:border-[rgba(0,180,255,0.4)] flex gap-4">
-                    {/* Datebox */}
-                    <div className="w-10 flex-shrink-0 text-center pt-0.5">
-                      <div className="text-[0.58rem] font-semibold uppercase tracking-wide text-[var(--xiv-blue)]">
-                        {formatServerTime(event.startTime, "date").split(" ")[0]}
+                  <div key={event.id} className="event-row border-b border-[var(--blue-008)] last:border-b-0 hover:bg-[var(--blue-004)] transition-colors">
+                    <div className="datebox">
+                      <div className="mo">{formatServerTime(event.startTime, "date").split(" ")[0]}</div>
+                      <div className="dy">{new Date(event.startTime).getUTCDate()}</div>
+                    </div>
+                    <div className="ev-mid">
+                      <div className="ev-title">
+                        {event.title}
+                        <Badge className={statusColors[event.status as keyof typeof statusColors]}>{event.status}</Badge>
+                        <Badge variant="outline">{typeLabels[event.eventType as keyof typeof typeLabels]}</Badge>
+                        {event.partakeEventId && <Badge variant="outline" className="border-[rgba(0,180,255,0.4)] text-[var(--xiv-blue)]">Partake</Badge>}
                       </div>
-                      <div className="font-cinzel text-xl font-bold leading-none mt-0.5">
-                        {new Date(event.startTime).getUTCDate()}
+                      <div className="ev-sub">
+                        <span className="meta">
+                          {format(new Date(event.startTime), "EEE")} · {formatServerTime(event.startTime, "time")}
+                          {event.endTime ? ` – ${formatServerTime(event.endTime, "time")} ${SERVER_TIME_LABEL}` : ` ${SERVER_TIME_LABEL}`}
+                        </span>
+                        {(event.attendanceCount || event.partakeAttendeeCount || event._count.patronLogs > 0) && (
+                          <span className="meta">
+                            {event.attendanceCount
+                              ? `${event.attendanceCount} attended`
+                              : event.partakeAttendeeCount
+                              ? `${event.partakeAttendeeCount} RSVP via Partake`
+                              : `${event._count.patronLogs} patron logs`}
+                          </span>
+                        )}
+                        {event.location && <span className="meta truncate max-w-[200px]">{event.location}</span>}
                       </div>
                     </div>
-                    <div className="flex-1 min-w-0">
-                      <div className="flex justify-between items-start gap-3 flex-wrap">
-                        <p className="font-semibold truncate">{event.title}</p>
-                        <div className="flex gap-1.5 flex-wrap shrink-0">
-                          <Badge className={statusColors[event.status as keyof typeof statusColors]}>{event.status}</Badge>
-                          <Badge variant="outline">{typeLabels[event.eventType as keyof typeof typeLabels]}</Badge>
-                          {event.partakeEventId && <Badge variant="outline" className="border-[rgba(0,180,255,0.4)] text-[var(--xiv-blue)]">Partake</Badge>}
-                        </div>
-                      </div>
-                      <p className="text-xs text-muted-foreground mt-0.5 flex items-center gap-1">
-                        <svg className="w-3 h-3" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
-                        {format(new Date(event.startTime), "EEE")} · {formatServerTime(event.startTime, "time")}
-                        {event.endTime ? ` – ${formatServerTime(event.endTime, "time")} ${SERVER_TIME_LABEL}` : ` ${SERVER_TIME_LABEL}`}
-                      </p>
-                      {(event.attendanceCount || event.partakeAttendeeCount || event._count.patronLogs > 0) && (
-                        <p className="text-xs text-muted-foreground mt-1 flex items-center gap-1">
-                          <svg className="w-3 h-3" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
-                          {event.attendanceCount
-                            ? `${event.attendanceCount} attended`
-                            : event.partakeAttendeeCount
-                            ? `${event.partakeAttendeeCount} RSVP via Partake`
-                            : `${event._count.patronLogs} patron logs`}
-                        </p>
-                      )}
-                      {event.location && <p className="text-xs text-muted-foreground mt-1 truncate">{event.location}</p>}
-                      <div className="flex gap-2 mt-3">
-                        <Button asChild variant="outline" size="sm"><Link href={`/dashboard/${slug}/events/${event.id}`}>View</Link></Button>
-                        <Button asChild variant="outline" size="sm"><Link href={`/dashboard/${slug}/events/${event.id}/edit`}>Edit</Link></Button>
-                      </div>
+                    <div className="ev-right">
+                      <Button asChild variant="outline" size="sm"><Link href={`/dashboard/${slug}/events/${event.id}`}>View</Link></Button>
+                      <Button asChild variant="outline" size="sm"><Link href={`/dashboard/${slug}/events/${event.id}/edit`}>Edit</Link></Button>
                     </div>
                   </div>
                 ))}
@@ -308,20 +303,26 @@ export default async function EventsPage({
                         <div className="flex-1 h-px bg-[rgba(0,180,255,0.15)]" />
                         <span className="text-xs text-muted-foreground">{monthEvents.length} events</span>
                       </div>
-                      <div className="grid grid-cols-1 gap-2">
+                      <div className="panel">
                         {monthEvents.map((event: typeof pastEvents[number]) => (
-                          <Link key={event.id} href={`/dashboard/${slug}/events/${event.id}`} className="group">
-                            <div className="xiv-card rounded-xl p-3.5 flex items-center justify-between gap-4 opacity-70 hover:opacity-100 transition-all duration-200 hover:border-[rgba(0,180,255,0.3)]">
-                              <div className="flex-1 min-w-0">
-                                <p className="font-medium text-sm truncate group-hover:text-[var(--xiv-blue)] transition-colors">{event.title}</p>
-                                <p className="text-xs text-muted-foreground mt-0.5">
-                                  {formatServerTime(event.startTime, "datelong")} · {formatServerTime(event.startTime, "time")} {SERVER_TIME_LABEL}
-                                </p>
+                          <Link key={event.id} href={`/dashboard/${slug}/events/${event.id}`} className="block border-b border-[var(--blue-008)] last:border-b-0 hover:bg-[var(--blue-004)] transition-colors">
+                            <div className="event-row opacity-75 hover:opacity-100 transition-opacity">
+                              <div className="datebox off">
+                                <div className="mo">{formatServerTime(event.startTime, "date").split(" ")[0]}</div>
+                                <div className="dy">{new Date(event.startTime).getUTCDate()}</div>
                               </div>
-                              <div className="flex gap-1.5 shrink-0">
+                              <div className="ev-mid">
+                                <div className="ev-title">
+                                  {event.title}
+                                  {event.partakeEventId && <Badge variant="outline" className="border-[rgba(0,180,255,0.4)] text-[var(--xiv-blue)]">Partake</Badge>}
+                                </div>
+                                <div className="ev-sub">
+                                  <span className="meta">{formatServerTime(event.startTime, "time")} {SERVER_TIME_LABEL}</span>
+                                </div>
+                              </div>
+                              <div className="ev-right">
                                 <Badge className={statusColors[event.status as keyof typeof statusColors]}>{event.status}</Badge>
                                 <Badge variant="outline">{typeLabels[event.eventType as keyof typeof typeLabels]}</Badge>
-                                {event.partakeEventId && <Badge variant="outline" className="border-[rgba(0,180,255,0.4)] text-[var(--xiv-blue)]">Partake</Badge>}
                               </div>
                             </div>
                           </Link>

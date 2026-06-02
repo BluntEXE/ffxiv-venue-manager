@@ -645,7 +645,7 @@
   display: flex;
   align-items: center;
   gap: 12px;
-  margin: 36px 0 18px;
+  margin: 32px 0 16px;
 }
 .section-label .sl-label {
   font-size: 0.72rem;
@@ -720,7 +720,7 @@
 
 /* Sidebar scroll area — hide native scrollbar, show thin thumb on hover */
 .sidebar-scroll { scrollbar-width: thin; scrollbar-color: var(--blue-015) transparent; }
-.sidebar-scroll::-webkit-scrollbar { width: 4px; }
+.sidebar-scroll::-webkit-scrollbar { width: 6px; }
 .sidebar-scroll::-webkit-scrollbar-track { background: transparent; }
 .sidebar-scroll::-webkit-scrollbar-thumb { background: var(--blue-015); border-radius: 999px; }
 .sidebar-scroll:hover::-webkit-scrollbar-thumb { background: var(--blue-035); }
@@ -734,22 +734,6 @@
   color: var(--fg-faint);
 }
 
-/* Status pills */
-.xiv-status-open {
-  background: rgba(16, 185, 129, 0.12);
-  color: var(--success-text);
-  border: 1px solid rgba(16, 185, 129, 0.25);
-}
-.xiv-status-closed {
-  background: rgba(243, 139, 168, 0.10);
-  color: var(--destructive);
-  border: 1px solid rgba(243, 139, 168, 0.20);
-}
-.xiv-status-soon {
-  background: rgba(249, 226, 175, 0.10);
-  color: var(--warning);
-  border: 1px solid rgba(249, 226, 175, 0.20);
-}
 
 /* Live pinging dot */
 @keyframes xiv-ping {
@@ -938,10 +922,10 @@
 
 /* ── Layout utilities from prototype ── */
 
-/* .cols-2 — two equal columns, matches prototype usage */
+/* .cols-2 — asymmetric two-column, matches prototype 1.6fr 1fr */
 .cols-2 {
   display: grid;
-  grid-template-columns: 1fr 1fr;
+  grid-template-columns: 1.6fr 1fr;
   gap: 18px;
   align-items: start;
 }
@@ -956,7 +940,7 @@
   justify-content: space-between;
   gap: 16px;
   flex-wrap: wrap;
-  margin-bottom: 24px;
+  margin-bottom: 22px;
 }
 
 /* .stack — vertical flex column for sidebar panels */
@@ -971,13 +955,13 @@
   text-transform: uppercase;
   letter-spacing: 0.06em;
   color: var(--xiv-blue);
-  padding: 12px 20px;
+  padding: 13px 22px;
   border-bottom: 1px solid var(--blue-008);
 }
 .dtable th.t-num, .dtable td.t-num { text-align: right; }
 .dtable td {
-  padding: 13px 20px;
-  font-size: 0.88rem;
+  padding: 14px 22px;
+  font-size: 0.86rem;
   border-bottom: 1px solid var(--blue-008);
   vertical-align: middle;
 }
