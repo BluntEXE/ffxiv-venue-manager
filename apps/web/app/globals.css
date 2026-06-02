@@ -1187,9 +1187,9 @@
 .hours-row.today { background: var(--blue-007); }
 .hours-row.today .day { color: var(--xiv-blue); font-weight: 600; }
 .loc-block { padding: 16px 20px; }
-.loc-line { display: flex; justify-content: space-between; font-size: 0.86rem; padding: 6px 0; }
+.loc-line { display: grid; grid-template-columns: max-content 1fr; gap: 8px; font-size: 0.86rem; padding: 6px 0; align-items: baseline; }
 .loc-line .lk { color: var(--fg-faint); }
-.loc-line .lv { color: var(--foreground); font-weight: 500; }
+.loc-line .lv { color: var(--foreground); font-weight: 500; text-align: right; }
 .host-row { display: flex; align-items: center; gap: 12px; padding: 16px 20px; }
 .host-row .av { width: 42px; height: 42px; border-radius: 999px; display: grid; place-items: center; font-size: 0.9rem; font-weight: 600; color: var(--xiv-navy); flex-shrink: 0; background: linear-gradient(135deg, #f9e2af, #e0c98a); }
 .host-row .hn { font-family: var(--font-outfit), system-ui, sans-serif; font-weight: 600; font-size: 0.95rem; display: flex; align-items: center; gap: 7px; }
