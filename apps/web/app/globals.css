@@ -1054,6 +1054,34 @@
   .event-row .ev-right { width: 100%; justify-content: space-between; }
 }
 
+/* ── Stat cards — matches prototype .stat spec ── */
+.stat { background: var(--card); border: 1px solid var(--blue-015); border-radius: var(--radius-lg); padding: 16px 18px; transition: border-color .2s ease; }
+.stat:hover { border-color: var(--blue-035); }
+.stat .top { display: flex; align-items: center; justify-content: space-between; }
+.stat .sb { width: 30px; height: 30px; border-radius: var(--radius-sm); display: grid; place-items: center; background: var(--blue-010); border: 1px solid var(--blue-018); color: var(--xiv-blue); flex-shrink: 0; }
+.stat .sb.em { background: var(--success-soft); border-color: rgba(16,185,129,0.25); color: var(--success-text); }
+.stat .sb.am { background: rgba(249,226,175,0.10); border-color: rgba(249,226,175,0.25); color: var(--warning); }
+.stat .sb svg { width: 16px; height: 16px; }
+.stat .k { font-size: 0.64rem; text-transform: uppercase; letter-spacing: 0.12em; color: var(--fg-faint); font-weight: 600; margin-top: 14px; }
+.stat .v { font-family: var(--font-outfit), system-ui, sans-serif; font-weight: 700; font-size: 1.7rem; color: var(--foreground); margin-top: 4px; line-height: 1; }
+.stat .v .unit { font-size: 0.9rem; font-weight: 500; color: var(--muted-foreground); margin-left: 3px; }
+.stat .delta { font-size: 0.72rem; margin-top: 7px; display: inline-flex; align-items: center; gap: 4px; color: var(--success-text); }
+.stat .delta.flat { color: var(--fg-faint); }
+.stat .delta.down { color: var(--destructive); }
+.stat .delta svg { width: 12px; height: 12px; }
+
+/* ── Filters bar + tabs + search — matches prototype .filters spec ── */
+.filters { display: flex; align-items: center; gap: 14px; margin: 24px 0 16px; flex-wrap: wrap; }
+.tabs { display: flex; gap: 4px; background: var(--card); border: 1px solid var(--blue-015); border-radius: var(--radius-full); padding: 4px; }
+.tab { font-family: var(--font-sans); font-size: 0.85rem; font-weight: 600; border: none; background: transparent; color: var(--muted-foreground); padding: 7px 16px; border-radius: var(--radius-full); cursor: pointer; display: inline-flex; align-items: center; gap: 7px; transition: background .2s ease, color .2s ease; }
+.tab:hover { color: var(--foreground); background: var(--blue-007); }
+.tab.active { background: var(--xiv-blue); color: var(--xiv-navy); }
+.search { flex: 1; min-width: 200px; max-width: 320px; position: relative; display: flex; align-items: center; }
+.search svg { position: absolute; left: 14px; width: 16px; height: 16px; color: var(--fg-faint); pointer-events: none; }
+.search input { width: 100%; font-family: var(--font-sans); font-size: 0.88rem; color: var(--foreground); background: var(--card); border: 1px solid var(--blue-015); border-radius: var(--radius-md); padding: 10px 14px 10px 40px; outline: none; transition: border-color .2s ease; }
+.search input::placeholder { color: var(--fg-faint); }
+.search input:focus { border-color: var(--blue-035); }
+
 /* ── Kanban (Tasks) — matches prototype .kanban spec ── */
 .kanban { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; align-items: start; }
 @media (max-width: 1100px) { .kanban { grid-template-columns: 1fr; } }
