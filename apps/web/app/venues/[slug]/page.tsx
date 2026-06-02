@@ -19,6 +19,7 @@ import { MapPin, Calendar, Clock, Crown, Image as ImageIcon, ChevronLeft, Scroll
 import { getServerTimeLabel, formatServerTime } from "@/lib/server-time"
 import { VenueFollowButton } from "@/components/venue-follow-button"
 import { CopyAddressButton, CopyAddressInline } from "@/components/copy-address-button"
+import { SiteFooter } from "@/components/site-footer"
 
 export default async function VenueProfilePage({
   params,
@@ -353,19 +354,7 @@ export default async function VenueProfilePage({
         </div>
       </section>
 
-      {/* ── Footer ── */}
-      <footer className="bg-[var(--card-mantle)] border-t border-[var(--blue-008)] py-[30px]">
-        <div className="max-w-[1080px] mx-auto px-8 flex justify-between gap-4 flex-wrap items-center">
-          <Link href="/" className="inline-flex items-center gap-2 text-[0.92rem] font-cinzel font-bold">
-            {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img src="/xiv-icon.png" alt="" width={26} height={26} />
-            <span><span className="text-[var(--xiv-blue)]">XIV</span> <span className="text-foreground/80">Venue Manager</span></span>
-          </Link>
-          <p className="text-[0.74rem] text-[var(--fg-faint)] leading-[1.6] max-w-[60ch]">
-            A community fan tool, not affiliated with SQUARE ENIX CO., LTD. FINAL FANTASY is a registered trademark of Square Enix Holdings Co., Ltd.
-          </p>
-        </div>
-      </footer>
+      <SiteFooter />
     </div>
   )
 }
