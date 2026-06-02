@@ -72,6 +72,8 @@ export default function SettingsPage({
   const [venueName, setVenueName] = useState("")
   const [venueDescription, setVenueDescription] = useState("")
   const [venueLocation, setVenueLocation] = useState("")
+  const [venueDataCenter, setVenueDataCenter] = useState("")
+  const [venueWorld, setVenueWorld] = useState("")
   const [tagInput, setTagInput] = useState("")
 
   const [isLoading, setIsLoading] = useState(true)
@@ -111,6 +113,8 @@ export default function SettingsPage({
         setVenueName(venue.name ?? "")
         setVenueDescription(venue.description ?? "")
         setVenueLocation(venue.location ?? "")
+        setVenueDataCenter(venue.dataCenter ?? "")
+        setVenueWorld(venue.world ?? "")
         if (venue.memberships?.[0]) {
           setUserRole(venue.memberships[0].role)
         }
@@ -335,7 +339,9 @@ export default function SettingsPage({
                   </div>
                   <div className="space-y-1.5">
                     <Label>Data Centre &amp; World</Label>
-                    <Input value={`${venueDescription ? "" : ""}${slug}`} disabled
+                    <Input
+                      value={venueDataCenter && venueWorld ? `${venueDataCenter} · ${venueWorld}` : ""}
+                      disabled
                       className="bg-background border-[var(--blue-015)] opacity-50 cursor-not-allowed text-[var(--fg-faint)] font-mono text-sm"
                       placeholder="Set during venue creation" />
                   </div>

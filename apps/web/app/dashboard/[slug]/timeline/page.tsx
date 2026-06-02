@@ -46,7 +46,7 @@ export default async function TimelinePage({
           </div>
           <h1 className="page-h1">Timeline</h1>
           <p className="text-[0.95rem] text-muted-foreground mt-[10px] max-w-[560px] leading-[1.6]">
-            A running log of everything that happens at your venue — events, sales, shifts and milestones.
+            A running log of everything that happens at your venue: events, sales, shifts, and milestones.
           </p>
         </div>
 
