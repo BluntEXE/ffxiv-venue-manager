@@ -142,10 +142,15 @@ export default async function LivePage({
       userRole={userRole}
     >
       <div className="page-inner">
-        {/* Eyebrow */}
-        <div className="flex items-center gap-2 mb-4">
-          <span className="w-[7px] h-[7px] bg-[rgba(0,180,255,0.7)] rotate-45 shadow-[0_0_10px_rgba(0,180,255,0.5)] flex-shrink-0" />
-          <span className="text-[0.72rem] font-semibold uppercase tracking-[0.14em] text-[var(--xiv-blue)]">{venue.name} &middot; {venue.dataCenter} &middot; {venue.world}</span>
+        {/* Header — matches all other dashboard pages */}
+        <div className="head-row">
+          <div>
+            <div className="flex items-center gap-2 mb-1.5">
+              <span className="w-[7px] h-[7px] bg-[rgba(0,180,255,0.7)] rotate-45 shadow-[0_0_10px_rgba(0,180,255,0.5)] flex-shrink-0" />
+              <span className="text-[0.72rem] font-semibold uppercase tracking-[0.14em] text-[var(--xiv-blue)]">{venue.name} &middot; {venue.dataCenter} &middot; {venue.world}</span>
+            </div>
+            <h1 className="page-h1">Live Mode</h1>
+          </div>
         </div>
 
         {activeEvent ? (
@@ -180,8 +185,7 @@ export default async function LivePage({
             }))}
           />
         ) : (
-          <div className="mt-2">
-            <h1 className="page-h1 mb-4">Live Mode</h1>
+          <div>
             <Card>
               <CardContent className="py-12 text-center space-y-4">
                 <p className="text-muted-foreground">
