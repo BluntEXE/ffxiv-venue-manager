@@ -24,7 +24,14 @@ export function NavbarClient({ session, venues }: NavbarClientProps) {
   const pathname = usePathname()
   const [pluginSynced, setPluginSynced] = useState(false)
 
-  const isVenuePage = !!(pathname?.match(/^\/dashboard\/[^/]+(?:\/|$)/) && pathname !== "/dashboard")
+  // True for any page that has a sidebar: venue dashboard pages, discover, following
+  // Excludes /dashboard/account/* (personal pages with no sidebar)
+  const isVenuePage = !!(
+    pathname?.match(/^\/dashboard\/(?!account)[^/]+(?:\/|$)/) ||
+    pathname === "/discover" ||
+    pathname?.startsWith("/discover?") ||
+    pathname === "/following"
+  )
 
   // Current venue context for user chip subtitle
   const currentSlug = pathname?.match(/^\/dashboard\/([^/]+)/)?.[1]

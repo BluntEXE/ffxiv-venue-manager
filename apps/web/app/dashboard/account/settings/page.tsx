@@ -55,14 +55,16 @@ export default function AccountSettingsPage() {
   return (
     <div className="page-inner" style={{ maxWidth: 740 }}>
       {/* Header */}
-      <div className="mb-[6px]">
-        <div className="flex items-center gap-2 mb-3">
-          <span className="w-[7px] h-[7px] bg-[rgba(0,180,255,0.7)] rotate-45 shadow-[0_0_10px_rgba(0,180,255,0.5)]" />
-          <Link href="/dashboard/account" className="text-[0.72rem] font-semibold uppercase tracking-[0.14em] text-[var(--xiv-blue)] hover:underline flex items-center gap-1">
-            <ArrowLeft className="w-3 h-3" /> Account
-          </Link>
+      <div className="head-row">
+        <div>
+          <div className="flex items-center gap-2 mb-1.5">
+            <span className="w-[7px] h-[7px] bg-[rgba(0,180,255,0.7)] rotate-45 shadow-[0_0_10px_rgba(0,180,255,0.5)] flex-shrink-0" />
+            <Link href="/dashboard/account" className="text-[0.72rem] font-semibold uppercase tracking-[0.14em] text-[var(--xiv-blue)] hover:underline flex items-center gap-1">
+              <ArrowLeft className="w-3 h-3" /> Account
+            </Link>
+          </div>
+          <h1 className="page-h1">Account Settings</h1>
         </div>
-        <h1 className="page-h1">Account Settings</h1>
       </div>
 
       {/* Display name */}

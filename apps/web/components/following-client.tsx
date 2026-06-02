@@ -41,15 +41,17 @@ export function FollowingClient({
   return (
     <div className="page-inner" style={{ maxWidth: 940 }}>
       {/* Page header */}
-      <div className="page-head mb-[6px]">
-        <div className="flex items-center gap-2 mb-3">
-          <span className="w-[7px] h-[7px] bg-[rgba(0,180,255,0.7)] rotate-45 shadow-[0_0_10px_rgba(0,180,255,0.5)] flex-shrink-0" />
-          <span className="text-[0.72rem] font-semibold uppercase tracking-[0.14em] text-[var(--xiv-blue)]">Explore</span>
+      <div className="head-row">
+        <div>
+          <div className="flex items-center gap-2 mb-1.5">
+            <span className="w-[7px] h-[7px] bg-[rgba(0,180,255,0.7)] rotate-45 shadow-[0_0_10px_rgba(0,180,255,0.5)] flex-shrink-0" />
+            <span className="text-[0.72rem] font-semibold uppercase tracking-[0.14em] text-[var(--xiv-blue)]">Following</span>
+          </div>
+          <h1 className="page-h1">Following</h1>
+          <p className="text-[0.9rem] text-muted-foreground mt-2 max-w-[560px] leading-[1.6]">
+            Venues you follow across the realm. See who&apos;s open now and never miss a night.
+          </p>
         </div>
-        <h1 className="page-h1">Following</h1>
-        <p className="text-[0.95rem] text-muted-foreground mt-[10px] max-w-[560px] leading-[1.6]">
-          Venues you follow across the realm — see who&apos;s open now and never miss a night.
-        </p>
       </div>
 
       {/* Filters */}

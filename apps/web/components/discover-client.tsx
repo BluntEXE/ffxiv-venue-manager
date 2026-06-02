@@ -62,15 +62,17 @@ export function DiscoverClient({
   return (
     <div className="page-inner" style={{ maxWidth: 940 }}>
       {/* Page header */}
-      <div className="page-head mb-[6px]">
-        <div className="flex items-center gap-2 mb-3">
-          <span className="w-[7px] h-[7px] bg-[rgba(0,180,255,0.7)] rotate-45 shadow-[0_0_10px_rgba(0,180,255,0.5)] flex-shrink-0" />
-          <span className="text-[0.72rem] font-semibold uppercase tracking-[0.14em] text-[var(--xiv-blue)]">Discover</span>
+      <div className="head-row">
+        <div>
+          <div className="flex items-center gap-2 mb-1.5">
+            <span className="w-[7px] h-[7px] bg-[rgba(0,180,255,0.7)] rotate-45 shadow-[0_0_10px_rgba(0,180,255,0.5)] flex-shrink-0" />
+            <span className="text-[0.72rem] font-semibold uppercase tracking-[0.14em] text-[var(--xiv-blue)]">Discover</span>
+          </div>
+          <h1 className="page-h1">Find a venue tonight</h1>
+          <p className="text-[0.9rem] text-muted-foreground mt-2 max-w-[560px] leading-[1.6]">
+            Roleplay taverns, lounges and clubs open across the realm right now.
+          </p>
         </div>
-        <h1 className="page-h1">Find a venue tonight</h1>
-        <p className="text-[0.95rem] text-muted-foreground mt-[10px] max-w-[560px] leading-[1.6]">
-          Roleplay taverns, lounges and clubs open across the realm right now.
-        </p>
       </div>
 
       {/* Filter bar */}
