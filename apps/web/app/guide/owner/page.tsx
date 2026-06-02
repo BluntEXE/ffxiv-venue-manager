@@ -15,8 +15,8 @@ export default function OwnerManagerGuidePage() {
       {/* Guide hero */}
       <div className="xiv-hero-bg overflow-hidden border-b border-[var(--blue-008)]">
         <div className="container mx-auto px-4 py-14 max-w-3xl">
-          <Link href="/" className="inline-flex items-center gap-1.5 text-sm text-muted-foreground hover:text-[var(--xiv-blue)] transition-colors mb-6">
-            &#8592; Back to Home
+          <Link href="/guide/getting-started" className="inline-flex items-center gap-1.5 text-sm text-muted-foreground hover:text-[var(--xiv-blue)] transition-colors mb-6">
+            &#8592; New to venues? Start here
           </Link>
           <div className="flex items-center gap-2 mb-3">
             <span className="w-[7px] h-[7px] bg-[rgba(0,180,255,0.7)] rotate-45 shadow-[0_0_10px_rgba(0,180,255,0.5)]" />
