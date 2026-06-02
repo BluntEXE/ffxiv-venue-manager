@@ -1,26 +1,37 @@
 import { S3Client, PutObjectCommand, DeleteObjectCommand } from "@aws-sdk/client-s3"
 import { getSignedUrl } from "@aws-sdk/s3-request-presigner"
 
+const creds = {
+  accessKeyId:     process.env.MINIO_ROOT_USER     ?? "xivvenues",
+  secretAccessKey: process.env.MINIO_ROOT_PASSWORD ?? "",
+}
+
+// Internal client — used for server-to-server ops (bucket init, delete)
 export const s3 = new S3Client({
   endpoint: process.env.MINIO_ENDPOINT ?? "http://minio:9000",
-  region: "us-east-1", // MinIO requires a region value but doesn't use it
-  credentials: {
-    accessKeyId:     process.env.MINIO_ROOT_USER     ?? "xivvenues",
-    secretAccessKey: process.env.MINIO_ROOT_PASSWORD ?? "",
-  },
-  forcePathStyle: true, // Required for MinIO
+  region: "us-east-1",
+  credentials: creds,
+  forcePathStyle: true,
+})
+
+// Public client — presigned URLs must use the browser-reachable hostname
+const s3Public = new S3Client({
+  endpoint: process.env.MINIO_PUBLIC_URL ?? process.env.MINIO_ENDPOINT ?? "http://localhost:9000",
+  region: "us-east-1",
+  credentials: creds,
+  forcePathStyle: true,
 })
 
 export const BUCKET = process.env.MINIO_BUCKET ?? "xiv-venues"
 
-/** Generate a pre-signed upload URL valid for 5 minutes */
+/** Generate a pre-signed upload URL valid for 5 minutes (uses public endpoint) */
 export async function getUploadUrl(key: string, contentType: string): Promise<string> {
   const command = new PutObjectCommand({
     Bucket: BUCKET,
     Key: key,
     ContentType: contentType,
   })
-  return getSignedUrl(s3, command, { expiresIn: 300 })
+  return getSignedUrl(s3Public, command, { expiresIn: 300 })
 }
 
 /** Delete a stored object by key */

@@ -2,7 +2,7 @@ import { getServerSession } from "next-auth"
 import { authOptions } from "@/lib/auth"
 import { NextResponse } from "next/server"
 import { getUploadUrl, BUCKET, s3 } from "@/lib/storage"
-import { CreateBucketCommand, HeadBucketCommand, PutBucketPolicyCommand } from "@aws-sdk/client-s3"
+import { CreateBucketCommand, HeadBucketCommand, PutBucketPolicyCommand, PutBucketCorsCommand } from "@aws-sdk/client-s3"
 import { randomBytes } from "crypto"
 import path from "path"
 
@@ -24,6 +24,19 @@ async function ensureBucket() {
         Version: "2012-10-17",
         Statement: [{ Effect: "Allow", Principal: "*", Action: "s3:GetObject", Resource: `arn:aws:s3:::${BUCKET}/*` }],
       }),
+    }))
+    // Allow browsers to PUT directly via presigned URLs (CORS)
+    await s3.send(new PutBucketCorsCommand({
+      Bucket: BUCKET,
+      CORSConfiguration: {
+        CORSRules: [{
+          AllowedOrigins: ["*"],
+          AllowedMethods: ["GET", "PUT"],
+          AllowedHeaders: ["*"],
+          ExposeHeaders: ["ETag"],
+          MaxAgeSeconds: 3600,
+        }],
+      },
     }))
   }
   bucketReady = true
