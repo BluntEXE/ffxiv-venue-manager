@@ -66,8 +66,8 @@ export function VenueSidebar({
     {
       label: "Explore",
       items: [
-        { href: "/discover", label: "Discover", icon: Compass },
-        { href: "/following", label: "Following", icon: BookHeart },
+        { href: `/discover?from=${venueSlug}`, label: "Discover", icon: Compass },
+        { href: `/following?from=${venueSlug}`, label: "Following", icon: BookHeart },
       ],
     },
     {
@@ -134,7 +134,7 @@ export function VenueSidebar({
       {/* Venue switcher */}
       {venues.length > 0 && (
         <div className="px-3 pt-4 pb-3 border-b border-[var(--blue-008)]">
-          <VenueSwitcher venues={venues} />
+          <VenueSwitcher venues={venues} activeSlug={venueSlug} />
         </div>
       )}
 

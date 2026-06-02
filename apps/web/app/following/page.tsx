@@ -7,7 +7,12 @@ import { ExploreLayout } from "@/components/explore-layout"
 
 export const dynamic = "force-dynamic"
 
-export default async function FollowingPage() {
+export default async function FollowingPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ from?: string }>
+}) {
+  const { from: fromSlug } = await searchParams
   const session = await getServerSession(authOptions)
   if (!session?.user) redirect("/auth/signin")
 
@@ -47,7 +52,7 @@ export default async function FollowingPage() {
   }))
 
   return (
-    <ExploreLayout>
+    <ExploreLayout fromSlug={fromSlug}>
       <FollowingClient venues={venues} followCount={follows.length} />
     </ExploreLayout>
   )

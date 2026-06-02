@@ -20,9 +20,10 @@ interface Venue {
 
 interface VenueSwitcherProps {
   venues: Venue[]
+  activeSlug?: string
 }
 
-export function VenueSwitcher({ venues }: VenueSwitcherProps) {
+export function VenueSwitcher({ venues, activeSlug }: VenueSwitcherProps) {
   const router = useRouter()
   const pathname = usePathname()
 
@@ -39,9 +40,10 @@ export function VenueSwitcher({ venues }: VenueSwitcherProps) {
     router.push(`/dashboard/${slug}`)
   }
 
-  // Detect current venue from URL
+  // Prefer explicit activeSlug, fall back to URL detection
   const parts = pathname?.split("/") || []
-  const currentSlug = parts[2] && venues.some((v) => v.slug === parts[2]) ? parts[2] : null
+  const urlSlug = parts[2] && venues.some((v) => v.slug === parts[2]) ? parts[2] : null
+  const currentSlug = urlSlug ?? activeSlug ?? null
   const current = venues.find((v) => v.slug === currentSlug) ?? venues[0]
 
   if (!current) return null
@@ -79,8 +81,7 @@ export function VenueSwitcher({ venues }: VenueSwitcherProps) {
       <DropdownMenuContent
         align="start"
         side="bottom"
-        className="w-[240px] border-[var(--blue-018)]"
-        className="bg-[rgba(7,11,20,0.97)] backdrop-blur-2xl"
+        className="w-[240px] border-[var(--blue-018)] bg-[rgba(7,11,20,0.97)] backdrop-blur-2xl"
       >
         <p className="px-3 pt-2 pb-1 text-[0.65rem] font-semibold uppercase tracking-[0.1em] text-[var(--fg-faint)]">
           Switch venue

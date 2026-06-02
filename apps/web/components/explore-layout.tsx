@@ -4,19 +4,29 @@ import { authOptions } from "@/lib/auth"
 import { prisma } from "@/lib/prisma"
 import { VenueSidebar } from "./venue-sidebar"
 
-export async function ExploreLayout({ children }: { children: ReactNode }) {
+export async function ExploreLayout({ children, fromSlug }: { children: ReactNode; fromSlug?: string }) {
   const session = await getServerSession(authOptions)
 
-  // Get user's first venue for sidebar context (explore pages aren't venue-specific)
+  // Get sidebar venue context — prefer the venue the user navigated from (`fromSlug`)
   let venueSlug = ""
   let venueName = ""
   let userRole  = "STAFF"
   let venues: Array<{ id: string; name: string; slug: string; dataCenter: string; world: string }> = []
 
   if (session?.user?.id) {
-    const membership = await prisma.membership.findFirst({
-      where: { userId: session.user.id },
-      orderBy: { createdAt: "desc" },
+    // Use the referred venue if provided, otherwise fall back to oldest membership
+    const membership = fromSlug
+      ? await prisma.membership.findFirst({
+          where: { userId: session.user.id, venue: { slug: fromSlug } },
+          select: { role: true, venue: { select: { id: true, name: true, slug: true, dataCenter: true, world: true } } },
+        }) ?? await prisma.membership.findFirst({
+          where: { userId: session.user.id },
+          orderBy: { createdAt: "asc" },
+          select: { role: true, venue: { select: { id: true, name: true, slug: true, dataCenter: true, world: true } } },
+        })
+      : await prisma.membership.findFirst({
+          where: { userId: session.user.id },
+          orderBy: { createdAt: "asc" },
       select: {
         role: true,
         venue: { select: { id: true, name: true, slug: true, dataCenter: true, world: true } },
@@ -31,6 +41,7 @@ export async function ExploreLayout({ children }: { children: ReactNode }) {
 
     const allMemberships = await prisma.membership.findMany({
       where: { userId: session.user.id },
+      orderBy: { createdAt: "asc" },
       select: {
         role: true,
         venue: { select: { id: true, name: true, slug: true, dataCenter: true, world: true } },

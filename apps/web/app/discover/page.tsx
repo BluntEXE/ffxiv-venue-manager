@@ -4,7 +4,7 @@ import { prisma } from "@/lib/prisma"
 import { DiscoverClient, type DiscoverVenue } from "@/components/discover-client"
 import { ExploreLayout } from "@/components/explore-layout"
 
-export const revalidate = 60
+export const dynamic = "force-dynamic"
 
 // "Tonight" window: events starting within the next 8 hours, or started up to 30 min ago
 function tonightWindow(): { from: Date; to: Date } {
@@ -15,7 +15,12 @@ function tonightWindow(): { from: Date; to: Date } {
   }
 }
 
-export default async function DiscoverPage() {
+export default async function DiscoverPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ from?: string }>
+}) {
+  const { from: fromSlug } = await searchParams
   const session = await getServerSession(authOptions)
   const { from, to } = tonightWindow()
 
@@ -76,7 +81,7 @@ export default async function DiscoverPage() {
   })
 
   return (
-    <ExploreLayout>
+    <ExploreLayout fromSlug={fromSlug}>
       <DiscoverClient venues={cards} isAuthed={!!session?.user} totalCount={venues.length} />
     </ExploreLayout>
   )

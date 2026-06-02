@@ -33,6 +33,20 @@ const updateSettingsSchema = z.object({
   discordWebhookUrl: z.string().url().optional().or(z.literal("")),
   // Partake integration
   partakeTeamId: z.number().int().positive().nullable().optional(),
+  // Venue profile extras stored in settings JSON
+  tagline: z.string().max(200).optional(),
+  tags: z.array(z.string().max(50)).max(20).optional(),
+  defaultHours: z.string().max(100).optional(),
+  openNights: z.string().max(100).optional(),
+  isAdult: z.boolean().optional(),
+  // Analytics — owner-configured discovery source percentages
+  discoverySources: z.object({
+    partake:    z.number().min(0).max(100).optional(),
+    shout:      z.number().min(0).max(100).optional(),
+    discord:    z.number().min(0).max(100).optional(),
+    wordOfMouth:z.number().min(0).max(100).optional(),
+    other:      z.number().min(0).max(100).optional(),
+  }).optional(),
 })
 
 export const GET = withRateLimit<{ params: Promise<{ venueId: string }> }>(
