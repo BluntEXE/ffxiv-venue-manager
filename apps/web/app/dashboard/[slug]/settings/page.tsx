@@ -632,6 +632,33 @@ export default function SettingsPage({
               </div>
             </section>
 
+            {/* ── Notifications ── */}
+            <section className="panel">
+              <div className="ph"><span className="pt"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>Notifications</span></div>
+              {[
+                { key: "newFollower",      title: "New follower",      desc: "When someone follows your venue." },
+                { key: "eventRsvp",        title: "Event RSVPs",       desc: "When a patron RSVPs to an event." },
+                { key: "lowStaffCoverage", title: "Low staff coverage", desc: "When an open shift is unfilled within 24h." },
+                { key: "dailySummary",     title: "Daily summary",     desc: "A nightly recap of sales and attendance." },
+              ].map(({ key, title, desc }) => {
+                const val = (settings.notifications as Record<string, boolean> | undefined)?.[key] ?? false
+                return (
+                  <div key={key} className="setrow">
+                    <div className="sinfo">
+                      <div className="stitle">{title}</div>
+                      <div className="sdesc">{desc}</div>
+                    </div>
+                    <button
+                      type="button"
+                      onClick={() => setSettings({ ...settings, notifications: { ...(settings.notifications as Record<string, boolean> ?? {}), [key]: !val } })}
+                      disabled={isSaving}
+                      className={`toggle${val ? " on" : ""}`}
+                    />
+                  </div>
+                )
+              })}
+            </section>
+
             {/* ── Danger zone ── */}
             {userRole === "OWNER" && (
               <section className="panel" style={{ borderColor: "rgba(243,139,168,0.3)" }}>

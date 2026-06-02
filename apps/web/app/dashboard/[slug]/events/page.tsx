@@ -232,10 +232,7 @@ export default async function EventsPage({
       ) : (
         <>
           {/* Upcoming Events */}
-          <div className="mb-10">
-            <h2 className="font-cinzel text-lg font-bold tracking-[0.02em] mb-4">
-              Upcoming Events <span className="text-muted-foreground font-normal text-base">({upcomingEvents.length})</span>
-            </h2>
+          <div className="mb-8">
             {upcomingEvents.length === 0 ? (
               <div className="xiv-card rounded-xl p-8 text-center">
                 <p className="text-muted-foreground">No upcoming events. Check back soon or ask your manager.</p>
@@ -292,9 +289,6 @@ export default async function EventsPage({
             }, {})
             return (
               <div>
-                <h2 className="font-cinzel text-lg font-bold tracking-[0.02em] mb-6">
-                  Past Events <span className="text-muted-foreground font-normal text-base">({pastEvents.length})</span>
-                </h2>
                 <div className="space-y-8">
                   {Object.entries(grouped).map(([month, monthEvents]) => (
                     <div key={month}>

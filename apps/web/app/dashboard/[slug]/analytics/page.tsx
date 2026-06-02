@@ -290,7 +290,9 @@ export default function AnalyticsPage() {
 
         {/* Charts */}
         <div className="space-y-6">
-          {/* Revenue Chart — CSS bars matching prototype */}
+        {/* cols-2: revenue chart left, insights right */}
+        <div className="cols-2">
+          {/* Left: Revenue Chart */}
           {(() => {
             const maxRev = Math.max(...financialData.map(d => d.revenue), 1)
             const totalRev = financialData.reduce((s, d) => s + d.revenue, 0)
@@ -342,10 +344,10 @@ export default function AnalyticsPage() {
             )
           })()}
 
-          {/* Mid section: patron visits left, insights right */}
-          <div className="grid grid-cols-1 lg:grid-cols-[1fr_270px] gap-6 items-start">
+          {/* Right: Patron mix + Busiest nights + Top services + Discovery */}
+          <div className="space-y-4">
 
-            {/* Left: Patron Visits — CSS bars */}
+            {/* Patron Visits — CSS bars (shown as right panel compact chart) */}
             {(() => {
               const maxPat = Math.max(...patronData.map(d => d.patrons), 1)
               return (
@@ -499,6 +501,7 @@ export default function AnalyticsPage() {
 
             </div>
           </div>
+          </div>{/* end cols-2 */}
 
           {/* Average Traffic Flow */}
           <div>

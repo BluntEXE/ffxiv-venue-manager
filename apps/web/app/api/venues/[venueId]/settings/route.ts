@@ -39,6 +39,8 @@ const updateSettingsSchema = z.object({
   defaultHours: z.string().max(100).optional(),
   openNights: z.string().max(100).optional(),
   isAdult: z.boolean().optional(),
+  // Notification preferences
+  notifications: z.record(z.string(), z.boolean()).optional(),
   // Analytics — owner-configured discovery source percentages
   discoverySources: z.object({
     partake:    z.number().min(0).max(100).optional(),

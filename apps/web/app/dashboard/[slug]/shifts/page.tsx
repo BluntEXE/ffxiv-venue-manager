@@ -205,20 +205,18 @@ export default async function ShiftsPage({
             { k: "Active now",       v: activeCount,         sub: "on shift",        icon: "M12 2v4m0 12v4M4.93 4.93l2.83 2.83m8.48 8.48 2.83 2.83M2 12h4m12 0h4M4.93 19.07l2.83-2.83m8.48-8.48 2.83-2.83" },
             { k: "Coverage",         v: `${coverPct}%`,      sub: "of scheduled",    icon: "M9 12l2 2 4-4m6 2a9 9 0 1 1-18 0 9 9 0 0 1 18 0" },
           ].map(({ k, v, sub, icon }) => (
-            <Card key={k} className="p-4">
-              <div className="flex items-start gap-3">
-                <span className="w-8 h-8 rounded-lg bg-[var(--blue-010)] border border-[var(--blue-018)] flex items-center justify-center flex-shrink-0 mt-0.5">
-                  <svg className="w-4 h-4 text-[var(--xiv-blue)]" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+            <div key={k} className="stat">
+              <div className="top">
+                <span className="sb">
+                  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
                     <path d={icon} />
                   </svg>
                 </span>
-                <div>
-                  <p className="text-[0.66rem] uppercase tracking-[0.1em] text-[var(--fg-faint)] font-semibold">{k}</p>
-                  <p className="font-[var(--font-outfit)] text-xl font-bold mt-0.5">{v}</p>
-                  <p className="text-[0.7rem] text-muted-foreground mt-0.5">{sub}</p>
-                </div>
               </div>
-            </Card>
+              <div className="k">{k}</div>
+              <div className="v">{v}</div>
+              <div className="delta flat">{sub}</div>
+            </div>
           ))}
         </div>
 
