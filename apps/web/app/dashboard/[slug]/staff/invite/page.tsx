@@ -132,7 +132,6 @@ export default function InviteStaffPage({
         })
       } catch (err) {
         // User cancelled share or error occurred
-        console.log('Share cancelled or failed:', err)
       }
     }
   }

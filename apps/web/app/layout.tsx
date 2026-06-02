@@ -30,9 +30,27 @@ const jetbrainsMono = JetBrains_Mono({
 
 export const dynamic = "force-dynamic"
 
+const SITE_URL = "https://xivvenuemanager.com"
+const SITE_DESC = "Free venue management for FFXIV roleplay venues. Track events, manage staff, log sales and go live — from the web or inside the game."
+
 export const metadata: Metadata = {
-  title: "XIV Venue Manager",
-  description: "The ultimate venue management platform for Final Fantasy XIV. Track events, manage staff, monitor sales, and grow your community.",
+  title: { default: "XIV Venue Manager", template: "%s" },
+  description: SITE_DESC,
+  metadataBase: new URL(SITE_URL),
+  openGraph: {
+    type: "website",
+    siteName: "XIV Venue Manager",
+    title: "XIV Venue Manager",
+    description: SITE_DESC,
+    url: SITE_URL,
+    images: [{ url: "/og-image.png", width: 1200, height: 630, alt: "XIV Venue Manager" }],
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "XIV Venue Manager",
+    description: SITE_DESC,
+    images: ["/og-image.png"],
+  },
   icons: {
     icon: [
       { url: "/icon-16x16.png", sizes: "16x16", type: "image/png" },

@@ -1,3 +1,10 @@
+import type { Metadata } from "next"
+
+export const metadata: Metadata = {
+  title: "Create Your Venue — XIV Venue Manager",
+  description: "Set up your FFXIV roleplay venue in under two minutes. Sign in with Discord and you're ready to go.",
+}
+
 import { getServerSession } from "next-auth"
 import { authOptions } from "@/lib/auth"
 import { redirect } from "next/navigation"

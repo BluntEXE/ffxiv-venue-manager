@@ -2,6 +2,7 @@
 
 import { ReactNode, useEffect, useState } from "react"
 import { useSession } from "next-auth/react"
+import { usePathname } from "next/navigation"
 import { VenueSidebar } from "./venue-sidebar"
 import { useVenues } from "./venue-context"
 import { ActiveVenueTracker } from "./active-venue-tracker"
@@ -11,8 +12,16 @@ interface VenueLayoutClientProps {
   slug: string
 }
 
+const PAGE_LABELS: Record<string, string> = {
+  "": "Overview", analytics: "Analytics", live: "Live Mode", events: "Events",
+  staff: "Staff", shifts: "Shifts", tasks: "Tasks", services: "Services",
+  sales: "Sales", payroll: "Payroll", timeline: "Timeline",
+  "patron-logs": "Patron Logs", settings: "Settings",
+}
+
 export function VenueLayoutClient({ children, slug }: VenueLayoutClientProps) {
   const { data: session } = useSession()
+  const pathname = usePathname()
   const { venues, getVenueBySlug, isLoading } = useVenues()
   const [venueData, setVenueData] = useState<{
     name: string
@@ -30,6 +39,15 @@ export function VenueLayoutClient({ children, slug }: VenueLayoutClientProps) {
       })
     }
   }, [slug, getVenueBySlug, isLoading])
+
+  // Set page title dynamically based on current route
+  useEffect(() => {
+    if (!pathname) return
+    const parts = pathname.split("/")
+    const pageKey = parts[3] ?? ""
+    const label = PAGE_LABELS[pageKey] ?? ""
+    document.title = label ? `${label} — XIV Venue Manager` : "XIV Venue Manager"
+  }, [pathname])
 
   if (!venueData) {
     return <div className="[@media(min-width:1081px)]:ml-[300px] relative z-[1]">{children}</div>

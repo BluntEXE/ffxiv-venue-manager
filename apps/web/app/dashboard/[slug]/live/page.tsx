@@ -1,6 +1,7 @@
 import { getServerSession } from "next-auth"
 import { authOptions } from "@/lib/auth"
 import { redirect, notFound } from "next/navigation"
+import Link from "next/link"
 import { Card, CardContent } from "@/components/ui/card"
 import { prisma } from "@/lib/prisma"
 import { VenueLayout } from "@/components/venue-layout"
@@ -182,13 +183,20 @@ export default async function LivePage({
           <div className="mt-2">
             <h1 className="page-h1 mb-4">Live Mode</h1>
             <Card>
-              <CardContent className="py-12 text-center">
+              <CardContent className="py-12 text-center space-y-4">
                 <p className="text-muted-foreground">
-                  No active or upcoming events.
                   {canManage
-                    ? " Create an event and set it to Active to use Live Mode."
-                    : " Live Mode activates when an event is running."}
+                    ? "No active event. Create one and set it to Active to start tracking patrons and sales in real time."
+                    : "Live Mode activates when an event is running. Check back when the night starts."}
                 </p>
+                {canManage && (
+                  <Link
+                    href={`/dashboard/${slug}/events/new`}
+                    className="inline-flex items-center gap-2 xiv-btn-shimmer xiv-cta px-5 py-2.5 rounded-lg text-sm font-semibold"
+                  >
+                    Create an event
+                  </Link>
+                )}
               </CardContent>
             </Card>
           </div>

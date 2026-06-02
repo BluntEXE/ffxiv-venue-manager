@@ -1,3 +1,10 @@
+import type { Metadata } from "next"
+
+export const metadata: Metadata = {
+  title: "Staff Guide — XIV Venue Manager",
+  description: "Everything staff need to know: plugin setup, logging sales, clocking shifts, patron tracking and more.",
+}
+
 import Link from "next/link"
 import { GuideTOC } from "@/components/guide-toc"
 

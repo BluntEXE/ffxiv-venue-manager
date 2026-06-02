@@ -1,8 +1,14 @@
+import type { Metadata } from "next"
 import { getServerSession } from "next-auth"
 import { authOptions } from "@/lib/auth"
 import { prisma } from "@/lib/prisma"
 import { DiscoverClient, type DiscoverVenue } from "@/components/discover-client"
 import { ExploreLayout } from "@/components/explore-layout"
+
+export const metadata: Metadata = {
+  title: "Discover Venues — XIV Venue Manager",
+  description: "Find FFXIV roleplay venues open tonight across every data centre and world.",
+}
 
 export const revalidate = 60
 

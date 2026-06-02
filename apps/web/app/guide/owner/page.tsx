@@ -1,3 +1,10 @@
+import type { Metadata } from "next"
+
+export const metadata: Metadata = {
+  title: "Owner & Manager Guide — XIV Venue Manager",
+  description: "Everything you need to get your FFXIV roleplay venue running — setup, plugin install, staff management, events, payroll and more.",
+}
+
 import Link from "next/link"
 import { GuideTOC } from "@/components/guide-toc"
 

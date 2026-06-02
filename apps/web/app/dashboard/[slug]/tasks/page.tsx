@@ -295,7 +295,6 @@ export default function TasksPage({
         dueDate: formData.dueDate || null,
       }
 
-      console.log("Sending task update:", requestBody)
 
       const response = await fetch(`/api/venues/${venue.id}/tasks/${editingTask.id}`, {
         method: "PUT",

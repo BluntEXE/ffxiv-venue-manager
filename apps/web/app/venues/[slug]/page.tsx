@@ -1,13 +1,24 @@
+import type { Metadata } from "next"
 import { getServerSession } from "next-auth"
 import { authOptions } from "@/lib/auth"
 import { notFound } from "next/navigation"
 import Link from "next/link"
 import { prisma } from "@/lib/prisma"
+
+export async function generateMetadata({ params }: { params: Promise<{ slug: string }> }): Promise<Metadata> {
+  const { slug } = await params
+  const venue = await prisma.venue.findUnique({ where: { slug, isActive: true }, select: { name: true, description: true, dataCenter: true, world: true } })
+  if (!venue) return { title: "Venue — XIV Venue Manager" }
+  return {
+    title: `${venue.name} — XIV Venue Manager`,
+    description: venue.description ?? `${venue.name} is an FFXIV roleplay venue on ${venue.dataCenter} · ${venue.world}. Follow to stay updated on events.`,
+  }
+}
 import { format } from "date-fns"
 import { MapPin, Calendar, Clock, Crown, Image as ImageIcon, ChevronLeft, Scroll } from "lucide-react"
 import { getServerTimeLabel, formatServerTime } from "@/lib/server-time"
 import { VenueFollowButton } from "@/components/venue-follow-button"
-import { CopyAddressButton } from "@/components/copy-address-button"
+import { CopyAddressButton, CopyAddressInline } from "@/components/copy-address-button"
 
 export default async function VenueProfilePage({
   params,
@@ -134,12 +145,7 @@ export default async function VenueProfilePage({
               {" · "}open until {liveEvent.endTime ? `${formatServerTime(liveEvent.endTime.toISOString(), "time")} ${tzLabel}` : "late"}
             </span>
             <div className="flex-1" />
-            <button
-              onClick={undefined}
-              className="btn btn-outline btn-sm flex items-center gap-2 px-4 py-[7px] text-[0.85rem] rounded-[var(--radius-md)] border border-[var(--blue-018)] bg-[rgba(7,11,20,0.5)] hover:border-[var(--blue-045)] hover:bg-[var(--blue-007)] transition-colors"
-            >
-              <Navigation className="w-4 h-4" /> Copy address
-            </button>
+            <CopyAddressInline address={address} />
           </div>
         </div>
       )}
@@ -153,12 +159,13 @@ export default async function VenueProfilePage({
             <div className="prof-main flex flex-col gap-[34px]">
 
               {/* About */}
-              {venue.description && (
-                <div className="about">
-                  <div className="block-title"><Scroll /> About</div>
-                  <p className="text-[0.96rem] text-[var(--fg-subtle)] leading-[1.7]">{venue.description}</p>
-                </div>
-              )}
+              <div className="about">
+                <div className="block-title"><Scroll /> About</div>
+                {venue.description
+                  ? <p className="text-[0.96rem] text-[var(--fg-subtle)] leading-[1.7]">{venue.description}</p>
+                  : <p className="text-[0.9rem] text-[var(--fg-faint)] italic">The owner hasn&apos;t added a description yet.</p>
+                }
+              </div>
 
               {/* Upcoming events */}
               {upcomingEvents.length > 0 && (
@@ -189,20 +196,17 @@ export default async function VenueProfilePage({
                 </div>
               )}
 
-              {/* Gallery placeholder */}
-              <div className="gallery-block">
-                <div className="block-title">
-                  <ImageIcon /> Gallery
+              {/* Gallery — hidden until real images are supported */}
+              {false && (
+                <div className="gallery-block">
+                  <div className="block-title"><ImageIcon /> Gallery</div>
+                  <div className="gallery">
+                    {[0,1,2].map(i => (
+                      <div key={i} className="gtile"><div className="gbg" /><ImageIcon /></div>
+                    ))}
+                  </div>
                 </div>
-                <div className="gallery">
-                  {[0,1,2].map(i => (
-                    <div key={i} className="gtile">
-                      <div className="gbg" />
-                      <ImageIcon />
-                    </div>
-                  ))}
-                </div>
-              </div>
+              )}
             </div>
 
             {/* ── Side column ── */}
@@ -220,6 +224,7 @@ export default async function VenueProfilePage({
                     </div>
                   )
                 })}
+                <p className="px-5 pb-3 pt-1 text-[0.72rem] text-[var(--fg-faint)]">Hours not set by owner.</p>
               </div>
 
               {/* Location */}

@@ -489,6 +489,8 @@ export default async function Home() {
                   { label: "Owner guide", href: "/guide/owner" },
                   { label: "Staff guide", href: "/guide/staff" },
                   { label: "FAQ", href: "/guide/owner#faq" },
+                  { label: "Privacy policy", href: "/privacy" },
+                  { label: "Terms of use", href: "/terms" },
                 ].map(({ label, href }) => (
                   <Link key={href} href={href} className="block text-sm text-muted-foreground hover:text-[var(--xiv-blue)] transition-colors">{label}</Link>
                 ))}
