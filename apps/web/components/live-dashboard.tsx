@@ -171,7 +171,7 @@ export function LiveDashboard({
           <span className={isUpcoming ? "status soon w-fit" : "status open w-fit"}>
             <span className="dot" />{isUpcoming ? "Starting soon" : "Live now"}
           </span>
-          <div className="font-[var(--font-cinzel-var)] font-bold text-[1.45rem] tracking-[0.02em] leading-tight">{event.title}</div>
+          <div className="font-cinzel font-bold text-[1.45rem] tracking-[0.02em] leading-tight">{event.title}</div>
           <div className="text-[0.84rem] text-muted-foreground flex items-center gap-2">
             <Clock className="w-[14px] h-[14px] text-[var(--xiv-blue)]" />
             Started {formatServerTime(event.startTime, "time")} {SERVER_TIME_LABEL}

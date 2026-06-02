@@ -79,7 +79,7 @@ export default async function VenueProfilePage({
               ) : (
                 <span className="status closed mb-[14px] inline-flex"><span className="dot" />Closed</span>
               )}
-              <h1 className="font-[var(--font-cinzel-var)] font-bold text-[clamp(2.2rem,4vw,3.2rem)] tracking-[0.02em] leading-[1.05]">
+              <h1 className="font-cinzel font-bold text-[clamp(2.2rem,4vw,3.2rem)] tracking-[0.02em] leading-[1.05]">
                 {venue.name}
               </h1>
               <div className="font-mono text-[0.86rem] text-[var(--xiv-blue)] mt-3 flex items-center gap-2">
@@ -290,7 +290,7 @@ export default async function VenueProfilePage({
       {/* ── Footer ── */}
       <footer className="bg-[var(--card-mantle)] border-t border-[var(--blue-008)] py-[30px]">
         <div className="max-w-[1080px] mx-auto px-8 flex justify-between gap-4 flex-wrap items-center">
-          <Link href="/" className="inline-flex items-center gap-2 text-[0.92rem] font-[var(--font-cinzel-var)] font-bold">
+          <Link href="/" className="inline-flex items-center gap-2 text-[0.92rem] font-cinzel font-bold">
             {/* eslint-disable-next-line @next/next/no-img-element */}
             <img src="/xiv-icon.png" alt="" width={26} height={26} />
             <span><span className="text-[var(--xiv-blue)]">XIV</span> <span className="text-foreground/80">Venue Manager</span></span>

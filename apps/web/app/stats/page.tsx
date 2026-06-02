@@ -58,7 +58,7 @@ export default async function StatsPage() {
             <span className="h-px flex-1 max-w-[80px] bg-gradient-to-l from-transparent to-[var(--xiv-blue)]" />
           </div>
           <p className="text-[0.72rem] font-semibold uppercase tracking-[0.16em] text-[var(--xiv-blue)] mb-[14px]">Community stats</p>
-          <h1 className="font-[var(--font-cinzel-var)] font-bold text-[clamp(2.2rem,4vw,3rem)] tracking-[0.02em]">
+          <h1 className="font-cinzel font-bold text-[clamp(2.2rem,4vw,3rem)] tracking-[0.02em]">
             The realm, by the numbers
           </h1>
 
@@ -74,7 +74,7 @@ export default async function StatsPage() {
                 <div className={`ic w-10 h-10 rounded-[var(--radius-md)] grid place-items-center mx-auto mb-[14px] border ${live ? "bg-[var(--success-soft)] border-[rgba(16,185,129,0.25)] text-[var(--success-text)]" : "bg-[var(--blue-010)] border-[var(--blue-018)] text-[var(--xiv-blue)]"}`}>
                   {icon}
                 </div>
-                <div className={`v font-[var(--font-cinzel-var)] font-bold text-[clamp(1.8rem,3vw,2.4rem)] leading-none tracking-[0.01em] ${live ? "text-[var(--success-text)]" : ""}`}>
+                <div className={`v font-cinzel font-bold text-[clamp(1.8rem,3vw,2.4rem)] leading-none tracking-[0.01em] ${live ? "text-[var(--success-text)]" : ""}`}>
                   {value}
                   {live && <span className="pip inline-block w-[7px] h-[7px] rounded-full bg-[var(--success-text)] ml-1.5 relative align-middle animate-ping" />}
                 </div>
@@ -89,7 +89,7 @@ export default async function StatsPage() {
       <section className="py-[50px] border-b border-[var(--blue-008)]">
         <div className="max-w-[1080px] mx-auto px-8">
           <div className="sec-head mb-[30px]">
-            <h2 className="font-[var(--font-cinzel-var)] font-bold text-[var(--text-section,clamp(1.75rem,2.5vw+.75rem,2.75rem))] tracking-[0.02em]">Across the realm</h2>
+            <h2 className="font-cinzel font-bold text-[var(--text-section,clamp(1.75rem,2.5vw+.75rem,2.75rem))] tracking-[0.02em]">Across the realm</h2>
             <p className="text-muted-foreground text-[0.98rem] mt-2">Where venues run, and when the realm comes alive.</p>
           </div>
           <div className="cols2 grid grid-cols-1 md:grid-cols-2 gap-[18px] items-start">
@@ -155,7 +155,7 @@ export default async function StatsPage() {
       <section className="py-[50px] bg-[#060b16] border-b border-[var(--blue-008)]">
         <div className="max-w-[1080px] mx-auto px-8">
           <div className="sec-head mb-[30px]">
-            <h2 className="font-[var(--font-cinzel-var)] font-bold text-[var(--text-section,clamp(1.75rem,2.5vw+.75rem,2.75rem))] tracking-[0.02em]">What the realm runs</h2>
+            <h2 className="font-cinzel font-bold text-[var(--text-section,clamp(1.75rem,2.5vw+.75rem,2.75rem))] tracking-[0.02em]">What the realm runs</h2>
             <p className="text-muted-foreground text-[0.98rem] mt-2">The kinds of venues hosts are building — and this week&apos;s activity.</p>
           </div>
           <div className="cols2 grid grid-cols-1 md:grid-cols-2 gap-[18px] items-start">
@@ -203,7 +203,7 @@ export default async function StatsPage() {
                   </span>
                 </div>
                 <div className="flex items-baseline gap-3 px-5 py-[22px]">
-                  <span className="font-[var(--font-cinzel-var)] font-bold text-[2.4rem] leading-none">{fmtCompact(stats.eventsTotal)}</span>
+                  <span className="font-cinzel font-bold text-[2.4rem] leading-none">{fmtCompact(stats.eventsTotal)}</span>
                   <span className="text-muted-foreground text-[0.9rem]">events tracked</span>
                 </div>
                 <div className="flex items-center gap-2 px-5 pb-5 text-sm text-muted-foreground">
@@ -225,7 +225,7 @@ export default async function StatsPage() {
             <span className="w-[9px] h-[9px] bg-[rgba(0,180,255,0.7)] rotate-45 shadow-[0_0_12px_rgba(0,180,255,0.5)]" />
             <span className="h-px flex-1 max-w-[80px] bg-gradient-to-l from-transparent to-[var(--xiv-blue)]" />
           </div>
-          <h2 className="font-[var(--font-cinzel-var)] font-bold text-[var(--text-section,clamp(1.75rem,2.5vw+.75rem,2.75rem))] tracking-[0.02em] mt-[18px]">
+          <h2 className="font-cinzel font-bold text-[var(--text-section,clamp(1.75rem,2.5vw+.75rem,2.75rem))] tracking-[0.02em] mt-[18px]">
             Add your venue to the count
           </h2>
           <p className="text-muted-foreground text-[1.02rem] mt-[14px] mb-6 mx-auto max-w-[46ch]">

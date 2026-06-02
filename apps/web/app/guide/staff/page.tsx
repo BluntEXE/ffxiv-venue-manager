@@ -1,5 +1,5 @@
 import Link from "next/link"
-import { Button } from "@/components/ui/button"
+import { GuideTOC } from "@/components/guide-toc"
 
 export default function StaffGuidePage() {
   return (
@@ -29,45 +29,22 @@ export default function StaffGuidePage() {
       </div>
 
       <div className="container mx-auto px-4 py-12 max-w-5xl">
-        <div className="grid grid-cols-1 lg:grid-cols-[240px_1fr] gap-10 items-start">
+        <div className="grid grid-cols-1 lg:grid-cols-[220px_1fr] gap-11 items-start">
 
-          {/* Sticky TOC sidebar */}
-          <aside className="hidden lg:block sticky top-20">
-            <div className="rounded-xl border border-[var(--blue-018)] bg-[var(--card)] overflow-hidden">
-              <div className="flex items-center gap-2 px-4 py-3 border-b border-[var(--blue-008)] font-semibold text-sm">
-                <svg className="w-3.5 h-3.5 text-[var(--xiv-blue)]" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/></svg>
-                On this page
-              </div>
-              <nav className="py-1">
-                {[
-                  { id: "getting-started", label: "Getting Started" },
-                  { id: "dashboard",       label: "Your Dashboard" },
-                  { id: "sales",           label: "Logging Sales" },
-                  { id: "patrons",         label: "Patron Tracking" },
-                  { id: "shifts",          label: "Shifts" },
-                  { id: "tasks",           label: "Tasks" },
-                  { id: "timeline",        label: "Timeline" },
-                  { id: "live",            label: "Live Mode" },
-                  { id: "tips",            label: "Tips" },
-                ].map(({ id, label }) => (
-                  <a
-                    key={id}
-                    href={`#${id}`}
-                    className="flex items-center gap-2 px-4 py-2 text-[0.8rem] text-muted-foreground hover:text-[var(--xiv-blue)] hover:bg-[var(--blue-007)] transition-colors"
-                  >
-                    <span className="w-1 h-1 rounded-full bg-[var(--blue-035)] flex-shrink-0" />
-                    {label}
-                  </a>
-                ))}
-              </nav>
-              <div className="border-t border-[var(--blue-008)] p-3">
-                <Link href="/guide/owner" className="flex items-center gap-2 text-[0.78rem] text-muted-foreground hover:text-[var(--xiv-blue)] transition-colors">
-                  <svg className="w-3.5 h-3.5" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
-                  Owner guide →
-                </Link>
-              </div>
-            </div>
-          </aside>
+          <GuideTOC
+            items={[
+              { id: "getting-started", label: "Getting Started" },
+              { id: "dashboard",       label: "Your Dashboard" },
+              { id: "sales",           label: "Logging Sales" },
+              { id: "patrons",         label: "Patron Tracking" },
+              { id: "shifts",          label: "Shifts" },
+              { id: "tasks",           label: "Tasks" },
+              { id: "timeline",        label: "Timeline" },
+              { id: "live",            label: "Live Mode" },
+              { id: "tips",            label: "Tips" },
+            ]}
+            footerLink={{ href: "/guide/owner", label: "Owner guide" }}
+          />
 
           <article className="space-y-8 min-w-0">
           <header className="sr-only">
@@ -85,8 +62,8 @@ export default function StaffGuidePage() {
           </div>
 
           {/* Getting Started */}
-          <section className="space-y-6">
-            <h2 id="getting-started" className="font-cinzel text-2xl font-semibold border-b border-[rgba(0,180,255,0.2)] pb-3 tracking-wide">Getting Started</h2>
+          <section id="getting-started" className="space-y-6 scroll-mt-[84px]">
+            <h2 className="font-cinzel text-2xl font-semibold border-b border-[rgba(0,180,255,0.2)] pb-3 tracking-wide">Getting Started</h2>
 
             <ol className="space-y-3 pl-2 text-sm leading-relaxed">
               <li className="flex items-start gap-3">
@@ -116,8 +93,8 @@ export default function StaffGuidePage() {
           </section>
 
           {/* Dashboard */}
-          <section className="space-y-6">
-            <h2 id="dashboard" className="font-cinzel text-2xl font-semibold border-b border-[rgba(0,180,255,0.2)] pb-3 tracking-wide">Your Dashboard</h2>
+          <section id="dashboard" className="space-y-6 scroll-mt-[84px]">
+            <h2 className="font-cinzel text-2xl font-semibold border-b border-[rgba(0,180,255,0.2)] pb-3 tracking-wide">Your Dashboard</h2>
 
             <p className="text-sm leading-relaxed">Your venue dashboard shows:</p>
             <ul className="space-y-2 pl-2 text-sm leading-relaxed">
@@ -127,8 +104,8 @@ export default function StaffGuidePage() {
           </section>
 
           {/* Logging Sales */}
-          <section className="space-y-6">
-            <h2 id="sales" className="font-cinzel text-2xl font-semibold border-b border-[rgba(0,180,255,0.2)] pb-3 tracking-wide">Logging Sales</h2>
+          <section id="sales" className="space-y-6 scroll-mt-[84px]">
+            <h2 className="font-cinzel text-2xl font-semibold border-b border-[rgba(0,180,255,0.2)] pb-3 tracking-wide">Logging Sales</h2>
 
             <div className="space-y-3">
               <h3 className="text-base font-semibold text-foreground/80">From the Plugin (Recommended)</h3>
@@ -159,8 +136,8 @@ export default function StaffGuidePage() {
           </section>
 
           {/* Patron Tracking */}
-          <section className="space-y-6">
-            <h2 id="patrons" className="font-cinzel text-2xl font-semibold border-b border-[rgba(0,180,255,0.2)] pb-3 tracking-wide">Patron Tracking</h2>
+          <section id="patrons" className="space-y-6 scroll-mt-[84px]">
+            <h2 className="font-cinzel text-2xl font-semibold border-b border-[rgba(0,180,255,0.2)] pb-3 tracking-wide">Patron Tracking</h2>
 
             <p className="text-sm leading-relaxed">The plugin tracks when patrons enter and leave your venue&apos;s housing plot, syncing in the background.</p>
 
@@ -172,8 +149,8 @@ export default function StaffGuidePage() {
           </section>
 
           {/* Shifts */}
-          <section className="space-y-6">
-            <h2 id="shifts" className="font-cinzel text-2xl font-semibold border-b border-[rgba(0,180,255,0.2)] pb-3 tracking-wide">Shifts</h2>
+          <section id="shifts" className="space-y-6 scroll-mt-[84px]">
+            <h2 className="font-cinzel text-2xl font-semibold border-b border-[rgba(0,180,255,0.2)] pb-3 tracking-wide">Shifts</h2>
 
             <div className="space-y-3">
               <h3 className="text-base font-semibold text-foreground/80">Viewing Your Shifts</h3>
@@ -206,16 +183,16 @@ export default function StaffGuidePage() {
           </section>
 
           {/* Tasks */}
-          <section className="space-y-6">
-            <h2 id="tasks" className="font-cinzel text-2xl font-semibold border-b border-[rgba(0,180,255,0.2)] pb-3 tracking-wide">Tasks</h2>
+          <section id="tasks" className="space-y-6 scroll-mt-[84px]">
+            <h2 className="font-cinzel text-2xl font-semibold border-b border-[rgba(0,180,255,0.2)] pb-3 tracking-wide">Tasks</h2>
 
             <p className="text-sm leading-relaxed">Your manager may assign you tasks on the Tasks page &mdash; prep items, event duties, follow-ups, etc. Depending on your venue&apos;s task visibility setting, you may also see unassigned tasks or all tasks.</p>
             <p className="text-sm leading-relaxed text-muted-foreground">Mark tasks complete from the Tasks page when you&apos;re done.</p>
           </section>
 
           {/* Timeline */}
-          <section className="space-y-6">
-            <h2 id="timeline" className="font-cinzel text-2xl font-semibold border-b border-[rgba(0,180,255,0.2)] pb-3 tracking-wide">Timeline</h2>
+          <section id="timeline" className="space-y-6 scroll-mt-[84px]">
+            <h2 className="font-cinzel text-2xl font-semibold border-b border-[rgba(0,180,255,0.2)] pb-3 tracking-wide">Timeline</h2>
 
             <p className="text-sm leading-relaxed">The Timeline shows a live feed of venue activity: sales and patron visits. Filter by:</p>
             <ul className="list-disc list-inside space-y-1.5 pl-4 text-sm text-muted-foreground">
@@ -227,15 +204,15 @@ export default function StaffGuidePage() {
           </section>
 
           {/* Live Mode */}
-          <section className="space-y-6">
-            <h2 id="live" className="font-cinzel text-2xl font-semibold border-b border-[rgba(0,180,255,0.2)] pb-3 tracking-wide">Live Mode</h2>
+          <section id="live" className="space-y-6 scroll-mt-[84px]">
+            <h2 className="font-cinzel text-2xl font-semibold border-b border-[rgba(0,180,255,0.2)] pb-3 tracking-wide">Live Mode</h2>
 
             <p className="text-sm leading-relaxed">During active events, the Live page shows patron count, sales, revenue (your manager&apos;s visibility settings control what you see), and a live activity feed.</p>
           </section>
 
           {/* Tips */}
-          <section className="space-y-6">
-            <h2 id="tips" className="font-cinzel text-2xl font-semibold border-b border-[rgba(0,180,255,0.2)] pb-3 tracking-wide">Tips</h2>
+          <section id="tips" className="space-y-6 scroll-mt-[84px]">
+            <h2 className="font-cinzel text-2xl font-semibold border-b border-[rgba(0,180,255,0.2)] pb-3 tracking-wide">Tips</h2>
 
             <ul className="space-y-2.5 pl-2 text-sm leading-relaxed">
               <li className="flex items-start gap-2">

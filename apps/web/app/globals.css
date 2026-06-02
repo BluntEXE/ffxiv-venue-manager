@@ -792,7 +792,7 @@
 /* Usage: wrap page body in <div className="page-inner"> */
 .page-inner {
   padding: 24px 18px 80px;
-  max-width: 940px;
+  max-width: 1160px;
 }
 @media (min-width: 1081px) {
   .page-inner {
