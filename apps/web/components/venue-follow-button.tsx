@@ -8,9 +8,10 @@ interface VenueFollowButtonProps {
   venueId: string
   isFollowing: boolean
   followCount: number
+  compact?: boolean
 }
 
-export function VenueFollowButton({ venueId, isFollowing: initial, followCount: initialCount }: VenueFollowButtonProps) {
+export function VenueFollowButton({ venueId, isFollowing: initial, followCount: initialCount, compact }: VenueFollowButtonProps) {
   const [following, setFollowing] = useState(initial)
   const [count, setCount] = useState(initialCount)
   const [loading, setLoading] = useState(false)
@@ -28,6 +29,23 @@ export function VenueFollowButton({ venueId, isFollowing: initial, followCount: 
     } finally {
       setLoading(false)
     }
+  }
+
+  if (compact) {
+    return (
+      <button
+        onClick={toggle}
+        disabled={loading}
+        title={following ? `Unfollow (${count})` : `Follow (${count})`}
+        className={`p-[7px] rounded-[var(--radius-md)] border transition-colors ${
+          following
+            ? "border-[var(--blue-020)] bg-[var(--blue-012)] text-[var(--xiv-blue)] hover:bg-[var(--destructive-soft)] hover:text-[var(--destructive)] hover:border-[rgba(243,139,168,0.3)]"
+            : "border-[var(--blue-018)] bg-[rgba(7,11,20,0.5)] text-muted-foreground hover:text-[var(--support-pink)] hover:border-[rgba(243,139,168,0.3)] hover:bg-[rgba(243,139,168,0.08)]"
+        }`}
+      >
+        <Heart className={`h-4 w-4 ${following ? "fill-current" : ""}`} />
+      </button>
+    )
   }
 
   return (

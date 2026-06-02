@@ -244,20 +244,27 @@ function VenueC3Card({ venue, dimmed, isAuthed }: { venue: DiscoverVenue; dimmed
           )}
         </div>
       </div>
-      <div className="flex flex-col items-end gap-[10px] flex-shrink-0">
-        {isOpen ? (
-          <span className="status open"><span className="dot" />Open</span>
-        ) : isSoon ? (
-          <span className="status soon"><span className="dot" />Soon</span>
-        ) : (
-          <span className="status closed"><span className="dot" />Closed</span>
-        )}
-        <Link
-          href={`/venues/${venue.slug}`}
-          className={`btn btn-outline flex items-center gap-2 px-4 py-[7px] text-[0.85rem] rounded-[var(--radius-md)] border border-[var(--blue-018)] bg-[rgba(7,11,20,0.5)] hover:border-[var(--blue-045)] hover:bg-[var(--blue-007)] transition-colors ${dimmed ? "opacity-40 pointer-events-none" : ""}`}
-        >
-          Visit <ArrowRight className="w-4 h-4" />
-        </Link>
+      <div className="flex items-center gap-[10px] flex-shrink-0">
+        <div className="flex flex-col items-end gap-[10px]">
+          {isOpen ? (
+            <span className="status open"><span className="dot" />Open</span>
+          ) : isSoon ? (
+            <span className="status soon"><span className="dot" />Soon</span>
+          ) : (
+            <span className="status closed"><span className="dot" />Closed</span>
+          )}
+          <div className="flex items-center gap-2">
+            {isAuthed && (
+              <VenueFollowButton venueId={venue.id} isFollowing={venue.isFollowed} followCount={venue.followCount} compact />
+            )}
+            <Link
+              href={`/venues/${venue.slug}`}
+              className="btn btn-outline flex items-center gap-2 px-4 py-[7px] text-[0.85rem] rounded-[var(--radius-md)] border border-[var(--blue-018)] bg-[rgba(7,11,20,0.5)] hover:border-[var(--blue-045)] hover:bg-[var(--blue-007)] transition-colors"
+            >
+              Visit <ArrowRight className="w-4 h-4" />
+            </Link>
+          </div>
+        </div>
       </div>
     </div>
   )
