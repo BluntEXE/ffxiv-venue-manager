@@ -63,6 +63,57 @@ export default async function VenueProfilePage({
   const DAY_NAMES     = ["Sunday","Monday","Tuesday","Wednesday","Thursday","Friday","Saturday"]
   const address       = `${venue.dataCenter} · ${venue.world}${venue.location ? ` · ${venue.location}` : ""}`
 
+  // Parse hours from settings
+  const s = venue.settings as Record<string, unknown> | null
+  const defaultHours = (s?.defaultHours as string | undefined) ?? ""
+  const openNights   = (s?.openNights   as string | undefined) ?? ""
+
+  // Map day abbreviations/names to DAY_NAMES index (0=Sunday)
+  const DAY_PATTERNS: [RegExp, number][] = [
+    [/\bsun(day)?\b/i,    0],
+    [/\bmon(day)?\b/i,    1],
+    [/\btue(s(day)?)?\b/i, 2],
+    [/\bwed(nesday)?\b/i, 3],
+    [/\bthu(rs?(day)?)?\b/i, 4],
+    [/\bfri(day)?\b/i,    5],
+    [/\bsat(urday)?\b/i,  6],
+  ]
+
+  // Detect a "Fri-Sun" / "Fri–Sat" range and expand it
+  function expandDayRange(text: string): number[] {
+    const rangeMatch = text.match(/(\w+)\s*[-–]\s*(\w+)/)
+    if (rangeMatch) {
+      const from = DAY_PATTERNS.findIndex(([rx]) => rx.test(rangeMatch[1]))
+      const to   = DAY_PATTERNS.findIndex(([rx]) => rx.test(rangeMatch[2]))
+      if (from !== -1 && to !== -1) {
+        const days: number[] = []
+        let i = from
+        while (true) {
+          days.push(i % 7)
+          if (i % 7 === to) break
+          i++
+          if (i - from > 7) break // safety
+        }
+        return days
+      }
+    }
+    return []
+  }
+
+  function parseOpenDays(nights: string): Set<number> | null {
+    if (!nights.trim()) return null
+    if (/every\s*(night|day)/i.test(nights)) return new Set([0,1,2,3,4,5,6])
+    const range = expandDayRange(nights)
+    if (range.length > 0) return new Set(range)
+    const found = new Set<number>()
+    for (const [rx, idx] of DAY_PATTERNS) {
+      if (rx.test(nights)) found.add(idx)
+    }
+    return found.size > 0 ? found : null
+  }
+
+  const openDays = parseOpenDays(openNights)
+
   return (
     <div className="min-h-screen bg-[var(--background)]">
 
@@ -218,16 +269,42 @@ export default async function VenueProfilePage({
               {/* Hours */}
               <div className="dcard">
                 <div className="dh"><Clock /> Hours</div>
-                {DAY_NAMES.map((day, i) => {
-                  const isToday = i === todayUTCDay
-                  return (
-                    <div key={day} className={`hours-row${isToday ? " today" : " closed"}`}>
-                      <span className="day">{day}</span>
-                      <span className="hrs">—</span>
+                {openDays ? (
+                  DAY_NAMES.map((day, i) => {
+                    const isOpen  = openDays.has(i)
+                    const isToday = i === todayUTCDay
+                    return (
+                      <div key={day} className={`hours-row${isToday ? " today" : isOpen ? "" : " closed"}`}>
+                        <span className="day">{day}</span>
+                        <span className="hrs">{isOpen ? (defaultHours || "Open") : "Closed"}</span>
+                      </div>
+                    )
+                  })
+                ) : defaultHours ? (
+                  // Has hours but couldn't parse specific days — show a summary row
+                  <>
+                    <div className="px-5 py-3 text-[0.86rem]">
+                      <span className="text-muted-foreground">Hours</span>
+                      <span className="float-right font-medium">{defaultHours} {tzLabel}</span>
                     </div>
-                  )
-                })}
-                <p className="px-5 pb-3 pt-1 text-[0.72rem] text-[var(--fg-faint)]">Hours not set by owner.</p>
+                    {openNights && (
+                      <div className="px-5 pb-3 text-[0.86rem]">
+                        <span className="text-muted-foreground">Open</span>
+                        <span className="float-right font-medium">{openNights}</span>
+                      </div>
+                    )}
+                  </>
+                ) : (
+                  <>
+                    {DAY_NAMES.map((day, i) => (
+                      <div key={day} className={`hours-row closed${i === todayUTCDay ? " today" : ""}`}>
+                        <span className="day">{day}</span>
+                        <span className="hrs">—</span>
+                      </div>
+                    ))}
+                    <p className="px-5 pb-3 pt-1 text-[0.72rem] text-[var(--fg-faint)]">Hours not set by owner.</p>
+                  </>
+                )}
               </div>
 
               {/* Location */}
