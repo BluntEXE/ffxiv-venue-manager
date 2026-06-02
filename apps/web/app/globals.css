@@ -533,6 +533,7 @@
   background: #0a0f1e !important;
   border: 1px solid rgba(0, 180, 255, 0.18) !important;
   transition: border-color 0.2s ease, box-shadow 0.2s ease;
+  position: relative;
 }
 
 .xiv-card:hover {
@@ -910,6 +911,7 @@
   border: 1px solid var(--blue-018);
   border-radius: var(--radius-xl);
   overflow: hidden;
+  position: relative;
 }
 
 /* ── Panel (live mode + venue profile) — matches prototype .panel ── */
@@ -918,6 +920,7 @@
   border: 1px solid var(--blue-018);
   border-radius: var(--radius-xl);
   overflow: hidden;
+  position: relative;
 }
 
 /* ── Layout utilities from prototype ── */
@@ -1055,7 +1058,7 @@
 }
 
 /* ── Stat cards — matches prototype .stat spec ── */
-.stat { background: var(--card); border: 1px solid var(--blue-015); border-radius: var(--radius-lg); padding: 16px 18px; transition: border-color .2s ease; }
+.stat { background: var(--card); border: 1px solid var(--blue-015); border-radius: var(--radius-lg); padding: 16px 18px; transition: border-color .2s ease; position: relative; }
 .stat:hover { border-color: var(--blue-035); }
 .stat .top { display: flex; align-items: center; justify-content: space-between; }
 .stat .sb { width: 30px; height: 30px; border-radius: var(--radius-sm); display: grid; place-items: center; background: var(--blue-010); border: 1px solid var(--blue-018); color: var(--xiv-blue); flex-shrink: 0; }
@@ -1085,7 +1088,7 @@
 /* ── Kanban (Tasks) — matches prototype .kanban spec ── */
 .kanban { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; align-items: start; }
 @media (max-width: 1100px) { .kanban { grid-template-columns: 1fr; } }
-.kcol { background: var(--card); border: 1px solid var(--blue-015); border-radius: var(--radius-xl); padding: 6px; }
+.kcol { background: var(--card); border: 1px solid var(--blue-015); border-radius: var(--radius-xl); padding: 6px; position: relative; }
 .kcol > .kh { display: flex; align-items: center; gap: 9px; padding: 12px 14px 10px; font-family: var(--font-outfit), system-ui, sans-serif; font-weight: 600; font-size: 0.9rem; }
 .kcol > .kh .kdot { width: 8px; height: 8px; border-radius: 999px; flex-shrink: 0; }
 .kcol > .kh .kc { margin-left: auto; font-size: 0.72rem; color: var(--fg-faint); background: var(--blue-010); padding: 1px 8px; border-radius: 999px; }
