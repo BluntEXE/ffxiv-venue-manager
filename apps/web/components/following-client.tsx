@@ -2,7 +2,7 @@
 
 import { useState } from "react"
 import Link from "next/link"
-import { MapPin, ArrowRight, Radio, Building2 } from "lucide-react"
+import { MapPin, ArrowRight, Radio, Building2, Heart } from "lucide-react"
 import { VenueFollowButton } from "@/components/venue-follow-button"
 
 type FollowingVenue = {
