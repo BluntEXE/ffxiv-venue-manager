@@ -7,6 +7,7 @@ export const metadata: Metadata = {
 
 import Link from "next/link"
 import { GuideTOC } from "@/components/guide-toc"
+import { SiteFooter } from "@/components/site-footer"
 
 export default function OwnerManagerGuidePage() {
   return (
@@ -401,6 +402,7 @@ export default function OwnerManagerGuidePage() {
           </article>
         </div>
       </div>
+      <SiteFooter />
     </div>
   )
 }

@@ -7,6 +7,7 @@ export const metadata: Metadata = {
 
 import Link from "next/link"
 import { GuideTOC } from "@/components/guide-toc"
+import { SiteFooter } from "@/components/site-footer"
 
 export default function StaffGuidePage() {
   return (
@@ -243,6 +244,7 @@ export default function StaffGuidePage() {
           </article>
         </div>
       </div>
+      <SiteFooter />
     </div>
   )
 }
