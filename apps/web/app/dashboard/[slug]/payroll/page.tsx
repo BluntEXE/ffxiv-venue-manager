@@ -450,7 +450,7 @@ export default function PayrollPage() {
       <div className="page-inner space-y-6">
         {/* Breadcrumb */}
         {/* Header */}
-        <div className="flex flex-col sm:flex-row sm:justify-between sm:items-start gap-4">
+        <div className="head-row">
           <div>
             <VenueEyebrow slug={slug} />
             <h1 className="page-h1">Payroll</h1>

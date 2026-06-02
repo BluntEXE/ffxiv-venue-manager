@@ -242,50 +242,32 @@ export default function AnalyticsPage() {
           </div>
         </div>
 
-        {/* Summary KPIs — matches reference: Revenue / Patrons / Avg Spend / Repeat Rate */}
+        {/* Summary KPIs */}
         <div className="kpis mb-6">
-          <Card className="p-4">
-            <StatReadout
-              label="Revenue"
-              value={totalRevenue >= 1000000 ? `${(totalRevenue/1000000).toFixed(2)}m gil` : totalRevenue >= 1000 ? `${(totalRevenue/1000).toFixed(1)}k gil` : `${totalRevenue} gil`}
-              subtext={`${eventStats?.recentCount || 0} events tracked`}
-              icon={<DollarSign />}
-              iconVariant="blue"
-            />
-          </Card>
-          <Card className="p-4">
-            <StatReadout
-              label="Patrons"
-              value={totalPatrons.toLocaleString()}
-              subtext="unique visitors"
-              icon={<Users />}
-              iconVariant="blue"
-            />
-          </Card>
-          <Card className="p-4">
-            <StatReadout
-              label="Avg spend"
-              value={eventStats?.avgSpend && eventStats.avgSpend > 0
-                ? `${eventStats.avgSpend.toLocaleString()} gil`
-                : avgDailyRevenue > 0 ? `${avgDailyRevenue.toLocaleString()} gil` : "—"}
-              subtext="per transaction"
-              icon={<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>}
-              iconVariant="success"
-            />
-          </Card>
-          <Card className="p-4">
-            <StatReadout
-              label="Repeat rate"
-              value={eventStats?.repeatRate !== undefined
-                ? `${eventStats.repeatRate}%`
-                : analyticsData?.patronMix
-                  ? `${Math.round(((analyticsData.patronMix.regular + analyticsData.patronMix.vip) / (analyticsData.patronMix.total || 1)) * 100)}%`
-                  : "—"}
-              subtext="3+ visits"
-              icon={<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><polyline points="23 4 23 10 17 10"/><polyline points="1 20 1 14 7 14"/><path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10"/><path d="M1 14l4.64 4.36A9 9 0 0 0 20.49 15"/></svg>}
-              iconVariant="warning"
-            />
-          </Card>
+          <div className="stat">
+            <div className="top"><span className="sb"><DollarSign size={16} /></span></div>
+            <div className="k">Revenue</div>
+            <div className="v">{totalRevenue >= 1000000 ? `${(totalRevenue/1000000).toFixed(2)}m` : totalRevenue >= 1000 ? `${(totalRevenue/1000).toFixed(1)}k` : totalRevenue} <span className="unit">gil</span></div>
+            <div className="delta flat">{eventStats?.recentCount || 0} events tracked</div>
+          </div>
+          <div className="stat">
+            <div className="top"><span className="sb"><Users size={16} /></span></div>
+            <div className="k">Patrons</div>
+            <div className="v">{totalPatrons.toLocaleString()}</div>
+            <div className="delta flat">unique visitors</div>
+          </div>
+          <div className="stat">
+            <div className="top"><span className="sb em"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg></span></div>
+            <div className="k">Avg spend</div>
+            <div className="v">{eventStats?.avgSpend && eventStats.avgSpend > 0 ? `${eventStats.avgSpend.toLocaleString()}` : avgDailyRevenue > 0 ? `${avgDailyRevenue.toLocaleString()}` : "—"} <span className="unit">gil</span></div>
+            <div className="delta flat">per transaction</div>
+          </div>
+          <div className="stat">
+            <div className="top"><span className="sb am"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><polyline points="23 4 23 10 17 10"/><polyline points="1 20 1 14 7 14"/><path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10"/><path d="M1 14l4.64 4.36A9 9 0 0 0 20.49 15"/></svg></span></div>
+            <div className="k">Repeat rate</div>
+            <div className="v">{eventStats?.repeatRate !== undefined ? `${eventStats.repeatRate}` : analyticsData?.patronMix ? `${Math.round(((analyticsData.patronMix.regular + analyticsData.patronMix.vip) / (analyticsData.patronMix.total || 1)) * 100)}` : "—"} <span className="unit">%</span></div>
+            <div className="delta flat">3+ visits</div>
+          </div>
         </div>
 
         {/* Charts */}

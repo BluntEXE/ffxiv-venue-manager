@@ -1199,3 +1199,7 @@
 .gtile { aspect-ratio: 4/3; border-radius: var(--radius-lg); border: 1px solid var(--blue-015); background: linear-gradient(135deg, var(--card), var(--surface-alt, var(--card))); position: relative; overflow: hidden; display: grid; place-items: center; }
 .gtile .gbg { position: absolute; inset: 0; background: url('/starfield.png') center/cover; opacity: 0.18; pointer-events: none; }
 .gtile svg { width: 26px; height: 26px; color: var(--blue-035); position: relative; }
+
+/* Hide scrollbar but keep scroll functionality */
+.scrollbar-hide { -ms-overflow-style: none; scrollbar-width: none; }
+.scrollbar-hide::-webkit-scrollbar { display: none; }

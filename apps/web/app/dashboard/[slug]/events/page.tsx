@@ -96,7 +96,7 @@ export default async function EventsPage({
       <div className="page-inner">
         {/* Breadcrumb */}
         {/* Header */}
-        <div className="flex flex-col sm:flex-row sm:justify-between sm:items-start gap-4 mb-6 md:mb-8">
+        <div className="head-row">
           <div>
             <div className="flex items-center gap-2 mb-1.5">
               <span className="w-[7px] h-[7px] bg-[rgba(0,180,255,0.7)] rotate-45 shadow-[0_0_10px_rgba(0,180,255,0.5)] flex-shrink-0" />

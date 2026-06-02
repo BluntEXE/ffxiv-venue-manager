@@ -307,7 +307,7 @@ export default function ServicesPage({
       <div className="page-inner">
         {/* Breadcrumb */}
         {/* Header */}
-        <div className="flex flex-col sm:flex-row sm:justify-between sm:items-start gap-4 mb-6 md:mb-8">
+        <div className="head-row">
           <div>
             <VenueEyebrow slug={slug} />
             <h1 className="page-h1">Services</h1>

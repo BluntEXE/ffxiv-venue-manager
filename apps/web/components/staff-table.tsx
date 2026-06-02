@@ -78,27 +78,29 @@ export function StaffTable({
 
   return (
     <div>
-      {/* Filter bar */}
-      <div className="flex items-center gap-3 mb-4 flex-wrap">
-        <div className="flex gap-1 bg-[var(--card)] border border-[var(--blue-015)] rounded-full p-1">
-          {tabs.map(({ key, label }) => (
-            <button
-              key={key}
-              onClick={() => setFilter(key)}
-              className={`text-sm font-semibold px-4 py-1.5 rounded-full transition-colors ${
-                filter === key
-                  ? "bg-[var(--xiv-blue)] text-[var(--xiv-navy)]"
-                  : "text-muted-foreground hover:text-foreground hover:bg-[var(--blue-007)]"
-              }`}
-            >
-              {label}
-              <span className={`ml-1.5 text-[0.68rem] ${filter === key ? "opacity-70" : "text-[var(--fg-faint)]"}`}>
-                {counts[key]}
-              </span>
-            </button>
-          ))}
+      {/* Filter bar — tabs scrollable, search on own line */}
+      <div className="mb-4 space-y-2">
+        <div className="overflow-x-auto scrollbar-hide">
+          <div className="flex gap-1 bg-[var(--card)] border border-[var(--blue-015)] rounded-full p-1 w-max min-w-full">
+            {tabs.map(({ key, label }) => (
+              <button
+                key={key}
+                onClick={() => setFilter(key)}
+                className={`text-sm font-semibold px-4 py-1.5 rounded-full transition-colors whitespace-nowrap ${
+                  filter === key
+                    ? "bg-[var(--xiv-blue)] text-[var(--xiv-navy)]"
+                    : "text-muted-foreground hover:text-foreground hover:bg-[var(--blue-007)]"
+                }`}
+              >
+                {label}
+                <span className={`ml-1.5 text-[0.68rem] ${filter === key ? "opacity-70" : "text-[var(--fg-faint)]"}`}>
+                  {counts[key]}
+                </span>
+              </button>
+            ))}
+          </div>
         </div>
-        <div className="relative flex items-center flex-1 min-w-[160px] max-w-xs">
+        <div className="relative flex items-center max-w-xs">
           <svg className="absolute left-3 w-4 h-4 text-[var(--fg-faint)] pointer-events-none" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
           <Input
             className="pl-9 bg-[var(--card)] border-[var(--blue-015)] focus:border-[var(--blue-035)] h-9 text-sm"

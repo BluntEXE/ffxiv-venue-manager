@@ -112,7 +112,7 @@ export default async function StaffPage({
       <div className="page-inner">
         {/* Breadcrumb */}
         {/* Header */}
-        <div className="flex flex-col sm:flex-row sm:justify-between sm:items-start gap-4 mb-6 md:mb-8">
+        <div className="head-row">
           <div>
             <div className="flex items-center gap-2 mb-1.5">
               <span className="w-[7px] h-[7px] bg-[rgba(0,180,255,0.7)] rotate-45 shadow-[0_0_10px_rgba(0,180,255,0.5)] flex-shrink-0" />
@@ -140,15 +140,10 @@ export default async function StaffPage({
 
         {/* Stats */}
         <div className="kpis mb-6">
-          <Card className="px-[18px] py-4"><StatReadout label="Active staff" value={activeStaff.length} subtext="Members" icon={<Users />} iconVariant="blue" /></Card>
-          <Card className="p-4">
-            <div className="flex items-start justify-between">
-              <StatReadout label="On shift now" value={activeShifts.length} subtext={activeShifts.length > 0 ? "clocked in" : "no active shifts"} icon={<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>} iconVariant="success" />
-              {activeShifts.length > 0 && <span className="xiv-live-dot mt-1 shrink-0" />}
-            </div>
-          </Card>
-          <Card className="px-[18px] py-4"><StatReadout label="Hours this week" value={Math.round(hoursThisWeek)} subtext="h" icon={<Shield />} iconVariant="blue" /></Card>
-          <Card className="px-[18px] py-4"><StatReadout label="Tips pool (wk)" value={tipsThisWeek > 0 ? `${Math.round(tipsThisWeek / 1000)}k` : "0"} subtext="gil" icon={<Users />} iconVariant="warning" /></Card>
+          <div className="stat"><div className="top"><span className="sb"><Users size={16} /></span></div><div className="k">Active staff</div><div className="v">{activeStaff.length}</div><div className="delta flat">Members</div></div>
+          <div className="stat"><div className="top"><span className={activeShifts.length > 0 ? "sb em" : "sb"}><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg></span></div><div className="k">On shift now</div><div className="v">{activeShifts.length}</div><div className="delta flat">{activeShifts.length > 0 ? "clocked in" : "no active shifts"}</div></div>
+          <div className="stat"><div className="top"><span className="sb"><Shield size={16} /></span></div><div className="k">Hours this week</div><div className="v">{Math.round(hoursThisWeek)} <span className="unit">h</span></div><div className="delta flat">scheduled</div></div>
+          <div className="stat"><div className="top"><span className="sb am"><Users size={16} /></span></div><div className="k">Tips pool (wk)</div><div className="v">{tipsThisWeek > 0 ? `${Math.round(tipsThisWeek / 1000)}k` : "0"} <span className="unit">gil</span></div><div className="delta flat">split by hours</div></div>
         </div>
 
         {/* Staff table */}
