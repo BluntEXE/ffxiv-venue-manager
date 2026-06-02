@@ -3,6 +3,7 @@
 import Link from "next/link"
 import Image from "next/image"
 import { usePathname } from "next/navigation"
+import { useEffect, useState } from "react"
 import { Button } from "@/components/ui/button"
 import { UserMenu } from "./user-menu"
 import { FeedbackDialog } from "./feedback-dialog"
@@ -16,15 +17,35 @@ interface NavbarClientProps {
   venues: Array<{ id: string; name: string; slug: string; role: string }>
 }
 
+const PLUGIN_STALE_MS = 5 * 60 * 1000 // 5 minutes
+
 export function NavbarClient({ session, venues }: NavbarClientProps) {
   const { toggle } = useSidebar()
   const pathname = usePathname()
+  const [pluginSynced, setPluginSynced] = useState(false)
 
   const isVenuePage = !!(pathname?.match(/^\/dashboard\/[^/]+(?:\/|$)/) && pathname !== "/dashboard")
 
   // Current venue context for user chip subtitle
   const currentSlug = pathname?.match(/^\/dashboard\/([^/]+)/)?.[1]
   const currentVenue = currentSlug ? venues.find((v) => v.slug === currentSlug) : undefined
+
+  // Poll plugin sync status every 30s when on a venue page
+  useEffect(() => {
+    if (!isVenuePage || !currentVenue?.id) { setPluginSynced(false); return }
+    let cancelled = false
+    const check = async () => {
+      try {
+        const res = await fetch(`/api/venues/${currentVenue.id}/plugin-status`)
+        if (!res.ok || cancelled) return
+        const { lastUsedAt } = await res.json()
+        if (!cancelled) setPluginSynced(!!lastUsedAt && Date.now() - new Date(lastUsedAt).getTime() < PLUGIN_STALE_MS)
+      } catch { /* network error — keep last state */ }
+    }
+    check()
+    const interval = setInterval(check, 30_000)
+    return () => { cancelled = true; clearInterval(interval) }
+  }, [isVenuePage, currentVenue?.id])
 
   return (
     <nav className="sticky top-0 z-50 w-full xiv-nav xiv-glass relative">
@@ -63,8 +84,8 @@ export function NavbarClient({ session, venues }: NavbarClientProps) {
         <div className="flex items-center gap-[14px]">
           {session ? (
             <>
-              {/* Sync pill — hidden on mobile */}
-              {isVenuePage && (
+              {/* Sync pill — hidden on mobile, only shown when plugin recently synced */}
+              {isVenuePage && pluginSynced && (
                 <div className="hidden [@media(min-width:1081px)]:inline-flex items-center gap-2 px-[11px] py-[5px] rounded-full text-[0.74rem] font-medium font-mono border border-[rgba(16,185,129,0.25)] bg-[rgba(16,185,129,0.08)] text-[var(--success-text)]">
                   <span className="xiv-live-dot scale-75" />
                   Plugin synced

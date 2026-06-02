@@ -1053,3 +1053,37 @@
   .event-row { flex-wrap: wrap; }
   .event-row .ev-right { width: 100%; justify-content: space-between; }
 }
+
+/* ── Kanban (Tasks) — matches prototype .kanban spec ── */
+.kanban { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; align-items: start; }
+@media (max-width: 1100px) { .kanban { grid-template-columns: 1fr; } }
+.kcol { background: var(--card); border: 1px solid var(--blue-015); border-radius: var(--radius-xl); padding: 6px; }
+.kcol > .kh { display: flex; align-items: center; gap: 9px; padding: 12px 14px 10px; font-family: var(--font-outfit), system-ui, sans-serif; font-weight: 600; font-size: 0.9rem; }
+.kcol > .kh .kdot { width: 8px; height: 8px; border-radius: 999px; flex-shrink: 0; }
+.kcol > .kh .kc { margin-left: auto; font-size: 0.72rem; color: var(--fg-faint); background: var(--blue-010); padding: 1px 8px; border-radius: 999px; }
+.kbody { display: flex; flex-direction: column; gap: 8px; padding: 4px; min-height: 40px; }
+.kcard { background: var(--background); border: 1px solid var(--blue-012); border-radius: var(--radius-md); padding: 12px 13px; cursor: pointer; transition: border-color .18s ease, transform .18s ease; }
+.kcard:hover { border-color: var(--blue-035); transform: translateY(-1px); }
+.kcard .kt { font-size: 0.85rem; color: var(--foreground); line-height: 1.4; margin-bottom: 11px; }
+.kcard.done .kt { color: var(--fg-faint); text-decoration: line-through; }
+.kcard .km { display: flex; align-items: center; gap: 8px; }
+.kcard .km .due { font-size: 0.7rem; color: var(--fg-faint); display: inline-flex; align-items: center; gap: 4px; }
+.kcard .km .due svg { width: 12px; height: 12px; }
+.kcard .km .due.today { color: var(--warning); }
+.kcard .km .sp { flex: 1; }
+.kcard .km .av-xs { width: 24px; height: 24px; border-radius: 999px; font-size: 0.6rem; display: grid; place-items: center; font-weight: 600; color: var(--xiv-navy); background: linear-gradient(135deg, #34d399, #10b981); flex-shrink: 0; }
+
+/* ── Schedule grid (Shifts) — matches prototype .sched-grid spec ── */
+.sched { overflow-x: auto; }
+.sched-grid { min-width: 760px; display: grid; grid-template-columns: 150px repeat(7, 1fr); }
+.sched-grid .sg-h { font-size: 0.66rem; text-transform: uppercase; letter-spacing: 0.05em; color: var(--xiv-blue); font-weight: 600; padding: 12px 8px; border-bottom: 1px solid var(--blue-008); text-align: center; }
+.sched-grid .sg-h.staffcol { text-align: left; padding-left: 14px; color: var(--fg-faint); }
+.sched-grid .sg-h .dnum { color: var(--fg-faint); font-weight: 500; margin-left: 4px; }
+.sched-grid .sg-h.today-col { background: var(--blue-004); }
+.sched-grid .sg-h.today-col .dnum, .sched-grid .sg-h.today-col { color: var(--xiv-blue); }
+.sched-grid .sg-staff { padding: 12px 14px; border-bottom: 1px solid var(--blue-008); display: flex; align-items: center; gap: 10px; font-size: 0.82rem; }
+.sched-grid .sg-cell { border-bottom: 1px solid var(--blue-008); border-left: 1px solid var(--blue-008); padding: 7px; min-height: 58px; display: flex; flex-direction: column; gap: 5px; }
+.sched-grid .sg-cell.today-col { background: var(--blue-004); }
+.shift-chip { font-size: 0.66rem; font-weight: 600; padding: 4px 6px; border-radius: var(--radius-sm); background: var(--blue-012); color: var(--xiv-blue); border: 1px solid var(--blue-020); text-align: center; line-height: 1.25; }
+.shift-chip.em { background: var(--success-soft); color: var(--success-text); border-color: rgba(16,185,129,0.25); }
+.shift-chip.am { background: rgba(249,226,175,0.10); color: var(--warning); border-color: rgba(249,226,175,0.25); }

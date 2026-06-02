@@ -368,7 +368,7 @@ export default function TasksPage({
       {isLoading ? (
         <PageLoading text="Loading tasks..." />
       ) : (
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 items-start">
+        <div className="kanban">
           {(
             [
               { key: "PENDING",     label: "To do",      dot: "var(--xiv-blue)",    next: "IN_PROGRESS" as const, nextLabel: "Start"    },
@@ -382,21 +382,16 @@ export default function TasksPage({
                 (!search || t.title.toLowerCase().includes(search.toLowerCase()))
             )
             return (
-              <div
-                key={key}
-                className="rounded-2xl border border-[var(--blue-015)] bg-[var(--card)] overflow-hidden"
-              >
+              <div key={key} className="kcol">
                 {/* Column header */}
-                <div className="flex items-center gap-2 px-4 py-3 border-b border-[var(--blue-008)]">
-                  <span className="w-2 h-2 rounded-full flex-shrink-0" style={{ background: dot }} />
-                  <span className="font-[var(--font-outfit)] font-semibold text-sm">{label}</span>
-                  <span className="ml-auto text-xs text-[var(--fg-faint)] bg-[var(--blue-010)] px-2 py-0.5 rounded-full">
-                    {col.length}
-                  </span>
+                <div className="kh">
+                  <span className="kdot" style={{ background: dot }} />
+                  <span>{label}</span>
+                  <span className="kc">{col.length}</span>
                 </div>
 
                 {/* Cards */}
-                <div className="flex flex-col gap-2 p-2 min-h-10">
+                <div className="kbody">
                   {col.length === 0 && (
                     <p className="text-xs text-[var(--fg-faint)] text-center py-6">
                       {key === "PENDING" && tasks.length === 0 ? "No tasks yet" : "Empty"}
@@ -405,55 +400,30 @@ export default function TasksPage({
                   {col.map((task) => (
                     <div
                       key={task.id}
-                      className={`rounded-lg border bg-background px-[13px] py-3 cursor-pointer transition-all hover:-translate-y-px hover:border-[var(--blue-035)] ${
-                        key === "COMPLETED"
-                          ? "border-[var(--blue-008)] opacity-70"
-                          : "border-[var(--blue-012)]"
-                      }`}
+                      className={`kcard${key === "COMPLETED" ? " done opacity-70" : ""}`}
                       onClick={() => handleStatusUpdate(task.id, next)}
                       title={`Click to move to ${nextLabel === "Start" ? "In Progress" : nextLabel === "Complete" ? "Done" : "To Do"}`}
                     >
-                      <p className={`text-sm leading-snug mb-3 ${key === "COMPLETED" ? "line-through text-[var(--fg-faint)]" : "text-foreground"}`}>
-                        {task.title}
-                      </p>
-                      <div className="flex items-center gap-2">
-                        {/* Priority dot */}
-                        <span
-                          className="w-2 h-2 rounded-full flex-shrink-0"
-                          title={task.priority}
-                          style={{
-                            background:
-                              task.priority === "URGENT" ? "var(--destructive)" :
-                              task.priority === "HIGH"   ? "var(--warning)" :
-                              task.priority === "MEDIUM" ? "var(--xiv-blue)" :
-                                                           "var(--fg-faint)",
-                          }}
-                        />
+                      <p className="kt">{task.title}</p>
+                      <div className="km">
                         {/* Due date */}
                         {task.dueDate ? (
-                          <span className={`text-[0.68rem] flex items-center gap-1 ${
-                            new Date(task.dueDate) < new Date() && key !== "COMPLETED"
-                              ? "text-[var(--warning)]"
-                              : "text-[var(--fg-faint)]"
-                          }`}>
-                            <svg className="w-3 h-3" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+                          <span className={`due${new Date(task.dueDate) < new Date() && key !== "COMPLETED" ? " today" : ""}`}>
+                            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
                             {format(new Date(task.dueDate), "d MMM")}
                           </span>
                         ) : key === "COMPLETED" ? (
-                          <span className="text-[0.68rem] text-[var(--fg-faint)] flex items-center gap-1">
-                            <svg className="w-3 h-3" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><polyline points="20 6 9 17 4 12"/></svg>
+                          <span className="due">
+                            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><polyline points="20 6 9 17 4 12"/></svg>
                             Done
                           </span>
                         ) : null}
-                        <div className="flex-1" />
+                        <div className="sp" />
                         {/* Assignee avatar */}
                         {task.assignee ? (
-                          <Avatar className="w-6 h-6 text-[0.6rem]">
-                            <AvatarImage src={task.assignee.image ?? undefined} />
-                            <AvatarFallback className="text-[0.6rem] bg-gradient-to-br from-emerald-400 to-emerald-600 text-[var(--xiv-navy)] font-bold">
-                              {task.assignee.name?.slice(0, 2).toUpperCase() ?? "?"}
-                            </AvatarFallback>
-                          </Avatar>
+                          <span className="av-xs" title={task.assignee.name ?? ""}>
+                            {task.assignee.name?.slice(0, 2).toUpperCase() ?? "?"}
+                          </span>
                         ) : task.assignedRole ? (
                           <span
                             className="text-[0.65rem] font-medium px-2 py-0.5 rounded-full border"

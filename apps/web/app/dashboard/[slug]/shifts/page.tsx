@@ -263,87 +263,57 @@ export default async function ShiftsPage({
         </div>
 
         {/* Weekly grid */}
-        <Card className="mb-6 overflow-hidden">
-          <div className="overflow-x-auto">
-            <div
-              className="grid"
-              style={{ minWidth: 760, gridTemplateColumns: "160px repeat(7, 1fr)" }}
-            >
-              {/* Header row */}
-              <div className="pl-4 py-3 text-left text-[0.66rem] uppercase tracking-[0.05em] text-[var(--xiv-blue)] font-semibold border-b border-[var(--blue-008)]">
-                Staff
-              </div>
-              {weekDays.map((day, i) => {
-                const isToday = utcDayKey(day) === todayKey
-                return (
-                  <div
-                    key={i}
-                    className={`py-3 px-2 text-center text-[0.66rem] uppercase tracking-[0.05em] font-semibold border-b border-[var(--blue-008)] ${
-                      isToday ? "bg-[var(--blue-004)]" : ""
-                    }`}
-                  >
-                    <span className={isToday ? "text-[var(--xiv-blue)]" : "text-[var(--fg-faint)]"}>
-                      {DAY_SHORT[i]}
-                    </span>{" "}
-                    <span className={isToday ? "text-[var(--xiv-blue)]" : "text-[var(--fg-faint)] font-normal"}>
-                      {day.getUTCDate()}
-                    </span>
-                  </div>
-                )
-              })}
-
-              {/* Staff rows */}
-              {staffRows.map((member) => (
-                <>
-                  <div
-                    key={`${member.membershipId}-name`}
-                    className="flex items-center gap-2.5 px-3.5 py-3 border-b border-[var(--blue-008)] text-sm min-w-0"
-                  >
-                    <Avatar className="w-7 h-7 flex-shrink-0">
-                      <AvatarImage src={member.image ?? undefined} />
-                      <AvatarFallback className="text-[0.62rem] font-bold bg-gradient-to-br from-[var(--xiv-blue)] to-blue-700 text-white">
-                        {member.name.split(" ").map((n) => n[0]).join("").slice(0, 2).toUpperCase()}
-                      </AvatarFallback>
-                    </Avatar>
-                    <span className="truncate text-[0.82rem]">{member.name}</span>
-                  </div>
-                  {weekDays.map((day) => {
-                    const key = utcDayKey(day)
-                    const dayShifts = member.cells.get(key) ?? []
-                    const isToday = key === todayKey
-                    return (
-                      <div
-                        key={`${member.membershipId}-${key}`}
-                        className={`border-b border-[var(--blue-008)] border-l border-l-[var(--blue-008)] p-1.5 flex flex-col gap-1 min-h-[58px] ${
-                          isToday ? "bg-[var(--blue-004)]" : ""
-                        }`}
-                      >
-                        {dayShifts.map((shift) => (
-                          <span
-                            key={shift.id}
-                            className={`text-[0.66rem] font-semibold px-1.5 py-1 rounded text-center leading-tight border whitespace-nowrap ${
-                              statusChip[shift.status] ?? statusChip.SCHEDULED
-                            }`}
-                          >
-                            {fmtHour(shift.scheduledStart)}–{fmtHour(shift.scheduledEnd)}
-                          </span>
-                        ))}
-                      </div>
-                    )
-                  })}
-                </>
-              ))}
-
-              {/* Empty state */}
-              {staffRows.length === 0 && (
-                <div className="col-span-8 py-12 text-center text-sm text-muted-foreground">
-                  No shifts scheduled for this week.
-                  {canManage && " Use the button above to add shifts."}
+        <div className="panel mb-6 sched">
+          <div className="sched-grid">
+            {/* Header row */}
+            <div className="sg-h staffcol">Staff</div>
+            {weekDays.map((day, i) => {
+              const isToday = utcDayKey(day) === todayKey
+              return (
+                <div key={i} className={`sg-h${isToday ? " today-col" : ""}`}>
+                  {DAY_SHORT[i]} <span className="dnum">{day.getUTCDate()}</span>
                 </div>
-              )}
-            </div>
+              )
+            })}
+
+            {/* Staff rows */}
+            {staffRows.map((member) => (
+              <>
+                <div key={`${member.membershipId}-name`} className="sg-staff">
+                  <span className="av-sm flex-shrink-0">
+                    {member.name.split(" ").map((n: string) => n[0]).join("").slice(0, 2).toUpperCase()}
+                  </span>
+                  <span className="truncate">{member.name}</span>
+                </div>
+                {weekDays.map((day) => {
+                  const key = utcDayKey(day)
+                  const dayShifts = member.cells.get(key) ?? []
+                  const isToday = key === todayKey
+                  return (
+                    <div key={`${member.membershipId}-${key}`} className={`sg-cell${isToday ? " today-col" : ""}`}>
+                      {dayShifts.map((shift) => (
+                        <span
+                          key={shift.id}
+                          className={`shift-chip${shift.status === "ACTIVE" ? " em" : shift.status === "MISSED" ? " am" : ""}`}
+                        >
+                          {fmtHour(shift.scheduledStart)}–{fmtHour(shift.scheduledEnd)}
+                        </span>
+                      ))}
+                    </div>
+                  )
+                })}
+              </>
+            ))}
+
+            {/* Empty state */}
+            {staffRows.length === 0 && (
+              <div className="col-span-8 py-12 text-center text-sm text-muted-foreground">
+                No shifts scheduled for this week.
+                {canManage && " Use the button above to add shifts."}
+              </div>
+            )}
           </div>
-        </Card>
+        </div>
 
         {/* Actions section — clock-in/out for shifts that need it */}
         {actionShifts.length > 0 && (
