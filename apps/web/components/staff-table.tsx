@@ -94,7 +94,7 @@ export function StaffTable({
           </DropdownMenuTrigger>
           <DropdownMenuContent
             align="start"
-            className="w-[200px] border-[var(--blue-018)] bg-[rgba(7,11,20,0.97)] backdrop-blur-2xl"
+            className="w-[200px]"
           >
             {/* System roles */}
             {tabs.filter(t => ["all","owner","manager","staff"].includes(t.key)).map(({ key, label }) => (
