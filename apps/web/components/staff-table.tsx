@@ -6,6 +6,8 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuTrigger } from "@/components/ui/dropdown-menu"
+import { ChevronDown, Check } from "lucide-react"
 
 export type StaffMember = {
   id: string
@@ -80,29 +82,51 @@ export function StaffTable({
     <div>
       {/* Filter bar — role select + search on one line */}
       <div className="flex items-center gap-3 mb-4">
-        <select
-          value={filter}
-          onChange={e => setFilter(e.target.value as Filter)}
-          style={{
-            flexShrink: 0,
-            width: 180,
-            fontFamily: "var(--font-sans)",
-            fontSize: "0.88rem",
-            color: "var(--foreground)",
-            background: "var(--card)",
-            border: "1px solid var(--blue-015)",
-            borderRadius: "var(--radius-md)",
-            padding: "0 11px",
-            height: 36,
-            outline: "none",
-          }}
-        >
-          {tabs.map(({ key, label }) => (
-            <option key={key} value={key}>
-              {label} ({counts[key] ?? 0})
-            </option>
-          ))}
-        </select>
+        <DropdownMenu>
+          <DropdownMenuTrigger asChild>
+            <button className="flex items-center gap-2 h-9 px-3 rounded-[var(--radius-md)] border border-[var(--blue-015)] bg-[var(--card)] text-sm font-medium text-foreground hover:border-[var(--blue-035)] hover:bg-[var(--blue-007)] transition-colors flex-shrink-0">
+              <span className="max-w-[120px] truncate">
+                {tabs.find(t => t.key === filter)?.label ?? "All"}
+              </span>
+              <span className="text-[0.68rem] text-[var(--fg-faint)]">{counts[filter] ?? 0}</span>
+              <ChevronDown className="w-3.5 h-3.5 text-[var(--fg-faint)] flex-shrink-0" />
+            </button>
+          </DropdownMenuTrigger>
+          <DropdownMenuContent
+            align="start"
+            className="w-[200px] border-[var(--blue-018)] bg-[rgba(7,11,20,0.97)] backdrop-blur-2xl"
+          >
+            {/* System roles */}
+            {tabs.filter(t => ["all","owner","manager","staff"].includes(t.key)).map(({ key, label }) => (
+              <DropdownMenuItem
+                key={key}
+                onClick={() => setFilter(key)}
+                className={`flex items-center justify-between gap-2 cursor-pointer ${filter === key ? "text-[var(--xiv-blue)]" : ""}`}
+              >
+                <span>{label}</span>
+                <span className="text-[0.68rem] text-[var(--fg-faint)]">{counts[key] ?? 0}</span>
+                {filter === key && <Check className="w-3.5 h-3.5 flex-shrink-0" />}
+              </DropdownMenuItem>
+            ))}
+            {/* Custom roles — only shown if any exist */}
+            {tabs.some(t => !["all","owner","manager","staff"].includes(t.key)) && (
+              <>
+                <DropdownMenuSeparator className="bg-[var(--blue-008)]" />
+                {tabs.filter(t => !["all","owner","manager","staff"].includes(t.key)).map(({ key, label }) => (
+                  <DropdownMenuItem
+                    key={key}
+                    onClick={() => setFilter(key)}
+                    className={`flex items-center justify-between gap-2 cursor-pointer ${filter === key ? "text-[var(--xiv-blue)]" : ""}`}
+                  >
+                    <span>{label}</span>
+                    <span className="text-[0.68rem] text-[var(--fg-faint)]">{counts[key] ?? 0}</span>
+                    {filter === key && <Check className="w-3.5 h-3.5 flex-shrink-0" />}
+                  </DropdownMenuItem>
+                ))}
+              </>
+            )}
+          </DropdownMenuContent>
+        </DropdownMenu>
         <div className="relative flex items-center flex-1 min-w-0 max-w-xs">
           <svg className="absolute left-3 w-4 h-4 text-[var(--fg-faint)] pointer-events-none" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
           <Input
