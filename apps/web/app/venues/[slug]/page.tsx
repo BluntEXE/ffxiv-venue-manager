@@ -4,9 +4,10 @@ import { notFound } from "next/navigation"
 import Link from "next/link"
 import { prisma } from "@/lib/prisma"
 import { format } from "date-fns"
-import { MapPin, Calendar, Heart, Clock, Crown, Image as ImageIcon, ChevronLeft, Navigation, Scroll, Bell, Repeat } from "lucide-react"
+import { MapPin, Calendar, Clock, Crown, Image as ImageIcon, ChevronLeft, Scroll } from "lucide-react"
 import { getServerTimeLabel, formatServerTime } from "@/lib/server-time"
 import { VenueFollowButton } from "@/components/venue-follow-button"
+import { CopyAddressButton } from "@/components/copy-address-button"
 
 export default async function VenueProfilePage({
   params,
@@ -154,9 +155,7 @@ export default async function VenueProfilePage({
               {/* About */}
               {venue.description && (
                 <div className="about">
-                  <div className="block-title font-[var(--font-outfit)] font-semibold text-[1.15rem] mb-4 flex items-center gap-[10px]">
-                    <Scroll className="w-[18px] h-[18px] text-[var(--xiv-blue)]" /> About
-                  </div>
+                  <div className="block-title"><Scroll /> About</div>
                   <p className="text-[0.96rem] text-[var(--fg-subtle)] leading-[1.7]">{venue.description}</p>
                 </div>
               )}
@@ -164,33 +163,25 @@ export default async function VenueProfilePage({
               {/* Upcoming events */}
               {upcomingEvents.length > 0 && (
                 <div className="upcoming">
-                  <div className="block-title font-[var(--font-outfit)] font-semibold text-[1.15rem] mb-4 flex items-center gap-[10px]">
-                    <Calendar className="w-[18px] h-[18px] text-[var(--xiv-blue)]" /> Upcoming events
+                  <div className="block-title">
+                    <Calendar /> Upcoming events
                   </div>
-                  <div className="events-list space-y-2">
+                  <div className="events-list panel">
                     {upcomingEvents.map(ev => (
-                      <div key={ev.id} className="vcard event-row flex items-center gap-4 px-5 py-4">
-                        {/* Date box */}
-                        <div className="datebox w-10 text-center flex-shrink-0">
-                          <div className="mo text-[0.6rem] font-semibold uppercase tracking-wide text-[var(--xiv-blue)]">{format(ev.startTime, "MMM")}</div>
-                          <div className="dy font-[var(--font-outfit)] font-bold text-[1.5rem] leading-none">{format(ev.startTime, "d")}</div>
+                      <div key={ev.id} className="event-row border-b border-[var(--blue-008)] last:border-b-0">
+                        <div className="datebox">
+                          <div className="mo">{format(ev.startTime, "MMM")}</div>
+                          <div className="dy">{format(ev.startTime, "d")}</div>
                         </div>
-                        <div className="ev-mid flex-1 min-w-0">
-                          <div className="ev-title font-[var(--font-outfit)] font-semibold text-[1.05rem] flex items-center gap-2 flex-wrap">
-                            {ev.title}
-                          </div>
-                          <div className="ev-sub flex items-center gap-4 mt-1 flex-wrap">
-                            <span className="meta text-[0.82rem] text-muted-foreground flex items-center gap-1.5">
-                              <Clock className="w-[14px] h-[14px] text-[var(--xiv-blue)]" />
+                        <div className="ev-mid">
+                          <div className="ev-title">{ev.title}</div>
+                          <div className="ev-sub">
+                            <span className="meta">
+                              <Clock />
                               {format(ev.startTime, "EEE")} · {formatServerTime(ev.startTime.toISOString(), "time")}{ev.endTime ? `–${formatServerTime(ev.endTime.toISOString(), "time")}` : ""} {tzLabel}
                             </span>
                             {ev.eventType && <span className="tag">{ev.eventType}</span>}
                           </div>
-                        </div>
-                        <div className="ev-right flex-shrink-0">
-                          <button className="btn btn-outline flex items-center gap-2 px-4 py-[7px] text-[0.85rem] rounded-[var(--radius-md)] border border-[var(--blue-018)] bg-[rgba(7,11,20,0.5)] hover:border-[var(--blue-045)] transition-colors">
-                            <Bell className="w-[14px] h-[14px]" /> Remind me
-                          </button>
                         </div>
                       </div>
                     ))}
@@ -200,14 +191,14 @@ export default async function VenueProfilePage({
 
               {/* Gallery placeholder */}
               <div className="gallery-block">
-                <div className="block-title font-[var(--font-outfit)] font-semibold text-[1.15rem] mb-4 flex items-center gap-[10px]">
-                  <ImageIcon className="w-[18px] h-[18px] text-[var(--xiv-blue)]" /> Gallery
+                <div className="block-title">
+                  <ImageIcon /> Gallery
                 </div>
-                <div className="gallery grid grid-cols-3 gap-3">
+                <div className="gallery">
                   {[0,1,2].map(i => (
-                    <div key={i} className="gtile aspect-[4/3] rounded-[var(--radius-lg)] border border-[var(--blue-015)] relative overflow-hidden grid place-items-center bg-gradient-to-br from-card to-[var(--surface-alt,var(--card))]">
-                      <div className="gbg absolute inset-0 bg-[url('/starfield.png')] bg-center bg-cover opacity-[0.18]" />
-                      <ImageIcon className="w-[26px] h-[26px] text-[var(--blue-035)] relative" />
+                    <div key={i} className="gtile">
+                      <div className="gbg" />
+                      <ImageIcon />
                     </div>
                   ))}
                 </div>
@@ -219,15 +210,13 @@ export default async function VenueProfilePage({
 
               {/* Hours */}
               <div className="dcard">
-                <div className="dh flex items-center gap-[9px] px-5 py-[15px] border-b border-[var(--blue-008)] font-[var(--font-outfit)] font-semibold text-[0.95rem]">
-                  <Clock className="w-4 h-4 text-[var(--xiv-blue)]" /> Hours
-                </div>
+                <div className="dh"><Clock /> Hours</div>
                 {DAY_NAMES.map((day, i) => {
                   const isToday = i === todayUTCDay
                   return (
-                    <div key={day} className={`hours-row flex items-center justify-between px-5 py-[10px] text-[0.86rem] ${i > 0 ? "border-t border-[var(--blue-008)]" : ""} ${isToday ? "bg-[var(--blue-007)]" : ""}`}>
-                      <span className={isToday ? "text-[var(--xiv-blue)] font-semibold" : "text-muted-foreground"}>{day}</span>
-                      <span className="text-[var(--fg-faint)] text-xs tabular-nums">—</span>
+                    <div key={day} className={`hours-row${isToday ? " today" : " closed"}`}>
+                      <span className="day">{day}</span>
+                      <span className="hrs">—</span>
                     </div>
                   )
                 })}
@@ -235,48 +224,34 @@ export default async function VenueProfilePage({
 
               {/* Location */}
               <div className="dcard">
-                <div className="dh flex items-center gap-[9px] px-5 py-[15px] border-b border-[var(--blue-008)] font-[var(--font-outfit)] font-semibold text-[0.95rem]">
-                  <MapPin className="w-4 h-4 text-[var(--xiv-blue)]" /> Location
-                </div>
-                <div className="loc-block px-5 py-4">
+                <div className="dh"><MapPin /> Location</div>
+                <div className="loc-block">
                   {[
                     { k: "Data Centre", v: venue.dataCenter },
                     { k: "World",       v: venue.world },
                     ...(venue.location ? [{ k: "Ward & Plot", v: venue.location }] : []),
                   ].map(({ k, v }) => (
-                    <div key={k} className="loc-line flex justify-between py-[6px] text-[0.86rem]">
-                      <span className="lk text-[var(--fg-faint)]">{k}</span>
-                      <span className="lv font-medium">{v}</span>
+                    <div key={k} className="loc-line">
+                      <span className="lk">{k}</span>
+                      <span className="lv">{v}</span>
                     </div>
                   ))}
-                  <button
-                    className="copy-addr mt-[14px] w-full xiv-btn-shimmer xiv-cta flex items-center justify-center gap-2 px-5 py-[10px] rounded-[var(--radius-md)] text-[0.9rem] font-semibold"
-                    onClick={undefined}
-                  >
-                    <Navigation className="w-4 h-4" /> Copy travel address
-                  </button>
+                  <CopyAddressButton address={address} />
                 </div>
               </div>
 
               {/* Hosted by */}
               {owner && (
                 <div className="dcard">
-                  <div className="dh flex items-center gap-[9px] px-5 py-[15px] border-b border-[var(--blue-008)] font-[var(--font-outfit)] font-semibold text-[0.95rem]">
-                    <Crown className="w-4 h-4 text-[var(--xiv-blue)]" /> Hosted by
-                  </div>
-                  <div className="host-row flex items-center gap-3 px-5 py-4">
-                    <div className="av w-[42px] h-[42px] rounded-full grid place-items-center text-[0.9rem] font-semibold text-[var(--xiv-navy)] flex-shrink-0"
-                      style={{ background: "linear-gradient(135deg, #f9e2af, #e0c98a)" }}>
-                      {owner.name?.charAt(0)?.toUpperCase() ?? "?"}
-                    </div>
+                  <div className="dh"><Crown /> Hosted by</div>
+                  <div className="host-row">
+                    <div className="av">{owner.name?.charAt(0)?.toUpperCase() ?? "?"}</div>
                     <div>
-                      <div className="hn font-[var(--font-outfit)] font-semibold text-[0.95rem] flex items-center gap-[7px]">
-                        <Crown className="w-[14px] h-[14px] text-[var(--warning)]" />
+                      <div className="hn">
+                        <Crown />
                         {owner.name ?? "Owner"}
                       </div>
-                      <div className="hr text-[0.76rem] text-[var(--fg-faint)] mt-0.5">
-                        Owner · since {format(owner.createdAt, "yyyy")}
-                      </div>
+                      <div className="hr">Owner · since {format(owner.createdAt, "yyyy")}</div>
                     </div>
                   </div>
                 </div>

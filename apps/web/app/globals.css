@@ -1087,3 +1087,30 @@
 .shift-chip { font-size: 0.66rem; font-weight: 600; padding: 4px 6px; border-radius: var(--radius-sm); background: var(--blue-012); color: var(--xiv-blue); border: 1px solid var(--blue-020); text-align: center; line-height: 1.25; }
 .shift-chip.em { background: var(--success-soft); color: var(--success-text); border-color: rgba(16,185,129,0.25); }
 .shift-chip.am { background: rgba(249,226,175,0.10); color: var(--warning); border-color: rgba(249,226,175,0.25); }
+
+/* ── Venue profile — matches prototype spec ── */
+.dh { padding: 15px 20px; border-bottom: 1px solid var(--blue-008); font-family: var(--font-outfit), system-ui, sans-serif; font-weight: 600; font-size: 0.95rem; display: flex; align-items: center; gap: 9px; }
+.dh svg { width: 16px; height: 16px; color: var(--xiv-blue); }
+.hours-row { display: flex; align-items: center; justify-content: space-between; padding: 10px 20px; font-size: 0.86rem; }
+.hours-row + .hours-row { border-top: 1px solid var(--blue-008); }
+.hours-row .day { color: var(--muted-foreground); }
+.hours-row .hrs { color: var(--foreground); font-variant-numeric: tabular-nums; }
+.hours-row.closed .hrs { color: var(--fg-faint); }
+.hours-row.today { background: var(--blue-007); }
+.hours-row.today .day { color: var(--xiv-blue); font-weight: 600; }
+.loc-block { padding: 16px 20px; }
+.loc-line { display: flex; justify-content: space-between; font-size: 0.86rem; padding: 6px 0; }
+.loc-line .lk { color: var(--fg-faint); }
+.loc-line .lv { color: var(--foreground); font-weight: 500; }
+.host-row { display: flex; align-items: center; gap: 12px; padding: 16px 20px; }
+.host-row .av { width: 42px; height: 42px; border-radius: 999px; display: grid; place-items: center; font-size: 0.9rem; font-weight: 600; color: var(--xiv-navy); flex-shrink: 0; background: linear-gradient(135deg, #f9e2af, #e0c98a); }
+.host-row .hn { font-family: var(--font-outfit), system-ui, sans-serif; font-weight: 600; font-size: 0.95rem; display: flex; align-items: center; gap: 7px; }
+.host-row .hn svg { width: 14px; height: 14px; color: var(--warning); }
+.host-row .hr { font-size: 0.76rem; color: var(--fg-faint); margin-top: 2px; }
+.block-title { font-family: var(--font-outfit), system-ui, sans-serif; font-weight: 600; font-size: 1.15rem; margin-bottom: 16px; display: flex; align-items: center; gap: 10px; }
+.block-title svg { width: 18px; height: 18px; color: var(--xiv-blue); }
+.gallery { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; }
+@media (max-width: 860px) { .gallery { grid-template-columns: repeat(2, 1fr); } }
+.gtile { aspect-ratio: 4/3; border-radius: var(--radius-lg); border: 1px solid var(--blue-015); background: linear-gradient(135deg, var(--card), var(--surface-alt, var(--card))); position: relative; overflow: hidden; display: grid; place-items: center; }
+.gtile .gbg { position: absolute; inset: 0; background: url('/starfield.png') center/cover; opacity: 0.18; pointer-events: none; }
+.gtile svg { width: 26px; height: 26px; color: var(--blue-035); position: relative; }
