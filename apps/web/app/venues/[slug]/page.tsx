@@ -15,7 +15,7 @@ export async function generateMetadata({ params }: { params: Promise<{ slug: str
   }
 }
 import { format } from "date-fns"
-import { MapPin, Calendar, Clock, Crown, Image as ImageIcon, ChevronLeft, Scroll } from "lucide-react"
+import { MapPin, Calendar, Clock, Crown, Image as ImageIcon, ChevronLeft, Scroll, Heart } from "lucide-react"
 import { getServerTimeLabel, formatServerTime } from "@/lib/server-time"
 import { VenueFollowButton } from "@/components/venue-follow-button"
 import { CopyAddressButton, CopyAddressInline } from "@/components/copy-address-button"

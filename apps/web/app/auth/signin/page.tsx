@@ -32,9 +32,8 @@ export default function SignInPage() {
 
           <Button
             onClick={() => signIn("discord", { callbackUrl: "/dashboard" })}
-            className="w-full xiv-btn-shimmer font-semibold"
+            className="w-full xiv-btn-shimmer xiv-cta font-semibold"
             size="lg"
-            className="xiv-cta"
           >
             <svg
               className="mr-2 h-5 w-5"

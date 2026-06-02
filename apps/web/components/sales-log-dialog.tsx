@@ -119,6 +119,7 @@ export function SalesLogDialog({ venueId, services, events }: SalesLogDialogProp
     setFormData({
       serviceId: "",
       eventId: activeEvent ? activeEvent.id : "",
+      type: "SALE",
       amount: "",
       customerName: "",
       notes: "",

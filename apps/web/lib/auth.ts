@@ -4,7 +4,7 @@ import DiscordProvider from "next-auth/providers/discord"
 import { prisma } from "@/lib/prisma"
 
 export const authOptions: NextAuthOptions = {
-  adapter: PrismaAdapter(prisma),
+  adapter: PrismaAdapter(prisma as Parameters<typeof PrismaAdapter>[0]),
   providers: [
     DiscordProvider({
       clientId: process.env.DISCORD_CLIENT_ID!,

@@ -89,6 +89,8 @@ export interface VenueSettings {
     wordOfMouth?: number  // Word of mouth
     other?: number        // Other
   }
+  /** Web notification preferences (key = notification type, value = enabled) */
+  notifications?: Record<string, boolean>
 }
 
 /**

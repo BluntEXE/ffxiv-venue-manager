@@ -153,6 +153,7 @@ export default function AnalyticsPage() {
   }
 
   // Transform data for charts
+  const todayStr = format(new Date(), "MMM dd")
   const financialData = analyticsData?.revenueByEvent.map((e) => ({
     date: format(new Date(e.startTime), "MMM dd"),
     fullDate: new Date(e.startTime),
@@ -160,6 +161,7 @@ export default function AnalyticsPage() {
     revenue: e.revenue,
     payroll: e.payroll,
     netProfit: e.netProfit,
+    isToday: format(new Date(e.startTime), "MMM dd") === todayStr,
   })) || []
 
   const serviceRevenue = analyticsData?.serviceRevenue.map((s) => ({
@@ -193,8 +195,7 @@ export default function AnalyticsPage() {
             <p>Error loading analytics: {error}</p>
             <button
               onClick={() => fetchAnalytics()}
-              className="mt-4 px-4 py-2 rounded-md transition-colors"
-              className="xiv-cta"
+              className="mt-4 px-4 py-2 rounded-md transition-colors xiv-cta"
             >
               Retry
             </button>
@@ -203,6 +204,11 @@ export default function AnalyticsPage() {
       </VenueLayoutClient>
     )
   }
+
+  // analyticsData must be non-null past this point
+  if (!analyticsData) return null
+  // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+  const data = analyticsData!
 
   // Use pre-calculated values from API
   const totalRevenue = eventStats?.totalRevenue || 0
@@ -265,7 +271,7 @@ export default function AnalyticsPage() {
           <div className="stat">
             <div className="top"><span className="sb am"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><polyline points="23 4 23 10 17 10"/><polyline points="1 20 1 14 7 14"/><path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10"/><path d="M1 14l4.64 4.36A9 9 0 0 0 20.49 15"/></svg></span></div>
             <div className="k">Repeat rate</div>
-            <div className="v">{eventStats?.repeatRate !== undefined ? `${eventStats.repeatRate}` : analyticsData?.patronMix ? `${Math.round(((analyticsData.patronMix.regular + analyticsData.patronMix.vip) / (analyticsData.patronMix.total || 1)) * 100)}` : "—"} <span className="unit">%</span></div>
+            <div className="v">{eventStats?.repeatRate !== undefined ? `${eventStats.repeatRate}` : data.patronMix ? `${Math.round(((data.patronMix.regular + data.patronMix.vip) / (data.patronMix.total || 1)) * 100)}` : "—"} <span className="unit">%</span></div>
             <div className="delta flat">3+ visits</div>
           </div>
         </div>
@@ -362,7 +368,7 @@ export default function AnalyticsPage() {
             <div className="space-y-4">
 
               {/* Patron mix */}
-              {analyticsData.patronMix && analyticsData.patronMix.total > 1 && (
+              {data.patronMix && data.patronMix.total > 1 && (
                 <div className="rounded-xl border border-[var(--blue-018)] bg-[var(--card)] overflow-hidden">
                   <div className="flex items-center gap-2 px-5 py-3 border-b border-[var(--blue-008)] font-semibold text-sm">
                     <svg className="w-4 h-4 text-[var(--xiv-blue)]" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M21.21 15.89A10 10 0 1 1 8 2.83"/><path d="M22 12A10 10 0 0 0 12 2v10z"/></svg>
@@ -371,9 +377,9 @@ export default function AnalyticsPage() {
                   </div>
                   <div className="py-1">
                     {[
-                      { label: "New",     pct: analyticsData.patronMix.newPct,     count: analyticsData.patronMix.new,     color: "var(--xiv-blue)" },
-                      { label: "Regular", pct: analyticsData.patronMix.regularPct, count: analyticsData.patronMix.regular, color: "var(--success-text)" },
-                      { label: "VIP",     pct: analyticsData.patronMix.vipPct,     count: analyticsData.patronMix.vip,     color: "var(--warning)" },
+                      { label: "New",     pct: data.patronMix.newPct,     count: data.patronMix.new,     color: "var(--xiv-blue)" },
+                      { label: "Regular", pct: data.patronMix.regularPct, count: data.patronMix.regular, color: "var(--success-text)" },
+                      { label: "VIP",     pct: data.patronMix.vipPct,     count: data.patronMix.vip,     color: "var(--warning)" },
                     ].map(({ label, pct, count, color }) => (
                       <div key={label} className="flex items-center gap-2 px-4 py-2">
                         <div className="flex items-center gap-1.5 w-20 flex-shrink-0">
@@ -391,7 +397,7 @@ export default function AnalyticsPage() {
               )}
 
               {/* Busiest nights */}
-              {analyticsData.busiestNights && (
+              {data.busiestNights != null && (
                 <div className="rounded-xl border border-[var(--blue-018)] bg-[var(--card)] overflow-hidden">
                   <div className="flex items-center gap-2 px-5 py-3 border-b border-[var(--blue-008)] font-semibold text-sm">
                     <svg className="w-4 h-4 text-[var(--xiv-blue)]" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M3 9h18M9 21V9"/></svg>
@@ -400,7 +406,7 @@ export default function AnalyticsPage() {
                   </div>
                   <div className="px-4 pt-3 pb-4">
                     <div className="flex items-end gap-1.5 h-[80px]">
-                      {analyticsData.busiestNights.map(({ day, pct, count }) => (
+                      {(data.busiestNights ?? []).map(({ day, pct, count }) => (
                         <div key={day} className="flex-1 flex flex-col items-center gap-1" title={`${day}: ${count}`}>
                           <div className="w-full flex flex-col justify-end" style={{ height: 64 }}>
                             <div className="w-full rounded-t-sm" style={{ height: `${Math.max(pct, 4)}%`, background: pct > 70 ? "var(--xiv-blue)" : "rgba(0,180,255,0.3)" }} />
@@ -441,7 +447,7 @@ export default function AnalyticsPage() {
 
               {/* Where patrons find you */}
               {(() => {
-                const ds = analyticsData.discoverySources
+                const ds = data.discoverySources
                 const hasRealData = ds && Object.values(ds).some(v => v && v > 0)
 
                 const rows = hasRealData
@@ -512,8 +518,8 @@ export default function AnalyticsPage() {
                     </TableRow>
                   </TableHeader>
                   <TableBody>
-                    {analyticsData?.revenueByEvent && analyticsData.revenueByEvent.length > 0 ? (
-                      analyticsData.revenueByEvent.map((event) => {
+                    {analyticsData?.revenueByEvent && data.revenueByEvent.length > 0 ? (
+                      data.revenueByEvent.map((event) => {
                         const profitMargin = event.revenue > 0 ? ((event.netProfit / event.revenue) * 100).toFixed(1) : "0.0"
                         return (
                           <TableRow key={event.eventId}>
@@ -548,27 +554,27 @@ export default function AnalyticsPage() {
                       </TableRow>
                     )}
                     {/* Total Row */}
-                    {analyticsData?.revenueByEvent && analyticsData.revenueByEvent.length > 0 && (
+                    {analyticsData?.revenueByEvent && data.revenueByEvent.length > 0 && (
                       <TableRow className="bg-[rgba(0,180,255,0.06)] font-semibold border-t border-[rgba(0,180,255,0.25)]">
                         <TableCell colSpan={2} className="text-[var(--xiv-blue)]">TOTAL (Last 10 Events)</TableCell>
                         <TableCell className="text-right text-[var(--xiv-blue)]">
-                          {analyticsData.revenueByEvent.reduce((sum, e) => sum + e.revenue, 0).toLocaleString()} gil
+                          {data.revenueByEvent.reduce((sum, e) => sum + e.revenue, 0).toLocaleString()} gil
                         </TableCell>
                         <TableCell className="text-right text-amber-400">
-                          {analyticsData.revenueByEvent.reduce((sum, e) => sum + e.payroll, 0).toLocaleString()} gil
+                          {data.revenueByEvent.reduce((sum, e) => sum + e.payroll, 0).toLocaleString()} gil
                         </TableCell>
                         <TableCell className={`text-right ${
-                          analyticsData.revenueByEvent.reduce((sum, e) => sum + e.netProfit, 0) >= 0
+                          data.revenueByEvent.reduce((sum, e) => sum + e.netProfit, 0) >= 0
                             ? 'text-emerald-500'
                             : 'text-red-400'
                         }`}>
-                          {analyticsData.revenueByEvent.reduce((sum, e) => sum + e.netProfit, 0) >= 0 ? '+' : ''}
-                          {analyticsData.revenueByEvent.reduce((sum, e) => sum + e.netProfit, 0).toLocaleString()} gil
+                          {data.revenueByEvent.reduce((sum, e) => sum + e.netProfit, 0) >= 0 ? '+' : ''}
+                          {data.revenueByEvent.reduce((sum, e) => sum + e.netProfit, 0).toLocaleString()} gil
                         </TableCell>
                         <TableCell className={`text-right ${
-                          analyticsData.financial.profitMargin >= 0 ? 'text-emerald-500' : 'text-red-400'
+                          data.financial.profitMargin >= 0 ? 'text-emerald-500' : 'text-red-400'
                         }`}>
-                          {analyticsData.financial.profitMargin.toFixed(1)}%
+                          {data.financial.profitMargin.toFixed(1)}%
                         </TableCell>
                       </TableRow>
                     )}
@@ -585,7 +591,7 @@ export default function AnalyticsPage() {
           <div className="hidden">
 
             {/* Patron mix */}
-            {analyticsData.patronMix && analyticsData.patronMix.total > 1 && (
+            {(data.patronMix?.total ?? 0) > 1 && (
               <div className="rounded-xl border border-[var(--blue-018)] bg-[var(--card)] overflow-hidden">
                 <div className="flex items-center gap-2 px-[22px] py-[13px] border-b border-[var(--blue-008)] font-semibold text-sm">
                   <svg className="w-4 h-4 text-[var(--xiv-blue)]" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M21.21 15.89A10 10 0 1 1 8 2.83"/><path d="M22 12A10 10 0 0 0 12 2v10z"/></svg>
@@ -594,9 +600,9 @@ export default function AnalyticsPage() {
                 </div>
                 <div className="py-2">
                   {[
-                    { label: "New",     pct: analyticsData.patronMix.newPct,     count: analyticsData.patronMix.new,     color: "var(--xiv-blue)" },
-                    { label: "Regular", pct: analyticsData.patronMix.regularPct, count: analyticsData.patronMix.regular, color: "var(--success-text)" },
-                    { label: "VIP",     pct: analyticsData.patronMix.vipPct,     count: analyticsData.patronMix.vip,     color: "var(--warning)" },
+                    { label: "New",     pct: data.patronMix?.newPct ?? 0,     count: data.patronMix?.new ?? 0,     color: "var(--xiv-blue)" },
+                    { label: "Regular", pct: data.patronMix?.regularPct ?? 0, count: data.patronMix?.regular ?? 0, color: "var(--success-text)" },
+                    { label: "VIP",     pct: data.patronMix?.vipPct ?? 0,     count: data.patronMix?.vip ?? 0,     color: "var(--warning)" },
                   ].map(({ label, pct, count, color }) => (
                     <div key={label} className="flex items-center gap-3 px-5 py-2.5">
                       <div className="flex items-center gap-2 w-24 flex-shrink-0">
@@ -617,7 +623,7 @@ export default function AnalyticsPage() {
             )}
 
             {/* Busiest nights */}
-            {analyticsData.busiestNights && (
+            {data.busiestNights != null && (
               <div className="rounded-xl border border-[var(--blue-018)] bg-[var(--card)] overflow-hidden">
                 <div className="flex items-center gap-2 px-[22px] py-[13px] border-b border-[var(--blue-008)] font-semibold text-sm">
                   <svg className="w-4 h-4 text-[var(--xiv-blue)]" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M3 9h18M9 21V9"/></svg>
@@ -626,7 +632,7 @@ export default function AnalyticsPage() {
                 </div>
                 <div className="px-5 pt-4 pb-5">
                   <div className="flex items-end gap-2 h-[120px]">
-                    {analyticsData.busiestNights.map(({ day, pct, count }) => (
+                    {(data.busiestNights ?? []).map(({ day, pct, count }) => (
                       <div key={day} className="flex-1 flex flex-col items-center gap-1.5" title={`${day}: ${count} entries`}>
                         <div className="w-full flex flex-col justify-end" style={{ height: 96 }}>
                           <div
@@ -657,9 +663,9 @@ export default function AnalyticsPage() {
               <h2 className="font-cinzel text-lg font-bold tracking-[0.02em]">Financial Overview</h2>
             </div>
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-              <Card className="px-[18px] py-4"><StatReadout label="Payroll expenses" value={`${Math.round(analyticsData.financial.totalPayroll).toLocaleString()} gil`} subtext={`${analyticsData.financial.payrollAsPercentOfRevenue.toFixed(1)}% of revenue`} icon={<DollarSign />} iconVariant="blue" /></Card>
-              <Card className="px-[18px] py-4"><StatReadout label="Net profit / loss" value={`${analyticsData.financial.netProfit >= 0 ? "+" : ""}${Math.round(analyticsData.financial.netProfit).toLocaleString()} gil`} subtext="revenue minus payroll" deltaDirection={analyticsData.financial.netProfit >= 0 ? "up" : "down"} icon={<TrendingUp />} iconVariant={analyticsData.financial.netProfit >= 0 ? "success" : "warning"} /></Card>
-              <Card className="px-[18px] py-4"><StatReadout label="Profit margin" value={`${analyticsData.financial.profitMargin.toFixed(1)}%`} subtext={analyticsData.financial.profitMargin >= 50 ? "Healthy" : analyticsData.financial.profitMargin >= 25 ? "Moderate" : "Low"} icon={<Target />} iconVariant="blue" /></Card>
+              <Card className="px-[18px] py-4"><StatReadout label="Payroll expenses" value={`${Math.round(data.financial.totalPayroll).toLocaleString()} gil`} subtext={`${data.financial.payrollAsPercentOfRevenue.toFixed(1)}% of revenue`} icon={<DollarSign />} iconVariant="blue" /></Card>
+              <Card className="px-[18px] py-4"><StatReadout label="Net profit / loss" value={`${data.financial.netProfit >= 0 ? "+" : ""}${Math.round(data.financial.netProfit).toLocaleString()} gil`} subtext="revenue minus payroll" deltaDirection={data.financial.netProfit >= 0 ? "up" : "down"} icon={<TrendingUp />} iconVariant={data.financial.netProfit >= 0 ? "success" : "warning"} /></Card>
+              <Card className="px-[18px] py-4"><StatReadout label="Profit margin" value={`${data.financial.profitMargin.toFixed(1)}%`} subtext={data.financial.profitMargin >= 50 ? "Healthy" : data.financial.profitMargin >= 25 ? "Moderate" : "Low"} icon={<Target />} iconVariant="blue" /></Card>
             </div>
           </div>
         )}
@@ -672,8 +678,8 @@ export default function AnalyticsPage() {
               <h2 className="font-cinzel text-lg font-bold tracking-[0.02em]">Followers</h2>
             </div>
             <div className="kpis">
-              <Card className="px-[18px] py-4"><StatReadout label="Total followers" value={analyticsData.followers.total} subtext="app users following" icon={<Users />} iconVariant="blue" /></Card>
-              {Object.entries(analyticsData.followers.byMonth).map(([month, count]) => (
+              <Card className="px-[18px] py-4"><StatReadout label="Total followers" value={data.followers?.total ?? 0} subtext="app users following" icon={<Users />} iconVariant="blue" /></Card>
+              {Object.entries(data.followers?.byMonth ?? {}).map(([month, count]) => (
                 <Card key={month} className="p-4">
                   <StatReadout label={new Date(month + '-01').toLocaleDateString('en-GB', { month: 'short', year: 'numeric' })} value={`+${count as number}`} subtext="new followers" />
                 </Card>

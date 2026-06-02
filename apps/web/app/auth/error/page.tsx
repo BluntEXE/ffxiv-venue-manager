@@ -34,7 +34,7 @@ function AuthErrorContent() {
         </div>
 
         <div className="text-center space-y-3">
-          <Button asChild className="xiv-btn-shimmer font-semibold" className="xiv-cta">
+          <Button asChild className="xiv-btn-shimmer xiv-cta font-semibold">
             <Link href="/auth/signin">Try Again</Link>
           </Button>
           <p className="text-xs text-muted-foreground">
