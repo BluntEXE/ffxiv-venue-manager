@@ -356,10 +356,9 @@ export default function ServicesPage({
                   </button>
                 ))}
               </div>
-              <div className="relative flex items-center flex-1 min-w-[160px] max-w-xs">
-                <svg className="absolute left-3 w-4 h-4 text-[var(--fg-faint)] pointer-events-none" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
-                <Input
-                  className="pl-9 bg-[var(--card)] border-[var(--blue-015)] focus:border-[var(--blue-035)] h-9 text-sm"
+              <div className="search">
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
+                <input
                   placeholder="Search services…"
                   value={search}
                   onChange={e => setSearch(e.target.value)}
