@@ -118,7 +118,7 @@ export default async function Home() {
 
             <div className="xiv-fade-up-delay-2 flex flex-col sm:flex-row gap-4 mt-4">
               <Button asChild size="lg" className="xiv-btn-shimmer xiv-cta text-lg px-8 py-6 group font-semibold">
-                <Link href="/auth/signin">
+                <Link href="/get-started">
                   Get Started Free
                   <ArrowRight className="ml-2 h-5 w-5 transition-transform group-hover:translate-x-1" />
                 </Link>
@@ -415,7 +415,7 @@ export default async function Home() {
           </p>
           <div className="flex gap-3 justify-center flex-wrap">
             <Button asChild size="lg" className="xiv-btn-shimmer xiv-cta text-lg px-8 py-6 group">
-              <Link href="/auth/signin">
+              <Link href="/get-started">
                 Start Managing Your Venue
                 <ArrowRight className="ml-2 h-5 w-5 transition-transform group-hover:translate-x-1" />
               </Link>

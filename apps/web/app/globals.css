@@ -1130,6 +1130,49 @@
 .toggle.on::after { transform: translateX(16px); background: var(--xiv-navy); }
 .toggle:disabled { opacity: 0.5; cursor: not-allowed; }
 
+/* ── Get Started wizard — matches prototype spec ── */
+.gs-wrap { min-height: calc(100vh - 60px); display: flex; flex-direction: column; position: relative; background: var(--background); }
+.gs-bg { position: fixed; inset: 0; background: url('/starfield.png') center/cover; opacity: 0.16; animation: gs-drift 24s ease-in-out infinite alternate; pointer-events: none; z-index: 0; }
+.gs-bg::after { content: ""; position: absolute; inset: 0; background: radial-gradient(ellipse 70% 60% at 50% 35%, transparent, var(--background) 80%); }
+@keyframes gs-drift { from { transform: scale(1); } to { transform: scale(1.12) translate(-2%, -2%); } }
+
+.gs-main { position: relative; z-index: 1; flex: 1; display: grid; place-items: center; padding: 24px; }
+.gs-card { width: 100%; max-width: 520px; background: var(--card); border: 1px solid var(--blue-020); border-radius: var(--radius-xl); box-shadow: 0 30px 80px rgba(0,0,0,0.5), 0 0 60px rgba(0,180,255,0.06); overflow: hidden; }
+
+.gs-wiz-head { padding: 24px 32px 0; }
+.gs-progress { display: flex; align-items: center; gap: 8px; margin-bottom: 20px; }
+.gs-pstep { flex: 1; height: 4px; border-radius: 999px; background: var(--blue-010); overflow: hidden; }
+.gs-pf { display: block; height: 100%; width: 0; background: linear-gradient(90deg, var(--xiv-blue), rgba(0,180,255,0.6)); transition: width .3s ease; }
+.gs-pstep.done .gs-pf, .gs-pstep.active .gs-pf { width: 100%; }
+.gs-wiz-meta { font-size: 0.72rem; font-weight: 600; text-transform: uppercase; letter-spacing: 0.14em; color: var(--xiv-blue); }
+.gs-wiz-title { font-family: var(--font-cinzel-var), 'Cinzel', Georgia, serif; font-weight: 700; font-size: 1.5rem; letter-spacing: 0.02em; margin-top: 8px; }
+.gs-wiz-sub { color: var(--muted-foreground); font-size: 0.9rem; margin-top: 8px; line-height: 1.55; }
+.gs-wiz-body { padding: 22px 32px 8px; }
+.gs-wiz-foot { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 18px 32px 26px; border-top: 1px solid var(--blue-008); margin-top: 14px; }
+.gs-btn { display: inline-flex; align-items: center; gap: 8px; padding: 10px 20px; border-radius: var(--radius-md); font-size: 0.9rem; font-weight: 600; cursor: pointer; }
+.gs-btn:disabled { opacity: 0.6; cursor: not-allowed; }
+
+.gs-field { margin-bottom: 18px; }
+.gs-field:last-child { margin-bottom: 0; }
+.gs-field > label { display: block; font-size: 0.78rem; font-weight: 600; margin-bottom: 7px; }
+.gs-hint { font-size: 0.74rem; color: var(--fg-faint); margin-top: 6px; }
+.gs-inp, .gs-sel { width: 100%; font-family: var(--font-sans); font-size: 0.9rem; color: var(--foreground); background: var(--background); border: 1px solid var(--blue-015); border-radius: var(--radius-md); padding: 11px 13px; outline: none; transition: border-color .2s; }
+.gs-inp::placeholder { color: var(--fg-faint); }
+.gs-inp:focus, .gs-sel:focus { border-color: var(--blue-035); }
+.gs-sel { appearance: none; -webkit-appearance: none; background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%239399b2' stroke-width='2'><polyline points='6 9 12 15 18 9'/></svg>"); background-repeat: no-repeat; background-position: right 12px center; padding-right: 36px; }
+.gs-field-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+@media (max-width: 540px) { .gs-wiz-head, .gs-wiz-body, .gs-wiz-foot { padding-left: 22px; padding-right: 22px; } .gs-field-2 { grid-template-columns: 1fr; } }
+
+.gs-tagpick { display: flex; flex-wrap: wrap; gap: 8px; }
+.gs-tg { font-size: 0.8rem; font-weight: 500; padding: 6px 13px; border-radius: var(--radius-full); background: var(--background); color: var(--muted-foreground); border: 1px solid var(--blue-015); cursor: pointer; transition: all .15s; user-select: none; }
+.gs-tg:hover { border-color: var(--blue-035); color: var(--foreground); }
+.gs-tg.sel { background: var(--blue-012); color: var(--xiv-blue); border-color: var(--blue-035); }
+.gs-tg.sel.adult { background: var(--destructive-soft); color: var(--destructive); border-color: rgba(243,139,168,0.4); }
+.gs-toggle-row { display: flex; align-items: center; gap: 14px; padding: 4px 0; }
+
+.gs-review-row { display: flex; justify-content: space-between; gap: 16px; padding: 12px 0; border-bottom: 1px solid var(--blue-008); font-size: 0.9rem; }
+.gs-review-row:last-of-type { border-bottom: none; }
+
 /* ── Venue profile — matches prototype spec ── */
 .dh { padding: 15px 20px; border-bottom: 1px solid var(--blue-008); font-family: var(--font-outfit), system-ui, sans-serif; font-weight: 600; font-size: 0.95rem; display: flex; align-items: center; gap: 9px; }
 .dh svg { width: 16px; height: 16px; color: var(--xiv-blue); }
