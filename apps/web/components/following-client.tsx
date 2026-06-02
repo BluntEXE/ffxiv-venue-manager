@@ -48,7 +48,7 @@ export function FollowingClient({
             <span className="text-[0.72rem] font-semibold uppercase tracking-[0.14em] text-[var(--xiv-blue)]">Following</span>
           </div>
           <h1 className="page-h1">Following</h1>
-          <p className="text-[0.9rem] text-muted-foreground mt-2 max-w-[560px] leading-[1.6]">
+          <p className="text-sm text-muted-foreground mt-0.5 max-w-[560px]">
             Venues you follow across the realm. See who&apos;s open now and never miss a night.
           </p>
         </div>
