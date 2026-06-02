@@ -58,7 +58,7 @@ export default async function StatsPage() {
             <span className="h-px flex-1 max-w-[80px] bg-gradient-to-l from-transparent to-[var(--xiv-blue)]" />
           </div>
           <p className="text-[0.72rem] font-semibold uppercase tracking-[0.16em] text-[var(--xiv-blue)] mb-[14px]">Community stats</p>
-          <h1 className="font-cinzel font-bold text-[clamp(2.2rem,4vw,3rem)] tracking-[0.02em]">
+          <h1 className="font-cinzel font-bold text-[clamp(2.2rem,4vw,3rem)] tracking-[0.02em] xiv-glow-text">
             The realm, by the numbers
           </h1>
 

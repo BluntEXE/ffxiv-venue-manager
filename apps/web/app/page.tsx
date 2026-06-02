@@ -214,7 +214,7 @@ export default async function Home() {
 
       {/* Features — 3x2 feat-card grid matching prototype */}
       <section id="features" className="container mx-auto px-4 py-20 md:py-24">
-        <div className="text-center mb-14">
+        <div className="text-center mb-14 xiv-scroll-reveal">
           <div className="xiv-divider">
             <svg width="12" height="12" viewBox="0 0 12 12" fill="none" aria-hidden="true"><rect x="6" y="0" width="8.485" height="8.485" transform="rotate(45 6 0)" fill="rgba(0,180,255,0.7)"/></svg>
           </div>
@@ -286,7 +286,7 @@ export default async function Home() {
       {/* How it works — two halves + steps matching prototype */}
       <section id="how" className="border-y border-[var(--blue-008)] bg-[#060b16] py-20 md:py-24">
         <div className="container mx-auto px-4">
-          <div className="text-center mb-14">
+          <div className="text-center mb-14 xiv-scroll-reveal">
             <div className="flex items-center justify-center gap-3 mb-5">
               <div className="h-px w-14 bg-gradient-to-r from-transparent to-[var(--xiv-blue)]" />
               <div className="w-2 h-2 rotate-45 bg-[rgba(0,180,255,0.7)] shadow-[0_0_12px_rgba(0,180,255,0.5)]" />
@@ -316,7 +316,7 @@ export default async function Home() {
                 items: ["Captures patrons as they enter & leave", "Log a sale with /xvm sale 500", "Clock in and out of shifts in-game", "Everything syncs to the dashboard live"],
               },
             ].map(({ iconPath, title, sub, items }) => (
-              <div key={title} className="rounded-xl border border-[var(--blue-018)] bg-[var(--card)] p-7">
+              <div key={title} className="rounded-xl border border-[var(--blue-018)] bg-[var(--card)] p-7 xiv-scroll-reveal">
                 <div className="flex items-center gap-3 mb-4">
                   <div className="w-11 h-11 rounded-lg bg-[var(--blue-010)] border border-[var(--blue-018)] flex items-center justify-center text-[var(--xiv-blue)] flex-shrink-0">
                     <svg className="w-5 h-5" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d={iconPath}/></svg>
@@ -353,7 +353,7 @@ export default async function Home() {
               { n: "02", title: "Install the Dalamud plugin", desc: "Add the plugin from inside FFXIV to start capturing patrons and logging sales with slash commands." },
               { n: "03", title: "Run your venue from the dashboard", desc: "Open Live Mode on event night and watch sales, patrons and shifts roll in — then manage it all from one place." },
             ].map(({ n, title, desc }) => (
-              <div key={n} className="grid grid-cols-[5rem_1fr] gap-[22px] py-[22px] border-t border-[var(--blue-008)] items-start">
+              <div key={n} className="grid grid-cols-[5rem_1fr] gap-[22px] py-[22px] border-t border-[var(--blue-008)] items-start xiv-scroll-reveal">
                 <div className="font-cinzel font-bold text-[2.6rem] text-[rgba(0,180,255,0.2)] leading-none">{n}</div>
                 <div>
                   <p className="font-[var(--font-outfit)] font-semibold text-[1.1rem] mb-1.5">{title}</p>
@@ -368,7 +368,7 @@ export default async function Home() {
       {/* Additional Features */}
       <section className="border-y border-[rgba(0,180,255,0.1)] bg-[#060b16]">
         <div className="container mx-auto px-4 py-16 md:py-24">
-          <div className="text-center mb-12">
+          <div className="text-center mb-12 xiv-scroll-reveal">
             <div className="xiv-divider">
               <svg width="12" height="12" viewBox="0 0 12 12" fill="none" aria-hidden="true"><rect x="6" y="0" width="8.485" height="8.485" transform="rotate(45 6 0)" fill="rgba(0,180,255,0.7)"/></svg>
             </div>
@@ -386,7 +386,7 @@ export default async function Home() {
               { icon: Link2, title: "Partake.gg Sync", blurb: "Auto-import events from Partake" },
               { icon: CheckCircle2, title: "Task Management", blurb: "Assign, prioritize, track" },
             ].map(({ icon: Icon, title, blurb }) => (
-              <div key={title} className="space-y-2 flex flex-col items-center">
+              <div key={title} className="space-y-2 flex flex-col items-center xiv-scroll-reveal">
                 <IconBadge>
                   <Icon className="h-6 w-6" aria-hidden="true" />
                 </IconBadge>
@@ -400,7 +400,7 @@ export default async function Home() {
 
       {/* Free band — matches reference exactly */}
       <section className="container mx-auto px-4 py-20 md:py-24">
-        <div className="text-center">
+        <div className="text-center xiv-scroll-reveal">
           <div className="flex items-center justify-center gap-3 mb-5">
             <div className="h-px w-14 bg-gradient-to-r from-transparent to-[var(--xiv-blue)]" />
             <div className="w-2 h-2 rotate-45 bg-[rgba(0,180,255,0.7)] crystal-glow" />
