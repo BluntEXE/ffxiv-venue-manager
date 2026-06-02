@@ -14,7 +14,8 @@ function buildCsp(nonce: string): string {
     "frame-ancestors 'none'",
     "base-uri 'self'",
     "form-action 'self'",
-    ...(isDev ? [] : ["upgrade-insecure-requests"]),
+    // upgrade-insecure-requests omitted — MinIO runs on HTTP (LAN only until media subdomain is set up)
+    // ...(isDev ? [] : ["upgrade-insecure-requests"]),
   ].join("; ")
 }
 
