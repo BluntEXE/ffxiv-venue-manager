@@ -40,7 +40,7 @@ export default function PrivacyPage() {
             <ul className="space-y-2 list-disc list-inside pl-2">
               <li>To provide the venue management dashboard and all its features.</li>
               <li>To show venue owners patron visit history and analytics.</li>
-              <li>To display aggregate community statistics on the public /stats page (venue count, patron count, gil tracked — no individual data).</li>
+              <li>To display aggregate community statistics on the public /stats page (venue count, patron count, gil tracked; no individual data).</li>
               <li>We do not sell data. We do not share data with third parties except as required to run the service (Discord OAuth, self-hosted infrastructure).</li>
             </ul>
           </section>

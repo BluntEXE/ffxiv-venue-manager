@@ -137,7 +137,7 @@ export default function NewVenuePage() {
                 onChange={(e) => setSlugPreview(e.target.value)}
               />
               <p className="text-sm text-muted-foreground">
-                This sets your venue&apos;s address on this site — lowercase letters, numbers, and hyphens only.
+                This sets your venue&apos;s address on this site: lowercase letters, numbers, and hyphens only.
                 {slugPreview && (
                   <span className="block mt-1 font-medium text-foreground/70">
                     Your page: xivvenuemanager.com/dashboard/{slugPreview}

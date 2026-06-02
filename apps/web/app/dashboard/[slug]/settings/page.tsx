@@ -344,8 +344,8 @@ export default function SettingsPage({
               <div className="pbody space-y-4">
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   <div className="space-y-1.5">
-                    <Label htmlFor="venue-location">Ward &amp; Plot</Label>
-                    <Input id="venue-location" placeholder="e.g. Goblet · W5 P31"
+                    <Label htmlFor="venue-location">District, Ward &amp; Plot</Label>
+                    <Input id="venue-location" placeholder="e.g. Goblet · Ward 5 · Plot 31"
                       value={venueLocation} onChange={e => setVenueLocation(e.target.value)}
                       disabled={isSaving} className="bg-background border-[var(--blue-015)] focus:border-[var(--blue-035)]" />
                   </div>

@@ -241,7 +241,7 @@ export default function ApiKeysPage({
         <div className="flex items-center gap-2 px-[22px] py-[13px] border-b border-[var(--blue-008)] font-semibold text-sm">
           <svg className="w-4 h-4 text-[var(--xiv-blue)]" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M21 2l-2 2m-7.61 7.61a5.5 5.5 0 1 1-7.778 7.778 5.5 5.5 0 0 1 7.777-7.777zm0 0L15.5 7.5m0 0l3 3L22 7l-3-3m-3.5 3.5L19 4"/></svg>
           Create new API key
-          <span className="ml-auto text-xs text-[var(--fg-faint)] font-normal">Shown once — copy immediately</span>
+          <span className="ml-auto text-xs text-[var(--fg-faint)] font-normal">Shown once. Copy immediately.</span>
         </div>
         <CardContent>
           <div className="flex flex-col md:flex-row gap-3 md:gap-4 md:items-end">

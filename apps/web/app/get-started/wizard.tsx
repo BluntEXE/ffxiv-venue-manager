@@ -242,8 +242,8 @@ export function GetStartedWizard({ userName }: { userName: string }) {
                   </div>
                 </div>
                 <div className="gs-field">
-                  <label>Ward &amp; Plot <span style={{ color: "var(--fg-faint)", fontWeight: 400 }}>(optional)</span></label>
-                  <input className="gs-inp" placeholder="e.g. Goblet W5 P31" value={plot} onChange={e => setPlot(e.target.value)} />
+                  <label>District, Ward &amp; Plot <span style={{ color: "var(--fg-faint)", fontWeight: 400 }}>(optional)</span></label>
+                  <input className="gs-inp" placeholder="e.g. Goblet · Ward 5 · Plot 31" value={plot} onChange={e => setPlot(e.target.value)} />
                 </div>
                 <div className="gs-field-2">
                   <div className="gs-field">

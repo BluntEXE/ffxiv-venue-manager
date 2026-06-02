@@ -156,7 +156,7 @@ export default async function StatsPage() {
         <div className="max-w-[1080px] mx-auto px-8">
           <div className="sec-head mb-[30px]">
             <h2 className="font-cinzel font-bold text-[var(--text-section,clamp(1.75rem,2.5vw+.75rem,2.75rem))] tracking-[0.02em]">What the realm runs</h2>
-            <p className="text-muted-foreground text-[0.98rem] mt-2">The kinds of venues hosts are building — and this week&apos;s activity.</p>
+            <p className="text-muted-foreground text-[0.98rem] mt-2">The kinds of venues hosts are building, and this week&apos;s activity.</p>
           </div>
           <div className="cols2 grid grid-cols-1 md:grid-cols-2 gap-[18px] items-start">
 

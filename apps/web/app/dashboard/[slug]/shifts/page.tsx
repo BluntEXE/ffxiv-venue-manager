@@ -317,7 +317,7 @@ export default async function ShiftsPage({
         {actionShifts.length > 0 && (
           <div>
             <h2 className="font-cinzel text-base font-bold tracking-[0.02em] mb-3">
-              {activeShifts.length > 0 ? "On shift now" : "Upcoming — actions needed"}
+              {activeShifts.length > 0 ? "On shift now" : "Upcoming: actions needed"}
             </h2>
             <div className="grid grid-cols-1 gap-2">
               {actionShifts.map((shift) => (

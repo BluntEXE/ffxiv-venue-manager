@@ -28,7 +28,7 @@ export default function TermsPage() {
             <h2 className="font-[var(--font-outfit)] font-semibold text-lg text-foreground">Use of the service</h2>
             <ul className="space-y-2 list-disc list-inside pl-2">
               <li>You must sign in with a Discord account to use the dashboard.</li>
-              <li>You are responsible for all content you add to your venue — names, descriptions, event details, and patron data.</li>
+              <li>You are responsible for all content you add to your venue: names, descriptions, event details, and patron data.</li>
               <li>The Dalamud plugin captures character names of players who enter your venue's housing plot. By using the plugin, you accept responsibility for ensuring this is appropriate in the context of your venue.</li>
               <li>Do not use this service to harass, stalk, or harm other players.</li>
               <li>Do not attempt to access other users' data or venues without authorisation.</li>

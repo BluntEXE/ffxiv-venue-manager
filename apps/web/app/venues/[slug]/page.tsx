@@ -237,7 +237,7 @@ export default async function VenueProfilePage({
                   {[
                     { k: "Data Centre", v: venue.dataCenter },
                     { k: "World",       v: venue.world },
-                    ...(venue.location ? [{ k: "Ward & Plot", v: venue.location }] : []),
+                    ...(venue.location ? [{ k: "District, Ward & Plot", v: venue.location }] : []),
                   ].map(({ k, v }) => (
                     <div key={k} className="loc-line">
                       <span className="lk">{k}</span>
@@ -279,7 +279,7 @@ export default async function VenueProfilePage({
             <span><span className="text-[var(--xiv-blue)]">XIV</span> <span className="text-foreground/80">Venue Manager</span></span>
           </Link>
           <p className="text-[0.74rem] text-[var(--fg-faint)] leading-[1.6] max-w-[60ch]">
-            A community fan tool — not affiliated with SQUARE ENIX CO., LTD. FINAL FANTASY is a registered trademark of Square Enix Holdings Co., Ltd.
+            A community fan tool, not affiliated with SQUARE ENIX CO., LTD. FINAL FANTASY is a registered trademark of Square Enix Holdings Co., Ltd.
           </p>
         </div>
       </footer>

@@ -474,7 +474,7 @@ export default function AnalyticsPage() {
                       <p className="px-4 pb-3 pt-1 text-[0.68rem] text-[var(--fg-faint)]">
                         {hasRealData
                           ? "Your data · update in Settings"
-                          : "Estimates — set your own in Settings"}
+                          : "Estimates. Set your own in Settings."}
                       </p>
                     </div>
                   </div>

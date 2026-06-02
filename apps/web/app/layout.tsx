@@ -31,7 +31,7 @@ const jetbrainsMono = JetBrains_Mono({
 export const dynamic = "force-dynamic"
 
 const SITE_URL = "https://xivvenuemanager.com"
-const SITE_DESC = "Free venue management for FFXIV roleplay venues. Track events, manage staff, log sales and go live — from the web or inside the game."
+const SITE_DESC = "Free venue management for FFXIV roleplay venues. Track events, manage staff, log sales and go live from the web or inside the game."
 
 export const metadata: Metadata = {
   title: { default: "XIV Venue Manager", template: "%s" },
