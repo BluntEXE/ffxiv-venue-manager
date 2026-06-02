@@ -1116,6 +1116,20 @@
 .shift-chip.em { background: var(--success-soft); color: var(--success-text); border-color: rgba(16,185,129,0.25); }
 .shift-chip.am { background: rgba(249,226,175,0.10); color: var(--warning); border-color: rgba(249,226,175,0.25); }
 
+/* ── Panel header — matches prototype .panel > .ph spec ── */
+.panel > .ph { display: flex; align-items: center; gap: 12px; padding: 16px 20px; border-bottom: 1px solid var(--blue-008); }
+.panel > .ph .pt { font-family: var(--font-outfit), system-ui, sans-serif; font-weight: 600; font-size: 0.95rem; display: flex; align-items: center; gap: 9px; flex: 1; }
+.panel > .ph .pt svg { width: 17px; height: 17px; color: var(--xiv-blue); flex-shrink: 0; }
+.panel > .ph .ph-spacer { flex: 1; }
+.panel > .ph .pcount { font-size: 0.74rem; color: var(--fg-faint); font-weight: 500; }
+
+/* ── Toggle switch — matches prototype .toggle spec ── */
+.toggle { width: 38px; height: 22px; border-radius: 999px; background: var(--blue-010); border: 1px solid var(--blue-020); position: relative; cursor: pointer; transition: background .2s ease, border-color .2s ease; flex-shrink: 0; appearance: none; -webkit-appearance: none; }
+.toggle::after { content: ""; position: absolute; top: 2px; left: 2px; width: 16px; height: 16px; border-radius: 999px; background: var(--fg-faint); transition: transform .2s ease, background .2s ease; }
+.toggle.on { background: var(--xiv-blue); border-color: var(--xiv-blue); }
+.toggle.on::after { transform: translateX(16px); background: var(--xiv-navy); }
+.toggle:disabled { opacity: 0.5; cursor: not-allowed; }
+
 /* ── Venue profile — matches prototype spec ── */
 .dh { padding: 15px 20px; border-bottom: 1px solid var(--blue-008); font-family: var(--font-outfit), system-ui, sans-serif; font-weight: 600; font-size: 0.95rem; display: flex; align-items: center; gap: 9px; }
 .dh svg { width: 16px; height: 16px; color: var(--xiv-blue); }

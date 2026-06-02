@@ -255,15 +255,12 @@ export default function SettingsPage({
         {isLoading ? (
           <PageLoading text="Loading settings…" />
         ) : (
-          <div className="space-y-4">
+          <div className="stack mt-2">
 
             {/* ── Venue profile ── */}
-            <section className="rounded-xl border border-[var(--blue-018)] bg-[var(--card)] overflow-hidden">
-              <div className="flex items-center gap-2.5 px-[22px] py-[13px] border-b border-[var(--blue-008)] font-semibold text-[0.95rem]">
-                <svg className="w-4 h-4 text-[var(--xiv-blue)]" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
-                Venue profile
-              </div>
-              <div className="px-5 py-4 space-y-4">
+            <section className="panel">
+              <div className="ph"><span className="pt"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>Venue profile</span></div>
+              <div className="pbody space-y-4">
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   <div className="space-y-1.5">
                     <Label htmlFor="venue-name">Venue name</Label>
@@ -326,12 +323,9 @@ export default function SettingsPage({
             </section>
 
             {/* ── Location & hours ── */}
-            <section className="rounded-xl border border-[var(--blue-018)] bg-[var(--card)] overflow-hidden">
-              <div className="flex items-center gap-2.5 px-[22px] py-[13px] border-b border-[var(--blue-008)] font-semibold text-[0.95rem]">
-                <svg className="w-4 h-4 text-[var(--xiv-blue)]" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>
-                Location &amp; hours
-              </div>
-              <div className="px-5 py-4 space-y-4">
+            <section className="panel">
+              <div className="ph"><span className="pt"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>Location &amp; hours</span></div>
+              <div className="pbody space-y-4">
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   <div className="space-y-1.5">
                     <Label htmlFor="venue-location">Ward &amp; Plot</Label>
@@ -360,121 +354,97 @@ export default function SettingsPage({
                       disabled={isSaving} className="bg-background border-[var(--blue-015)] focus:border-[var(--blue-035)]" />
                   </div>
                 </div>
-                <div className="flex items-center justify-between py-1">
-                  <div>
-                    <p className="text-sm font-medium">Adult (18+) venue</p>
-                    <p className="text-xs text-[var(--fg-faint)]">Show the 18+ badge on your public listing.</p>
+                <div className="setrow" style={{ paddingLeft: 0, paddingRight: 0, border: "none" }}>
+                  <div className="sinfo">
+                    <div className="stitle">Adult (18+) venue</div>
+                    <div className="sdesc">Show the 18+ badge on your public listing.</div>
                   </div>
-                  <button type="button"
-                    onClick={() => setSettings({ ...settings, isAdult: !settings.isAdult })}
-                    disabled={isSaving}
-                    className={`relative w-[38px] h-[22px] rounded-full border transition-all duration-200 flex-shrink-0 ${
-                      settings.isAdult ? "bg-[var(--xiv-blue)] border-[var(--xiv-blue)]" : "bg-[var(--blue-010)] border-[var(--blue-020)]"
-                    }`}>
-                    <span className={`absolute top-[2px] left-[2px] w-4 h-4 rounded-full transition-all duration-200 ${
-                      settings.isAdult ? "translate-x-4 bg-[var(--xiv-navy)]" : "bg-[var(--fg-faint)]"
-                    }`} />
-                  </button>
+                  <button type="button" onClick={() => setSettings({ ...settings, isAdult: !settings.isAdult })} disabled={isSaving} className={`toggle${settings.isAdult ? " on" : ""}`} />
                 </div>
               </div>
             </section>
 
             {/* ── Integrations ── */}
-            <section className="rounded-xl border border-[var(--blue-018)] bg-[var(--card)] overflow-hidden">
-              <div className="flex items-center gap-2.5 px-[22px] py-[13px] border-b border-[var(--blue-008)] font-semibold text-[0.95rem]">
-                <svg className="w-4 h-4 text-[var(--xiv-blue)]" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg>
-                Integrations
-              </div>
+            <section className="panel">
+              <div className="ph"><span className="pt"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg>Integrations</span></div>
 
               {/* Dalamud */}
               <div className="introw">
-                <div className="w-10 h-10 rounded-lg bg-emerald-500/10 border border-emerald-500/20 flex items-center justify-center shrink-0">
-                  <svg className="w-5 h-5 text-emerald-400" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><rect x="6" y="2" width="12" height="20" rx="2"/><line x1="12" y1="18" x2="12" y2="18"/></svg>
+                <span className="iconbadge ii em" style={{ width: 40, height: 40 }}>
+                  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><rect x="6" y="2" width="12" height="20" rx="2"/><line x1="12" y1="18" x2="12" y2="18"/></svg>
+                </span>
+                <div className="iinfo">
+                  <div className="iname">Dalamud Plugin</div>
+                  <div className="idesc">In-game sales, clock-in and patron capture</div>
                 </div>
-                <div className="flex-1 min-w-0">
-                  <p className="text-sm font-semibold">Dalamud Plugin</p>
-                  <p className="text-xs text-muted-foreground mt-0.5">In-game sales, clock-in and patron capture</p>
-                </div>
-                <Link
-                  href={`/dashboard/${slug}/settings/api-keys`}
-                  className="text-xs font-semibold text-[var(--xiv-blue)] hover:underline shrink-0"
-                >
+                <Link href={`/dashboard/${slug}/settings/api-keys`} className="text-xs font-semibold text-[var(--xiv-blue)] hover:underline shrink-0">
                   Manage API Keys →
                 </Link>
               </div>
 
               {/* Partake */}
-              <div className="px-5 py-4 border-b border-[var(--blue-008)]">
-                <div className="flex items-center gap-4 mb-3">
-                  <div className="w-10 h-10 rounded-lg bg-[var(--blue-010)] border border-[var(--blue-018)] flex items-center justify-center shrink-0">
-                    <svg className="w-5 h-5 text-[var(--xiv-blue)]" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
-                  </div>
-                  <div className="flex-1 min-w-0">
-                    <p className="text-sm font-semibold">Partake.gg</p>
-                    <p className="text-xs text-muted-foreground mt-0.5">Publish events to the community calendar</p>
-                  </div>
-                  {settings.partakeTeamId && (
-                    <span className="text-[0.7rem] font-semibold px-2.5 py-1 rounded-full bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 shrink-0">
-                      Connected
-                    </span>
-                  )}
+              <div className="introw" style={{ flexWrap: "wrap", gap: 14 }}>
+                <span className="iconbadge ii" style={{ width: 40, height: 40 }}>
+                  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+                </span>
+                <div className="iinfo">
+                  <div className="iname">Partake.gg</div>
+                  <div className="idesc">Publish events to the community calendar</div>
                 </div>
-                <div className="flex gap-2 items-center">
-                  <Input
-                    type="number"
-                    placeholder="Partake team ID (e.g. 123)"
-                    value={settings.partakeTeamId ?? ""}
-                    onChange={(e) => {
-                      const val = e.target.value
-                      setSettings({ ...settings, partakeTeamId: val ? parseInt(val, 10) : null })
-                    }}
-                    disabled={isSaving}
-                    min={1}
-                    className="flex-1 bg-background border-[var(--blue-015)] focus:border-[var(--blue-035)] text-sm h-9"
-                  />
-                  {settings.partakeTeamId && (
-                    <Button variant="outline" size="sm" disabled={isSyncing} onClick={async () => {
-                      setIsSyncing(true); setSyncResult("")
-                      try {
-                        const res = await fetch(`/api/venues/${venueId}/sync-partake`, { method: "POST" })
-                        if (!res.ok) { const d = await res.json(); throw new Error(d.error || "Sync failed") }
-                        const d = await res.json()
-                        setSyncResult(`Synced: ${d.results.created} new, ${d.results.updated} updated`)
-                        setTimeout(() => setSyncResult(""), 5000)
-                      } catch (err: unknown) {
-                        setSyncResult(err instanceof Error ? err.message : "Sync failed")
-                      } finally { setIsSyncing(false) }
-                    }}>
-                      {isSyncing ? "Syncing…" : "Sync now"}
-                    </Button>
-                  )}
+                {settings.partakeTeamId && <span className="status open"><span className="dot" />Connected</span>}
+                <div className="w-full flex flex-col gap-2 pl-[54px]">
+                  <div className="flex gap-2 items-center">
+                    <Input
+                      type="number"
+                      placeholder="Partake team ID (e.g. 123)"
+                      value={settings.partakeTeamId ?? ""}
+                      onChange={(e) => {
+                        const val = e.target.value
+                        setSettings({ ...settings, partakeTeamId: val ? parseInt(val, 10) : null })
+                      }}
+                      disabled={isSaving}
+                      min={1}
+                      className="flex-1 bg-background border-[var(--blue-015)] focus:border-[var(--blue-035)] text-sm h-9"
+                    />
+                    {settings.partakeTeamId && (
+                      <Button variant="outline" size="sm" disabled={isSyncing} onClick={async () => {
+                        setIsSyncing(true); setSyncResult("")
+                        try {
+                          const res = await fetch(`/api/venues/${venueId}/sync-partake`, { method: "POST" })
+                          if (!res.ok) { const d = await res.json(); throw new Error(d.error || "Sync failed") }
+                          const d = await res.json()
+                          setSyncResult(`Synced: ${d.results.created} new, ${d.results.updated} updated`)
+                          setTimeout(() => setSyncResult(""), 5000)
+                        } catch (err: unknown) {
+                          setSyncResult(err instanceof Error ? err.message : "Sync failed")
+                        } finally { setIsSyncing(false) }
+                      }}>
+                        {isSyncing ? "Syncing…" : "Sync now"}
+                      </Button>
+                    )}
+                  </div>
+                  {syncResult && <p className="text-xs text-emerald-400">{syncResult}</p>}
+                  {settings.partakeTeamId && <p className="text-xs text-[var(--fg-faint)]">Syncs automatically every hour.</p>}
                 </div>
-                {syncResult && <p className="text-xs text-emerald-400 mt-2">{syncResult}</p>}
-                {settings.partakeTeamId && <p className="text-xs text-[var(--fg-faint)] mt-1.5">Syncs automatically every hour.</p>}
               </div>
 
               {/* Discord */}
-              <div className="flex items-center gap-4 px-5 py-3.5">
-                <div className="w-10 h-10 rounded-lg bg-[var(--blue-010)] border border-[var(--blue-018)] flex items-center justify-center shrink-0">
-                  <svg className="w-5 h-5 text-[var(--xiv-blue)]" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
-                </div>
-                <div className="flex-1 min-w-0">
-                  <p className="text-sm font-semibold">Discord</p>
-                  <p className="text-xs text-muted-foreground mt-0.5">OAuth sign-in and event webhooks</p>
-                </div>
-                <span className="text-[0.7rem] font-semibold px-2.5 py-1 rounded-full bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 shrink-0">
-                  Connected
+              <div className="introw">
+                <span className="iconbadge ii" style={{ width: 40, height: 40 }}>
+                  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
                 </span>
+                <div className="iinfo">
+                  <div className="iname">Discord</div>
+                  <div className="idesc">OAuth sign-in and event webhooks</div>
+                </div>
+                <span className="status open"><span className="dot" />Connected</span>
               </div>
             </section>
 
             {/* ── Discord Webhooks ── */}
-            <section className="rounded-xl border border-[var(--blue-018)] bg-[var(--card)] overflow-hidden">
-              <div className="flex items-center gap-2.5 px-[22px] py-[13px] border-b border-[var(--blue-008)] font-semibold text-[0.95rem]">
-                <svg className="w-4 h-4 text-[var(--xiv-blue)]" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>
-                Discord Webhooks
-              </div>
-              <div className="p-5 space-y-5">
+            <section className="panel">
+              <div className="ph"><span className="pt"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>Discord Webhooks</span></div>
+              <div className="pbody space-y-5">
                 <p className="text-xs text-[var(--fg-faint)]">
                   Server Settings → Integrations → Webhooks → New Webhook. Paste the URL below.
                 </p>
@@ -542,13 +512,9 @@ export default function SettingsPage({
             </section>
 
             {/* ── How patrons find you ── */}
-            <section className="rounded-xl border border-[var(--blue-018)] bg-[var(--card)] overflow-hidden">
-              <div className="flex items-center gap-2.5 px-[22px] py-[13px] border-b border-[var(--blue-008)] font-semibold text-[0.95rem]">
-                <svg className="w-4 h-4 text-[var(--xiv-blue)]" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></svg>
-                How patrons find you
-                <span className="ml-auto text-xs text-[var(--fg-faint)] font-normal">Shown in Analytics</span>
-              </div>
-              <div className="p-5 space-y-4">
+            <section className="panel">
+              <div className="ph"><span className="pt"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></svg>How patrons find you</span><span className="ph-spacer" /><span className="pcount">Shown in Analytics</span></div>
+              <div className="pbody space-y-4">
                 <p className="text-xs text-muted-foreground">
                   Estimate how patrons typically discover your venue. These percentages appear in your Analytics dashboard.
                   They don&apos;t need to add up to 100%.
@@ -595,13 +561,10 @@ export default function SettingsPage({
             </section>
 
             {/* ── Staff permissions ── */}
-            <section className="rounded-xl border border-[var(--blue-018)] bg-[var(--card)] overflow-hidden">
-              <div className="flex items-center gap-2.5 px-[22px] py-[13px] border-b border-[var(--blue-008)] font-semibold text-[0.95rem]">
-                <svg className="w-4 h-4 text-[var(--xiv-blue)]" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
-                Staff permissions
-              </div>
+            <section className="panel">
+              <div className="ph"><span className="pt"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>Staff permissions</span></div>
               <p className="px-5 pt-3 text-xs text-[var(--fg-faint)]">Owners and managers always have full access. These settings apply to staff only.</p>
-              <div className="divide-y divide-[var(--blue-008)] mt-3">
+              <div className="mt-1">
                 {[
                   {
                     id: "task-vis", label: "Tasks", desc: "Which tasks staff can see",
@@ -643,10 +606,10 @@ export default function SettingsPage({
                     ],
                   },
                 ].map((row) => (
-                  <div key={row.id} className="flex items-center gap-4 px-5 py-3">
-                    <div className="flex-1 min-w-0">
-                      <p className="text-sm font-medium">{row.label}</p>
-                      <p className="text-xs text-[var(--fg-faint)]">{row.desc}</p>
+                  <div key={row.id} className="setrow">
+                    <div className="sinfo">
+                      <div className="stitle">{row.label}</div>
+                      <div className="sdesc">{row.desc}</div>
                     </div>
                     <Select value={row.value} onValueChange={row.onChange} disabled={isSaving}>
                       <SelectTrigger className="w-[180px] h-8 text-xs bg-background border-[var(--blue-015)]">
@@ -665,16 +628,19 @@ export default function SettingsPage({
 
             {/* ── Danger zone ── */}
             {userRole === "OWNER" && (
-              <section className="rounded-xl border border-[rgba(243,139,168,0.3)] bg-[var(--card)] overflow-hidden">
-                <div className="flex items-center gap-2.5 px-5 py-3.5 border-b border-[rgba(243,139,168,0.18)] font-semibold text-[0.95rem] text-[var(--destructive)]">
-                  <svg className="w-4 h-4" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M10.29 3.86 1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0zM12 9v4m0 4h.01"/></svg>
-                  Danger zone
+              <section className="panel" style={{ borderColor: "rgba(243,139,168,0.3)" }}>
+                <div className="ph" style={{ borderBottomColor: "rgba(243,139,168,0.18)" }}>
+                  <span className="pt" style={{ color: "var(--destructive)" }}>
+                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" style={{ color: "var(--destructive)" }}><path d="M10.29 3.86 1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0zM12 9v4m0 4h.01"/></svg>
+                    Danger zone
+                  </span>
                 </div>
-                <div className="px-5 py-4 flex items-center justify-between gap-4">
-                  <div>
-                    <p className="text-sm font-medium">Delete venue</p>
-                    <p className="text-xs text-[var(--fg-faint)] mt-0.5">Permanently removes the venue and all associated data. Cannot be undone.</p>
-                  </div>
+                <div className="pbody">
+                  <div className="setrow" style={{ paddingLeft: 0, paddingRight: 0, border: "none" }}>
+                    <div className="sinfo">
+                      <div className="stitle">Delete venue</div>
+                      <div className="sdesc">Permanently removes the venue and all associated data. Cannot be undone.</div>
+                    </div>
                   <AlertDialog>
                     <AlertDialogTrigger asChild>
                       <Button variant="destructive" size="sm" disabled={isDeleting}>
@@ -696,6 +662,7 @@ export default function SettingsPage({
                       </AlertDialogFooter>
                     </AlertDialogContent>
                   </AlertDialog>
+                  </div>
                 </div>
               </section>
             )}
