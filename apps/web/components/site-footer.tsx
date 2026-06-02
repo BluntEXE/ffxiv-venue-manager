@@ -69,7 +69,7 @@ export function SiteFooter() {
             <h4 className="text-sm font-semibold mb-4">Community</h4>
             <div className="space-y-2.5">
               {[
-                { label: "Discord",    href: "https://discord.gg/xivvenuemanager" },
+                { label: "Discord",    href: "https://discord.gg/AN5VDNSe2A" },
                 { label: "GitHub",     href: "https://github.com/BluntEXE/xiv-venue-manager" },
                 { label: "Partake.gg", href: "https://partake.gg" },
                 { label: "Ko-fi",      href: "https://ko-fi.com/ehnocure" },
@@ -87,7 +87,7 @@ export function SiteFooter() {
           </p>
           <div className="flex items-center gap-2">
             {[
-              { href: "https://discord.gg/xivvenuemanager",           label: "Discord", path: "M20.3 4.4A19.8 19.8 0 0 0 15.4 3l-.3.5c1.7.4 3 1 4.2 1.8a16.5 16.5 0 0 0-14.6 0C6 4.5 7.3 3.9 9 3.5L8.6 3a19.8 19.8 0 0 0-4.9 1.4C1 8.9.2 13.3.6 17.6a19.9 19.9 0 0 0 6 3l.8-1.3c-.7-.3-1.4-.6-2-1l.5-.4a14.2 14.2 0 0 0 12.2 0l.5.4c-.6.4-1.3.7-2 1l.8 1.3a19.9 19.9 0 0 0 6-3c.5-5-.7-9.4-3.4-13.2ZM8.9 15c-1 0-1.8-.9-1.8-2s.8-2 1.8-2 1.8.9 1.8 2-.8 2-1.8 2Zm6.2 0c-1 0-1.8-.9-1.8-2s.8-2 1.8-2 1.8.9 1.8 2-.8 2-1.8 2Z" },
+              { href: "https://discord.gg/AN5VDNSe2A",           label: "Discord", path: "M20.3 4.4A19.8 19.8 0 0 0 15.4 3l-.3.5c1.7.4 3 1 4.2 1.8a16.5 16.5 0 0 0-14.6 0C6 4.5 7.3 3.9 9 3.5L8.6 3a19.8 19.8 0 0 0-4.9 1.4C1 8.9.2 13.3.6 17.6a19.9 19.9 0 0 0 6 3l.8-1.3c-.7-.3-1.4-.6-2-1l.5-.4a14.2 14.2 0 0 0 12.2 0l.5.4c-.6.4-1.3.7-2 1l.8 1.3a19.9 19.9 0 0 0 6-3c.5-5-.7-9.4-3.4-13.2ZM8.9 15c-1 0-1.8-.9-1.8-2s.8-2 1.8-2 1.8.9 1.8 2-.8 2-1.8 2Zm6.2 0c-1 0-1.8-.9-1.8-2s.8-2 1.8-2 1.8.9 1.8 2-.8 2-1.8 2Z" },
               { href: "https://github.com/BluntEXE/xiv-venue-manager", label: "GitHub",  path: "M12 2A10 10 0 0 0 8.8 21.5c.5.1.7-.2.7-.5v-1.7c-2.8.6-3.4-1.3-3.4-1.3-.4-1.2-1.1-1.5-1.1-1.5-.9-.6.1-.6.1-.6 1 .1 1.5 1 1.5 1 .9 1.5 2.3 1.1 2.9.8.1-.6.3-1.1.6-1.3-2.2-.3-4.6-1.1-4.6-5 0-1.1.4-2 1-2.7-.1-.3-.4-1.3.1-2.7 0 0 .8-.3 2.7 1a9.4 9.4 0 0 1 5 0c1.9-1.3 2.7-1 2.7-1 .5 1.4.2 2.4.1 2.7.6.7 1 1.6 1 2.7 0 3.9-2.3 4.7-4.6 5 .4.3.7.9.7 1.9v2.8c0 .3.2.6.7.5A10 10 0 0 0 12 2Z" },
               { href: "https://ko-fi.com/ehnocure",                    label: "Ko-fi",   path: "M12 21s-7.5-4.6-10-9.3C.4 8.4 1.9 5 5.2 5c2 0 3.3 1.2 3.8 2.2C9.5 6.2 10.8 5 12.8 5 16.1 5 17.6 8.4 16 11.7 13.5 16.4 12 21 12 21z" },
             ].map(({ href, label, path }) => (
