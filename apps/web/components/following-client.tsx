@@ -2,7 +2,8 @@
 
 import { useState } from "react"
 import Link from "next/link"
-import { MapPin, ArrowRight, Heart, Radio, Building2 } from "lucide-react"
+import { MapPin, ArrowRight, Radio, Building2 } from "lucide-react"
+import { VenueFollowButton } from "@/components/venue-follow-button"
 
 type FollowingVenue = {
   id: string
@@ -162,22 +163,18 @@ function VenueC3Card({
       </div>
 
       {/* Right */}
-      <div className="flex flex-col items-end gap-[10px] flex-shrink-0">
-        <div className="flex items-center gap-[10px]">
-          {isOpen ? (
-            <span className="status open"><span className="dot" />Open</span>
-          ) : (
-            <span className="status closed"><span className="dot" />Closed</span>
-          )}
-          {showFollow && (
-            <button className="p-[6px] rounded-[var(--radius-sm)] text-[var(--support-pink)] hover:bg-[var(--blue-007)] transition-colors" title="Following">
-              <Heart className="w-[18px] h-[18px] fill-[var(--support-pink)]" />
-            </button>
-          )}
-        </div>
+      <div className="flex items-center gap-2 flex-shrink-0">
+        {isOpen ? (
+          <span className="status open"><span className="dot" />Open</span>
+        ) : (
+          <span className="status closed"><span className="dot" />Closed</span>
+        )}
+        {showFollow && (
+          <VenueFollowButton venueId={venue.id} isFollowing={true} followCount={venue.followCount} compact />
+        )}
         <Link
           href={`/venues/${venue.slug}`}
-          className={`btn btn-outline btn-sm flex items-center gap-2 px-4 py-[7px] text-[0.85rem] rounded-[var(--radius-md)] border border-[var(--blue-018)] bg-[rgba(7,11,20,0.5)] hover:border-[var(--blue-045)] hover:bg-[var(--blue-007)] transition-colors ${!isOpen ? "opacity-40 pointer-events-none" : ""}`}
+          className="btn btn-outline btn-sm flex items-center gap-2 px-4 py-[7px] text-[0.85rem] rounded-[var(--radius-md)] border border-[var(--blue-018)] bg-[rgba(7,11,20,0.5)] hover:border-[var(--blue-045)] hover:bg-[var(--blue-007)] transition-colors"
         >
           Visit <ArrowRight className="w-4 h-4" />
         </Link>
