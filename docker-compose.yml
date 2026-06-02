@@ -105,6 +105,27 @@ services:
     networks:
       - app-network
 
+  minio:
+    image: minio/minio:latest
+    container_name: minio
+    command: server /data --console-address ":9001"
+    environment:
+      - MINIO_ROOT_USER=${MINIO_ROOT_USER:-xivvenues}
+      - MINIO_ROOT_PASSWORD=${MINIO_ROOT_PASSWORD}
+    volumes:
+      - ./docker/minio/data:/data
+    ports:
+      - "9000:9000"   # S3 API
+      - "9001:9001"   # Web console
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "mc", "ready", "local"]
+      interval: 10s
+      timeout: 5s
+      retries: 3
+    networks:
+      - app-network
+
 networks:
   app-network:
     driver: bridge

@@ -196,13 +196,16 @@ export default async function VenueProfilePage({
                 </div>
               )}
 
-              {/* Gallery — hidden until real images are supported */}
-              {false && (
+              {/* Gallery — real images from MinIO */}
+              {venue.galleryImages && venue.galleryImages.length > 0 && (
                 <div className="gallery-block">
                   <div className="block-title"><ImageIcon /> Gallery</div>
                   <div className="gallery">
-                    {[0,1,2].map(i => (
-                      <div key={i} className="gtile"><div className="gbg" /><ImageIcon /></div>
+                    {venue.galleryImages.map((url, i) => (
+                      <a key={url} href={url} target="_blank" rel="noopener noreferrer" className="gtile">
+                        {/* eslint-disable-next-line @next/next/no-img-element */}
+                        <img src={url} alt={`${venue.name} gallery ${i + 1}`} className="absolute inset-0 w-full h-full object-cover" />
+                      </a>
                     ))}
                   </div>
                 </div>

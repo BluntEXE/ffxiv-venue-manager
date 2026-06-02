@@ -132,12 +132,13 @@ model VerificationToken {
 // ============================================
 
 model Venue {
-  id          String  @id @default(cuid())
-  name        String
-  slug        String  @unique
-  description String? @db.Text
-  logoUrl     String?
-  bannerUrl   String?
+  id             String   @id @default(cuid())
+  name           String
+  slug           String   @unique
+  description    String?  @db.Text
+  logoUrl        String?
+  bannerUrl      String?
+  galleryImages  String[] @default([])
 
   // FFXIV Location
   dataCenter String
