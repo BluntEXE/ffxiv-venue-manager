@@ -55,6 +55,7 @@ export function SiteFooter() {
               {[
                 { label: "Getting started", href: "/guide/getting-started" },
                 { label: "Running events",  href: "/guide/events" },
+                { label: "Managing staff",  href: "/guide/staff-management" },
                 { label: "Owner guide",    href: "/guide/owner" },
                 { label: "Staff guide",    href: "/guide/staff" },
                 { label: "FAQ",            href: "/guide/owner#faq" },

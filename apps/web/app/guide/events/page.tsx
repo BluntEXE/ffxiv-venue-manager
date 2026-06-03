@@ -181,7 +181,7 @@ export default function EventsGuidePage() {
               </Link>
             </Button>
             <Button asChild variant="outline" className="border-[var(--xiv-blue-border)] hover:bg-[var(--xiv-blue-dim)] hover:border-[var(--xiv-blue)]">
-              <Link href="/guide/getting-started">Getting started guide</Link>
+              <Link href="/guide/staff-management">Managing staff guide</Link>
             </Button>
             <Button asChild variant="outline" className="border-[var(--xiv-blue-border)] hover:bg-[var(--xiv-blue-dim)] hover:border-[var(--xiv-blue)]">
               <Link href="/discover">Browse venues</Link>
