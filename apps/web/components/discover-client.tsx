@@ -48,7 +48,8 @@ export function DiscoverClient({
     return true
   })
 
-  const featured = filtered.find(v => v.isOpenNow || v.isTonightOpen) ?? filtered[0]
+  const daySeed = Math.floor(Date.now() / 86_400_000)
+  const featured = filtered.find(v => v.isOpenNow || v.isTonightOpen) ?? filtered[daySeed % filtered.length]
   const rest      = filtered.filter(v => v.id !== featured?.id)
   const restOpen   = rest.filter(v => v.isOpenNow).length
   const restClosed = rest.filter(v => !v.isOpenNow).length
