@@ -159,7 +159,7 @@ export default function GettingStartedPage() {
               </Link>
             </Button>
             <Button asChild variant="outline" className="border-[var(--xiv-blue-border)] hover:bg-[var(--xiv-blue-dim)] hover:border-[var(--xiv-blue)]">
-              <Link href="/guide/owner">Owner guide</Link>
+              <Link href="/guide/events">Running events guide</Link>
             </Button>
             <Button asChild variant="outline" className="border-[var(--xiv-blue-border)] hover:bg-[var(--xiv-blue-dim)] hover:border-[var(--xiv-blue)]">
               <Link href="/discover">Browse venues</Link>

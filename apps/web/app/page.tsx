@@ -486,7 +486,9 @@ export default async function Home() {
               <h4 className="text-sm font-semibold mb-4">Resources</h4>
               <div className="space-y-2.5">
                 {[
-                  { label: "Owner guide", href: "/guide/owner" },
+                  { label: "Getting started", href: "/guide/getting-started" },
+                  { label: "Running events",  href: "/guide/events" },
+                  { label: "Owner guide",     href: "/guide/owner" },
                   { label: "Staff guide", href: "/guide/staff" },
                   { label: "FAQ", href: "/guide/owner#faq" },
                   { label: "Privacy policy", href: "/privacy" },
