@@ -122,5 +122,14 @@ export const DELETE = withRateLimit(
       )
     }
   },
-  { requests: 3, window: "1 m" } // Very strict rate limit for deletion
+  {
+    requests: 3,
+    window: "1 m",
+    getIdentifier: async (req) => {
+      const session = await getServerSession(authOptions)
+      const userId = session?.user?.id
+      if (userId) return `user:${userId}:DELETE:${req.nextUrl.pathname}`
+      return `ip:${req.headers.get("x-forwarded-for")?.split(",")[0].trim() ?? req.headers.get("x-real-ip") ?? "anonymous"}:DELETE:${req.nextUrl.pathname}`
+    },
+  }
 )

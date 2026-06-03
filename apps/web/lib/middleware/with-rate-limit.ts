@@ -17,6 +17,7 @@ export function withRateLimit<T = unknown>(
     requests?: number
     window?: string
     bypassForDevelopment?: boolean
+    getIdentifier?: (req: NextRequest) => Promise<string> | string
   }
 ) {
   return async (req: NextRequest, context?: T): Promise<NextResponse> => {
@@ -26,7 +27,9 @@ export function withRateLimit<T = unknown>(
 
     const maxRequests = options?.requests || 200
     const windowSec = Math.max(1, Math.floor(parseWindow(options?.window || "1 m") / 1000))
-    const identifier = `ip:${getIdentifier(req)}`
+    const identifier = options?.getIdentifier
+      ? await options.getIdentifier(req)
+      : `ip:${getIpIdentifier(req)}:${req.method}:${req.nextUrl.pathname}`
 
     const rl = await checkLimit(identifier, maxRequests, windowSec)
 
@@ -67,7 +70,7 @@ function parseWindow(window: string): number {
   return value * multipliers[unit]
 }
 
-function getIdentifier(req: NextRequest): string {
+function getIpIdentifier(req: NextRequest): string {
   const forwarded = req.headers.get("x-forwarded-for")
   const realIp = req.headers.get("x-real-ip")
   const cfConnectingIp = req.headers.get("cf-connecting-ip")
