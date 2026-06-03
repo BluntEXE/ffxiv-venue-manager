@@ -149,12 +149,12 @@ export default function StaffManagementPage() {
             How XIV Venue Manager handles staff coordination
           </h2>
           <p className="text-muted-foreground leading-relaxed">
-            XIV Venue Manager gives your staff their own accounts connected to your venue. You assign shifts from the dashboard, they confirm from their own view, without Discord threads or spreadsheets.
+            XIV Venue Manager gives your staff their own accounts connected to your venue. You assign shifts from the dashboard and staff see their schedule from their own account, without Discord threads or spreadsheets.
           </p>
           <ul className="space-y-3 text-muted-foreground">
             {[
               "Build the weekly shift schedule in the dashboard and assign staff to each slot by role.",
-              "Staff confirm shifts from their own account — unconfirmed slots are visible at a glance.",
+              "Staff see their assigned shifts and start times from their own account, with no Discord thread to dig through.",
               "Staff log tips from inside the game with a single plugin command, tied to their shift record.",
               "Payroll runs at the end of the week from shift and sales data, with no manual totalling.",
               "Patron logs show which staff served which patrons, useful for tracking performance over time.",

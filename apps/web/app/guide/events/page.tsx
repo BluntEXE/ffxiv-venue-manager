@@ -154,7 +154,7 @@ export default function EventsGuidePage() {
           <ul className="space-y-3 text-muted-foreground">
             {[
               "Schedule events separately from regular shifts, with roles and notes per staff member.",
-              "Partake sync keeps your event listing in step with any changes you make from the dashboard.",
+              "Partake events sync into the dashboard automatically, so your XIV VM event list stays current with what you post on Partake.gg.",
               "Staff log sales from inside the game with a single plugin command, with no spreadsheet handoff at the end of the night.",
               "Revenue and attendance roll into the analytics dashboard so you can compare events side by side over time.",
               "Payroll at the end of the week pulls from shift records, so event tip payouts are calculated, not estimated.",
