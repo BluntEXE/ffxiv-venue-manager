@@ -148,7 +148,7 @@ export function StaffTable({
                 {["Staff", "Role", "Status", "Joined", ""].map((h, i) => (
                   <th
                     key={h || i}
-                    className={`text-left text-[0.68rem] font-medium uppercase tracking-[0.06em] text-[var(--xiv-blue)] px-5 py-3 border-b border-[var(--blue-008)] whitespace-nowrap ${
+                    className={`text-left text-[0.68rem] font-medium uppercase tracking-[0.06em] text-[var(--xiv-blue)] px-3 sm:px-5 py-3 border-b border-[var(--blue-008)] whitespace-nowrap ${
                       i === 2 || i === 3 ? "hidden sm:table-cell" : ""
                     } ${i === 4 ? "text-right" : ""}`}
                   >
@@ -164,7 +164,7 @@ export function StaffTable({
                   className="border-b border-[var(--blue-008)] last:border-0 hover:bg-[var(--blue-004)] transition-colors"
                 >
                   {/* Name */}
-                  <td className="px-5 py-3.5">
+                  <td className="px-3 sm:px-5 py-3.5">
                     <div className="flex items-center gap-3">
                       <Avatar className="w-8 h-8 flex-shrink-0">
                         <AvatarImage src={member.user?.image ?? undefined} />
@@ -177,7 +177,7 @@ export function StaffTable({
                   </td>
 
                   {/* Role */}
-                  <td className="px-5 py-3.5">
+                  <td className="px-3 sm:px-5 py-3.5">
                     <div className="flex items-center gap-1.5 flex-wrap">
                       <span className={`text-[0.7rem] font-medium px-2.5 py-0.5 rounded-full ${rolePill[member.role]}`}>
                         {member.role.charAt(0) + member.role.slice(1).toLowerCase()}
@@ -217,7 +217,7 @@ export function StaffTable({
                   </td>
 
                   {/* Actions */}
-                  <td className="px-5 py-3.5 text-right">
+<td className="px-3 sm:px-5 py-3.5 text-right">
                     {canManage && (
                       <Button variant="outline" size="sm" asChild>
                         <Link href={`/dashboard/${slug}/staff/${member.id}`}>Edit</Link>

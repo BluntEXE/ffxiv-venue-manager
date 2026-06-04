@@ -181,8 +181,8 @@ export function NavbarClient({ session, venues }: NavbarClientProps) {
 
               <Button asChild variant="ghost" size="sm" className="text-[var(--support-pink)] hover:text-pink-300 hover:bg-[rgba(243,139,168,0.08)]">
                 <Link href="https://ko-fi.com/ehnocure" target="_blank" rel="noopener noreferrer">
-                  <Heart className="h-4 w-4 mr-1" />
-                  Support
+                  <Heart className="h-4 w-4 sm:mr-1" />
+                  <span className="hidden sm:inline">Support</span>
                 </Link>
               </Button>
 
@@ -196,11 +196,11 @@ export function NavbarClient({ session, venues }: NavbarClientProps) {
             <>
               <Button asChild variant="ghost" size="sm" className="text-pink-400 hover:text-pink-300 hover:bg-pink-500/10">
                 <Link href="https://ko-fi.com/ehnocure" target="_blank" rel="noopener noreferrer">
-                  <Heart className="h-4 w-4 mr-1" />
-                  Support
+                  <Heart className="h-4 w-4 sm:mr-1" />
+                  <span className="hidden sm:inline">Support</span>
                 </Link>
               </Button>
-              <Button asChild variant="ghost" size="sm" className="text-sm text-foreground/60 hover:text-foreground hover:bg-[rgba(0,180,255,0.06)]">
+              <Button asChild variant="ghost" size="sm" className="hidden sm:inline-flex text-sm text-foreground/60 hover:text-foreground hover:bg-[rgba(0,180,255,0.06)]">
                 <Link href="/auth/signin">Sign In</Link>
               </Button>
               <Button asChild size="sm" className="font-cinzel font-semibold tracking-wide ml-1 text-xs xiv-btn-shimmer xiv-cta">

@@ -1106,7 +1106,13 @@
 
 /* ── Schedule grid (Shifts) — matches prototype .sched-grid spec ── */
 .sched { overflow-x: auto; }
+.sched::-webkit-scrollbar { height: 3px; }
+.sched::-webkit-scrollbar-track { background: transparent; }
+.sched::-webkit-scrollbar-thumb { background: rgba(0,180,255,0.3); border-radius: 4px; }
 .sched-grid { min-width: 760px; display: grid; grid-template-columns: 150px repeat(7, 1fr); }
+@media (max-width: 639px) {
+  .sched-grid { min-width: 560px; grid-template-columns: 100px repeat(7, 1fr); }
+}
 .sched-grid .sg-h { font-size: 0.66rem; text-transform: uppercase; letter-spacing: 0.05em; color: var(--xiv-blue); font-weight: 600; padding: 12px 8px; border-bottom: 1px solid var(--blue-008); text-align: center; }
 .sched-grid .sg-h.staffcol { text-align: left; padding-left: 14px; color: var(--fg-faint); }
 .sched-grid .sg-h .dnum { color: var(--fg-faint); font-weight: 500; margin-left: 4px; }

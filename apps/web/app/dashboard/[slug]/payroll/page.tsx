@@ -456,7 +456,7 @@ export default function PayrollPage() {
             <h1 className="page-h1">Payroll</h1>
           </div>
 
-          <div className="flex flex-col sm:flex-row gap-2">
+          <div className="flex flex-col sm:flex-row gap-2 w-full sm:w-auto">
           <Dialog open={isGenerateOpen} onOpenChange={(open) => {
             setIsGenerateOpen(open)
             if (!open) {

@@ -89,8 +89,8 @@ export function FeedbackDialog() {
     <Dialog open={isOpen} onOpenChange={setIsOpen}>
       <DialogTrigger asChild>
         <Button variant="ghost" size="sm" className="font-medium hover:bg-white/5">
-          <MessageSquare className="h-4 w-4 mr-2" />
-          Feedback
+          <MessageSquare className="h-4 w-4 sm:mr-2" />
+          <span className="hidden sm:inline">Feedback</span>
         </Button>
       </DialogTrigger>
       <DialogContent className="sm:max-w-[525px]">

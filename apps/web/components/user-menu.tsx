@@ -49,8 +49,8 @@ export function UserMenu({ user, currentVenueName, currentVenueRole }: UserMenuP
               {initials}
             </AvatarFallback>
           </Avatar>
-          <span className="user-chip-name">{user.name || "User"}</span>
-          <ChevronDown className="h-[15px] w-[15px] text-[var(--fg-faint)] flex-shrink-0" />
+          <span className="user-chip-name hidden sm:block">{user.name || "User"}</span>
+          <ChevronDown className="h-[15px] w-[15px] text-[var(--fg-faint)] flex-shrink-0 hidden sm:block" />
         </button>
       </DropdownMenuTrigger>
 
