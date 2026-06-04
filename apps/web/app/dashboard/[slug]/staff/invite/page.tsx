@@ -363,8 +363,8 @@ export default function InviteStaffPage({
             </div>
 
             {/* Form Actions */}
-            <div className="flex gap-4">
-              <Button type="submit" disabled={isLoading}>
+            <div className="flex flex-wrap gap-2 sm:flex-nowrap sm:gap-4">
+              <Button type="submit" disabled={isLoading} className="w-full sm:w-auto">
                 {isLoading ? "Generating Link..." : "Generate Invite Link"}
               </Button>
               <Button
@@ -372,6 +372,7 @@ export default function InviteStaffPage({
                 variant="outline"
                 asChild
                 disabled={isLoading}
+                className="w-full sm:w-auto"
               >
                 <Link href={`/dashboard/${slug}/staff`}>Cancel</Link>
               </Button>

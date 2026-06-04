@@ -129,7 +129,7 @@ export default async function EventsPage({
             <Link
               key={key}
               href={`/dashboard/${slug}/events?view=${key}`}
-              className={`text-sm font-semibold px-4 py-1.5 rounded-full transition-colors ${
+              className={`text-sm font-semibold px-3 sm:px-4 py-1.5 rounded-full transition-colors ${
                 view === key
                   ? "bg-[var(--xiv-blue)] text-[var(--xiv-navy)]"
                   : "text-muted-foreground hover:text-foreground hover:bg-[var(--blue-007)]"

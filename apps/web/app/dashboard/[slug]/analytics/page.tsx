@@ -505,7 +505,7 @@ export default function AnalyticsPage() {
             </div>
             <div className="p-5">
             <div>
-              <div className="rounded-xl border border-[rgba(0,180,255,0.15)] overflow-hidden">
+              <div className="rounded-xl border border-[rgba(0,180,255,0.15)] overflow-x-auto">
                 <Table>
                   <TableHeader>
                     <TableRow>

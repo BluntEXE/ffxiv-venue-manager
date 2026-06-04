@@ -291,8 +291,8 @@ export function PatronLogsManager({
             </div>
           </div>
 
-          <div className="flex gap-2 mt-4">
-            <Button onClick={applyFilters} disabled={isPending}>
+          <div className="flex flex-wrap gap-2 mt-4">
+            <Button onClick={applyFilters} disabled={isPending} className="flex-1 sm:flex-none">
               Apply filters
             </Button>
             <Button variant="outline" onClick={resetFilters} disabled={isPending}>
@@ -338,9 +338,9 @@ export function PatronLogsManager({
                 </th>
                 <th className="p-3 text-left">When</th>
                 <th className="p-3 text-left">Character</th>
-                <th className="p-3 text-left">Action</th>
+                <th className="p-3 text-left hidden sm:table-cell">Action</th>
                 <th className="p-3 text-left">Classification</th>
-                <th className="p-3 text-left">Event</th>
+                <th className="p-3 text-left hidden sm:table-cell">Event</th>
               </tr>
             </thead>
             <tbody>
@@ -372,7 +372,7 @@ export function PatronLogsManager({
                       <span className="text-muted-foreground"> ({l.world})</span>
                     )}
                   </td>
-                  <td className="p-3">
+                  <td className="p-3 hidden sm:table-cell">
                     <Badge variant="outline">{l.action}</Badge>
                   </td>
                   <td className="p-3">
@@ -397,7 +397,7 @@ export function PatronLogsManager({
                       )}
                     </div>
                   </td>
-                  <td className="p-3 text-muted-foreground">
+                  <td className="p-3 text-muted-foreground hidden sm:table-cell">
                     {l.event?.title ?? "-"}
                   </td>
                 </tr>

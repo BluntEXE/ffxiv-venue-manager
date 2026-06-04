@@ -322,7 +322,7 @@ export default async function VenueDashboardPage({
                 </Link>
               </div>
               <div className="overflow-x-auto">
-              <table className="w-full border-collapse min-w-[380px]">
+              <table className="w-full border-collapse min-w-[280px] sm:min-w-[380px]">
                 <thead>
                   <tr>
                     <th className="xiv-th text-left">Event</th>
