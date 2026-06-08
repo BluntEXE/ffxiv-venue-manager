@@ -31,7 +31,6 @@ interface StaffMember {
 interface RoleOption {
   id: string
   name: string
-  color: string | null
 }
 
 interface CreateShiftDialogProps {

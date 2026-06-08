@@ -136,7 +136,7 @@ export default async function ShiftsPage({
 
   const venueRoles = await prisma.role.findMany({
     where: { venueId: venue.id },
-    select: { id: true, name: true, color: true },
+    select: { id: true, name: true },
     orderBy: { name: "asc" },
   })
 
