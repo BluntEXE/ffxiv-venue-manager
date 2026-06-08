@@ -99,8 +99,9 @@ const createShiftSchema = z
     scheduledEnd: z.string().datetime(),
     notes: z.string().optional(),
   })
-  .refine((data) => data.membershipId || data.roleId, {
-    message: "Either membershipId (assign now) or roleId (leave open) is required",
+  // Cross-field rule (spans membershipId and roleId), so the error is form-level: no single field is "wrong" on its own.
+  .refine((data) => Boolean(data.membershipId) !== Boolean(data.roleId), {
+    message: "Provide exactly one of membershipId (assign now) or roleId (leave open), not both",
   })
 
 export async function POST(
@@ -142,10 +143,10 @@ export async function POST(
     }
 
     let targetMembership: { userId: string | null } | null = null
-    let roleId: string | null = null
+    let verifiedRoleId: string | null = null
 
     if (parsed.data.membershipId) {
-      // Assigning to a specific person — verify they belong to this venue
+      // Assigning to a specific person: verify they belong to this venue
       const member = await prisma.membership.findFirst({
         where: { id: parsed.data.membershipId, venueId: venue.id, status: "active" },
         select: { userId: true },
@@ -158,7 +159,7 @@ export async function POST(
       }
       targetMembership = member
     } else if (parsed.data.roleId) {
-      // Leaving the shift open — verify the role belongs to this venue
+      // Leaving the shift open: verify the role belongs to this venue
       const role = await prisma.role.findFirst({
         where: { id: parsed.data.roleId, venueId: venue.id },
         select: { id: true },
@@ -169,7 +170,7 @@ export async function POST(
           { status: 400 }
         )
       }
-      roleId = role.id
+      verifiedRoleId = role.id
     }
 
     const scheduledStart = new Date(parsed.data.scheduledStart)
@@ -177,7 +178,7 @@ export async function POST(
       data: {
         venueId: venue.id,
         membershipId: parsed.data.membershipId ?? null,
-        roleId,
+        roleId: verifiedRoleId,
         status: parsed.data.membershipId ? "SCHEDULED" : "OPEN",
         scheduledStart,
         scheduledEnd: new Date(parsed.data.scheduledEnd),
@@ -185,7 +186,7 @@ export async function POST(
       },
     })
 
-    // Queue shift reminder 1 hour before start — only meaningful for assigned shifts
+    // Queue shift reminder 1 hour before start: only meaningful for assigned shifts
     if (targetMembership?.userId) {
       const reminderAt = new Date(scheduledStart.getTime() - 60 * 60 * 1000)
       if (reminderAt > new Date()) {
