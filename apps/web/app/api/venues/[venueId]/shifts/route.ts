@@ -57,6 +57,7 @@ export async function GET(
             },
           },
         },
+        role: { select: { id: true, name: true, color: true } },
       },
       orderBy: { scheduledStart: "asc" },
     })
@@ -65,8 +66,10 @@ export async function GET(
       shifts: shifts.map((s) => ({
         id: s.id,
         membershipId: s.membershipId,
-        staffName: s.membership.user?.name ?? "Unknown",
-        staffImage: s.membership.user?.image ?? null,
+        staffName: s.membership?.user?.name ?? null,
+        staffImage: s.membership?.user?.image ?? null,
+        roleId: s.roleId,
+        roleName: s.role?.name ?? null,
         scheduledStart: s.scheduledStart.toISOString(),
         scheduledEnd: s.scheduledEnd.toISOString(),
         actualStart: s.actualStart?.toISOString() ?? null,
@@ -162,10 +165,10 @@ export async function POST(
 
     // Queue shift reminder 1 hour before start (best-effort, don't fail the request)
     const reminderAt = new Date(scheduledStart.getTime() - 60 * 60 * 1000)
-    if (reminderAt > new Date() && shift.membership.userId) {
+    if (reminderAt > new Date() && shift.membership?.userId) {
       prisma.pendingNotification.create({
         data: {
-          userId: shift.membership.userId as string,
+          userId: shift.membership.userId,
           type: "SHIFT_REMINDER",
           title: "Shift starting soon",
           body: `Your shift at ${venue.name} starts in 1 hour.`,

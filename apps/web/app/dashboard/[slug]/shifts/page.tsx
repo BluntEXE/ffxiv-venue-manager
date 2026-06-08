@@ -144,12 +144,13 @@ export default async function ShiftsPage({
   }>()
 
   for (const shift of weekShifts) {
+    if (!shift.membershipId) continue // open shifts get their own row, built separately below
     const mid = shift.membershipId
     if (!staffMap.has(mid)) {
       staffMap.set(mid, {
         membershipId: mid,
-        name: shift.membership.user?.name ?? "Unknown",
-        image: shift.membership.user?.image ?? null,
+        name: shift.membership!.user?.name ?? "Unknown",
+        image: shift.membership!.user?.image ?? null,
         cells: new Map(),
       })
     }
@@ -325,14 +326,14 @@ export default async function ShiftsPage({
                   <CardContent className="p-3 md:p-4">
                     <div className="flex items-center gap-3">
                       <Avatar className="h-8 w-8 flex-shrink-0">
-                        <AvatarImage src={shift.membership.user?.image ?? undefined} />
+                        <AvatarImage src={shift.membership?.user?.image ?? undefined} />
                         <AvatarFallback className="text-[0.65rem] font-bold">
-                          {shift.membership.user?.name?.slice(0, 2).toUpperCase() ?? "??"}
+                          {shift.membership?.user?.name?.slice(0, 2).toUpperCase() ?? "??"}
                         </AvatarFallback>
                       </Avatar>
                       <div className="flex-1 min-w-0">
                         <p className="text-sm font-medium truncate">
-                          {shift.membership.user?.name ?? "Unknown"}
+                          {shift.membership?.user?.name ?? "Unknown"}
                         </p>
                         <p className="text-xs text-muted-foreground">
                           {formatServerTime(shift.scheduledStart, "time")} — {formatServerTime(shift.scheduledEnd, "time")} {tzLabel}
@@ -343,10 +344,10 @@ export default async function ShiftsPage({
                           {shift.status}
                         </Badge>
                         {canManage && shift.status === "SCHEDULED" && (
-                          <ClockShiftButton venueSlug={slug} shiftId={shift.id} action="clock-in" staffName={shift.membership.user?.name ?? "staff"} />
+                          <ClockShiftButton venueSlug={slug} shiftId={shift.id} action="clock-in" staffName={shift.membership?.user?.name ?? "staff"} />
                         )}
                         {canManage && shift.status === "ACTIVE" && (
-                          <ClockShiftButton venueSlug={slug} shiftId={shift.id} action="clock-out" staffName={shift.membership.user?.name ?? "staff"} />
+                          <ClockShiftButton venueSlug={slug} shiftId={shift.id} action="clock-out" staffName={shift.membership?.user?.name ?? "staff"} />
                         )}
                         {!canManage && shift.membershipId === currentMembershipId && shift.status === "SCHEDULED" && (
                           <ClockShiftButton venueSlug={slug} shiftId={shift.id} action="clock-in" staffName="yourself" />

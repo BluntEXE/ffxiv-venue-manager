@@ -87,7 +87,7 @@ export async function POST(request: NextRequest) {
     }
 
     // Verify the authenticated user owns this shift
-    if (shift.membership.userId !== auth.userId) {
+    if (shift.membership?.userId !== auth.userId) {
       return NextResponse.json(
         { error: "This shift is not assigned to you" },
         { status: 403 }
