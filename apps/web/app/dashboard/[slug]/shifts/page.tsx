@@ -51,6 +51,7 @@ const statusChip: Record<string, string> = {
   COMPLETED: "bg-zinc-500/10 text-zinc-400 border-zinc-500/20",
   MISSED:    "bg-amber-500/10 text-amber-400 border-amber-500/20",
   CANCELLED: "bg-zinc-500/10 text-zinc-400 border-zinc-500/15 line-through",
+  OPEN:      "bg-amber-500/10 text-amber-400 border-amber-500/20 border-dashed",
 }
 
 const statusBadge: Record<string, string> = {
@@ -112,6 +113,7 @@ export default async function ShiftsPage({
       },
       include: {
         membership: { include: { user: { select: { id: true, name: true, image: true } } } },
+        role: { select: { name: true } },
       },
       orderBy: { scheduledStart: "asc" },
     }),
@@ -168,14 +170,25 @@ export default async function ShiftsPage({
 
   const staffRows = [...staffMap.values()]
 
+  // Open shifts (no member assigned yet): shown in their own row, grouped by required role
+  const openShiftsByDay = new Map<string, ShiftRow[]>()
+  for (const shift of weekShifts) {
+    if (shift.membershipId) continue
+    const key = utcDayKey(new Date(shift.scheduledStart))
+    if (!openShiftsByDay.has(key)) openShiftsByDay.set(key, [])
+    openShiftsByDay.get(key)!.push(shift)
+  }
+  const hasOpenShifts = openShiftsByDay.size > 0
+
   // KPI counts
   const scheduledCount = weekShifts.filter((s) => s.status === "SCHEDULED").length
   const activeCount = activeShifts.length
-  const openSlots = weekShifts.filter((s) => s.status === "MISSED").length
+  const openSlots = weekShifts.filter((s) => s.status === "OPEN").length
+  const missedCount = weekShifts.filter((s) => s.status === "MISSED").length
   const coverPct =
     weekShifts.length === 0
       ? 100
-      : Math.round(((weekShifts.length - openSlots) / weekShifts.length) * 100)
+      : Math.round(((weekShifts.length - missedCount) / weekShifts.length) * 100)
 
   // Upcoming shifts that need action (clock-in/out for this week)
   const actionShifts = weekShifts.filter(
@@ -310,6 +323,32 @@ export default async function ShiftsPage({
                 })}
               </>
             ))}
+
+            {hasOpenShifts && (
+              <>
+                <div key="open-shifts-name" className="sg-staff">
+                  <span className="av-sm flex-shrink-0 border border-dashed border-amber-500/40 bg-amber-500/10 text-amber-400">
+                    !
+                  </span>
+                  <span className="truncate text-amber-400">Open shifts</span>
+                </div>
+                {weekDays.map((day) => {
+                  const key = utcDayKey(day)
+                  const dayShifts = openShiftsByDay.get(key) ?? []
+                  const isToday = key === todayKey
+                  return (
+                    <div key={`open-${key}`} className={`sg-cell${isToday ? " today-col" : ""}`}>
+                      {dayShifts.map((shift) => (
+                        <span key={shift.id} className={`shift-chip ${statusChip.OPEN}`}>
+                          {fmtHour(shift.scheduledStart)}–{fmtHour(shift.scheduledEnd)}
+                          {shift.role?.name ? ` · ${shift.role.name}` : ""}
+                        </span>
+                      ))}
+                    </div>
+                  )
+                })}
+              </>
+            )}
 
             {/* Empty state */}
             {staffRows.length === 0 && (
