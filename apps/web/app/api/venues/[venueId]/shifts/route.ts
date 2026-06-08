@@ -66,7 +66,7 @@ export async function GET(
       shifts: shifts.map((s) => ({
         id: s.id,
         membershipId: s.membershipId,
-        staffName: s.membership?.user?.name ?? null,
+        staffName: s.membership?.user?.name ?? "Unknown",
         staffImage: s.membership?.user?.image ?? null,
         roleId: s.roleId,
         roleName: s.role?.name ?? null,

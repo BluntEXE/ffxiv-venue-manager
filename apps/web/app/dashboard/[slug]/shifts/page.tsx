@@ -149,8 +149,8 @@ export default async function ShiftsPage({
     if (!staffMap.has(mid)) {
       staffMap.set(mid, {
         membershipId: mid,
-        name: shift.membership!.user?.name ?? "Unknown",
-        image: shift.membership!.user?.image ?? null,
+        name: shift.membership?.user?.name ?? "Unknown",
+        image: shift.membership?.user?.image ?? null,
         cells: new Map(),
       })
     }
