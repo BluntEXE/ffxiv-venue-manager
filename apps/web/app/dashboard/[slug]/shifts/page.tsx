@@ -51,7 +51,6 @@ const statusChip: Record<string, string> = {
   COMPLETED: "bg-zinc-500/10 text-zinc-400 border-zinc-500/20",
   MISSED:    "bg-amber-500/10 text-amber-400 border-amber-500/20",
   CANCELLED: "bg-zinc-500/10 text-zinc-400 border-zinc-500/15 line-through",
-  OPEN:      "bg-amber-500/10 text-amber-400 border-amber-500/20 border-dashed",
 }
 
 const statusBadge: Record<string, string> = {
@@ -339,7 +338,7 @@ export default async function ShiftsPage({
                   return (
                     <div key={`open-${key}`} className={`sg-cell${isToday ? " today-col" : ""}`}>
                       {dayShifts.map((shift) => (
-                        <span key={shift.id} className={`shift-chip ${statusChip.OPEN}`}>
+                        <span key={shift.id} className="shift-chip op">
                           {fmtHour(shift.scheduledStart)}–{fmtHour(shift.scheduledEnd)}
                           {shift.role?.name ? ` · ${shift.role.name}` : ""}
                         </span>
