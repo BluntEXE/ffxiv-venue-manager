@@ -351,7 +351,7 @@ export default async function ShiftsPage({
             )}
 
             {/* Empty state */}
-            {staffRows.length === 0 && (
+            {staffRows.length === 0 && !hasOpenShifts && (
               <div className="col-span-8 py-12 text-center text-sm text-muted-foreground">
                 No shifts scheduled for this week.
                 {canManage && " Use the button above to add shifts."}
