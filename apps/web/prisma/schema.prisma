@@ -261,6 +261,7 @@ model Role {
 
   venue         Venue        @relation(fields: [venueId], references: [id], onDelete: Cascade)
   memberships   Membership[]
+  shifts        Shift[]
   services      Service[] // Services this role can provide
   assignedTasks Task[]       @relation("RoleTasks") // Tasks assigned to this role
 
@@ -679,6 +680,7 @@ model ApiKey {
 // ============================================
 
 enum ShiftStatus {
+  OPEN
   SCHEDULED
   ACTIVE
   COMPLETED
@@ -689,7 +691,8 @@ enum ShiftStatus {
 model Shift {
   id             String      @id @default(cuid())
   venueId        String
-  membershipId   String
+  membershipId   String?
+  roleId         String?
   payrollEntryId String? // Links to the payroll entry that paid for this shift
 
   // Schedule (set by manager when creating the shift)
@@ -708,13 +711,15 @@ model Shift {
   updatedAt DateTime @updatedAt
 
   venue        Venue         @relation(fields: [venueId], references: [id], onDelete: Cascade)
-  membership   Membership    @relation(fields: [membershipId], references: [id], onDelete: Cascade)
+  membership   Membership?   @relation(fields: [membershipId], references: [id], onDelete: Cascade)
+  role         Role?         @relation(fields: [roleId], references: [id], onDelete: SetNull)
   payrollEntry PayrollEntry? @relation(fields: [payrollEntryId], references: [id], onDelete: SetNull)
 
   @@index([venueId, scheduledStart])
   @@index([membershipId, status])
   @@index([venueId, status])
   @@index([payrollEntryId])
+  @@index([roleId])
   @@map("shifts")
 }
 
