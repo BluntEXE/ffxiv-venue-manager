@@ -134,6 +134,12 @@ export default async function ShiftsPage({
     image: m.user?.image ?? null,
   }))
 
+  const venueRoles = await prisma.role.findMany({
+    where: { venueId: venue.id },
+    select: { id: true, name: true, color: true },
+    orderBy: { name: "asc" },
+  })
+
   // Build staff × day grid
   type ShiftRow = (typeof weekShifts)[0]
   const staffMap = new Map<string, {
@@ -192,6 +198,7 @@ export default async function ShiftsPage({
             <CreateShiftDialog
               venueSlug={slug}
               staff={staffForDialog}
+              roles={venueRoles}
               timezone={timezone}
               tzLabel={tzLabel}
             />
