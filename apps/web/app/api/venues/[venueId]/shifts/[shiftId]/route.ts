@@ -100,8 +100,22 @@ export async function PATCH(
           select: { userId: true },
         })
         if (claimant?.userId) {
+          const now = new Date()
+          const shiftDate = shift.scheduledStart.toLocaleDateString("en-GB", { weekday: "short", day: "numeric", month: "short", timeZone: "UTC" })
+          // Immediate approval notification
+          prisma.pendingNotification.create({
+            data: {
+              userId: claimant.userId,
+              type: "SHIFT_CLAIM_APPROVED",
+              title: "Shift claim approved",
+              body: `Your claim for the ${shiftDate} shift at ${venue.name} was approved. You're on the schedule!`,
+              data: { venueId: venue.id, shiftId: shift.id },
+              scheduledFor: now,
+            },
+          }).catch(() => {})
+          // Shift reminder 1 hour before start
           const reminderAt = new Date(shift.scheduledStart.getTime() - 60 * 60 * 1000)
-          if (reminderAt > new Date()) {
+          if (reminderAt > now) {
             prisma.pendingNotification.create({
               data: {
                 userId: claimant.userId,
@@ -135,6 +149,26 @@ export async function PATCH(
       })
       if (result.count === 0) {
         return NextResponse.json({ error: "Shift status changed concurrently" }, { status: 409 })
+      }
+      // Notify the claimant — shift.membershipId captured before the update cleared it
+      if (shift.membershipId) {
+        const claimant = await prisma.membership.findUnique({
+          where: { id: shift.membershipId },
+          select: { userId: true },
+        })
+        if (claimant?.userId) {
+          const shiftDate = shift.scheduledStart.toLocaleDateString("en-GB", { weekday: "short", day: "numeric", month: "short", timeZone: "UTC" })
+          prisma.pendingNotification.create({
+            data: {
+              userId: claimant.userId,
+              type: "SHIFT_CLAIM_REJECTED",
+              title: "Shift claim not approved",
+              body: `Your claim for the ${shiftDate} shift at ${venue.name} wasn't approved. The slot is still open.`,
+              data: { venueId: venue.id, shiftId: shift.id },
+              scheduledFor: new Date(),
+            },
+          }).catch(() => {})
+        }
       }
       return NextResponse.json({ success: true, shift: { id: shift.id, status: "OPEN" } })
     }
