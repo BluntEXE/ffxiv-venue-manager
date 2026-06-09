@@ -350,13 +350,17 @@ export default async function ShiftsPage({
                   return (
                     <div key={`open-${key}`} className={`sg-cell${isToday ? " today-col" : ""}`}>
                       {dayShifts.map((shift) => (
-                        <OpenShiftChip
-                          key={shift.id}
-                          shiftId={shift.id}
-                          venueId={venue.id}
-                          timeLabel={`${fmtHour(shift.scheduledStart)}–${fmtHour(shift.scheduledEnd)}${shift.role?.name ? ` · ${shift.role.name}` : ""}`}
-                          canClaim={!canManage}
-                        />
+                        <div key={shift.id} className="flex items-center gap-1">
+                          <OpenShiftChip
+                            shiftId={shift.id}
+                            venueId={venue.id}
+                            timeLabel={`${fmtHour(shift.scheduledStart)}–${fmtHour(shift.scheduledEnd)}${shift.role?.name ? ` · ${shift.role.name}` : ""}`}
+                            canClaim={!canManage}
+                          />
+                          {canManage && (
+                            <DeleteShiftButton venueSlug={slug} shiftId={shift.id} hasPayroll={false} />
+                          )}
+                        </div>
                       ))}
                     </div>
                   )
