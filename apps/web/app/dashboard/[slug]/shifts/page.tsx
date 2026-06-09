@@ -8,6 +8,8 @@ import { CreateShiftDialog } from "@/components/create-shift-dialog"
 import { getServerTimezone, getServerTimeLabel, formatServerTime } from "@/lib/server-time"
 import { DeleteShiftButton } from "@/components/delete-shift-button"
 import { ClockShiftButton } from "@/components/clock-shift-button"
+import { OpenShiftChip } from "@/components/open-shift-chip"
+import { ClaimedShiftChip } from "@/components/claimed-shift-chip"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { Card, CardContent } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
@@ -172,7 +174,7 @@ export default async function ShiftsPage({
   // Open shifts (no member assigned yet): shown in their own row, grouped by required role
   const openShiftsByDay = new Map<string, ShiftRow[]>()
   for (const shift of weekShifts) {
-    if (shift.membershipId) continue
+    if (shift.status !== "OPEN") continue
     const key = utcDayKey(new Date(shift.scheduledStart))
     if (!openShiftsByDay.has(key)) openShiftsByDay.set(key, [])
     openShiftsByDay.get(key)!.push(shift)
@@ -182,7 +184,7 @@ export default async function ShiftsPage({
   // KPI counts
   const scheduledCount = weekShifts.filter((s) => s.status === "SCHEDULED").length
   const activeCount = activeShifts.length
-  const openSlots = weekShifts.filter((s) => s.status === "OPEN").length
+  const openSlots = weekShifts.filter((s) => s.status === "OPEN" || s.status === "CLAIMED").length
   const missedCount = weekShifts.filter((s) => s.status === "MISSED").length
   const coverPct =
     weekShifts.length === 0
@@ -309,14 +311,24 @@ export default async function ShiftsPage({
                   const isToday = key === todayKey
                   return (
                     <div key={`${member.membershipId}-${key}`} className={`sg-cell${isToday ? " today-col" : ""}`}>
-                      {dayShifts.map((shift) => (
-                        <span
-                          key={shift.id}
-                          className={`shift-chip${shift.status === "ACTIVE" ? " em" : shift.status === "MISSED" ? " am" : ""}`}
-                        >
-                          {fmtHour(shift.scheduledStart)}–{fmtHour(shift.scheduledEnd)}
-                        </span>
-                      ))}
+                      {dayShifts.map((shift) =>
+                        shift.status === "CLAIMED" ? (
+                          <ClaimedShiftChip
+                            key={shift.id}
+                            shiftId={shift.id}
+                            venueId={venue.id}
+                            timeLabel={`${fmtHour(shift.scheduledStart)}–${fmtHour(shift.scheduledEnd)}`}
+                            canManage={canManage}
+                          />
+                        ) : (
+                          <span
+                            key={shift.id}
+                            className={`shift-chip${shift.status === "ACTIVE" ? " em" : shift.status === "MISSED" ? " am" : ""}`}
+                          >
+                            {fmtHour(shift.scheduledStart)}–{fmtHour(shift.scheduledEnd)}
+                          </span>
+                        )
+                      )}
                     </div>
                   )
                 })}
@@ -338,10 +350,13 @@ export default async function ShiftsPage({
                   return (
                     <div key={`open-${key}`} className={`sg-cell${isToday ? " today-col" : ""}`}>
                       {dayShifts.map((shift) => (
-                        <span key={shift.id} className="shift-chip op">
-                          {fmtHour(shift.scheduledStart)}–{fmtHour(shift.scheduledEnd)}
-                          {shift.role?.name ? ` · ${shift.role.name}` : ""}
-                        </span>
+                        <OpenShiftChip
+                          key={shift.id}
+                          shiftId={shift.id}
+                          venueId={venue.id}
+                          timeLabel={`${fmtHour(shift.scheduledStart)}–${fmtHour(shift.scheduledEnd)}${shift.role?.name ? ` · ${shift.role.name}` : ""}`}
+                          canClaim={!canManage}
+                        />
                       ))}
                     </div>
                   )
