@@ -5,7 +5,7 @@ import { prisma } from "@/lib/prisma"
 import { z } from "zod"
 
 const patchSchema = z.object({
-  action: z.enum(["clock-in", "clock-out"]),
+  action: z.enum(["clock-in", "clock-out", "claim", "approve", "reject"]),
 })
 
 /**
@@ -55,6 +55,91 @@ export async function PATCH(
       return NextResponse.json({ error: "Shift not found" }, { status: 404 })
     }
 
+    // --- CLAIM ---
+    if (parsed.data.action === "claim") {
+      if (shift.status !== "OPEN") {
+        return NextResponse.json(
+          { error: `Shift is already ${shift.status.toLowerCase()}` },
+          { status: 400 }
+        )
+      }
+      const result = await prisma.shift.updateMany({
+        where: { id: shift.id, status: "OPEN" },
+        data: { membershipId: membership.id, status: "CLAIMED" },
+      })
+      if (result.count === 0) {
+        return NextResponse.json(
+          { error: "This shift was just claimed by someone else" },
+          { status: 409 }
+        )
+      }
+      return NextResponse.json({ success: true, shift: { id: shift.id, status: "CLAIMED" } })
+    }
+
+    // --- APPROVE ---
+    if (parsed.data.action === "approve") {
+      if (!isManager) {
+        return NextResponse.json({ error: "Only managers can approve claims" }, { status: 403 })
+      }
+      if (shift.status !== "CLAIMED") {
+        return NextResponse.json(
+          { error: `Shift is ${shift.status.toLowerCase()}, not claimed` },
+          { status: 400 }
+        )
+      }
+      const result = await prisma.shift.updateMany({
+        where: { id: shift.id, status: "CLAIMED" },
+        data: { status: "SCHEDULED" },
+      })
+      if (result.count === 0) {
+        return NextResponse.json({ error: "Shift status changed concurrently" }, { status: 409 })
+      }
+      if (shift.membershipId) {
+        const claimant = await prisma.membership.findUnique({
+          where: { id: shift.membershipId },
+          select: { userId: true },
+        })
+        if (claimant?.userId) {
+          const reminderAt = new Date(shift.scheduledStart.getTime() - 60 * 60 * 1000)
+          if (reminderAt > new Date()) {
+            prisma.pendingNotification.create({
+              data: {
+                userId: claimant.userId,
+                type: "SHIFT_REMINDER",
+                title: "Shift starting soon",
+                body: `Your shift at ${venue.name} starts in 1 hour.`,
+                data: { venueId: venue.id, shiftId: shift.id },
+                scheduledFor: reminderAt,
+              },
+            }).catch(() => {})
+          }
+        }
+      }
+      return NextResponse.json({ success: true, shift: { id: shift.id, status: "SCHEDULED" } })
+    }
+
+    // --- REJECT ---
+    if (parsed.data.action === "reject") {
+      if (!isManager) {
+        return NextResponse.json({ error: "Only managers can reject claims" }, { status: 403 })
+      }
+      if (shift.status !== "CLAIMED") {
+        return NextResponse.json(
+          { error: `Shift is ${shift.status.toLowerCase()}, not claimed` },
+          { status: 400 }
+        )
+      }
+      const result = await prisma.shift.updateMany({
+        where: { id: shift.id, status: "CLAIMED" },
+        data: { membershipId: null, status: "OPEN" },
+      })
+      if (result.count === 0) {
+        return NextResponse.json({ error: "Shift status changed concurrently" }, { status: 409 })
+      }
+      return NextResponse.json({ success: true, shift: { id: shift.id, status: "OPEN" } })
+    }
+
+    // Clock-in / clock-out — only the assigned member or a manager
     if (!isManager && shift.membershipId !== membership.id) {
       return NextResponse.json({ error: "This shift is not assigned to you" }, { status: 403 })
     }
