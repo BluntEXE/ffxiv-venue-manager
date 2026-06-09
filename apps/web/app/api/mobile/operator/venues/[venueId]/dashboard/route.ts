@@ -42,7 +42,7 @@ export async function GET(
         venueId,
         scheduledStart: { lte: endOfDay },
         scheduledEnd: { gte: startOfDay },
-        status: { not: "CANCELLED" },
+        status: { notIn: ["CANCELLED", "OPEN"] },
       },
       select: {
         id: true,

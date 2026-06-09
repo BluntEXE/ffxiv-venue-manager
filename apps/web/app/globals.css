@@ -1124,6 +1124,7 @@
 .shift-chip { font-size: 0.66rem; font-weight: 600; padding: 4px 6px; border-radius: var(--radius-sm); background: var(--blue-012); color: var(--xiv-blue); border: 1px solid var(--blue-020); text-align: center; line-height: 1.25; }
 .shift-chip.em { background: var(--success-soft); color: var(--success-text); border-color: rgba(16,185,129,0.25); }
 .shift-chip.am { background: rgba(249,226,175,0.10); color: var(--warning); border-color: rgba(249,226,175,0.25); }
+.shift-chip.op { background: rgba(249,226,175,0.10); color: var(--warning); border-color: rgba(249,226,175,0.25); border-style: dashed; }
 
 /* ── Panel header — matches prototype .panel > .ph spec ── */
 .panel > .ph { display: flex; align-items: center; gap: 12px; padding: 16px 20px; border-bottom: 1px solid var(--blue-008); }

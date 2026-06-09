@@ -8,6 +8,8 @@ import { CreateShiftDialog } from "@/components/create-shift-dialog"
 import { getServerTimezone, getServerTimeLabel, formatServerTime } from "@/lib/server-time"
 import { DeleteShiftButton } from "@/components/delete-shift-button"
 import { ClockShiftButton } from "@/components/clock-shift-button"
+import { OpenShiftChip } from "@/components/open-shift-chip"
+import { ClaimedShiftChip } from "@/components/claimed-shift-chip"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { Card, CardContent } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
@@ -112,6 +114,7 @@ export default async function ShiftsPage({
       },
       include: {
         membership: { include: { user: { select: { id: true, name: true, image: true } } } },
+        role: { select: { name: true } },
       },
       orderBy: { scheduledStart: "asc" },
     }),
@@ -134,6 +137,12 @@ export default async function ShiftsPage({
     image: m.user?.image ?? null,
   }))
 
+  const venueRoles = await prisma.role.findMany({
+    where: { venueId: venue.id },
+    select: { id: true, name: true },
+    orderBy: { name: "asc" },
+  })
+
   // Build staff × day grid
   type ShiftRow = (typeof weekShifts)[0]
   const staffMap = new Map<string, {
@@ -144,12 +153,13 @@ export default async function ShiftsPage({
   }>()
 
   for (const shift of weekShifts) {
+    if (!shift.membershipId) continue // open shifts get their own row, built separately below
     const mid = shift.membershipId
     if (!staffMap.has(mid)) {
       staffMap.set(mid, {
         membershipId: mid,
-        name: shift.membership.user?.name ?? "Unknown",
-        image: shift.membership.user?.image ?? null,
+        name: shift.membership?.user?.name ?? "Unknown",
+        image: shift.membership?.user?.image ?? null,
         cells: new Map(),
       })
     }
@@ -161,14 +171,25 @@ export default async function ShiftsPage({
 
   const staffRows = [...staffMap.values()]
 
+  // Open shifts (no member assigned yet): shown in their own row, grouped by required role
+  const openShiftsByDay = new Map<string, ShiftRow[]>()
+  for (const shift of weekShifts) {
+    if (shift.status !== "OPEN") continue
+    const key = utcDayKey(new Date(shift.scheduledStart))
+    if (!openShiftsByDay.has(key)) openShiftsByDay.set(key, [])
+    openShiftsByDay.get(key)!.push(shift)
+  }
+  const hasOpenShifts = openShiftsByDay.size > 0
+
   // KPI counts
   const scheduledCount = weekShifts.filter((s) => s.status === "SCHEDULED").length
   const activeCount = activeShifts.length
-  const openSlots = weekShifts.filter((s) => s.status === "MISSED").length
+  const openSlots = weekShifts.filter((s) => s.status === "OPEN" || s.status === "CLAIMED").length
+  const missedCount = weekShifts.filter((s) => s.status === "MISSED").length
   const coverPct =
     weekShifts.length === 0
       ? 100
-      : Math.round(((weekShifts.length - openSlots) / weekShifts.length) * 100)
+      : Math.round(((weekShifts.length - missedCount) / weekShifts.length) * 100)
 
   // Upcoming shifts that need action (clock-in/out for this week)
   const actionShifts = weekShifts.filter(
@@ -191,6 +212,7 @@ export default async function ShiftsPage({
             <CreateShiftDialog
               venueSlug={slug}
               staff={staffForDialog}
+              roles={venueRoles}
               timezone={timezone}
               tzLabel={tzLabel}
             />
@@ -289,22 +311,61 @@ export default async function ShiftsPage({
                   const isToday = key === todayKey
                   return (
                     <div key={`${member.membershipId}-${key}`} className={`sg-cell${isToday ? " today-col" : ""}`}>
-                      {dayShifts.map((shift) => (
-                        <span
-                          key={shift.id}
-                          className={`shift-chip${shift.status === "ACTIVE" ? " em" : shift.status === "MISSED" ? " am" : ""}`}
-                        >
-                          {fmtHour(shift.scheduledStart)}–{fmtHour(shift.scheduledEnd)}
-                        </span>
-                      ))}
+                      {dayShifts.map((shift) =>
+                        shift.status === "CLAIMED" ? (
+                          <ClaimedShiftChip
+                            key={shift.id}
+                            shiftId={shift.id}
+                            venueId={venue.id}
+                            timeLabel={`${fmtHour(shift.scheduledStart)}–${fmtHour(shift.scheduledEnd)}`}
+                            canManage={canManage}
+                          />
+                        ) : (
+                          <span
+                            key={shift.id}
+                            className={`shift-chip${shift.status === "ACTIVE" ? " em" : shift.status === "MISSED" ? " am" : ""}`}
+                          >
+                            {fmtHour(shift.scheduledStart)}–{fmtHour(shift.scheduledEnd)}
+                          </span>
+                        )
+                      )}
                     </div>
                   )
                 })}
               </>
             ))}
 
+            {hasOpenShifts && (
+              <>
+                <div key="open-shifts-name" className="sg-staff">
+                  <span className="av-sm flex-shrink-0 border border-dashed border-amber-500/40 bg-amber-500/10 text-amber-400">
+                    !
+                  </span>
+                  <span className="truncate text-amber-400">Open shifts</span>
+                </div>
+                {weekDays.map((day) => {
+                  const key = utcDayKey(day)
+                  const dayShifts = openShiftsByDay.get(key) ?? []
+                  const isToday = key === todayKey
+                  return (
+                    <div key={`open-${key}`} className={`sg-cell${isToday ? " today-col" : ""}`}>
+                      {dayShifts.map((shift) => (
+                        <OpenShiftChip
+                          key={shift.id}
+                          shiftId={shift.id}
+                          venueId={venue.id}
+                          timeLabel={`${fmtHour(shift.scheduledStart)}–${fmtHour(shift.scheduledEnd)}${shift.role?.name ? ` · ${shift.role.name}` : ""}`}
+                          canClaim={!canManage}
+                        />
+                      ))}
+                    </div>
+                  )
+                })}
+              </>
+            )}
+
             {/* Empty state */}
-            {staffRows.length === 0 && (
+            {staffRows.length === 0 && !hasOpenShifts && (
               <div className="col-span-8 py-12 text-center text-sm text-muted-foreground">
                 No shifts scheduled for this week.
                 {canManage && " Use the button above to add shifts."}
@@ -325,14 +386,14 @@ export default async function ShiftsPage({
                   <CardContent className="p-3 md:p-4">
                     <div className="flex items-center gap-3">
                       <Avatar className="h-8 w-8 flex-shrink-0">
-                        <AvatarImage src={shift.membership.user?.image ?? undefined} />
+                        <AvatarImage src={shift.membership?.user?.image ?? undefined} />
                         <AvatarFallback className="text-[0.65rem] font-bold">
-                          {shift.membership.user?.name?.slice(0, 2).toUpperCase() ?? "??"}
+                          {shift.membership?.user?.name?.slice(0, 2).toUpperCase() ?? "??"}
                         </AvatarFallback>
                       </Avatar>
                       <div className="flex-1 min-w-0">
                         <p className="text-sm font-medium truncate">
-                          {shift.membership.user?.name ?? "Unknown"}
+                          {shift.membership?.user?.name ?? "Unknown"}
                         </p>
                         <p className="text-xs text-muted-foreground">
                           {formatServerTime(shift.scheduledStart, "time")} — {formatServerTime(shift.scheduledEnd, "time")} {tzLabel}
@@ -343,10 +404,10 @@ export default async function ShiftsPage({
                           {shift.status}
                         </Badge>
                         {canManage && shift.status === "SCHEDULED" && (
-                          <ClockShiftButton venueSlug={slug} shiftId={shift.id} action="clock-in" staffName={shift.membership.user?.name ?? "staff"} />
+                          <ClockShiftButton venueSlug={slug} shiftId={shift.id} action="clock-in" staffName={shift.membership?.user?.name ?? "staff"} />
                         )}
                         {canManage && shift.status === "ACTIVE" && (
-                          <ClockShiftButton venueSlug={slug} shiftId={shift.id} action="clock-out" staffName={shift.membership.user?.name ?? "staff"} />
+                          <ClockShiftButton venueSlug={slug} shiftId={shift.id} action="clock-out" staffName={shift.membership?.user?.name ?? "staff"} />
                         )}
                         {!canManage && shift.membershipId === currentMembershipId && shift.status === "SCHEDULED" && (
                           <ClockShiftButton venueSlug={slug} shiftId={shift.id} action="clock-in" staffName="yourself" />

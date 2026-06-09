@@ -57,6 +57,7 @@ export async function GET(
             },
           },
         },
+        role: { select: { id: true, name: true, color: true } },
       },
       orderBy: { scheduledStart: "asc" },
     })
@@ -65,8 +66,10 @@ export async function GET(
       shifts: shifts.map((s) => ({
         id: s.id,
         membershipId: s.membershipId,
-        staffName: s.membership.user?.name ?? "Unknown",
-        staffImage: s.membership.user?.image ?? null,
+        staffName: s.membership?.user?.name ?? "Unknown",
+        staffImage: s.membership?.user?.image ?? null,
+        roleId: s.roleId,
+        roleName: s.role?.name ?? null,
         scheduledStart: s.scheduledStart.toISOString(),
         scheduledEnd: s.scheduledEnd.toISOString(),
         actualStart: s.actualStart?.toISOString() ?? null,
@@ -88,12 +91,18 @@ export async function GET(
  * POST /api/venues/[venueId]/shifts
  * Create a shift. OWNER/MANAGER only.
  */
-const createShiftSchema = z.object({
-  membershipId: z.string().min(1),
-  scheduledStart: z.string().datetime(),
-  scheduledEnd: z.string().datetime(),
-  notes: z.string().optional(),
-})
+const createShiftSchema = z
+  .object({
+    membershipId: z.string().min(1).optional(),
+    roleId: z.string().min(1).optional(),
+    scheduledStart: z.string().datetime(),
+    scheduledEnd: z.string().datetime(),
+    notes: z.string().optional(),
+  })
+  // Cross-field rule (spans membershipId and roleId), so the error is form-level: no single field is "wrong" on its own.
+  .refine((data) => Boolean(data.membershipId) !== Boolean(data.roleId), {
+    message: "Provide exactly one of membershipId (assign now) or roleId (leave open), not both",
+  })
 
 export async function POST(
   request: NextRequest,
@@ -133,46 +142,65 @@ export async function POST(
       )
     }
 
-    // Verify the target membership belongs to this venue
-    const targetMembership = await prisma.membership.findFirst({
-      where: {
-        id: parsed.data.membershipId,
-        venueId: venue.id,
-        status: "active",
-      },
-    })
-    if (!targetMembership) {
-      return NextResponse.json(
-        { error: "Staff member not found at this venue" },
-        { status: 400 }
-      )
+    let targetMembership: { userId: string | null } | null = null
+    let verifiedRoleId: string | null = null
+
+    if (parsed.data.membershipId) {
+      // Assigning to a specific person: verify they belong to this venue
+      const member = await prisma.membership.findFirst({
+        where: { id: parsed.data.membershipId, venueId: venue.id, status: "active" },
+        select: { userId: true },
+      })
+      if (!member) {
+        return NextResponse.json(
+          { error: "Staff member not found at this venue" },
+          { status: 400 }
+        )
+      }
+      targetMembership = member
+    } else if (parsed.data.roleId) {
+      // Leaving the shift open: verify the role belongs to this venue
+      const role = await prisma.role.findFirst({
+        where: { id: parsed.data.roleId, venueId: venue.id },
+        select: { id: true },
+      })
+      if (!role) {
+        return NextResponse.json(
+          { error: "Role not found at this venue" },
+          { status: 400 }
+        )
+      }
+      verifiedRoleId = role.id
     }
 
     const scheduledStart = new Date(parsed.data.scheduledStart)
     const shift = await prisma.shift.create({
       data: {
         venueId: venue.id,
-        membershipId: parsed.data.membershipId,
+        membershipId: parsed.data.membershipId ?? null,
+        roleId: verifiedRoleId,
+        status: parsed.data.membershipId ? "SCHEDULED" : "OPEN",
         scheduledStart,
         scheduledEnd: new Date(parsed.data.scheduledEnd),
         notes: parsed.data.notes ?? null,
       },
-      include: { membership: { select: { userId: true } } },
     })
 
-    // Queue shift reminder 1 hour before start (best-effort, don't fail the request)
-    const reminderAt = new Date(scheduledStart.getTime() - 60 * 60 * 1000)
-    if (reminderAt > new Date() && shift.membership.userId) {
-      prisma.pendingNotification.create({
-        data: {
-          userId: shift.membership.userId as string,
-          type: "SHIFT_REMINDER",
-          title: "Shift starting soon",
-          body: `Your shift at ${venue.name} starts in 1 hour.`,
-          data: { venueId: venue.id, shiftId: shift.id },
-          scheduledFor: reminderAt,
-        },
-      }).catch(() => {}) // non-blocking
+    // Queue shift reminder 1 hour before start: only meaningful for assigned shifts
+    if (targetMembership?.userId) {
+      const reminderAt = new Date(scheduledStart.getTime() - 60 * 60 * 1000)
+      if (reminderAt > new Date()) {
+        prisma.pendingNotification.create({
+          data: {
+            userId: targetMembership.userId,
+            type: "SHIFT_REMINDER",
+            title: "Shift starting soon",
+            body: `Your shift at ${venue.name} starts in 1 hour.`,
+            data: { venueId: venue.id, shiftId: shift.id },
+            scheduledFor: reminderAt,
+          },
+        }).catch(() => {}) // non-blocking
+      }
     }
 
     return NextResponse.json({ shift }, { status: 201 })

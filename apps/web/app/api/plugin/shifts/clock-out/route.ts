@@ -54,7 +54,7 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: "Invalid venue" }, { status: 400 })
     }
 
-    if (shift.membership.userId !== auth.userId) {
+    if (shift.membership?.userId !== auth.userId) {
       return NextResponse.json(
         { error: "This shift is not assigned to you" },
         { status: 403 }

@@ -28,27 +28,43 @@ interface StaffMember {
   image: string | null
 }
 
+interface RoleOption {
+  id: string
+  name: string
+}
+
 interface CreateShiftDialogProps {
   venueSlug: string
   staff: StaffMember[]
+  roles: RoleOption[]
   timezone?: string
   tzLabel?: string
 }
 
-export function CreateShiftDialog({ venueSlug, staff }: CreateShiftDialogProps) {
+export function CreateShiftDialog({ venueSlug, staff, roles }: CreateShiftDialogProps) {
   const router = useRouter()
   const [open, setOpen] = useState(false)
   const [submitting, setSubmitting] = useState(false)
   const [error, setError] = useState<string | null>(null)
 
+  const [mode, setMode] = useState<"assign" | "open">("assign")
   const [membershipId, setMembershipId] = useState("")
+  const [roleId, setRoleId] = useState("")
   const [date, setDate] = useState("")
   const [startTime, setStartTime] = useState("19:00")
   const [endTime, setEndTime] = useState("23:00")
   const [notes, setNotes] = useState("")
 
   async function handleSubmit() {
-    if (!membershipId || !date || !startTime || !endTime) {
+    if (mode === "assign" && !membershipId) {
+      setError("Please select a staff member")
+      return
+    }
+    if (mode === "open" && !roleId) {
+      setError("Please select a role")
+      return
+    }
+    if (!date || !startTime || !endTime) {
       setError("Please fill in all required fields")
       return
     }
@@ -70,7 +86,7 @@ export function CreateShiftDialog({ venueSlug, staff }: CreateShiftDialogProps) 
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          membershipId,
+          ...(mode === "assign" ? { membershipId } : { roleId }),
           scheduledStart,
           scheduledEnd,
           notes: notes || undefined,
@@ -83,7 +99,9 @@ export function CreateShiftDialog({ venueSlug, staff }: CreateShiftDialogProps) 
         return
       }
 
+      setMode("assign")
       setMembershipId("")
+      setRoleId("")
       setDate("")
       setStartTime("19:00")
       setEndTime("23:00")
@@ -106,26 +124,71 @@ export function CreateShiftDialog({ venueSlug, staff }: CreateShiftDialogProps) 
         <DialogHeader>
           <DialogTitle>Schedule a Shift</DialogTitle>
           <DialogDescription>
-            Assign a staff member to work a specific time slot.
+            Assign a staff member now, or leave the slot open for a specific role to be filled later.
           </DialogDescription>
         </DialogHeader>
 
         <div className="space-y-4 py-4">
           <div className="space-y-2">
-            <Label htmlFor="staff">Staff Member</Label>
-            <Select value={membershipId} onValueChange={setMembershipId}>
-              <SelectTrigger>
-                <SelectValue placeholder="Select staff member" />
-              </SelectTrigger>
-              <SelectContent>
-                {staff.map((s) => (
-                  <SelectItem key={s.id} value={s.id}>
-                    {s.name}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
+            <Label>Assignment</Label>
+            <div className="flex gap-2">
+              <Button
+                type="button"
+                variant={mode === "assign" ? "default" : "outline"}
+                size="sm"
+                onClick={() => setMode("assign")}
+              >
+                Assign to staff member
+              </Button>
+              <Button
+                type="button"
+                variant={mode === "open" ? "default" : "outline"}
+                size="sm"
+                onClick={() => setMode("open")}
+              >
+                Leave open (require role)
+              </Button>
+            </div>
           </div>
+
+          {mode === "assign" ? (
+            <div className="space-y-2">
+              <Label htmlFor="staff">Staff Member</Label>
+              <Select value={membershipId} onValueChange={setMembershipId}>
+                <SelectTrigger>
+                  <SelectValue placeholder="Select staff member" />
+                </SelectTrigger>
+                <SelectContent>
+                  {staff.map((s) => (
+                    <SelectItem key={s.id} value={s.id}>
+                      {s.name}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+          ) : (
+            <div className="space-y-2">
+              <Label htmlFor="role">Required Role</Label>
+              <Select value={roleId} onValueChange={setRoleId}>
+                <SelectTrigger>
+                  <SelectValue placeholder="Select required role" />
+                </SelectTrigger>
+                <SelectContent>
+                  {roles.map((r) => (
+                    <SelectItem key={r.id} value={r.id}>
+                      {r.name}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+              {roles.length === 0 && (
+                <p className="text-xs text-muted-foreground">
+                  No custom roles set up yet. Create one in Staff settings first.
+                </p>
+              )}
+            </div>
+          )}
 
           <div className="space-y-2">
             <Label htmlFor="date">Date</Label>
