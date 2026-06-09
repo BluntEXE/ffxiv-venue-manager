@@ -68,16 +68,28 @@ export async function GET(request: NextRequest) {
 
     const oneDayAgo = new Date(Date.now() - 24 * 60 * 60 * 1000)
 
-    const shifts = await prisma.shift.findMany({
-      where: {
-        venueId,
-        membershipId: membership.id,
-        scheduledStart: { gte: oneDayAgo },
-        status: { not: "CANCELLED" },
-      },
-      orderBy: { scheduledStart: "asc" },
-      take: 20,
-    })
+    const [shifts, openShifts] = await Promise.all([
+      prisma.shift.findMany({
+        where: {
+          venueId,
+          membershipId: membership.id,
+          scheduledStart: { gte: oneDayAgo },
+          status: { not: "CANCELLED" },
+        },
+        orderBy: { scheduledStart: "asc" },
+        take: 20,
+      }),
+      prisma.shift.findMany({
+        where: {
+          venueId,
+          status: "OPEN",
+          scheduledStart: { gte: new Date() },
+        },
+        include: { role: { select: { name: true } } },
+        orderBy: { scheduledStart: "asc" },
+        take: 10,
+      }),
+    ])
 
     return NextResponse.json({
       shifts: shifts.map((s) => ({
@@ -88,6 +100,12 @@ export async function GET(request: NextRequest) {
         actualEnd: s.actualEnd?.toISOString() ?? null,
         status: s.status,
         notes: s.notes,
+      })),
+      openShifts: openShifts.map((s) => ({
+        id: s.id,
+        scheduledStart: s.scheduledStart.toISOString(),
+        scheduledEnd: s.scheduledEnd.toISOString(),
+        roleName: s.role?.name ?? null,
       })),
     })
   } catch (error) {
