@@ -73,6 +73,30 @@ export async function PATCH(
           { status: 409 }
         )
       }
+      // Notify managers/owners that a claim was submitted
+      Promise.all([
+        prisma.membership.findMany({
+          where: { venueId: venue.id, status: "active", role: { in: ["OWNER", "MANAGER"] } },
+          select: { userId: true },
+        }),
+        prisma.user.findUnique({
+          where: { id: session.user.id },
+          select: { displayName: true, name: true },
+        }),
+      ]).then(([managers, claimant]) => {
+        const staffName = claimant?.displayName ?? claimant?.name ?? "A staff member"
+        const shiftDate = shift.scheduledStart.toLocaleDateString("en-GB", { weekday: "short", day: "numeric", month: "short", timeZone: "UTC" })
+        return prisma.pendingNotification.createMany({
+          data: managers.filter(m => m.userId).map((m) => ({
+            userId: m.userId!,
+            type: "SHIFT_CLAIM_SUBMITTED" as const,
+            title: "Shift claim pending",
+            body: `${staffName} claimed the ${shiftDate} shift at ${venue.name}.`,
+            data: { venueId: venue.id, shiftId: shift.id },
+            scheduledFor: new Date(),
+          })),
+        })
+      }).catch(() => {})
       return NextResponse.json({ success: true, shift: { id: shift.id, status: "CLAIMED" } })
     }
 
