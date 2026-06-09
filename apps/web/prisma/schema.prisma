@@ -681,6 +681,7 @@ model ApiKey {
 
 enum ShiftStatus {
   OPEN
+  CLAIMED
   SCHEDULED
   ACTIVE
   COMPLETED
