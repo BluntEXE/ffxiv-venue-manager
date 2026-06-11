@@ -44,10 +44,9 @@ interface Venue {
 
 export default function UnifiedApiKeysPage() {
   const [memberVenues, setMemberVenues] = useState<Venue[]>([])
-  const [ownedVenues, setOwnedVenues] = useState<Venue[]>([])
   const [apiKeys, setApiKeys] = useState<ApiKey[]>([])
   const [newKeyName, setNewKeyName] = useState("")
-  // Empty string means "account-wide" (all my venues, owners only).
+  // Empty string means "account-wide" (all my venues).
   const [selectedVenueId, setSelectedVenueId] = useState<string>("")
   const [isLoading, setIsLoading] = useState(true)
   const [isCreating, setIsCreating] = useState(false)
@@ -79,15 +78,7 @@ export default function UnifiedApiKeysPage() {
         const active = venues.filter((v) =>
           v.memberships?.some((m) => m.status === "active")
         )
-        const owned = active.filter((v) =>
-          v.memberships?.some((m) => m.role === "OWNER" && m.status === "active")
-        )
         setMemberVenues(active)
-        setOwnedVenues(owned)
-        // Non-owners must pick a specific venue; pre-select the first one.
-        if (owned.length === 0 && active.length > 0) {
-          setSelectedVenueId(active[0].id)
-        }
       }
 
       if (keysRes.ok) {
@@ -186,7 +177,6 @@ export default function UnifiedApiKeysPage() {
   }
 
   const hasMemberVenues = memberVenues.length > 0
-  const canCreateAccountWide = ownedVenues.length > 0
 
   return (
     <div className="container mx-auto p-4 md:p-6 lg:p-8 max-w-4xl">
@@ -268,11 +258,9 @@ export default function UnifiedApiKeysPage() {
                   onChange={(e) => setSelectedVenueId(e.target.value)}
                   className="mt-1 flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
                 >
-                  {canCreateAccountWide && (
-                    <option value="">
-                      All my venues (recommended - one key, works everywhere)
-                    </option>
-                  )}
+                  <option value="">
+                    All my venues (recommended - one key, works everywhere)
+                  </option>
                   {memberVenues.map((v) => (
                     <option key={v.id} value={v.id}>
                       Only: {v.name}
@@ -280,9 +268,9 @@ export default function UnifiedApiKeysPage() {
                   ))}
                 </select>
                 <p className="text-xs text-muted-foreground mt-1">
-                  Account-wide keys automatically cover any new venues you
-                  create later. Venue-scoped keys limit the blast radius if a
-                  key is leaked.
+                  Account-wide keys automatically cover any venue you join
+                  later, at whatever role you hold there. Venue-scoped keys
+                  limit the blast radius if a key is leaked.
                 </p>
               </div>
 

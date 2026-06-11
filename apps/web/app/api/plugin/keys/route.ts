@@ -77,20 +77,22 @@ export async function POST(request: NextRequest) {
 
     venueResponse = { id: venue.id, name: venue.name, slug: venue.slug }
   } else {
-    // Account-wide key: user must own at least one venue. This prevents
-    // a freshly-signed-up user with zero venues from creating a key that
-    // would match nothing at validate time.
-    const ownerCount = await prisma.membership.count({
+    // Account-wide key: user must have at least one active membership
+    // (any role). This prevents a freshly-signed-up user with zero
+    // venues from creating a key that would match nothing at validate
+    // time. Permissions at validate time are still resolved per-venue
+    // from the user's membership role, so staff/manager keys only ever
+    // act at their actual permission level.
+    const membershipCount = await prisma.membership.count({
       where: {
         userId: session.user.id,
         status: "active",
-        role: "OWNER",
       },
     })
 
-    if (ownerCount === 0) {
+    if (membershipCount === 0) {
       return NextResponse.json(
-        { error: "You must own at least one venue to create an API key" },
+        { error: "You must be a member of at least one venue to create an API key" },
         { status: 403 }
       )
     }
