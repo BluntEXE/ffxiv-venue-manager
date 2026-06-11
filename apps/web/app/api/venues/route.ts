@@ -7,6 +7,8 @@ import { withRateLimit } from "@/lib/middleware/with-rate-limit"
 import { validators } from "@/lib/validation"
 import { getOrSet, cacheKeys, cacheTTL, invalidateCache } from "@/lib/redis-cache"
 import { ensureManagerRole } from "@/lib/api/venue-setup"
+import { sendEmail } from "@/lib/email"
+import { venueWelcomeEmail, newVenueAlertEmail } from "@/lib/email-templates"
 
 const venueSchema = z.object({
   name: validators.venueName,
@@ -85,6 +87,26 @@ export const POST = withRateLimit(
 
       // Invalidate user's venue cache
       await invalidateCache(cacheKeys.userVenues(session.user.id))
+
+      // Notify owner + admin. Fire-and-forget: signup must not fail on email issues.
+      const ownerEmail = session.user.email
+      if (ownerEmail) {
+        sendEmail({
+          to: ownerEmail,
+          ...venueWelcomeEmail({ venueName: venue.name, slug: venue.slug, ownerName: session.user.name }),
+        }).catch(() => {})
+
+        sendEmail({
+          to: "rgcsubsonik@gmail.com",
+          ...newVenueAlertEmail({
+            venueName: venue.name,
+            slug: venue.slug,
+            ownerEmail,
+            dataCenter: venue.dataCenter,
+            world: venue.world,
+          }),
+        }).catch(() => {})
+      }
 
       return NextResponse.json(venue, { status: 201 })
     } catch (error) {
