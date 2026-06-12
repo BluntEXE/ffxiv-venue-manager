@@ -20,6 +20,10 @@ import { prisma } from '@/lib/prisma'
  * number would break System.Text.Json deserialization and fall through
  * to the silent-null path, giving the same "Services: 0" symptom we're
  * trying to fix).
+ *
+ * userRole may be a ' / '-joined string of multiple role names (e.g.
+ * "Court / Gposer") if the caller has a primary role plus additional
+ * roles assigned - it is no longer guaranteed to be a single role name.
  */
 export async function GET(request: NextRequest) {
   try {
@@ -60,8 +64,10 @@ export async function GET(request: NextRequest) {
       ...(membership?.additionalRoles.map((ar) => ar.role) ?? []),
     ]
 
-    const serviceMap = new Map<string, (typeof allRoles)[number]['services'][number]>()
-    for (const role of allRoles) {
+    const uniqueRoles = Array.from(new Map(allRoles.map((r) => [r.id, r])).values())
+
+    const serviceMap = new Map<string, (typeof uniqueRoles)[number]['services'][number]>()
+    for (const role of uniqueRoles) {
       for (const svc of role.services) {
         serviceMap.set(svc.id, svc)
       }
@@ -77,7 +83,7 @@ export async function GET(request: NextRequest) {
 
     return NextResponse.json({
       services,
-      userRole: allRoles.length > 0 ? allRoles.map((r) => r.name).join(' / ') : null,
+      userRole: uniqueRoles.length > 0 ? uniqueRoles.map((r) => r.name).join(' / ') : null,
     })
   } catch (error) {
     console.error('[Plugin API] Error fetching services:', error)
