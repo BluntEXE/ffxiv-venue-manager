@@ -14,6 +14,7 @@ const updateStaffSchema = z.object({
   temporaryRole: z.enum(["OWNER", "MANAGER", "STAFF"]).nullable().optional(),
   temporaryRoleExpiresAt: z.string().nullable().optional(),
   permanentRole: z.enum(["OWNER", "MANAGER", "STAFF"]).nullable().optional(),
+  additionalRoleIds: z.array(z.string()).optional(),
 })
 
 async function cleanupMemberData(
@@ -132,9 +133,37 @@ export const PUT = withRateLimit<{ params: Promise<{ venueId: string; membership
     }
     if (validatedData.permanentRole !== undefined) updateData.permanentRole = validatedData.permanentRole
 
-    const updatedMembership = await prisma.membership.update({
+    let validAdditionalRoleIds: string[] | undefined
+    if (validatedData.additionalRoleIds !== undefined) {
+      const existingRoles = await prisma.role.findMany({
+        where: { venueId, id: { in: validatedData.additionalRoleIds } },
+        select: { id: true },
+      })
+      validAdditionalRoleIds = existingRoles.map((r) => r.id)
+    }
+
+    await prisma.membership.update({
       where: { id: membershipId, venueId },
       data: updateData,
+    })
+
+    if (validAdditionalRoleIds !== undefined) {
+      await prisma.$transaction([
+        prisma.membershipRoleAssignment.deleteMany({
+          where: { membershipId },
+        }),
+        ...(validAdditionalRoleIds.length > 0
+          ? [
+              prisma.membershipRoleAssignment.createMany({
+                data: validAdditionalRoleIds.map((roleId) => ({ membershipId, roleId })),
+              }),
+            ]
+          : []),
+      ])
+    }
+
+    const updatedMembership = await prisma.membership.findUniqueOrThrow({
+      where: { id: membershipId },
       include: {
         user: {
           select: {
@@ -144,6 +173,7 @@ export const PUT = withRateLimit<{ params: Promise<{ venueId: string; membership
           },
         },
         customRole: true,
+        additionalRoles: { include: { role: true } },
       },
     })
 
