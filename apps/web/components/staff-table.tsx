@@ -13,6 +13,7 @@ export type StaffMember = {
   id: string
   role: "OWNER" | "MANAGER" | "STAFF"
   customRole: { name: string; color: string } | null
+  additionalRoles: { name: string; color: string }[]
   joinedAt: string
   isOnShift: boolean
   user: { id: string; name: string | null; image: string | null } | null
@@ -194,6 +195,19 @@ export function StaffTable({
                           {member.customRole.name}
                         </span>
                       )}
+                      {member.additionalRoles.map((role) => (
+                        <span
+                          key={role.name}
+                          className="text-[0.7rem] font-medium px-2.5 py-0.5 rounded-full border"
+                          style={{
+                            color: role.color,
+                            borderColor: role.color + "55",
+                            background: role.color + "18",
+                          }}
+                        >
+                          {role.name}
+                        </span>
+                      ))}
                     </div>
                   </td>
 
