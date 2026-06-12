@@ -70,6 +70,7 @@ export const GET = withRateLimit<{ params: Promise<{ venueId: string }> }>(
             },
           },
           customRole: true,
+          additionalRoles: { include: { role: true } },
         },
         orderBy: {
           createdAt: "asc",
