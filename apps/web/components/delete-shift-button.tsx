@@ -52,3 +52,4 @@ export function DeleteShiftButton({ venueSlug, shiftId, hasPayroll }: DeleteShif
     </Button>
   )
 }
+

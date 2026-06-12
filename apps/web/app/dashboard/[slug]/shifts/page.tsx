@@ -13,6 +13,8 @@ import { ClaimedShiftChip } from "@/components/claimed-shift-chip"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { Card, CardContent } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
+import { Button } from "@/components/ui/button"
+import { Copy } from "lucide-react"
 
 const DAY_SHORT = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"]
 
@@ -30,6 +32,11 @@ function addUTCDays(d: Date, n: number): Date {
 // "2026-06-01"
 function utcDayKey(d: Date): string {
   return d.toISOString().slice(0, 10)
+}
+
+// "22:00"
+function utcTimeKey(d: Date | string): string {
+  return new Date(d).toISOString().slice(11, 16)
 }
 
 // "10PM" or "10:30PM"
@@ -321,12 +328,33 @@ export default async function ShiftsPage({
                             canManage={canManage}
                           />
                         ) : (
-                          <span
-                            key={shift.id}
-                            className={`shift-chip${shift.status === "ACTIVE" ? " em" : shift.status === "MISSED" ? " am" : ""}`}
-                          >
-                            {fmtHour(shift.scheduledStart)}–{fmtHour(shift.scheduledEnd)}
-                          </span>
+                          <div key={shift.id} className="flex items-center gap-1">
+                            <span
+                              className={`shift-chip${shift.status === "ACTIVE" ? " em" : shift.status === "MISSED" ? " am" : ""}`}
+                            >
+                              {fmtHour(shift.scheduledStart)}–{fmtHour(shift.scheduledEnd)}
+                            </span>
+                            {canManage && (
+                              <CreateShiftDialog
+                                venueSlug={slug}
+                                staff={staffForDialog}
+                                roles={venueRoles}
+                                trigger={
+                                  <Button variant="ghost" size="sm" aria-label="Duplicate shift" className="h-6 w-6 p-0">
+                                    <Copy className="h-3.5 w-3.5" />
+                                  </Button>
+                                }
+                                prefill={{
+                                  mode: "assign",
+                                  membershipId: shift.membershipId ?? undefined,
+                                  date: utcDayKey(new Date(shift.scheduledStart)),
+                                  startTime: utcTimeKey(shift.scheduledStart),
+                                  endTime: utcTimeKey(shift.scheduledEnd),
+                                  notes: shift.notes ?? undefined,
+                                }}
+                              />
+                            )}
+                          </div>
                         )
                       )}
                     </div>
@@ -357,6 +385,26 @@ export default async function ShiftsPage({
                             timeLabel={`${fmtHour(shift.scheduledStart)}–${fmtHour(shift.scheduledEnd)}${shift.role?.name ? ` · ${shift.role.name}` : ""}`}
                             canClaim={!canManage}
                           />
+                          {canManage && (
+                            <CreateShiftDialog
+                              venueSlug={slug}
+                              staff={staffForDialog}
+                              roles={venueRoles}
+                              trigger={
+                                <Button variant="ghost" size="sm" aria-label="Duplicate shift" className="h-6 w-6 p-0">
+                                  <Copy className="h-3.5 w-3.5" />
+                                </Button>
+                              }
+                              prefill={{
+                                mode: "open",
+                                roleId: shift.roleId ?? undefined,
+                                date: utcDayKey(new Date(shift.scheduledStart)),
+                                startTime: utcTimeKey(shift.scheduledStart),
+                                endTime: utcTimeKey(shift.scheduledEnd),
+                                notes: shift.notes ?? undefined,
+                              }}
+                            />
+                          )}
                           {canManage && (
                             <DeleteShiftButton venueSlug={slug} shiftId={shift.id} hasPayroll={false} />
                           )}

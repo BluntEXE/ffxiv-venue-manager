@@ -33,27 +33,40 @@ interface RoleOption {
   name: string
 }
 
+interface ShiftPrefill {
+  mode?: "assign" | "open"
+  membershipId?: string
+  roleId?: string
+  date?: string
+  startTime?: string
+  endTime?: string
+  notes?: string
+}
+
 interface CreateShiftDialogProps {
   venueSlug: string
   staff: StaffMember[]
   roles: RoleOption[]
   timezone?: string
   tzLabel?: string
+  trigger?: React.ReactNode
+  prefill?: ShiftPrefill
 }
 
-export function CreateShiftDialog({ venueSlug, staff, roles }: CreateShiftDialogProps) {
+export function CreateShiftDialog({ venueSlug, staff, roles, trigger, prefill }: CreateShiftDialogProps) {
   const router = useRouter()
   const [open, setOpen] = useState(false)
   const [submitting, setSubmitting] = useState(false)
   const [error, setError] = useState<string | null>(null)
 
-  const [mode, setMode] = useState<"assign" | "open">("assign")
-  const [membershipId, setMembershipId] = useState("")
-  const [roleId, setRoleId] = useState("")
-  const [date, setDate] = useState("")
-  const [startTime, setStartTime] = useState("19:00")
-  const [endTime, setEndTime] = useState("23:00")
-  const [notes, setNotes] = useState("")
+  const [mode, setMode] = useState<"assign" | "open">(prefill?.mode ?? "assign")
+  const [membershipId, setMembershipId] = useState(prefill?.membershipId ?? "")
+  const [roleId, setRoleId] = useState(prefill?.roleId ?? "")
+  const [date, setDate] = useState(prefill?.date ?? "")
+  const [startTime, setStartTime] = useState(prefill?.startTime ?? "19:00")
+  const [endTime, setEndTime] = useState(prefill?.endTime ?? "23:00")
+  const [notes, setNotes] = useState(prefill?.notes ?? "")
+  const [quantity, setQuantity] = useState(1)
 
   async function handleSubmit() {
     if (mode === "assign" && !membershipId) {
@@ -82,30 +95,34 @@ export function CreateShiftDialog({ venueSlug, staff, roles }: CreateShiftDialog
     setError(null)
 
     try {
-      const res = await fetch(`/api/venues/${venueSlug}/shifts`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          ...(mode === "assign" ? { membershipId } : { roleId }),
-          scheduledStart,
-          scheduledEnd,
-          notes: notes || undefined,
-        }),
-      })
+      const count = mode === "open" ? Math.max(1, Math.min(20, quantity)) : 1
+      for (let i = 0; i < count; i++) {
+        const res = await fetch(`/api/venues/${venueSlug}/shifts`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            ...(mode === "assign" ? { membershipId } : { roleId }),
+            scheduledStart,
+            scheduledEnd,
+            notes: notes || undefined,
+          }),
+        })
 
-      if (!res.ok) {
-        const data = await res.json()
-        setError(data.error || "Failed to create shift")
-        return
+        if (!res.ok) {
+          const data = await res.json()
+          setError(data.error || "Failed to create shift")
+          return
+        }
       }
 
-      setMode("assign")
-      setMembershipId("")
-      setRoleId("")
-      setDate("")
-      setStartTime("19:00")
-      setEndTime("23:00")
-      setNotes("")
+      setMode(prefill?.mode ?? "assign")
+      setMembershipId(prefill?.membershipId ?? "")
+      setRoleId(prefill?.roleId ?? "")
+      setDate(prefill?.date ?? "")
+      setStartTime(prefill?.startTime ?? "19:00")
+      setEndTime(prefill?.endTime ?? "23:00")
+      setNotes(prefill?.notes ?? "")
+      setQuantity(1)
       setOpen(false)
       router.refresh()
     } catch (e) {
@@ -118,11 +135,11 @@ export function CreateShiftDialog({ venueSlug, staff, roles }: CreateShiftDialog
   return (
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>
-        <Button>Schedule Shift</Button>
+        {trigger ?? <Button>Schedule Shift</Button>}
       </DialogTrigger>
       <DialogContent className="sm:max-w-md">
         <DialogHeader>
-          <DialogTitle>Schedule a Shift</DialogTitle>
+          <DialogTitle>{prefill ? "Duplicate Shift" : "Schedule a Shift"}</DialogTitle>
           <DialogDescription>
             Assign a staff member now, or leave the slot open for a specific role to be filled later.
           </DialogDescription>
@@ -190,6 +207,24 @@ export function CreateShiftDialog({ venueSlug, staff, roles }: CreateShiftDialog
             </div>
           )}
 
+          {mode === "open" && (
+            <div className="space-y-2">
+              <Label htmlFor="quantity">How many open slots?</Label>
+              <Input
+                id="quantity"
+                type="number"
+                min={1}
+                max={20}
+                value={quantity}
+                onChange={(e) => setQuantity(Number(e.target.value))}
+                className="w-24"
+              />
+              <p className="text-xs text-muted-foreground">
+                Creates this many identical open shifts for staff to claim.
+              </p>
+            </div>
+          )}
+
           <div className="space-y-2">
             <Label htmlFor="date">Date</Label>
             <Input
@@ -245,7 +280,11 @@ export function CreateShiftDialog({ venueSlug, staff, roles }: CreateShiftDialog
             Cancel
           </Button>
           <Button onClick={handleSubmit} disabled={submitting}>
-            {submitting ? "Creating..." : "Create Shift"}
+            {submitting
+              ? "Creating..."
+              : mode === "open" && quantity > 1
+                ? `Create ${quantity} Shifts`
+                : "Create Shift"}
           </Button>
         </DialogFooter>
       </DialogContent>
