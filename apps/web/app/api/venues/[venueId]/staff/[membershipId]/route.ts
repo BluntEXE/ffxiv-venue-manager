@@ -162,7 +162,7 @@ export const PUT = withRateLimit<{ params: Promise<{ venueId: string; membership
       ])
     }
 
-    const updatedMembership = await prisma.membership.findUniqueOrThrow({
+    const updatedMembership = await prisma.membership.findUnique({
       where: { id: membershipId },
       include: {
         user: {
@@ -176,6 +176,10 @@ export const PUT = withRateLimit<{ params: Promise<{ venueId: string; membership
         additionalRoles: { include: { role: true } },
       },
     })
+
+    if (!updatedMembership) {
+      return NextResponse.json({ error: "Staff member not found" }, { status: 404 })
+    }
 
       return NextResponse.json(updatedMembership)
     } catch (error) {
