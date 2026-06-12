@@ -6,13 +6,14 @@ import { prisma } from '@/lib/prisma'
 /**
  * GET /api/plugin/services?venueId=…
  *
- * Returns the services the caller's assigned custom role can perform at
- * this venue. Shape matches the plugin's ServicesResponse:
+ * Returns the union of services the caller's assigned roles (primary
+ * custom role + any additional roles) can perform at this venue. Shape
+ * matches the plugin's ServicesResponse:
  *   { services: Service[], userRole: string | null }
  *
- * If the caller has no customRole at this venue (e.g. an OWNER who hasn't
- * been backfilled yet, or a STAFF with no assignment), services is an
- * empty list and userRole is null - plugin renders "Services: 0".
+ * If the caller has no roles assigned at this venue (e.g. an OWNER who
+ * hasn't been backfilled yet, or a STAFF with no assignment), services is
+ * an empty list and userRole is null - plugin renders "Services: 0".
  *
  * Price is serialized as a string to match the plugin's Service.Price
  * field type (XIVAppApiClient.cs defines Price as string, so sending a
@@ -48,11 +49,25 @@ export async function GET(request: NextRequest) {
         customRole: {
           include: { services: true },
         },
+        additionalRoles: {
+          include: { role: { include: { services: true } } },
+        },
       },
     })
 
-    const role = membership?.customRole
-    const services = (role?.services ?? []).map((svc) => ({
+    const allRoles = [
+      ...(membership?.customRole ? [membership.customRole] : []),
+      ...(membership?.additionalRoles.map((ar) => ar.role) ?? []),
+    ]
+
+    const serviceMap = new Map<string, (typeof allRoles)[number]['services'][number]>()
+    for (const role of allRoles) {
+      for (const svc of role.services) {
+        serviceMap.set(svc.id, svc)
+      }
+    }
+
+    const services = Array.from(serviceMap.values()).map((svc) => ({
       id: svc.id,
       name: svc.name,
       description: svc.description,
@@ -62,7 +77,7 @@ export async function GET(request: NextRequest) {
 
     return NextResponse.json({
       services,
-      userRole: role?.name ?? null,
+      userRole: allRoles.length > 0 ? allRoles.map((r) => r.name).join(' / ') : null,
     })
   } catch (error) {
     console.error('[Plugin API] Error fetching services:', error)
