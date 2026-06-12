@@ -86,3 +86,4 @@ graphify-out/
 app.json
 eas.json
 graphify-out/
+.worktrees/
