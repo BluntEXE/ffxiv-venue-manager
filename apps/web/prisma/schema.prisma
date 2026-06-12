@@ -27,29 +27,29 @@ model User {
   updatedAt     DateTime  @updatedAt
 
   // Relations
-  accounts              Account[]
-  sessions              Session[]
-  memberships           Membership[]
-  createdEvents         Event[]         @relation("EventCreator")
-  createdEventTemplates EventTemplate[] @relation("EventTemplateCreator")
-  assignedTasks         Task[]          @relation("AssignedTasks")
-  completedTasks        Task[]          @relation("TaskCompleter")
-  transactions          Transaction[]
-  paidPayrollEntries    PayrollEntry[]  @relation("PayrollPaidBy")
-  feedback              Feedback[]
-  reviewedFeedback      Feedback[]      @relation("FeedbackReviewer")
-  patronLogs            PatronLog[]     @relation("PatronLogger")
-  patronLogsWorking     PatronLog[]     @relation("PatronLogWorking")
-  patronLogsReclassified PatronLog[]    @relation("PatronLogReclassifier")
-  characters            UserCharacter[]
-  apiKeys                  ApiKey[]
-  refreshTokens            RefreshToken[]
-  deviceTokens             DeviceToken[]
-  pendingNotifications     PendingNotification[]
-  notificationPreference   NotificationPreference?
-  venueFollows             VenueFollow[]
-  shoutTemplates           ShoutTemplate[]
-  notifications            Notification[]
+  accounts               Account[]
+  sessions               Session[]
+  memberships            Membership[]
+  createdEvents          Event[]                 @relation("EventCreator")
+  createdEventTemplates  EventTemplate[]         @relation("EventTemplateCreator")
+  assignedTasks          Task[]                  @relation("AssignedTasks")
+  completedTasks         Task[]                  @relation("TaskCompleter")
+  transactions           Transaction[]
+  paidPayrollEntries     PayrollEntry[]          @relation("PayrollPaidBy")
+  feedback               Feedback[]
+  reviewedFeedback       Feedback[]              @relation("FeedbackReviewer")
+  patronLogs             PatronLog[]             @relation("PatronLogger")
+  patronLogsWorking      PatronLog[]             @relation("PatronLogWorking")
+  patronLogsReclassified PatronLog[]             @relation("PatronLogReclassifier")
+  characters             UserCharacter[]
+  apiKeys                ApiKey[]
+  refreshTokens          RefreshToken[]
+  deviceTokens           DeviceToken[]
+  pendingNotifications   PendingNotification[]
+  notificationPreference NotificationPreference?
+  venueFollows           VenueFollow[]
+  shoutTemplates         ShoutTemplate[]
+  notifications          Notification[]
 
   @@map("users")
 }
@@ -57,7 +57,7 @@ model User {
 model Notification {
   id        String   @id @default(cuid())
   userId    String
-  type      String   // NEW_FOLLOWER | STAFF_JOINED | TASK_ASSIGNED | TASK_COMPLETED
+  type      String // NEW_FOLLOWER | STAFF_JOINED | TASK_ASSIGNED | TASK_COMPLETED
   title     String
   body      String
   link      String?
@@ -150,13 +150,13 @@ model VerificationToken {
 // ============================================
 
 model Venue {
-  id             String   @id @default(cuid())
-  name           String
-  slug           String   @unique
-  description    String?  @db.Text
-  logoUrl        String?
-  bannerUrl      String?
-  galleryImages  String[] @default([])
+  id            String   @id @default(cuid())
+  name          String
+  slug          String   @unique
+  description   String?  @db.Text
+  logoUrl       String?
+  bannerUrl     String?
+  galleryImages String[] @default([])
 
   // FFXIV Location
   dataCenter String
@@ -236,8 +236,8 @@ model Membership {
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
-  user           User?          @relation(fields: [userId], references: [id], onDelete: Cascade)
-  venue          Venue          @relation(fields: [venueId], references: [id], onDelete: Cascade)
+  user            User?                      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  venue           Venue                      @relation(fields: [venueId], references: [id], onDelete: Cascade)
   customRole      Role?                      @relation(fields: [roleId], references: [id])
   additionalRoles MembershipRoleAssignment[]
   payrollEntries  PayrollEntry[]
@@ -282,6 +282,7 @@ model MembershipRoleAssignment {
   role       Role       @relation(fields: [roleId], references: [id], onDelete: Cascade)
 
   @@unique([membershipId, roleId])
+  @@index([roleId])
   @@map("membership_role_assignments")
 }
 
@@ -325,7 +326,7 @@ model Event {
   parentEventId  String? // For recurring event instances
 
   // Partake sync
-  partakeEventId       Int?  @unique
+  partakeEventId       Int? @unique
   partakeAttendeeCount Int?
 
   // Discord post tracking (Partake mirror)
@@ -392,22 +393,22 @@ enum PatronAction {
 }
 
 model PatronLog {
-  id            String    @id @default(cuid())
+  id            String   @id @default(cuid())
   venueId       String
   eventId       String? // Optional: associate with specific event
   characterName String? // FFXIV character name (from Dalamud plugin)
   world         String? // FFXIV home world (from Dalamud plugin)
-  action        String    @default("ENTER") // ENTER, EXIT/LEAVE, PRESENT
+  action        String   @default("ENTER") // ENTER, EXIT/LEAVE, PRESENT
   countChange   Int? // +1 for ENTER, -1 for EXIT (nullable for character-level logs)
   loggedBy      String? // User ID that logged this (staff or API key user)
-  timestamp     DateTime  @default(now()) // When the event actually happened
-  loggedAt      DateTime  @default(now()) // When the server received/recorded it
+  timestamp     DateTime @default(now()) // When the event actually happened
+  loggedAt      DateTime @default(now()) // When the server received/recorded it
 
   // Was the character's user clocked into an ACTIVE shift at this venue
   // when they walked in? Snapshotted at insert time so later shift edits
   // don't rewrite history. Off-duty staff → wasWorking = false (they're
   // a patron that night).
-  wasWorking    Boolean   @default(false)
+  wasWorking    Boolean @default(false)
   workingUserId String? // The user whose character was on shift (only set when wasWorking=true)
 
   // Manual reclassification audit (OWNER/MANAGER override). Null = original snapshot, untouched.
@@ -415,11 +416,11 @@ model PatronLog {
   reclassifiedById String?
   reclassifyReason String?
 
-  venue Venue  @relation(fields: [venueId], references: [id], onDelete: Cascade)
-  event Event? @relation(fields: [eventId], references: [id], onDelete: Cascade)
-  staff User?  @relation("PatronLogger", fields: [loggedBy], references: [id])
-  workingUser User? @relation("PatronLogWorking", fields: [workingUserId], references: [id], onDelete: SetNull)
-  reclassifiedBy User? @relation("PatronLogReclassifier", fields: [reclassifiedById], references: [id], onDelete: SetNull)
+  venue          Venue  @relation(fields: [venueId], references: [id], onDelete: Cascade)
+  event          Event? @relation(fields: [eventId], references: [id], onDelete: Cascade)
+  staff          User?  @relation("PatronLogger", fields: [loggedBy], references: [id])
+  workingUser    User?  @relation("PatronLogWorking", fields: [workingUserId], references: [id], onDelete: SetNull)
+  reclassifiedBy User?  @relation("PatronLogReclassifier", fields: [reclassifiedById], references: [id], onDelete: SetNull)
 
   @@index([venueId, timestamp])
   @@index([eventId, timestamp])
@@ -469,9 +470,9 @@ model Transaction {
 
   // Transaction details
   type         TransactionType @default(SALE)
-  amount       Decimal @db.Decimal(10, 2)
+  amount       Decimal         @db.Decimal(10, 2)
   customerName String?
-  notes        String? @db.Text
+  notes        String?         @db.Text
 
   createdAt DateTime @default(now())
 
@@ -691,6 +692,7 @@ model ApiKey {
   @@index([keyHash])
   @@map("api_keys")
 }
+
 // ============================================
 // SHIFTS & TIME TRACKING
 // ============================================
@@ -706,7 +708,7 @@ enum ShiftStatus {
 }
 
 model Shift {
-  id             String      @id @default(cuid())
+  id             String  @id @default(cuid())
   venueId        String
   membershipId   String?
   roleId         String?
@@ -719,7 +721,7 @@ model Shift {
   // Actuals (set by staff via clock-in / clock-out)
   actualStart DateTime?
   actualEnd   DateTime?
-  hoursWorked Decimal?    @db.Decimal(6, 2) // Stored at clock-out for immediate display
+  hoursWorked Decimal?  @db.Decimal(6, 2) // Stored at clock-out for immediate display
 
   status ShiftStatus @default(SCHEDULED)
   notes  String?     @db.Text
@@ -787,14 +789,14 @@ model PendingNotification {
 }
 
 model NotificationPreference {
-  id             String   @id @default(cuid())
-  userId         String   @unique
+  id               String   @id @default(cuid())
+  userId           String   @unique
   shiftReminder    Boolean  @default(true)
   venueOpenedNow   Boolean  @default(true)
   eventReminder    Boolean  @default(true)
   followVisibility Boolean  @default(false)
-  createdAt      DateTime @default(now())
-  updatedAt      DateTime @updatedAt
+  createdAt        DateTime @default(now())
+  updatedAt        DateTime @updatedAt
 
   user User @relation(fields: [userId], references: [id], onDelete: Cascade)
 
@@ -802,11 +804,11 @@ model NotificationPreference {
 }
 
 model VenueFollow {
-  id                  String   @id @default(cuid())
-  userId              String
-  venueId             String
-  visibleToOperators  Boolean  @default(false)
-  createdAt           DateTime @default(now())
+  id                 String   @id @default(cuid())
+  userId             String
+  venueId            String
+  visibleToOperators Boolean  @default(false)
+  createdAt          DateTime @default(now())
 
   user  User  @relation(fields: [userId], references: [id], onDelete: Cascade)
   venue Venue @relation(fields: [venueId], references: [id], onDelete: Cascade)
