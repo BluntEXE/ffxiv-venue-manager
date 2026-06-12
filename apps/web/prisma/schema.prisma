@@ -238,9 +238,10 @@ model Membership {
 
   user           User?          @relation(fields: [userId], references: [id], onDelete: Cascade)
   venue          Venue          @relation(fields: [venueId], references: [id], onDelete: Cascade)
-  customRole     Role?          @relation(fields: [roleId], references: [id])
-  payrollEntries PayrollEntry[]
-  shifts         Shift[]
+  customRole      Role?                      @relation(fields: [roleId], references: [id])
+  additionalRoles MembershipRoleAssignment[]
+  payrollEntries  PayrollEntry[]
+  shifts          Shift[]
 
   @@index([venueId, userId])
   @@index([venueId, role])
@@ -259,14 +260,29 @@ model Role {
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
-  venue         Venue        @relation(fields: [venueId], references: [id], onDelete: Cascade)
+  venue         Venue                      @relation(fields: [venueId], references: [id], onDelete: Cascade)
   memberships   Membership[]
+  additionalFor MembershipRoleAssignment[]
   shifts        Shift[]
   services      Service[] // Services this role can provide
-  assignedTasks Task[]       @relation("RoleTasks") // Tasks assigned to this role
+  assignedTasks Task[]                     @relation("RoleTasks") // Tasks assigned to this role
 
   @@unique([venueId, name])
   @@map("roles")
+}
+
+model MembershipRoleAssignment {
+  id           String @id @default(cuid())
+  membershipId String
+  roleId       String
+
+  createdAt DateTime @default(now())
+
+  membership Membership @relation(fields: [membershipId], references: [id], onDelete: Cascade)
+  role       Role       @relation(fields: [roleId], references: [id], onDelete: Cascade)
+
+  @@unique([membershipId, roleId])
+  @@map("membership_role_assignments")
 }
 
 // ============================================
