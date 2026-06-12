@@ -101,6 +101,13 @@ export default function ManageStaffMemberPage({
     })
   }, [params])
 
+  // Strip primary custom role out of additional roles if duplicated
+  useEffect(() => {
+    if (selectedCustomRole) {
+      setSelectedAdditionalRoleIds((prev) => prev.filter((id) => id !== selectedCustomRole))
+    }
+  }, [selectedCustomRole])
+
   // Fetch staff member and custom roles
   useEffect(() => {
     if (!slug || !membershipId) return
@@ -255,6 +262,8 @@ export default function ManageStaffMemberPage({
     )
   }
 
+  const additionalRoleOptions = customRoles.filter((role) => role.id !== selectedCustomRole)
+
   return (
     <VenueLayoutClient slug={slug}>
     <div className="page-inner max-w-3xl">
@@ -406,9 +415,7 @@ export default function ManageStaffMemberPage({
               on top of their custom role above.
             </p>
             <div className="flex flex-wrap gap-2">
-              {customRoles
-                .filter((role) => role.id !== selectedCustomRole)
-                .map((role) => {
+              {additionalRoleOptions.map((role) => {
                   const checked = selectedAdditionalRoleIds.includes(role.id)
                   return (
                     <button
@@ -428,9 +435,9 @@ export default function ManageStaffMemberPage({
                       {role.name}
                     </button>
                   )
-                })}
+              })}
             </div>
-            {customRoles.length <= 1 && (
+            {additionalRoleOptions.length === 0 && (
               <p className="text-xs text-muted-foreground">
                 Create more roles in Staff settings to assign additional roles.
               </p>
