@@ -54,6 +54,7 @@ interface StaffMember {
     name: string
     responsibilities: string | null
   } | null
+  additionalRoles: { role: CustomRole }[]
 }
 
 interface CustomRole {
@@ -88,6 +89,7 @@ export default function ManageStaffMemberPage({
   // Form state
   const [selectedRole, setSelectedRole] = useState<"OWNER" | "MANAGER" | "STAFF">("STAFF")
   const [selectedCustomRole, setSelectedCustomRole] = useState<string | null>(null)
+  const [selectedAdditionalRoleIds, setSelectedAdditionalRoleIds] = useState<string[]>([])
   const [isSaving, setIsSaving] = useState(false)
   const [isDeleting, setIsDeleting] = useState(false)
 
@@ -130,6 +132,7 @@ export default function ManageStaffMemberPage({
         setStaffMember(member)
         setSelectedRole(member.role)
         setSelectedCustomRole(member.roleId)
+        setSelectedAdditionalRoleIds(member.additionalRoles.map((ar: { role: CustomRole }) => ar.role.id))
 
         // Get custom roles
         const rolesResponse = await fetch(`/api/venues/${venue.id}/roles`)
@@ -168,6 +171,7 @@ export default function ManageStaffMemberPage({
           body: JSON.stringify({
             role: selectedRole,
             roleId: selectedCustomRole,
+            additionalRoleIds: selectedAdditionalRoleIds,
           }),
         }
       )
@@ -390,6 +394,45 @@ export default function ManageStaffMemberPage({
                 >
                   Create one
                 </Link>
+              </p>
+            )}
+          </div>
+
+          {/* Additional Roles */}
+          <div className="space-y-2">
+            <Label>Additional Roles</Label>
+            <p className="text-xs text-muted-foreground">
+              Lets this person provide services and fill shifts for these roles too,
+              on top of their custom role above.
+            </p>
+            <div className="flex flex-wrap gap-2">
+              {customRoles
+                .filter((role) => role.id !== selectedCustomRole)
+                .map((role) => {
+                  const checked = selectedAdditionalRoleIds.includes(role.id)
+                  return (
+                    <button
+                      key={role.id}
+                      type="button"
+                      onClick={() =>
+                        setSelectedAdditionalRoleIds((prev) =>
+                          checked ? prev.filter((id) => id !== role.id) : [...prev, role.id]
+                        )
+                      }
+                      className={`text-xs font-semibold px-2.5 py-1 rounded-full border transition-colors ${
+                        checked
+                          ? "border-[var(--xiv-blue)] bg-[rgba(0,180,255,0.12)] text-[var(--xiv-blue)]"
+                          : "border-[var(--blue-015)] text-muted-foreground hover:border-[var(--blue-028)]"
+                      }`}
+                    >
+                      {role.name}
+                    </button>
+                  )
+                })}
+            </div>
+            {customRoles.length <= 1 && (
+              <p className="text-xs text-muted-foreground">
+                Create more roles in Staff settings to assign additional roles.
               </p>
             )}
           </div>
