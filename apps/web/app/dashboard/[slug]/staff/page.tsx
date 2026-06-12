@@ -153,7 +153,9 @@ export default async function StaffPage({
             id: m.id,
             role: m.role as "OWNER" | "MANAGER" | "STAFF",
             customRole: m.customRole ? { name: m.customRole.name, color: m.customRole.color ?? "#9399b2" } : null,
-            additionalRoles: m.additionalRoles.map(ar => ({ name: ar.role.name, color: ar.role.color ?? "#9399b2" })),
+            additionalRoles: m.additionalRoles
+              .filter(ar => ar.roleId !== m.roleId)
+              .map(ar => ({ name: ar.role.name, color: ar.role.color ?? "#9399b2" })),
             joinedAt: m.createdAt.toISOString(),
             isOnShift: onShiftIds.has(m.id),
             user: m.user ? { id: m.user.id, name: m.user.name, image: m.user.image } : null,
