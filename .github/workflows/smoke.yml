@@ -42,9 +42,8 @@ jobs:
         run: pnpm install --frozen-lockfile
 
       - name: Install Playwright browsers
-        env:
-          DEBUG: pw:install
         run: |
+          rm -rf ~/.cache/ms-playwright
           timeout -k 10 180 pnpm --filter web exec playwright install chromium
 
       - name: Run smoke suite against prod
