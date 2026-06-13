@@ -1,3 +1,4 @@
+import { Fragment } from "react"
 import { getServerSession } from "next-auth"
 import { authOptions } from "@/lib/auth"
 import { redirect, notFound } from "next/navigation"
@@ -193,7 +194,13 @@ export default async function ShiftsPage({
   const activeCount = activeShifts.length
   const openSlots = weekShifts.filter((s) => s.status === "OPEN" || s.status === "CLAIMED").length
   const missedCount = weekShifts.filter((s) => s.status === "MISSED").length
+  // Fill rate: % of this week's shifts that have someone assigned (not OPEN/CLAIMED-unfilled)
   const coverPct =
+    weekShifts.length === 0
+      ? 100
+      : Math.round(((weekShifts.length - openSlots) / weekShifts.length) * 100)
+  // Reliability: % of shifts that weren't a no-show
+  const reliabilityPct =
     weekShifts.length === 0
       ? 100
       : Math.round(((weekShifts.length - missedCount) / weekShifts.length) * 100)
@@ -232,7 +239,8 @@ export default async function ShiftsPage({
             { k: "Shifts this week", v: weekShifts.length,  sub: fmtWeekLabel(weekStart) + "–" + fmtWeekLabel(addUTCDays(weekStart, 6)), icon: "M12 2a10 10 0 1 1 0 20A10 10 0 0 1 12 2zm0 2v8l4 2" },
             { k: "Open shifts",       v: openSlots,           sub: "needs cover",     icon: "M10.29 3.86 1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0zM12 9v4m0 4h.01" },
             { k: "Active now",       v: activeCount,         sub: "on shift",        icon: "M12 2v4m0 12v4M4.93 4.93l2.83 2.83m8.48 8.48 2.83 2.83M2 12h4m12 0h4M4.93 19.07l2.83-2.83m8.48-8.48 2.83-2.83" },
-            { k: "Coverage",         v: `${coverPct}%`,      sub: "of scheduled",    icon: "M9 12l2 2 4-4m6 2a9 9 0 1 1-18 0 9 9 0 0 1 18 0" },
+            { k: "Coverage",         v: `${coverPct}%`,      sub: "shifts filled",   icon: "M9 12l2 2 4-4m6 2a9 9 0 1 1-18 0 9 9 0 0 1 18 0" },
+            { k: "Reliability",      v: `${reliabilityPct}%`, sub: "no-shows excl.", icon: "M9 12l2 2 4-4m6 2a9 9 0 1 1-18 0 9 9 0 0 1 18 0" },
           ].map(({ k, v, sub, icon }) => (
             <div key={k} className="stat">
               <div className="top">
@@ -305,7 +313,7 @@ export default async function ShiftsPage({
 
             {/* Staff rows */}
             {staffRows.map((member) => (
-              <>
+              <Fragment key={member.membershipId}>
                 <div key={`${member.membershipId}-name`} className="sg-staff">
                   <span className="av-sm flex-shrink-0">
                     {member.name.split(" ").map((n: string) => n[0]).join("").slice(0, 2).toUpperCase()}
@@ -361,7 +369,7 @@ export default async function ShiftsPage({
                     </div>
                   )
                 })}
-              </>
+              </Fragment>
             ))}
 
             {hasOpenShifts && (

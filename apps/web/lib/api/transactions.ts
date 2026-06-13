@@ -39,11 +39,33 @@ export async function createTransaction(
   staffUserId: string,
   input: CreateTransactionInput
 ) {
+  // If the caller didn't specify an event, attribute the sale to whatever
+  // event is currently running at this venue (startTime <= now <= endTime,
+  // status PUBLISHED or ACTIVE). Mirrors the lookup in
+  // /api/plugin/events/active so sales logged during an event always count
+  // toward its revenue, even if the client (plugin or web) doesn't pass
+  // eventId explicitly.
+  let eventId = input.eventId
+  if (!eventId) {
+    const now = new Date()
+    const activeEvent = await prisma.event.findFirst({
+      where: {
+        venueId,
+        startTime: { lte: now },
+        endTime: { gte: now },
+        status: { in: ["PUBLISHED", "ACTIVE"] },
+      },
+      orderBy: { startTime: "desc" },
+      select: { id: true },
+    })
+    eventId = activeEvent?.id
+  }
+
   const newTransaction = await prisma.transaction.create({
     data: {
       venueId,
       serviceId: input.serviceId,
-      eventId: input.eventId,
+      eventId,
       staffId: staffUserId,
       type: input.type ?? "SALE",
       amount: input.amount,

@@ -12,6 +12,7 @@ import { VenueLayout } from "@/components/venue-layout"
 import { ServerTimeRange } from "@/components/server-time"
 import { getServerTimezone, getServerTimeLabel } from "@/lib/server-time"
 import { OverviewRevenueChart } from "@/components/overview-revenue-chart"
+import { formatGil } from "@/lib/format"
 import { OverviewTasks } from "@/components/overview-tasks"
 import { format, subDays, subWeeks, formatDistanceToNow } from "date-fns"
 import {
@@ -202,7 +203,7 @@ export default async function VenueDashboardPage({
             <Card className="p-4">
               <StatReadout
                 label="Revenue this week"
-                value={kpis.revenueThisWeek >= 1000 ? `${(kpis.revenueThisWeek / 1000).toFixed(1)}k gil` : `${kpis.revenueThisWeek} gil`}
+                value={formatGil(kpis.revenueThisWeek)}
                 delta={revDelta !== null ? `${revDelta > 0 ? "+" : ""}${revDelta}% vs last` : undefined}
                 deltaDirection={revDelta !== null ? (revDelta >= 0 ? "up" : "down") : "neutral"}
                 icon={<BarChart3 />} iconVariant="blue"

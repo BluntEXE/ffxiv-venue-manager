@@ -3,6 +3,7 @@ import { authOptions } from "@/lib/auth"
 import { redirect, notFound } from "next/navigation"
 import Link from "next/link"
 import { Button } from "@/components/ui/button"
+import { formatGilCompact } from "@/lib/format"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { StatReadout } from "@/components/ui/stat-readout"
 import { Badge } from "@/components/ui/badge"
@@ -144,7 +145,7 @@ export default async function StaffPage({
           <div className="stat"><div className="top"><span className="sb"><Users size={16} /></span></div><div className="k">Active staff</div><div className="v">{activeStaff.length}</div><div className="delta flat">Members</div></div>
           <div className="stat"><div className="top"><span className={activeShifts.length > 0 ? "sb em" : "sb"}><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg></span></div><div className="k">On shift now</div><div className="v">{activeShifts.length}</div><div className="delta flat">{activeShifts.length > 0 ? "clocked in" : "no active shifts"}</div></div>
           <div className="stat"><div className="top"><span className="sb"><Shield size={16} /></span></div><div className="k">Hours this week</div><div className="v">{Math.round(hoursThisWeek)} <span className="unit">h</span></div><div className="delta flat">scheduled</div></div>
-          <div className="stat"><div className="top"><span className="sb am"><Users size={16} /></span></div><div className="k">Tips pool (wk)</div><div className="v">{tipsThisWeek > 0 ? `${Math.round(tipsThisWeek / 1000)}k` : "0"} <span className="unit">gil</span></div><div className="delta flat">split by hours</div></div>
+          <div className="stat"><div className="top"><span className="sb am"><Users size={16} /></span></div><div className="k">Tips pool (wk)</div><div className="v">{tipsThisWeek > 0 ? formatGilCompact(tipsThisWeek) : "0"} <span className="unit">gil</span></div><div className="delta flat">split by hours</div></div>
         </div>
 
         {/* Staff table */}
