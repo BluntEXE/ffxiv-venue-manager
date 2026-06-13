@@ -83,11 +83,11 @@ export async function GET(request: NextRequest) {
         where: {
           venueId,
           status: "OPEN",
-          scheduledStart: { gte: new Date() },
+          scheduledEnd: { gte: new Date() },
         },
         include: { role: { select: { name: true } } },
         orderBy: { scheduledStart: "asc" },
-        take: 10,
+        take: 50,
       }),
     ])
 
