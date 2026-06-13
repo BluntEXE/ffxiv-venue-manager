@@ -43,8 +43,8 @@ jobs:
 
       - name: Install Playwright browsers
         run: |
-          for i in 1 2 3; do
-            timeout 180 pnpm --filter web exec playwright install --with-deps chromium && exit 0
+          for i in 1 2; do
+            timeout -k 10 300 pnpm --filter web exec playwright install chromium && exit 0
             echo "Playwright install attempt $i timed out or failed, retrying..."
           done
           exit 1
