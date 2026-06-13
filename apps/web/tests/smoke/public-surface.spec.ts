@@ -12,15 +12,15 @@ test.describe("public surfaces", () => {
 
     await expect(page).toHaveTitle(/XIV Venue Manager/)
 
-    // The four landing-strip tiles read from /api/stats. If the SSR fetch
-    // breaks they fall back to em-dashes; assert the labels render so we
-    // know the section is present even on a fallback.
-    await expect(page.getByText("Active venues", { exact: true })).toBeVisible()
-    await expect(page.getByText("Events tracked", { exact: true })).toBeVisible()
-    await expect(page.getByText("Gil tracked", { exact: true })).toBeVisible()
-    await expect(page.getByText("Last activity", { exact: true })).toBeVisible()
+    // The social-proof strip reads from /api/stats. If the SSR fetch breaks
+    // it falls back to a loading placeholder; assert the live phrases render
+    // so we know the section is present even on a fallback.
+    await expect(page.getByText(/active venues/i)).toBeVisible()
+    await expect(page.getByText(/events tracked/i)).toBeVisible()
+    await expect(page.getByText(/flowing through the economy/i)).toBeVisible()
+    await expect(page.getByText(/last activity/i)).toBeVisible()
 
-    await expect(page.getByRole("link", { name: /See full usage stats/i })).toBeVisible()
+    await expect(page.getByRole("link", { name: /Full stats/i })).toBeVisible()
   })
 
   test("/stats page renders without console errors", async ({ page }) => {
@@ -33,9 +33,9 @@ test.describe("public surfaces", () => {
     expect(response?.status()).toBe(200)
     await expect(page).toHaveTitle(/Usage stats/)
 
-    await expect(page.getByRole("heading", { name: /Real venues/i })).toBeVisible()
-    await expect(page.getByText("Live data", { exact: true })).toBeVisible()
-    await expect(page.getByText("All-time totals", { exact: true })).toBeVisible()
+    await expect(page.getByRole("heading", { name: /The realm, by the numbers/i })).toBeVisible()
+    await expect(page.getByText("Community stats", { exact: true })).toBeVisible()
+    await expect(page.getByRole("heading", { name: /Across the realm/i })).toBeVisible()
 
     expect(consoleErrors, "console errors on /stats").toEqual([])
   })
