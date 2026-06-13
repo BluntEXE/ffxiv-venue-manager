@@ -33,7 +33,7 @@ export function ClaimedShiftChip({ shiftId, venueId, timeLabel, canManage }: Cla
   }
 
   return (
-    <div className="flex flex-col gap-0.5">
+    <div className="flex flex-col gap-0.5 items-start">
       <span className="shift-chip bg-violet-500/10 text-violet-400 border-violet-500/20">
         {timeLabel}
       </span>

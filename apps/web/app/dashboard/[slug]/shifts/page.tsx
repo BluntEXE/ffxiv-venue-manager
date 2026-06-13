@@ -324,7 +324,7 @@ export default async function ShiftsPage({
                             key={shift.id}
                             shiftId={shift.id}
                             venueId={venue.id}
-                            timeLabel={`${fmtHour(shift.scheduledStart)}–${fmtHour(shift.scheduledEnd)}`}
+                            timeLabel={`${fmtHour(shift.scheduledStart)}–${fmtHour(shift.scheduledEnd)}${shift.role?.name ? ` · ${shift.role.name}` : ""}`}
                             canManage={canManage}
                           />
                         ) : (
@@ -333,6 +333,7 @@ export default async function ShiftsPage({
                               className={`shift-chip${shift.status === "ACTIVE" ? " em" : shift.status === "MISSED" ? " am" : ""}`}
                             >
                               {fmtHour(shift.scheduledStart)}–{fmtHour(shift.scheduledEnd)}
+                              {shift.role?.name ? ` · ${shift.role.name}` : ""}
                             </span>
                             {canManage && (
                               <CreateShiftDialog
