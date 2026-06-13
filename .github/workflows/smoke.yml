@@ -25,7 +25,7 @@ permissions:
 jobs:
   smoke:
     runs-on: ubuntu-latest
-    timeout-minutes: 10
+    timeout-minutes: 15
     env:
       FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
     steps:
@@ -42,7 +42,12 @@ jobs:
         run: pnpm install --frozen-lockfile
 
       - name: Install Playwright browsers
-        run: pnpm --filter web exec playwright install --with-deps chromium
+        run: |
+          for i in 1 2 3; do
+            timeout 180 pnpm --filter web exec playwright install --with-deps chromium && exit 0
+            echo "Playwright install attempt $i timed out or failed, retrying..."
+          done
+          exit 1
 
       - name: Run smoke suite against prod
         env:
