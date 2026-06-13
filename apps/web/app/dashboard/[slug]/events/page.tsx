@@ -278,56 +278,6 @@ export default async function EventsPage({
               </div>
             )}
           </div>
-
-          {/* Past Events — grouped by month */}
-          {pastEvents.length > 0 && (() => {
-            const grouped = pastEvents.reduce((acc: Record<string, typeof pastEvents>, event) => {
-              const key = format(new Date(event.startTime), "MMMM yyyy")
-              if (!acc[key]) acc[key] = []
-              acc[key].push(event)
-              return acc
-            }, {})
-            return (
-              <div>
-                <div className="space-y-8">
-                  {Object.entries(grouped).map(([month, monthEvents]) => (
-                    <div key={month}>
-                      <div className="flex items-center gap-3 mb-3">
-                        <span className="text-xs font-semibold text-[var(--xiv-blue)] uppercase tracking-widest">{month}</span>
-                        <div className="flex-1 h-px bg-[rgba(0,180,255,0.15)]" />
-                        <span className="text-xs text-muted-foreground">{monthEvents.length} events</span>
-                      </div>
-                      <div className="panel">
-                        {monthEvents.map((event: typeof pastEvents[number]) => (
-                          <Link key={event.id} href={`/dashboard/${slug}/events/${event.id}`} className="block border-b border-[var(--blue-008)] last:border-b-0 hover:bg-[var(--blue-004)] transition-colors">
-                            <div className="event-row opacity-75 hover:opacity-100 transition-opacity">
-                              <div className="datebox off">
-                                <div className="mo">{formatServerTime(event.startTime, "date").split(" ")[0]}</div>
-                                <div className="dy">{new Date(event.startTime).getUTCDate()}</div>
-                              </div>
-                              <div className="ev-mid">
-                                <div className="ev-title">
-                                  {event.title}
-                                  {event.partakeEventId && <Badge variant="outline" className="border-[rgba(0,180,255,0.4)] text-[var(--xiv-blue)]">Partake</Badge>}
-                                </div>
-                                <div className="ev-sub">
-                                  <span className="meta">{formatServerTime(event.startTime, "time")} {SERVER_TIME_LABEL}</span>
-                                </div>
-                              </div>
-                              <div className="ev-right">
-                                <Badge className={statusColors[event.status as keyof typeof statusColors]}>{event.status}</Badge>
-                                <Badge variant="outline">{typeLabels[event.eventType as keyof typeof typeLabels]}</Badge>
-                              </div>
-                            </div>
-                          </Link>
-                        ))}
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              </div>
-            )
-          })()}
         </>
       )}
       </div>
