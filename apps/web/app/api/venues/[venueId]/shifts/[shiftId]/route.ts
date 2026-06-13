@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server"
 import { getServerSession } from "next-auth"
 import { authOptions } from "@/lib/auth"
 import { prisma } from "@/lib/prisma"
+import { hasOverlappingShift } from "@/lib/shift-overlap"
 import { z } from "zod"
 
 const patchSchema = z.object({
@@ -60,6 +61,12 @@ export async function PATCH(
       if (shift.status !== "OPEN") {
         return NextResponse.json(
           { error: `Shift is already ${shift.status.toLowerCase()}` },
+          { status: 400 }
+        )
+      }
+      if (await hasOverlappingShift(membership.id, shift.scheduledStart, shift.scheduledEnd, shift.id)) {
+        return NextResponse.json(
+          { error: "You already have a shift that overlaps this time" },
           { status: 400 }
         )
       }

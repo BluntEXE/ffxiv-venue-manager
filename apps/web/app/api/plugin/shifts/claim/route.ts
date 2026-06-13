@@ -3,6 +3,7 @@ import { z } from "zod"
 import { prisma } from "@/lib/prisma"
 import { validateApiKey } from "@/lib/api/plugin-auth"
 import { enforcePluginRateLimit, enforcePluginIpRateLimit } from "@/lib/api/plugin-rate-limit"
+import { hasOverlappingShift } from "@/lib/shift-overlap"
 
 /**
  * POST /api/plugin/shifts/claim
@@ -62,6 +63,13 @@ export async function POST(request: NextRequest) {
     })
     if (!membership) {
       return NextResponse.json({ error: "No active membership at this venue" }, { status: 403 })
+    }
+
+    if (await hasOverlappingShift(membership.id, shift.scheduledStart, shift.scheduledEnd, shift.id)) {
+      return NextResponse.json(
+        { error: "You already have a shift that overlaps this time" },
+        { status: 400 }
+      )
     }
 
     const result = await prisma.shift.updateMany({
