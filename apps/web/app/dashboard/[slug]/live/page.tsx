@@ -94,11 +94,15 @@ export default async function LivePage({
   // Calculate revenue (respect visibility)
   let totalRevenue = 0
   let personalRevenue = 0
+  let personalSaleCount = 0
   if (activeEvent) {
     for (const tx of activeEvent.transactions) {
       const amt = Number(tx.amount)
       totalRevenue += amt
-      if (tx.staffId === session.user.id) personalRevenue += amt
+      if (tx.staffId === session.user.id) {
+        personalRevenue += amt
+        personalSaleCount++
+      }
     }
   }
 
@@ -110,6 +114,14 @@ export default async function LivePage({
         : settings.revenueVisibility === "own"
           ? personalRevenue
           : null
+
+  // Sale count follows the same visibility scoping as revenue, so the
+  // "Transactions" stat doesn't show a venue-wide count next to a
+  // personal-only gil amount.
+  const saleCountDisplay =
+    !canManage && settings.revenueVisibility === "own"
+      ? personalSaleCount
+      : activeEvent?.transactions.length ?? 0
 
   // Patron roster (recent ENTERs, crude in-venue list)
   const patronRoster = activeEvent ? await prisma.patronLog.findMany({
@@ -167,9 +179,11 @@ export default async function LivePage({
             isUpcoming={isUpcoming}
             initialPatronCount={Math.max(0, patronCount)}
             initialRevenue={revenueDisplay}
-            initialSaleCount={activeEvent.transactions.length}
+            initialSaleCount={saleCountDisplay}
             initialNewTonight={newTonightCount}
             showRevenue={showRevenue}
+            currentUserId={session.user.id}
+            scopeSalesToOwn={!canManage && settings.revenueVisibility === "own"}
             revenueLabel={
               canManage || settings.revenueVisibility === "all"
                 ? "Total Revenue"

@@ -50,6 +50,8 @@ interface LiveDashboardProps {
   revenueLabel: string
   patronRoster: PatronRosterItem[]
   onShiftStaff: StaffRosterItem[]
+  currentUserId: string
+  scopeSalesToOwn: boolean
 }
 
 export function LiveDashboard({
@@ -64,6 +66,8 @@ export function LiveDashboard({
   revenueLabel,
   patronRoster: initialRoster,
   onShiftStaff,
+  currentUserId,
+  scopeSalesToOwn,
 }: LiveDashboardProps) {
   const [patronCount, setPatronCount] = useState(initialPatronCount)
   const [revenue, setRevenue] = useState(initialRevenue ?? 0)
@@ -119,8 +123,9 @@ export function LiveDashboard({
 
         if (data.type === "sale") {
           const amt = Number(data.data.amount || 0)
-          if (showRevenue) setRevenue(prev => prev + amt)
-          setSaleCount(prev => prev + 1)
+          const isOwnSale = data.data.staff?.id === currentUserId
+          if (showRevenue && (!scopeSalesToOwn || isOwnSale)) setRevenue(prev => prev + amt)
+          if (!scopeSalesToOwn || isOwnSale) setSaleCount(prev => prev + 1)
           setActivity(prev => prev.some(a => a.id === data.id) ? prev : [{
             id: data.id, type: "sale" as const, timestamp: data.timestamp,
             text: `${data.data.customerName || "Someone"} — ${amt.toLocaleString()} gil${data.data.staff?.name ? " · " + data.data.staff.name : ""}`,
@@ -149,7 +154,7 @@ export function LiveDashboard({
     }
     es.onerror = () => setConnected(false)
     return () => es.close()
-  }, [venueId, showRevenue])
+  }, [venueId, showRevenue, scopeSalesToOwn, currentUserId])
 
   const fiClass = (type: ActivityItem["type"]) => {
     if (type === "patron_enter") return "bg-[var(--success-soft)] border-[rgba(16,185,129,0.25)] text-[var(--success-text)]"
