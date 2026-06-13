@@ -3,7 +3,7 @@ import { z } from "zod"
 import { prisma } from "@/lib/prisma"
 import { validateApiKey } from "@/lib/api/plugin-auth"
 import { enforcePluginRateLimit, enforcePluginIpRateLimit } from "@/lib/api/plugin-rate-limit"
-import { hasOverlappingShift } from "@/lib/shift-overlap"
+import { claimShiftWithMerge } from "@/lib/shift-overlap"
 
 /**
  * POST /api/plugin/shifts/claim
@@ -65,56 +65,58 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: "No active membership at this venue" }, { status: 403 })
     }
 
-    if (await hasOverlappingShift(membership.id, shift.scheduledStart, shift.scheduledEnd, shift.id)) {
-      return NextResponse.json(
-        { error: "You already have a shift that overlaps this time" },
-        { status: 400 }
-      )
-    }
+    const claimResult = await claimShiftWithMerge(shift, membership.id)
 
-    const result = await prisma.shift.updateMany({
-      where: { id: shift.id, status: "OPEN" },
-      data: { membershipId: membership.id, status: "CLAIMED" },
-    })
-
-    if (result.count === 0) {
+    if (claimResult === null) {
       return NextResponse.json(
         { error: "This shift was just claimed by someone else" },
         { status: 409 }
       )
     }
 
-    // Notify managers (best-effort)
-    Promise.all([
-      prisma.membership.findMany({
-        where: { venueId: shift.venueId, status: "active", role: { in: ["OWNER", "MANAGER"] } },
-        select: { userId: true },
-      }),
-      prisma.user.findUnique({
-        where: { id: auth.userId },
-        select: { displayName: true, name: true },
-      }),
-      prisma.venue.findUnique({
-        where: { id: shift.venueId },
-        select: { name: true },
-      }),
-    ]).then(([managers, claimant, venue]) => {
-      const staffName = claimant?.displayName ?? claimant?.name ?? "A staff member"
-      const venueName = venue?.name ?? "your venue"
-      const shiftDate = shift.scheduledStart.toLocaleDateString("en-GB", { weekday: "short", day: "numeric", month: "short", timeZone: "UTC" })
-      return prisma.pendingNotification.createMany({
-        data: managers.filter(m => m.userId).map((m) => ({
-          userId: m.userId!,
-          type: "SHIFT_CLAIM_SUBMITTED" as const,
-          title: "Shift claim pending",
-          body: `${staffName} claimed the ${shiftDate} shift at ${venueName}.`,
-          data: { venueId: shift.venueId, shiftId: shift.id },
-          scheduledFor: new Date(),
-        })),
-      })
-    }).catch(() => {})
+    // Notify managers a claim needs approval (skip if merged into an
+    // already-approved shift — nothing for a manager to act on)
+    if (!claimResult.merged) {
+      Promise.all([
+        prisma.membership.findMany({
+          where: { venueId: shift.venueId, status: "active", role: { in: ["OWNER", "MANAGER"] } },
+          select: { userId: true },
+        }),
+        prisma.user.findUnique({
+          where: { id: auth.userId },
+          select: { displayName: true, name: true },
+        }),
+        prisma.venue.findUnique({
+          where: { id: shift.venueId },
+          select: { name: true },
+        }),
+      ]).then(([managers, claimant, venue]) => {
+        const staffName = claimant?.displayName ?? claimant?.name ?? "A staff member"
+        const venueName = venue?.name ?? "your venue"
+        const shiftDate = shift.scheduledStart.toLocaleDateString("en-GB", { weekday: "short", day: "numeric", month: "short", timeZone: "UTC" })
+        return prisma.pendingNotification.createMany({
+          data: managers.filter(m => m.userId).map((m) => ({
+            userId: m.userId!,
+            type: "SHIFT_CLAIM_SUBMITTED" as const,
+            title: "Shift claim pending",
+            body: `${staffName} claimed the ${shiftDate} shift at ${venueName}.`,
+            data: { venueId: shift.venueId, shiftId: shift.id },
+            scheduledFor: new Date(),
+          })),
+        })
+      }).catch(() => {})
+    }
 
-    return NextResponse.json({ success: true, shift: { id: shift.id, status: "CLAIMED" } })
+    return NextResponse.json({
+      success: true,
+      shift: {
+        id: claimResult.shift.id,
+        status: claimResult.shift.status,
+        scheduledStart: claimResult.shift.scheduledStart.toISOString(),
+        scheduledEnd: claimResult.shift.scheduledEnd.toISOString(),
+      },
+      merged: claimResult.merged,
+    })
   } catch (error) {
     console.error("[Plugin API] Error claiming shift:", error)
     return NextResponse.json({ error: "Internal server error" }, { status: 500 })

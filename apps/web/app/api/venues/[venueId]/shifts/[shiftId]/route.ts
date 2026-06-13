@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from "next/server"
 import { getServerSession } from "next-auth"
 import { authOptions } from "@/lib/auth"
 import { prisma } from "@/lib/prisma"
-import { hasOverlappingShift } from "@/lib/shift-overlap"
+import { claimShiftWithMerge } from "@/lib/shift-overlap"
 import { z } from "zod"
 
 const patchSchema = z.object({
@@ -64,47 +64,50 @@ export async function PATCH(
           { status: 400 }
         )
       }
-      if (await hasOverlappingShift(membership.id, shift.scheduledStart, shift.scheduledEnd, shift.id)) {
-        return NextResponse.json(
-          { error: "You already have a shift that overlaps this time" },
-          { status: 400 }
-        )
-      }
-      const result = await prisma.shift.updateMany({
-        where: { id: shift.id, status: "OPEN" },
-        data: { membershipId: membership.id, status: "CLAIMED" },
-      })
-      if (result.count === 0) {
+      const claimResult = await claimShiftWithMerge(shift, membership.id)
+      if (claimResult === null) {
         return NextResponse.json(
           { error: "This shift was just claimed by someone else" },
           { status: 409 }
         )
       }
-      // Notify managers/owners that a claim was submitted
-      Promise.all([
-        prisma.membership.findMany({
-          where: { venueId: venue.id, status: "active", role: { in: ["OWNER", "MANAGER"] } },
-          select: { userId: true },
-        }),
-        prisma.user.findUnique({
-          where: { id: session.user.id },
-          select: { displayName: true, name: true },
-        }),
-      ]).then(([managers, claimant]) => {
-        const staffName = claimant?.displayName ?? claimant?.name ?? "A staff member"
-        const shiftDate = shift.scheduledStart.toLocaleDateString("en-GB", { weekday: "short", day: "numeric", month: "short", timeZone: "UTC" })
-        return prisma.pendingNotification.createMany({
-          data: managers.filter(m => m.userId).map((m) => ({
-            userId: m.userId!,
-            type: "SHIFT_CLAIM_SUBMITTED" as const,
-            title: "Shift claim pending",
-            body: `${staffName} claimed the ${shiftDate} shift at ${venue.name}.`,
-            data: { venueId: venue.id, shiftId: shift.id },
-            scheduledFor: new Date(),
-          })),
-        })
-      }).catch(() => {})
-      return NextResponse.json({ success: true, shift: { id: shift.id, status: "CLAIMED" } })
+      // Notify managers/owners that a claim needs approval (skip if merged
+      // into an already-approved shift — nothing for a manager to act on)
+      if (!claimResult.merged) {
+        Promise.all([
+          prisma.membership.findMany({
+            where: { venueId: venue.id, status: "active", role: { in: ["OWNER", "MANAGER"] } },
+            select: { userId: true },
+          }),
+          prisma.user.findUnique({
+            where: { id: session.user.id },
+            select: { displayName: true, name: true },
+          }),
+        ]).then(([managers, claimant]) => {
+          const staffName = claimant?.displayName ?? claimant?.name ?? "A staff member"
+          const shiftDate = shift.scheduledStart.toLocaleDateString("en-GB", { weekday: "short", day: "numeric", month: "short", timeZone: "UTC" })
+          return prisma.pendingNotification.createMany({
+            data: managers.filter(m => m.userId).map((m) => ({
+              userId: m.userId!,
+              type: "SHIFT_CLAIM_SUBMITTED" as const,
+              title: "Shift claim pending",
+              body: `${staffName} claimed the ${shiftDate} shift at ${venue.name}.`,
+              data: { venueId: venue.id, shiftId: shift.id },
+              scheduledFor: new Date(),
+            })),
+          })
+        }).catch(() => {})
+      }
+      return NextResponse.json({
+        success: true,
+        shift: {
+          id: claimResult.shift.id,
+          status: claimResult.shift.status,
+          scheduledStart: claimResult.shift.scheduledStart.toISOString(),
+          scheduledEnd: claimResult.shift.scheduledEnd.toISOString(),
+        },
+        merged: claimResult.merged,
+      })
     }
 
     // --- APPROVE ---
