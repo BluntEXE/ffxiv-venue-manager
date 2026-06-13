@@ -42,12 +42,10 @@ jobs:
         run: pnpm install --frozen-lockfile
 
       - name: Install Playwright browsers
+        env:
+          DEBUG: pw:install
         run: |
-          for i in 1 2; do
-            timeout -k 10 300 pnpm --filter web exec playwright install chromium && exit 0
-            echo "Playwright install attempt $i timed out or failed, retrying..."
-          done
-          exit 1
+          timeout -k 10 180 pnpm --filter web exec playwright install chromium
 
       - name: Run smoke suite against prod
         env:
