@@ -801,6 +801,19 @@
   gap: 14px;
 }
 
+/* ── Live stat grid — matches prototype .stat-grid repeat(5,1fr) ── */
+.stat-grid {
+  display: grid;
+  grid-template-columns: repeat(5, 1fr);
+  gap: 14px;
+}
+@media (max-width: 1023px) {
+  .stat-grid { grid-template-columns: repeat(2, 1fr); }
+}
+@media (max-width: 480px) {
+  .stat-grid { grid-template-columns: 1fr; }
+}
+
 /* ── Timeline ── */
 .tl-day { font-size: 0.66rem; text-transform: uppercase; letter-spacing: 0.12em; color: var(--fg-faint); font-weight: 600; margin: 18px 0 6px; padding: 0 22px; }
 .tl-item { display: grid; grid-template-columns: 70px 1fr; gap: 14px; padding: 2px 22px; }
