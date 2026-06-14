@@ -147,7 +147,7 @@ export function ImportPanel({ onImport }: Props) {
                 onChange={e => setDiscordText(e.target.value)}
                 placeholder="Paste Discord post text here…"
                 rows={5}
-                className={`${inputClass} resize-y`}
+                className={`${inputClass} w-full resize-y`}
               />
               <button onClick={handleDiscordParse} className={primaryBtn}>
                 Parse
