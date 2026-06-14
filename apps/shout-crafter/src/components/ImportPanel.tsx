@@ -1,7 +1,8 @@
 import { useState } from 'react'
 import type { ParsedEvent } from '../types'
 import { extractEventId, fetchPartakeEvent } from '../lib/partake'
-import { parseDiscordPost } from '../lib/discord-parser'
+import { parseDiscordPost, mergeParsedEvents } from '../lib/discord-parser'
+import { fetchAiParse } from '../lib/ai-parse'
 import { Download } from 'lucide-react'
 
 interface Props {
@@ -32,6 +33,7 @@ export function ImportPanel({ onImport }: Props) {
   const [partakeUrl, setPartakeUrl] = useState('')
   const [discordText, setDiscordText] = useState('')
   const [loading, setLoading] = useState(false)
+  const [aiChecking, setAiChecking] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [pending, setPending] = useState<ParsedEvent | null>(null)
   const [selected, setSelected] = useState<Set<keyof ParsedEvent>>(new Set())
@@ -52,11 +54,25 @@ export function ImportPanel({ onImport }: Props) {
     }
   }
 
-  function handleDiscordParse() {
+  async function handleDiscordParse() {
     setError(null)
     setPending(null)
     if (!discordText.trim()) { setError('Paste some text first'); return }
-    showReview(parseDiscordPost(discordText))
+
+    const regexResult = parseDiscordPost(discordText)
+    const isThin = !regexResult.venueName && !regexResult.openTime && !regexResult.djs
+    if (!isThin) {
+      showReview(regexResult)
+      return
+    }
+
+    setAiChecking(true)
+    try {
+      const aiResult = await fetchAiParse(discordText)
+      showReview(mergeParsedEvents(regexResult, aiResult))
+    } finally {
+      setAiChecking(false)
+    }
   }
 
   function showReview(parsed: ParsedEvent) {
@@ -149,8 +165,8 @@ export function ImportPanel({ onImport }: Props) {
                 rows={5}
                 className={`${inputClass} w-full resize-y`}
               />
-              <button onClick={handleDiscordParse} className={primaryBtn}>
-                Parse
+              <button onClick={handleDiscordParse} disabled={aiChecking} className={primaryBtn}>
+                {aiChecking ? 'Checking with Local Model…' : 'Parse'}
               </button>
             </>
           )}
