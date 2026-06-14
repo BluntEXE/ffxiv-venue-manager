@@ -230,7 +230,7 @@ export function mergeParsedEvents(regex: ParsedEvent, llm: ParsedEvent): ParsedE
     const regexIsEmpty = regexValue === undefined || regexValue === ''
     const llmHasValue = llmValue !== undefined && llmValue !== ''
     if (regexIsEmpty && llmHasValue) {
-      merged[key] = llmValue
+      ;(merged as Record<keyof ParsedEvent, unknown>)[key] = llmValue
     }
   }
   return merged
