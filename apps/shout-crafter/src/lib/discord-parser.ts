@@ -222,6 +222,20 @@ function extractDJs(text: string): string {
     .join(', ')
 }
 
+export function mergeParsedEvents(regex: ParsedEvent, llm: ParsedEvent): ParsedEvent {
+  const merged: ParsedEvent = { ...regex }
+  for (const key of Object.keys(llm) as (keyof ParsedEvent)[]) {
+    const regexValue = regex[key]
+    const llmValue = llm[key]
+    const regexIsEmpty = regexValue === undefined || regexValue === ''
+    const llmHasValue = llmValue !== undefined && llmValue !== ''
+    if (regexIsEmpty && llmHasValue) {
+      merged[key] = llmValue
+    }
+  }
+  return merged
+}
+
 export function parseDiscordPost(rawText: string): ParsedEvent {
   const text = stripCommand(rawText)
   const result: ParsedEvent = {}
