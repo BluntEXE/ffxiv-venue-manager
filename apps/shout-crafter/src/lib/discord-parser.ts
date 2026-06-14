@@ -222,6 +222,11 @@ function extractDJs(text: string): string {
     .join(', ')
 }
 
+// Fields where the regex parser is prone to confidently-wrong matches
+// (decorated venue names, theme/contest text mistaken for taglines, slot
+// timestamps leaking into DJ lists) - prefer the LLM's value when it has one.
+const LLM_PREFERRED_FIELDS: (keyof ParsedEvent)[] = ['venueName', 'tagline', 'djs']
+
 export function mergeParsedEvents(regex: ParsedEvent, llm: ParsedEvent): ParsedEvent {
   const merged: ParsedEvent = { ...regex }
   for (const key of Object.keys(llm) as (keyof ParsedEvent)[]) {
@@ -229,7 +234,8 @@ export function mergeParsedEvents(regex: ParsedEvent, llm: ParsedEvent): ParsedE
     const llmValue = llm[key]
     const regexIsEmpty = regexValue === undefined || regexValue === ''
     const llmHasValue = llmValue !== undefined && llmValue !== ''
-    if (regexIsEmpty && llmHasValue) {
+    if (!llmHasValue) continue
+    if (regexIsEmpty || LLM_PREFERRED_FIELDS.includes(key)) {
       ;(merged as Record<keyof ParsedEvent, unknown>)[key] = llmValue
     }
   }

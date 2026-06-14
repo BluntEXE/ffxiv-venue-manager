@@ -3,14 +3,29 @@ import { mergeParsedEvents } from './discord-parser'
 import type { ParsedEvent } from '../types'
 
 describe('mergeParsedEvents', () => {
-  it('keeps regex-derived values when present', () => {
-    const regex: ParsedEvent = { venueName: 'Velvet Room', openTime: '18:00-20:00 ST' }
-    const llm: ParsedEvent = { venueName: 'Wrong Name', openTime: '19:00-21:00 ST', djs: 'DJ Echo' }
+  it('keeps regex-derived values when present, for fields the LLM is not preferred on', () => {
+    const regex: ParsedEvent = { openTime: '18:00-20:00 ST', location: 'W6 P9' }
+    const llm: ParsedEvent = { openTime: '19:00-21:00 ST', location: 'W1 P1' }
     expect(mergeParsedEvents(regex, llm)).toEqual({
-      venueName: 'Velvet Room',
       openTime: '18:00-20:00 ST',
-      djs: 'DJ Echo',
+      location: 'W6 P9',
     })
+  })
+
+  it('prefers the LLM value for venueName, tagline, and djs even when regex has a value', () => {
+    const regex: ParsedEvent = { venueName: 'Wrong Name', tagline: 'Wrong Tagline', djs: 'Wrong DJ List', openTime: '18:00-20:00 ST' }
+    const llm: ParsedEvent = { venueName: 'Project XIV', tagline: 'Divine', djs: 'DJ Echo' }
+    expect(mergeParsedEvents(regex, llm)).toEqual({
+      venueName: 'Project XIV',
+      tagline: 'Divine',
+      djs: 'DJ Echo',
+      openTime: '18:00-20:00 ST',
+    })
+  })
+
+  it('keeps the regex value for LLM-preferred fields when the LLM has none', () => {
+    const regex: ParsedEvent = { venueName: 'Velvet Room', tagline: 'Glow Night', djs: 'DJ Echo' }
+    expect(mergeParsedEvents(regex, {})).toEqual(regex)
   })
 
   it('fills in fields the regex left empty or undefined', () => {

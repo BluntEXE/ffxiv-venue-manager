@@ -60,11 +60,6 @@ export function ImportPanel({ onImport }: Props) {
     if (!discordText.trim()) { setError('Paste some text first'); return }
 
     const regexResult = parseDiscordPost(discordText)
-    const isThin = !regexResult.venueName && !regexResult.openTime && !regexResult.djs
-    if (!isThin) {
-      showReview(regexResult)
-      return
-    }
 
     setAiChecking(true)
     try {
