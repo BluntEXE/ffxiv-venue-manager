@@ -47,7 +47,7 @@ export function ShoutPreview({ shout, onChange }: Props) {
             <h2 className="font-semibold text-[1.02rem] text-[var(--foreground)]" style={{ fontFamily: 'var(--font-heading)' }}>
               Preview
             </h2>
-            <p className="text-sm text-[var(--muted-foreground)]">Editable — paste straight into FFXIV chat</p>
+            <p className="text-sm text-[var(--muted-foreground)]">Editable, paste straight into FFXIV chat</p>
           </div>
         </div>
 
