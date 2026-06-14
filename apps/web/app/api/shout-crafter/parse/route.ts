@@ -75,7 +75,7 @@ async function handler(req: NextRequest): Promise<NextResponse> {
         Authorization: `Bearer ${process.env.HERMES_LITELLM_API_KEY}`,
       },
       body: JSON.stringify({
-        model: "google/gemma-3-12b-it:free",
+        model: "google/gemma-4-26b-a4b-it:free",
         messages: [
           { role: "system", content: SYSTEM_PROMPT },
           { role: "user", content: text },
