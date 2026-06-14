@@ -87,4 +87,6 @@ app.json
 eas.json
 graphify-out/
 .worktrees/
+.claude/worktrees/
+docs/superpowers/
 docker/minio/data/
