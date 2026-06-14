@@ -62,6 +62,7 @@ async function handler(req: NextRequest): Promise<NextResponse> {
     return cors(NextResponse.json({}, { status: 200 }))
   }
   if (!text.trim()) return cors(NextResponse.json({}, { status: 200 }))
+  if (text.length > 4000) text = text.slice(0, 4000)
 
   const controller = new AbortController()
   const timeout = setTimeout(() => controller.abort(), 15000)
