@@ -81,6 +81,7 @@ async function handler(req: NextRequest): Promise<NextResponse> {
       },
       body: JSON.stringify({
         model: "deepseek/deepseek-v4-flash",
+        temperature: 0,
         messages: [
           { role: "system", content: SYSTEM_PROMPT },
           { role: "user", content: text },
