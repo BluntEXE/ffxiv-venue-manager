@@ -2,6 +2,7 @@ import { useState } from 'react'
 import type { ParsedEvent } from '../types'
 import { extractEventId, fetchPartakeEvent } from '../lib/partake'
 import { parseDiscordPost } from '../lib/discord-parser'
+import { Download } from 'lucide-react'
 
 interface Props {
   onImport: (parsed: ParsedEvent) => void
@@ -16,6 +17,15 @@ const FIELD_LABELS: { key: keyof ParsedEvent; label: string }[] = [
   { key: 'djs',       label: 'DJs' },
   { key: 'links',     label: 'Links' },
 ]
+
+const inputClass =
+  'flex-1 bg-[var(--blue-004)] text-[var(--foreground)] placeholder-[var(--fg-faint)] rounded-[0.5rem] px-3 py-2 text-sm border border-[var(--blue-015)] focus:border-[var(--xiv-blue)] focus:outline-none focus:shadow-[0_0_0_3px_rgba(0,180,255,0.12)] transition-colors'
+
+const primaryBtn =
+  'px-4 py-2 bg-[var(--xiv-blue)] text-[var(--xiv-navy)] text-sm font-bold rounded-[0.5rem] hover:opacity-90 disabled:opacity-50 transition-opacity'
+
+const ghostBtn =
+  'px-4 py-2 bg-[var(--blue-006)] text-[var(--muted-foreground)] text-sm font-medium rounded-[0.5rem] hover:bg-[var(--blue-010)] transition-colors'
 
 export function ImportPanel({ onImport }: Props) {
   const [tab, setTab] = useState<'partake' | 'discord'>('partake')
@@ -82,9 +92,7 @@ export function ImportPanel({ onImport }: Props) {
   }
 
   const tabClass = (t: typeof tab) =>
-    `px-4 py-2 text-sm font-medium rounded-t transition-colors ${
-      tab === t ? 'bg-[#313244] text-[#cba6f7]' : 'text-[#a6adc8] hover:text-[#cdd6f4]'
-    }`
+    `${pillBase} ${tab === t ? pillActive : pillInactive}`
 
   const foundFields = pending
     ? FIELD_LABELS.filter(({ key }) => pending[key] !== undefined && pending[key] !== '')
@@ -94,101 +102,101 @@ export function ImportPanel({ onImport }: Props) {
     : []
 
   return (
-    <div>
-      <div className="flex gap-1 mb-0">
+    <div className="xiv-card space-y-3">
+      <div className="flex items-center gap-3">
+        <div className="w-9 h-9 rounded-[0.625rem] bg-[var(--blue-010)] flex items-center justify-center shrink-0">
+          <Download size={18} className="text-[var(--xiv-blue)]" />
+        </div>
+        <div>
+          <h2 className="font-semibold text-[1.02rem] text-[var(--foreground)]" style={{ fontFamily: 'var(--font-heading)' }}>
+            Import event
+          </h2>
+          <p className="text-sm text-[var(--muted-foreground)]">Pull details from a Partake link or a Discord post</p>
+        </div>
+      </div>
+
+      <div className="flex gap-2">
         <button className={tabClass('partake')} onClick={() => { setTab('partake'); setPending(null) }}>Partake URL</button>
         <button className={tabClass('discord')} onClick={() => { setTab('discord'); setPending(null) }}>Discord Paste</button>
       </div>
 
-      <div className="bg-[#313244] rounded-b rounded-tr p-4 space-y-3">
-        {!pending ? (
-          <>
-            {tab === 'partake' ? (
-              <>
-                <p className="text-xs text-[#a6adc8]">Paste a Partake event URL to pull in event details.</p>
-                <div className="flex gap-2">
-                  <input
-                    type="url"
-                    value={partakeUrl}
-                    onChange={e => setPartakeUrl(e.target.value)}
-                    onKeyDown={e => e.key === 'Enter' && handlePartakeFetch()}
-                    placeholder="https://partake.gg/events/12345"
-                    className="flex-1 bg-[#1e1e2e] text-[#cdd6f4] placeholder-[#6c7086] rounded px-3 py-2 text-sm border border-[#45475a] focus:border-[#cba6f7] focus:outline-none"
-                  />
-                  <button
-                    onClick={handlePartakeFetch}
-                    disabled={loading}
-                    className="px-4 py-2 bg-[#cba6f7] text-[#1e1e2e] text-sm font-semibold rounded hover:opacity-90 disabled:opacity-50 transition-opacity"
-                  >
-                    {loading ? 'Fetching…' : 'Import'}
-                  </button>
-                </div>
-              </>
-            ) : (
-              <>
-                <p className="text-xs text-[#a6adc8]">Paste a Discord post. We'll pull out what we can.</p>
-                <textarea
-                  value={discordText}
-                  onChange={e => setDiscordText(e.target.value)}
-                  placeholder="Paste Discord post text here…"
-                  rows={5}
-                  className="w-full bg-[#1e1e2e] text-[#cdd6f4] placeholder-[#6c7086] rounded px-3 py-2 text-sm border border-[#45475a] focus:border-[#cba6f7] focus:outline-none resize-y"
+      {!pending ? (
+        <>
+          {tab === 'partake' ? (
+            <>
+              <p className="text-xs text-[var(--muted-foreground)]">Paste a Partake event URL to pull in event details.</p>
+              <div className="flex gap-2 flex-wrap">
+                <input
+                  type="url"
+                  value={partakeUrl}
+                  onChange={e => setPartakeUrl(e.target.value)}
+                  onKeyDown={e => e.key === 'Enter' && handlePartakeFetch()}
+                  placeholder="https://partake.gg/events/12345"
+                  className={inputClass}
                 />
-                <button
-                  onClick={handleDiscordParse}
-                  className="px-4 py-2 bg-[#cba6f7] text-[#1e1e2e] text-sm font-semibold rounded hover:opacity-90 transition-opacity"
-                >
-                  Parse
+                <button onClick={handlePartakeFetch} disabled={loading} className={primaryBtn}>
+                  {loading ? 'Fetching…' : 'Import'}
                 </button>
-              </>
-            )}
-            {error && <p className="text-[#f38ba8] text-xs">{error}</p>}
-          </>
-        ) : (
-          <>
-            <p className="text-xs text-[#a6adc8]">Tick what to bring in. Untick to keep what you have.</p>
-
-            {foundFields.length > 0 && (
-              <div className="space-y-1.5">
-                {foundFields.map(({ key, label }) => (
-                  <label key={key} className="flex items-center gap-2 cursor-pointer group">
-                    <input
-                      type="checkbox"
-                      checked={selected.has(key)}
-                      onChange={() => toggleField(key)}
-                      className="w-4 h-4 accent-[#cba6f7]"
-                    />
-                    <span className="text-xs font-medium text-[#a6adc8] w-24">{label}</span>
-                    <span className="text-xs text-[#cdd6f4] truncate">{String(pending[key])}</span>
-                  </label>
-                ))}
               </div>
-            )}
-
-            {missingFields.length > 0 && (
-              <p className="text-xs text-[#6c7086]">
-                Not in this post: {missingFields.map(f => f.label).join(', ')}
-              </p>
-            )}
-
-            <div className="flex gap-2 pt-1">
-              <button
-                onClick={applySelected}
-                disabled={selected.size === 0}
-                className="px-4 py-2 bg-[#cba6f7] text-[#1e1e2e] text-sm font-semibold rounded hover:opacity-90 disabled:opacity-40 transition-opacity"
-              >
-                Apply {selected.size > 0 ? `${selected.size} field${selected.size > 1 ? 's' : ''}` : ''}
+            </>
+          ) : (
+            <>
+              <p className="text-xs text-[var(--muted-foreground)]">Paste a Discord post. We'll pull out what we can.</p>
+              <textarea
+                value={discordText}
+                onChange={e => setDiscordText(e.target.value)}
+                placeholder="Paste Discord post text here…"
+                rows={5}
+                className={`${inputClass} w-full resize-y`}
+              />
+              <button onClick={handleDiscordParse} className={primaryBtn}>
+                Parse
               </button>
-              <button
-                onClick={() => setPending(null)}
-                className="px-4 py-2 bg-[#45475a] text-[#cdd6f4] text-sm rounded hover:bg-[#585b70] transition-colors"
-              >
-                Cancel
-              </button>
+            </>
+          )}
+          {error && <p className="text-[var(--destructive)] text-xs">{error}</p>}
+        </>
+      ) : (
+        <div className="bg-[var(--blue-004)] border border-[var(--blue-015)] rounded-[0.625rem] p-3 space-y-3">
+          <p className="text-xs text-[var(--muted-foreground)]">Tick what to bring in. Untick to keep what you have.</p>
+
+          {foundFields.length > 0 && (
+            <div className="space-y-1.5">
+              {foundFields.map(({ key, label }) => (
+                <label key={key} className="flex items-center gap-2 cursor-pointer group">
+                  <input
+                    type="checkbox"
+                    checked={selected.has(key)}
+                    onChange={() => toggleField(key)}
+                    className="w-4 h-4 accent-[var(--xiv-blue)]"
+                  />
+                  <span className="text-[0.68rem] font-semibold uppercase tracking-[0.07em] text-[var(--muted-foreground)] w-28 shrink-0">{label}</span>
+                  <span className="text-xs text-[var(--foreground)] truncate">{String(pending[key])}</span>
+                </label>
+              ))}
             </div>
-          </>
-        )}
-      </div>
+          )}
+
+          {missingFields.length > 0 && (
+            <p className="text-xs text-[var(--fg-faint)]">
+              Not in this post: {missingFields.map(f => f.label).join(', ')}
+            </p>
+          )}
+
+          <div className="flex gap-2 pt-1">
+            <button onClick={applySelected} disabled={selected.size === 0} className={primaryBtn.replace('px-4', 'px-4 disabled:opacity-40')}>
+              Apply {selected.size > 0 ? `${selected.size} field${selected.size > 1 ? 's' : ''}` : ''}
+            </button>
+            <button onClick={() => setPending(null)} className={ghostBtn}>
+              Cancel
+            </button>
+          </div>
+        </div>
+      )}
     </div>
   )
 }
+
+const pillBase = 'px-[13px] py-[7px] rounded-full text-sm font-medium transition-colors'
+const pillActive = 'bg-[var(--xiv-blue)] text-[var(--xiv-navy)] font-semibold'
+const pillInactive = 'bg-[var(--blue-006)] text-[var(--muted-foreground)] hover:bg-[var(--blue-010)]'

@@ -2,14 +2,14 @@ import { useState, useEffect } from 'react'
 import type { ShoutFields, TemplateId, ParsedEvent } from './types'
 import { ImportPanel } from './components/ImportPanel'
 import { ShoutBuilder } from './components/ShoutBuilder'
-import { TemplateSelector } from './components/TemplateSelector'
 import { ShoutPreview } from './components/ShoutPreview'
-import { buildShout, SEPARATORS, DECORS } from './lib/shout-templates'
+import { buildShout } from './lib/shout-templates'
 import type { SeparatorId, DecorId } from './lib/shout-templates'
 import { fetchSession } from './lib/xivvm-auth'
 import type { XivVMSession } from './lib/xivvm-auth'
 import { SavedShouts } from './components/SavedShouts'
 import { FeedbackModal } from './components/FeedbackModal'
+import { ArrowLeft, LogIn, MessageSquare } from 'lucide-react'
 
 const EMPTY_FIELDS: ShoutFields = {
   venueName: '',
@@ -24,9 +24,15 @@ const EMPTY_FIELDS: ShoutFields = {
   links: '',
 }
 
-const btnBase = 'px-3 py-1.5 rounded text-sm font-medium transition-colors'
-const btnActive = 'bg-[#cba6f7] text-[#1e1e2e]'
-const btnInactive = 'bg-[#45475a] text-[#cdd6f4] hover:bg-[#585b70]'
+function initials(name: string | null): string {
+  if (!name) return '?'
+  return name
+    .split(' ')
+    .filter(Boolean)
+    .slice(0, 2)
+    .map(p => p[0]!.toUpperCase())
+    .join('')
+}
 
 export default function App() {
   const [fields, setFields] = useState<ShoutFields>(EMPTY_FIELDS)
@@ -62,66 +68,114 @@ export default function App() {
   useEffect(() => { setShout(generated) }, [generated])
 
   return (
-    <div className="min-h-screen bg-[#1e1e2e] text-[#cdd6f4]">
-      <header className="border-b border-[#313244] px-4 py-4">
-        <div className="max-w-3xl mx-auto">
-          <h1 className="text-xl font-bold text-[#cba6f7]">FFXIV Shout Crafter</h1>
-          <p className="text-sm text-[#a6adc8] mt-0.5">Craft /shout ads from Partake events or Discord posts.</p>
+    <div className="min-h-screen bg-[var(--xiv-navy)] text-[var(--foreground)]">
+      <header className="relative overflow-hidden border-b border-[var(--blue-012)]">
+        <div
+          className="absolute inset-0 opacity-[0.22]"
+          style={{
+            backgroundImage: 'url(/starfield.png)',
+            backgroundSize: 'cover',
+            backgroundPosition: 'center',
+            animation: 'starDrift 22s ease-in-out infinite',
+          }}
+        />
+        <div
+          className="absolute inset-0 pointer-events-none"
+          style={{
+            background: 'radial-gradient(ellipse 600px 220px at 50% 0%, rgba(0,180,255,0.14), transparent 70%)',
+          }}
+        />
+
+        <div className="relative max-w-[880px] mx-auto px-6 py-4 flex items-center justify-between gap-4 flex-wrap">
+          <div className="flex items-center gap-3">
+            <img
+              src="/xiv-icon.png"
+              alt=""
+              className="w-9 h-9"
+              style={{ filter: 'drop-shadow(0 0 9px rgba(0,180,255,0.55))' }}
+            />
+            <div>
+              <h1
+                className="font-bold tracking-[0.04em] text-[1.4rem] leading-tight text-[var(--foreground)]"
+                style={{ fontFamily: 'var(--font-display)' }}
+              >
+                Shout Crafter
+              </h1>
+              <p className="text-[0.72rem] text-[var(--muted-foreground)]">
+                Craft{' '}
+                <code
+                  className="px-1 rounded-[0.25rem] text-[var(--xiv-blue)] bg-[var(--blue-010)]"
+                  style={{ fontFamily: 'var(--font-mono)' }}
+                >
+                  /shout
+                </code>{' '}
+                ads from Partake & Discord
+              </p>
+            </div>
+          </div>
+
+          <div className="flex items-center gap-3">
+            <a
+              href="https://xivvenuemanager.com"
+              className="flex items-center gap-1 text-[0.8rem] text-[var(--muted-foreground)] hover:text-[var(--xiv-blue)] transition-colors"
+            >
+              <ArrowLeft size={14} />
+              XIV Venue Manager
+            </a>
+            {xivvm?.user && (
+              <div className="flex items-center gap-2 bg-[var(--blue-006)] rounded-full pl-1 pr-3 py-1">
+                <div
+                  className="w-[26px] h-[26px] rounded-full flex items-center justify-center text-[0.65rem] font-bold text-[var(--xiv-navy)]"
+                  style={{ background: 'linear-gradient(135deg,#00b4ff,#0a3a5c)', fontFamily: 'var(--font-heading)' }}
+                >
+                  {initials(xivvm.user.name)}
+                </div>
+                <span className="text-sm text-[var(--foreground)]">{xivvm.user.name}</span>
+              </div>
+            )}
+          </div>
         </div>
+
+        <div
+          className="absolute bottom-0 left-0 right-0 h-px"
+          style={{ background: 'linear-gradient(90deg, transparent, rgba(0,180,255,0.55), transparent)' }}
+        />
       </header>
 
-      <main className="max-w-3xl mx-auto px-4 py-6 space-y-5">
+      <main className="max-w-[880px] mx-auto px-6 py-[26px] pb-14 space-y-[18px]">
         <ImportPanel onImport={handleImport} />
 
-        <ShoutBuilder fields={fields} onChange={setFields} />
+        <ShoutBuilder
+          fields={fields}
+          onChange={setFields}
+          templateId={templateId}
+          onTemplateChange={setTemplateId}
+          separatorId={separatorId}
+          onSeparatorChange={setSeparatorId}
+          decorId={decorId}
+          onDecorChange={setDecorId}
+        />
 
-        <div className="bg-[#313244] rounded p-4 space-y-4">
-          <div className="flex items-center gap-3 flex-wrap">
-            <span className="text-xs text-[#a6adc8] font-medium uppercase tracking-wide w-20">Template</span>
-            <TemplateSelector selected={templateId} onChange={setTemplateId} />
-          </div>
-
-          <div className="flex items-center gap-3 flex-wrap">
-            <span className="text-xs text-[#a6adc8] font-medium uppercase tracking-wide w-20">Separator</span>
-            <div className="flex gap-2">
-              {SEPARATORS.map(s => (
-                <button
-                  key={s.id}
-                  onClick={() => setSeparatorId(s.id)}
-                  className={`${btnBase} font-mono ${separatorId === s.id ? btnActive : btnInactive}`}
-                >
-                  {s.label}
-                </button>
-              ))}
-            </div>
-          </div>
-
-          <div className="flex items-start gap-3 flex-wrap">
-            <span className="text-xs text-[#a6adc8] font-medium uppercase tracking-wide w-20 pt-1.5">Venue Style</span>
-            <div className="flex gap-2 flex-wrap">
-              {DECORS.map(d => (
-                <button
-                  key={d.id}
-                  onClick={() => setDecorId(d.id)}
-                  className={`${btnBase} ${decorId === d.id ? btnActive : btnInactive}`}
-                >
-                  {d.label}
-                </button>
-              ))}
-            </div>
-          </div>
-
-          <ShoutPreview shout={shout} onChange={setShout} />
-        </div>
+        <ShoutPreview shout={shout} onChange={setShout} />
 
         {xivvm?.user ? (
           <>
-            <div className="bg-[#313244] rounded px-4 py-3 flex items-center gap-2">
-              {xivvm.user.image && <img src={xivvm.user.image} className="w-7 h-7 rounded-full" alt="" />}
-              <p className="text-sm text-[#cdd6f4] flex-1">Signed in as <span className="font-semibold text-[#cba6f7]">{xivvm.user.name}</span></p>
+            <p className="text-[0.7rem] font-semibold uppercase tracking-[0.08em] text-[var(--muted-foreground)]">
+              Logged-in view
+            </p>
+            <div className="xiv-card !py-3 flex items-center gap-3">
+              <div
+                className="w-[26px] h-[26px] rounded-full flex items-center justify-center text-[0.65rem] font-bold text-[var(--xiv-navy)]"
+                style={{ background: 'linear-gradient(135deg,#00b4ff,#0a3a5c)', fontFamily: 'var(--font-heading)' }}
+              >
+                {initials(xivvm.user.name)}
+              </div>
+              <p className="text-sm flex-1 text-[var(--foreground)]">
+                Signed in as <span className="font-semibold text-[var(--xiv-blue)]">{xivvm.user.name}</span>
+              </p>
               <a
                 href="https://xivvenuemanager.com/auth/signout-shoutcrafter"
-                className="text-xs text-[#6c7086] hover:text-[#f38ba8] transition-colors"
+                className="text-xs text-[var(--fg-faint)] hover:text-[var(--destructive)] transition-colors"
               >
                 Sign out
               </a>
@@ -135,29 +189,59 @@ export default function App() {
             />
           </>
         ) : (
-          <div className="bg-[#313244] rounded p-4 text-center space-y-1">
-            <p className="text-sm text-[#cdd6f4]">Save shouts across your venues.</p>
-            <p className="text-xs text-[#a6adc8]">
-              Sign into <a href="https://xivvenuemanager.com" className="text-[#cba6f7] hover:underline">XIV Venue Manager</a> to save and reuse your shouts.
+          <>
+            <p className="text-[0.7rem] font-semibold uppercase tracking-[0.08em] text-[var(--muted-foreground)]">
+              Logged-out view
             </p>
-          </div>
+            <div className="xiv-card flex flex-col items-center text-center gap-3">
+              <div className="w-12 h-12 rounded-[0.75rem] bg-[var(--blue-010)] flex items-center justify-center">
+                <LogIn size={22} className="text-[var(--xiv-blue)]" />
+              </div>
+              <h2 className="font-semibold text-[1.02rem] text-[var(--foreground)]" style={{ fontFamily: 'var(--font-heading)' }}>
+                Save shouts across your venues
+              </h2>
+              <p className="text-sm text-[var(--muted-foreground)]">
+                Sign in to save and reuse your shouts on any device.
+              </p>
+              <a
+                href="https://xivvenuemanager.com"
+                className="xiv-btn-shimmer inline-flex items-center gap-2 bg-[var(--xiv-blue)] text-[var(--xiv-navy)] font-bold text-sm px-4 py-2 rounded-[0.5rem]"
+                style={{ fontFamily: 'var(--font-heading)' }}
+              >
+                <MessageSquare size={16} />
+                Sign in with Discord
+              </a>
+            </div>
+          </>
         )}
       </main>
 
-      <footer className="border-t border-[#313244] px-4 py-4 mt-8">
-        <div className="max-w-3xl mx-auto text-xs text-[#6c7086] flex items-center justify-center gap-3">
-          <span>Part of <a href="https://xivvenuemanager.com" className="text-[#cba6f7] hover:underline">XIV Venue Manager</a></span>
-          {xivvm?.user && (
-            <>
-              <span>·</span>
-              <button
-                onClick={() => setShowFeedback(true)}
-                className="text-[#6c7086] hover:text-[#a6adc8] transition-colors"
-              >
-                Feedback
-              </button>
-            </>
-          )}
+      <footer className="border-t border-[var(--blue-010)]">
+        <div className="max-w-[880px] mx-auto px-6 py-6 text-center space-y-2">
+          <div className="flex items-center justify-center gap-3 flex-wrap text-sm text-[var(--muted-foreground)]">
+            <span>
+              Part of{' '}
+              <a href="https://xivvenuemanager.com" className="text-[var(--xiv-blue)] hover:underline">
+                XIV Venue Manager
+              </a>
+            </span>
+            {xivvm?.user && (
+              <>
+                <span>·</span>
+                <button
+                  onClick={() => setShowFeedback(true)}
+                  className="hover:text-[var(--xiv-blue)] transition-colors"
+                >
+                  Feedback
+                </button>
+              </>
+            )}
+          </div>
+          <p className="text-xs text-[var(--fg-faint)]">
+            XIV Venue Manager is not affiliated with SQUARE ENIX CO., LTD.
+            <br />
+            FINAL FANTASY is a registered trademark of Square Enix Holdings Co., Ltd.
+          </p>
         </div>
       </footer>
 
