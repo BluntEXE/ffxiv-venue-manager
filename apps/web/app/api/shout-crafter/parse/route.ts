@@ -47,7 +47,12 @@ function sanitizeFields(raw: unknown): ExtractedFields {
   const obj = raw as Record<string, unknown>
   for (const field of STRING_FIELDS) {
     const value = obj[field]
-    if (typeof value === "string" && value.trim()) result[field] = value.trim()
+    if (typeof value === "string" && value.trim()) {
+      result[field] = value.trim()
+    } else if (Array.isArray(value) && value.every((v) => typeof v === "string")) {
+      const joined = value.map((v) => v.trim()).filter(Boolean).join(", ")
+      if (joined) result[field] = joined
+    }
   }
   if (typeof obj.isAdult === "boolean") result.isAdult = obj.isAdult
   return result
@@ -75,7 +80,7 @@ async function handler(req: NextRequest): Promise<NextResponse> {
         Authorization: `Bearer ${process.env.HERMES_LITELLM_API_KEY}`,
       },
       body: JSON.stringify({
-        model: "google/gemma-4-26b-a4b-it:free",
+        model: "deepseek/deepseek-v4-flash",
         messages: [
           { role: "system", content: SYSTEM_PROMPT },
           { role: "user", content: text },
