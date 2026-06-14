@@ -13,7 +13,12 @@ const CATEGORIES: { id: FeedbackCategory; label: string }[] = [
   { id: 'GENERAL',         label: 'General' },
 ]
 
-const inputClass = 'w-full bg-[#1e1e2e] text-[#cdd6f4] placeholder-[#6c7086] rounded px-3 py-2 text-sm border border-[#45475a] focus:border-[#cba6f7] focus:outline-none'
+const inputClass =
+  'w-full bg-[var(--blue-004)] text-[var(--foreground)] placeholder-[var(--fg-faint)] rounded-[0.5rem] px-3 py-2 text-sm border border-[var(--blue-015)] focus:border-[var(--xiv-blue)] focus:outline-none focus:shadow-[0_0_0_3px_rgba(0,180,255,0.12)] transition-colors'
+
+const pillBase = 'px-3 py-1.5 rounded-full text-sm font-medium transition-colors'
+const pillActive = 'bg-[var(--xiv-blue)] text-[var(--xiv-navy)] font-semibold'
+const pillInactive = 'bg-[var(--blue-006)] text-[var(--muted-foreground)] hover:bg-[var(--blue-010)]'
 
 export function FeedbackModal({ onClose }: Props) {
   const [category, setCategory] = useState<FeedbackCategory>('BUG_REPORT')
@@ -62,13 +67,15 @@ export function FeedbackModal({ onClose }: Props) {
       onClick={e => { if (e.target === e.currentTarget) onClose() }}
     >
       {/* Modal panel */}
-      <div className="w-full max-w-lg bg-[#313244] rounded-lg shadow-2xl overflow-hidden animate-[fadeSlideUp_200ms_ease-out]">
-        <div className="px-5 py-4 border-b border-[#45475a] flex items-center justify-between">
-          <h2 className="text-sm font-semibold text-[#cdd6f4]">Send Feedback</h2>
+      <div className="w-full max-w-lg xiv-card !p-0 overflow-hidden animate-[fadeSlideUp_200ms_ease-out]">
+        <div className="px-5 py-4 border-b border-[var(--blue-010)] flex items-center justify-between">
+          <h2 className="font-semibold text-[1.02rem] text-[var(--foreground)]" style={{ fontFamily: 'var(--font-heading)' }}>
+            Send Feedback
+          </h2>
           <button
             onClick={onClose}
             aria-label="Close"
-            className="text-[#6c7086] hover:text-[#cdd6f4] transition-colors text-lg leading-none"
+            className="text-[var(--fg-faint)] hover:text-[var(--foreground)] transition-colors text-lg leading-none"
           >
             ×
           </button>
@@ -76,25 +83,21 @@ export function FeedbackModal({ onClose }: Props) {
 
         {success ? (
           <div className="px-5 py-10 flex flex-col items-center gap-2 text-center">
-            <span className="text-2xl text-[#a6e3a1]">✓</span>
-            <p className="text-sm text-[#cdd6f4]">Feedback sent.</p>
-            <p className="text-xs text-[#6c7086]">Thanks for helping improve Shout Crafter.</p>
+            <span className="text-2xl text-[var(--xiv-blue)]">✓</span>
+            <p className="text-sm text-[var(--foreground)]">Feedback sent.</p>
+            <p className="text-xs text-[var(--fg-faint)]">Thanks for helping improve Shout Crafter.</p>
           </div>
         ) : (
           <div className="px-5 py-4 space-y-4">
             {/* Category */}
             <div className="space-y-1.5">
-              <label className="block text-xs font-medium text-[#a6adc8] uppercase tracking-wide">Category</label>
+              <label className="block text-[0.68rem] font-semibold text-[var(--muted-foreground)] uppercase tracking-[0.07em]">Category</label>
               <div className="flex gap-2 flex-wrap">
                 {CATEGORIES.map(c => (
                   <button
                     key={c.id}
                     onClick={() => setCategory(c.id)}
-                    className={`px-3 py-1.5 rounded text-sm font-medium transition-colors ${
-                      category === c.id
-                        ? 'bg-[#cba6f7] text-[#1e1e2e]'
-                        : 'bg-[#45475a] text-[#cdd6f4] hover:bg-[#585b70]'
-                    }`}
+                    className={`${pillBase} ${category === c.id ? pillActive : pillInactive}`}
                   >
                     {c.label}
                   </button>
@@ -104,8 +107,8 @@ export function FeedbackModal({ onClose }: Props) {
 
             {/* Subject */}
             <div className="space-y-1.5">
-              <label className="block text-xs font-medium text-[#a6adc8] uppercase tracking-wide">
-                Subject <span className="text-[#f38ba8]">*</span>
+              <label className="block text-[0.68rem] font-semibold text-[var(--muted-foreground)] uppercase tracking-[0.07em]">
+                Subject <span className="text-[var(--destructive)]">*</span>
               </label>
               <input
                 value={subject}
@@ -118,8 +121,8 @@ export function FeedbackModal({ onClose }: Props) {
 
             {/* Description */}
             <div className="space-y-1.5">
-              <label className="block text-xs font-medium text-[#a6adc8] uppercase tracking-wide">
-                Description <span className="text-[#f38ba8]">*</span>
+              <label className="block text-[0.68rem] font-semibold text-[var(--muted-foreground)] uppercase tracking-[0.07em]">
+                Description <span className="text-[var(--destructive)]">*</span>
               </label>
               <textarea
                 value={description}
@@ -131,20 +134,21 @@ export function FeedbackModal({ onClose }: Props) {
             </div>
 
             {error && (
-              <p className="text-xs text-[#f38ba8]">{error}</p>
+              <p className="text-xs text-[var(--destructive)]">{error}</p>
             )}
 
             <div className="flex gap-2 pt-1">
               <button
                 onClick={handleSubmit}
                 disabled={submitting || !subject.trim() || !description.trim()}
-                className="flex-1 px-4 py-2 bg-[#cba6f7] text-[#1e1e2e] text-sm font-semibold rounded hover:opacity-90 disabled:opacity-40 transition-opacity"
+                className="flex-1 xiv-btn-shimmer px-4 py-2 bg-[var(--xiv-blue)] text-[var(--xiv-navy)] text-sm font-bold rounded-[0.5rem] disabled:opacity-40 transition-opacity"
+                style={{ fontFamily: 'var(--font-heading)' }}
               >
                 {submitting ? 'Sending…' : 'Send Feedback'}
               </button>
               <button
                 onClick={onClose}
-                className="px-4 py-2 bg-[#45475a] text-[#cdd6f4] text-sm rounded hover:bg-[#585b70] transition-colors"
+                className="px-4 py-2 bg-[var(--blue-006)] text-[var(--muted-foreground)] text-sm font-medium rounded-[0.5rem] hover:bg-[var(--blue-010)] transition-colors"
               >
                 Cancel
               </button>
