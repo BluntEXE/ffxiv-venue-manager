@@ -3,6 +3,7 @@ import { getServerSession } from "next-auth"
 import { authOptions } from "@/lib/auth"
 import { prisma } from "@/lib/prisma"
 import { claimShiftWithMerge } from "@/lib/shift-overlap"
+import { logShiftAudit } from "@/lib/shift-audit"
 import { z } from "zod"
 
 const patchSchema = z.object({
@@ -71,6 +72,7 @@ export async function PATCH(
           { status: 409 }
         )
       }
+      await logShiftAudit(claimResult.shift.id, "CLAIM", session.user.id, "web")
       // Notify managers/owners that a claim needs approval (skip if merged
       // into an already-approved shift — nothing for a manager to act on)
       if (!claimResult.merged) {
@@ -128,6 +130,7 @@ export async function PATCH(
       if (result.count === 0) {
         return NextResponse.json({ error: "Shift status changed concurrently" }, { status: 409 })
       }
+      await logShiftAudit(shift.id, "APPROVE", session.user.id, "web")
       if (shift.membershipId) {
         const claimant = await prisma.membership.findUnique({
           where: { id: shift.membershipId },
@@ -184,6 +187,7 @@ export async function PATCH(
       if (result.count === 0) {
         return NextResponse.json({ error: "Shift status changed concurrently" }, { status: 409 })
       }
+      await logShiftAudit(shift.id, "REJECT", session.user.id, "web")
       // Notify the claimant — shift.membershipId captured before the update cleared it
       if (shift.membershipId) {
         const claimant = await prisma.membership.findUnique({
@@ -249,6 +253,7 @@ export async function PATCH(
       }
 
       queueOpenedNowNotifications(venue.id, venue.name, now).catch(() => {})
+      await logShiftAudit(shift.id, "CLOCK_IN", session.user.id, "web")
 
       return NextResponse.json({
         success: true,
@@ -275,6 +280,8 @@ export async function PATCH(
     if (writeResult.count === 0) {
       return NextResponse.json({ error: "Shift status changed concurrently" }, { status: 409 })
     }
+
+    await logShiftAudit(shift.id, "CLOCK_OUT", session.user.id, "web")
 
     return NextResponse.json({
       success: true,

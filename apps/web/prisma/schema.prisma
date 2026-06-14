@@ -49,6 +49,7 @@ model User {
   notificationPreference NotificationPreference?
   venueFollows           VenueFollow[]
   shoutTemplates         ShoutTemplate[]
+  shiftAuditLogs         ShiftAuditLog[]
   notifications          Notification[]
 
   @@map("users")
@@ -733,6 +734,7 @@ model Shift {
   membership   Membership?   @relation(fields: [membershipId], references: [id], onDelete: Cascade)
   role         Role?         @relation(fields: [roleId], references: [id], onDelete: SetNull)
   payrollEntry PayrollEntry? @relation(fields: [payrollEntryId], references: [id], onDelete: SetNull)
+  auditLogs    ShiftAuditLog[]
 
   @@index([venueId, scheduledStart])
   @@index([membershipId, status])
@@ -740,6 +742,24 @@ model Shift {
   @@index([payrollEntryId])
   @@index([roleId])
   @@map("shifts")
+}
+
+// Audit trail for clock-in/out and claim/approve/reject actions on a shift.
+// actorUserId is null for system-initiated changes (e.g. auto-miss sweeps).
+model ShiftAuditLog {
+  id          String   @id @default(cuid())
+  shiftId     String
+  action      String // CLOCK_IN, CLOCK_OUT, CLAIM, APPROVE, REJECT
+  actorUserId String?
+  source      String // web, mobile_self, mobile_operator, plugin
+  createdAt   DateTime @default(now())
+
+  shift Shift @relation(fields: [shiftId], references: [id], onDelete: Cascade)
+  actor User?  @relation(fields: [actorUserId], references: [id], onDelete: SetNull)
+
+  @@index([shiftId])
+  @@index([actorUserId])
+  @@map("shift_audit_logs")
 }
 
 // ============================================

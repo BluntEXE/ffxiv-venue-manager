@@ -2,6 +2,7 @@ import { NextResponse } from "next/server"
 import { z } from "zod"
 import { prisma } from "@/lib/prisma"
 import { requireOperator, isOperatorContext } from "@/lib/mobile-operator-auth"
+import { logShiftAudit } from "@/lib/shift-audit"
 
 const patchSchema = z.object({
   action: z.enum(["clock-in", "clock-out"]),
@@ -56,6 +57,8 @@ export async function PATCH(
       return NextResponse.json({ error: "Shift status changed concurrently" }, { status: 409 })
     }
 
+    await logShiftAudit(shift.id, "CLOCK_IN", ctx.userId, "mobile_operator")
+
     return NextResponse.json({
       success: true,
       shift: { id: shift.id, status: "ACTIVE", actualStart: now.toISOString() },
@@ -81,6 +84,8 @@ export async function PATCH(
   if (writeResult.count === 0) {
     return NextResponse.json({ error: "Shift status changed concurrently" }, { status: 409 })
   }
+
+  await logShiftAudit(shift.id, "CLOCK_OUT", ctx.userId, "mobile_operator")
 
   return NextResponse.json({
     success: true,

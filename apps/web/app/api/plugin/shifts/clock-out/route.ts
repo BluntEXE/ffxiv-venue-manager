@@ -3,6 +3,7 @@ import { z } from "zod"
 import { prisma } from "@/lib/prisma"
 import { validateApiKey, checkPermission } from "@/lib/api/plugin-auth"
 import { enforcePluginRateLimit, enforcePluginIpRateLimit } from "@/lib/api/plugin-rate-limit"
+import { logShiftAudit } from "@/lib/shift-audit"
 
 /**
  * POST /api/plugin/shifts/clock-out
@@ -102,6 +103,8 @@ export async function POST(request: NextRequest) {
         { status: 400 }
       )
     }
+
+    await logShiftAudit(shift.id, "CLOCK_OUT", auth.userId, "plugin")
 
     return NextResponse.json({
       success: true,
