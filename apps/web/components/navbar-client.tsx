@@ -99,7 +99,7 @@ export function NavbarClient({ session, venues }: NavbarClientProps) {
         )}
 
         {/* Brand */}
-        <Link href="/" className="flex items-center gap-2.5 group flex-shrink-0">
+        <Link href="/" className="flex items-center gap-2.5 group flex-shrink-0" aria-label="XIV Venue Manager home">
           <Image
             src="/xiv-icon.png"
             alt=""
