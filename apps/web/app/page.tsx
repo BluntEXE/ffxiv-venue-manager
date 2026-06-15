@@ -354,7 +354,7 @@ export default async function Home() {
               { n: "03", title: "Run your venue from the dashboard", desc: "Open Live Mode on event night. Watch sales, patrons, and shifts in real time and manage everything from one place." },
             ].map(({ n, title, desc }) => (
               <div key={n} className="grid grid-cols-[5rem_1fr] gap-[22px] py-[22px] border-t border-[var(--blue-008)] items-start xiv-scroll-reveal">
-                <div className="font-cinzel font-bold text-[2.6rem] text-[rgba(0,180,255,0.2)] leading-none">{n}</div>
+                <div aria-hidden="true" className="font-cinzel font-bold text-[2.6rem] text-[rgba(0,180,255,0.2)] leading-none">{n}</div>
                 <div>
                   <p className="font-[var(--font-outfit)] font-semibold text-[1.1rem] mb-1.5">{title}</p>
                   <p className="text-[0.92rem] text-muted-foreground leading-[1.55]">{desc}</p>
