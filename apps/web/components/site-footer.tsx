@@ -10,7 +10,7 @@ export function SiteFooter() {
           {/* Brand col */}
           <div>
             <Link href="/" className="flex items-center gap-2.5 mb-4">
-              <Image src="/xiv-icon.png" alt="XIV Venue Manager" width={28} height={28} className="object-contain" />
+              <Image src="/xiv-icon.png" alt="" width={28} height={28} className="object-contain" />
               <span className="font-cinzel font-bold tracking-wide text-sm">
                 <span className="text-xiv">XIV</span>{" "}
                 <span className="text-foreground/80">Venue Manager</span>
@@ -34,7 +34,7 @@ export function SiteFooter() {
 
           {/* Product */}
           <div>
-            <h4 className="text-sm font-semibold mb-4">Product</h4>
+            <h3 className="text-sm font-semibold mb-4">Product</h3>
             <div className="space-y-2.5">
               {[
                 { label: "Features",       href: "/#features" },
@@ -50,7 +50,7 @@ export function SiteFooter() {
 
           {/* Resources */}
           <div>
-            <h4 className="text-sm font-semibold mb-4">Resources</h4>
+            <h3 className="text-sm font-semibold mb-4">Resources</h3>
             <div className="space-y-2.5">
               {[
                 { label: "Getting started", href: "/guide/getting-started" },
@@ -70,7 +70,7 @@ export function SiteFooter() {
 
           {/* Community */}
           <div>
-            <h4 className="text-sm font-semibold mb-4">Community</h4>
+            <h3 className="text-sm font-semibold mb-4">Community</h3>
             <div className="space-y-2.5">
               {[
                 { label: "Discord",    href: "https://discord.gg/AN5VDNSe2A" },

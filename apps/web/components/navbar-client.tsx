@@ -102,7 +102,7 @@ export function NavbarClient({ session, venues }: NavbarClientProps) {
         <Link href="/" className="flex items-center gap-2.5 group flex-shrink-0">
           <Image
             src="/xiv-icon.png"
-            alt="XIV Venue Manager"
+            alt=""
             width={32}
             height={32}
             className="object-contain transition-opacity group-hover:opacity-90"
@@ -180,7 +180,7 @@ export function NavbarClient({ session, venues }: NavbarClientProps) {
               <FeedbackDialog />
 
               <Button asChild variant="ghost" size="sm" className="text-[var(--support-pink)] hover:text-pink-300 hover:bg-[rgba(243,139,168,0.08)]">
-                <Link href="https://ko-fi.com/ehnocure" target="_blank" rel="noopener noreferrer">
+                <Link href="https://ko-fi.com/ehnocure" target="_blank" rel="noopener noreferrer" aria-label="Support on Ko-fi">
                   <Heart className="h-4 w-4 sm:mr-1" />
                   <span className="hidden sm:inline">Support</span>
                 </Link>
@@ -195,7 +195,7 @@ export function NavbarClient({ session, venues }: NavbarClientProps) {
           ) : (
             <>
               <Button asChild variant="ghost" size="sm" className="text-pink-400 hover:text-pink-300 hover:bg-pink-500/10">
-                <Link href="https://ko-fi.com/ehnocure" target="_blank" rel="noopener noreferrer">
+                <Link href="https://ko-fi.com/ehnocure" target="_blank" rel="noopener noreferrer" aria-label="Support on Ko-fi">
                   <Heart className="h-4 w-4 sm:mr-1" />
                   <span className="hidden sm:inline">Support</span>
                 </Link>
