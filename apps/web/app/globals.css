@@ -315,8 +315,8 @@
   }
 
   /* Fix card content overflow */
-  .card,
-  [class*="card"] {
+  [data-slot="card"],
+  .xiv-card {
     max-width: 100%;
     overflow-x: auto;
   }
