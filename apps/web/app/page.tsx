@@ -92,6 +92,7 @@ export default async function Home() {
   const stats = await getPublicStats().catch(() => null)
   return (
     <div className="min-h-screen">
+      <link rel="preload" href="/starfield.webp" as="image" fetchPriority="high" />
       {/* Hero Section */}
       <section className="xiv-hero-bg overflow-hidden">
         <div className="container mx-auto px-4 pt-[120px] pb-[70px]">
