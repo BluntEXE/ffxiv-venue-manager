@@ -48,7 +48,7 @@ export default async function StatsPage() {
 
       {/* ── Stats hero ── */}
       <section className="stats-hero relative overflow-hidden pt-[120px] pb-[56px] text-center border-b border-[var(--blue-008)]">
-        <div className="absolute inset-0 bg-[url('/starfield.png')] bg-center bg-cover opacity-[0.18]" />
+        <div className="absolute inset-0 bg-[url('/starfield.webp')] bg-center bg-cover opacity-[0.18]" />
         <div className="absolute inset-0" style={{ background: "radial-gradient(ellipse 70% 70% at 50% 30%, transparent, var(--background) 80%)" }} />
         <div className="relative z-10 max-w-[1080px] mx-auto px-8">
           {/* Crystal row */}

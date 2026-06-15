@@ -147,7 +147,7 @@ function FeaturedCard({ venue, isAuthed }: { venue: DiscoverVenue; isAuthed: boo
     <div className="vcard featured c4 rounded-xl border border-[var(--blue-018)] overflow-hidden relative">
       {/* HUD banner */}
       <div className="absolute inset-x-0 top-0 h-[116px] overflow-hidden pointer-events-none">
-        <div className="absolute inset-0 bg-cover bg-center opacity-40" style={{ backgroundImage: "url('/starfield.png')" }} />
+        <div className="absolute inset-0 bg-cover bg-center opacity-40" style={{ backgroundImage: "url('/starfield.webp')" }} />
         <div className="absolute inset-0" style={{ background: "linear-gradient(180deg, rgba(0,180,255,0.05), var(--card) 92%)" }} />
       </div>
 

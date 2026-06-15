@@ -8,6 +8,15 @@ const nextConfig: NextConfig = {
   async headers() {
     return [
       {
+        source: "/:path(.*\\.(?:png|jpg|jpeg|webp|avif|svg|ico|gif))",
+        headers: [
+          {
+            key: "Cache-Control",
+            value: "public, max-age=604800",
+          },
+        ],
+      },
+      {
         source: "/:path*",
         headers: [
           // Prevent clickjacking attacks

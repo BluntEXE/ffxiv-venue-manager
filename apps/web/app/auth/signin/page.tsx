@@ -1,5 +1,6 @@
 "use client"
 
+import Image from "next/image"
 import { signIn } from "next-auth/react"
 import { Button } from "@/components/ui/button"
 
@@ -10,7 +11,7 @@ export default function SignInPage() {
         {/* Brand mark */}
         <div className="text-center space-y-3">
           <div className="flex justify-center items-center gap-3 mb-1">
-            <img src="/xiv-icon.png" alt="XIV Venue Manager" className="h-10 w-10" />
+            <Image src="/xiv-icon.png" alt="XIV Venue Manager" width={40} height={40} className="h-10 w-10 object-contain" />
             <span className="font-cinzel text-2xl font-bold tracking-wide">
               <span className="text-[var(--xiv-blue)]">XIV</span>
               <span className="text-foreground/80 ml-2">Venue Manager</span>

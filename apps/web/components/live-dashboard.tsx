@@ -168,7 +168,7 @@ export function LiveDashboard({
 
       {/* Session bar — matches prototype .session-bar */}
       <div className="rounded-xl border border-[var(--blue-018)] overflow-hidden relative flex items-center gap-7 flex-wrap px-[26px] py-5 bg-[var(--card)]">
-        <div className="absolute inset-0 bg-[url('/starfield.png')] bg-cover bg-center opacity-[0.18] pointer-events-none" />
+        <div className="absolute inset-0 bg-[url('/starfield.webp')] bg-cover bg-center opacity-[0.18] pointer-events-none" />
         <div className="absolute inset-0 sess-gradient pointer-events-none" />
 
         {/* Main event info */}

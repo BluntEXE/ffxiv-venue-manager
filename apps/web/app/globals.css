@@ -226,7 +226,7 @@
     content: "";
     position: fixed;
     inset: 0;
-    background: url('/starfield.png') center / cover;
+    background: url('/starfield.webp') center / cover;
     opacity: 0.07;
     pointer-events: none;
     z-index: 0;
@@ -847,7 +847,7 @@
   content: '';
   position: absolute;
   inset: -10%;
-  background-image: url('/starfield.png');
+  background-image: url('/starfield.webp');
   background-size: cover;
   background-position: center;
   opacity: 0.22;
@@ -1155,7 +1155,7 @@
 
 /* ── Get Started wizard — matches prototype spec ── */
 .gs-wrap { min-height: calc(100vh - 60px); display: flex; flex-direction: column; position: relative; background: var(--background); }
-.gs-bg { position: fixed; inset: 0; background: url('/starfield.png') center/cover; opacity: 0.16; animation: gs-drift 24s ease-in-out infinite alternate; pointer-events: none; z-index: 0; }
+.gs-bg { position: fixed; inset: 0; background: url('/starfield.webp') center/cover; opacity: 0.16; animation: gs-drift 24s ease-in-out infinite alternate; pointer-events: none; z-index: 0; }
 .gs-bg::after { content: ""; position: absolute; inset: 0; background: radial-gradient(ellipse 70% 60% at 50% 35%, transparent, var(--background) 80%); }
 @keyframes gs-drift { from { transform: scale(1); } to { transform: scale(1.12) translate(-2%, -2%); } }
 
@@ -1220,7 +1220,7 @@
 .gallery { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; }
 @media (max-width: 860px) { .gallery { grid-template-columns: repeat(2, 1fr); } }
 .gtile { aspect-ratio: 4/3; border-radius: var(--radius-lg); border: 1px solid var(--blue-015); background: linear-gradient(135deg, var(--card), var(--surface-alt, var(--card))); position: relative; overflow: hidden; display: grid; place-items: center; }
-.gtile .gbg { position: absolute; inset: 0; background: url('/starfield.png') center/cover; opacity: 0.18; pointer-events: none; }
+.gtile .gbg { position: absolute; inset: 0; background: url('/starfield.webp') center/cover; opacity: 0.18; pointer-events: none; }
 .gtile svg { width: 26px; height: 26px; color: var(--blue-035); position: relative; }
 
 /* Hide scrollbar but keep scroll functionality */
