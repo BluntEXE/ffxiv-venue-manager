@@ -5,11 +5,6 @@ const nextConfig: NextConfig = {
   output: "standalone",
   // Required for pnpm workspaces: trace file deps from monorepo root
   outputFileTracingRoot: path.join(__dirname, "../../"),
-  // Inline critical CSS and load the rest non-blocking (addresses
-  // Lighthouse "Render-blocking requests" for the global stylesheet)
-  experimental: {
-    optimizeCss: true,
-  },
   async headers() {
     return [
       {
