@@ -113,7 +113,7 @@
   --surface-alt: #060b16;
   --card-mantle: #181825;
   --fg-subtle: var(--ctp-subtext1);
-  --fg-faint: var(--ctp-overlay0);
+  --fg-faint: var(--ctp-overlay1);
   --success: #10b981;
   --success-soft: rgba(16, 185, 129, 0.10);
   --success-text: #34d399;
