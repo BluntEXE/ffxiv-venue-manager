@@ -95,7 +95,17 @@ export default function StaffGuidePage() {
               </li>
               <li className="flex items-start gap-3">
                 <span className="font-mono text-xs bg-[rgba(0,180,255,0.15)] text-[var(--xiv-blue)] rounded-full w-6 h-6 flex items-center justify-center shrink-0 mt-0.5">3</span>
-                <span><span className="font-medium">Configure the plugin:</span> Open it with <code className="bg-[rgba(0,180,255,0.08)] text-[var(--xiv-blue)] px-1.5 py-0.5 rounded text-xs font-mono">/xvm</code>, go to Settings, paste your API key (from the website under Settings &gt; API Keys), set the server URL to <code className="bg-[rgba(0,180,255,0.08)] text-[var(--xiv-blue)] px-1.5 py-0.5 rounded text-xs font-mono">https://xivvenuemanager.com</code>, and select your venue.</span>
+                <div className="space-y-2 text-sm leading-relaxed">
+                  <span><span className="font-medium">Configure the plugin:</span> Open it with <code className="bg-[rgba(0,180,255,0.08)] text-[var(--xiv-blue)] px-1.5 py-0.5 rounded text-xs font-mono">/xvm</code> and go to Settings. Paste your API key, set the server URL to <code className="bg-[rgba(0,180,255,0.08)] text-[var(--xiv-blue)] px-1.5 py-0.5 rounded text-xs font-mono">https://xivvenuemanager.com</code>, and select your venue.</span>
+                  <p className="text-muted-foreground">Your API key is in your venue dashboard — open the venue, click <span className="font-medium text-foreground">Settings</span> in the left sidebar (not the account menu in the top right), then <span className="font-medium text-foreground">API Keys</span>.</p>
+                </div>
+              </li>
+              <li className="flex items-start gap-3">
+                <span className="font-mono text-xs bg-[rgba(0,180,255,0.15)] text-[var(--xiv-blue)] rounded-full w-6 h-6 flex items-center justify-center shrink-0 mt-0.5">4</span>
+                <div className="space-y-2 text-sm leading-relaxed">
+                  <span><span className="font-medium">Add your character:</span> On the website, open the account menu in the top right and go to <span className="font-medium">Account Settings</span>, then <span className="font-medium">Characters</span>. Add your FFXIV character name and world. This lets the plugin tell you apart from patrons so you are not counted as a visitor during your shift.</span>
+                  <p className="text-muted-foreground">You also need to save the venue location in your own plugin. Visit the venue&apos;s housing plot in game, open the plugin&apos;s <span className="font-medium text-foreground">Venues</span> tab, enter a name, and click <span className="font-medium text-foreground">Save Venue</span>. Then select your venue from the <span className="font-medium text-foreground">XIV-App Venue</span> dropdown. This is saved per-person and must be done by each staff member individually.</p>
+                </div>
               </li>
             </ol>
           </section>

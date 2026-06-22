@@ -98,14 +98,36 @@ export default function OwnerManagerGuidePage() {
                 <li>Click <span className="font-medium">Save and Close</span></li>
                 <li>Open the Plugin Installer, search for &quot;XIVVenueManagerSync&quot;, and install it</li>
                 <li>Open with <code className="bg-[rgba(0,180,255,0.08)] text-[var(--xiv-blue)] px-1.5 py-0.5 rounded text-xs font-mono">/xvm</code>, go to Settings</li>
-                <li>Generate an API key on the website (Settings &gt; API Keys) and paste it in the plugin</li>
+                <li>On the website, open your venue dashboard and click <span className="font-medium">Settings</span> in the left sidebar (not the account menu in the top right), then go to <span className="font-medium">API Keys</span> and generate a key</li>
+                <li>Paste the API key into the plugin</li>
                 <li>Set the server URL to <code className="bg-[rgba(0,180,255,0.08)] text-[var(--xiv-blue)] px-1.5 py-0.5 rounded text-xs font-mono">https://xivvenuemanager.com</code></li>
                 <li>Select your venue</li>
               </ol>
             </div>
 
             <div className="space-y-3">
-              <h3 className="text-base font-semibold text-foreground/80">3. Configure Venue Settings</h3>
+              <h3 className="text-base font-semibold text-foreground/80">3. Add Your Character</h3>
+              <p className="text-sm leading-relaxed">The plugin uses your character name to tell staff and patrons apart. Without this step, everyone in your venue is counted as a patron.</p>
+              <ol className="list-decimal list-inside space-y-1.5 pl-2 text-sm leading-relaxed">
+                <li>On the website, open the account menu in the top right and go to <span className="font-medium">Account Settings</span></li>
+                <li>Under <span className="font-medium">Characters</span>, add your FFXIV character name and world</li>
+                <li>Ask your staff to do the same from their own accounts</li>
+              </ol>
+            </div>
+
+            <div className="space-y-3">
+              <h3 className="text-base font-semibold text-foreground/80">4. Set Your Venue Location in the Plugin</h3>
+              <p className="text-sm leading-relaxed">The plugin needs to know which housing plot is your venue. This is saved locally per person — every staff member needs to do this on their own machine.</p>
+              <ol className="list-decimal list-inside space-y-1.5 pl-2 text-sm leading-relaxed">
+                <li>Go to your venue&apos;s housing plot in game with the plugin running</li>
+                <li>Open the plugin (<code className="bg-[rgba(0,180,255,0.08)] text-[var(--xiv-blue)] px-1.5 py-0.5 rounded text-xs font-mono">/xvm</code>) and go to the <span className="font-medium">Venues</span> tab</li>
+                <li>Enter a name and click <span className="font-medium">Save Venue</span> — this saves the current plot</li>
+                <li>In the <span className="font-medium">XIV-App Venue</span> column, select your web venue from the dropdown — this is what connects patron tracking to the correct venue on the website</li>
+              </ol>
+            </div>
+
+            <div className="space-y-3">
+              <h3 className="text-base font-semibold text-foreground/80">5. Configure Venue Settings</h3>
               <p className="text-sm leading-relaxed">In venue Settings:</p>
               <ul className="space-y-3 pl-2 text-sm leading-relaxed">
                 <li className="space-y-1.5">
