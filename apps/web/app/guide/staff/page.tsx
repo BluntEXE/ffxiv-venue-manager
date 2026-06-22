@@ -97,7 +97,7 @@ export default function StaffGuidePage() {
                 <span className="font-mono text-xs bg-[rgba(0,180,255,0.15)] text-[var(--xiv-blue)] rounded-full w-6 h-6 flex items-center justify-center shrink-0 mt-0.5">3</span>
                 <div className="space-y-2 text-sm leading-relaxed">
                   <span><span className="font-medium">Configure the plugin:</span> Open it with <code className="bg-[rgba(0,180,255,0.08)] text-[var(--xiv-blue)] px-1.5 py-0.5 rounded text-xs font-mono">/xvm</code> and go to Settings. Paste your API key, set the server URL to <code className="bg-[rgba(0,180,255,0.08)] text-[var(--xiv-blue)] px-1.5 py-0.5 rounded text-xs font-mono">https://xivvenuemanager.com</code>, and select your venue.</span>
-                  <p className="text-muted-foreground">Your API key is in your venue dashboard — open the venue, click <span className="font-medium text-foreground">Settings</span> in the left sidebar (not the account menu in the top right), then <span className="font-medium text-foreground">API Keys</span>.</p>
+                  <p className="text-muted-foreground">To find your API key: open your venue dashboard, click <span className="font-medium text-foreground">Settings</span> in the left sidebar (not the account menu in the top right), then <span className="font-medium text-foreground">API Keys</span>.</p>
                 </div>
               </li>
               <li className="flex items-start gap-3">

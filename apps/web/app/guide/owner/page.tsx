@@ -117,12 +117,12 @@ export default function OwnerManagerGuidePage() {
 
             <div className="space-y-3">
               <h3 className="text-base font-semibold text-foreground/80">4. Set Your Venue Location in the Plugin</h3>
-              <p className="text-sm leading-relaxed">The plugin needs to know which housing plot is your venue. This is saved locally per person — every staff member needs to do this on their own machine.</p>
+              <p className="text-sm leading-relaxed">The plugin needs to know which housing plot is your venue. This is saved locally per person. Every staff member needs to do this on their own machine.</p>
               <ol className="list-decimal list-inside space-y-1.5 pl-2 text-sm leading-relaxed">
                 <li>Go to your venue&apos;s housing plot in game with the plugin running</li>
                 <li>Open the plugin (<code className="bg-[rgba(0,180,255,0.08)] text-[var(--xiv-blue)] px-1.5 py-0.5 rounded text-xs font-mono">/xvm</code>) and go to the <span className="font-medium">Venues</span> tab</li>
-                <li>Enter a name and click <span className="font-medium">Save Venue</span> — this saves the current plot</li>
-                <li>In the <span className="font-medium">XIV-App Venue</span> column, select your web venue from the dropdown — this is what connects patron tracking to the correct venue on the website</li>
+                <li>Enter a name and click <span className="font-medium">Save Venue</span> to save the current plot</li>
+                <li>In the <span className="font-medium">XIV-App Venue</span> column, select your web venue from the dropdown. This connects patron tracking to the correct venue on the website.</li>
               </ol>
             </div>
 
