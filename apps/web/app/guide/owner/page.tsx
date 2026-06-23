@@ -79,68 +79,81 @@ export default function OwnerManagerGuidePage() {
           <section id="setup" className="space-y-6 scroll-mt-[84px]">
             <h2 className="font-cinzel text-2xl font-semibold border-b border-[rgba(0,180,255,0.2)] pb-3 tracking-wide">Initial Setup</h2>
 
-            <div className="space-y-3">
-              <h3 className="text-base font-semibold text-foreground/80">1. Create Your Venue</h3>
-              <ol className="list-decimal list-inside space-y-1.5 pl-2 text-sm leading-relaxed">
-                <li>Sign in at <a href="https://xivvenuemanager.com" className="text-[var(--xiv-blue)] underline underline-offset-2 hover:opacity-80">xivvenuemanager.com</a> with Discord</li>
-                <li>Click &quot;Create Venue&quot;</li>
-                <li>Fill in your venue name, world, data center, and optional location/description</li>
-              </ol>
-            </div>
-
-            <div className="space-y-3">
-              <h3 className="text-base font-semibold text-foreground/80">2. Install the Plugin</h3>
-              <ol className="list-decimal list-inside space-y-1.5 pl-2 text-sm leading-relaxed">
-                <li>Open Dalamud Settings (type <code className="bg-[rgba(0,180,255,0.08)] text-[var(--xiv-blue)] px-1.5 py-0.5 rounded text-xs font-mono">/xlsettings</code> in the game chat)</li>
-                <li>Go to the <span className="font-medium">Experimental</span> tab</li>
-                <li>Under <span className="font-medium">Custom Plugin Repositories</span>, paste this URL and click the <span className="font-medium">+</span> button:<br />
-                  <code className="bg-muted/60 px-1.5 py-0.5 rounded text-xs font-mono select-all break-all">https://raw.githubusercontent.com/BluntEXE/XIVVenueManagerSync/master/repo.json</code>
-                </li>
-                <li>Click <span className="font-medium">Save and Close</span></li>
-                <li>Open the Plugin Installer, search for &quot;XIVVenueManagerSync&quot;, and install it</li>
-                <li>Open with <code className="bg-[rgba(0,180,255,0.08)] text-[var(--xiv-blue)] px-1.5 py-0.5 rounded text-xs font-mono">/xvm</code>, go to Settings</li>
-                <li>On the website, open your venue dashboard and click <span className="font-medium">Settings</span> in the left sidebar (not the account menu in the top right), then go to <span className="font-medium">API Keys</span> and generate a key</li>
-                <li>Paste the API key into the plugin</li>
-                <li>Set the server URL to <code className="bg-[rgba(0,180,255,0.08)] text-[var(--xiv-blue)] px-1.5 py-0.5 rounded text-xs font-mono">https://xivvenuemanager.com</code></li>
-                <li>Select your venue</li>
-              </ol>
-            </div>
-
-            <div className="space-y-3">
-              <h3 className="text-base font-semibold text-foreground/80">3. Add Your Character</h3>
-              <p className="text-sm leading-relaxed">The plugin uses your character name to tell staff and patrons apart. Without this step, everyone in your venue is counted as a patron.</p>
-              <ol className="list-decimal list-inside space-y-1.5 pl-2 text-sm leading-relaxed">
-                <li>On the website, open the account menu in the top right and go to <span className="font-medium">Account Settings</span></li>
-                <li>Under <span className="font-medium">Characters</span>, add your FFXIV character name and world</li>
-                <li>Ask your staff to do the same from their own accounts</li>
-              </ol>
-            </div>
-
-            <div className="space-y-3">
-              <h3 className="text-base font-semibold text-foreground/80">4. Set Your Venue Location in the Plugin</h3>
-              <p className="text-sm leading-relaxed">The plugin needs to know which housing plot is your venue. This is saved locally per person. Every staff member needs to do this on their own machine.</p>
-              <ol className="list-decimal list-inside space-y-1.5 pl-2 text-sm leading-relaxed">
-                <li>Go to your venue&apos;s housing plot in game with the plugin running</li>
-                <li>Open the plugin (<code className="bg-[rgba(0,180,255,0.08)] text-[var(--xiv-blue)] px-1.5 py-0.5 rounded text-xs font-mono">/xvm</code>) and go to the <span className="font-medium">Venues</span> tab</li>
-                <li>Enter a name and click <span className="font-medium">Save Venue</span> to save the current plot</li>
-                <li>In the <span className="font-medium">XIV-App Venue</span> column, select your web venue from the dropdown. This connects patron tracking to the correct venue on the website.</li>
-              </ol>
-            </div>
-
-            <div className="space-y-3">
-              <h3 className="text-base font-semibold text-foreground/80">5. Configure Venue Settings</h3>
-              <p className="text-sm leading-relaxed">In venue Settings:</p>
-              <ul className="space-y-3 pl-2 text-sm leading-relaxed">
-                <li className="space-y-1.5">
-                  <span className="font-medium">Visibility Controls</span>: Control what staff can see:
-                  <ul className="list-disc list-inside pl-4 space-y-1 mt-1.5 text-muted-foreground">
-                    <li><code className="bg-[rgba(0,180,255,0.08)] text-[var(--xiv-blue)] px-1.5 py-0.5 rounded text-xs font-mono">salesVisibility</code>: <code className="bg-[rgba(0,180,255,0.08)] text-[var(--xiv-blue)] px-1.5 py-0.5 rounded text-xs font-mono">all</code> (everyone sees all sales), <code className="bg-[rgba(0,180,255,0.08)] text-[var(--xiv-blue)] px-1.5 py-0.5 rounded text-xs font-mono">own</code> (staff see only their own), <code className="bg-[rgba(0,180,255,0.08)] text-[var(--xiv-blue)] px-1.5 py-0.5 rounded text-xs font-mono">none</code></li>
-                    <li><code className="bg-[rgba(0,180,255,0.08)] text-[var(--xiv-blue)] px-1.5 py-0.5 rounded text-xs font-mono">revenueVisibility</code>: same options; controls revenue numbers in Analytics and Live Mode</li>
+            <ol className="space-y-3 pl-2 text-sm leading-relaxed">
+              <li className="flex items-start gap-3">
+                <span className="font-mono text-xs bg-[rgba(0,180,255,0.15)] text-[var(--xiv-blue)] rounded-full w-6 h-6 flex items-center justify-center shrink-0 mt-0.5">1</span>
+                <div className="space-y-2">
+                  <span className="font-medium">Create Your Venue</span>
+                  <ol className="list-decimal list-inside space-y-1.5 pl-2 leading-relaxed">
+                    <li>Sign in at <a href="https://xivvenuemanager.com" className="text-[var(--xiv-blue)] underline underline-offset-2 hover:opacity-80">xivvenuemanager.com</a> with Discord</li>
+                    <li>Click &quot;Create Venue&quot;</li>
+                    <li>Fill in your venue name, world, data center, and optional location/description</li>
+                  </ol>
+                </div>
+              </li>
+              <li className="flex items-start gap-3">
+                <span className="font-mono text-xs bg-[rgba(0,180,255,0.15)] text-[var(--xiv-blue)] rounded-full w-6 h-6 flex items-center justify-center shrink-0 mt-0.5">2</span>
+                <div className="space-y-2">
+                  <span className="font-medium">Install the Plugin</span>
+                  <ol className="list-decimal list-inside space-y-1.5 pl-2 leading-relaxed">
+                    <li>Open Dalamud Settings (type <code className="bg-[rgba(0,180,255,0.08)] text-[var(--xiv-blue)] px-1.5 py-0.5 rounded text-xs font-mono">/xlsettings</code> in the game chat)</li>
+                    <li>Go to the <span className="font-medium">Experimental</span> tab</li>
+                    <li>Under <span className="font-medium">Custom Plugin Repositories</span>, paste this URL and click the <span className="font-medium">+</span> button:<br />
+                      <code className="bg-muted/60 px-1.5 py-0.5 rounded text-xs font-mono select-all break-all">https://raw.githubusercontent.com/BluntEXE/XIVVenueManagerSync/master/repo.json</code>
+                    </li>
+                    <li>Click <span className="font-medium">Save and Close</span></li>
+                    <li>Open the Plugin Installer, search for &quot;XIVVenueManagerSync&quot;, and install it</li>
+                    <li>Open with <code className="bg-[rgba(0,180,255,0.08)] text-[var(--xiv-blue)] px-1.5 py-0.5 rounded text-xs font-mono">/xvm</code>, go to Settings</li>
+                    <li>On the website, open your venue dashboard and click <span className="font-medium">Settings</span> in the left sidebar (not the account menu in the top right), then go to <span className="font-medium">API Keys</span> and generate a key</li>
+                    <li>Paste the API key into the plugin</li>
+                    <li>Set the server URL to <code className="bg-[rgba(0,180,255,0.08)] text-[var(--xiv-blue)] px-1.5 py-0.5 rounded text-xs font-mono">https://xivvenuemanager.com</code></li>
+                    <li>Select your venue</li>
+                  </ol>
+                </div>
+              </li>
+              <li className="flex items-start gap-3">
+                <span className="font-mono text-xs bg-[rgba(0,180,255,0.15)] text-[var(--xiv-blue)] rounded-full w-6 h-6 flex items-center justify-center shrink-0 mt-0.5">3</span>
+                <div className="space-y-2">
+                  <span className="font-medium">Add Your Character</span>
+                  <p className="text-muted-foreground leading-relaxed">The plugin uses your character name to tell staff and patrons apart. Without this step, everyone in your venue is counted as a patron.</p>
+                  <ol className="list-decimal list-inside space-y-1.5 pl-2 leading-relaxed">
+                    <li>On the website, open the account menu in the top right and go to <span className="font-medium">Account Settings</span></li>
+                    <li>Under <span className="font-medium">Characters</span>, add your FFXIV character name and world</li>
+                    <li>Ask your staff to do the same from their own accounts</li>
+                  </ol>
+                </div>
+              </li>
+              <li className="flex items-start gap-3">
+                <span className="font-mono text-xs bg-[rgba(0,180,255,0.15)] text-[var(--xiv-blue)] rounded-full w-6 h-6 flex items-center justify-center shrink-0 mt-0.5">4</span>
+                <div className="space-y-2">
+                  <span className="font-medium">Set Your Venue Location in the Plugin</span>
+                  <p className="text-muted-foreground leading-relaxed">The plugin needs to know which housing plot is your venue. This is saved locally per person. Every staff member needs to do this on their own machine.</p>
+                  <ol className="list-decimal list-inside space-y-1.5 pl-2 leading-relaxed">
+                    <li>Go to your venue&apos;s housing plot in game with the plugin running</li>
+                    <li>Open the plugin (<code className="bg-[rgba(0,180,255,0.08)] text-[var(--xiv-blue)] px-1.5 py-0.5 rounded text-xs font-mono">/xvm</code>) and go to the <span className="font-medium">Venues</span> tab</li>
+                    <li>Enter a name and click <span className="font-medium">Save Venue</span> to save the current plot</li>
+                    <li>In the <span className="font-medium">XIV-App Venue</span> column, select your web venue from the dropdown. This connects patron tracking to the correct venue on the website.</li>
+                  </ol>
+                </div>
+              </li>
+              <li className="flex items-start gap-3">
+                <span className="font-mono text-xs bg-[rgba(0,180,255,0.15)] text-[var(--xiv-blue)] rounded-full w-6 h-6 flex items-center justify-center shrink-0 mt-0.5">5</span>
+                <div className="space-y-2">
+                  <span className="font-medium">Configure Venue Settings</span>
+                  <p className="text-muted-foreground leading-relaxed">In venue Settings:</p>
+                  <ul className="space-y-3 pl-2 leading-relaxed">
+                    <li className="space-y-1.5">
+                      <span className="font-medium">Visibility Controls</span>: Control what staff can see:
+                      <ul className="list-disc list-inside pl-4 space-y-1 mt-1.5 text-muted-foreground">
+                        <li><code className="bg-[rgba(0,180,255,0.08)] text-[var(--xiv-blue)] px-1.5 py-0.5 rounded text-xs font-mono">salesVisibility</code>: <code className="bg-[rgba(0,180,255,0.08)] text-[var(--xiv-blue)] px-1.5 py-0.5 rounded text-xs font-mono">all</code> (everyone sees all sales), <code className="bg-[rgba(0,180,255,0.08)] text-[var(--xiv-blue)] px-1.5 py-0.5 rounded text-xs font-mono">own</code> (staff see only their own), <code className="bg-[rgba(0,180,255,0.08)] text-[var(--xiv-blue)] px-1.5 py-0.5 rounded text-xs font-mono">none</code></li>
+                        <li><code className="bg-[rgba(0,180,255,0.08)] text-[var(--xiv-blue)] px-1.5 py-0.5 rounded text-xs font-mono">revenueVisibility</code>: same options; controls revenue numbers in Analytics and Live Mode</li>
+                      </ul>
+                    </li>
+                    <li><span className="font-medium">Discord Webhooks</span>: Separate webhook URLs for staff, events, and revenue channels</li>
                   </ul>
-                </li>
-                <li><span className="font-medium">Discord Webhooks</span>: Separate webhook URLs for staff, events, and revenue channels</li>
-              </ul>
-            </div>
+                </div>
+              </li>
+            </ol>
           </section>
 
           {/* Managing Staff */}
