@@ -28,6 +28,7 @@ overrides:
   metro-transform-worker: "0.80.12"
   "@xmldom/xmldom": ">=0.8.13"
   "esbuild@>=0.27.3 <0.28.1": ">=0.28.1"
+  "hono": ">=4.12.25"
 
 auditConfig:
   ignoreCves:
