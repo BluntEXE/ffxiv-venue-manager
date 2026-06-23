@@ -4,7 +4,7 @@ import { authOptions } from "@/lib/auth"
 import { redirect } from "next/navigation"
 
 export const metadata: Metadata = {
-  title: "Following — XIV Venue Manager",
+  title: "Following",
   description: "Venues you follow across the realm.",
 }
 import { prisma } from "@/lib/prisma"

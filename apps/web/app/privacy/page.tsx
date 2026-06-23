@@ -2,7 +2,7 @@ import type { Metadata } from "next"
 import Link from "next/link"
 
 export const metadata: Metadata = {
-  title: "Privacy Policy — XIV Venue Manager",
+  title: "Privacy Policy",
   description: "What data XIV Venue Manager collects, how it is used, and how to delete it.",
 }
 

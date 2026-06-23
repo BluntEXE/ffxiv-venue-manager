@@ -8,7 +8,7 @@ import { prisma } from "@/lib/prisma"
 export async function generateMetadata({ params }: { params: Promise<{ slug: string }> }): Promise<Metadata> {
   const { slug } = await params
   const venue = await prisma.venue.findUnique({ where: { slug, isActive: true }, select: { name: true, description: true, dataCenter: true, world: true, bannerUrl: true } })
-  if (!venue) return { title: "Venue — XIV Venue Manager" }
+  if (!venue) return { title: "Venue Not Found" }
   const desc = venue.description ?? `${venue.name} is an FFXIV roleplay venue on ${venue.dataCenter} - ${venue.world}. Follow to stay updated on events.`
   const ogImage = venue.bannerUrl ?? "/og-image.png"
   return {

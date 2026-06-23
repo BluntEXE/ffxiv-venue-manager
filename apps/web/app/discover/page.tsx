@@ -6,8 +6,9 @@ import { DiscoverClient, type DiscoverVenue } from "@/components/discover-client
 import { ExploreLayout } from "@/components/explore-layout"
 
 export const metadata: Metadata = {
-  title: "Discover Venues — XIV Venue Manager",
+  title: "Discover Venues",
   description: "Find FFXIV roleplay venues open tonight across every data centre and world.",
+  alternates: { canonical: "https://xivvenuemanager.com/discover" },
 }
 
 export const revalidate = 60

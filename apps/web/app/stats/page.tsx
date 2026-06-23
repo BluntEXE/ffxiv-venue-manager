@@ -6,7 +6,7 @@ import { getPublicStats } from "@/lib/public-stats"
 export const revalidate = 60
 
 export const metadata: Metadata = {
-  title: "Usage stats — XIV Venue Manager",
+  title: "Usage stats",
   description: "Live aggregate usage stats: venues, events, patrons and gil tracked across the FFXIV venue community.",
 }
 

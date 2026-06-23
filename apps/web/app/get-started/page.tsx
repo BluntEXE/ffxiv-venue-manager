@@ -1,7 +1,7 @@
 import type { Metadata } from "next"
 
 export const metadata: Metadata = {
-  title: "Create Your Venue — XIV Venue Manager",
+  title: "Create Your Venue",
   description: "Set up your FFXIV roleplay venue in under two minutes. Sign in with Discord and you're ready to go.",
 }
 

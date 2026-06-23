@@ -2,7 +2,7 @@ import type { Metadata } from "next"
 import Link from "next/link"
 
 export const metadata: Metadata = {
-  title: "Terms of Use — XIV Venue Manager",
+  title: "Terms of Use",
   description: "Terms of use for XIV Venue Manager.",
 }
 
