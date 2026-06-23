@@ -9,13 +9,15 @@ export async function generateMetadata({ params }: { params: Promise<{ slug: str
   const { slug } = await params
   const venue = await prisma.venue.findUnique({ where: { slug, isActive: true }, select: { name: true, description: true, dataCenter: true, world: true, bannerUrl: true } })
   if (!venue) return { title: "Venue Not Found" }
-  const desc = venue.description ?? `${venue.name} is an FFXIV roleplay venue on ${venue.dataCenter} - ${venue.world}. Follow to stay updated on events.`
+  const desc = venue.description ?? `${venue.name} runs on ${venue.world}, ${venue.dataCenter}. Check opening hours and upcoming events.`
   const ogImage = venue.bannerUrl ?? "/og-image.png"
   return {
     title: venue.name,
     description: desc,
     alternates: { canonical: `https://xivvenuemanager.com/venues/${slug}` },
     openGraph: {
+      type: "website",
+      siteName: "XIV Venue Manager",
       title: `${venue.name} | XIV Venue Manager`,
       description: desc,
       url: `https://xivvenuemanager.com/venues/${slug}`,

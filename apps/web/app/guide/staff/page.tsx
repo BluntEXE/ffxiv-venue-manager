@@ -3,6 +3,7 @@ import type { Metadata } from "next"
 export const metadata: Metadata = {
   title: "Staff Guide",
   description: "Everything staff need to know: plugin setup, logging sales, clocking shifts, patron tracking and more.",
+  alternates: { canonical: "https://xivvenuemanager.com/guide/staff" },
 }
 
 import Link from "next/link"

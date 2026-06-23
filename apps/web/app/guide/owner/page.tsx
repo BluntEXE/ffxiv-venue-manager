@@ -3,6 +3,7 @@ import type { Metadata } from "next"
 export const metadata: Metadata = {
   title: "Owner & Manager Guide",
   description: "Everything you need to get your FFXIV roleplay venue running — setup, plugin install, staff management, events, payroll and more.",
+  alternates: { canonical: "https://xivvenuemanager.com/guide/owner" },
 }
 
 import Link from "next/link"
