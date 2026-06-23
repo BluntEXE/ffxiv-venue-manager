@@ -17,7 +17,7 @@ const WORLDS: Record<string, string[]> = {
   Aether:    ["Adamantoise","Cactuar","Faerie","Gilgamesh","Jenova","Midgardsormr","Sargatanas","Siren"],
   Primal:    ["Behemoth","Excalibur","Exodus","Famfrit","Hyperion","Lamia","Leviathan","Ultros"],
   Crystal:   ["Balmung","Brynhildr","Coeurl","Diabolos","Goblin","Malboro","Mateus","Zalera"],
-  Dynamis:   ["Halicarnassus","Maduin","Marilith","Seraph"],
+  Dynamis:   ["Cuchulainn","Golem","Halicarnassus","Kraken","Maduin","Marilith","Rafflesia","Seraph"],
   Chaos:     ["Cerberus","Louisoix","Moogle","Omega","Phantom","Ragnarok","Sagittarius","Spriggan"],
   Light:     ["Alpha","Lich","Odin","Phoenix","Raiden","Shiva","Twintania","Zodiark"],
   Elemental: ["Aegis","Atomos","Carbuncle","Garuda","Gungnir","Kujata","Tonberry","Typhon"],
