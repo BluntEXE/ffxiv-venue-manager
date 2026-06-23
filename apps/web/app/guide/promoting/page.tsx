@@ -36,6 +36,7 @@ const PAIN_POINTS = [
 export default function PromotingGuidePage() {
   return (
     <div className="min-h-screen">
+      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify({ "@context": "https://schema.org", "@type": "Article", "headline": "How to Promote Your FFXIV Venue", "description": "Where FFXIV patrons find venues: directories, Partake, Discord, and in-game shouts, and how to keep your listings working without constant upkeep.", "url": "https://xivvenuemanager.com/guide/promoting", "publisher": { "@type": "Organization", "name": "XIV Venue Manager", "url": "https://xivvenuemanager.com" } }) }} />
 
       {/* Hero */}
       <div className="xiv-hero-bg overflow-hidden border-b border-[var(--blue-008)]">

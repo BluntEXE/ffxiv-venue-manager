@@ -36,6 +36,7 @@ const PAIN_POINTS = [
 export default function GettingStartedPage() {
   return (
     <div className="min-h-screen">
+      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify({ "@context": "https://schema.org", "@type": "Article", "headline": "How to Run a Venue in FFXIV", "description": "What running an FFXIV roleplay venue involves, where it gets complicated, and how XIV Venue Manager keeps you organised.", "url": "https://xivvenuemanager.com/guide/getting-started", "publisher": { "@type": "Organization", "name": "XIV Venue Manager", "url": "https://xivvenuemanager.com" } }) }} />
 
       {/* Hero */}
       <div className="xiv-hero-bg overflow-hidden border-b border-[var(--blue-008)]">

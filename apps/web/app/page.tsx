@@ -90,8 +90,21 @@ function IconBadge({
 
 export default async function Home() {
   const stats = await getPublicStats().catch(() => null)
+  const jsonLd = {
+    "@context": "https://schema.org",
+    "@type": "SoftwareApplication",
+    "name": "XIV Venue Manager",
+    "applicationCategory": "GameApplication",
+    "operatingSystem": "Web Browser, Windows (Dalamud plugin)",
+    "offers": { "@type": "Offer", "price": "0", "priceCurrency": "USD" },
+    "description": "Free venue management for FFXIV roleplay venues. Track events, manage staff, log sales and go live from the web or inside the game.",
+    "url": "https://xivvenuemanager.com",
+    "screenshot": "https://xivvenuemanager.com/og-image.png",
+  }
+
   return (
     <div className="min-h-screen">
+      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }} />
       <link rel="preload" href="/starfield.webp" as="image" fetchPriority="high" />
       {/* Hero Section */}
       <section className="xiv-hero-bg overflow-hidden">

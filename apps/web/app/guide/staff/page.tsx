@@ -12,6 +12,7 @@ import { SiteFooter } from "@/components/site-footer"
 export default function StaffGuidePage() {
   return (
     <div className="min-h-screen">
+      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify({ "@context": "https://schema.org", "@type": "Article", "headline": "Staff Guide", "description": "Everything staff need to know: plugin setup, logging sales, clocking shifts, patron tracking and more.", "url": "https://xivvenuemanager.com/guide/staff", "publisher": { "@type": "Organization", "name": "XIV Venue Manager", "url": "https://xivvenuemanager.com" } }) }} />
       {/* Guide hero */}
       <div className="xiv-hero-bg overflow-hidden border-b border-[var(--blue-008)]">
         <div className="container mx-auto px-4 py-14 max-w-3xl">
