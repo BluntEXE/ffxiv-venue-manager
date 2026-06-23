@@ -151,8 +151,13 @@ export default async function VenueProfilePage({
       {/* ── Hero banner ── */}
       <section className="profile-hero relative mt-[60px] h-[340px] overflow-hidden border-b border-[var(--blue-008)]">
         {/* BG */}
-        <div className="absolute inset-0 bg-[url('/starfield.webp')] bg-center bg-cover opacity-40 scale-[1.05]" />
-        <div className="absolute inset-0" style={{ background: "linear-gradient(180deg, rgba(7,11,20,0.2) 0%, rgba(7,11,20,0.55) 55%, var(--background) 100%)" }} />
+        {venue.bannerUrl ? (
+          // eslint-disable-next-line @next/next/no-img-element
+          <img src={venue.bannerUrl} alt="" className="absolute inset-0 w-full h-full object-cover scale-[1.05]" aria-hidden="true" />
+        ) : (
+          <div className="absolute inset-0 bg-[url('/starfield.webp')] bg-center bg-cover opacity-40 scale-[1.05]" />
+        )}
+        <div className="absolute inset-0" style={{ background: "linear-gradient(180deg, rgba(7,11,20,0.3) 0%, rgba(7,11,20,0.65) 55%, var(--background) 100%)" }} />
 
         {/* Back link — top left */}
         <div className="absolute top-5 left-6 z-10">
