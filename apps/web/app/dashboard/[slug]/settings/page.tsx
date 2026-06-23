@@ -9,6 +9,7 @@ import { VenueEyebrow } from "@/components/venue-eyebrow"
 import { Label } from "@/components/ui/label"
 import { Input } from "@/components/ui/input"
 import { GalleryManager } from "@/components/gallery-manager"
+import { BannerUpload } from "@/components/banner-upload"
 import { Checkbox } from "@/components/ui/checkbox"
 import {
   Card,
@@ -87,6 +88,7 @@ export default function SettingsPage({
   const [venueId, setVenueId] = useState<string>("")
   const [userRole, setUserRole] = useState<string>("")
   const [galleryImages, setGalleryImages] = useState<string[]>([])
+  const [bannerUrl, setBannerUrl] = useState<string | null>(null)
 
   // Unwrap params
   useEffect(() => {
@@ -118,6 +120,7 @@ export default function SettingsPage({
         setVenueDataCenter(venue.dataCenter ?? "")
         setVenueWorld(venue.world ?? "")
         setGalleryImages(venue.galleryImages ?? [])
+        setBannerUrl(venue.bannerUrl ?? null)
         if (venue.memberships?.[0]) {
           setUserRole(venue.memberships[0].role)
         }
@@ -315,6 +318,10 @@ export default function SettingsPage({
                     />
                   </div>
                   <p className="text-[0.68rem] text-[var(--fg-faint)]">Press Enter or comma to add. e.g. 18+, Bar, RP, Live Music</p>
+                </div>
+                <div className="space-y-1.5">
+                  <Label>Banner image</Label>
+                  {venueId && <BannerUpload venueId={venueId} initialUrl={bannerUrl} onUpdate={setBannerUrl} />}
                 </div>
                 <div className="space-y-1.5">
                   <Label htmlFor="venue-desc">Description</Label>
