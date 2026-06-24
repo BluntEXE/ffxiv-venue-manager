@@ -52,6 +52,8 @@ export async function GET(
           status: true,
           startTime: true,
           endTime: true,
+          partakeAttendeeCount: true,
+          attendanceCount: true,
         },
         orderBy: { startTime: "asc" },
         take: 10,
