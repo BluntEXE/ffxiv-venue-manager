@@ -83,8 +83,7 @@ packages/*/node_modules/
 *.keystore
 *.apk
 graphify-out/
-app.json
-eas.json
+# app.json and eas.json intentionally tracked (needed for EAS Build)
 graphify-out/
 .worktrees/
 .claude/worktrees/
