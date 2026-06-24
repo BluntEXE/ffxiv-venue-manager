@@ -1,4 +1,4 @@
-const { withGradleProperties } = require('@expo/config-plugins')
+const { withGradleProperties } = require('expo/config-plugins')
 const fs = require('fs')
 const path = require('path')
 
