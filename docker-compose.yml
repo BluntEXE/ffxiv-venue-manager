@@ -128,6 +128,36 @@ services:
     networks:
       - app-network
 
+  venue-manager-next:
+    build:
+      context: .
+      dockerfile: apps/web/Dockerfile
+    container_name: venue-manager-next
+    ports:
+      - "3007:3000"
+    env_file: .env
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    restart: "no"
+    networks:
+      - app-network
+    profiles:
+      - green
+
+  maintenance-page:
+    image: nginx:alpine
+    container_name: maintenance-page
+    ports:
+      - "3007:80"
+    volumes:
+      - ./docker/maintenance:/usr/share/nginx/html:ro
+    restart: "no"
+    profiles:
+      - maintenance
+
 networks:
   app-network:
     driver: bridge
