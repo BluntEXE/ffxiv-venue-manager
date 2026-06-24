@@ -23,6 +23,7 @@ type Stage = "idle" | "cropping" | "saving"
 
 interface CropState {
   imgEl: HTMLImageElement
+  src: string
   renderedW: number
   renderedH: number
   imgX: number
@@ -58,10 +59,11 @@ export function LogoUpload({ venueId, initialUrl, galleryImages, onUpdate }: Log
       const rH = img.naturalHeight * scale
       setCrop({
         imgEl:     img,
-        renderedW: rW,
-        renderedH: rH,
-        imgX:      (CONTAINER_W - rW) / 2,
-        imgY:      (CONTAINER_H - rH) / 2,
+        src,
+        renderedW: Math.round(rW),
+        renderedH: Math.round(rH),
+        imgX:      Math.round((CONTAINER_W - rW) / 2),
+        imgY:      Math.round((CONTAINER_H - rH) / 2),
       })
       setStage("cropping")
     }
@@ -268,7 +270,7 @@ export function LogoUpload({ venueId, initialUrl, galleryImages, onUpdate }: Log
             >
               {/* eslint-disable-next-line @next/next/no-img-element */}
               <img
-                src={crop.imgEl.src}
+                src={crop.src}
                 alt=""
                 draggable={false}
                 style={{
@@ -295,7 +297,7 @@ export function LogoUpload({ venueId, initialUrl, galleryImages, onUpdate }: Log
               <div className="w-11 h-11 rounded-lg border border-[var(--blue-015)] overflow-hidden bg-[var(--surface1)]">
                 {/* eslint-disable-next-line @next/next/no-img-element */}
                 <img
-                  src={crop.imgEl.src}
+                  src={crop.src}
                   alt=""
                   style={{
                     width:     crop.renderedW * (44 / FRAME_SIZE),
