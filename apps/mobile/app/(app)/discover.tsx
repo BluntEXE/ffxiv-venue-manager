@@ -1,4 +1,4 @@
-import { useState, useCallback, useRef } from 'react'
+import { useState, useCallback, useRef, useEffect } from 'react'
 import { FlashList } from '@shopify/flash-list'
 import { RefreshControl, TextInput, ScrollView, StyleSheet } from 'react-native'
 import { YStack, XStack, Text, Button } from 'tamagui'
@@ -150,6 +150,10 @@ export default function DiscoverScreen() {
   const [debouncedSearch, setDebouncedSearch] = useState('')
   const searchTimer = useRef<ReturnType<typeof setTimeout> | null>(null)
 
+  useEffect(() => {
+    return () => { if (searchTimer.current) clearTimeout(searchTimer.current) }
+  }, [])
+
   function onSearchChange(text: string) {
     setSearch(text)
     if (searchTimer.current) clearTimeout(searchTimer.current)
@@ -177,12 +181,12 @@ export default function DiscoverScreen() {
     setSearch('')
     setDebouncedSearch('')
     setSelectedDC(null)
-    load(t, null)
+    // useFocusEffect picks up tab + selectedDC changes and fetches
   }
 
   function switchDC(dc: string | null) {
     setSelectedDC(dc)
-    load(tab, dc)
+    // useFocusEffect picks up selectedDC change and fetches
   }
 
   function onRefresh() {
