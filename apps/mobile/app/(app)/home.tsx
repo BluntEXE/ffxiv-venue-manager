@@ -64,7 +64,6 @@ export default function HomeScreen() {
   const [openShifts, setOpenShifts] = useState<OpenShift[]>([])
   const [openShiftsExpanded, setOpenShiftsExpanded] = useState(true)
   const [claiming, setClaiming] = useState<string | null>(null)
-  const [claimedIds, setClaimedIds] = useState<Set<string>>(new Set())
   const [claimErrors, setClaimErrors] = useState<Record<string, string>>({})
 
   useEffect(() => {
@@ -80,6 +79,7 @@ export default function HomeScreen() {
 
   async function loadShifts(isRefresh = false) {
     if (!isRefresh) setShiftsLoading(true)
+    setClaimErrors({})
     try {
       const [shiftsRes, followsRes, openShiftsRes] = await Promise.all([
         apiFetch('/api/mobile/my/shifts'),
@@ -122,7 +122,7 @@ export default function HomeScreen() {
         setClaimErrors(e => ({ ...e, [shiftId]: data.error || 'Failed to claim' }))
         return
       }
-      setClaimedIds(s => new Set<string>([...s, shiftId]))
+      setOpenShifts(s => s.filter(x => x.id !== shiftId))
     } catch {
       setClaimErrors(e => ({ ...e, [shiftId]: 'Network error' }))
     } finally {
@@ -372,7 +372,7 @@ export default function HomeScreen() {
                     {s.venueName}
                   </Text>
                   <Text color="$subtext0" fontSize={12}>
-                    {formatST(s.scheduledStart)} – {formatST(s.scheduledEnd)} ST
+                    {formatST(s.scheduledStart, 'datetime')} – {formatST(s.scheduledEnd, 'datetime')} ST
                   </Text>
                   {s.roleName && (
                     <Text color="$subtext0" fontSize={11}>{s.roleName}</Text>
@@ -381,25 +381,19 @@ export default function HomeScreen() {
                     <Text color="$danger" fontSize={11}>{claimErrors[s.id]}</Text>
                   )}
                 </YStack>
-                {claimedIds.has(s.id) ? (
-                  <XStack backgroundColor="rgba(0,180,255,0.12)" borderRadius="$4" paddingHorizontal="$2" paddingVertical={2}>
-                    <Text fontSize={11} color="$primary">Pending</Text>
-                  </XStack>
-                ) : (
-                  <Button
-                    size="$2"
-                    backgroundColor="$primary"
-                    color="$base"
-                    borderRadius="$2"
-                    fontFamily="InterBold"
-                    fontSize={12}
-                    disabled={claiming === s.id}
-                    onPress={() => claimShift(s.id, s.venueId)}
-                    pressStyle={{ opacity: 0.85 }}
-                  >
-                    {claiming === s.id ? <Spinner size="small" color="$base" /> : 'Claim'}
-                  </Button>
-                )}
+                <Button
+                  size="$2"
+                  backgroundColor="$primary"
+                  color="$base"
+                  borderRadius="$2"
+                  fontFamily="InterBold"
+                  fontSize={12}
+                  disabled={claiming === s.id}
+                  onPress={() => claimShift(s.id, s.venueId)}
+                  pressStyle={{ opacity: 0.85 }}
+                >
+                  {claiming === s.id ? <Spinner size="small" color="$base" /> : 'Claim'}
+                </Button>
               </XStack>
             ))}
           </YStack>
