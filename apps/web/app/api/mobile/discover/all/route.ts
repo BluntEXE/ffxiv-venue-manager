@@ -21,6 +21,7 @@ export async function GET(req: NextRequest) {
       world: true,
       location: true,
       logoUrl: true,
+      bannerUrl: true,
       shifts: {
         where: {
           OR: [
@@ -68,12 +69,13 @@ export async function GET(req: NextRequest) {
       world: v.world,
       location: v.location,
       logoUrl: v.logoUrl,
+      bannerUrl: v.bannerUrl,
       openSince: activeShift
         ? (activeShift.actualStart ?? activeShift.scheduledStart)
         : null,
       scheduledEnd:
         activeShift?.scheduledEnd ?? tonightShift?.scheduledEnd ?? null,
-      staffOnShift: activeShift ? v._count.shifts : undefined,
+      staffOnShift: activeShift ? v._count.shifts : null,
       nextOpen: tonightShift?.scheduledStart ?? null,
     }
   })
