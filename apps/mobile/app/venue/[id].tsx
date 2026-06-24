@@ -41,8 +41,17 @@ const EVENT_TYPE_STYLES: Record<string, { bg: string; color: string }> = {
 
 function cleanDescription(text: string): string {
   return text
-    .replace(/!\[.*?\]\(.*?\)/g, '')  // strip markdown images
-    .replace(/\[.*?\]\(.*?\)/g, '')    // strip markdown links
+    .replace(/!\[[^\]]*\]\([^)]*\)/g, '')     // strip images
+    .replace(/\[([^\]]*)\]\([^)]*\)/g, '$1')  // strip links, keep label
+    .replace(/\*\*([^*]*)\*\*/g, '$1')         // strip bold, keep content
+    .replace(/\*([^*]*)\*/g, '$1')             // strip italic, keep content
+    .split('\n')
+    .map(l => l.trim())
+    .filter(l => l.length > 0)
+    .filter(l => !/^[*#\-_=~]+$/.test(l))     // drop decorative-only lines
+    .map(l => l.replace(/^#{1,6}\s*/, ''))     // strip heading prefixes
+    .filter(l => l.length > 0)
+    .join('\n')
     .trim()
 }
 
