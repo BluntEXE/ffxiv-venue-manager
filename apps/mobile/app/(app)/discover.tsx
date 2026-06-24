@@ -1,6 +1,6 @@
-import { useState, useCallback } from 'react'
+import { useState, useCallback, useRef } from 'react'
 import { FlashList } from '@shopify/flash-list'
-import { RefreshControl } from 'react-native'
+import { RefreshControl, TextInput, ScrollView, StyleSheet } from 'react-native'
 import { YStack, XStack, Text, Button } from 'tamagui'
 import { useRouter } from 'expo-router'
 import { useFocusEffect } from 'expo-router'
@@ -12,6 +12,13 @@ import { formatST, formatOpenSince, formatUntil } from '@/lib/server-time'
 
 const API = 'https://xivvenuemanager.com'
 
+const DATA_CENTRES = [
+  'Aether', 'Crystal', 'Primal', 'Dynamis',
+  'Chaos', 'Light',
+  'Materia',
+  'Elemental', 'Gaia', 'Mana', 'Meteor',
+]
+
 type Venue = {
   id: string
   name: string
@@ -19,27 +26,60 @@ type Venue = {
   world: string
   location: string | null
   logoUrl: string | null
-  staffOnShift?: number
+  staffOnShift?: number | null
   staffScheduled?: number
   openSince?: string | null
   nextOpen?: string | null
   scheduledEnd?: string | null
 }
 
-type Tab = 'open' | 'tonight'
+type Tab = 'open' | 'tonight' | 'all'
 
-async function fetchVenues(tab: Tab): Promise<Venue[]> {
-  const path = tab === 'open' ? 'open-now' : 'tonight'
-  const res = await fetch(`${API}/api/mobile/discover/${path}`)
+async function fetchVenues(tab: Tab, dc?: string): Promise<Venue[]> {
+  if (tab === 'open') {
+    const res = await fetch(`${API}/api/mobile/discover/open-now`)
+    if (!res.ok) throw new Error('Failed to fetch')
+    return res.json()
+  }
+  if (tab === 'tonight') {
+    const res = await fetch(`${API}/api/mobile/discover/tonight`)
+    if (!res.ok) throw new Error('Failed to fetch')
+    return res.json()
+  }
+  const url = dc
+    ? `${API}/api/mobile/discover/all?dc=${encodeURIComponent(dc)}`
+    : `${API}/api/mobile/discover/all`
+  const res = await fetch(url)
   if (!res.ok) throw new Error('Failed to fetch')
   return res.json()
 }
 
 function VenueRow({ venue, tab, onPress }: { venue: Venue; tab: Tab; onPress: () => void }) {
-  const staff = tab === 'open' ? venue.staffOnShift : venue.staffScheduled
-  const timeStr = tab === 'open'
-    ? (venue.openSince ? `Open ${formatOpenSince(venue.openSince)}` : 'Open now')
-    : (venue.nextOpen ? `Opens ${formatUntil(venue.nextOpen)} · ${formatST(venue.nextOpen)}` : 'Tonight')
+  const isAll = tab === 'all'
+  const isOpen = isAll ? venue.openSince != null : tab === 'open'
+  const isTonight = isAll ? venue.nextOpen != null : tab === 'tonight'
+
+  const staff = isOpen ? venue.staffOnShift : venue.staffScheduled
+
+  let timeStr: string
+  let badgeBg: string
+  let badgeColor: '$success' | '$info' | '$overlay'
+
+  if (isOpen) {
+    timeStr = venue.openSince ? `Open ${formatOpenSince(venue.openSince)}` : 'Open now'
+    badgeBg = '#a6e3a120'
+    badgeColor = '$success'
+  } else if (isTonight) {
+    timeStr = venue.nextOpen
+      ? `Opens ${formatUntil(venue.nextOpen)} · ${formatST(venue.nextOpen)}`
+      : 'Tonight'
+    badgeBg = '#89b4fa20'
+    badgeColor = '$info'
+  } else {
+    timeStr = 'No shifts scheduled'
+    badgeBg = 'transparent'
+    badgeColor = '$overlay'
+  }
 
   return (
     <XStack
@@ -75,16 +115,18 @@ function VenueRow({ venue, tab, onPress }: { venue: Venue; tab: Tab; onPress: ()
           {venue.world} · {venue.dataCenter}
         </Text>
         <XStack gap="$2" alignItems="center" marginTop="$1">
-          <XStack
-            backgroundColor={tab === 'open' ? '#a6e3a120' : '#89b4fa20'}
-            borderRadius="$4"
-            paddingHorizontal="$2"
-            paddingVertical={2}
-          >
-            <Text fontSize={11} color={tab === 'open' ? '$success' : '$info'}>
-              {timeStr}
-            </Text>
-          </XStack>
+          {(isOpen || isTonight) ? (
+            <XStack
+              backgroundColor={badgeBg}
+              borderRadius="$4"
+              paddingHorizontal="$2"
+              paddingVertical={2}
+            >
+              <Text fontSize={11} color={badgeColor}>{timeStr}</Text>
+            </XStack>
+          ) : (
+            <Text fontSize={11} color="$overlay">{timeStr}</Text>
+          )}
           {staff != null && staff > 0 && (
             <Text fontSize={11} color="$subtext0">{staff} staff</Text>
           )}
@@ -103,12 +145,22 @@ export default function DiscoverScreen() {
   const [loading, setLoading] = useState(true)
   const [refreshing, setRefreshing] = useState(false)
   const [error, setError] = useState<string | null>(null)
+  const [selectedDC, setSelectedDC] = useState<string | null>(null)
+  const [search, setSearch] = useState('')
+  const [debouncedSearch, setDebouncedSearch] = useState('')
+  const searchTimer = useRef<ReturnType<typeof setTimeout> | null>(null)
 
-  const load = useCallback(async (t: Tab, isRefresh = false) => {
+  function onSearchChange(text: string) {
+    setSearch(text)
+    if (searchTimer.current) clearTimeout(searchTimer.current)
+    searchTimer.current = setTimeout(() => setDebouncedSearch(text), 300)
+  }
+
+  const load = useCallback(async (t: Tab, dc: string | null = null, isRefresh = false) => {
     if (!isRefresh) setLoading(true)
     setError(null)
     try {
-      const data = await fetchVenues(t)
+      const data = await fetchVenues(t, dc ?? undefined)
       setVenues(data)
     } catch {
       setError('Could not load venues. Try again.')
@@ -118,16 +170,50 @@ export default function DiscoverScreen() {
     }
   }, [])
 
-  useFocusEffect(useCallback(() => { load(tab) }, [tab, load]))
+  useFocusEffect(useCallback(() => { load(tab, selectedDC) }, [tab, selectedDC, load]))
 
   function switchTab(t: Tab) {
     setTab(t)
-    load(t)
+    setSearch('')
+    setDebouncedSearch('')
+    setSelectedDC(null)
+    load(t, null)
+  }
+
+  function switchDC(dc: string | null) {
+    setSelectedDC(dc)
+    load(tab, dc)
   }
 
   function onRefresh() {
     setRefreshing(true)
-    load(tab, true)
+    setSearch('')
+    setDebouncedSearch('')
+    load(tab, selectedDC, true)
+  }
+
+  const displayedVenues = tab === 'all' && debouncedSearch.trim()
+    ? venues.filter(v => v.name.toLowerCase().includes(debouncedSearch.toLowerCase().trim()))
+    : venues
+
+  const tabLabel: Record<Tab, string> = {
+    open: 'Open Now',
+    tonight: 'Tonight',
+    all: 'All',
+  }
+
+  const emptyTitle: Record<Tab, string> = {
+    open: 'No venues open right now',
+    tonight: 'Nothing scheduled tonight',
+    all: 'No venues found',
+  }
+
+  const emptySubtitle: Record<Tab, string> = {
+    open: 'Check back later or browse Tonight.',
+    tonight: 'No shifts scheduled for the rest of today.',
+    all: debouncedSearch || selectedDC
+      ? 'Try a different name or data centre.'
+      : 'No active venues.',
   }
 
   return (
@@ -143,7 +229,7 @@ export default function DiscoverScreen() {
           padding="$1"
           gap="$1"
         >
-          {(['open', 'tonight'] as Tab[]).map((t) => (
+          {(['open', 'tonight', 'all'] as Tab[]).map((t) => (
             <Button
               key={t}
               size="$3"
@@ -155,10 +241,46 @@ export default function DiscoverScreen() {
               onPress={() => switchTab(t)}
               pressStyle={{ opacity: 0.85 }}
             >
-              {t === 'open' ? 'Open Now' : 'Tonight'}
+              {tabLabel[t]}
             </Button>
           ))}
         </XStack>
+
+        {tab === 'all' && (
+          <>
+            <TextInput
+              style={styles.searchInput}
+              placeholder="Search venues by name..."
+              placeholderTextColor="#6c7086"
+              value={search}
+              onChangeText={onSearchChange}
+              clearButtonMode="while-editing"
+            />
+            <ScrollView horizontal showsHorizontalScrollIndicator={false}>
+              <XStack gap="$2" paddingBottom="$1">
+                {([null, ...DATA_CENTRES] as Array<string | null>).map((dc) => {
+                  const active = selectedDC === dc
+                  const label = dc ?? 'All DCs'
+                  return (
+                    <Button
+                      key={label}
+                      size="$2"
+                      borderRadius="$4"
+                      backgroundColor={active ? 'rgba(0,180,255,0.12)' : 'transparent'}
+                      color={active ? '$primary' : '$subtext0'}
+                      borderWidth={1}
+                      borderColor={active ? 'rgba(0,180,255,0.3)' : 'rgba(0,180,255,0.12)'}
+                      onPress={() => switchDC(dc)}
+                      pressStyle={{ opacity: 0.85 }}
+                    >
+                      {label}
+                    </Button>
+                  )
+                })}
+              </XStack>
+            </ScrollView>
+          </>
+        )}
       </ScreenTop>
 
       {loading ? (
@@ -171,15 +293,15 @@ export default function DiscoverScreen() {
           title="Could not load venues"
           subtitle={error}
         />
-      ) : venues.length === 0 ? (
+      ) : displayedVenues.length === 0 ? (
         <EmptyState
-          icon="moon-outline"
-          title={tab === 'open' ? 'No venues open right now' : 'Nothing scheduled tonight'}
-          subtitle={tab === 'open' ? 'Check back later or browse Tonight.' : 'No shifts scheduled for the rest of today.'}
+          icon={tab === 'all' ? 'search-outline' : 'moon-outline'}
+          title={emptyTitle[tab]}
+          subtitle={emptySubtitle[tab]}
         />
       ) : (
         <FlashList
-          data={venues}
+          data={displayedVenues}
           estimatedItemSize={88}
           keyExtractor={(v) => v.id}
           renderItem={({ item }) => (
@@ -204,3 +326,17 @@ export default function DiscoverScreen() {
     </YStack>
   )
 }
+
+const styles = StyleSheet.create({
+  searchInput: {
+    backgroundColor: '#0a0f1e',
+    borderWidth: 1,
+    borderColor: 'rgba(0,180,255,0.15)',
+    borderRadius: 8,
+    paddingHorizontal: 12,
+    paddingVertical: 9,
+    fontSize: 14,
+    color: '#cdd6f4',
+    fontFamily: 'Inter',
+  },
+})
