@@ -1,4 +1,5 @@
 import { useEffect, useState, useCallback } from 'react'
+import * as SecureStore from 'expo-secure-store'
 import { ScrollView, RefreshControl, Image } from 'react-native'
 import { YStack, XStack, Text, Button, Spinner } from 'tamagui'
 import { useRouter, useFocusEffect } from 'expo-router'
@@ -42,6 +43,15 @@ type FollowedVenue = {
   isOpenNow: boolean
 }
 
+type OpenShift = {
+  id: string
+  venueId: string
+  venueName: string
+  scheduledStart: string
+  scheduledEnd: string
+  roleName: string | null
+}
+
 export default function HomeScreen() {
   const router = useRouter()
   const [authed, setAuthed] = useState<boolean | null>(null)
@@ -51,6 +61,17 @@ export default function HomeScreen() {
   const [follows, setFollows] = useState<FollowedVenue[]>([])
   const [refreshing, setRefreshing] = useState(false)
   const [clocking, setClocking] = useState<string | null>(null)
+  const [openShifts, setOpenShifts] = useState<OpenShift[]>([])
+  const [openShiftsExpanded, setOpenShiftsExpanded] = useState(true)
+  const [claiming, setClaiming] = useState<string | null>(null)
+  const [claimedIds, setClaimedIds] = useState<Set<string>>(new Set())
+  const [claimErrors, setClaimErrors] = useState<Record<string, string>>({})
+
+  useEffect(() => {
+    SecureStore.getItemAsync('@xivvm/openShiftsExpanded').then(val => {
+      if (val !== null) setOpenShiftsExpanded(val === 'true')
+    })
+  }, [])
 
   async function checkAuth() {
     const tokens = await loadTokens()
@@ -60,12 +81,14 @@ export default function HomeScreen() {
   async function loadShifts(isRefresh = false) {
     if (!isRefresh) setShiftsLoading(true)
     try {
-      const [shiftsRes, followsRes] = await Promise.all([
+      const [shiftsRes, followsRes, openShiftsRes] = await Promise.all([
         apiFetch('/api/mobile/my/shifts'),
         apiFetch('/api/mobile/my/follows'),
+        apiFetch('/api/mobile/my/open-shifts'),
       ])
       if (shiftsRes.ok) setShifts(await shiftsRes.json())
       if (followsRes.ok) setFollows(await followsRes.json())
+      if (openShiftsRes.ok) setOpenShifts(await openShiftsRes.json())
     } catch {}
     setShiftsLoading(false)
     setRefreshing(false)
@@ -74,6 +97,37 @@ export default function HomeScreen() {
   function onRefresh() {
     setRefreshing(true)
     loadShifts(true)
+  }
+
+  function toggleOpenShifts() {
+    const next = !openShiftsExpanded
+    setOpenShiftsExpanded(next)
+    SecureStore.setItemAsync('@xivvm/openShiftsExpanded', String(next))
+  }
+
+  async function claimShift(shiftId: string, venueId: string) {
+    setClaiming(shiftId)
+    setClaimErrors(e => { const n = { ...e }; delete n[shiftId]; return n })
+    try {
+      const res = await apiFetch(`/api/mobile/my/open-shifts/${shiftId}`, {
+        method: 'POST',
+        body: JSON.stringify({ venueId }),
+      })
+      if (res.status === 409) {
+        setOpenShifts(s => s.filter(x => x.id !== shiftId))
+        return
+      }
+      if (!res.ok) {
+        const data = await res.json().catch(() => ({}))
+        setClaimErrors(e => ({ ...e, [shiftId]: data.error || 'Failed to claim' }))
+        return
+      }
+      setClaimedIds(s => new Set<string>([...s, shiftId]))
+    } catch {
+      setClaimErrors(e => ({ ...e, [shiftId]: 'Network error' }))
+    } finally {
+      setClaiming(null)
+    }
   }
 
   async function clockShift(shiftId: string, action: 'clock-in' | 'clock-out') {
@@ -292,6 +346,63 @@ export default function HomeScreen() {
               />
             ) : null}
           </>
+        )}
+
+        {openShifts.length > 0 && (
+          <YStack gap="$2" marginTop="$2">
+            <XStack alignItems="center" justifyContent="space-between">
+              <Text fontFamily="Outfit_600SemiBold" fontSize={16} color="$text">Open Shifts</Text>
+              <Button chromeless size="$2" onPress={toggleOpenShifts} paddingHorizontal="$1">
+                <Ionicons name={openShiftsExpanded ? 'chevron-up' : 'chevron-down'} size={16} color="#a6adc8" />
+              </Button>
+            </XStack>
+            {openShiftsExpanded && openShifts.map((s) => (
+              <XStack
+                key={s.id}
+                backgroundColor="$surface0"
+                borderRadius="$2"
+                padding="$3"
+                alignItems="center"
+                gap="$3"
+                borderWidth={1}
+                borderColor="rgba(0,180,255,0.15)"
+              >
+                <YStack flex={1} gap="$1">
+                  <Text color="$text" fontSize={14} fontFamily="Outfit_600SemiBold" numberOfLines={1}>
+                    {s.venueName}
+                  </Text>
+                  <Text color="$subtext0" fontSize={12}>
+                    {formatST(s.scheduledStart)} – {formatST(s.scheduledEnd)} ST
+                  </Text>
+                  {s.roleName && (
+                    <Text color="$subtext0" fontSize={11}>{s.roleName}</Text>
+                  )}
+                  {claimErrors[s.id] && (
+                    <Text color="$danger" fontSize={11}>{claimErrors[s.id]}</Text>
+                  )}
+                </YStack>
+                {claimedIds.has(s.id) ? (
+                  <XStack backgroundColor="rgba(0,180,255,0.12)" borderRadius="$4" paddingHorizontal="$2" paddingVertical={2}>
+                    <Text fontSize={11} color="$primary">Pending</Text>
+                  </XStack>
+                ) : (
+                  <Button
+                    size="$2"
+                    backgroundColor="$primary"
+                    color="$base"
+                    borderRadius="$2"
+                    fontFamily="InterBold"
+                    fontSize={12}
+                    disabled={claiming === s.id}
+                    onPress={() => claimShift(s.id, s.venueId)}
+                    pressStyle={{ opacity: 0.85 }}
+                  >
+                    {claiming === s.id ? <Spinner size="small" color="$base" /> : 'Claim'}
+                  </Button>
+                )}
+              </XStack>
+            ))}
+          </YStack>
         )}
 
         {follows.length > 0 && (
