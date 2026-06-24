@@ -193,8 +193,7 @@ export default function DiscoverScreen() {
     setRefreshing(true)
     setSearch('')
     setDebouncedSearch('')
-    setSelectedDC(null)
-    load(tab, null, true)
+    load(tab, selectedDC, true)
   }
 
   const displayedVenues = tab === 'all' && debouncedSearch.trim()
