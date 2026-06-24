@@ -55,6 +55,28 @@ export default function ManageScreen() {
   const [error, setError] = useState<string | null>(null)
   const [refreshing, setRefreshing] = useState(false)
   const [clocking, setClocking] = useState<string | null>(null)
+  const [actioning, setActioning] = useState<string | null>(null)
+
+  async function shiftAction(shiftId: string, action: 'clock-in' | 'clock-out' | 'approve' | 'reject') {
+    if (!selectedVenue) return
+    setActioning(shiftId)
+    try {
+      const res = await apiFetch(
+        `/api/mobile/operator/venues/${selectedVenue.id}/shifts/${shiftId}`,
+        { method: 'PATCH', body: JSON.stringify({ action }) }
+      )
+      if (!res.ok) {
+        const data = await res.json().catch(() => ({}))
+        console.error('Shift action failed:', data.error)
+        return
+      }
+      await loadDashboard(selectedVenue)
+    } catch {
+      console.error('Shift action error')
+    } finally {
+      setActioning(null)
+    }
+  }
 
   async function clockShift(shiftId: string, action: 'clock-in' | 'clock-out') {
     if (!selectedVenue || clocking) return
@@ -284,7 +306,7 @@ export default function ManageScreen() {
                   <XStack key={s.id} backgroundColor="$surface0" borderRadius="$2" padding="$3" alignItems="center" gap="$3" borderWidth={1} borderColor="rgba(0,180,255,0.15)">
                     <YStack
                       width={8} height={8} borderRadius="$4"
-                      backgroundColor={s.status === 'ACTIVE' ? '$success' : '$surface2'}
+                      backgroundColor={s.status === 'ACTIVE' ? '$success' : s.status === 'CLAIMED' ? '$primary' : '$surface2'}
                     />
                     <YStack flex={1} gap="$1">
                       <Text color="$text" fontSize={14}>
@@ -294,6 +316,36 @@ export default function ManageScreen() {
                         {formatST(s.scheduledStart)} – {formatST(s.scheduledEnd)}
                       </Text>
                     </YStack>
+                    {s.status === 'CLAIMED' && (
+                      <XStack gap="$1">
+                        <Button
+                          size="$2"
+                          backgroundColor="$success"
+                          color="$base"
+                          borderRadius="$2"
+                          fontFamily="InterBold"
+                          fontSize={12}
+                          disabled={actioning === s.id}
+                          pressStyle={{ opacity: 0.85 }}
+                          onPress={() => shiftAction(s.id, 'approve')}
+                        >
+                          {actioning === s.id ? '…' : 'Approve'}
+                        </Button>
+                        <Button
+                          size="$2"
+                          backgroundColor="$danger"
+                          color="$base"
+                          borderRadius="$2"
+                          fontFamily="InterBold"
+                          fontSize={12}
+                          disabled={actioning === s.id}
+                          pressStyle={{ opacity: 0.85 }}
+                          onPress={() => shiftAction(s.id, 'reject')}
+                        >
+                          {actioning === s.id ? '…' : 'Reject'}
+                        </Button>
+                      </XStack>
+                    )}
                     {s.status === 'SCHEDULED' && (
                       <Button
                         size="$2"

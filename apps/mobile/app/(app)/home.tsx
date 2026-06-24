@@ -21,7 +21,7 @@ const DISCORD_AUTH_URL =
 
 type Shift = {
   id: string
-  status: 'ACTIVE' | 'SCHEDULED' | 'COMPLETED' | 'MISSED'
+  status: 'ACTIVE' | 'SCHEDULED' | 'CLAIMED' | 'COMPLETED' | 'MISSED'
   scheduledStart: string
   scheduledEnd: string
   actualStart: string | null
@@ -201,7 +201,7 @@ export default function HomeScreen() {
   }
 
   const activeShift = shifts.find((s) => s.status === 'ACTIVE')
-  const upcoming = shifts.filter((s) => s.status === 'SCHEDULED')
+  const upcoming = shifts.filter((s) => s.status === 'SCHEDULED' || s.status === 'CLAIMED')
 
   return (
     <YStack flex={1} backgroundColor="$base">
@@ -311,7 +311,11 @@ export default function HomeScreen() {
                         {formatST(s.scheduledStart, 'datetime')} ST
                       </Text>
                     </YStack>
-                    {canClockIn(s.scheduledStart) ? (
+                    {s.status === 'CLAIMED' ? (
+                      <XStack backgroundColor="rgba(0,180,255,0.08)" borderRadius="$4" paddingHorizontal="$2" paddingVertical={2}>
+                        <Text fontSize={11} color="$primary">Pending approval</Text>
+                      </XStack>
+                    ) : canClockIn(s.scheduledStart) ? (
                       <Button
                         size="$3"
                         backgroundColor="$success"

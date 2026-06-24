@@ -5,7 +5,7 @@ import { requireOperator, isOperatorContext } from "@/lib/mobile-operator-auth"
 import { logShiftAudit } from "@/lib/shift-audit"
 
 const patchSchema = z.object({
-  action: z.enum(["clock-in", "clock-out"]),
+  action: z.enum(["clock-in", "clock-out", "approve", "reject"]),
 })
 
 /**
@@ -63,6 +63,38 @@ export async function PATCH(
       success: true,
       shift: { id: shift.id, status: "ACTIVE", actualStart: now.toISOString() },
     })
+  }
+
+  // approve claim
+  if (parsed.data.action === "approve") {
+    if (shift.status !== "CLAIMED") {
+      return NextResponse.json({ error: "Shift is not pending approval" }, { status: 400 })
+    }
+    const writeResult = await prisma.shift.updateMany({
+      where: { id: shift.id, status: "CLAIMED" },
+      data: { status: "SCHEDULED" },
+    })
+    if (writeResult.count === 0) {
+      return NextResponse.json({ error: "Shift status changed concurrently" }, { status: 409 })
+    }
+    await logShiftAudit(shift.id, "APPROVE", ctx.userId, "mobile_operator")
+    return NextResponse.json({ success: true, shift: { id: shift.id, status: "SCHEDULED" } })
+  }
+
+  // reject claim
+  if (parsed.data.action === "reject") {
+    if (shift.status !== "CLAIMED") {
+      return NextResponse.json({ error: "Shift is not pending approval" }, { status: 400 })
+    }
+    const writeResult = await prisma.shift.updateMany({
+      where: { id: shift.id, status: "CLAIMED" },
+      data: { status: "OPEN", membershipId: null },
+    })
+    if (writeResult.count === 0) {
+      return NextResponse.json({ error: "Shift status changed concurrently" }, { status: 409 })
+    }
+    await logShiftAudit(shift.id, "REJECT", ctx.userId, "mobile_operator")
+    return NextResponse.json({ success: true, shift: { id: shift.id, status: "OPEN" } })
   }
 
   // clock-out
