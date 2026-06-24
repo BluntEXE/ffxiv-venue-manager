@@ -42,6 +42,7 @@ export function LogoUpload({ venueId, initialUrl, galleryImages, onUpdate }: Log
   const [error, setError]         = useState("")
   const fileInputRef              = useRef<HTMLInputElement>(null)
   const dragRef                   = useRef<{ startX: number; startY: number; origImgX: number; origImgY: number; renderedW: number; renderedH: number } | null>(null)
+  const canvasRef                 = useRef<HTMLCanvasElement>(null)
   // ── Load image into crop UI ────────────────────────────────────────────
   const loadImage = useCallback((src: string) => {
     const img = new Image()
@@ -106,6 +107,23 @@ export function LogoUpload({ venueId, initialUrl, galleryImages, onUpdate }: Log
   }, [])
 
   const onMouseUp = useCallback(() => { dragRef.current = null }, [])
+
+  // Redraw crop canvas whenever position changes
+  useEffect(() => {
+    if (!crop || !canvasRef.current) return
+    const ctx = canvasRef.current.getContext("2d")
+    if (!ctx) return
+    ctx.clearRect(0, 0, CONTAINER_W, CONTAINER_H)
+    ctx.drawImage(crop.imgEl, crop.imgX, crop.imgY, crop.renderedW, crop.renderedH)
+    ctx.fillStyle = "rgba(0,0,0,0.55)"
+    ctx.fillRect(0, 0, CONTAINER_W, FRAME_TOP)
+    ctx.fillRect(0, FRAME_TOP + FRAME_SIZE, CONTAINER_W, CONTAINER_H - FRAME_TOP - FRAME_SIZE)
+    ctx.fillRect(0, FRAME_TOP, FRAME_LEFT, FRAME_SIZE)
+    ctx.fillRect(FRAME_LEFT + FRAME_SIZE, FRAME_TOP, FRAME_LEFT, FRAME_SIZE)
+    ctx.strokeStyle = "rgba(0,180,255,0.8)"
+    ctx.lineWidth = 2
+    ctx.strokeRect(FRAME_LEFT + 1, FRAME_TOP + 1, FRAME_SIZE - 2, FRAME_SIZE - 2)
+  }, [crop])
 
   useEffect(() => {
     window.addEventListener("mousemove", onMouseMove)
@@ -253,34 +271,14 @@ export function LogoUpload({ venueId, initialUrl, galleryImages, onUpdate }: Log
           <p className="text-xs text-muted-foreground">Drag to position. The highlighted square is what will be saved.</p>
 
           <div className="flex gap-4 items-start">
-            <div
-              className="relative overflow-hidden rounded-lg border border-[var(--blue-015)] cursor-grab active:cursor-grabbing flex-shrink-0"
-              style={{ width: CONTAINER_W, height: CONTAINER_H, background: "#070b14" }}
+            <canvas
+              ref={canvasRef}
+              width={CONTAINER_W}
+              height={CONTAINER_H}
+              className="rounded-lg border border-[var(--blue-015)] cursor-grab active:cursor-grabbing flex-shrink-0"
+              style={{ background: "#070b14" }}
               onMouseDown={onMouseDown}
-            >
-              {/* eslint-disable-next-line @next/next/no-img-element */}
-              <img
-                src={crop.src}
-                alt=""
-                draggable={false}
-                style={{
-                  position: "absolute",
-                  left: crop.imgX,
-                  top:  crop.imgY,
-                  width:  crop.renderedW,
-                  height: crop.renderedH,
-                  userSelect: "none",
-                  pointerEvents: "none",
-                }}
-              />
-              <div style={{ position: "absolute", inset: 0, pointerEvents: "none" }}>
-                <div style={{ position: "absolute", top: 0, left: 0, right: 0, height: FRAME_TOP, background: "rgba(0,0,0,0.55)" }} />
-                <div style={{ position: "absolute", bottom: 0, left: 0, right: 0, height: CONTAINER_H - FRAME_TOP - FRAME_SIZE, background: "rgba(0,0,0,0.55)" }} />
-                <div style={{ position: "absolute", top: FRAME_TOP, left: 0, width: FRAME_LEFT, height: FRAME_SIZE, background: "rgba(0,0,0,0.55)" }} />
-                <div style={{ position: "absolute", top: FRAME_TOP, right: 0, width: FRAME_LEFT, height: FRAME_SIZE, background: "rgba(0,0,0,0.55)" }} />
-                <div style={{ position: "absolute", top: FRAME_TOP, left: FRAME_LEFT, width: FRAME_SIZE, height: FRAME_SIZE, border: "2px solid rgba(0,180,255,0.8)", borderRadius: 4 }} />
-              </div>
-            </div>
+            />
 
             <div className="flex flex-col items-center gap-1">
               <p className="text-xs text-muted-foreground">Preview</p>
