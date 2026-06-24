@@ -24,7 +24,7 @@ A two-part venue management system for **Final Fantasy XIV** social venues: a **
 │  FFXIV client    │  HTTP │  Web app + API   │  SQL  │   PostgreSQL     │
 │  + Dalamud       ├──────►│  (Next.js 16)    ├──────►│   25 tables      │
 │  + my plugin     │  SSE  │  + Redis cache   │       │                  │
-│  (4,975 LOC C#)  │◄──────┤  (32,224 LOC TS) │       │                  │
+│  (5,761 LOC C#)  │◄──────┤  (~109k LOC TS)  │       │                  │
 └──────────────────┘       └──────────────────┘       └──────────────────┘
         ▲                          │ HTTP
         │                          ▼
@@ -35,16 +35,16 @@ A two-part venue management system for **Final Fantasy XIV** social venues: a **
                           ┌──────────────────┐
                           │  Android app     │
                           │  (Expo/RN)       │
-                          │  (2,642 LOC TS)  │
+                          │  (3,451 LOC TS)  │
                           └──────────────────┘
 ```
 
 | | |
 |---|---|
-| **Lines of code** | ~40,000 (32,224 TS web + 2,642 TS mobile + 4,975 C#) |
+| **Lines of code** | ~115,000 (109k TS web · 5.7k C# plugin); mobile tracked separately (~3.5k TS) |
 | **API routes** | 81 |
 | **Database tables** | 25 |
-| **Commits** | 221 over ~6 months |
+| **Commits** | 573 (web) · 348 (plugin), ongoing since December 2025 |
 | **Knowledge-graph nodes** | 1,054 entities, 204 communities |
 | **Solo built** | Yes - every line, every decision |
 
@@ -255,18 +255,18 @@ The cost: SSE doesn't survive a server restart - connections drop and the browse
 
 | Metric | Value |
 |---|---|
-| Total LOC | ~40,000 |
-| Web app (TS/TSX) | 32,224 |
-| Mobile app (TS/TSX) | 2,642 |
-| Plugin (C#) | 4,975 |
+| Total LOC | ~115,000 |
+| Web app (TS/TSX) | ~109,000 |
+| Mobile app (TS/TSX) | 3,451 |
+| Plugin (C#) | 5,761 |
 | API routes | 81 |
 | Database tables | 25 |
 | Plugin-facing routes | 12 |
 | Web-only routes | 57 |
 | Mobile-facing routes | 12 |
 | Cron jobs | 4 |
-| Commits | 221 |
-| Active development span | ~6 months (Dec 2025 - May 2026) |
+| Commits | 573 (web) · 348 (plugin), ongoing |
+| Active development span | December 2025 - present (ongoing) |
 | Production environment | Single self-hosted Linux box |
 | Container count | 7 (web, postgres, redis, cron, xiv-stats, adminer, static-ehno) |
 | Redis memory ceiling | 256 MB (`allkeys-lru`) |
