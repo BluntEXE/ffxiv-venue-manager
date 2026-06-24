@@ -26,6 +26,25 @@ type Event = {
   status: string
   startTime: string
   endTime: string
+  partakeAttendeeCount: number | null
+  attendanceCount: number | null
+}
+
+const EVENT_TYPE_STYLES: Record<string, { bg: string; color: string }> = {
+  PERFORMANCE: { bg: 'rgba(203,166,247,0.15)', color: '#cba6f7' },
+  GAME_NIGHT:  { bg: 'rgba(137,180,250,0.15)', color: '#89b4fa' },
+  SPECIAL:     { bg: 'rgba(249,226,175,0.15)', color: '#f9e2af' },
+  SOCIAL:      { bg: 'rgba(166,227,161,0.15)', color: '#a6e3a1' },
+  PRIVATE:     { bg: 'rgba(108,112,134,0.15)', color: '#6c7086' },
+  OTHER:       { bg: 'rgba(166,173,200,0.15)', color: '#a6adc8' },
+}
+
+function getCountdown(startTime: string): string | null {
+  const ms = new Date(startTime).getTime() - Date.now()
+  if (ms <= 0 || ms > 24 * 60 * 60 * 1000) return null
+  const h = Math.floor(ms / (60 * 60 * 1000))
+  const m = Math.floor((ms % (60 * 60 * 1000)) / (60 * 1000))
+  return h > 0 ? `Starts in ${h}h ${m}m` : `Starts in ${m}m`
 }
 
 type VenueDetail = {
@@ -269,17 +288,45 @@ export default function VenueDetailScreen() {
           {venue.events.length > 0 && (
             <YStack gap="$2">
               <Text fontFamily="Outfit_600SemiBold" fontSize={16} color="$text">Events</Text>
-              {venue.events.map((e) => (
-                <YStack key={e.id} backgroundColor="$surface0" borderRadius="$2" padding="$3" gap="$1" borderWidth={1} borderColor="rgba(0,180,255,0.15)">
-                  <Text color="$text" fontSize={14} fontWeight="bold">{e.title}</Text>
-                  <Text color="$subtext0" fontSize={12}>
-                    {formatST(e.startTime, 'datetime')} ST
-                  </Text>
-                  {e.description && (
-                    <Text color="$subtext0" fontSize={13} numberOfLines={3}>{e.description}</Text>
-                  )}
-                </YStack>
-              ))}
+              {venue.events.map((e) => {
+                const badge = EVENT_TYPE_STYLES[e.eventType] ?? EVENT_TYPE_STYLES.OTHER
+                const count = e.partakeAttendeeCount ?? e.attendanceCount ?? null
+                const countdown = getCountdown(e.startTime)
+                return (
+                  <YStack key={e.id} backgroundColor="$surface0" borderRadius="$2" padding="$3" gap="$1" borderWidth={1} borderColor="rgba(0,180,255,0.15)">
+                    <XStack alignItems="center" justifyContent="space-between">
+                      <Text color="$text" fontSize={14} fontFamily="Outfit_600SemiBold" flex={1} numberOfLines={1}>
+                        {e.title}
+                      </Text>
+                      <XStack
+                        backgroundColor={badge.bg}
+                        borderRadius="$4"
+                        paddingHorizontal="$2"
+                        paddingVertical={2}
+                        marginLeft="$2"
+                      >
+                        <Text fontSize={10} style={{ color: badge.color }}>
+                          {e.eventType.replace('_', ' ')}
+                        </Text>
+                      </XStack>
+                    </XStack>
+                    <XStack gap="$3" alignItems="center">
+                      <Text color="$subtext0" fontSize={12}>
+                        {formatST(e.startTime, 'datetime')} ST
+                      </Text>
+                      {countdown && (
+                        <Text color="$primary" fontSize={11}>{countdown}</Text>
+                      )}
+                      {count != null && (
+                        <Text color="$subtext0" fontSize={11}>{count} attending</Text>
+                      )}
+                    </XStack>
+                    {e.description && (
+                      <Text color="$subtext0" fontSize={13} numberOfLines={3}>{e.description}</Text>
+                    )}
+                  </YStack>
+                )
+              })}
             </YStack>
           )}
 
