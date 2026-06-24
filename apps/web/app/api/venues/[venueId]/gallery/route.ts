@@ -3,6 +3,7 @@ import { authOptions } from "@/lib/auth"
 import { NextResponse } from "next/server"
 import { prisma } from "@/lib/prisma"
 import { deleteObject, keyFromUrl } from "@/lib/storage"
+import { invalidateCache, cacheKeys } from "@/lib/redis-cache"
 
 // POST: add a new image URL to gallery
 export async function POST(req: Request, { params }: { params: Promise<{ venueId: string }> }) {
@@ -31,6 +32,7 @@ export async function POST(req: Request, { params }: { params: Promise<{ venueId
     select: { galleryImages: true },
   })
 
+  await invalidateCache(cacheKeys.userVenues(session.user.id))
   return NextResponse.json({ galleryImages: venue.galleryImages })
 }
 
@@ -53,6 +55,8 @@ export async function DELETE(req: Request, { params }: { params: Promise<{ venue
 
   const updated = venue.galleryImages.filter((img) => img !== url)
   await prisma.venue.update({ where: { id: venueId }, data: { galleryImages: updated } })
+
+  await invalidateCache(cacheKeys.userVenues(session.user.id))
 
   // Delete from MinIO
   try { await deleteObject(keyFromUrl(url)) } catch { /* best effort */ }

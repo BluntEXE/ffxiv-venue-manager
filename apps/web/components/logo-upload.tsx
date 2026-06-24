@@ -45,7 +45,6 @@ export function LogoUpload({ venueId, initialUrl, galleryImages, onUpdate }: Log
   // ── Load image into crop UI ────────────────────────────────────────────
   const loadImage = useCallback((src: string) => {
     const img = new Image()
-    img.crossOrigin = "anonymous"
     img.onload = () => {
       const scale = Math.max(FRAME_SIZE / img.naturalWidth, FRAME_SIZE / img.naturalHeight)
       const rW = img.naturalWidth  * scale
