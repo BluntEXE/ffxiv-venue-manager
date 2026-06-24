@@ -52,6 +52,35 @@ type OpenShift = {
   roleName: string | null
 }
 
+type FeedEvent = {
+  id: string
+  venueId: string
+  venueName: string
+  title: string
+  startTime: string
+  endTime: string
+  eventType: string
+  partakeAttendeeCount: number | null
+  attendanceCount: number | null
+}
+
+const EVENT_TYPE_STYLES: Record<string, { bg: string; color: string }> = {
+  PERFORMANCE: { bg: 'rgba(203,166,247,0.15)', color: '#cba6f7' },
+  GAME_NIGHT:  { bg: 'rgba(137,180,250,0.15)', color: '#89b4fa' },
+  SPECIAL:     { bg: 'rgba(249,226,175,0.15)', color: '#f9e2af' },
+  SOCIAL:      { bg: 'rgba(166,227,161,0.15)', color: '#a6e3a1' },
+  PRIVATE:     { bg: 'rgba(108,112,134,0.15)', color: '#6c7086' },
+  OTHER:       { bg: 'rgba(166,173,200,0.15)', color: '#a6adc8' },
+}
+
+function eventTypeBadge(type: string) {
+  return EVENT_TYPE_STYLES[type] ?? EVENT_TYPE_STYLES.OTHER
+}
+
+function attendeeCount(e: FeedEvent): number | null {
+  return e.partakeAttendeeCount ?? e.attendanceCount ?? null
+}
+
 export default function HomeScreen() {
   const router = useRouter()
   const [authed, setAuthed] = useState<boolean | null>(null)
@@ -63,12 +92,20 @@ export default function HomeScreen() {
   const [clocking, setClocking] = useState<string | null>(null)
   const [openShifts, setOpenShifts] = useState<OpenShift[]>([])
   const [openShiftsExpanded, setOpenShiftsExpanded] = useState(true)
+  const [eventsFeed, setEventsFeed] = useState<FeedEvent[]>([])
+  const [eventsExpanded, setEventsExpanded] = useState(true)
   const [claiming, setClaiming] = useState<string | null>(null)
   const [claimErrors, setClaimErrors] = useState<Record<string, string>>({})
 
   useEffect(() => {
     SecureStore.getItemAsync('@xivvm/openShiftsExpanded').then(val => {
       if (val !== null) setOpenShiftsExpanded(val === 'true')
+    })
+  }, [])
+
+  useEffect(() => {
+    SecureStore.getItemAsync('@xivvm/eventsFeedExpanded').then(val => {
+      if (val !== null) setEventsExpanded(val === 'true')
     })
   }, [])
 
@@ -81,14 +118,16 @@ export default function HomeScreen() {
     if (!isRefresh) setShiftsLoading(true)
     setClaimErrors({})
     try {
-      const [shiftsRes, followsRes, openShiftsRes] = await Promise.all([
+      const [shiftsRes, followsRes, openShiftsRes, eventsRes] = await Promise.all([
         apiFetch('/api/mobile/my/shifts'),
         apiFetch('/api/mobile/my/follows'),
         apiFetch('/api/mobile/my/open-shifts'),
+        apiFetch('/api/mobile/my/events-feed'),
       ])
       if (shiftsRes.ok) setShifts(await shiftsRes.json())
       if (followsRes.ok) setFollows(await followsRes.json())
       if (openShiftsRes.ok) setOpenShifts(await openShiftsRes.json())
+      if (eventsRes.ok) setEventsFeed(await eventsRes.json())
     } catch {}
     setShiftsLoading(false)
     setRefreshing(false)
@@ -103,6 +142,12 @@ export default function HomeScreen() {
     const next = !openShiftsExpanded
     setOpenShiftsExpanded(next)
     SecureStore.setItemAsync('@xivvm/openShiftsExpanded', String(next))
+  }
+
+  function toggleEvents() {
+    const next = !eventsExpanded
+    setEventsExpanded(next)
+    SecureStore.setItemAsync('@xivvm/eventsFeedExpanded', String(next))
   }
 
   async function claimShift(shiftId: string, venueId: string) {
@@ -350,6 +395,61 @@ export default function HomeScreen() {
               />
             ) : null}
           </>
+        )}
+
+        {eventsFeed.length > 0 && (
+          <YStack gap="$2" marginTop="$2">
+            <XStack alignItems="center" justifyContent="space-between">
+              <Text fontFamily="Outfit_600SemiBold" fontSize={16} color="$text">Upcoming Events</Text>
+              <Button chromeless size="$2" onPress={toggleEvents} paddingHorizontal="$1">
+                <Ionicons name={eventsExpanded ? 'chevron-up' : 'chevron-down'} size={16} color="#a6adc8" />
+              </Button>
+            </XStack>
+            {eventsExpanded && eventsFeed.map((e) => {
+              const badge = eventTypeBadge(e.eventType)
+              const count = attendeeCount(e)
+              return (
+                <XStack
+                  key={e.id}
+                  backgroundColor="$surface0"
+                  borderRadius="$2"
+                  padding="$3"
+                  alignItems="center"
+                  gap="$3"
+                  borderWidth={1}
+                  borderColor="rgba(0,180,255,0.15)"
+                  pressStyle={{ opacity: 0.85 }}
+                  onPress={() => router.push(`/venue/${e.venueId}` as any)}
+                >
+                  <YStack flex={1} gap="$1">
+                    <Text color="$subtext0" fontSize={11}>{e.venueName}</Text>
+                    <Text color="$text" fontSize={14} fontFamily="Outfit_600SemiBold" numberOfLines={1}>
+                      {e.title}
+                    </Text>
+                    <XStack gap="$2" alignItems="center" marginTop="$1">
+                      <Text color="$subtext0" fontSize={12}>
+                        {formatST(e.startTime, 'datetime')} ST
+                      </Text>
+                      <XStack
+                        backgroundColor={badge.bg}
+                        borderRadius="$4"
+                        paddingHorizontal="$2"
+                        paddingVertical={2}
+                      >
+                        <Text fontSize={10} style={{ color: badge.color }}>
+                          {e.eventType.replace('_', ' ')}
+                        </Text>
+                      </XStack>
+                      {count != null && (
+                        <Text fontSize={11} color="$subtext0">{count} attending</Text>
+                      )}
+                    </XStack>
+                  </YStack>
+                  <Ionicons name="chevron-forward" size={14} color="#6c7086" />
+                </XStack>
+              )
+            })}
+          </YStack>
         )}
 
         {openShifts.length > 0 && (
