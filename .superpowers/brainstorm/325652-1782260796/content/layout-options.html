@@ -1,0 +1,75 @@
+<h2>Maintenance Page Layout</h2>
+<p class="subtitle">Which structure feels right for communicating site status + plugin guidance?</p>
+
+<div class="cards">
+
+  <div class="card" data-choice="a" onclick="toggleSelect(this)">
+    <div class="card-image" style="background:#070b14;border:1px solid rgba(0,180,255,0.2);border-radius:6px;padding:16px;font-family:sans-serif;">
+      <div style="text-align:center;padding:12px 0 8px;">
+        <div style="color:#00b4ff;font-size:11px;letter-spacing:3px;text-transform:uppercase;margin-bottom:6px;">XIV VENUE MANAGER</div>
+        <div style="color:#e2e8f0;font-size:18px;font-weight:600;margin-bottom:4px;">Under Maintenance</div>
+        <div style="color:#94a3b8;font-size:11px;">Back shortly — Est. return 04:30 UTC</div>
+      </div>
+      <div style="height:1px;background:rgba(0,180,255,0.15);margin:10px 0;"></div>
+      <div style="color:#94a3b8;font-size:10px;text-align:center;line-height:1.6;">
+        <div style="color:#00b4ff;font-size:10px;margin-bottom:4px;">Plugin during maintenance</div>
+        Clock-in/out will fail &bull; Patron visits won't log &bull; Sales won't record
+      </div>
+    </div>
+    <div class="card-body">
+      <h3>A — Centred Single Panel</h3>
+      <p>Logo + status + one compact plugin notice. Minimal. On-brand. Fast to read. Best for short outages where users just need "it'll be back soon."</p>
+    </div>
+  </div>
+
+  <div class="card" data-choice="b" onclick="toggleSelect(this)">
+    <div class="card-image" style="background:#070b14;border:1px solid rgba(0,180,255,0.2);border-radius:6px;padding:14px;font-family:sans-serif;">
+      <div style="text-align:center;padding:8px 0 6px;">
+        <div style="color:#00b4ff;font-size:10px;letter-spacing:3px;text-transform:uppercase;margin-bottom:4px;">XIV VENUE MANAGER</div>
+        <div style="color:#e2e8f0;font-size:16px;font-weight:600;margin-bottom:2px;">Scheduled Maintenance</div>
+        <div style="color:#94a3b8;font-size:10px;">Est. return 04:30 UTC</div>
+      </div>
+      <div style="height:1px;background:rgba(0,180,255,0.15);margin:8px 0;"></div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:4px;">
+        <div style="background:rgba(0,180,255,0.06);border:1px solid rgba(0,180,255,0.15);border-radius:4px;padding:8px;">
+          <div style="color:#00b4ff;font-size:9px;letter-spacing:1px;text-transform:uppercase;margin-bottom:4px;">What's happening</div>
+          <div style="color:#94a3b8;font-size:9px;line-height:1.5;">Database updates &amp; server upgrades in progress.</div>
+        </div>
+        <div style="background:rgba(0,180,255,0.06);border:1px solid rgba(0,180,255,0.15);border-radius:4px;padding:8px;">
+          <div style="color:#f59e0b;font-size:9px;letter-spacing:1px;text-transform:uppercase;margin-bottom:4px;">Plugin notice</div>
+          <div style="color:#94a3b8;font-size:9px;line-height:1.5;">Clock-in/out, sales &amp; patron logging offline.</div>
+        </div>
+      </div>
+    </div>
+    <div class="card-body">
+      <h3>B — Two-Column Info Cards</h3>
+      <p>Splits "what's happening" from "plugin impact" into side-by-side cards. More informative. Good when maintenance has a reason worth explaining.</p>
+    </div>
+  </div>
+
+  <div class="card" data-choice="c" onclick="toggleSelect(this)">
+    <div class="card-image" style="background:#070b14;border:1px solid rgba(0,180,255,0.2);border-radius:6px;padding:14px;font-family:sans-serif;">
+      <div style="text-align:center;padding:8px 0 6px;">
+        <div style="color:#00b4ff;font-size:10px;letter-spacing:3px;text-transform:uppercase;margin-bottom:4px;">XIV VENUE MANAGER</div>
+        <div style="color:#e2e8f0;font-size:16px;font-weight:600;margin-bottom:2px;">Under Maintenance</div>
+        <div style="color:#94a3b8;font-size:10px;">Est. return 04:30 UTC</div>
+      </div>
+      <div style="height:1px;background:rgba(0,180,255,0.15);margin:8px 0;"></div>
+      <div style="margin-top:4px;">
+        <div style="color:#00b4ff;font-size:9px;letter-spacing:1px;text-transform:uppercase;margin-bottom:5px;">Plugin behaviour during maintenance</div>
+        <div style="display:flex;flex-direction:column;gap:4px;">
+          <div style="display:flex;align-items:center;gap:6px;"><span style="color:#ef4444;font-size:10px;">✕</span><span style="color:#94a3b8;font-size:9px;">Clock-in / Clock-out — will fail with error</span></div>
+          <div style="display:flex;align-items:center;gap:6px;"><span style="color:#ef4444;font-size:10px;">✕</span><span style="color:#94a3b8;font-size:9px;">Patron visit logging — silent fail, visits lost</span></div>
+          <div style="display:flex;align-items:center;gap:6px;"><span style="color:#ef4444;font-size:10px;">✕</span><span style="color:#94a3b8;font-size:9px;">Sale! logging — silent fail, records lost</span></div>
+          <div style="display:flex;align-items:center;gap:6px;"><span style="color:#f59e0b;font-size:10px;">⚠</span><span style="color:#94a3b8;font-size:9px;">DTR bar / shift info — may show stale data</span></div>
+          <div style="display:flex;align-items:center;gap:6px;"><span style="color:#22c55e;font-size:10px;">✓</span><span style="color:#94a3b8;font-size:9px;">All features restore automatically on site return</span></div>
+        </div>
+      </div>
+    </div>
+    <div class="card-body">
+      <h3>C — Status List</h3>
+      <p>Full per-feature status breakdown with red/yellow/green indicators. Most detailed. Best if you expect users to be mid-event and need to know exactly what works.</p>
+    </div>
+  </div>
+
+</div>
