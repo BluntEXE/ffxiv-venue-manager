@@ -70,7 +70,7 @@
   }
 
   .subtitle {
-    color: #64748b;
+    color: #8897a8;
     font-size: 13px;
     line-height: 1.5;
   }
@@ -89,7 +89,7 @@
   .rule { height: 1px; background: rgba(0,180,255,0.08); margin: 22px 0; }
 
   .section-label {
-    font-size: 10px;
+    font-size: 11px;
     letter-spacing: 2px;
     text-transform: uppercase;
     color: rgba(0,180,255,0.6);
@@ -115,7 +115,7 @@
   .row-desc { font-size: 11px; color: #475569; line-height: 1.4; }
 
   .badge {
-    font-size: 10px;
+    font-size: 11px;
     padding: 2px 8px;
     border-radius: 10px;
     font-weight: 500;
@@ -130,11 +130,18 @@
     display: flex;
     align-items: center;
     justify-content: space-between;
+    flex-wrap: wrap;
     gap: 14px;
   }
 
-  .foot-note { font-size: 11px; color: #334155; line-height: 1.55; }
+  .foot-note { font-size: 11px; color: #64748b; line-height: 1.55; }
   .foot-note strong { color: #475569; }
+
+  .discord-btn:hover,
+  .discord-btn:focus-visible {
+    border-color: rgba(88,101,242,0.5);
+    outline: none;
+  }
 
   .discord-btn {
     display: inline-flex;
@@ -163,7 +170,7 @@
   <div class="card">
 
     <div class="card-head">
-      <div class="icon">&#9881;</div>
+      <div class="icon" aria-hidden="true">&#9881;</div>
       <h1>Scheduled Maintenance</h1>
       <p class="subtitle">The site is offline. Back shortly.</p>
       <span class="eta">Est. return: 11:00 UTC</span>
@@ -175,7 +182,7 @@
     <div class="status-list">
 
       <div class="row">
-        <div class="row-icon">&#x1F534;</div>
+        <div class="row-icon" aria-hidden="true">&#x1F534;</div>
         <div class="row-body">
           <div class="row-name">Clock-in / Clock-out</div>
           <div class="row-desc">Fails with an in-game error. Don't start or end shifts now.</div>
@@ -184,7 +191,7 @@
       </div>
 
       <div class="row">
-        <div class="row-icon">&#x1F534;</div>
+        <div class="row-icon" aria-hidden="true">&#x1F534;</div>
         <div class="row-body">
           <div class="row-name">Patron Visit Logging</div>
           <div class="row-desc">Visits during this window won't be recorded and can't be recovered.</div>
@@ -193,7 +200,7 @@
       </div>
 
       <div class="row">
-        <div class="row-icon">&#x1F534;</div>
+        <div class="row-icon" aria-hidden="true">&#x1F534;</div>
         <div class="row-body">
           <div class="row-name">Sale! Logging</div>
           <div class="row-desc">Sales logged now won't be recorded.</div>
@@ -202,7 +209,7 @@
       </div>
 
       <div class="row">
-        <div class="row-icon">&#x1F7E1;</div>
+        <div class="row-icon" aria-hidden="true">&#x1F7E1;</div>
         <div class="row-body">
           <div class="row-name">DTR Bar / Shift Info</div>
           <div class="row-desc">Shows last-known shift status. Updates when the site returns.</div>
@@ -211,7 +218,7 @@
       </div>
 
       <div class="row">
-        <div class="row-icon">&#x1F7E2;</div>
+        <div class="row-icon" aria-hidden="true">&#x1F7E2;</div>
         <div class="row-body">
           <div class="row-name">Plugin Connection</div>
           <div class="row-desc">No restart needed. The plugin reconnects when the site comes back.</div>
