@@ -10,6 +10,7 @@ import { Label } from "@/components/ui/label"
 import { Input } from "@/components/ui/input"
 import { GalleryManager } from "@/components/gallery-manager"
 import { BannerUpload } from "@/components/banner-upload"
+import { LogoUpload } from "@/components/logo-upload"
 import { Checkbox } from "@/components/ui/checkbox"
 import {
   Card,
@@ -89,6 +90,7 @@ export default function SettingsPage({
   const [userRole, setUserRole] = useState<string>("")
   const [galleryImages, setGalleryImages] = useState<string[]>([])
   const [bannerUrl, setBannerUrl] = useState<string | null>(null)
+  const [logoUrl, setLogoUrl] = useState<string | null>(null)
 
   // Unwrap params
   useEffect(() => {
@@ -121,6 +123,7 @@ export default function SettingsPage({
         setVenueWorld(venue.world ?? "")
         setGalleryImages(venue.galleryImages ?? [])
         setBannerUrl(venue.bannerUrl ?? null)
+        setLogoUrl(venue.logoUrl ?? null)
         if (venue.memberships?.[0]) {
           setUserRole(venue.memberships[0].role)
         }
@@ -319,6 +322,19 @@ export default function SettingsPage({
                   </div>
                   <p className="text-[0.68rem] text-[var(--fg-faint)]">Press Enter or comma to add. e.g. 18+, Bar, RP, Live Music</p>
                 </div>
+                <div className="space-y-1.5">
+                  <Label>Venue logo</Label>
+                  <p className="text-xs text-muted-foreground">Square logo shown next to your venue in the mobile app. Upload or pick from your gallery photos.</p>
+                  {venueId && (
+                    <LogoUpload
+                      venueId={venueId}
+                      initialUrl={logoUrl}
+                      galleryImages={galleryImages}
+                      onUpdate={setLogoUrl}
+                    />
+                  )}
+                </div>
+                <div className="border-t border-[var(--blue-015)]" />
                 <div className="space-y-1.5">
                   <Label>Banner image</Label>
                   {venueId && <BannerUpload venueId={venueId} initialUrl={bannerUrl} onUpdate={setBannerUrl} />}
