@@ -30,7 +30,7 @@ export const PATCH = withRateLimit(
         return NextResponse.json({ error: "Forbidden" }, { status: 403 })
       }
 
-      const { name, description, location, bannerUrl } = body
+      const { name, description, location, bannerUrl, logoUrl } = body
       const updated = await prisma.venue.update({
         where: { id: venueId },
         data: {
@@ -38,6 +38,7 @@ export const PATCH = withRateLimit(
           ...(description !== undefined && { description: description ? String(description).trim() : null }),
           ...(location !== undefined && { location: location ? String(location).trim() : null }),
           ...(bannerUrl !== undefined && { bannerUrl: bannerUrl ? String(bannerUrl) : null }),
+          ...(logoUrl !== undefined && { logoUrl: logoUrl ? String(logoUrl) : null }),
         },
       })
 
