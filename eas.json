@@ -1,42 +1,5 @@
 {
   "cli": {
-    "version": ">= 10.0.0",
-    "appVersionSource": "remote"
-  },
-  "build": {
-    "development": {
-      "developmentClient": true,
-      "distribution": "internal",
-      "projectSubdirectory": "apps/mobile",
-      "android": {
-        "buildType": "apk"
-      },
-      "env": {
-        "EXPO_PUBLIC_DISCORD_CLIENT_ID": "1442821194263957616"
-      }
-    },
-    "preview": {
-      "distribution": "internal",
-      "projectSubdirectory": "apps/mobile",
-      "node": "20.19.0",
-      "android": {
-        "buildType": "apk"
-      },
-      "env": {
-        "EXPO_PUBLIC_DISCORD_CLIENT_ID": "1442821194263957616"
-      }
-    },
-    "production": {
-      "projectSubdirectory": "apps/mobile",
-      "android": {
-        "buildType": "app-bundle"
-      },
-      "env": {
-        "EXPO_PUBLIC_DISCORD_CLIENT_ID": "1442821194263957616"
-      }
-    }
-  },
-  "submit": {
-    "production": {}
+    "version": ">= 10.0.0"
   }
 }
