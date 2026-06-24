@@ -39,6 +39,13 @@ const EVENT_TYPE_STYLES: Record<string, { bg: string; color: string }> = {
   OTHER:       { bg: 'rgba(166,173,200,0.15)', color: '#a6adc8' },
 }
 
+function cleanDescription(text: string): string {
+  return text
+    .replace(/!\[.*?\]\(.*?\)/g, '')  // strip markdown images
+    .replace(/\[.*?\]\(.*?\)/g, '')    // strip markdown links
+    .trim()
+}
+
 function getCountdown(startTime: string): string | null {
   const ms = new Date(startTime).getTime() - Date.now()
   if (ms <= 0 || ms > 24 * 60 * 60 * 1000) return null
@@ -321,8 +328,8 @@ export default function VenueDetailScreen() {
                         <Text color="$subtext0" fontSize={11}>{count} attending</Text>
                       )}
                     </XStack>
-                    {e.description && (
-                      <Text color="$subtext0" fontSize={13} numberOfLines={3}>{e.description}</Text>
+                    {e.description && cleanDescription(e.description) && (
+                      <Text color="$subtext0" fontSize={13} numberOfLines={3}>{cleanDescription(e.description)}</Text>
                     )}
                   </YStack>
                 )
