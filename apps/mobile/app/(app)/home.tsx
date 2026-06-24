@@ -1,5 +1,5 @@
 import { useEffect, useState, useCallback } from 'react'
-import { ScrollView, RefreshControl } from 'react-native'
+import { ScrollView, RefreshControl, Image } from 'react-native'
 import { YStack, XStack, Text, Button, Spinner } from 'tamagui'
 import { useRouter, useFocusEffect } from 'expo-router'
 import { Ionicons } from '@expo/vector-icons'
@@ -38,6 +38,7 @@ type FollowedVenue = {
   venueName: string
   dataCenter: string
   world: string
+  logoUrl: string | null
   isOpenNow: boolean
 }
 
@@ -309,6 +310,22 @@ export default function HomeScreen() {
                 pressStyle={{ opacity: 0.85 }}
                 onPress={() => router.push(`/venue/${f.venueId}` as any)}
               >
+                <YStack
+                  width={36}
+                  height={36}
+                  borderRadius="$2"
+                  backgroundColor="$surface1"
+                  alignItems="center"
+                  justifyContent="center"
+                  flexShrink={0}
+                  overflow="hidden"
+                >
+                  {f.logoUrl ? (
+                    <Image source={{ uri: f.logoUrl }} style={{ width: 36, height: 36, borderRadius: 8 }} resizeMode="cover" />
+                  ) : (
+                    <Ionicons name="storefront-outline" size={18} color="#a6adc8" />
+                  )}
+                </YStack>
                 <YStack flex={1} gap="$1">
                   <Text color="$text" fontSize={14} fontFamily="Outfit_600SemiBold" numberOfLines={1}>
                     {f.venueName}

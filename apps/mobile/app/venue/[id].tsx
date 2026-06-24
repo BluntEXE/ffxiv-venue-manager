@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react'
-import { ScrollView } from 'react-native'
+import { ScrollView, Image } from 'react-native'
 import { YStack, XStack, Text, Spinner, Button } from 'tamagui'
 import { useLocalSearchParams, useRouter } from 'expo-router'
 import { Ionicons } from '@expo/vector-icons'
@@ -173,7 +173,37 @@ export default function VenueDetailScreen() {
       )}
 
       <ScrollView style={{ flex: 1 }}>
-        <YStack padding="$4" gap="$4">
+        {/* Banner + logo header */}
+        {(venue.bannerUrl || venue.logoUrl) && (
+          <YStack>
+            {venue.bannerUrl ? (
+              <Image
+                source={{ uri: venue.bannerUrl }}
+                style={{ width: '100%', height: 140 }}
+                resizeMode="cover"
+              />
+            ) : (
+              <YStack height={60} backgroundColor="$surface0" />
+            )}
+            {venue.logoUrl && (
+              <YStack
+                position="absolute"
+                bottom={-20}
+                left={16}
+                width={48}
+                height={48}
+                borderRadius="$2"
+                backgroundColor="$surface0"
+                borderWidth={2}
+                borderColor="$base"
+                overflow="hidden"
+              >
+                <Image source={{ uri: venue.logoUrl }} style={{ width: 48, height: 48 }} resizeMode="cover" />
+              </YStack>
+            )}
+          </YStack>
+        )}
+        <YStack padding="$4" gap="$4" paddingTop={venue.logoUrl ? '$7' : '$4'}>
           <YStack gap="$1">
             <Text color="$subtext0" fontSize={13}>{venue.world} · {venue.dataCenter}</Text>
             {venue.location && (
