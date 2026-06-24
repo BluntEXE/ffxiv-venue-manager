@@ -40,7 +40,7 @@ export function LogoUpload({ venueId, initialUrl, galleryImages, onUpdate }: Log
   const [crop, setCrop]           = useState<CropState | null>(null)
   const [error, setError]         = useState("")
   const fileInputRef              = useRef<HTMLInputElement>(null)
-  const dragRef                   = useRef<{ startX: number; startY: number; origImgX: number; origImgY: number } | null>(null)
+  const dragRef                   = useRef<{ startX: number; startY: number; origImgX: number; origImgY: number; renderedW: number; renderedH: number } | null>(null)
 
   // ── Load image into crop UI ────────────────────────────────────────────
   const loadImage = useCallback((src: string) => {
@@ -50,6 +50,7 @@ export function LogoUpload({ venueId, initialUrl, galleryImages, onUpdate }: Log
       const scale = Math.max(FRAME_SIZE / img.naturalWidth, FRAME_SIZE / img.naturalHeight)
       const rW = img.naturalWidth  * scale
       const rH = img.naturalHeight * scale
+      if (src.startsWith("blob:")) URL.revokeObjectURL(src)
       setCrop({
         imgEl:     img,
         renderedW: rW,
@@ -59,7 +60,10 @@ export function LogoUpload({ venueId, initialUrl, galleryImages, onUpdate }: Log
       })
       setStage("cropping")
     }
-    img.onerror = () => setError("Failed to load image")
+    img.onerror = () => {
+      if (src.startsWith("blob:")) URL.revokeObjectURL(src)
+      setError("Failed to load image")
+    }
     img.src = src
   }, [])
 
@@ -83,23 +87,24 @@ export function LogoUpload({ venueId, initialUrl, galleryImages, onUpdate }: Log
   const onMouseDown = (e: React.MouseEvent) => {
     if (!crop) return
     e.preventDefault()
-    dragRef.current = { startX: e.clientX, startY: e.clientY, origImgX: crop.imgX, origImgY: crop.imgY }
+    dragRef.current = { startX: e.clientX, startY: e.clientY, origImgX: crop.imgX, origImgY: crop.imgY, renderedW: crop.renderedW, renderedH: crop.renderedH }
   }
 
   const onMouseMove = useCallback((e: MouseEvent) => {
-    if (!dragRef.current || !crop) return
+    if (!dragRef.current) return
     const dx = e.clientX - dragRef.current.startX
     const dy = e.clientY - dragRef.current.startY
-    const minX = FRAME_LEFT + FRAME_SIZE - crop.renderedW
+    const { renderedW, renderedH } = dragRef.current
+    const minX = FRAME_LEFT + FRAME_SIZE - renderedW
     const maxX = FRAME_LEFT
-    const minY = FRAME_TOP  + FRAME_SIZE - crop.renderedH
+    const minY = FRAME_TOP  + FRAME_SIZE - renderedH
     const maxY = FRAME_TOP
     setCrop(c => c ? {
       ...c,
       imgX: clamp(dragRef.current!.origImgX + dx, minX, maxX),
       imgY: clamp(dragRef.current!.origImgY + dy, minY, maxY),
     } : c)
-  }, [crop])
+  }, [])
 
   const onMouseUp = useCallback(() => { dragRef.current = null }, [])
 
