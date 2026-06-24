@@ -42,16 +42,8 @@ export function LogoUpload({ venueId, initialUrl, galleryImages, onUpdate }: Log
   const [error, setError]         = useState("")
   const fileInputRef              = useRef<HTMLInputElement>(null)
   const dragRef                   = useRef<{ startX: number; startY: number; origImgX: number; origImgY: number; renderedW: number; renderedH: number } | null>(null)
-  const blobUrlRef                = useRef<string | null>(null)
-
-  const revokeBlobUrl = () => {
-    if (blobUrlRef.current) { URL.revokeObjectURL(blobUrlRef.current); blobUrlRef.current = null }
-  }
-
   // ── Load image into crop UI ────────────────────────────────────────────
   const loadImage = useCallback((src: string) => {
-    revokeBlobUrl() // clean up any previous blob URL before loading a new image
-    if (src.startsWith("blob:")) blobUrlRef.current = src
     const img = new Image()
     img.onload = () => {
       const scale = Math.max(FRAME_SIZE / img.naturalWidth, FRAME_SIZE / img.naturalHeight)
@@ -67,12 +59,8 @@ export function LogoUpload({ venueId, initialUrl, galleryImages, onUpdate }: Log
       })
       setStage("cropping")
     }
-    img.onerror = () => {
-      revokeBlobUrl()
-      setError("Failed to load image")
-    }
+    img.onerror = () => setError("Failed to load image")
     img.src = src
-  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
 
   const handleFile = (file: File) => {
@@ -83,7 +71,10 @@ export function LogoUpload({ venueId, initialUrl, galleryImages, onUpdate }: Log
       setError("Max 10 MB"); return
     }
     setError("")
-    loadImage(URL.createObjectURL(file))
+    const reader = new FileReader()
+    reader.onload = (e) => { if (e.target?.result) loadImage(e.target.result as string) }
+    reader.onerror = () => setError("Failed to read file")
+    reader.readAsDataURL(file)
   }
 
   const handleGalleryPick = (url: string) => {
@@ -163,7 +154,6 @@ export function LogoUpload({ venueId, initialUrl, galleryImages, onUpdate }: Log
       })
       if (!patch.ok) { const d = await patch.json(); throw new Error(d.error || "Failed to save") }
 
-      revokeBlobUrl()
       setSavedUrl(storedUrl)
       onUpdate(storedUrl)
       setStage("idle")
@@ -190,7 +180,7 @@ export function LogoUpload({ venueId, initialUrl, galleryImages, onUpdate }: Log
     }
   }
 
-  const cancelCrop = () => { revokeBlobUrl(); setStage("idle"); setCrop(null); setError("") }
+  const cancelCrop = () => { setStage("idle"); setCrop(null); setError("") }
 
   // ── Render ──────────────────────────────────────────────────────────────
   return (
