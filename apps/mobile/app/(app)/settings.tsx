@@ -275,6 +275,17 @@ export default function SettingsScreen() {
             <Text color="$subtext0" fontSize={13}>Website</Text>
             <Text color="$primary" fontSize={13}>xivvenuemanager.com</Text>
           </XStack>
+          <Divider />
+          <XStack
+            padding="$4"
+            alignItems="center"
+            justifyContent="space-between"
+            pressStyle={{ opacity: 0.7 }}
+            onPress={() => router.push('/feedback' as any)}
+          >
+            <Text color="$subtext0" fontSize={13}>Send Feedback</Text>
+            <Text color="$overlay" fontSize={13}>›</Text>
+          </XStack>
         </SectionCard>
 
       </ScrollView>
