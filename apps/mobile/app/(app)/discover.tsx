@@ -1,6 +1,6 @@
 import { useState, useCallback, useRef, useEffect } from 'react'
 import { FlashList } from '@shopify/flash-list'
-import { RefreshControl, TextInput, ScrollView, StyleSheet } from 'react-native'
+import { RefreshControl, TextInput, ScrollView, StyleSheet, Image } from 'react-native'
 import { YStack, XStack, Text, Button } from 'tamagui'
 import { useRouter } from 'expo-router'
 import { useFocusEffect } from 'expo-router'
@@ -103,8 +103,17 @@ function VenueRow({ venue, tab, onPress }: { venue: Venue; tab: Tab; onPress: ()
         alignItems="center"
         justifyContent="center"
         flexShrink={0}
+        overflow="hidden"
       >
-        <Ionicons name="storefront-outline" size={22} color="#a6adc8" />
+        {venue.logoUrl ? (
+          <Image
+            source={{ uri: venue.logoUrl }}
+            style={{ width: 44, height: 44, borderRadius: 8 }}
+            resizeMode="cover"
+          />
+        ) : (
+          <Ionicons name="storefront-outline" size={22} color="#a6adc8" />
+        )}
       </YStack>
 
       <YStack flex={1} gap="$1">
