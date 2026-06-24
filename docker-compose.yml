@@ -133,6 +133,7 @@ services:
       context: .
       dockerfile: apps/web/Dockerfile
     container_name: venue-manager-next
+    working_dir: /app
     ports:
       - "3007:3000"
     env_file: .env
@@ -155,6 +156,8 @@ services:
     volumes:
       - ./docker/maintenance:/usr/share/nginx/html:ro
     restart: "no"
+    networks:
+      - app-network
     profiles:
       - maintenance
 
