@@ -87,5 +87,6 @@ graphify-out/
 graphify-out/
 .worktrees/
 .claude/worktrees/
-docs/superpowers/
+docs/superpowers/brainstorm/
+.superpowers/
 docker/minio/data/
