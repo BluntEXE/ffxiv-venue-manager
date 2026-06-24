@@ -41,15 +41,21 @@ export function LogoUpload({ venueId, initialUrl, galleryImages, onUpdate }: Log
   const [error, setError]         = useState("")
   const fileInputRef              = useRef<HTMLInputElement>(null)
   const dragRef                   = useRef<{ startX: number; startY: number; origImgX: number; origImgY: number; renderedW: number; renderedH: number } | null>(null)
+  const blobUrlRef                = useRef<string | null>(null)
+
+  const revokeBlobUrl = () => {
+    if (blobUrlRef.current) { URL.revokeObjectURL(blobUrlRef.current); blobUrlRef.current = null }
+  }
 
   // ── Load image into crop UI ────────────────────────────────────────────
   const loadImage = useCallback((src: string) => {
+    revokeBlobUrl() // clean up any previous blob URL before loading a new image
+    if (src.startsWith("blob:")) blobUrlRef.current = src
     const img = new Image()
     img.onload = () => {
       const scale = Math.max(FRAME_SIZE / img.naturalWidth, FRAME_SIZE / img.naturalHeight)
       const rW = img.naturalWidth  * scale
       const rH = img.naturalHeight * scale
-      if (src.startsWith("blob:")) URL.revokeObjectURL(src)
       setCrop({
         imgEl:     img,
         renderedW: rW,
@@ -60,10 +66,11 @@ export function LogoUpload({ venueId, initialUrl, galleryImages, onUpdate }: Log
       setStage("cropping")
     }
     img.onerror = () => {
-      if (src.startsWith("blob:")) URL.revokeObjectURL(src)
+      revokeBlobUrl()
       setError("Failed to load image")
     }
     img.src = src
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
 
   const handleFile = (file: File) => {
@@ -154,6 +161,7 @@ export function LogoUpload({ venueId, initialUrl, galleryImages, onUpdate }: Log
       })
       if (!patch.ok) { const d = await patch.json(); throw new Error(d.error || "Failed to save") }
 
+      revokeBlobUrl()
       setSavedUrl(storedUrl)
       onUpdate(storedUrl)
       setStage("idle")
@@ -180,7 +188,7 @@ export function LogoUpload({ venueId, initialUrl, galleryImages, onUpdate }: Log
     }
   }
 
-  const cancelCrop = () => { setStage("idle"); setCrop(null); setError("") }
+  const cancelCrop = () => { revokeBlobUrl(); setStage("idle"); setCrop(null); setError("") }
 
   // ── Render ──────────────────────────────────────────────────────────────
   return (
