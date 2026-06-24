@@ -48,6 +48,8 @@ function VenueRow({ venue, tab, onPress }: { venue: Venue; tab: Tab; onPress: ()
       padding="$4"
       marginHorizontal="$4"
       marginBottom="$3"
+      borderWidth={1}
+      borderColor="rgba(0,180,255,0.15)"
       pressStyle={{ opacity: 0.85 }}
       onPress={onPress}
       alignItems="center"
@@ -133,14 +135,23 @@ export default function DiscoverScreen() {
       <ScreenTop gap="$3">
         <Text fontFamily="Outfit_700Bold" fontSize={24} color="$text">Discover</Text>
 
-        <XStack gap="$2">
+        <XStack
+          backgroundColor="rgba(0,180,255,0.06)"
+          borderWidth={1}
+          borderColor="rgba(0,180,255,0.12)"
+          borderRadius="$4"
+          padding="$1"
+          gap="$1"
+        >
           {(['open', 'tonight'] as Tab[]).map((t) => (
             <Button
               key={t}
               size="$3"
-              borderRadius="$4"
-              backgroundColor={tab === t ? '$primary' : '$surface0'}
-              color={tab === t ? '$base' : '$subtext0'}
+              borderRadius="$3"
+              backgroundColor={tab === t ? 'rgba(0,180,255,0.12)' : 'transparent'}
+              color={tab === t ? '$primary' : '$subtext0'}
+              borderWidth={1}
+              borderColor={tab === t ? 'rgba(0,180,255,0.3)' : 'transparent'}
               onPress={() => switchTab(t)}
               pressStyle={{ opacity: 0.85 }}
             >
@@ -183,9 +194,9 @@ export default function DiscoverScreen() {
             <RefreshControl
               refreshing={refreshing}
               onRefresh={onRefresh}
-              tintColor="#cba6f7"
-              colors={['#cba6f7']}
-              progressBackgroundColor="#313244"
+              tintColor="#00b4ff"
+              colors={['#00b4ff']}
+              progressBackgroundColor="#0a0f1e"
             />
           }
         />

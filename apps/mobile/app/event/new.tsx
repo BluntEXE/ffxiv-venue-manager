@@ -145,9 +145,11 @@ export default function NewEventScreen() {
 
 const styles = StyleSheet.create({
   input: {
-    backgroundColor: '#313244',
+    backgroundColor: '#0a0f1e',
     color: '#cdd6f4',
     borderRadius: 8,
+    borderWidth: 1,
+    borderColor: 'rgba(0,180,255,0.15)',
     padding: 12,
     fontSize: 14,
     fontFamily: 'Inter',

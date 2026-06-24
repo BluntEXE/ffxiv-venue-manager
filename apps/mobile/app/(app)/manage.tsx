@@ -158,14 +158,23 @@ export default function ManageScreen() {
 
         {venues.length > 1 && (
           <ScrollView horizontal showsHorizontalScrollIndicator={false}>
-            <XStack gap="$2">
+            <XStack
+              backgroundColor="rgba(0,180,255,0.06)"
+              borderWidth={1}
+              borderColor="rgba(0,180,255,0.12)"
+              borderRadius="$4"
+              padding="$1"
+              gap="$1"
+            >
               {venues.map((v) => (
                 <Button
                   key={v.id}
                   size="$3"
-                  borderRadius="$4"
-                  backgroundColor={selectedVenue?.id === v.id ? '$primary' : '$surface0'}
-                  color={selectedVenue?.id === v.id ? '$base' : '$subtext0'}
+                  borderRadius="$3"
+                  backgroundColor={selectedVenue?.id === v.id ? 'rgba(0,180,255,0.12)' : 'transparent'}
+                  color={selectedVenue?.id === v.id ? '$primary' : '$subtext0'}
+                  borderWidth={1}
+                  borderColor={selectedVenue?.id === v.id ? 'rgba(0,180,255,0.3)' : 'transparent'}
                   onPress={() => loadDashboard(v)}
                 >
                   {v.name}
@@ -187,9 +196,9 @@ export default function ManageScreen() {
             <RefreshControl
               refreshing={refreshing}
               onRefresh={onRefresh}
-              tintColor="#cba6f7"
-              colors={['#cba6f7']}
-              progressBackgroundColor="#313244"
+              tintColor="#00b4ff"
+              colors={['#00b4ff']}
+              progressBackgroundColor="#0a0f1e"
             />
           }
         >
@@ -201,7 +210,7 @@ export default function ManageScreen() {
                 { label: 'On shift', value: dashboard.summary.activeShifts, color: '$success' },
                 { label: 'Scheduled', value: dashboard.summary.scheduledShifts, color: '$primary' },
               ].map((s) => (
-                <YStack key={s.label} flex={1} backgroundColor="$surface0" borderRadius="$3" padding="$3" alignItems="center" gap="$1">
+                <YStack key={s.label} flex={1} backgroundColor="$surface0" borderRadius="$3" padding="$3" alignItems="center" gap="$1" borderWidth={1} borderColor="rgba(0,180,255,0.15)">
                   <Text fontSize={24} fontFamily="Outfit_700Bold" color={s.color}>{s.value}</Text>
                   <Text fontSize={11} color="$subtext0">{s.label}</Text>
                 </YStack>
@@ -237,6 +246,8 @@ export default function ManageScreen() {
                     padding="$3"
                     alignItems="center"
                     gap="$3"
+                    borderWidth={1}
+                    borderColor="rgba(0,180,255,0.15)"
                     pressStyle={{ opacity: 0.85 }}
                     onPress={() => router.push({ pathname: '/event/[id]', params: { id: e.id } } as any)}
                   >
@@ -270,7 +281,7 @@ export default function ManageScreen() {
               </XStack>
               ) : (
                 dashboard.shifts.map((s) => (
-                  <XStack key={s.id} backgroundColor="$surface0" borderRadius="$2" padding="$3" alignItems="center" gap="$3">
+                  <XStack key={s.id} backgroundColor="$surface0" borderRadius="$2" padding="$3" alignItems="center" gap="$3" borderWidth={1} borderColor="rgba(0,180,255,0.15)">
                     <YStack
                       width={8} height={8} borderRadius="$4"
                       backgroundColor={s.status === 'ACTIVE' ? '$success' : '$surface2'}

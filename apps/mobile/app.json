@@ -7,7 +7,7 @@
     "orientation": "portrait",
     "icon": "./assets/icon.png",
     "splash": {
-      "backgroundColor": "#1e1e2e",
+      "backgroundColor": "#070b14",
       "resizeMode": "contain"
     },
     "platforms": [
@@ -18,7 +18,7 @@
       "versionCode": 1,
       "adaptiveIcon": {
         "foregroundImage": "./assets/adaptive-icon.png",
-        "backgroundColor": "#1e1e2e"
+        "backgroundColor": "#070b14"
       },
       "intentFilters": [
         {
@@ -39,7 +39,7 @@
     "plugins": [
       "expo-router",
       "expo-secure-store",
-      ["expo-notifications", { "icon": "./assets/icon.png", "color": "#1e1e2e" }],
+      ["expo-notifications", { "icon": "./assets/icon.png", "color": "#070b14" }],
       "./plugins/withGradle88",
       "./plugins/withExpoModulesCoreAndroidFix",
       "./plugins/withTamaguiAndroidFix"

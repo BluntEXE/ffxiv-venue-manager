@@ -33,8 +33,8 @@ export function OfflineBanner() {
       alignItems="center"
       gap="$2"
     >
-      <Ionicons name="cloud-offline-outline" size={16} color="#1e1e2e" />
-      <Text color="#1e1e2e" fontSize={13} fontFamily="Inter">
+      <Ionicons name="cloud-offline-outline" size={16} color="#070b14" />
+      <Text color="#070b14" fontSize={13} fontFamily="Inter">
         No internet connection
       </Text>
     </XStack>

@@ -141,22 +141,22 @@ export default function VenueDetailScreen() {
         </Text>
         <Button
           size="$3"
-          backgroundColor={following ? '#cba6f720' : '$surface0'}
+          backgroundColor={following ? 'rgba(0,180,255,0.12)' : '$surface0'}
           borderRadius="$4"
           onPress={toggleFollow}
           disabled={followLoading}
           icon={followLoading
             ? <Spinner size="small" color="$primary" />
-            : <Ionicons name={following ? 'heart' : 'heart-outline'} size={18} color={following ? '#cba6f7' : '#a6adc8'} />
+            : <Ionicons name={following ? 'heart' : 'heart-outline'} size={18} color={following ? '#00b4ff' : '#a6adc8'} />
           }
         />
       </ScreenHeader>
 
       {!isAuthed && !following && (
         <XStack
-          backgroundColor="#cba6f715"
+          backgroundColor="rgba(0,180,255,0.08)"
           borderBottomWidth={1}
-          borderBottomColor="#cba6f730"
+          borderBottomColor="rgba(0,180,255,0.18)"
           padding="$3"
           paddingHorizontal="$4"
           alignItems="center"
@@ -164,11 +164,11 @@ export default function VenueDetailScreen() {
           pressStyle={{ opacity: 0.85 }}
           onPress={toggleFollow}
         >
-          <Ionicons name="heart-outline" size={16} color="#cba6f7" />
+          <Ionicons name="heart-outline" size={16} color="#00b4ff" />
           <Text color="$primary" fontSize={13} fontFamily="Inter" flex={1}>
             Sign in with Discord to follow this venue and get notified when it opens.
           </Text>
-          <Ionicons name="chevron-forward" size={14} color="#cba6f7" />
+          <Ionicons name="chevron-forward" size={14} color="#00b4ff" />
         </XStack>
       )}
 
@@ -195,7 +195,7 @@ export default function VenueDetailScreen() {
                   Open Now
                 </Text>
               </XStack>
-              <XStack backgroundColor="$surface0" borderRadius="$2" padding="$3" alignItems="center" gap="$2">
+              <XStack backgroundColor="$surface0" borderRadius="$2" padding="$3" alignItems="center" gap="$2" borderWidth={1} borderColor="rgba(0,180,255,0.15)">
                 <Text color="$text" fontSize={14} flex={1}>
                   {activeShifts.length} staff on shift
                 </Text>
@@ -224,6 +224,8 @@ export default function VenueDetailScreen() {
                   padding="$3"
                   alignItems="center"
                   gap="$2"
+                  borderWidth={1}
+                  borderColor="rgba(0,180,255,0.15)"
                 >
                   <Text color="$subtext0" fontSize={13} flex={1}>
                     {formatST(slot.start)} – {formatST(slot.end)} ST
@@ -238,7 +240,7 @@ export default function VenueDetailScreen() {
             <YStack gap="$2">
               <Text fontFamily="Outfit_600SemiBold" fontSize={16} color="$text">Events</Text>
               {venue.events.map((e) => (
-                <YStack key={e.id} backgroundColor="$surface0" borderRadius="$2" padding="$3" gap="$1">
+                <YStack key={e.id} backgroundColor="$surface0" borderRadius="$2" padding="$3" gap="$1" borderWidth={1} borderColor="rgba(0,180,255,0.15)">
                   <Text color="$text" fontSize={14} fontWeight="bold">{e.title}</Text>
                   <Text color="$subtext0" fontSize={12}>
                     {formatST(e.startTime, 'datetime')} ST

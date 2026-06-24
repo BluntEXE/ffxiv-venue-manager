@@ -7,10 +7,10 @@ export default function AppLayout() {
       screenOptions={{
         headerShown: false,
         tabBarStyle: {
-          backgroundColor: '#181825',
-          borderTopColor: '#313244',
+          backgroundColor: '#050810',
+          borderTopColor: 'rgba(0,180,255,0.15)',
         },
-        tabBarActiveTintColor: '#cba6f7',
+        tabBarActiveTintColor: '#00b4ff',
         tabBarInactiveTintColor: '#6c7086',
         tabBarLabelStyle: { fontFamily: 'Inter', fontSize: 12 },
       }}

@@ -47,8 +47,8 @@ function SettingRow({
         value={value}
         onValueChange={onToggle}
         disabled={disabled}
-        trackColor={{ false: '#45475a', true: '#cba6f720' }}
-        thumbColor={value ? '#cba6f7' : '#585b70'}
+        trackColor={{ false: '#0d1525', true: 'rgba(0,180,255,0.25)' }}
+        thumbColor={value ? '#00b4ff' : '#111827'}
       />
     </XStack>
   )
@@ -56,7 +56,7 @@ function SettingRow({
 
 function SectionCard({ title, children }: { title: string; children: React.ReactNode }) {
   return (
-    <YStack backgroundColor="$surface0" borderRadius="$3" overflow="hidden" marginBottom="$4">
+    <YStack backgroundColor="$surface0" borderRadius="$3" overflow="hidden" marginBottom="$4" borderWidth={1} borderColor="rgba(0,180,255,0.15)">
       <XStack paddingHorizontal="$4" paddingTop="$3" paddingBottom="$2">
         <Text fontFamily="Outfit_600SemiBold" fontSize={12} color="$subtext0" letterSpacing={1}>
           {title.toUpperCase()}

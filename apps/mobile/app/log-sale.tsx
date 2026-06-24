@@ -116,12 +116,21 @@ export default function LogSaleScreen() {
               <Spinner color="$primary" />
             ) : (
               <ScrollView horizontal showsHorizontalScrollIndicator={false}>
-                <XStack gap="$2">
+                <XStack
+                  backgroundColor="rgba(0,180,255,0.06)"
+                  borderWidth={1}
+                  borderColor="rgba(0,180,255,0.12)"
+                  borderRadius="$4"
+                  padding="$1"
+                  gap="$1"
+                >
                   <Button
                     size="$2"
-                    borderRadius="$4"
-                    backgroundColor={!selectedService ? '$primary' : '$surface0'}
-                    color={!selectedService ? '$base' : '$subtext0'}
+                    borderRadius="$3"
+                    backgroundColor={!selectedService ? 'rgba(0,180,255,0.12)' : 'transparent'}
+                    color={!selectedService ? '$primary' : '$subtext0'}
+                    borderWidth={1}
+                    borderColor={!selectedService ? 'rgba(0,180,255,0.3)' : 'transparent'}
                     onPress={() => selectService(null)}
                     pressStyle={{ opacity: 0.85, scale: 0.97 }}
                   >
@@ -131,9 +140,11 @@ export default function LogSaleScreen() {
                     <Button
                       key={s.id}
                       size="$2"
-                      borderRadius="$4"
-                      backgroundColor={selectedService?.id === s.id ? '$primary' : '$surface0'}
-                      color={selectedService?.id === s.id ? '$base' : '$text'}
+                      borderRadius="$3"
+                      backgroundColor={selectedService?.id === s.id ? 'rgba(0,180,255,0.12)' : 'transparent'}
+                      color={selectedService?.id === s.id ? '$primary' : '$subtext0'}
+                      borderWidth={1}
+                      borderColor={selectedService?.id === s.id ? 'rgba(0,180,255,0.3)' : 'transparent'}
                       onPress={() => selectService(s)}
                       pressStyle={{ opacity: 0.85, scale: 0.97 }}
                     >
@@ -148,7 +159,8 @@ export default function LogSaleScreen() {
           <Field label="AMOUNT (GIL)">
             <Input
               backgroundColor="$surface0"
-              borderWidth={0}
+              borderWidth={1}
+              borderColor="rgba(0,180,255,0.15)"
               color="$text"
               placeholderTextColor="#6c7086"
               placeholder="0"
@@ -163,7 +175,8 @@ export default function LogSaleScreen() {
           <Field label="CUSTOMER NAME">
             <Input
               backgroundColor="$surface0"
-              borderWidth={0}
+              borderWidth={1}
+              borderColor="rgba(0,180,255,0.15)"
               color="$text"
               placeholderTextColor="#6c7086"
               placeholder="Forename Surname"
@@ -178,7 +191,8 @@ export default function LogSaleScreen() {
           <Field label="NOTES (OPTIONAL)">
             <Input
               backgroundColor="$surface0"
-              borderWidth={0}
+              borderWidth={1}
+              borderColor="rgba(0,180,255,0.15)"
               color="$text"
               placeholderTextColor="#6c7086"
               placeholder="Any extra details…"

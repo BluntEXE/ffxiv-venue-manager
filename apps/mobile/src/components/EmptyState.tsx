@@ -10,7 +10,7 @@ type Props = {
 export function EmptyState({ icon, title, subtitle }: Props) {
   return (
     <YStack flex={1} alignItems="center" justifyContent="center" gap="$3" padding="$8">
-      <Ionicons name={icon} size={48} color="#585b70" />
+      <Ionicons name={icon} size={48} color="#6c7086" />
       <YStack alignItems="center" gap="$1">
         <Text fontFamily="Outfit_600SemiBold" fontSize={16} color="$subtext0" textAlign="center">
           {title}

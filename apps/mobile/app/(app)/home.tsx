@@ -161,9 +161,9 @@ export default function HomeScreen() {
           <RefreshControl
             refreshing={refreshing}
             onRefresh={onRefresh}
-            tintColor="#cba6f7"
-            colors={['#cba6f7']}
-            progressBackgroundColor="#313244"
+            tintColor="#00b4ff"
+            colors={['#00b4ff']}
+            progressBackgroundColor="#0a0f1e"
           />
         }
       >
@@ -245,6 +245,8 @@ export default function HomeScreen() {
                     padding="$3"
                     alignItems="center"
                     gap="$3"
+                    borderWidth={1}
+                    borderColor="rgba(0,180,255,0.15)"
                   >
                     <YStack flex={1} gap="$1">
                       <Text color="$text" fontSize={14} fontFamily="Outfit_600SemiBold" numberOfLines={1}>
@@ -270,7 +272,7 @@ export default function HomeScreen() {
                       </Button>
                     ) : (
                       <XStack
-                        backgroundColor="#cba6f720"
+                        backgroundColor="rgba(0,180,255,0.12)"
                         borderRadius="$4"
                         paddingHorizontal="$2"
                         paddingVertical={2}
@@ -302,6 +304,8 @@ export default function HomeScreen() {
                 padding="$3"
                 alignItems="center"
                 gap="$3"
+                borderWidth={1}
+                borderColor="rgba(0,180,255,0.15)"
                 pressStyle={{ opacity: 0.85 }}
                 onPress={() => router.push(`/venue/${f.venueId}` as any)}
               >

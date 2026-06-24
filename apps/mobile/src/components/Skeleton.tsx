@@ -49,9 +49,9 @@ export function VenueSkeleton() {
 }
 
 const styles = StyleSheet.create({
-  base: { backgroundColor: '#45475a' },
+  base: { backgroundColor: '#0d1525' },
   card: {
-    backgroundColor: '#313244',
+    backgroundColor: '#0a0f1e',
     borderRadius: 8,
     padding: 14,
     marginHorizontal: 16,
@@ -60,7 +60,7 @@ const styles = StyleSheet.create({
   },
   venueCard: {
     flexDirection: 'row',
-    backgroundColor: '#313244',
+    backgroundColor: '#0a0f1e',
     borderRadius: 12,
     padding: 14,
     marginHorizontal: 16,
@@ -72,7 +72,7 @@ const styles = StyleSheet.create({
     width: 44,
     height: 44,
     borderRadius: 8,
-    backgroundColor: '#45475a',
+    backgroundColor: '#0d1525',
     flexShrink: 0,
   },
 })
