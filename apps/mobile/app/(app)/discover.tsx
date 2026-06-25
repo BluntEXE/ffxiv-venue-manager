@@ -110,6 +110,7 @@ function VenueRow({ venue, tab, onPress }: { venue: Venue; tab: Tab; onPress: ()
             source={{ uri: venue.logoUrl }}
             style={{ width: 44, height: 44, borderRadius: 8 }}
             resizeMode="cover"
+            accessibilityLabel={`${venue.name} logo`}
           />
         ) : (
           <Ionicons name="storefront-outline" size={22} color="#a6adc8" />
@@ -134,7 +135,7 @@ function VenueRow({ venue, tab, onPress }: { venue: Venue; tab: Tab; onPress: ()
               <Text fontSize={11} color={badgeColor}>{timeStr}</Text>
             </XStack>
           ) : (
-            <Text fontSize={11} color="$overlay">{timeStr}</Text>
+            <Text fontSize={11} color="$subtext0">{timeStr}</Text>
           )}
           {staff != null && staff > 0 && (
             <Text fontSize={11} color="$subtext0">{staff} staff</Text>
@@ -142,7 +143,7 @@ function VenueRow({ venue, tab, onPress }: { venue: Venue; tab: Tab; onPress: ()
         </XStack>
       </YStack>
 
-      <Text color="$overlay" fontSize={18}>›</Text>
+      <Text color="$subtext0" fontSize={18}>›</Text>
     </XStack>
   )
 }

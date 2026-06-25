@@ -155,6 +155,7 @@ export default function SettingsScreen() {
                   <Image
                     source={{ uri: user.image }}
                     style={{ width: 44, height: 44, borderRadius: 22 }}
+                    accessibilityLabel="Profile avatar"
                   />
                 ) : (
                   <YStack
@@ -262,7 +263,7 @@ export default function SettingsScreen() {
         <SectionCard title="About">
           <XStack padding="$4" alignItems="center" justifyContent="space-between">
             <Text color="$subtext0" fontSize={13}>XIV Venue Manager</Text>
-            <Text color="$overlay" fontSize={13}>v1.0.0</Text>
+            <Text color="$subtext0" fontSize={13}>v1.0.0</Text>
           </XStack>
           <Divider />
           <XStack
@@ -284,7 +285,7 @@ export default function SettingsScreen() {
             onPress={() => router.push('/feedback' as any)}
           >
             <Text color="$subtext0" fontSize={13}>Send Feedback</Text>
-            <Text color="$overlay" fontSize={13}>›</Text>
+            <Text color="$subtext0" fontSize={13}>›</Text>
           </XStack>
         </SectionCard>
 

@@ -52,7 +52,7 @@ export default function FeedbackScreen() {
     <KeyboardAvoidingView style={{ flex: 1 }} behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
       <YStack flex={1} backgroundColor="$base">
         <ScreenHeader>
-          <Button size="$3" backgroundColor="$surface0" color="$text" borderRadius="$4" onPress={() => router.back()}>
+          <Button size="$4" backgroundColor="$surface0" color="$text" borderRadius="$4" fontFamily="Inter" onPress={() => router.back()}>
             ‹ Back
           </Button>
           <Text fontFamily="Outfit_700Bold" fontSize={20} color="$text" flex={1}>

@@ -244,10 +244,11 @@ export default function ManageScreen() {
               <XStack alignItems="center" justifyContent="space-between">
                 <Text fontFamily="Outfit_600SemiBold" fontSize={16} color="$text">Today's Events</Text>
                 <Button
-                  size="$2"
+                  size="$3"
                   backgroundColor="$primary"
                   color="$base"
                   borderRadius="$3"
+                  fontFamily="InterBold"
                   onPress={() => router.push({ pathname: '/event/new', params: { venueId: selectedVenue!.id } } as any)}
                 >
                   + New
@@ -257,7 +258,7 @@ export default function ManageScreen() {
               {dashboard.events.length === 0 ? (
                 <XStack alignItems="center" gap="$2" paddingVertical="$2">
                 <Ionicons name="calendar-outline" size={16} color="#6c7086" />
-                <Text color="$overlay" fontSize={13}>No events today</Text>
+                <Text color="$subtext0" fontSize={13}>No events today</Text>
               </XStack>
               ) : (
                 dashboard.events.map((e) => (
@@ -287,7 +288,7 @@ export default function ManageScreen() {
                     >
                       <Text fontSize={11} color={e.status === 'ACTIVE' ? '$success' : '$info'}>{e.status}</Text>
                     </XStack>
-                    <Text color="$overlay" fontSize={16}>›</Text>
+                    <Text color="$subtext0" fontSize={16}>›</Text>
                   </XStack>
                 ))
               )}
@@ -299,7 +300,7 @@ export default function ManageScreen() {
               {dashboard.shifts.length === 0 ? (
                 <XStack alignItems="center" gap="$2" paddingVertical="$2">
                 <Ionicons name="people-outline" size={16} color="#6c7086" />
-                <Text color="$overlay" fontSize={13}>No shifts scheduled today</Text>
+                <Text color="$subtext0" fontSize={13}>No shifts scheduled today</Text>
               </XStack>
               ) : (
                 dashboard.shifts.map((s) => (
@@ -319,7 +320,7 @@ export default function ManageScreen() {
                     {s.status === 'CLAIMED' && (
                       <XStack gap="$1">
                         <Button
-                          size="$2"
+                          size="$3"
                           backgroundColor="$success"
                           color="$base"
                           borderRadius="$2"
@@ -332,7 +333,7 @@ export default function ManageScreen() {
                           {actioning === s.id ? '…' : 'Approve'}
                         </Button>
                         <Button
-                          size="$2"
+                          size="$3"
                           backgroundColor="$danger"
                           color="$base"
                           borderRadius="$2"
@@ -348,7 +349,7 @@ export default function ManageScreen() {
                     )}
                     {s.status === 'SCHEDULED' && (
                       <Button
-                        size="$2"
+                        size="$3"
                         backgroundColor="$success"
                         color="$base"
                         borderRadius="$2"
@@ -363,7 +364,7 @@ export default function ManageScreen() {
                     )}
                     {s.status === 'ACTIVE' && (
                       <Button
-                        size="$2"
+                        size="$3"
                         backgroundColor="$danger"
                         color="$base"
                         borderRadius="$2"

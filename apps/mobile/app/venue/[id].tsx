@@ -134,7 +134,7 @@ export default function VenueDetailScreen() {
     return (
       <YStack flex={1} backgroundColor="$base" alignItems="center" justifyContent="center" gap="$3">
         <Text color="$danger">{error ?? 'Venue not found.'}</Text>
-        <Button size="$3" backgroundColor="$surface0" color="$text" onPress={() => router.back()}>
+        <Button size="$4" backgroundColor="$surface0" color="$text" fontFamily="Inter" onPress={() => router.back()}>
           Go back
         </Button>
       </YStack>
@@ -173,23 +173,28 @@ export default function VenueDetailScreen() {
       </ScreenHeader>
 
       {!isAuthed && !following && (
-        <XStack
-          backgroundColor="rgba(0,180,255,0.08)"
+        <YStack
+          backgroundColor="rgba(0,180,255,0.06)"
           borderBottomWidth={1}
-          borderBottomColor="rgba(0,180,255,0.18)"
+          borderBottomColor="rgba(0,180,255,0.15)"
           padding="$3"
           paddingHorizontal="$4"
-          alignItems="center"
-          gap="$3"
-          pressStyle={{ opacity: 0.85 }}
-          onPress={toggleFollow}
         >
-          <Ionicons name="heart-outline" size={16} color="#00b4ff" />
-          <Text color="$primary" fontSize={13} fontFamily="Inter" flex={1}>
-            Sign in with Discord to follow this venue and get notified when it opens.
-          </Text>
-          <Ionicons name="chevron-forward" size={14} color="#00b4ff" />
-        </XStack>
+          <Button
+            size="$4"
+            backgroundColor="$primary"
+            color="$base"
+            fontFamily="InterBold"
+            borderRadius="$3"
+            pressStyle={{ opacity: 0.85 }}
+            accessibilityLabel="Sign in with Discord to follow this venue"
+            accessibilityRole="button"
+            onPress={toggleFollow}
+            icon={<Ionicons name="heart-outline" size={16} color="#070b14" />}
+          >
+            Sign in with Discord to follow
+          </Button>
+        </YStack>
       )}
 
       <ScrollView style={{ flex: 1 }}>
@@ -201,6 +206,7 @@ export default function VenueDetailScreen() {
                 source={{ uri: venue.bannerUrl }}
                 style={{ width: '100%', height: 140 }}
                 resizeMode="cover"
+                accessibilityLabel={`${venue.name} banner`}
               />
             ) : (
               <YStack height={60} backgroundColor="$surface0" />
@@ -218,7 +224,7 @@ export default function VenueDetailScreen() {
                 borderColor="$base"
                 overflow="hidden"
               >
-                <Image source={{ uri: venue.logoUrl }} style={{ width: 48, height: 48 }} resizeMode="cover" />
+                <Image source={{ uri: venue.logoUrl }} style={{ width: 48, height: 48 }} resizeMode="cover" accessibilityLabel={`${venue.name} logo`} />
               </YStack>
             )}
           </YStack>
@@ -306,7 +312,7 @@ export default function VenueDetailScreen() {
                         paddingVertical={2}
                         marginLeft="$2"
                       >
-                        <Text fontSize={10} style={{ color: badge.color }}>
+                        <Text fontSize={11} style={{ color: badge.color }}>
                           {e.eventType.replace('_', ' ')}
                         </Text>
                       </XStack>
@@ -327,6 +333,8 @@ export default function VenueDetailScreen() {
                         color="$primary"
                         fontSize={12}
                         marginTop="$1"
+                        accessibilityRole="link"
+                        accessibilityLabel="View event on Partake"
                         onPress={() => Linking.openURL(`https://partake.gg/events/${e.partakeEventId}`)}
                       >
                         View on Partake →

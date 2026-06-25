@@ -436,7 +436,7 @@ export default function HomeScreen() {
                         paddingHorizontal="$2"
                         paddingVertical={2}
                       >
-                        <Text fontSize={10} style={{ color: badge.color }}>
+                        <Text fontSize={11} style={{ color: badge.color }}>
                           {e.eventType.replace('_', ' ')}
                         </Text>
                       </XStack>
@@ -530,7 +530,7 @@ export default function HomeScreen() {
                   overflow="hidden"
                 >
                   {f.logoUrl ? (
-                    <Image source={{ uri: f.logoUrl }} style={{ width: 36, height: 36, borderRadius: 8 }} resizeMode="cover" />
+                    <Image source={{ uri: f.logoUrl }} style={{ width: 36, height: 36, borderRadius: 8 }} resizeMode="cover" accessibilityLabel={`${f.venueName} logo`} />
                   ) : (
                     <Ionicons name="storefront-outline" size={18} color="#a6adc8" />
                   )}
