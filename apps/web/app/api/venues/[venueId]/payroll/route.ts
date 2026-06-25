@@ -67,12 +67,20 @@ export const GET = withRateLimit<{ params: Promise<{ venueId: string }> }>(
       const searchParams = request.nextUrl.searchParams
       const isPaidFilter = searchParams.get("isPaid")
       const staffId = searchParams.get("membershipId")
+      const from = searchParams.get("from")
+      const to = searchParams.get("to")
+
+      const fromDate = from ? new Date(from) : null
+      const toDate = to ? new Date(to) : null
+      if (toDate) toDate.setUTCHours(23, 59, 59, 999)
 
       const payrollEntries = await prisma.payrollEntry.findMany({
         where: {
           venueId: venue.id,
           ...(isPaidFilter !== null && { isPaid: isPaidFilter === "true" }),
           ...(staffId && { membershipId: staffId }),
+          ...(fromDate && { periodStart: { gte: fromDate } }),
+          ...(toDate && { periodEnd: { lte: toDate } }),
         },
         include: {
           membership: {

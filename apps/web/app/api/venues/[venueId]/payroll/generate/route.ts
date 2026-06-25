@@ -83,6 +83,7 @@ export const POST = withRateLimit<{ params: Promise<{ venueId: string }> }>(
 
       const startDate = new Date(periodStart)
       const endDate = new Date(periodEnd)
+      endDate.setUTCHours(23, 59, 59, 999)
 
       if (isNaN(startDate.getTime()) || isNaN(endDate.getTime())) {
         return NextResponse.json({ error: "Invalid date format" }, { status: 400 })
@@ -292,6 +293,7 @@ export const GET = withRateLimit<{ params: Promise<{ venueId: string }> }>(
 
       const startDate = new Date(periodStart)
       const endDate = new Date(periodEnd)
+      endDate.setUTCHours(23, 59, 59, 999)
 
       if (isNaN(startDate.getTime()) || isNaN(endDate.getTime())) {
         return NextResponse.json({ error: "Invalid date format" }, { status: 400 })

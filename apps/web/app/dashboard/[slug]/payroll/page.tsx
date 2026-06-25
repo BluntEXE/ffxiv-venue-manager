@@ -129,6 +129,8 @@ export default function PayrollPage() {
   const [loading, setLoading] = useState(true)
   const [isDialogOpen, setIsDialogOpen] = useState(false)
   const [filter, setFilter] = useState<"all" | "paid" | "unpaid">("all")
+  const [dateFrom, setDateFrom] = useState("")
+  const [dateTo, setDateTo] = useState("")
   const [isCreating, setIsCreating] = useState(false)
   const [updatingId, setUpdatingId] = useState<string | null>(null)
 
@@ -169,14 +171,16 @@ export default function PayrollPage() {
       fetchPayrollEntries()
       fetchStaff()
     }
-  }, [session, slug, filter])
+  }, [session, slug, filter, dateFrom, dateTo])
 
   const fetchPayrollEntries = async () => {
     try {
       const isPaidQuery = filter === "paid" ? "true" : filter === "unpaid" ? "false" : ""
-      const response = await fetch(
-        `/api/venues/${slug}/payroll${isPaidQuery ? `?isPaid=${isPaidQuery}` : ""}`
-      )
+      const qs = new URLSearchParams()
+      if (isPaidQuery) qs.set("isPaid", isPaidQuery)
+      if (dateFrom) qs.set("from", dateFrom)
+      if (dateTo) qs.set("to", dateTo)
+      const response = await fetch(`/api/venues/${slug}/payroll${qs.toString() ? `?${qs}` : ""}`)
 
       if (!response.ok) {
         if (response.status === 403) {
@@ -846,8 +850,9 @@ export default function PayrollPage() {
             icon={<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>} iconVariant="success" /></Card>
         </div>
 
-        {/* Filter tabs */}
-        <div className="flex gap-1 bg-[var(--card)] border border-[var(--blue-015)] rounded-full p-1 w-fit">
+        {/* Filter bar */}
+        <div className="flex flex-wrap items-center gap-3">
+          <div className="flex gap-1 bg-[var(--card)] border border-[var(--blue-015)] rounded-full p-1 w-fit">
           {(["all", "unpaid", "paid"] as const).map((f) => (
             <button
               key={f}
@@ -864,6 +869,33 @@ export default function PayrollPage() {
               </span>
             </button>
           ))}
+          </div>
+
+          <div className="flex items-center gap-2 text-sm text-muted-foreground">
+            <Input
+              type="date"
+              value={dateFrom}
+              onChange={(e) => setDateFrom(e.target.value)}
+              className="w-36 h-8 text-xs"
+              placeholder="From"
+            />
+            <span>–</span>
+            <Input
+              type="date"
+              value={dateTo}
+              onChange={(e) => setDateTo(e.target.value)}
+              className="w-36 h-8 text-xs"
+              placeholder="To"
+            />
+            {(dateFrom || dateTo) && (
+              <button
+                onClick={() => { setDateFrom(""); setDateTo("") }}
+                className="text-xs text-[var(--fg-faint)] hover:text-foreground transition-colors"
+              >
+                Clear
+              </button>
+            )}
+          </div>
         </div>
 
         {/* Payroll table */}
