@@ -401,7 +401,7 @@ export default function HomeScreen() {
           <YStack gap="$2" marginTop="$2">
             <XStack alignItems="center" justifyContent="space-between">
               <Text fontFamily="Outfit_600SemiBold" fontSize={16} color="$text">Upcoming Events</Text>
-              <Button chromeless size="$2" onPress={toggleEvents} paddingHorizontal="$1" hitSlop={{ top: 12, bottom: 12, left: 12, right: 12 }}>
+              <Button chromeless size="$3" onPress={toggleEvents} paddingHorizontal="$1">
                 <Ionicons name={eventsExpanded ? 'chevron-up' : 'chevron-down'} size={16} color="#a6adc8" />
               </Button>
             </XStack>
@@ -456,7 +456,7 @@ export default function HomeScreen() {
           <YStack gap="$2" marginTop="$2">
             <XStack alignItems="center" justifyContent="space-between">
               <Text fontFamily="Outfit_600SemiBold" fontSize={16} color="$text">Open Shifts</Text>
-              <Button chromeless size="$2" onPress={toggleOpenShifts} paddingHorizontal="$1" hitSlop={{ top: 12, bottom: 12, left: 12, right: 12 }}>
+              <Button chromeless size="$3" onPress={toggleOpenShifts} paddingHorizontal="$1">
                 <Ionicons name={openShiftsExpanded ? 'chevron-up' : 'chevron-down'} size={16} color="#a6adc8" />
               </Button>
             </XStack>
