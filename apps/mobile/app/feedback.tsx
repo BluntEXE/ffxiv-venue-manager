@@ -80,7 +80,7 @@ export default function FeedbackScreen() {
                   {CATEGORIES.map((c) => (
                     <Button
                       key={c.value}
-                      size="$2"
+                      size="$3"
                       borderRadius="$4"
                       backgroundColor={category === c.value ? 'rgba(0,180,255,0.12)' : 'transparent'}
                       color={category === c.value ? '$primary' : '$subtext0'}

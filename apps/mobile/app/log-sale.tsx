@@ -125,7 +125,7 @@ export default function LogSaleScreen() {
                   gap="$1"
                 >
                   <Button
-                    size="$2"
+                    size="$3"
                     borderRadius="$3"
                     backgroundColor={!selectedService ? 'rgba(0,180,255,0.12)' : 'transparent'}
                     color={!selectedService ? '$primary' : '$subtext0'}
@@ -139,7 +139,7 @@ export default function LogSaleScreen() {
                   {services.map((s) => (
                     <Button
                       key={s.id}
-                      size="$2"
+                      size="$3"
                       borderRadius="$3"
                       backgroundColor={selectedService?.id === s.id ? 'rgba(0,180,255,0.12)' : 'transparent'}
                       color={selectedService?.id === s.id ? '$primary' : '$subtext0'}

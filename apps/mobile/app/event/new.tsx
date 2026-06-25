@@ -115,7 +115,7 @@ export default function NewEventScreen() {
             {EVENT_TYPES.map((t) => (
               <Button
                 key={t}
-                size="$2"
+                size="$3"
                 borderRadius="$4"
                 backgroundColor={eventType === t ? '$primary' : '$surface0'}
                 color={eventType === t ? '$base' : '$subtext0'}

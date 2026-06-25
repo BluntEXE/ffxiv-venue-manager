@@ -278,7 +278,7 @@ export default function DiscoverScreen() {
                   return (
                     <Button
                       key={label}
-                      size="$2"
+                      size="$3"
                       borderRadius="$4"
                       backgroundColor={active ? 'rgba(0,180,255,0.12)' : 'transparent'}
                       color={active ? '$primary' : '$subtext0'}
