@@ -47,11 +47,11 @@ export async function GET(
         select: {
           id: true,
           title: true,
-          description: true,
           eventType: true,
           status: true,
           startTime: true,
           endTime: true,
+          partakeEventId: true,
           partakeAttendeeCount: true,
           attendanceCount: true,
         },

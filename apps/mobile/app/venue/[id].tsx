@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react'
-import { ScrollView, Image } from 'react-native'
+import { ScrollView, Image, Linking } from 'react-native'
 import { YStack, XStack, Text, Spinner, Button } from 'tamagui'
 import { useLocalSearchParams, useRouter } from 'expo-router'
 import { Ionicons } from '@expo/vector-icons'
@@ -21,11 +21,11 @@ type Shift = {
 type Event = {
   id: string
   title: string
-  description: string | null
   eventType: string
   status: string
   startTime: string
   endTime: string
+  partakeEventId: number | null
   partakeAttendeeCount: number | null
   attendanceCount: number | null
 }
@@ -39,21 +39,6 @@ const EVENT_TYPE_STYLES: Record<string, { bg: string; color: string }> = {
   OTHER:       { bg: 'rgba(166,173,200,0.15)', color: '#a6adc8' },
 }
 
-function cleanDescription(text: string): string {
-  return text
-    .replace(/!\[[^\]]*\]\([^)]*\)/g, '')     // strip images
-    .replace(/\[([^\]]*)\]\([^)]*\)/g, '$1')  // strip links, keep label
-    .replace(/\*\*([^*]*)\*\*/g, '$1')         // strip bold, keep content
-    .replace(/\*([^*]*)\*/g, '$1')             // strip italic, keep content
-    .split('\n')
-    .map(l => l.trim())
-    .filter(l => l.length > 0)
-    .filter(l => !/^[*#\-_=~]+$/.test(l))     // drop decorative-only lines
-    .map(l => l.replace(/^#{1,6}\s*/, ''))     // strip heading prefixes
-    .filter(l => l.length > 0)
-    .join('\n')
-    .trim()
-}
 
 function getCountdown(startTime: string): string | null {
   const ms = new Date(startTime).getTime() - Date.now()
@@ -337,8 +322,15 @@ export default function VenueDetailScreen() {
                         <Text color="$subtext0" fontSize={11}>{count} attending</Text>
                       )}
                     </XStack>
-                    {e.description && cleanDescription(e.description) && (
-                      <Text color="$subtext0" fontSize={13} numberOfLines={3}>{cleanDescription(e.description)}</Text>
+                    {e.partakeEventId && (
+                      <Text
+                        color="$primary"
+                        fontSize={12}
+                        marginTop="$1"
+                        onPress={() => Linking.openURL(`https://partake.gg/events/${e.partakeEventId}`)}
+                      >
+                        View on Partake →
+                      </Text>
                     )}
                   </YStack>
                 )
