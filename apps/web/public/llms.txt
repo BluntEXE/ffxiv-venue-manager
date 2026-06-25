@@ -1,0 +1,36 @@
+# XIV Venue Manager
+
+> Free venue management for FFXIV roleplay venues. Track events, manage staff, log sales, and go live from the web or inside the game via a Dalamud plugin.
+
+XIV Venue Manager is a web application and Dalamud plugin for Final Fantasy XIV roleplay venue hosts. It provides event scheduling, staff shift management, sales tracking, patron visit logging, and a live dashboard visible in-game.
+
+## Getting Started
+
+- [Homepage](https://xivvenuemanager.com/): Overview and feature summary
+- [Get Started](https://xivvenuemanager.com/get-started): Sign in with Discord and connect your venue
+- [Discover Venues](https://xivvenuemanager.com/discover): Browse active FFXIV roleplay venues
+
+## Guides
+
+- [Getting Started Guide](https://xivvenuemanager.com/guide/getting-started): How to set up your venue and install the plugin
+- [Events Guide](https://xivvenuemanager.com/guide/events): Creating and managing venue events
+- [Staff Management Guide](https://xivvenuemanager.com/guide/staff-management): Managing staff roles and shifts
+- [Promoting Your Venue](https://xivvenuemanager.com/guide/promoting): How to promote your venue to players
+- [Owner Guide](https://xivvenuemanager.com/guide/owner): Full guide for venue owners
+- [Staff Guide](https://xivvenuemanager.com/guide/staff): Guide for venue staff members
+
+## Data Centres
+
+- [Aether](https://xivvenuemanager.com/discover/aether): Venues on the Aether data centre
+- [Crystal](https://xivvenuemanager.com/discover/crystal): Venues on the Crystal data centre
+- [Primal](https://xivvenuemanager.com/discover/primal): Venues on the Primal data centre
+- [Chaos](https://xivvenuemanager.com/discover/chaos): Venues on the Chaos data centre
+- [Light](https://xivvenuemanager.com/discover/light): Venues on the Light data centre
+- [Elemental](https://xivvenuemanager.com/discover/elemental): Venues on the Elemental data centre
+- [Gaia](https://xivvenuemanager.com/discover/gaia): Venues on the Gaia data centre
+- [Mana](https://xivvenuemanager.com/discover/mana): Venues on the Mana data centre
+
+## Legal
+
+- [Privacy Policy](https://xivvenuemanager.com/privacy): Privacy policy and data handling
+- [Terms of Service](https://xivvenuemanager.com/terms): Terms of service

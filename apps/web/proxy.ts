@@ -21,7 +21,7 @@ function buildCsp(nonce: string): string {
   ].join("; ")
 }
 
-const PUBLIC_PATHS = ["/privacy", "/", "/auth/signin", "/auth/error", "/auth/signout-shoutcrafter", "/test", "/stats", "/discover", "/sitemap.xml"]
+const PUBLIC_PATHS = ["/privacy", "/", "/auth/signin", "/auth/error", "/auth/signout-shoutcrafter", "/test", "/stats", "/discover", "/sitemap.xml", "/llms.txt"]
 const PUBLIC_PREFIXES = ["/.well-known/", "/guide/", "/invite/", "/venues/", "/following", "/discover/", "/api/invites/", "/api/mobile/", "/api/shout-crafter/", "/api/feedback", "/api/stats"]
 
 export async function proxy(req: NextRequest) {
