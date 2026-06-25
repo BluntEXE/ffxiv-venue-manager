@@ -111,7 +111,7 @@ export default function ManageScreen() {
       if (!res.ok) throw new Error('fetch failed')
       const data: ManagedVenue[] = await res.json()
       setVenues(data)
-      if (data.length > 0) loadDashboard(data[0], true)
+      if (data.length > 0) await loadDashboard(data[0], true)
     } catch {
       setError('Could not load venues.')
     } finally {
