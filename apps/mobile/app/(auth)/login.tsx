@@ -34,10 +34,10 @@ export default function LoginScreen() {
       padding="$6"
     >
       <YStack alignItems="center" gap="$2">
-        <Text fontSize={28} color="$text" fontFamily="Outfit_700Bold">
+        <Text fontSize={24} color="$text" fontFamily="Outfit_700Bold">
           XIV Venue Manager
         </Text>
-        <Text fontSize={14} color="$subtext0">
+        <Text fontSize={14} color="$subtext0" textAlign="center">
           Off-game management for FFXIV venues
         </Text>
       </YStack>
@@ -59,6 +59,7 @@ export default function LoginScreen() {
         backgroundColor="$primary"
         color="$base"
         fontFamily="InterBold"
+        fontSize={14}
         borderRadius="$3"
         onPress={startLogin}
         disabled={loading}
