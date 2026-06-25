@@ -541,10 +541,15 @@ export default function HomeScreen() {
                   </Text>
                   <Text color="$subtext0" fontSize={12}>{f.world} · {f.dataCenter}</Text>
                 </YStack>
-                {f.isOpenNow && (
+                {f.isOpenNow ? (
                   <XStack backgroundColor="#a6e3a120" borderRadius="$4" paddingHorizontal="$2" paddingVertical={2} alignItems="center" gap="$1">
                     <XStack width={6} height={6} borderRadius="$4" backgroundColor="$success" />
                     <Text fontSize={11} color="$success">Open</Text>
+                  </XStack>
+                ) : (
+                  <XStack backgroundColor="rgba(108,112,134,0.15)" borderRadius="$4" paddingHorizontal="$2" paddingVertical={2} alignItems="center" gap="$1">
+                    <XStack width={6} height={6} borderRadius="$4" backgroundColor="$subtext0" />
+                    <Text fontSize={11} color="$subtext0">Closed</Text>
                   </XStack>
                 )}
                 <Ionicons name="chevron-forward" size={16} color="#6c7086" />
