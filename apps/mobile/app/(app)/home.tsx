@@ -542,13 +542,11 @@ export default function HomeScreen() {
                   <Text color="$subtext0" fontSize={12}>{f.world} · {f.dataCenter}</Text>
                 </YStack>
                 {f.isOpenNow ? (
-                  <XStack backgroundColor="#a6e3a120" borderRadius="$4" paddingHorizontal="$2" paddingVertical={2} alignItems="center" gap="$1">
-                    <XStack width={6} height={6} borderRadius="$4" backgroundColor="$success" />
+                  <XStack backgroundColor="#a6e3a120" borderRadius="$4" paddingHorizontal="$2" paddingVertical={2}>
                     <Text fontSize={11} color="$success">Open</Text>
                   </XStack>
                 ) : (
-                  <XStack backgroundColor="rgba(108,112,134,0.15)" borderRadius="$4" paddingHorizontal="$2" paddingVertical={2} alignItems="center" gap="$1">
-                    <XStack width={6} height={6} borderRadius="$4" backgroundColor="$subtext0" />
+                  <XStack backgroundColor="rgba(166,173,200,0.15)" borderRadius="$4" paddingHorizontal="$2" paddingVertical={2}>
                     <Text fontSize={11} color="$subtext0">Closed</Text>
                   </XStack>
                 )}
