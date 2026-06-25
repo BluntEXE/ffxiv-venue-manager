@@ -49,6 +49,21 @@ const nextConfig: NextConfig = {
             key: "Permissions-Policy",
             value: "camera=(), microphone=(), geolocation=()",
           },
+          // Isolate browsing context from cross-origin openers (prevents opener attacks)
+          {
+            key: "Cross-Origin-Opener-Policy",
+            value: "same-origin",
+          },
+          // Prevent cross-site requests from loading our resources (hotlinking/side-channel)
+          {
+            key: "Cross-Origin-Resource-Policy",
+            value: "same-site",
+          },
+          // Enable cross-origin isolation; credentialless allows external CDN images
+          {
+            key: "Cross-Origin-Embedder-Policy",
+            value: "credentialless",
+          },
           // Content-Security-Policy is set per-request in proxy.ts with a unique nonce.
         ],
       },
