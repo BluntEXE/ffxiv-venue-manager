@@ -3,12 +3,19 @@ import { ScrollView, Image, Linking } from 'react-native'
 import { YStack, XStack, Text, Spinner, Button } from 'tamagui'
 import { useLocalSearchParams, useRouter } from 'expo-router'
 import { Ionicons } from '@expo/vector-icons'
+import * as WebBrowser from 'expo-web-browser'
 import { ScreenHeader } from '@/components/ScreenHeader'
 import { formatST } from '@/lib/server-time'
 import { loadTokens, isExpired, getValidToken } from '@/lib/auth'
 import { setPendingAction } from '@/lib/pending-action'
 
 const API = 'https://xivvenuemanager.com'
+const DISCORD_AUTH_URL =
+  `https://discord.com/oauth2/authorize` +
+  `?client_id=${process.env.EXPO_PUBLIC_DISCORD_CLIENT_ID}` +
+  `&redirect_uri=${encodeURIComponent(API + '/api/mobile/auth/discord/callback')}` +
+  `&response_type=code` +
+  `&scope=identify%20email`
 
 type Shift = {
   id: string
@@ -105,7 +112,7 @@ export default function VenueDetailScreen() {
   async function toggleFollow() {
     if (!isAuthed) {
       await setPendingAction({ type: 'follow_venue', venueId: id!, returnTo: `/venue/${id}` })
-      router.push('/(auth)/login')
+      await WebBrowser.openAuthSessionAsync(DISCORD_AUTH_URL, 'vmapp://')
       return
     }
     setFollowLoading(true)
