@@ -121,7 +121,7 @@ export default async function Home() {
                 For FFXIV roleplay venue hosts
               </p>
             </div>
-            <h1 className="xiv-fade-up font-cinzel font-bold text-hero max-w-[16ch] leading-[1.08] tracking-[0.01em]">
+            <h1 className="font-cinzel font-bold text-hero max-w-[16ch] leading-[1.08] tracking-[0.01em]">
               Venue management built for{" "}
               <span className="xiv-glow-text">FFXIV</span>
             </h1>

@@ -20,6 +20,7 @@ const cinzel = Cinzel({
   variable: "--font-cinzel-var",
   subsets: ["latin"],
   weight: ["400", "600", "700"],
+  display: "swap",
 })
 
 const jetbrainsMono = JetBrains_Mono({
