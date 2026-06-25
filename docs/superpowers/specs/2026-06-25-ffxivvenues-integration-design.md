@@ -107,10 +107,11 @@ Handled via the existing `PATCH /api/venues/[venueId]/settings` endpoint:
 
 ### Linking
 1. Operator enters their ffxivvenues.com venue ID in settings
-2. API fetches that venue from ffxivvenues.com
-3. Name and world/ward compared against the XIV VM venue record
-4. Match: link saves, audit fields stored, initial sync fires
-5. Mismatch: save rejected with a message explaining the discrepancy
+2. API fetches that venue from ffxivvenues.com and returns the venue name
+3. Settings page displays "You are linking to: [venue name]" and asks them to confirm
+4. On confirm: link saves, audit fields stored, initial sync fires
+
+No automated name/location matching -- multi-plot venues and name variations make this unreliable. The operator confirms what they're linking to, and the audit trail handles any bad faith claims.
 
 ### Unlinking
 1. Operator clicks Unlink
@@ -133,7 +134,7 @@ Handled via the existing `PATCH /api/venues/[venueId]/settings` endpoint:
 | Cron sync | Yes (2 jobs) | Yes (2 jobs) |
 | Manual sync button | Yes | Yes |
 | Settings ID field | Yes (team ID) | Yes (venue ID) |
-| Verification | None | Name/world match |
+| Verification | None | Operator confirms venue name before linking |
 
 ---
 
