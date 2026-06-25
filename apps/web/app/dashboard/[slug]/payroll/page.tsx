@@ -37,7 +37,7 @@ import { Checkbox } from "@/components/ui/checkbox"
 import { Badge } from "@/components/ui/badge"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { format } from "date-fns"
-import { Plus, DollarSign, Clock, CheckCircle2, XCircle, Zap, Trash2 } from "lucide-react"
+import { Plus, DollarSign, Clock, CheckCircle2, XCircle, Zap, Trash2, Users } from "lucide-react"
 import { PageLoading } from "@/components/ui/loading-spinner"
 
 interface PayrollEntry {
@@ -157,6 +157,18 @@ export default function PayrollPage() {
   const [genPreview, setGenPreview] = useState<GeneratePreview | null>(null)
   const [genLoading, setGenLoading] = useState(false)
   const [genCreating, setGenCreating] = useState(false)
+
+  // Generate All state
+  const [isGenAllOpen, setIsGenAllOpen] = useState(false)
+  const [genAllStart, setGenAllStart] = useState("")
+  const [genAllEnd, setGenAllEnd] = useState("")
+  const [genAllPreview, setGenAllPreview] = useState<{
+    membershipId: string; name: string; image: string | null
+    shiftCount: number; totalHours: number; rate: number | null
+    estimatedTotal: number | null; skipped: boolean; skipReason: string | null
+  }[] | null>(null)
+  const [genAllLoading, setGenAllLoading] = useState(false)
+  const [genAllCreating, setGenAllCreating] = useState(false)
 
   const venueId = params?.slug as string
 
@@ -408,6 +420,43 @@ export default function PayrollPage() {
     }
   }
 
+  const fetchGenAllPreview = async () => {
+    if (!genAllStart || !genAllEnd) return
+    setGenAllLoading(true)
+    setGenAllPreview(null)
+    try {
+      const qs = new URLSearchParams({ periodStart: genAllStart, periodEnd: genAllEnd })
+      const res = await fetch(`/api/venues/${slug}/payroll/generate-all?${qs}`)
+      if (!res.ok) { const e = await res.json(); throw new Error(e.error) }
+      const data = await res.json()
+      setGenAllPreview(data.members)
+    } catch (e) {
+      alert(e instanceof Error ? e.message : "Failed to load preview")
+    } finally {
+      setGenAllLoading(false)
+    }
+  }
+
+  const handleGenAll = async () => {
+    if (!genAllStart || !genAllEnd) return
+    setGenAllCreating(true)
+    try {
+      const res = await fetch(`/api/venues/${slug}/payroll/generate-all`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ periodStart: genAllStart, periodEnd: genAllEnd }),
+      })
+      if (!res.ok) { const e = await res.json(); throw new Error(e.error) }
+      setIsGenAllOpen(false)
+      setGenAllStart(""); setGenAllEnd(""); setGenAllPreview(null)
+      fetchPayrollEntries()
+    } catch (e) {
+      alert(e instanceof Error ? e.message : "Failed to generate payroll")
+    } finally {
+      setGenAllCreating(false)
+    }
+  }
+
   const genEffectiveRate = genRateOverride
     ? parseFloat(genRateOverride)
     : genPreview?.staff.defaultHourlyRate ?? 0
@@ -461,6 +510,95 @@ export default function PayrollPage() {
           </div>
 
           <div className="flex flex-col sm:flex-row gap-2 w-full sm:w-auto">
+
+          {/* Generate All from Shifts */}
+          <Dialog open={isGenAllOpen} onOpenChange={(open) => {
+            setIsGenAllOpen(open)
+            if (!open) { setGenAllStart(""); setGenAllEnd(""); setGenAllPreview(null) }
+          }}>
+            <DialogTrigger asChild>
+              <Button variant="outline">
+                <Users className="mr-2 h-4 w-4" />
+                Generate All
+              </Button>
+            </DialogTrigger>
+            <DialogContent className="max-w-lg max-h-[85vh] overflow-y-auto">
+              <DialogHeader>
+                <DialogTitle>Generate Payroll for All Members</DialogTitle>
+                <DialogDescription>
+                  Creates entries for every member with completed unpaid shifts in this period
+                </DialogDescription>
+              </DialogHeader>
+
+              <div className="space-y-4">
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="space-y-2">
+                    <Label>Period Start</Label>
+                    <Input type="date" value={genAllStart}
+                      onChange={(e) => { setGenAllStart(e.target.value); setGenAllPreview(null) }} />
+                  </div>
+                  <div className="space-y-2">
+                    <Label>Period End</Label>
+                    <Input type="date" value={genAllEnd}
+                      onChange={(e) => { setGenAllEnd(e.target.value); setGenAllPreview(null) }} />
+                  </div>
+                </div>
+
+                <Button variant="outline" className="w-full"
+                  onClick={fetchGenAllPreview}
+                  disabled={!genAllStart || !genAllEnd || genAllLoading}>
+                  {genAllLoading ? "Loading..." : "Preview"}
+                </Button>
+
+                {genAllPreview && (
+                  <div className="space-y-2">
+                    {genAllPreview.filter(m => !m.skipped).length === 0 && (
+                      <p className="text-sm text-center text-muted-foreground py-4">
+                        No eligible members with shifts and rates in this period.
+                      </p>
+                    )}
+                    {genAllPreview.filter(m => !m.skipped).map((m) => (
+                      <div key={m.membershipId} className="flex items-center justify-between p-3 bg-muted rounded-lg text-sm">
+                        <div className="flex items-center gap-2">
+                          <Avatar className="w-6 h-6">
+                            <AvatarImage src={m.image || undefined} />
+                            <AvatarFallback className="text-[0.6rem]">{m.name[0]}</AvatarFallback>
+                          </Avatar>
+                          <span className="font-medium">{m.name}</span>
+                          <span className="text-muted-foreground">{m.shiftCount} shift{m.shiftCount !== 1 ? "s" : ""} · {m.totalHours}h</span>
+                        </div>
+                        <span className="font-semibold text-[var(--xiv-blue)]">
+                          {m.estimatedTotal?.toLocaleString()} gil
+                        </span>
+                      </div>
+                    ))}
+                    {genAllPreview.filter(m => m.skipped).length > 0 && (
+                      <div className="pt-2 border-t border-border">
+                        <p className="text-xs text-muted-foreground mb-1">Skipped</p>
+                        {genAllPreview.filter(m => m.skipped).map((m) => (
+                          <div key={m.membershipId} className="flex items-center justify-between p-2 text-xs text-muted-foreground">
+                            <span>{m.name}</span>
+                            <span>{m.skipReason === "no_shifts" ? "No shifts" : "No rate set"}</span>
+                          </div>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+                )}
+              </div>
+
+              <DialogFooter>
+                <Button variant="outline" onClick={() => setIsGenAllOpen(false)} disabled={genAllCreating}>Cancel</Button>
+                <Button
+                  onClick={handleGenAll}
+                  disabled={!genAllPreview || genAllPreview.filter(m => !m.skipped).length === 0 || genAllCreating}
+                >
+                  {genAllCreating ? "Generating..." : `Generate (${genAllPreview?.filter(m => !m.skipped).length ?? 0} members)`}
+                </Button>
+              </DialogFooter>
+            </DialogContent>
+          </Dialog>
+
           <Dialog open={isGenerateOpen} onOpenChange={(open) => {
             setIsGenerateOpen(open)
             if (!open) {
