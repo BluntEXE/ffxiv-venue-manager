@@ -66,7 +66,6 @@ export function buildShiftEmbed(
     color: XIV_BLUE,
     fields,
     footer: { text: "XIV Venue Manager" },
-    timestamp: embed.scheduledStart.toISOString(),
   }
 
   if (embed.thumbnailUrl) {
