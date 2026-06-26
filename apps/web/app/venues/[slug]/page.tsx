@@ -32,6 +32,8 @@ import { VenueFollowButton } from "@/components/venue-follow-button"
 import { CopyAddressButton, CopyAddressInline } from "@/components/copy-address-button"
 import { SiteFooter } from "@/components/site-footer"
 import { VenueScheduleDisplay } from "@/components/venue-schedule-display"
+import { FfxivvenuesScheduleDisplay } from "@/components/ffxivvenues-schedule-display"
+import type { FfxivVenueData } from "@/lib/ffxivvenues"
 import { isOpenNow } from "@/lib/schedule-utils"
 
 export default async function VenueProfilePage({
@@ -58,6 +60,7 @@ export default async function VenueProfilePage({
       scheduleEntries: {
         orderBy: [{ day: "asc" }, { startHour: "asc" }],
       },
+      venueSchedule: true,
     },
   })
 
@@ -76,7 +79,8 @@ export default async function VenueProfilePage({
   const liveEvent     = venue.events.find(e => e.status === "ACTIVE")
   const upcomingEvents = venue.events.filter(e => e.status === "PUBLISHED")
   const openFromSchedule = isOpenNow(venue.scheduleEntries)
-  const isOpen = !!liveEvent || openFromSchedule
+  const openFromFfxivvenues = (venue.venueSchedule?.data as FfxivVenueData | null)?.resolution?.isNow === true
+  const isOpen = !!liveEvent || openFromSchedule || openFromFfxivvenues
   const tzLabel       = getServerTimeLabel(venue.dataCenter)
   const todayUTCDay   = new Date().getUTCDay()
   const DAY_NAMES     = ["Sunday","Monday","Tuesday","Wednesday","Thursday","Friday","Saturday"]
@@ -349,6 +353,14 @@ export default async function VenueProfilePage({
                   <VenueScheduleDisplay entries={[]} />
                 )}
               </div>
+
+              {/* ffxivvenues synced schedule */}
+              {venue.venueSchedule && (
+                <FfxivvenuesScheduleDisplay
+                  data={venue.venueSchedule.data as FfxivVenueData}
+                  syncedAt={venue.venueSchedule.syncedAt}
+                />
+              )}
 
               {/* Location */}
               <div className="dcard">
