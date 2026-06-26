@@ -772,6 +772,15 @@ export default function SettingsPage({
                       <p className="text-xs text-[var(--fg-faint)] mb-3">
                         Leave empty to post one shift per event matching the full event duration.
                       </p>
+                      {shiftBotTemplates.length > 0 && (
+                        <div className="flex gap-2 items-center px-3 mb-1">
+                          <span className="flex-1 text-xs text-[var(--fg-faint)]">Name</span>
+                          <span className="w-[4.5rem] text-xs text-[var(--fg-faint)] text-center">Offset (h)</span>
+                          <span className="w-[4.5rem] text-xs text-[var(--fg-faint)] text-center">Duration (h)</span>
+                          <span className="w-[4.5rem] text-xs text-[var(--fg-faint)] text-center">Slots</span>
+                          <span className="w-5" />
+                        </div>
+                      )}
                       <div className="space-y-3">
                         {shiftBotTemplates.map((t, i) => (
                           <div key={i} className="flex gap-2 items-center p-3 rounded-lg border border-[var(--blue-018)] bg-[var(--card)]">
@@ -782,40 +791,27 @@ export default function SettingsPage({
                               placeholder="Shift name"
                               className="rounded-[var(--radius-sm)] border border-[var(--blue-015)] bg-background px-3 py-1.5 text-sm focus:border-[var(--blue-035)] focus:outline-none flex-1"
                             />
-                            <div className="flex items-center gap-1">
-                              <span className="text-xs text-[var(--fg-faint)]">+</span>
-                              <input
-                                type="number"
-                                min={0}
-                                value={t.startOffsetHours}
-                                onChange={(e) => setShiftBotTemplates((prev) => prev.map((x, j) => j === i ? { ...x, startOffsetHours: Number(e.target.value) } : x))}
-                                className="rounded-[var(--radius-sm)] border border-[var(--blue-015)] bg-background px-2 py-1.5 text-sm focus:border-[var(--blue-035)] focus:outline-none w-14 text-center"
-                                title="Start offset hours from event start"
-                              />
-                              <span className="text-xs text-[var(--fg-faint)]">h</span>
-                            </div>
-                            <div className="flex items-center gap-1">
-                              <input
-                                type="number"
-                                min={1}
-                                value={t.durationHours}
-                                onChange={(e) => setShiftBotTemplates((prev) => prev.map((x, j) => j === i ? { ...x, durationHours: Number(e.target.value) } : x))}
-                                className="rounded-[var(--radius-sm)] border border-[var(--blue-015)] bg-background px-2 py-1.5 text-sm focus:border-[var(--blue-035)] focus:outline-none w-14 text-center"
-                                title="Duration in hours"
-                              />
-                              <span className="text-xs text-[var(--fg-faint)]">hr</span>
-                            </div>
-                            <div className="flex items-center gap-1">
-                              <input
-                                type="number"
-                                min={1}
-                                value={t.slots}
-                                onChange={(e) => setShiftBotTemplates((prev) => prev.map((x, j) => j === i ? { ...x, slots: Number(e.target.value) } : x))}
-                                className="rounded-[var(--radius-sm)] border border-[var(--blue-015)] bg-background px-2 py-1.5 text-sm focus:border-[var(--blue-035)] focus:outline-none w-14 text-center"
-                                title="Max slots"
-                              />
-                              <span className="text-xs text-[var(--fg-faint)]">slots</span>
-                            </div>
+                            <input
+                              type="number"
+                              min={0}
+                              value={t.startOffsetHours}
+                              onChange={(e) => setShiftBotTemplates((prev) => prev.map((x, j) => j === i ? { ...x, startOffsetHours: Number(e.target.value) } : x))}
+                              className="rounded-[var(--radius-sm)] border border-[var(--blue-015)] bg-background px-2 py-1.5 text-sm focus:border-[var(--blue-035)] focus:outline-none w-[4.5rem] text-center"
+                            />
+                            <input
+                              type="number"
+                              min={1}
+                              value={t.durationHours}
+                              onChange={(e) => setShiftBotTemplates((prev) => prev.map((x, j) => j === i ? { ...x, durationHours: Number(e.target.value) } : x))}
+                              className="rounded-[var(--radius-sm)] border border-[var(--blue-015)] bg-background px-2 py-1.5 text-sm focus:border-[var(--blue-035)] focus:outline-none w-[4.5rem] text-center"
+                            />
+                            <input
+                              type="number"
+                              min={1}
+                              value={t.slots}
+                              onChange={(e) => setShiftBotTemplates((prev) => prev.map((x, j) => j === i ? { ...x, slots: Number(e.target.value) } : x))}
+                              className="rounded-[var(--radius-sm)] border border-[var(--blue-015)] bg-background px-2 py-1.5 text-sm focus:border-[var(--blue-035)] focus:outline-none w-[4.5rem] text-center"
+                            />
                             <button
                               type="button"
                               onClick={() => setShiftBotTemplates((prev) => prev.filter((_, j) => j !== i))}
