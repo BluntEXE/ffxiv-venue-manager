@@ -195,9 +195,30 @@ model Venue {
   shifts         Shift[]
   patronLogs     PatronLog[]
   apiKeys        ApiKey[]
-  follows        VenueFollow[]
+  follows         VenueFollow[]
+  scheduleEntries VenueScheduleEntry[]
 
   @@map("venues")
+}
+
+model VenueScheduleEntry {
+  id              String    @id @default(cuid())
+  venueId         String
+  day             Int       // 0=Sun, 1=Mon, 2=Tue, 3=Wed, 4=Thu, 5=Fri, 6=Sat
+  startHour       Int       // 0-23 UTC / Server Time
+  startMin        Int       // 0-59
+  endHour         Int?      // null = no fixed end time
+  endMin          Int?
+  crossesMidnight Boolean   @default(false) // end time is next calendar day
+  interval        String    @default("weekly") // "weekly"|"biweekly"|"monthly"
+  weekOfMonth     Int?      // monthly only: 1=first 2=second 3=third 4=fourth 5=last
+  commencing      DateTime? // biweekly only: anchor date to determine which weeks
+  label           String?   // optional e.g. "DJ Night"
+
+  venue Venue @relation(fields: [venueId], references: [id], onDelete: Cascade)
+
+  @@index([venueId])
+  @@map("venue_schedule_entries")
 }
 
 // ============================================
