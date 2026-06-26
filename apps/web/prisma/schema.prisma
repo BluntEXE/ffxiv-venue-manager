@@ -200,9 +200,10 @@ model Venue {
   shifts         Shift[]
   patronLogs     PatronLog[]
   apiKeys        ApiKey[]
-  follows         VenueFollow[]
-  scheduleEntries VenueScheduleEntry[]
-  venueSchedule   VenueSchedule?
+  follows           VenueFollow[]
+  scheduleEntries   VenueScheduleEntry[]
+  venueSchedule     VenueSchedule?
+  shiftSignupEmbeds ShiftSignupEmbed[]
 
   @@map("venues")
 }
@@ -393,12 +394,13 @@ model Event {
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
 
-  venue        Venue         @relation(fields: [venueId], references: [id], onDelete: Cascade)
-  createdBy    User          @relation("EventCreator", fields: [createdById], references: [id])
-  parentEvent  Event?        @relation("EventRecurrence", fields: [parentEventId], references: [id])
-  childEvents  Event[]       @relation("EventRecurrence")
-  transactions Transaction[]
-  patronLogs   PatronLog[]
+  venue             Venue             @relation(fields: [venueId], references: [id], onDelete: Cascade)
+  createdBy         User              @relation("EventCreator", fields: [createdById], references: [id])
+  parentEvent       Event?            @relation("EventRecurrence", fields: [parentEventId], references: [id])
+  childEvents       Event[]           @relation("EventRecurrence")
+  transactions      Transaction[]
+  patronLogs        PatronLog[]
+  shiftSignupEmbeds ShiftSignupEmbed[]
 
   @@index([venueId, startTime])
   @@index([venueId, status])
@@ -774,6 +776,9 @@ model Shift {
   status ShiftStatus @default(SCHEDULED)
   notes  String?     @db.Text
 
+  shiftSignupEmbedId String?
+  shiftSignupEmbed   ShiftSignupEmbed? @relation(fields: [shiftSignupEmbedId], references: [id], onDelete: SetNull)
+
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
@@ -788,6 +793,7 @@ model Shift {
   @@index([venueId, status])
   @@index([payrollEntryId])
   @@index([roleId])
+  @@index([shiftSignupEmbedId])
   @@map("shifts")
 }
 
@@ -807,6 +813,30 @@ model ShiftAuditLog {
   @@index([shiftId])
   @@index([actorUserId])
   @@map("shift_audit_logs")
+}
+
+model ShiftSignupEmbed {
+  id               String    @id @default(cuid())
+  venueId          String
+  eventId          String
+  templateName     String
+  discordMessageId String
+  channelId        String
+  scheduledStart   DateTime
+  scheduledEnd     DateTime
+  slots            Int
+  waitlist         Json      @default("[]")
+  postedAt         DateTime  @default(now())
+  cancelledAt      DateTime?
+
+  venue  Venue   @relation(fields: [venueId], references: [id], onDelete: Cascade)
+  event  Event   @relation(fields: [eventId], references: [id], onDelete: Cascade)
+  shifts Shift[]
+
+  @@unique([eventId, templateName])
+  @@index([venueId])
+  @@index([eventId])
+  @@map("shift_signup_embeds")
 }
 
 // ============================================
