@@ -125,35 +125,47 @@ export async function handleShiftAccept(
   })
   if (existing) return { content: "You are already signed up for this shift." }
 
-  const acceptedCount = embed.shifts.length
+  const waitlist = embed.waitlist as WaitlistEntry[]
+  const alreadyWaiting = waitlist.some((w) => w.discordUserId === discordUserId)
 
-  if (acceptedCount >= embed.slots) {
-    const waitlist = embed.waitlist as WaitlistEntry[]
-    const alreadyWaiting = waitlist.some((w) => w.discordUserId === discordUserId)
-    if (alreadyWaiting) return { content: "You are already on the waitlist." }
+  let shiftCreated = false
+  let newWaitlistPosition = 0
 
-    const newWaitlist: WaitlistEntry[] = [
-      ...waitlist,
-      { discordUserId, discordUsername, signedUpAt: new Date().toISOString() },
-    ]
-    await prisma.shiftSignupEmbed.update({
-      where: { id: embedId },
-      data: { waitlist: newWaitlist },
+  await prisma.$transaction(async (tx) => {
+    const currentAccepted = await tx.shift.count({
+      where: { shiftSignupEmbedId: embedId, status: { not: "CANCELLED" } },
     })
-    await refreshEmbed({ ...embed, waitlist: newWaitlist })
-    return { content: `Slots are full — you have been added to the waitlist (position ${newWaitlist.length}).` }
-  }
 
-  await prisma.shift.create({
-    data: {
-      venueId: embed.venueId,
-      membershipId: membership.id,
-      scheduledStart: embed.scheduledStart,
-      scheduledEnd: embed.scheduledEnd,
-      status: "SCHEDULED",
-      shiftSignupEmbedId: embedId,
-    },
+    if (currentAccepted >= embed.slots) {
+      if (!alreadyWaiting) {
+        const newWaitlist: WaitlistEntry[] = [
+          ...waitlist,
+          { discordUserId, discordUsername, signedUpAt: new Date().toISOString() },
+        ]
+        await tx.shiftSignupEmbed.update({ where: { id: embedId }, data: { waitlist: newWaitlist } })
+        newWaitlistPosition = newWaitlist.length
+      }
+    } else {
+      await tx.shift.create({
+        data: {
+          venueId: embed.venueId,
+          membershipId: membership.id,
+          scheduledStart: embed.scheduledStart,
+          scheduledEnd: embed.scheduledEnd,
+          status: "SCHEDULED",
+          shiftSignupEmbedId: embedId,
+        },
+      })
+      shiftCreated = true
+    }
   })
+
+  if (!shiftCreated) {
+    if (alreadyWaiting) return { content: "You are already on the waitlist." }
+    const updatedEmbed = await prisma.shiftSignupEmbed.findUnique({ where: { id: embedId } })
+    if (updatedEmbed) await refreshEmbed(updatedEmbed)
+    return { content: `Slots are full — you have been added to the waitlist (position ${newWaitlistPosition}).` }
+  }
 
   await refreshEmbed(embed)
   return { content: `You are signed up for **${embed.templateName}**. See you there!` }
@@ -181,15 +193,10 @@ export async function handleShiftDecline(
       if (shift) {
         await prisma.shift.update({ where: { id: shift.id }, data: { status: "CANCELLED" } })
 
-        const waitlist = embed.waitlist as WaitlistEntry[]
-        if (waitlist.length > 0) {
-          const [, ...rest] = waitlist
-          await prisma.shiftSignupEmbed.update({ where: { id: embedId }, data: { waitlist: rest } })
-          await refreshEmbed({ ...embed, waitlist: rest })
-          return { content: "You have been removed from this shift. A slot is now available." }
-        }
-
         await refreshEmbed(embed)
+        if ((embed.waitlist as WaitlistEntry[]).length > 0) {
+          return { content: "You have been removed from this shift. A slot is now available for those on the maybe list." }
+        }
         return { content: "You have been removed from this shift." }
       }
     }
