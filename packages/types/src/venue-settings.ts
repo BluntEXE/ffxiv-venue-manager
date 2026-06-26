@@ -52,7 +52,7 @@ export interface ShiftTemplate {
 export interface ShiftBotSettings {
   enabled: boolean
   channelId: string         // Discord channel ID to post embeds in
-  daysBeforeEvent: number   // how many days before to post (default 3)
+  daysBeforeEvent?: number  // how many days before to post — undefined = 3
   templates: ShiftTemplate[] // empty = one shift matching full event duration
 }
 
