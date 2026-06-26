@@ -397,7 +397,7 @@ export default async function Home() {
               { icon: Lock, title: "Privacy Controls", blurb: "Control what staff can see" },
               { icon: Smartphone, title: "Mobile Friendly", blurb: "Works on any device" },
               { icon: Bell, title: "Discord Webhooks", blurb: "Auto-post events, sales, tasks" },
-              { icon: Link2, title: "Partake.gg Sync", blurb: "Auto-import events from Partake" },
+              { icon: Link2, title: "Partner Integrations", blurb: "Sync with Partake.gg & ffxivvenues.com" },
               { icon: CheckCircle2, title: "Task Management", blurb: "Assign, prioritize, track" },
             ].map(({ icon: Icon, title, blurb }) => (
               <div key={title} className="space-y-2 flex flex-col items-center xiv-scroll-reveal">
@@ -408,6 +408,89 @@ export default async function Home() {
                 <p className="text-sm text-muted-foreground">{blurb}</p>
               </div>
             ))}
+          </div>
+        </div>
+      </section>
+
+      {/* Partners */}
+      <section className="border-y border-[var(--blue-008)] bg-[#060b16] py-20 md:py-24">
+        <div className="container mx-auto px-4">
+          <div className="text-center mb-14 xiv-scroll-reveal">
+            <div className="xiv-divider">
+              <svg width="12" height="12" viewBox="0 0 12 12" fill="none" aria-hidden="true"><rect x="6" y="0" width="8.485" height="8.485" transform="rotate(45 6 0)" fill="rgba(0,180,255,0.7)"/></svg>
+            </div>
+            <h2 className="font-cinzel text-section font-bold mb-4 tracking-wide">Partners</h2>
+            <p className="text-muted-foreground max-w-[52ch] mx-auto leading-relaxed">
+              XIV Venue Manager integrates with community tools built by fellow FFXIV players.
+            </p>
+          </div>
+
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-[18px] max-w-3xl mx-auto">
+            {/* Partake.gg */}
+            <a
+              href="https://partake.gg"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="group rounded-xl border border-[var(--blue-018)] bg-[var(--card)] p-7 flex flex-col gap-5 transition-all duration-[250ms] hover:border-[rgba(0,180,255,0.45)] hover:shadow-[0_0_20px_rgba(0,180,255,0.07),inset_0_1px_0_rgba(0,180,255,0.12)] hover:-translate-y-0.5 xiv-scroll-reveal"
+            >
+              <div className="flex items-center gap-4">
+                <div className="w-14 h-14 rounded-xl overflow-hidden flex-shrink-0 bg-[#141520] flex items-center justify-center">
+                  <Image src="/partners/partake-logo.png" alt="Partake.gg" width={56} height={56} className="object-contain" />
+                </div>
+                <div>
+                  <p className="font-[var(--font-outfit)] font-semibold text-[1.1rem]">Partake.gg</p>
+                  <p className="text-[0.78rem] text-[var(--xiv-blue)]">Event discovery for FFXIV</p>
+                </div>
+              </div>
+              <p className="text-[0.88rem] text-muted-foreground leading-[1.6]">
+                The community calendar for FFXIV events. XIV Venue Manager syncs your events to Partake so players can discover your nights from anywhere.
+              </p>
+              <div className="mt-auto">
+                <div className="text-[0.78rem] text-[var(--fg-faint)] font-medium uppercase tracking-wide mb-2">We use</div>
+                <div className="flex flex-wrap gap-2">
+                  {["Event import", "Attendee count sync", "Auto-publish"].map(t => (
+                    <span key={t} className="text-[0.75rem] px-2.5 py-1 rounded-full border border-[var(--blue-015)] bg-[var(--blue-008)] text-[var(--xiv-blue)]">{t}</span>
+                  ))}
+                </div>
+              </div>
+              <div className="flex items-center gap-1.5 text-[0.8rem] text-[var(--xiv-blue)] group-hover:underline">
+                Visit Partake.gg
+                <svg className="w-3.5 h-3.5 transition-transform group-hover:translate-x-0.5" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+              </div>
+            </a>
+
+            {/* ffxivvenues.com */}
+            <a
+              href="https://ffxivvenues.com"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="group rounded-xl border border-[var(--blue-018)] bg-[var(--card)] p-7 flex flex-col gap-5 transition-all duration-[250ms] hover:border-[rgba(0,180,255,0.45)] hover:shadow-[0_0_20px_rgba(0,180,255,0.07),inset_0_1px_0_rgba(0,180,255,0.12)] hover:-translate-y-0.5 xiv-scroll-reveal"
+            >
+              <div className="flex items-center gap-4">
+                <div className="w-14 h-14 rounded-xl overflow-hidden flex-shrink-0 bg-black flex items-center justify-center">
+                  <Image src="/partners/ffxivvenues-logo.png" alt="FFXIV Venues" width={56} height={56} className="object-contain" />
+                </div>
+                <div>
+                  <p className="font-[var(--font-outfit)] font-semibold text-[1.1rem]">ffxivvenues.com</p>
+                  <p className="text-[0.78rem] text-[var(--xiv-blue)]">Venue directory for FFXIV</p>
+                </div>
+              </div>
+              <p className="text-[0.88rem] text-muted-foreground leading-[1.6]">
+                The definitive venue listing site for FFXIV. Link your listing to sync your opening schedule directly to your XIV Venue Manager profile.
+              </p>
+              <div className="mt-auto">
+                <div className="text-[0.78rem] text-[var(--fg-faint)] font-medium uppercase tracking-wide mb-2">We use</div>
+                <div className="flex flex-wrap gap-2">
+                  {["Schedule sync", "Open Now status", "2-hourly auto-sync"].map(t => (
+                    <span key={t} className="text-[0.75rem] px-2.5 py-1 rounded-full border border-[var(--blue-015)] bg-[var(--blue-008)] text-[var(--xiv-blue)]">{t}</span>
+                  ))}
+                </div>
+              </div>
+              <div className="flex items-center gap-1.5 text-[0.8rem] text-[var(--xiv-blue)] group-hover:underline">
+                Visit ffxivvenues.com
+                <svg className="w-3.5 h-3.5 transition-transform group-hover:translate-x-0.5" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+              </div>
+            </a>
           </div>
         </div>
       </section>

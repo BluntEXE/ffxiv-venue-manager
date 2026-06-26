@@ -1,6 +1,7 @@
 import { prisma } from "@/lib/prisma"
 
 const PARTAKE_API = "https://api.partake.gg/"
+const USER_AGENT = "XIV-Venue-Manager/1.0"
 
 const EVENTS_QUERY = `
   query getTimelineEvents($teamId: Int, $sortBy: EventSortType, $endsBetween: TimeRangeInput, $offset: Int, $limit: Int) {
@@ -66,7 +67,7 @@ function mapEventType(tags: string[]): string {
 export async function fetchPartakeEvents(teamId: number): Promise<PartakeEvent[]> {
   const res = await fetch(PARTAKE_API, {
     method: "POST",
-    headers: { "Content-Type": "application/json" },
+    headers: { "Content-Type": "application/json", "User-Agent": USER_AGENT },
     body: JSON.stringify({
       query: EVENTS_QUERY,
       variables: {

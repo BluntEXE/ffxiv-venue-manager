@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <link rel="icon" href="/assets/favicon-BXs5E_K-.ico" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta name="theme-color" content="#000000" />
+
+  <title>FFXIV Venues</title>
+  <meta property="og:type" content="website">
+  <meta property="og:title" content="FFXIV Venues">
+  <meta property="twitter:title" content="FFXIV Venues">
+
+  <meta name="description"
+        content="A beautiful directory and timetable of venues in Final Fantasy XIV."
+  />
+  <meta property="og:description"
+        content="A beautiful directory and timetable of venues in Final Fantasy XIV.">
+  <meta property="twitter:description"
+        content="A beautiful directory and timetable of venues in Final Fantasy XIV.">
+
+  <meta property="og:image" content="/assets/ogcard-Dld-U3m1.jpg">
+  <meta property="twitter:card" content="summary_large_image">
+  <meta property="twitter:image" content="ogcard.jpg">
+
+  <link rel="apple-touch-icon" href="/assets/icon-180-BPIGHQ5p.png" />
+  <link rel="manifest" href="/assets/manifest-CTXPKVid.json" />
+  <script type="module" crossorigin src="/assets/index-DJl7pIfx.js"></script>
+  <link rel="stylesheet" crossorigin href="/assets/index-DHxjUPBr.css">
+</head>
+<body>
+  <noscript>You need to enable JavaScript to run this app.</noscript>
+  <div id="app-root"></div>
+</body>
+</html>
