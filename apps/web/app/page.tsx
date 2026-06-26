@@ -257,8 +257,8 @@ export default async function Home() {
             {
               icon: <><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></>,
               color: "",
-              title: "Partake.gg events",
-              desc: "Import and publish events to the community calendar, and build /shout adverts straight from them.",
+              title: "Partner integrations",
+              desc: "Pull live events and attendee counts from Partake.gg. Sync your schedule from ffxivvenues.com and show live Open Now status.",
             },
             {
               icon: <><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></>,
@@ -443,12 +443,12 @@ export default async function Home() {
                 </div>
               </div>
               <p className="text-[0.88rem] text-muted-foreground leading-[1.6]">
-                The community calendar for FFXIV events. XIV Venue Manager syncs your events to Partake so players can discover your nights from anywhere.
+                The community event calendar for FFXIV. XIV Venue Manager pulls your events and attendee counts from Partake so venue profiles stay current automatically.
               </p>
               <div className="mt-auto">
                 <div className="text-[0.78rem] text-[var(--fg-faint)] font-medium uppercase tracking-wide mb-2">We use</div>
                 <div className="flex flex-wrap gap-2">
-                  {["Event import", "Attendee count sync", "Auto-publish"].map(t => (
+                  {["Event sync", "Attendee count"].map(t => (
                     <span key={t} className="text-[0.75rem] px-2.5 py-1 rounded-full border border-[var(--blue-015)] bg-[var(--blue-008)] text-[var(--xiv-blue)]">{t}</span>
                   ))}
                 </div>
