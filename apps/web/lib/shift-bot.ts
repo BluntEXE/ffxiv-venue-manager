@@ -1,6 +1,10 @@
 import { prisma } from "@/lib/prisma"
 import { editBotMessage, postBotMessage, type BotMessagePayload } from "@/lib/discord-bot"
 import type { ShiftTemplate } from "@xiv-venue-manager/types"
+import type { Prisma } from "@/generated/prisma"
+
+/** Cast a typed array back to Prisma's opaque JSON array type. */
+const asJsonArray = (v: unknown[]): Prisma.InputJsonArray => v as unknown as Prisma.InputJsonArray
 
 const XIV_BLUE = 0x00b4ff
 
@@ -142,7 +146,7 @@ export async function handleShiftAccept(
           ...waitlist,
           { discordUserId, discordUsername, signedUpAt: new Date().toISOString() },
         ]
-        await tx.shiftSignupEmbed.update({ where: { id: embedId }, data: { waitlist: newWaitlist } })
+        await tx.shiftSignupEmbed.update({ where: { id: embedId }, data: { waitlist: asJsonArray(newWaitlist) } })
         newWaitlistPosition = newWaitlist.length
       }
     } else {
@@ -205,7 +209,7 @@ export async function handleShiftDecline(
   const waitlist = embed.waitlist as unknown as WaitlistEntry[]
   const newWaitlist = waitlist.filter((w) => w.discordUserId !== discordUserId)
   if (newWaitlist.length < waitlist.length) {
-    await prisma.shiftSignupEmbed.update({ where: { id: embedId }, data: { waitlist: newWaitlist } })
+    await prisma.shiftSignupEmbed.update({ where: { id: embedId }, data: { waitlist: asJsonArray(newWaitlist) } })
     await refreshEmbed({ ...embed, waitlist: newWaitlist })
     return { content: "You have been removed from the waitlist." }
   }
@@ -242,7 +246,7 @@ export async function handleShiftMaybe(
     ...waitlist,
     { discordUserId, discordUsername, signedUpAt: new Date().toISOString() },
   ]
-  await prisma.shiftSignupEmbed.update({ where: { id: embedId }, data: { waitlist: newWaitlist } })
+  await prisma.shiftSignupEmbed.update({ where: { id: embedId }, data: { waitlist: asJsonArray(newWaitlist) } })
   await refreshEmbed({ ...embed, waitlist: newWaitlist })
   return { content: "Marked as maybe — you will be notified if a slot opens up." }
 }
