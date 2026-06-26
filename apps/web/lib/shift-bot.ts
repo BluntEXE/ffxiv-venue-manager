@@ -298,7 +298,13 @@ export async function postShiftEmbedsForEvent(
       0,
       []
     )
-    await editBotMessage(channelId, messageId, finalPayload)
+    try {
+      await editBotMessage(channelId, messageId, finalPayload)
+    } catch (err) {
+      // Delete the DB record so next cron run retries instead of skipping
+      await prisma.shiftSignupEmbed.delete({ where: { id: record.id } })
+      throw err
+    }
   }
 }
 
