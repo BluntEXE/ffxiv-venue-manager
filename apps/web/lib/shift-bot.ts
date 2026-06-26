@@ -46,7 +46,7 @@ export function buildShiftEmbed(
     fields.push({ name: `Waitlist (${embed.waitlist.length})`, value: waitlistField, inline: true })
   }
 
-  const buttons = [
+  const buttons: import("@/lib/discord-bot").DiscordButtonComponent[] = [
     { type: 2, style: 3, label: `✓ Accept${slotsRemaining <= 0 ? " (Full)" : ""}`, custom_id: `shift_accept:${embed.id}` },
     { type: 2, style: 2, label: "? Maybe", custom_id: `shift_maybe:${embed.id}` },
     { type: 2, style: 4, label: "✗ Decline", custom_id: `shift_decline:${embed.id}` },
@@ -58,7 +58,7 @@ export function buildShiftEmbed(
       color: XIV_BLUE,
       fields,
     }],
-    components: [{ type: 1, components: buttons }],
+    components: [{ type: 1 as const, components: buttons }],
   }
 }
 
