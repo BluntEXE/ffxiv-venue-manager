@@ -98,6 +98,15 @@ export default function SettingsPage({
   const [scheduleEntries, setScheduleEntries] = useState<ScheduleEntry[]>([])
   const [scheduleLoaded, setScheduleLoaded] = useState(false)
   const [showAddEntry, setShowAddEntry] = useState(false)
+  const [ffxivVenueId, setFfxivVenueId] = useState<string | null>(null)
+  const [ffxivVenueLinkedAt, setFfxivVenueLinkedAt] = useState<string | null>(null)
+  const [ffxivVenueSyncedAt, setFfxivVenueSyncedAt] = useState<string | null>(null)
+  const [ffxivInput, setFfxivInput] = useState("")
+  const [ffxivPreview, setFfxivPreview] = useState<{ id: string; name: string } | null>(null)
+  const [ffxivPreviewLoading, setFfxivPreviewLoading] = useState(false)
+  const [ffxivPreviewError, setFfxivPreviewError] = useState<string | null>(null)
+  const [ffxivSyncing, setFfxivSyncing] = useState(false)
+  const [ffxivUnlinking, setFfxivUnlinking] = useState(false)
 
   // Unwrap params
   useEffect(() => {
@@ -161,6 +170,9 @@ export default function SettingsPage({
             partakeTeamId: settingsData.partakeTeamId ?? null,
             discoverySources: settingsData.discoverySources ?? {},
           })
+          setFfxivVenueId(settingsData.ffxivVenueId ?? null)
+          setFfxivVenueLinkedAt(settingsData.ffxivVenueLinkedAt ?? null)
+          setFfxivVenueSyncedAt(settingsData.ffxivVenueSyncedAt ?? null)
         }
 
         fetch(`/api/venues/${venue.id}/schedule`)
@@ -270,6 +282,80 @@ export default function SettingsPage({
     const res = await fetch(`/api/venues/${venueId}/schedule/${id}`, { method: "DELETE" })
     if (!res.ok) throw new Error("Failed to delete")
     setScheduleEntries(prev => prev.filter(e => e.id !== id))
+  }
+
+  async function handleFfxivPreview() {
+    if (!ffxivInput.trim()) return
+    setFfxivPreviewLoading(true)
+    setFfxivPreviewError(null)
+    setFfxivPreview(null)
+    try {
+      const res = await fetch(`/api/venues/${venueId}/sync-ffxivvenues?ffxivId=${encodeURIComponent(ffxivInput.trim())}`)
+      if (!res.ok) {
+        const err = await res.json()
+        throw new Error(err.error ?? "Not found")
+      }
+      setFfxivPreview(await res.json())
+    } catch (e) {
+      setFfxivPreviewError(e instanceof Error ? e.message : "Failed to look up venue")
+    } finally {
+      setFfxivPreviewLoading(false)
+    }
+  }
+
+  async function handleFfxivLink() {
+    if (!ffxivPreview) return
+    setFfxivPreviewLoading(true)
+    try {
+      const res = await fetch(`/api/venues/${venueId}/settings`, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ ffxivVenueId: ffxivPreview.id }),
+      })
+      if (!res.ok) throw new Error("Failed to link")
+      const data = await res.json()
+      setFfxivVenueId(data.ffxivVenueId)
+      setFfxivPreview(null)
+      setFfxivInput("")
+      await fetch(`/api/venues/${venueId}/sync-ffxivvenues`, { method: "POST" })
+      setFfxivVenueSyncedAt(new Date().toISOString())
+    } catch (e) {
+      setFfxivPreviewError(e instanceof Error ? e.message : "Failed to link")
+    } finally {
+      setFfxivPreviewLoading(false)
+    }
+  }
+
+  async function handleFfxivSyncNow() {
+    setFfxivSyncing(true)
+    try {
+      const res = await fetch(`/api/venues/${venueId}/sync-ffxivvenues`, { method: "POST" })
+      if (!res.ok) {
+        const err = await res.json()
+        if (err.unlinked) { setFfxivVenueId(null); setFfxivVenueSyncedAt(null) }
+        return
+      }
+      setFfxivVenueSyncedAt(new Date().toISOString())
+    } finally {
+      setFfxivSyncing(false)
+    }
+  }
+
+  async function handleFfxivUnlink() {
+    if (!confirm("Unlink ffxivvenues.com? The synced schedule will be removed from your profile.")) return
+    setFfxivUnlinking(true)
+    try {
+      await fetch(`/api/venues/${venueId}/settings`, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ ffxivVenueId: null }),
+      })
+      setFfxivVenueId(null)
+      setFfxivVenueLinkedAt(null)
+      setFfxivVenueSyncedAt(null)
+    } finally {
+      setFfxivUnlinking(false)
+    }
   }
 
   if (!slug) {
@@ -578,6 +664,91 @@ export default function SettingsPage({
                   <div className="idesc">OAuth sign-in and event webhooks</div>
                 </div>
                 <span className="status open"><span className="dot" />Connected</span>
+              </div>
+            </section>
+
+            {/* ── ffxivvenues.com Integration ── */}
+            <section className="panel">
+              <div className="ph">
+                <span className="pt">
+                  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="w-4 h-4">
+                    <path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/>
+                    <path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/>
+                  </svg>
+                  ffxivvenues.com
+                </span>
+                {ffxivVenueId && (
+                  <span className="text-[0.72rem] text-emerald-400 ml-2">✓ Linked</span>
+                )}
+              </div>
+
+              <div className="px-5 py-4 space-y-3">
+                {ffxivVenueId ? (
+                  <>
+                    <p className="text-[0.82rem] text-[var(--fg-faint)]">
+                      Schedule synced from your ffxivvenues.com listing every 2 hours.
+                      {ffxivVenueSyncedAt && (
+                        <> Last synced: {new Date(ffxivVenueSyncedAt).toLocaleString("en-GB", { timeZone: "UTC" })} ST</>
+                      )}
+                    </p>
+                    <div className="flex gap-2">
+                      <button type="button" onClick={handleFfxivSyncNow} disabled={ffxivSyncing}
+                        className="text-[0.82rem] text-[var(--xiv-blue)] hover:opacity-80 transition-opacity disabled:opacity-40">
+                        {ffxivSyncing ? "Syncing…" : "Sync now"}
+                      </button>
+                      <span className="text-[var(--fg-faint)]">·</span>
+                      <button type="button" onClick={handleFfxivUnlink} disabled={ffxivUnlinking}
+                        className="text-[0.82rem] text-red-400 hover:opacity-80 transition-opacity disabled:opacity-40">
+                        {ffxivUnlinking ? "Unlinking…" : "Unlink"}
+                      </button>
+                    </div>
+                  </>
+                ) : ffxivPreview ? (
+                  <>
+                    <p className="text-[0.82rem]">
+                      Linking to: <span className="font-medium text-[var(--xiv-blue)]">{ffxivPreview.name}</span>
+                    </p>
+                    <div className="flex gap-2">
+                      <button type="button" onClick={handleFfxivLink} disabled={ffxivPreviewLoading}
+                        className="xiv-btn-shimmer px-3 py-1.5 text-[0.82rem] rounded-[var(--radius-sm)]">
+                        {ffxivPreviewLoading ? "Linking…" : "Confirm link"}
+                      </button>
+                      <button type="button" onClick={() => { setFfxivPreview(null); setFfxivPreviewError(null) }}
+                        className="px-3 py-1.5 text-[0.82rem] text-[var(--fg-faint)] hover:opacity-80">
+                        Cancel
+                      </button>
+                    </div>
+                  </>
+                ) : (
+                  <>
+                    <p className="text-[0.82rem] text-[var(--fg-faint)]">
+                      Link your ffxivvenues.com listing to sync your schedule automatically.
+                    </p>
+                    <div className="flex gap-2">
+                      <input
+                        type="text"
+                        placeholder="ffxivvenues.com venue ID"
+                        value={ffxivInput}
+                        onChange={e => setFfxivInput(e.target.value)}
+                        onKeyDown={e => e.key === "Enter" && handleFfxivPreview()}
+                        className="flex-1 rounded-[var(--radius-sm)] border border-[var(--blue-015)] bg-background px-3 py-1.5 text-sm focus:border-[var(--blue-035)] focus:outline-none"
+                      />
+                      <button type="button" onClick={handleFfxivPreview}
+                        disabled={ffxivPreviewLoading || !ffxivInput.trim()}
+                        className="xiv-btn-shimmer px-3 py-1.5 text-[0.82rem] rounded-[var(--radius-sm)] disabled:opacity-40">
+                        {ffxivPreviewLoading ? "Looking up…" : "Look up"}
+                      </button>
+                    </div>
+                    {ffxivPreviewError && <p className="text-[0.78rem] text-red-400">{ffxivPreviewError}</p>}
+                    <p className="text-[0.72rem] text-[var(--fg-faint)]">
+                      Find your venue ID at{" "}
+                      <a href="https://ffxivvenues.com" target="_blank" rel="noopener noreferrer" className="text-[var(--xiv-blue)]">
+                        ffxivvenues.com
+                      </a>
+                      {" "}— it appears in your listing URL.
+                    </p>
+                  </>
+                )}
               </div>
             </section>
 
