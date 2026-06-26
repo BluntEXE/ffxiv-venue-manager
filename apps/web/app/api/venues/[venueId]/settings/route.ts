@@ -33,6 +33,8 @@ const updateSettingsSchema = z.object({
   discordWebhookUrl: z.string().url().optional().or(z.literal("")),
   // Partake integration
   partakeTeamId: z.number().int().positive().nullable().optional(),
+  // ffxivvenues.com integration
+  ffxivVenueId: z.string().nullable().optional(),
   // Venue profile extras stored in settings JSON
   tagline: z.string().max(200).optional(),
   tags: z.array(z.string().max(50)).max(20).optional(),
@@ -89,6 +91,9 @@ export const GET = withRateLimit<{ params: Promise<{ venueId: string }> }>(
         settings: true,
         discordWebhookUrl: true,
         partakeTeamId: true,
+        ffxivVenueId: true,
+        ffxivVenueLinkedAt: true,
+        venueSchedule: { select: { syncedAt: true } },
       },
     })
 
@@ -100,6 +105,9 @@ export const GET = withRateLimit<{ params: Promise<{ venueId: string }> }>(
         ...parseVenueSettings(venue.settings),
         discordWebhookUrl: venue.discordWebhookUrl,
         partakeTeamId: venue.partakeTeamId,
+        ffxivVenueId: venue.ffxivVenueId,
+        ffxivVenueLinkedAt: venue.ffxivVenueLinkedAt,
+        ffxivVenueSyncedAt: venue.venueSchedule?.syncedAt ?? null,
       })
     } catch (error) {
       console.error("Error fetching venue settings:", error)
@@ -157,7 +165,7 @@ export const PUT = withRateLimit<{ params: Promise<{ venueId: string }> }>(
     }
 
     // Extract top-level venue columns from validated data
-    const { discordWebhookUrl, partakeTeamId, ...settingsData } = validatedData
+    const { discordWebhookUrl, partakeTeamId, ffxivVenueId, ...settingsData } = validatedData
 
     // Merge new settings with existing settings (type-safe)
     const currentSettings = parseVenueSettings(venue.settings)
@@ -177,18 +185,30 @@ export const PUT = withRateLimit<{ params: Promise<{ venueId: string }> }>(
         ...(partakeTeamId !== undefined && {
           partakeTeamId: partakeTeamId,
         }),
+        ...(ffxivVenueId !== undefined && {
+          ffxivVenueId: ffxivVenueId,
+          ffxivVenueLinkedAt: ffxivVenueId ? new Date() : null,
+          ffxivVenueLinkedBy: ffxivVenueId ? session.user.id : null,
+        }),
       },
       select: {
         settings: true,
         discordWebhookUrl: true,
         partakeTeamId: true,
+        ffxivVenueId: true,
       },
     })
+
+    // If unlinking, remove synced schedule data
+    if (ffxivVenueId === null) {
+      await prisma.venueSchedule.deleteMany({ where: { venueId } })
+    }
 
       return NextResponse.json({
         ...parseVenueSettings(updatedVenue.settings),
         discordWebhookUrl: updatedVenue.discordWebhookUrl,
         partakeTeamId: updatedVenue.partakeTeamId,
+        ffxivVenueId: updatedVenue.ffxivVenueId,
       })
     } catch (error) {
       if (error instanceof z.ZodError) {
