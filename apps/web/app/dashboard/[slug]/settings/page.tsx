@@ -111,6 +111,7 @@ export default function SettingsPage({
   const [shiftBotEnabled, setShiftBotEnabled] = useState(false)
   const [shiftBotChannelId, setShiftBotChannelId] = useState("")
   const [shiftBotDaysBefore, setShiftBotDaysBefore] = useState(3)
+  const [shiftBotThumbnailUrl, setShiftBotThumbnailUrl] = useState("")
   const [shiftBotTemplates, setShiftBotTemplates] = useState<Array<{
     name: string; startOffsetHours: number; durationHours: number; slots: number
   }>>([])
@@ -183,6 +184,7 @@ export default function SettingsPage({
           setShiftBotEnabled(settingsData.shiftBot?.enabled ?? false)
           setShiftBotChannelId(settingsData.shiftBot?.channelId ?? "")
           setShiftBotDaysBefore(settingsData.shiftBot?.daysBeforeEvent ?? 3)
+          setShiftBotThumbnailUrl(settingsData.shiftBot?.thumbnailUrl ?? "")
           setShiftBotTemplates(settingsData.shiftBot?.templates ?? [])
         }
 
@@ -237,6 +239,7 @@ export default function SettingsPage({
             channelId: shiftBotChannelId,
             daysBeforeEvent: shiftBotDaysBefore,
             templates: shiftBotTemplates,
+            thumbnailUrl: shiftBotThumbnailUrl || undefined,
           },
         }),
       })
@@ -727,6 +730,17 @@ export default function SettingsPage({
                           Invite the bot to your server →
                         </a>
                       </p>
+                    </div>
+
+                    <div>
+                      <label className="block text-sm font-medium mb-1">Embed Thumbnail URL <span className="text-[var(--fg-faint)] font-normal">(optional)</span></label>
+                      <input
+                        type="url"
+                        value={shiftBotThumbnailUrl}
+                        onChange={(e) => setShiftBotThumbnailUrl(e.target.value)}
+                        placeholder="https://… — leave blank to use your Discord server icon"
+                        className="flex-1 w-full rounded-[var(--radius-sm)] border border-[var(--blue-015)] bg-background px-3 py-1.5 text-sm focus:border-[var(--blue-035)] focus:outline-none"
+                      />
                     </div>
 
                     <div>

@@ -54,11 +54,20 @@ export async function GET(request: Request) {
         await postShiftEmbedsForEvent(
           event.id,
           venue.id,
+          venue.name,
           event.title,
           event.startTime,
           event.endTime,
           shiftBot.channelId,
-          templates
+          templates,
+          shiftBot.thumbnailUrl,
+          shiftBot.cachedGuildIconUrl,
+          async (iconUrl) => {
+            await prisma.venue.update({
+              where: { id: venue.id },
+              data: { settings: { ...settings, shiftBot: { ...shiftBot, cachedGuildIconUrl: iconUrl } } as object },
+            })
+          }
         )
         stats.posted++
       } catch (err) {

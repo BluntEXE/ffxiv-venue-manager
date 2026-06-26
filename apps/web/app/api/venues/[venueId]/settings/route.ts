@@ -62,6 +62,8 @@ const updateSettingsSchema = z.object({
       durationHours: z.number().min(1).max(24),
       slots: z.number().int().min(1).max(100),
     })).max(10),
+    thumbnailUrl: z.string().url().optional().or(z.literal("")),
+    cachedGuildIconUrl: z.string().optional(),
   }).optional(),
 })
 

@@ -54,6 +54,8 @@ export interface ShiftBotSettings {
   channelId: string         // Discord channel ID to post embeds in
   daysBeforeEvent?: number  // how many days before to post — undefined = 3
   templates: ShiftTemplate[] // empty = one shift matching full event duration
+  thumbnailUrl?: string     // custom embed thumbnail; falls back to guild icon
+  cachedGuildIconUrl?: string // auto-fetched guild icon, refreshed on first post
 }
 
 /**

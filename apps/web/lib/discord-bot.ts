@@ -56,3 +56,16 @@ export async function deleteBotMessage(channelId: string, messageId: string): Pr
     method: "DELETE",
   })
 }
+
+export async function getGuildIconUrl(channelId: string): Promise<string | null> {
+  try {
+    const channel = await botFetch(`/channels/${channelId}`)
+    const guildId = channel?.guild_id
+    if (!guildId) return null
+    const guild = await botFetch(`/guilds/${guildId}`)
+    if (!guild?.icon) return null
+    return `https://cdn.discordapp.com/icons/${guildId}/${guild.icon}.png?size=128`
+  } catch {
+    return null
+  }
+}
