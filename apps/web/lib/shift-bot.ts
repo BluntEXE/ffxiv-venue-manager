@@ -1,7 +1,7 @@
 import { prisma } from "@/lib/prisma"
 import { editBotMessage, postBotMessage, type BotMessagePayload } from "@/lib/discord-bot"
 import type { ShiftTemplate } from "@xiv-venue-manager/types"
-import type { Prisma } from "@/generated/prisma"
+import type { Prisma } from "@/generated/prisma/client"
 
 /** Cast a typed array back to Prisma's opaque JSON array type. */
 const asJsonArray = (v: unknown[]): Prisma.InputJsonArray => v as unknown as Prisma.InputJsonArray
