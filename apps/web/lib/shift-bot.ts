@@ -91,7 +91,7 @@ async function refreshEmbed(embedRecord: {
       scheduledStart: embedRecord.scheduledStart,
       scheduledEnd: embedRecord.scheduledEnd,
       slots: embedRecord.slots,
-      waitlist: embedRecord.waitlist as WaitlistEntry[],
+      waitlist: embedRecord.waitlist as unknown as WaitlistEntry[],
     },
     acceptedShifts.length,
     acceptedNames
@@ -125,7 +125,7 @@ export async function handleShiftAccept(
   })
   if (existing) return { content: "You are already signed up for this shift." }
 
-  const waitlist = embed.waitlist as WaitlistEntry[]
+  const waitlist = embed.waitlist as unknown as WaitlistEntry[]
   const alreadyWaiting = waitlist.some((w) => w.discordUserId === discordUserId)
 
   let shiftCreated = false
@@ -194,7 +194,7 @@ export async function handleShiftDecline(
         await prisma.shift.update({ where: { id: shift.id }, data: { status: "CANCELLED" } })
 
         await refreshEmbed(embed)
-        if ((embed.waitlist as WaitlistEntry[]).length > 0) {
+        if ((embed.waitlist as unknown as WaitlistEntry[]).length > 0) {
           return { content: "You have been removed from this shift. A slot is now available for those on the maybe list." }
         }
         return { content: "You have been removed from this shift." }
@@ -202,7 +202,7 @@ export async function handleShiftDecline(
     }
   }
 
-  const waitlist = embed.waitlist as WaitlistEntry[]
+  const waitlist = embed.waitlist as unknown as WaitlistEntry[]
   const newWaitlist = waitlist.filter((w) => w.discordUserId !== discordUserId)
   if (newWaitlist.length < waitlist.length) {
     await prisma.shiftSignupEmbed.update({ where: { id: embedId }, data: { waitlist: newWaitlist } })
@@ -221,7 +221,7 @@ export async function handleShiftMaybe(
   const embed = await prisma.shiftSignupEmbed.findUnique({ where: { id: embedId } })
   if (!embed || embed.cancelledAt) return { content: "This shift is no longer available." }
 
-  const waitlist = embed.waitlist as WaitlistEntry[]
+  const waitlist = embed.waitlist as unknown as WaitlistEntry[]
   const alreadyWaiting = waitlist.some((w) => w.discordUserId === discordUserId)
   if (alreadyWaiting) return { content: "You are already on the maybe list." }
 
