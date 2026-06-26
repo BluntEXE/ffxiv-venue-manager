@@ -171,6 +171,29 @@ export async function handleShiftAccept(
     return { content: `Slots are full — you have been added to the waitlist (position ${newWaitlistPosition}).` }
   }
 
+  // Merge overlapping/adjacent shifts for this member on the same event
+  const newShift = await prisma.shift.findFirst({
+    where: { shiftSignupEmbedId: embedId, membershipId: membership.id, status: { not: "CANCELLED" } },
+  })
+  if (newShift) {
+    const overlapping = await prisma.shift.findFirst({
+      where: {
+        id: { not: newShift.id },
+        membershipId: membership.id,
+        status: { in: ["CLAIMED", "SCHEDULED", "ACTIVE"] },
+        scheduledStart: { lte: newShift.scheduledEnd },
+        scheduledEnd: { gte: newShift.scheduledStart },
+        shiftSignupEmbed: { eventId: embed.eventId },
+      },
+    })
+    if (overlapping) {
+      const mergedStart = overlapping.scheduledStart < newShift.scheduledStart ? overlapping.scheduledStart : newShift.scheduledStart
+      const mergedEnd = overlapping.scheduledEnd > newShift.scheduledEnd ? overlapping.scheduledEnd : newShift.scheduledEnd
+      await prisma.shift.update({ where: { id: overlapping.id }, data: { scheduledStart: mergedStart, scheduledEnd: mergedEnd } })
+      await prisma.shift.delete({ where: { id: newShift.id } })
+    }
+  }
+
   await refreshEmbed(embed)
   return { content: `You are signed up for **${embed.templateName}**. See you there!` }
 }
