@@ -31,6 +31,8 @@ import { getServerTimeLabel, formatServerTime } from "@/lib/server-time"
 import { VenueFollowButton } from "@/components/venue-follow-button"
 import { CopyAddressButton, CopyAddressInline } from "@/components/copy-address-button"
 import { SiteFooter } from "@/components/site-footer"
+import { VenueScheduleDisplay } from "@/components/venue-schedule-display"
+import { isOpenNow } from "@/lib/schedule-utils"
 
 export default async function VenueProfilePage({
   params,
@@ -53,6 +55,9 @@ export default async function VenueProfilePage({
         take: 5,
         select: { id: true, title: true, startTime: true, endTime: true, status: true, eventType: true },
       },
+      scheduleEntries: {
+        orderBy: [{ day: "asc" }, { startHour: "asc" }],
+      },
     },
   })
 
@@ -70,6 +75,8 @@ export default async function VenueProfilePage({
 
   const liveEvent     = venue.events.find(e => e.status === "ACTIVE")
   const upcomingEvents = venue.events.filter(e => e.status === "PUBLISHED")
+  const openFromSchedule = isOpenNow(venue.scheduleEntries)
+  const isOpen = !!liveEvent || openFromSchedule
   const tzLabel       = getServerTimeLabel(venue.dataCenter)
   const todayUTCDay   = new Date().getUTCDay()
   const DAY_NAMES     = ["Sunday","Monday","Tuesday","Wednesday","Thursday","Friday","Saturday"]
@@ -173,7 +180,7 @@ export default async function VenueProfilePage({
           <div className="max-w-[1080px] mx-auto px-8 pb-[26px] flex items-end justify-between gap-6 flex-wrap">
             {/* Identity */}
             <div className="hero-id">
-              {liveEvent ? (
+              {isOpen ? (
                 <span className="status open mb-[14px] inline-flex"><span className="dot" />Open now</span>
               ) : upcomingEvents.length > 0 ? (
                 <span className="status soon mb-[14px] inline-flex"><span className="dot" />Opening soon</span>
@@ -311,14 +318,16 @@ export default async function VenueProfilePage({
               {/* Hours */}
               <div className="dcard">
                 <div className="dh"><Clock /> Hours</div>
-                {openDays ? (
+                {venue.scheduleEntries.length > 0 ? (
+                  <VenueScheduleDisplay entries={venue.scheduleEntries} />
+                ) : openDays ? (
                   DAY_NAMES.map((day, i) => {
-                    const isOpen  = openDays.has(i)
-                    const isToday = i === todayUTCDay
+                    const isDayOpen = openDays.has(i)
+                    const isToday   = i === todayUTCDay
                     return (
-                      <div key={day} className={`hours-row${isToday ? " today" : isOpen ? "" : " closed"}`}>
+                      <div key={day} className={`hours-row${isToday ? " today" : isDayOpen ? "" : " closed"}`}>
                         <span className="day">{day}</span>
-                        <span className="hrs">{isOpen ? (defaultHours || "Open") : "Closed"}</span>
+                        <span className="hrs">{isDayOpen ? (defaultHours || "Open") : "Closed"}</span>
                       </div>
                     )
                   })
@@ -337,15 +346,7 @@ export default async function VenueProfilePage({
                     )}
                   </>
                 ) : (
-                  <>
-                    {DAY_NAMES.map((day, i) => (
-                      <div key={day} className={`hours-row closed${i === todayUTCDay ? " today" : ""}`}>
-                        <span className="day">{day}</span>
-                        <span className="hrs">—</span>
-                      </div>
-                    ))}
-                    <p className="px-5 pb-3 pt-1 text-[0.72rem] text-[var(--fg-faint)]">Hours not set by owner.</p>
-                  </>
+                  <VenueScheduleDisplay entries={[]} />
                 )}
               </div>
 

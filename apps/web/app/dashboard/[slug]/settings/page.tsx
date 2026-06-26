@@ -40,6 +40,10 @@ import {
 } from "@/components/ui/alert-dialog"
 import { PageLoading } from "@/components/ui/loading-spinner"
 import type { VenueSettings } from "@xiv-venue-manager/types"
+import { ScheduleEntryForm } from "@/components/schedule-entry-form"
+import type { ScheduleEntry } from "@/lib/schedule-utils"
+import { DAY_NAMES, formatEntryTime, formatIntervalLabel } from "@/lib/schedule-utils"
+import { Plus, Trash2 } from "lucide-react"
 
 
 export default function SettingsPage({
@@ -91,6 +95,9 @@ export default function SettingsPage({
   const [galleryImages, setGalleryImages] = useState<string[]>([])
   const [bannerUrl, setBannerUrl] = useState<string | null>(null)
   const [logoUrl, setLogoUrl] = useState<string | null>(null)
+  const [scheduleEntries, setScheduleEntries] = useState<ScheduleEntry[]>([])
+  const [scheduleLoaded, setScheduleLoaded] = useState(false)
+  const [showAddEntry, setShowAddEntry] = useState(false)
 
   // Unwrap params
   useEffect(() => {
@@ -155,6 +162,14 @@ export default function SettingsPage({
             discoverySources: settingsData.discoverySources ?? {},
           })
         }
+
+        fetch(`/api/venues/${venue.id}/schedule`)
+          .then(r => r.json())
+          .then((data: ScheduleEntry[]) => {
+            setScheduleEntries(data)
+            setScheduleLoaded(true)
+          })
+          .catch(() => setScheduleLoaded(true))
       } catch (error: unknown) {
         setError(error instanceof Error ? error.message : "Failed to load settings")
       } finally {
@@ -233,6 +248,28 @@ export default function SettingsPage({
       setError(error instanceof Error ? error.message : "Failed to delete venue")
       setIsDeleting(false)
     }
+  }
+
+  async function handleAddEntry(data: {
+    day: number; startHour: number; startMin: number;
+    endHour: number | null; endMin: number | null;
+    crossesMidnight: boolean; interval: string;
+    weekOfMonth: number | null; commencing: string | null; label: string | null
+  }) {
+    const res = await fetch(`/api/venues/${venueId}/schedule`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(data),
+    })
+    if (!res.ok) throw new Error("Failed to save")
+    const created: ScheduleEntry = await res.json()
+    setScheduleEntries(prev => [...prev, created])
+  }
+
+  async function handleDeleteEntry(id: string) {
+    const res = await fetch(`/api/venues/${venueId}/schedule/${id}`, { method: "DELETE" })
+    if (!res.ok) throw new Error("Failed to delete")
+    setScheduleEntries(prev => prev.filter(e => e.id !== id))
   }
 
   if (!slug) {
@@ -361,6 +398,65 @@ export default function SettingsPage({
               </div>
             </section>
 
+            {/* ── Opening Schedule ── */}
+            <section className="panel">
+              <div className="ph">
+                <span className="pt">
+                  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="w-4 h-4">
+                    <circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/>
+                  </svg>
+                  Opening Schedule
+                </span>
+              </div>
+
+              <div className="px-5 py-4 space-y-3">
+                <p className="text-[0.82rem] text-[var(--fg-faint)]">
+                  Set your regular opening days and times. All times in Server Time (ST = UTC).
+                </p>
+
+                {scheduleLoaded && scheduleEntries.length > 0 && (
+                  <div className="divide-y divide-[var(--blue-008)] rounded-[var(--radius-md)] border border-[var(--blue-015)] overflow-hidden">
+                    {scheduleEntries.map(entry => (
+                      <div key={entry.id} className="flex items-center justify-between px-4 py-3 bg-[var(--blue-005)]">
+                        <div>
+                          <span className="font-medium text-sm">{DAY_NAMES[entry.day]}</span>
+                          <span className="text-[var(--fg-faint)] text-sm ml-2">{formatEntryTime(entry)}</span>
+                          {entry.interval !== "WEEKLY" && (
+                            <span className="ml-2 text-[0.72rem] text-[var(--xiv-blue)]">{formatIntervalLabel(entry)}</span>
+                          )}
+                          {entry.label && (
+                            <span className="ml-2 text-[0.72rem] text-[var(--fg-faint)]">{entry.label}</span>
+                          )}
+                        </div>
+                        <button
+                          type="button"
+                          onClick={() => handleDeleteEntry(entry.id)}
+                          className="text-[var(--fg-faint)] hover:text-red-400 transition-colors p-1"
+                          aria-label="Remove entry"
+                        >
+                          <Trash2 className="w-4 h-4" />
+                        </button>
+                      </div>
+                    ))}
+                  </div>
+                )}
+
+                <button
+                  type="button"
+                  onClick={() => setShowAddEntry(true)}
+                  className="flex items-center gap-2 text-[0.85rem] text-[var(--xiv-blue)] hover:opacity-80 transition-opacity"
+                >
+                  <Plus className="w-4 h-4" /> Add opening time
+                </button>
+              </div>
+
+              <ScheduleEntryForm
+                open={showAddEntry}
+                onClose={() => setShowAddEntry(false)}
+                onSave={handleAddEntry}
+              />
+            </section>
+
             {/* ── Location & hours ── */}
             <section className="panel">
               <div className="ph"><span className="pt"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>Location &amp; hours</span></div>
@@ -382,6 +478,9 @@ export default function SettingsPage({
                   </div>
                 </div>
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                  <p className="col-span-full text-[0.72rem] text-[var(--fg-faint)] mb-2">
+                    Legacy free-text hours — use the schedule section above instead.
+                  </p>
                   <div className="space-y-1.5">
                     <Label htmlFor="default-hours">Default hours (ST)</Label>
                     <Input id="default-hours" placeholder="e.g. 10PM–2AM"
