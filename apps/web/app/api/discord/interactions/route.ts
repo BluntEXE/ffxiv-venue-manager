@@ -32,8 +32,12 @@ export async function POST(req: NextRequest) {
   // Button interaction
   if (interaction.type === 3) {
     const customId: string = interaction.data.custom_id
-    const discordUserId: string = interaction.member?.user?.id ?? interaction.user?.id
-    const discordUsername: string = interaction.member?.user?.username ?? interaction.user?.username
+    const discordUserId: string | undefined = interaction.member?.user?.id ?? interaction.user?.id
+    const discordUsername: string | undefined = interaction.member?.user?.username ?? interaction.user?.username
+
+    if (!discordUserId) {
+      return NextResponse.json({ type: 4, data: { content: "Could not identify your Discord account.", flags: 64 } })
+    }
 
     let result: { content: string }
 
