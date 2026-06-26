@@ -1,4 +1,5 @@
 import type { FfxivVenueData } from "@/lib/ffxivvenues"
+import { ServerTime } from "@/components/server-time"
 
 const DAY_NAMES = ["Sunday","Monday","Tuesday","Wednesday","Thursday","Friday","Saturday"]
 
@@ -24,11 +25,6 @@ export function FfxivvenuesScheduleDisplay({ data, syncedAt }: Props) {
     if (!byDay.has(d)) byDay.set(d, [])
     byDay.get(d)!.push(entry)
   }
-
-  const syncedDate = new Date(syncedAt)
-  const syncLabel = syncedDate.toLocaleDateString("en-GB", {
-    day: "numeric", month: "short", hour: "2-digit", minute: "2-digit", timeZone: "UTC"
-  }) + " ST"
 
   return (
     <div className="dcard">
@@ -80,7 +76,7 @@ export function FfxivvenuesScheduleDisplay({ data, syncedAt }: Props) {
         >
           Schedule via ffxivvenues.com →
         </a>
-        <span className="text-[0.7rem] text-[var(--fg-faint)]">Synced {syncLabel}</span>
+        <span className="text-[0.7rem] text-[var(--fg-faint)]">Synced <ServerTime date={syncedAt} formatStr="datetime" /> ST</span>
       </div>
     </div>
   )
