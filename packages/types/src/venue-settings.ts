@@ -36,6 +36,27 @@ export interface WebhookSettings {
 }
 
 /**
+ * A single shift template defining one shift type for an event night.
+ * startOffsetHours is relative to the Partake event start time.
+ */
+export interface ShiftTemplate {
+  name: string              // e.g. "Early Shift"
+  startOffsetHours: number  // 0 = same as event start
+  durationHours: number     // e.g. 4
+  slots: number             // max staff for this shift
+}
+
+/**
+ * Shift bot configuration — controls Discord pre-event shift signup posts
+ */
+export interface ShiftBotSettings {
+  enabled: boolean
+  channelId: string         // Discord channel ID to post embeds in
+  daysBeforeEvent: number   // how many days before to post (default 3)
+  templates: ShiftTemplate[] // empty = one shift matching full event duration
+}
+
+/**
  * Task visibility settings
  * Controls what tasks staff members can see
  */
@@ -91,6 +112,8 @@ export interface VenueSettings {
   }
   /** Web notification preferences (key = notification type, value = enabled) */
   notifications?: Record<string, boolean>
+  /** Discord shift bot configuration */
+  shiftBot?: ShiftBotSettings
 }
 
 /**
