@@ -39,6 +39,7 @@ import {
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog"
 import { PageLoading } from "@/components/ui/loading-spinner"
+import { ServerTime } from "@/components/server-time"
 import type { VenueSettings } from "@xiv-venue-manager/types"
 import { ScheduleEntryForm } from "@/components/schedule-entry-form"
 import type { ScheduleEntry } from "@/lib/schedule-utils"
@@ -688,7 +689,7 @@ export default function SettingsPage({
                     <p className="text-[0.82rem] text-[var(--fg-faint)]">
                       Schedule synced from your ffxivvenues.com listing every 2 hours.
                       {ffxivVenueSyncedAt && (
-                        <> Last synced: {new Date(ffxivVenueSyncedAt).toLocaleString("en-GB", { timeZone: "UTC" })} ST</>
+                        <> Last synced: <ServerTime date={ffxivVenueSyncedAt} /> ST</>
                       )}
                     </p>
                     <div className="flex gap-2">
