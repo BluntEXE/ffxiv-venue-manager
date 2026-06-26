@@ -467,7 +467,9 @@ export default async function Home() {
               className="group rounded-xl border border-[var(--blue-018)] bg-[var(--card)] p-7 flex flex-col gap-5 transition-all duration-[250ms] hover:border-[rgba(0,180,255,0.45)] hover:shadow-[0_0_20px_rgba(0,180,255,0.07),inset_0_1px_0_rgba(0,180,255,0.12)] hover:-translate-y-0.5 xiv-scroll-reveal"
             >
               <div className="flex flex-col gap-2">
-                <Image src="/partners/ffxivvenues-logo-0.webp" alt="FFXIV Venues" width={180} height={36} className="object-contain" />
+                <div className="bg-[#111] rounded-lg px-3 py-2 inline-flex w-fit">
+                  <Image src="/partners/ffxivvenues-logo-0.webp" alt="FFXIV Venues" width={180} height={36} className="object-contain" />
+                </div>
                 <p className="text-[0.78rem] text-[var(--xiv-blue)]">Venue directory for FFXIV</p>
               </div>
               <p className="text-[0.88rem] text-muted-foreground leading-[1.6]">
