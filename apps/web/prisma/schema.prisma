@@ -172,6 +172,11 @@ model Venue {
   // Partake Integration
   partakeTeamId Int?
 
+  // ffxivvenues.com Integration
+  ffxivVenueId       String?   @unique
+  ffxivVenueLinkedAt DateTime?
+  ffxivVenueLinkedBy String?
+
   // Discord Integration (deprecated - kept for migration)
   discordWebhookUrl String?
   discordServerId   String?
@@ -197,6 +202,7 @@ model Venue {
   apiKeys        ApiKey[]
   follows         VenueFollow[]
   scheduleEntries VenueScheduleEntry[]
+  venueSchedule   VenueSchedule?
 
   @@map("venues")
 }
@@ -221,6 +227,18 @@ model VenueScheduleEntry {
 
   @@index([venueId])
   @@map("venue_schedule_entries")
+}
+
+model VenueSchedule {
+  id       String   @id @default(cuid())
+  venueId  String   @unique
+  source   String
+  data     Json
+  syncedAt DateTime @updatedAt
+
+  venue Venue @relation(fields: [venueId], references: [id], onDelete: Cascade)
+
+  @@map("venue_schedules")
 }
 
 // ============================================
