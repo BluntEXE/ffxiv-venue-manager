@@ -51,6 +51,6 @@ export async function proxy(req: NextRequest) {
 
 export const config = {
   matcher: [
-    "/((?!api/auth|api/cron|api/plugin|api/stats|api/homepage|api/diag|_next/static|_next/image|favicon.ico|.*\\.png|.*\\.jpg|.*\\.svg|.*\\.webp).*)",
+    "/((?!api/auth|api/cron|api/plugin|api/discord|api/stats|api/homepage|api/diag|_next/static|_next/image|favicon.ico|.*\\.png|.*\\.jpg|.*\\.svg|.*\\.webp).*)",
   ],
 }
