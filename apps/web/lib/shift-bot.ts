@@ -7,18 +7,11 @@ import type { Prisma } from "@/generated/prisma/client"
 const asJsonArray = (v: unknown[]): Prisma.InputJsonArray => v as unknown as Prisma.InputJsonArray
 
 const XIV_BLUE = 0x00b4ff
-const FOOTER_ICON = "https://xivvenuemanager.com/xiv-icon.png"
 
 interface WaitlistEntry {
   discordUserId: string
   discordUsername: string
   signedUpAt: string
-}
-
-function slotFillBar(filled: number, total: number): string {
-  const barLength = Math.min(total, 10)
-  const filledBlocks = Math.round((filled / total) * barLength)
-  return "▓".repeat(filledBlocks) + "░".repeat(barLength - filledBlocks)
 }
 
 /**
@@ -51,11 +44,9 @@ export function buildShiftEmbed(
     ? embed.waitlist.map((w, i) => `${i + 1}. ${w.discordUsername}`).join("\n")
     : null
 
-  const slotBar = `${slotFillBar(acceptedCount, embed.slots)}  ${acceptedCount} / ${embed.slots}`
-
   const fields: object[] = [
-    { name: "Time", value: `<t:${startTs}:t> – <t:${endTs}:t> (<t:${startTs}:R>)`, inline: false },
-    { name: slotBar, value: acceptedField, inline: true },
+    { name: "Time", value: `<t:${startTs}:F> – <t:${endTs}:t> (<t:${startTs}:R>)`, inline: false },
+    { name: `Accepted (${acceptedCount}/${embed.slots})`, value: acceptedField, inline: true },
   ]
 
   if (waitlistField) {
@@ -74,7 +65,7 @@ export function buildShiftEmbed(
     description: `Shift signup · ${embed.eventTitle}`,
     color: XIV_BLUE,
     fields,
-    footer: { text: "XIV Venue Manager", icon_url: FOOTER_ICON },
+    footer: { text: "XIV Venue Manager" },
     timestamp: embed.scheduledStart.toISOString(),
   }
 
