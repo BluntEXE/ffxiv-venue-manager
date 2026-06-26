@@ -51,6 +51,18 @@ const updateSettingsSchema = z.object({
     wordOfMouth:z.number().min(0).max(100).optional(),
     other:      z.number().min(0).max(100).optional(),
   }).optional(),
+  // Discord Shift Bot
+  shiftBot: z.object({
+    enabled: z.boolean(),
+    channelId: z.string().max(20),
+    daysBeforeEvent: z.number().int().min(1).max(14).optional(),
+    templates: z.array(z.object({
+      name: z.string().max(100),
+      startOffsetHours: z.number().min(0).max(23),
+      durationHours: z.number().min(1).max(24),
+      slots: z.number().int().min(1).max(100),
+    })).max(10),
+  }).optional(),
 })
 
 export const GET = withRateLimit<{ params: Promise<{ venueId: string }> }>(
