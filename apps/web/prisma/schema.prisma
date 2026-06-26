@@ -210,10 +210,12 @@ model VenueScheduleEntry {
   endHour         Int?      // null = no fixed end time
   endMin          Int?
   crossesMidnight Boolean   @default(false) // end time is next calendar day
-  interval        String    @default("weekly") // "weekly"|"biweekly"|"monthly"
+  interval        ScheduleInterval @default(WEEKLY)
   weekOfMonth     Int?      // monthly only: 1=first 2=second 3=third 4=fourth 5=last
   commencing      DateTime? // biweekly only: anchor date to determine which weeks
   label           String?   // optional e.g. "DJ Night"
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
 
   venue Venue @relation(fields: [venueId], references: [id], onDelete: Cascade)
 
@@ -224,6 +226,12 @@ model VenueScheduleEntry {
 // ============================================
 // MEMBERSHIPS & ROLES
 // ============================================
+
+enum ScheduleInterval {
+  WEEKLY
+  BIWEEKLY
+  MONTHLY
+}
 
 enum MembershipRole {
   OWNER
