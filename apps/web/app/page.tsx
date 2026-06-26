@@ -467,8 +467,8 @@ export default async function Home() {
               className="group rounded-xl border border-[var(--blue-018)] bg-[var(--card)] p-7 flex flex-col gap-5 transition-all duration-[250ms] hover:border-[rgba(0,180,255,0.45)] hover:shadow-[0_0_20px_rgba(0,180,255,0.07),inset_0_1px_0_rgba(0,180,255,0.12)] hover:-translate-y-0.5 xiv-scroll-reveal"
             >
               <div className="flex items-center gap-4">
-                <div className="w-14 h-14 rounded-xl flex-shrink-0 bg-[#111] flex items-center justify-center p-2">
-                  <Image src="/partners/ffxivvenues-logo-0.webp" alt="FFXIV Venues" width={48} height={48} className="object-contain" />
+                <div className="w-14 h-14 rounded-xl overflow-hidden flex-shrink-0 bg-black flex items-center justify-center">
+                  <Image src="/partners/ffxivvenues-logo.png" alt="FFXIV Venues" width={56} height={56} className="object-contain" />
                 </div>
                 <div>
                   <p className="font-[var(--font-outfit)] font-semibold text-[1.1rem]">ffxivvenues.com</p>
