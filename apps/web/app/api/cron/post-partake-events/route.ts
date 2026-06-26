@@ -2,6 +2,7 @@ import { NextResponse } from "next/server"
 import { prisma } from "@/lib/prisma"
 import { verifyCronAuth } from "@/lib/cron-auth"
 import { fetchPartakeEvents } from "@/lib/partake"
+import { cancelShiftEmbedsForEvent } from "@/lib/shift-bot"
 import {
   formatPartakeEventPayload,
   formatPartakeEventReminderPayload,
@@ -105,6 +106,7 @@ export async function GET(request: Request) {
               where: { id: ev.id },
               data: { discordCancelledAt: now, status: "CANCELLED" },
             })
+            await cancelShiftEmbedsForEvent(ev.id)
             stats.cancelled++
             venueStats.cancelled++
           } else {
