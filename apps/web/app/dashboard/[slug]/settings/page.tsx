@@ -684,122 +684,29 @@ export default function SettingsPage({
                 </div>
                 <span className="status open"><span className="dot" />Connected</span>
               </div>
-            </section>
 
-            {/* ── ffxivvenues.com Integration ── */}
-            <section className="panel">
-              <div className="ph">
-                <span className="pt">
-                  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="w-4 h-4">
-                    <path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/>
-                    <path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/>
-                  </svg>
-                  ffxivvenues.com
-                </span>
-                {ffxivVenueId && (
-                  <span className="text-[0.72rem] text-emerald-400 ml-2">✓ Linked</span>
-                )}
-              </div>
-
-              <div className="px-5 py-4 space-y-3">
-                {ffxivVenueId ? (
-                  <>
-                    <p className="text-[0.82rem] text-[var(--fg-faint)]">
-                      Schedule synced from your ffxivvenues.com listing every 2 hours.
-                      {ffxivVenueSyncedAt && (
-                        <> Last synced: <ServerTime date={ffxivVenueSyncedAt} /> ST</>
-                      )}
-                    </p>
-                    <div className="flex gap-2">
-                      <button type="button" onClick={handleFfxivSyncNow} disabled={ffxivSyncing}
-                        className="text-[0.82rem] text-[var(--xiv-blue)] hover:opacity-80 transition-opacity disabled:opacity-40">
-                        {ffxivSyncing ? "Syncing…" : "Sync now"}
-                      </button>
-                      <span className="text-[var(--fg-faint)]">·</span>
-                      <button type="button" onClick={handleFfxivUnlink} disabled={ffxivUnlinking}
-                        className="text-[0.82rem] text-red-400 hover:opacity-80 transition-opacity disabled:opacity-40">
-                        {ffxivUnlinking ? "Unlinking…" : "Unlink"}
-                      </button>
-                    </div>
-                  </>
-                ) : ffxivPreview ? (
-                  <>
-                    <p className="text-[0.82rem]">
-                      Linking to: <span className="font-medium text-[var(--xiv-blue)]">{ffxivPreview.name}</span>
-                    </p>
-                    <div className="flex gap-2">
-                      <button type="button" onClick={handleFfxivLink} disabled={ffxivPreviewLoading}
-                        className="xiv-btn-shimmer px-3 py-1.5 text-[0.82rem] rounded-[var(--radius-sm)]">
-                        {ffxivPreviewLoading ? "Linking…" : "Confirm link"}
-                      </button>
-                      <button type="button" onClick={() => { setFfxivPreview(null); setFfxivPreviewError(null) }}
-                        className="px-3 py-1.5 text-[0.82rem] text-[var(--fg-faint)] hover:opacity-80">
-                        Cancel
-                      </button>
-                    </div>
-                  </>
-                ) : (
-                  <>
-                    <p className="text-[0.82rem] text-[var(--fg-faint)]">
-                      Link your ffxivvenues.com listing to sync your schedule automatically.
-                    </p>
-                    <div className="flex gap-2">
-                      <input
-                        type="text"
-                        placeholder="ffxivvenues.com venue ID"
-                        value={ffxivInput}
-                        onChange={e => setFfxivInput(e.target.value)}
-                        onKeyDown={e => e.key === "Enter" && handleFfxivPreview()}
-                        className="flex-1 rounded-[var(--radius-sm)] border border-[var(--blue-015)] bg-background px-3 py-1.5 text-sm focus:border-[var(--blue-035)] focus:outline-none"
-                      />
-                      <button type="button" onClick={handleFfxivPreview}
-                        disabled={ffxivPreviewLoading || !ffxivInput.trim()}
-                        className="xiv-btn-shimmer px-3 py-1.5 text-[0.82rem] rounded-[var(--radius-sm)] disabled:opacity-40">
-                        {ffxivPreviewLoading ? "Looking up…" : "Look up"}
-                      </button>
-                    </div>
-                    {ffxivPreviewError && <p className="text-[0.78rem] text-red-400">{ffxivPreviewError}</p>}
-                    <p className="text-[0.72rem] text-[var(--fg-faint)]">
-                      Find your venue ID at{" "}
-                      <a href="https://ffxivvenues.com" target="_blank" rel="noopener noreferrer" className="text-[var(--xiv-blue)]">
-                        ffxivvenues.com
-                      </a>
-                      {" "}— it appears in your listing URL.
-                    </p>
-                  </>
-                )}
-              </div>
-            </section>
-
-            {/* ── Discord Shift Bot ── */}
-            <section className="panel">
-              <div className="ph">
-                <span className="pt">
-                  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="w-4 h-4">
+              {/* Discord Shift Bot */}
+              <div className="introw" style={{ flexWrap: "wrap", gap: 14 }}>
+                <span className="iconbadge ii" style={{ width: 40, height: 40 }}>
+                  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
                     <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/>
                   </svg>
-                  Discord Shift Bot
                 </span>
-              </div>
-
-              <div className="px-5 py-4 space-y-4">
-                <div className="flex items-center justify-between">
-                  <p className="text-[0.82rem] text-[var(--fg-faint)]">
-                    Automatically post shift signup embeds to Discord before each event.
-                  </p>
-                  <label className="flex items-center gap-2 cursor-pointer shrink-0 ml-4">
-                    <input
-                      type="checkbox"
-                      checked={shiftBotEnabled}
-                      onChange={(e) => setShiftBotEnabled(e.target.checked)}
-                      className="rounded"
-                    />
-                    <span className="text-sm">Enabled</span>
-                  </label>
+                <div className="iinfo">
+                  <div className="iname">Discord Shift Bot</div>
+                  <div className="idesc">Post shift signup embeds before each event</div>
                 </div>
-
+                <label className="flex items-center gap-2 cursor-pointer ml-auto shrink-0">
+                  <input
+                    type="checkbox"
+                    checked={shiftBotEnabled}
+                    onChange={(e) => setShiftBotEnabled(e.target.checked)}
+                    className="rounded"
+                  />
+                  <span className="text-sm">{shiftBotEnabled ? "Enabled" : "Disabled"}</span>
+                </label>
                 {shiftBotEnabled && (
-                  <div className="space-y-4">
+                  <div className="w-full pl-[54px] space-y-4">
                     <div>
                       <label className="block text-sm font-medium mb-1">Discord Channel ID</label>
                       <input
@@ -907,6 +814,91 @@ export default function SettingsPage({
                       </div>
                     </div>
                   </div>
+                )}
+              </div>
+            </section>
+
+            {/* ── ffxivvenues.com Integration ── */}
+            <section className="panel">
+              <div className="ph">
+                <span className="pt">
+                  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="w-4 h-4">
+                    <path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/>
+                    <path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/>
+                  </svg>
+                  ffxivvenues.com
+                </span>
+                {ffxivVenueId && (
+                  <span className="text-[0.72rem] text-emerald-400 ml-2">✓ Linked</span>
+                )}
+              </div>
+
+              <div className="px-5 py-4 space-y-3">
+                {ffxivVenueId ? (
+                  <>
+                    <p className="text-[0.82rem] text-[var(--fg-faint)]">
+                      Schedule synced from your ffxivvenues.com listing every 2 hours.
+                      {ffxivVenueSyncedAt && (
+                        <> Last synced: <ServerTime date={ffxivVenueSyncedAt} /> ST</>
+                      )}
+                    </p>
+                    <div className="flex gap-2">
+                      <button type="button" onClick={handleFfxivSyncNow} disabled={ffxivSyncing}
+                        className="text-[0.82rem] text-[var(--xiv-blue)] hover:opacity-80 transition-opacity disabled:opacity-40">
+                        {ffxivSyncing ? "Syncing…" : "Sync now"}
+                      </button>
+                      <span className="text-[var(--fg-faint)]">·</span>
+                      <button type="button" onClick={handleFfxivUnlink} disabled={ffxivUnlinking}
+                        className="text-[0.82rem] text-red-400 hover:opacity-80 transition-opacity disabled:opacity-40">
+                        {ffxivUnlinking ? "Unlinking…" : "Unlink"}
+                      </button>
+                    </div>
+                  </>
+                ) : ffxivPreview ? (
+                  <>
+                    <p className="text-[0.82rem]">
+                      Linking to: <span className="font-medium text-[var(--xiv-blue)]">{ffxivPreview.name}</span>
+                    </p>
+                    <div className="flex gap-2">
+                      <button type="button" onClick={handleFfxivLink} disabled={ffxivPreviewLoading}
+                        className="xiv-btn-shimmer px-3 py-1.5 text-[0.82rem] rounded-[var(--radius-sm)]">
+                        {ffxivPreviewLoading ? "Linking…" : "Confirm link"}
+                      </button>
+                      <button type="button" onClick={() => { setFfxivPreview(null); setFfxivPreviewError(null) }}
+                        className="px-3 py-1.5 text-[0.82rem] text-[var(--fg-faint)] hover:opacity-80">
+                        Cancel
+                      </button>
+                    </div>
+                  </>
+                ) : (
+                  <>
+                    <p className="text-[0.82rem] text-[var(--fg-faint)]">
+                      Link your ffxivvenues.com listing to sync your schedule automatically.
+                    </p>
+                    <div className="flex gap-2">
+                      <input
+                        type="text"
+                        placeholder="ffxivvenues.com venue ID"
+                        value={ffxivInput}
+                        onChange={e => setFfxivInput(e.target.value)}
+                        onKeyDown={e => e.key === "Enter" && handleFfxivPreview()}
+                        className="flex-1 rounded-[var(--radius-sm)] border border-[var(--blue-015)] bg-background px-3 py-1.5 text-sm focus:border-[var(--blue-035)] focus:outline-none"
+                      />
+                      <button type="button" onClick={handleFfxivPreview}
+                        disabled={ffxivPreviewLoading || !ffxivInput.trim()}
+                        className="xiv-btn-shimmer px-3 py-1.5 text-[0.82rem] rounded-[var(--radius-sm)] disabled:opacity-40">
+                        {ffxivPreviewLoading ? "Looking up…" : "Look up"}
+                      </button>
+                    </div>
+                    {ffxivPreviewError && <p className="text-[0.78rem] text-red-400">{ffxivPreviewError}</p>}
+                    <p className="text-[0.72rem] text-[var(--fg-faint)]">
+                      Find your venue ID at{" "}
+                      <a href="https://ffxivvenues.com" target="_blank" rel="noopener noreferrer" className="text-[var(--xiv-blue)]">
+                        ffxivvenues.com
+                      </a>
+                      {" "}— it appears in your listing URL.
+                    </p>
+                  </>
                 )}
               </div>
             </section>
