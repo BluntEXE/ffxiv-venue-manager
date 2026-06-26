@@ -65,7 +65,7 @@ export function ScheduleEntryForm({ open, onClose, onSave, initial, title = "Add
   function setStart(val: string) {
     const [h, m] = parseTime(val)
     const endH = form.endHour
-    const crosses = endH != null && (h > endH || (h === endH && form.startMin > (form.endMin ?? 0)))
+    const crosses = endH != null && (h > endH || (h === endH && m > (form.endMin ?? 0)))
     setForm(f => ({ ...f, startHour: h, startMin: m, crossesMidnight: crosses }))
   }
 
