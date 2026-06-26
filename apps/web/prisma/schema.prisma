@@ -820,7 +820,7 @@ model ShiftSignupEmbed {
   venueId          String
   eventId          String
   templateName     String
-  discordMessageId String
+  discordMessageId String @unique
   channelId        String
   scheduledStart   DateTime
   scheduledEnd     DateTime
