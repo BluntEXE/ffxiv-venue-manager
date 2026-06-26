@@ -65,7 +65,7 @@ export function buildShiftEmbed(
     description: `Shift signup · ${embed.eventTitle}`,
     color: XIV_BLUE,
     fields,
-    footer: { text: "XIV Venue Manager" },
+    footer: { text: "Sent via XIV Venue Manager" },
   }
 
   if (embed.thumbnailUrl) {
