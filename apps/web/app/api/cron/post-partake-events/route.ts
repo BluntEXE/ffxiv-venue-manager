@@ -106,7 +106,12 @@ export async function GET(request: Request) {
               where: { id: ev.id },
               data: { discordCancelledAt: now, status: "CANCELLED" },
             })
-            await cancelShiftEmbedsForEvent(ev.id)
+            try {
+              await cancelShiftEmbedsForEvent(ev.id)
+            } catch (err) {
+              console.error(`[Partake Post] Failed to cancel shift embeds for event ${ev.id}:`, err)
+              stats.errors++
+            }
             stats.cancelled++
             venueStats.cancelled++
           } else {
