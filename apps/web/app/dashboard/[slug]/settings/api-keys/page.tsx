@@ -53,6 +53,7 @@ export default function ApiKeysPage({
   const [notOwner, setNotOwner] = useState(false)
   const [apiKeys, setApiKeys] = useState<ApiKey[]>([])
   const [newKeyName, setNewKeyName] = useState("")
+  const [keyScope, setKeyScope] = useState<"account" | "venue">("account")
   const [isLoading, setIsLoading] = useState(true)
   const [isCreating, setIsCreating] = useState(false)
   const [showKey, setShowKey] = useState<string | null>(null)
@@ -120,9 +121,9 @@ export default function ApiKeysPage({
     }
   }
 
-  // Only show keys that belong to the venue this page is scoped to.
+  // Show account-wide keys + keys scoped to this venue.
   const venueKeys = useMemo(
-    () => apiKeys.filter((k) => k.venue?.slug === slug),
+    () => apiKeys.filter((k) => !k.venue || k.venue.slug === slug),
     [apiKeys, slug]
   )
 
@@ -141,7 +142,10 @@ export default function ApiKeysPage({
       const res = await fetch("/api/plugin/keys", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ venueId: currentVenue.id, name: newKeyName.trim() }),
+        body: JSON.stringify({
+          name: newKeyName.trim(),
+          ...(keyScope === "venue" ? { venueId: currentVenue.id } : {}),
+        }),
       })
 
       const data = await res.json()
@@ -261,7 +265,26 @@ export default function ApiKeysPage({
                 A label to help you remember where this key is installed.
               </p>
             </div>
-            <Button onClick={createApiKey} disabled={isCreating}>
+            <div className="space-y-1.5 shrink-0">
+              <Label>Scope</Label>
+              <div className="flex rounded-lg border border-[var(--blue-015)] overflow-hidden text-sm">
+                <button
+                  type="button"
+                  onClick={() => setKeyScope("account")}
+                  className={`px-3 py-1.5 transition-colors ${keyScope === "account" ? "bg-[var(--xiv-blue)] text-[var(--xiv-navy)] font-semibold" : "text-muted-foreground hover:bg-[var(--blue-007)]"}`}
+                >
+                  Account wide
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setKeyScope("venue")}
+                  className={`px-3 py-1.5 transition-colors border-l border-[var(--blue-015)] ${keyScope === "venue" ? "bg-[var(--xiv-blue)] text-[var(--xiv-navy)] font-semibold" : "text-muted-foreground hover:bg-[var(--blue-007)]"}`}
+                >
+                  This venue only
+                </button>
+              </div>
+            </div>
+            <Button onClick={createApiKey} disabled={isCreating} className="shrink-0">
               {isCreating ? "Creating..." : "Generate Key"}
             </Button>
           </div>
@@ -420,13 +443,15 @@ export default function ApiKeysPage({
                     <div className="text-sm text-muted-foreground font-mono">
                       {key.key}
                     </div>
-                    <div className="text-xs text-muted-foreground mt-1">
-                      Created:{" "}
-                      {new Date(key.createdAt).toLocaleDateString()}
-                      {key.lastUsedAt &&
-                        ` • Last used: ${new Date(
-                          key.lastUsedAt
-                        ).toLocaleDateString()}`}
+                    <div className="text-xs text-muted-foreground mt-1 flex flex-wrap gap-x-2 items-center">
+                      <span className={`inline-flex items-center gap-1 font-medium ${key.venue ? "text-[var(--fg-subtle)]" : "text-[var(--xiv-blue)]"}`}>
+                        {key.venue ? `Venue: ${key.venue.name}` : "Account wide"}
+                      </span>
+                      <span>·</span>
+                      <span>Created: {new Date(key.createdAt).toLocaleDateString()}</span>
+                      {key.lastUsedAt && (
+                        <><span>·</span><span>Last used: {new Date(key.lastUsedAt).toLocaleDateString()}</span></>
+                      )}
                     </div>
                   </div>
                   <div className="flex items-center gap-2">

@@ -80,7 +80,7 @@ export default function SettingsPage({
   // Venue profile DB fields (saved separately)
   const [venueName, setVenueName] = useState("")
   const [venueDescription, setVenueDescription] = useState("")
-  const [venueDistrict, setVenueDistrict] = useState<string>("")
+  const [venueDistrict, setVenueDistrict] = useState<string>("__none__")
   const [venueWard, setVenueWard] = useState<string>("")
   const [venuePlot, setVenuePlot] = useState<string>("")
   const [venueDataCenter, setVenueDataCenter] = useState("")
@@ -145,7 +145,7 @@ export default function SettingsPage({
         setVenueId(venue.id)
         setVenueName(venue.name ?? "")
         setVenueDescription(venue.description ?? "")
-        setVenueDistrict(venue.district ?? "")
+        setVenueDistrict(venue.district ?? "__none__")
         setVenueWard(venue.ward != null ? String(venue.ward) : "")
         setVenuePlot(venue.plot != null ? String(venue.plot) : "")
         setVenueDataCenter(venue.dataCenter ?? "")
@@ -225,7 +225,7 @@ export default function SettingsPage({
         body: JSON.stringify({
           name: venueName.trim() || undefined,
           description: venueDescription || null,
-          district: venueDistrict || null,
+          district: (venueDistrict && venueDistrict !== "__none__") ? venueDistrict : null,
           ward: venueWard ? parseInt(venueWard, 10) : null,
           plot: venuePlot ? parseInt(venuePlot, 10) : null,
         }),
@@ -598,7 +598,7 @@ export default function SettingsPage({
                         <SelectValue placeholder="Select…" />
                       </SelectTrigger>
                       <SelectContent>
-                        <SelectItem value="">— None —</SelectItem>
+                        <SelectItem value="__none__">— None —</SelectItem>
                         {FFXIV_DISTRICTS.map(d => (
                           <SelectItem key={d} value={d}>{d}</SelectItem>
                         ))}
