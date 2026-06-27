@@ -5,6 +5,7 @@ import Link from "next/link"
 import { Button } from "@/components/ui/button"
 import { prisma } from "@/lib/prisma"
 import { Building2, Users, ChevronRight, Plus } from "lucide-react"
+import { AnnouncementBanner } from "@/components/announcement-banner"
 
 const roleColors: Record<string, string> = {
   OWNER: "bg-emerald-500/15 text-emerald-400 border-emerald-500/30",
@@ -18,6 +19,16 @@ export default async function DashboardPage() {
   if (!session?.user) {
     redirect("/auth/signin")
   }
+
+  const now = new Date()
+  const announcements = await prisma.announcement.findMany({
+    where: {
+      OR: [{ expiresAt: null }, { expiresAt: { gt: now } }],
+      dismissals: { none: { userId: session.user.id } },
+    },
+    select: { id: true, title: true, message: true, link: true, linkLabel: true },
+    orderBy: { createdAt: "desc" },
+  })
 
   const venues = await prisma.venue.findMany({
     where: {
@@ -38,6 +49,7 @@ export default async function DashboardPage() {
 
   return (
     <div className="page-inner">
+      <AnnouncementBanner announcements={announcements} />
       <div className="flex flex-col sm:flex-row sm:justify-between sm:items-start gap-4 mb-8">
         <div>
           <h1 className="page-h1">Dashboard</h1>

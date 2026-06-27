@@ -194,7 +194,7 @@ export default async function LivePage({
               arrivedAt: p.loggedAt.toISOString(),
             }))}
             onShiftStaff={activeShifts.map(s => ({
-              name: s.membership?.user?.name ?? s.membership?.invitedName ?? "Staff",
+              name: s.membership?.nickname ?? s.membership?.user?.name ?? s.membership?.invitedName ?? "Staff",
               role: s.membership?.role ?? "STAFF",
             }))}
           />

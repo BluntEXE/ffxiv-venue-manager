@@ -159,7 +159,9 @@ export default async function StaffPage({
               .map(ar => ({ name: ar.role.name, color: ar.role.color ?? "#9399b2" })),
             joinedAt: m.createdAt.toISOString(),
             isOnShift: onShiftIds.has(m.id),
+            nickname: m.nickname ?? null,
             user: m.user ? { id: m.user.id, name: m.user.name, image: m.user.image } : null,
+            venueId: venue.id,
           }))}
           slug={slug}
           canManage={canManageStaff}

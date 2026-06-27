@@ -11,6 +11,7 @@ const updateStaffSchema = z.object({
   status: z.string().optional(),
   invitedName: z.string().nullable().optional(),
   invitedEmail: z.string().nullable().optional(),
+  nickname: z.string().max(50).nullable().optional(),
   temporaryRole: z.enum(["OWNER", "MANAGER", "STAFF"]).nullable().optional(),
   temporaryRoleExpiresAt: z.string().nullable().optional(),
   permanentRole: z.enum(["OWNER", "MANAGER", "STAFF"]).nullable().optional(),
@@ -125,6 +126,7 @@ export const PUT = withRateLimit<{ params: Promise<{ venueId: string; membership
     if (validatedData.status !== undefined) updateData.status = validatedData.status
     if (validatedData.invitedName !== undefined) updateData.invitedName = validatedData.invitedName
     if (validatedData.invitedEmail !== undefined) updateData.invitedEmail = validatedData.invitedEmail
+    if (validatedData.nickname !== undefined) updateData.nickname = validatedData.nickname ?? null
     if (validatedData.temporaryRole !== undefined) updateData.temporaryRole = validatedData.temporaryRole
     if (validatedData.temporaryRoleExpiresAt !== undefined) {
       updateData.temporaryRoleExpiresAt = validatedData.temporaryRoleExpiresAt

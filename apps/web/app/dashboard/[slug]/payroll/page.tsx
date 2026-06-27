@@ -57,6 +57,7 @@ interface PayrollEntry {
   membership: {
     id: string
     role: string
+    nickname: string | null
     user: {
       id: string
       name: string | null
@@ -81,6 +82,7 @@ interface StaffMember {
   userId: string | null
   role: string
   hourlyRate: string | null
+  nickname: string | null
   user: {
     id: string
     name: string | null
@@ -636,7 +638,7 @@ export default function PayrollPage() {
                     <SelectContent>
                       {staff.map((member) => (
                         <SelectItem key={member.id} value={member.id}>
-                          {member.user?.displayName || member.user?.name || "Unknown"}
+                          {member.nickname ?? member.user?.displayName ?? member.user?.name ?? "Unknown"}
                           {member.hourlyRate ? ` (${member.hourlyRate} Gil/hr)` : ""}
                         </SelectItem>
                       ))}
@@ -837,7 +839,7 @@ export default function PayrollPage() {
                       <SelectContent>
                         {staff.map((member) => (
                           <SelectItem key={member.id} value={member.id}>
-                            {member.user?.displayName || member.user?.name || "Unknown"}
+                            {member.nickname ?? member.user?.displayName ?? member.user?.name ?? "Unknown"}
                           </SelectItem>
                         ))}
                       </SelectContent>
@@ -1057,7 +1059,7 @@ export default function PayrollPage() {
                 {filteredEntries.map((entry) => {
                   const name = entry.isManualEntry
                     ? entry.manualEntryName || "Unknown"
-                    : entry.membership?.user?.displayName || entry.membership?.user?.name || "Unknown"
+                    : entry.membership?.nickname ?? entry.membership?.user?.displayName ?? entry.membership?.user?.name ?? "Unknown"
                   const initials = name.charAt(0).toUpperCase()
                   const total = Math.round(parseFloat(entry.totalAmount))
                   return (

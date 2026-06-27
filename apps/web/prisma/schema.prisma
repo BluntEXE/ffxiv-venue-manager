@@ -51,6 +51,8 @@ model User {
   shoutTemplates         ShoutTemplate[]
   shiftAuditLogs         ShiftAuditLog[]
   notifications          Notification[]
+  announcementDismissals AnnouncementDismissal[]
+  announcements          Announcement[]
 
   @@map("users")
 }
@@ -273,6 +275,7 @@ model Membership {
   invitedBy       String? // User ID who created the invite
   invitedEmail    String? // Email for display purposes only (not used for auth)
   invitedName     String? // Name placeholder for invited staff
+  nickname        String? // Venue-specific display name set by managers
 
   // Compensation
   hourlyRate Decimal? @db.Decimal(10, 2) // Default hourly rate for this member at this venue
@@ -930,4 +933,36 @@ model RefreshToken {
   @@index([userId])
   @@index([tokenHash])
   @@map("refresh_tokens")
+}
+
+// ============================================
+// ANNOUNCEMENTS
+// ============================================
+
+model Announcement {
+  id        String    @id @default(cuid())
+  title     String
+  message   String
+  link      String?
+  linkLabel String?
+  expiresAt DateTime?
+  createdAt DateTime  @default(now())
+  createdBy String
+
+  author     User                    @relation(fields: [createdBy], references: [id])
+  dismissals AnnouncementDismissal[]
+
+  @@map("announcements")
+}
+
+model AnnouncementDismissal {
+  userId         String
+  announcementId String
+  dismissedAt    DateTime @default(now())
+
+  user         User         @relation(fields: [userId], references: [id], onDelete: Cascade)
+  announcement Announcement @relation(fields: [announcementId], references: [id], onDelete: Cascade)
+
+  @@id([userId, announcementId])
+  @@map("announcement_dismissals")
 }

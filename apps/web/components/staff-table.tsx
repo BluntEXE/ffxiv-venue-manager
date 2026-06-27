@@ -7,7 +7,7 @@ import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuTrigger } from "@/components/ui/dropdown-menu"
-import { ChevronDown, Check } from "lucide-react"
+import { ChevronDown, Check, Pencil, X } from "lucide-react"
 
 export type StaffMember = {
   id: string
@@ -16,7 +16,9 @@ export type StaffMember = {
   additionalRoles: { name: string; color: string }[]
   joinedAt: string
   isOnShift: boolean
+  nickname: string | null
   user: { id: string; name: string | null; image: string | null } | null
+  venueId: string
 }
 
 const ROLE_ORDER: Record<string, number> = { OWNER: 0, MANAGER: 1, STAFF: 2 }
@@ -30,7 +32,7 @@ const rolePill: Record<string, string> = {
 type Filter = "all" | "owner" | "manager" | "staff"
 
 export function StaffTable({
-  members,
+  members: initialMembers,
   slug,
   canManage,
 }: {
@@ -38,8 +40,35 @@ export function StaffTable({
   slug: string
   canManage: boolean
 }) {
+  const [members, setMembers] = useState(initialMembers)
   const [filter, setFilter] = useState<Filter>("all")
   const [search, setSearch] = useState("")
+  const [editingId, setEditingId] = useState<string | null>(null)
+  const [editValue, setEditValue] = useState("")
+  const [saving, setSaving] = useState(false)
+
+  async function saveNickname(member: StaffMember) {
+    setSaving(true)
+    const trimmed = editValue.trim() || null
+    try {
+      const res = await fetch(`/api/venues/${member.venueId}/staff/${member.id}`, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ nickname: trimmed }),
+      })
+      if (res.ok) {
+        setMembers(prev => prev.map(m => m.id === member.id ? { ...m, nickname: trimmed } : m))
+      }
+    } finally {
+      setSaving(false)
+      setEditingId(null)
+    }
+  }
+
+  function startEdit(member: StaffMember) {
+    setEditingId(member.id)
+    setEditValue(member.nickname ?? "")
+  }
 
   // Extract unique custom role names for additional filter tabs
   const customRoleNames = Array.from(
@@ -63,7 +92,8 @@ export function StaffTable({
       if (customRoleNames.includes(filter) && m.customRole?.name !== filter) return false
       if (search) {
         const q = search.toLowerCase()
-        if (!(m.user?.name ?? "").toLowerCase().includes(q) &&
+        if (!(m.nickname ?? m.user?.name ?? "").toLowerCase().includes(q) &&
+            !(m.user?.name ?? "").toLowerCase().includes(q) &&
             !(m.customRole?.name ?? "").toLowerCase().includes(q)) return false
       }
       return true
@@ -170,10 +200,64 @@ export function StaffTable({
                       <Avatar className="w-8 h-8 flex-shrink-0">
                         <AvatarImage src={member.user?.image ?? undefined} />
                         <AvatarFallback className="text-[0.65rem] font-bold bg-gradient-to-br from-[var(--xiv-blue)] to-blue-700 text-white">
-                          {member.user?.name?.slice(0, 2).toUpperCase() ?? "??"}
+                          {(member.nickname ?? member.user?.name)?.slice(0, 2).toUpperCase() ?? "??"}
                         </AvatarFallback>
                       </Avatar>
-                      <span className="text-sm font-medium">{member.user?.name ?? "Unknown"}</span>
+                      {editingId === member.id ? (
+                        <div className="flex items-center gap-1.5">
+                          <Input
+                            autoFocus
+                            value={editValue}
+                            onChange={e => setEditValue(e.target.value)}
+                            onKeyDown={e => {
+                              if (e.key === "Enter") saveNickname(member)
+                              if (e.key === "Escape") setEditingId(null)
+                            }}
+                            placeholder={member.user?.name ?? "Nickname…"}
+                            className="h-7 w-36 text-sm py-0 px-2"
+                            maxLength={50}
+                            disabled={saving}
+                          />
+                          <button
+                            onClick={() => saveNickname(member)}
+                            disabled={saving}
+                            className="text-[var(--xiv-blue)] hover:opacity-70 transition-opacity disabled:opacity-40"
+                            aria-label="Save nickname"
+                          >
+                            <Check className="w-3.5 h-3.5" />
+                          </button>
+                          <button
+                            onClick={() => setEditingId(null)}
+                            disabled={saving}
+                            className="text-[var(--fg-faint)] hover:opacity-70 transition-opacity"
+                            aria-label="Cancel"
+                          >
+                            <X className="w-3.5 h-3.5" />
+                          </button>
+                        </div>
+                      ) : (
+                        <div className="flex items-center gap-1.5 group">
+                          <div>
+                            <span className="text-sm font-medium">
+                              {member.nickname ?? member.user?.name ?? "Unknown"}
+                            </span>
+                            {member.nickname && (
+                              <p className="text-[0.65rem] text-[var(--fg-faint)] leading-tight">
+                                {member.user?.name}
+                              </p>
+                            )}
+                          </div>
+                          {canManage && (
+                            <button
+                              onClick={() => startEdit(member)}
+                              className="opacity-0 group-hover:opacity-100 transition-opacity text-[var(--fg-faint)] hover:text-[var(--xiv-blue)]"
+                              aria-label="Edit nickname"
+                            >
+                              <Pencil className="w-3 h-3" />
+                            </button>
+                          )}
+                        </div>
+                      )}
                     </div>
                   </td>
 
