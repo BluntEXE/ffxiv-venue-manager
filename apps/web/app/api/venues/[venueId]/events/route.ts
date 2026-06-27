@@ -4,6 +4,7 @@ import { authOptions } from "@/lib/auth"
 import { prisma } from "@/lib/prisma"
 import { z } from "zod"
 import { withRateLimit } from "@/lib/middleware/with-rate-limit"
+import { generateOccurrences, type RecurrenceRule } from "@/lib/recurrence"
 
 const eventSchema = z.object({
   title: z.string().min(1, "Event title is required"),
@@ -13,6 +14,7 @@ const eventSchema = z.object({
   startTime: z.string().transform((str) => new Date(str)),
   endTime: z.string().transform((str) => new Date(str)),
   timezone: z.string().default("UTC"),
+  recurrenceRule: z.enum(["WEEKLY", "BIWEEKLY", "MONTHLY"]).optional(),
 })
 
 export const POST = withRateLimit<{ params: Promise<{ venueId: string }> }>(
@@ -50,14 +52,34 @@ export const POST = withRateLimit<{ params: Promise<{ venueId: string }> }>(
 
     const body = await request.json()
     const validatedData = eventSchema.parse(body)
+    const { recurrenceRule, ...eventData } = validatedData
 
     const event = await prisma.event.create({
       data: {
-        ...validatedData,
+        ...eventData,
+        recurrenceRule: recurrenceRule ?? null,
         venueId,
         createdById: session.user.id,
       },
     })
+
+    if (recurrenceRule) {
+      const occurrences = generateOccurrences(event.startTime, event.endTime, recurrenceRule as RecurrenceRule, 8)
+      await prisma.event.createMany({
+        data: occurrences.map((o) => ({
+          title: event.title,
+          description: event.description,
+          eventType: event.eventType,
+          status: event.status,
+          timezone: event.timezone,
+          venueId,
+          createdById: session.user.id,
+          parentEventId: event.id,
+          startTime: o.startTime,
+          endTime: o.endTime,
+        })),
+      })
+    }
 
     return NextResponse.json(event, { status: 201 })
   } catch (error) {

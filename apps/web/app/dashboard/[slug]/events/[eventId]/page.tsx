@@ -8,6 +8,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Badge } from "@/components/ui/badge"
 import { prisma } from "@/lib/prisma"
 import { DeleteEventButton } from "@/components/delete-event-button"
+import { CancelSeriesButton } from "@/components/cancel-series-button"
 import { PatronTracking } from "@/components/patron-tracking"
 import { EventAttendanceChart } from "@/components/event-attendance-chart"
 import { ServerTime } from "@/components/server-time"
@@ -100,6 +101,11 @@ export default async function EventDetailsPage({
                 Partake
               </Badge>
             )}
+            {(event.recurrenceRule || event.parentEventId) && (
+              <Badge variant="outline" className="border-[rgba(0,180,255,0.25)] text-[var(--fg-subtle)]">
+                ↻ Recurring
+              </Badge>
+            )}
           </div>
           <p className="text-sm text-muted-foreground">
             {event.partakeEventId
@@ -118,6 +124,13 @@ export default async function EventDetailsPage({
                   Edit
                 </Link>
               </Button>
+              {(event.recurrenceRule || event.parentEventId) && (
+                <CancelSeriesButton
+                  venueId={venue.id}
+                  eventId={eventId}
+                  venueSlug={slug}
+                />
+              )}
               <DeleteEventButton
                 venueId={venue.id}
                 eventId={eventId}

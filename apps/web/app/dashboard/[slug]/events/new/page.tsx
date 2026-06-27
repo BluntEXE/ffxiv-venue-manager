@@ -48,6 +48,8 @@ export default function NewEventPage() {
   const [templates, setTemplates] = useState<EventTemplate[]>([])
   const [selectedTemplate, setSelectedTemplate] = useState<string>("")
   const [selectedStatus, setSelectedStatus] = useState("DRAFT")
+  const [repeating, setRepeating] = useState(false)
+  const [recurrenceRule, setRecurrenceRule] = useState("WEEKLY")
   const [formValues, setFormValues] = useState({
     title: "",
     description: "",
@@ -150,8 +152,7 @@ export default function NewEventPage() {
       return
     }
 
-    const formData = new FormData(e.currentTarget)
-    const data = {
+    const data: Record<string, unknown> = {
       title: formValues.title,
       description: formValues.description || undefined,
       eventType: formValues.eventType,
@@ -160,6 +161,7 @@ export default function NewEventPage() {
       endTime: endTime.toISOString(),
       timezone: Intl.DateTimeFormat().resolvedOptions().timeZone,
     }
+    if (repeating) data.recurrenceRule = recurrenceRule
 
     try {
       // First, get the venue ID from the slug
@@ -313,6 +315,43 @@ export default function NewEventPage() {
               <p className="text-sm text-muted-foreground">
                 Draft events are only visible to staff. Published events are visible to everyone.
               </p>
+            </div>
+
+            {/* Repeating */}
+            <div className="space-y-3 p-4 border border-[var(--blue-015)] rounded-lg bg-[var(--blue-004)]">
+              <div className="flex items-center justify-between">
+                <div>
+                  <Label htmlFor="repeating" className="text-sm font-semibold">Repeating Event</Label>
+                  <p className="text-xs text-muted-foreground mt-0.5">Generates 8 future instances automatically</p>
+                </div>
+                <button
+                  type="button"
+                  role="switch"
+                  aria-checked={repeating}
+                  id="repeating"
+                  onClick={() => setRepeating(!repeating)}
+                  className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--xiv-blue)] ${
+                    repeating ? "bg-[var(--xiv-blue)]" : "bg-muted"
+                  }`}
+                >
+                  <span className={`inline-block h-4 w-4 rounded-full bg-white shadow transition-transform ${repeating ? "translate-x-6" : "translate-x-1"}`} />
+                </button>
+              </div>
+              {repeating && (
+                <div className="space-y-2">
+                  <Label htmlFor="recurrenceRule">Frequency</Label>
+                  <Select value={recurrenceRule} onValueChange={setRecurrenceRule}>
+                    <SelectTrigger>
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="WEEKLY">Weekly</SelectItem>
+                      <SelectItem value="BIWEEKLY">Every two weeks</SelectItem>
+                      <SelectItem value="MONTHLY">Monthly</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+              )}
             </div>
 
             {/* Error Message */}

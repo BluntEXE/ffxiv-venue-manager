@@ -75,6 +75,7 @@ export default async function EventsPage({
     include: {
       createdBy: { select: { name: true } },
       _count: { select: { patronLogs: true } },
+      parentEvent: { select: { recurrenceRule: true } },
     },
     orderBy: { startTime: "asc" },
   })
@@ -251,6 +252,7 @@ export default async function EventsPage({
                         <Badge className={statusColors[event.status as keyof typeof statusColors]}>{event.status}</Badge>
                         <Badge variant="outline">{typeLabels[event.eventType as keyof typeof typeLabels]}</Badge>
                         {event.partakeEventId && <Badge variant="outline" className="border-[rgba(0,180,255,0.4)] text-[var(--xiv-blue)]">Partake</Badge>}
+                        {(event.recurrenceRule || event.parentEventId) && <Badge variant="outline" className="border-[rgba(0,180,255,0.25)] text-[var(--fg-subtle)]">↻ Recurring</Badge>}
                       </div>
                       <div className="ev-sub">
                         <span className="meta">

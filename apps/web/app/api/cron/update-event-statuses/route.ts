@@ -1,6 +1,8 @@
 import { NextResponse } from "next/server"
 import { prisma } from "@/lib/prisma"
 import { verifyCronAuth } from "@/lib/cron-auth"
+import { generateOccurrences, type RecurrenceRule } from "@/lib/recurrence"
+import { addWeeks } from "date-fns"
 
 /**
  * Cron Job: Automatic Event Status Updates
@@ -119,10 +121,74 @@ export async function GET(request: Request) {
       }
     }
 
+    // 3. Roll recurring event series forward — keep 8 weeks of future instances
+    const recurringParents = await prisma.event.findMany({
+      where: { recurrenceRule: { not: null }, parentEventId: null },
+      select: {
+        id: true,
+        title: true,
+        description: true,
+        eventType: true,
+        status: true,
+        timezone: true,
+        venueId: true,
+        createdById: true,
+        recurrenceRule: true,
+        childEvents: {
+          where: { status: { not: "CANCELLED" } },
+          select: { startTime: true, endTime: true },
+          orderBy: { startTime: "desc" },
+          take: 1,
+        },
+      },
+    })
+
+    let recurringGenerated = 0
+    const windowEnd = addWeeks(now, 8)
+
+    for (const parent of recurringParents) {
+      const lastChild = parent.childEvents[0]
+      const lastTime = lastChild ? new Date(lastChild.startTime) : new Date(parent.status === "CANCELLED" ? 0 : now)
+      if (lastTime >= windowEnd) continue
+
+      // Find the latest child to extend from
+      const latestChild = await prisma.event.findFirst({
+        where: { parentEventId: parent.id, status: { not: "CANCELLED" } },
+        orderBy: { startTime: "desc" },
+        select: { startTime: true, endTime: true },
+      })
+      if (!latestChild) continue
+
+      const newOccurrences = generateOccurrences(
+        new Date(latestChild.startTime),
+        new Date(latestChild.endTime),
+        parent.recurrenceRule as RecurrenceRule,
+        4
+      )
+
+      await prisma.event.createMany({
+        data: newOccurrences.map((o) => ({
+          title: parent.title,
+          description: parent.description,
+          eventType: parent.eventType,
+          status: "PUBLISHED",
+          timezone: parent.timezone,
+          venueId: parent.venueId,
+          createdById: parent.createdById,
+          parentEventId: parent.id,
+          startTime: o.startTime,
+          endTime: o.endTime,
+        })),
+        skipDuplicates: true,
+      })
+      recurringGenerated += newOccurrences.length
+    }
+
     // Log the results for monitoring
     console.log(`[Event Status Update] ${now.toISOString()}`)
     console.log(`  Activated: ${activatedCount} events`)
     console.log(`  Completed: ${completedCount} events`)
+    console.log(`  Recurring generated: ${recurringGenerated} instances`)
 
     if (activatedCount > 0) {
       console.log("  Activated events:")
@@ -160,6 +226,7 @@ export async function GET(request: Request) {
             endTime: e.endTime,
           })),
         },
+        recurringGenerated,
       },
     })
   } catch (error) {
