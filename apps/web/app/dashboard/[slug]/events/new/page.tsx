@@ -50,26 +50,32 @@ export default function NewEventPage() {
   const [selectedStatus, setSelectedStatus] = useState("DRAFT")
   const [repeating, setRepeating] = useState(false)
   const [recurrenceRule, setRecurrenceRule] = useState("WEEKLY")
+  const [hasPartake, setHasPartake] = useState(false)
   const [formValues, setFormValues] = useState({
     title: "",
     description: "",
     eventType: "OTHER",
   })
 
-  // Fetch templates on mount
+  // Fetch templates + venue info on mount
   useEffect(() => {
-    const fetchTemplates = async () => {
+    const fetchData = async () => {
       try {
-        const response = await fetch(`/api/venues/${slug}/event-templates`)
-        if (response.ok) {
-          const data = await response.json()
-          setTemplates(data)
+        const [templatesRes, venuesRes] = await Promise.all([
+          fetch(`/api/venues/${slug}/event-templates`),
+          fetch(`/api/venues`),
+        ])
+        if (templatesRes.ok) setTemplates(await templatesRes.json())
+        if (venuesRes.ok) {
+          const venues = await venuesRes.json()
+          const venue = venues.find((v: { slug: string; partakeTeamId: string | null }) => v.slug === slug)
+          if (venue?.partakeTeamId) setHasPartake(true)
         }
       } catch (error) {
-        console.error("Error fetching templates:", error)
+        console.error("Error fetching form data:", error)
       }
     }
-    fetchTemplates()
+    fetchData()
   }, [slug])
 
   // Handle template selection
@@ -338,18 +344,25 @@ export default function NewEventPage() {
                 </button>
               </div>
               {repeating && (
-                <div className="space-y-2">
-                  <Label htmlFor="recurrenceRule">Frequency</Label>
-                  <Select value={recurrenceRule} onValueChange={setRecurrenceRule}>
-                    <SelectTrigger>
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="WEEKLY">Weekly</SelectItem>
-                      <SelectItem value="BIWEEKLY">Every two weeks</SelectItem>
-                      <SelectItem value="MONTHLY">Monthly</SelectItem>
-                    </SelectContent>
-                  </Select>
+                <div className="space-y-3">
+                  <div className="space-y-2">
+                    <Label htmlFor="recurrenceRule">Frequency</Label>
+                    <Select value={recurrenceRule} onValueChange={setRecurrenceRule}>
+                      <SelectTrigger>
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="WEEKLY">Weekly</SelectItem>
+                        <SelectItem value="BIWEEKLY">Every two weeks</SelectItem>
+                        <SelectItem value="MONTHLY">Monthly</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  {hasPartake && (
+                    <p className="text-xs text-amber-400">
+                      This venue syncs events from Partake. Only use recurring events for series not managed there — duplicates will appear if both cover the same night.
+                    </p>
+                  )}
                 </div>
               )}
             </div>
