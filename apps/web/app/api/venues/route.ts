@@ -16,6 +16,9 @@ const venueSchema = z.object({
   description: validators.venueDescription,
   dataCenter: z.string().min(1, "Data center is required").max(50, "Data center name too long"),
   world: z.string().min(1, "World is required").max(50, "World name too long"),
+  district: validators.venueDistrict,
+  ward: validators.venueWard,
+  plot: validators.venuePlot,
   location: validators.venueLocation,
 })
 
@@ -61,6 +64,9 @@ export const POST = withRateLimit(
             description: validatedData.description,
             dataCenter: validatedData.dataCenter,
             world: validatedData.world,
+            district: validatedData.district ?? null,
+            ward: validatedData.ward ?? null,
+            plot: validatedData.plot ?? null,
             location: validatedData.location,
             ownerId: userId,
             memberships: {

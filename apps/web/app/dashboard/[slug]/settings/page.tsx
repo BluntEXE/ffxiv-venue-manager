@@ -45,6 +45,7 @@ import { ScheduleEntryForm } from "@/components/schedule-entry-form"
 import type { ScheduleEntry } from "@/lib/schedule-utils"
 import { DAY_NAMES, formatEntryTime, formatIntervalLabel } from "@/lib/schedule-utils"
 import { Plus, Trash2 } from "lucide-react"
+import { FFXIV_DISTRICTS } from "@/lib/venue-location"
 
 
 export default function SettingsPage({
@@ -79,7 +80,9 @@ export default function SettingsPage({
   // Venue profile DB fields (saved separately)
   const [venueName, setVenueName] = useState("")
   const [venueDescription, setVenueDescription] = useState("")
-  const [venueLocation, setVenueLocation] = useState("")
+  const [venueDistrict, setVenueDistrict] = useState<string>("")
+  const [venueWard, setVenueWard] = useState<string>("")
+  const [venuePlot, setVenuePlot] = useState<string>("")
   const [venueDataCenter, setVenueDataCenter] = useState("")
   const [venueWorld, setVenueWorld] = useState("")
   const [tagInput, setTagInput] = useState("")
@@ -142,7 +145,9 @@ export default function SettingsPage({
         setVenueId(venue.id)
         setVenueName(venue.name ?? "")
         setVenueDescription(venue.description ?? "")
-        setVenueLocation(venue.location ?? "")
+        setVenueDistrict(venue.district ?? "")
+        setVenueWard(venue.ward != null ? String(venue.ward) : "")
+        setVenuePlot(venue.plot != null ? String(venue.plot) : "")
         setVenueDataCenter(venue.dataCenter ?? "")
         setVenueWorld(venue.world ?? "")
         setGalleryImages(venue.galleryImages ?? [])
@@ -220,7 +225,9 @@ export default function SettingsPage({
         body: JSON.stringify({
           name: venueName.trim() || undefined,
           description: venueDescription || null,
-          location: venueLocation || null,
+          district: venueDistrict || null,
+          ward: venueWard ? parseInt(venueWard, 10) : null,
+          plot: venuePlot ? parseInt(venuePlot, 10) : null,
         }),
       })
       if (!profileRes.ok) {
@@ -571,18 +578,60 @@ export default function SettingsPage({
               <div className="pbody space-y-4">
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   <div className="space-y-1.5">
-                    <Label htmlFor="venue-location">District, Ward &amp; Plot</Label>
-                    <Input id="venue-location" placeholder="e.g. Goblet · Ward 5 · Plot 31"
-                      value={venueLocation} onChange={e => setVenueLocation(e.target.value)}
-                      disabled={isSaving} className="bg-background border-[var(--blue-015)] focus:border-[var(--blue-035)]" />
-                  </div>
-                  <div className="space-y-1.5">
                     <Label>Data Centre &amp; World</Label>
                     <Input
                       value={venueDataCenter && venueWorld ? `${venueDataCenter} · ${venueWorld}` : ""}
                       disabled
                       className="bg-background border-[var(--blue-015)] opacity-50 cursor-not-allowed text-[var(--fg-faint)] font-mono text-sm"
                       placeholder="Set during venue creation" />
+                  </div>
+                </div>
+                <div className="grid grid-cols-3 gap-3">
+                  <div className="space-y-1.5">
+                    <Label htmlFor="venue-district">District</Label>
+                    <Select
+                      value={venueDistrict}
+                      onValueChange={setVenueDistrict}
+                      disabled={isSaving}
+                    >
+                      <SelectTrigger id="venue-district" className="bg-background border-[var(--blue-015)] focus:border-[var(--blue-035)]">
+                        <SelectValue placeholder="Select…" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="">— None —</SelectItem>
+                        {FFXIV_DISTRICTS.map(d => (
+                          <SelectItem key={d} value={d}>{d}</SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  <div className="space-y-1.5">
+                    <Label htmlFor="venue-ward">Ward</Label>
+                    <Input
+                      id="venue-ward"
+                      type="number"
+                      min={1}
+                      max={30}
+                      placeholder="1–30"
+                      value={venueWard}
+                      onChange={e => setVenueWard(e.target.value)}
+                      disabled={isSaving}
+                      className="bg-background border-[var(--blue-015)] focus:border-[var(--blue-035)]"
+                    />
+                  </div>
+                  <div className="space-y-1.5">
+                    <Label htmlFor="venue-plot">Plot</Label>
+                    <Input
+                      id="venue-plot"
+                      type="number"
+                      min={1}
+                      max={60}
+                      placeholder="1–60"
+                      value={venuePlot}
+                      onChange={e => setVenuePlot(e.target.value)}
+                      disabled={isSaving}
+                      className="bg-background border-[var(--blue-015)] focus:border-[var(--blue-035)]"
+                    />
                   </div>
                 </div>
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
@@ -650,28 +699,24 @@ export default function SettingsPage({
                         Schedule synced every 2 hours.{ffxivVenueSyncedAt && <> Last synced: <ServerTime date={ffxivVenueSyncedAt} /> ST</>}
                       </p>
                       <div className="flex gap-3">
-                        <button type="button" onClick={handleFfxivSyncNow} disabled={ffxivSyncing}
-                          className="xiv-btn-shimmer text-xs px-3 py-1.5 rounded-[var(--radius-sm)] disabled:opacity-40">
+                        <Button type="button" variant="outline-blue" size="sm" onClick={handleFfxivSyncNow} disabled={ffxivSyncing}>
                           {ffxivSyncing ? "Syncing…" : "Sync now"}
-                        </button>
-                        <button type="button" onClick={handleFfxivUnlink} disabled={ffxivUnlinking}
-                          className="text-xs px-3 py-1.5 rounded-[var(--radius-sm)] border border-red-400/30 text-red-400 hover:bg-red-400/10 transition-colors disabled:opacity-40">
+                        </Button>
+                        <Button type="button" variant="destructive" size="sm" onClick={handleFfxivUnlink} disabled={ffxivUnlinking}>
                           {ffxivUnlinking ? "Unlinking…" : "Unlink"}
-                        </button>
+                        </Button>
                       </div>
                     </>
                   ) : ffxivPreview ? (
                     <>
                       <p className="text-xs">Linking to: <span className="font-medium text-[var(--xiv-blue)]">{ffxivPreview.name}</span></p>
                       <div className="flex gap-3">
-                        <button type="button" onClick={handleFfxivLink} disabled={ffxivPreviewLoading}
-                          className="xiv-btn-shimmer text-xs px-3 py-1.5 rounded-[var(--radius-sm)] disabled:opacity-40">
+                        <Button type="button" variant="outline-blue" size="sm" onClick={handleFfxivLink} disabled={ffxivPreviewLoading}>
                           {ffxivPreviewLoading ? "Linking…" : "Confirm link"}
-                        </button>
-                        <button type="button" onClick={() => { setFfxivPreview(null); setFfxivPreviewError(null) }}
-                          className="text-xs text-[var(--fg-faint)] hover:opacity-80 transition-opacity">
+                        </Button>
+                        <Button type="button" variant="ghost" size="sm" onClick={() => { setFfxivPreview(null); setFfxivPreviewError(null) }}>
                           Cancel
-                        </button>
+                        </Button>
                       </div>
                     </>
                   ) : (
@@ -685,11 +730,10 @@ export default function SettingsPage({
                           onKeyDown={e => e.key === "Enter" && handleFfxivPreview()}
                           className="flex-1 rounded-[var(--radius-sm)] border border-[var(--blue-015)] bg-background px-3 py-1.5 text-sm focus:border-[var(--blue-035)] focus:outline-none"
                         />
-                        <button type="button" onClick={handleFfxivPreview}
-                          disabled={ffxivPreviewLoading || !ffxivInput.trim()}
-                          className="xiv-btn-shimmer text-xs px-3 py-1.5 rounded-[var(--radius-sm)] disabled:opacity-40">
+                        <Button type="button" variant="outline-blue" size="sm" onClick={handleFfxivPreview}
+                          disabled={ffxivPreviewLoading || !ffxivInput.trim()}>
                           {ffxivPreviewLoading ? "Looking up…" : "Look up"}
-                        </button>
+                        </Button>
                       </div>
                       {ffxivPreviewError && <p className="text-xs text-red-400">{ffxivPreviewError}</p>}
                       <p className="text-xs text-[var(--fg-faint)]">
@@ -725,7 +769,7 @@ export default function SettingsPage({
                       className="flex-1 bg-background border-[var(--blue-015)] focus:border-[var(--blue-035)] text-sm h-9"
                     />
                     {settings.partakeTeamId && (
-                      <button type="button" disabled={isSyncing} onClick={async () => {
+                      <Button type="button" variant="outline-blue" size="sm" disabled={isSyncing} onClick={async () => {
                         setIsSyncing(true); setSyncResult("")
                         try {
                           const res = await fetch(`/api/venues/${venueId}/sync-partake`, { method: "POST" })
@@ -736,9 +780,9 @@ export default function SettingsPage({
                         } catch (err: unknown) {
                           setSyncResult(err instanceof Error ? err.message : "Sync failed")
                         } finally { setIsSyncing(false) }
-                      }} className="xiv-btn-shimmer text-xs px-3 py-1.5 rounded-[var(--radius-sm)] disabled:opacity-40 shrink-0">
+                      }}>
                         {isSyncing ? "Syncing…" : "Sync now"}
-                      </button>
+                      </Button>
                     )}
                   </div>
                   {syncResult && <p className="text-xs text-emerald-400">{syncResult}</p>}
@@ -828,16 +872,17 @@ export default function SettingsPage({
                     <div>
                       <div className="flex items-center justify-between mb-2">
                         <label className="text-sm font-medium">Shift Templates</label>
-                        <button
+                        <Button
                           type="button"
-                          className="xiv-btn-shimmer text-xs px-3 py-1"
+                          variant="outline-blue"
+                          size="sm"
                           onClick={() => setShiftBotTemplates((t) => [
                             ...t,
                             { name: "", startOffsetHours: 0, durationHours: 4, slots: 5 },
                           ])}
                         >
                           + Add Template
-                        </button>
+                        </Button>
                       </div>
                       <p className="text-xs text-[var(--fg-faint)] mb-3">
                         Leave empty to post one shift per event matching the full event duration.

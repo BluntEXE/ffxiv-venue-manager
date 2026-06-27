@@ -28,6 +28,7 @@ export async function generateMetadata({ params }: { params: Promise<{ slug: str
 import { format } from "date-fns"
 import { MapPin, Calendar, Clock, Crown, Image as ImageIcon, ChevronLeft, Scroll, Heart } from "lucide-react"
 import { getServerTimeLabel, formatServerTime } from "@/lib/server-time"
+import { formatVenueAddress, formatVenueLocationShort } from "@/lib/venue-location"
 import { VenueFollowButton } from "@/components/venue-follow-button"
 import { CopyAddressButton, CopyAddressInline } from "@/components/copy-address-button"
 import { SiteFooter } from "@/components/site-footer"
@@ -84,7 +85,7 @@ export default async function VenueProfilePage({
   const tzLabel       = getServerTimeLabel(venue.dataCenter)
   const todayUTCDay   = new Date().getUTCDay()
   const DAY_NAMES     = ["Sunday","Monday","Tuesday","Wednesday","Thursday","Friday","Saturday"]
-  const address       = `${venue.dataCenter} · ${venue.world}${venue.location ? ` · ${venue.location}` : ""}`
+  const address       = formatVenueAddress(venue)
 
   // Parse hours from settings
   const s = venue.settings as Record<string, unknown> | null
@@ -369,7 +370,7 @@ export default async function VenueProfilePage({
                   {[
                     { k: "Data Centre", v: venue.dataCenter },
                     { k: "World",       v: venue.world },
-                    ...(venue.location ? [{ k: "District, Ward & Plot", v: venue.location }] : []),
+                    ...((() => { const loc = formatVenueLocationShort(venue); return loc ? [{ k: "District, Ward & Plot", v: loc }] : [] })()),
                   ].map(({ k, v }) => (
                     <div key={k} className="loc-line">
                       <span className="lk">{k}</span>

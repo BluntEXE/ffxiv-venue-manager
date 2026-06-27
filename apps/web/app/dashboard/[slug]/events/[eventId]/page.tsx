@@ -305,9 +305,9 @@ export default async function EventDetailsPage({
               <p className="text-sm text-muted-foreground">
                 {venue.world} ({venue.dataCenter})
               </p>
-              {venue.location && (
+              {(venue.district || venue.ward || venue.plot || venue.location) && (
                 <p className="text-sm text-muted-foreground mt-2">
-                  📍 {venue.location}
+                  📍 {[venue.district, venue.ward ? `W${venue.ward}` : null, venue.plot ? `P${venue.plot}` : null].filter(Boolean).join(" ") || venue.location}
                 </p>
               )}
             </CardContent>

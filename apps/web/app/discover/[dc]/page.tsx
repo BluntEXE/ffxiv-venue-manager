@@ -5,6 +5,7 @@ import { prisma } from "@/lib/prisma"
 import { SiteFooter } from "@/components/site-footer"
 import { Button } from "@/components/ui/button"
 import { MapPin, ArrowRight, ChevronLeft } from "lucide-react"
+import { formatVenueLocationShort } from "@/lib/venue-location"
 
 export const dynamic = "force-dynamic"
 
@@ -147,7 +148,7 @@ export default async function DataCentrePage(
 
                       <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
                         <MapPin className="w-3 h-3 shrink-0" />
-                        <span>{venue.world}{venue.location ? ` · ${venue.location}` : ""}</span>
+                        <span>{venue.world}{(() => { const loc = formatVenueLocationShort(venue); return loc ? ` · ${loc}` : "" })()}</span>
                       </div>
 
                       {venue.description && (

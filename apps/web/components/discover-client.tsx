@@ -4,6 +4,7 @@ import { useState } from "react"
 import Link from "next/link"
 import { MapPin, ArrowRight, Heart, Radio, Moon, Building2, Users } from "lucide-react"
 import { VenueFollowButton } from "@/components/venue-follow-button"
+import { formatVenueAddress } from "@/lib/venue-location"
 
 export type DiscoverVenue = {
   id: string
@@ -11,6 +12,9 @@ export type DiscoverVenue = {
   slug: string
   dataCenter: string
   world: string
+  district: string | null
+  ward: number | null
+  plot: number | null
   location: string | null
   description: string | null
   followCount: number
@@ -43,7 +47,7 @@ export function DiscoverClient({
     if (tab === "tonight" && !v.isTonightOpen) return false
     if (search) {
       const q = search.toLowerCase()
-      return [v.name, v.dataCenter, v.world, v.location ?? ""].join(" ").toLowerCase().includes(q)
+      return [v.name, v.dataCenter, v.world, v.district ?? "", v.location ?? ""].join(" ").toLowerCase().includes(q)
     }
     return true
   })
@@ -159,7 +163,7 @@ function FeaturedCard({ venue, isAuthed }: { venue: DiscoverVenue; isAuthed: boo
         <div className="flex-1 min-w-0 pt-0.5">
           <div className="vname text-[clamp(1.5rem,2.2vw,1.85rem)]">{venue.name}</div>
           <div className="font-mono text-[0.8rem] text-[var(--xiv-blue)] mt-[7px]">
-            {venue.dataCenter} · {venue.world}{venue.location ? ` · ${venue.location}` : ""}
+            {formatVenueAddress(venue)}
           </div>
         </div>
         <div className="flex flex-col items-end gap-[10px] flex-shrink-0">
@@ -238,7 +242,7 @@ function VenueC3Card({ venue, dimmed, isAuthed }: { venue: DiscoverVenue; dimmed
         <div className="flex items-center gap-[18px] mt-[7px] flex-wrap">
           <span className="meta">
             <MapPin className="w-[15px] h-[15px]" />
-            {venue.dataCenter} · {venue.world}{venue.location ? ` · ${venue.location}` : ""}
+            {formatVenueAddress(venue)}
           </span>
           {venue.activeEvent && (
             <span className="meta text-[var(--xiv-blue)]">{venue.activeEvent.title}</span>

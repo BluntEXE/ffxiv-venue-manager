@@ -4,6 +4,7 @@ import { useState } from "react"
 import { useRouter } from "next/navigation"
 import Link from "next/link"
 import { ArrowLeft, ArrowRight, Check } from "lucide-react"
+import { FFXIV_DISTRICTS } from "@/lib/venue-location"
 
 // ── DC / World data ──────────────────────────────────────────────
 const DATA_CENTERS = [
@@ -55,10 +56,12 @@ export function GetStartedWizard({ userName }: { userName: string }) {
   const [tags, setTags]       = useState<string[]>([])
 
   // Step 2
-  const [dc, setDc]           = useState("")
-  const [world, setWorld]     = useState("")
-  const [plot, setPlot]       = useState("")
-  const [hours, setHours]     = useState("")
+  const [dc, setDc]             = useState("")
+  const [world, setWorld]       = useState("")
+  const [district, setDistrict] = useState("")
+  const [ward, setWard]         = useState("")
+  const [plot, setPlot]         = useState("")
+  const [hours, setHours]       = useState("")
   const [nights, setNights]   = useState("")
   const [adult, setAdult]     = useState(false)
 
@@ -90,7 +93,9 @@ export function GetStartedWizard({ userName }: { userName: string }) {
             description: tagline.trim() || null,
             dataCenter: dc,
             world,
-            location: plot.trim() || null,
+            district: district || null,
+            ward: ward ? parseInt(ward, 10) : null,
+            plot: plot ? parseInt(plot, 10) : null,
             settings: {
               tagline: tagline.trim() || undefined,
               tags: adult ? ["18+", ...tags.filter(t => t !== "18+")] : tags.filter(t => t !== "18+"),
@@ -110,7 +115,10 @@ export function GetStartedWizard({ userName }: { userName: string }) {
               headers: { "Content-Type": "application/json" },
               body: JSON.stringify({
                 name: name.trim(), slug: slugRetry, description: tagline.trim() || null,
-                dataCenter: dc, world, location: plot.trim() || null,
+                dataCenter: dc, world,
+                district: district || null,
+                ward: ward ? parseInt(ward, 10) : null,
+                plot: plot ? parseInt(plot, 10) : null,
               }),
             })
             if (!res2.ok) { const d2 = await res2.json(); throw new Error(d2.error || "Failed") }
@@ -241,9 +249,22 @@ export function GetStartedWizard({ userName }: { userName: string }) {
                     </select>
                   </div>
                 </div>
-                <div className="gs-field">
-                  <label>District, Ward &amp; Plot <span style={{ color: "var(--fg-faint)", fontWeight: 400 }}>(optional)</span></label>
-                  <input className="gs-inp" placeholder="e.g. Goblet · Ward 5 · Plot 31" value={plot} onChange={e => setPlot(e.target.value)} />
+                <div className="gs-field-3" style={{ display: "grid", gridTemplateColumns: "2fr 1fr 1fr", gap: 10 }}>
+                  <div className="gs-field">
+                    <label>District <span style={{ color: "var(--fg-faint)", fontWeight: 400 }}>(optional)</span></label>
+                    <select className="gs-sel" value={district} onChange={e => setDistrict(e.target.value)}>
+                      <option value="">Select…</option>
+                      {FFXIV_DISTRICTS.map(d => <option key={d} value={d}>{d}</option>)}
+                    </select>
+                  </div>
+                  <div className="gs-field">
+                    <label>Ward</label>
+                    <input className="gs-inp" type="number" min={1} max={30} placeholder="1–30" value={ward} onChange={e => setWard(e.target.value)} />
+                  </div>
+                  <div className="gs-field">
+                    <label>Plot</label>
+                    <input className="gs-inp" type="number" min={1} max={60} placeholder="1–60" value={plot} onChange={e => setPlot(e.target.value)} />
+                  </div>
                 </div>
                 <div className="gs-field-2">
                   <div className="gs-field">
@@ -269,7 +290,7 @@ export function GetStartedWizard({ userName }: { userName: string }) {
               <>
                 {[
                   { k: "Venue",    v: name || "—" },
-                  { k: "Location", v: [dc, world, plot].filter(Boolean).join(" · ") || "—" },
+                  { k: "Location", v: [dc, world, [district, ward ? `W${ward}` : null, plot ? `P${plot}` : null].filter(Boolean).join(" ")].filter(Boolean).join(" · ") || "—" },
                   { k: "Hours",    v: [hours, nights].filter(Boolean).join(" · ") || "TBD" },
                   { k: "Tags",     v: tags.length ? null : "None" },
                 ].map(({ k, v }) => (

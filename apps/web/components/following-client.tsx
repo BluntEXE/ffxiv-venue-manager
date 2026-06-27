@@ -4,6 +4,7 @@ import { useState } from "react"
 import Link from "next/link"
 import { MapPin, ArrowRight, Radio, Building2, Heart } from "lucide-react"
 import { VenueFollowButton } from "@/components/venue-follow-button"
+import { formatVenueAddress } from "@/lib/venue-location"
 
 type FollowingVenue = {
   id: string
@@ -11,6 +12,9 @@ type FollowingVenue = {
   slug: string
   dataCenter: string
   world: string
+  district: string | null
+  ward: number | null
+  plot: number | null
   location: string | null
   followCount: number
   isOpenNow: boolean
@@ -31,7 +35,7 @@ export function FollowingClient({
     if (tab === "open" && !v.isOpenNow) return false
     if (search) {
       const q = search.toLowerCase()
-      return [v.name, v.dataCenter, v.world, v.location ?? ""].join(" ").toLowerCase().includes(q)
+      return [v.name, v.dataCenter, v.world, v.district ?? "", v.location ?? ""].join(" ").toLowerCase().includes(q)
     }
     return true
   })
@@ -157,7 +161,7 @@ function VenueC3Card({
         <div className="flex items-center gap-[18px] mt-[7px] flex-wrap">
           <span className="meta">
             <MapPin className="w-[15px] h-[15px]" />
-            {venue.dataCenter} · {venue.world}{venue.location ? ` · ${venue.location}` : ""}
+            {formatVenueAddress(venue)}
           </span>
         </div>
       </div>
