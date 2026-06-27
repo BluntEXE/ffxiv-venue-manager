@@ -1,6 +1,6 @@
 import { useEffect, useState, useCallback } from 'react'
 import * as SecureStore from 'expo-secure-store'
-import { ScrollView, RefreshControl, Image } from 'react-native'
+import { ScrollView, RefreshControl, Image, Alert } from 'react-native'
 import { YStack, XStack, Text, Button, Spinner } from 'tamagui'
 import { useRouter, useFocusEffect } from 'expo-router'
 import { Ionicons } from '@expo/vector-icons'
@@ -96,6 +96,7 @@ export default function HomeScreen() {
   const [eventsExpanded, setEventsExpanded] = useState(true)
   const [claiming, setClaiming] = useState<string | null>(null)
   const [claimErrors, setClaimErrors] = useState<Record<string, string>>({})
+  const [claimPending, setClaimPending] = useState<Record<string, boolean>>({})
 
   useEffect(() => {
     SecureStore.getItemAsync('@xivvm/openShiftsExpanded').then(val => {
@@ -150,7 +151,7 @@ export default function HomeScreen() {
     SecureStore.setItemAsync('@xivvm/eventsFeedExpanded', String(next))
   }
 
-  async function claimShift(shiftId: string, venueId: string) {
+  async function doClaimShift(shiftId: string, venueId: string) {
     setClaiming(shiftId)
     setClaimErrors(e => { const n = { ...e }; delete n[shiftId]; return n })
     try {
@@ -167,12 +168,24 @@ export default function HomeScreen() {
         setClaimErrors(e => ({ ...e, [shiftId]: data.error || 'Failed to claim' }))
         return
       }
+      setClaimPending(p => ({ ...p, [shiftId]: true }))
       setOpenShifts(s => s.filter(x => x.id !== shiftId))
     } catch {
       setClaimErrors(e => ({ ...e, [shiftId]: 'Network error' }))
     } finally {
       setClaiming(null)
     }
+  }
+
+  function claimShift(shiftId: string, venueId: string, label: string) {
+    Alert.alert(
+      'Claim this shift?',
+      `${label}\n\nYour claim will be sent to a manager for approval.`,
+      [
+        { text: 'Cancel', style: 'cancel' },
+        { text: 'Claim', onPress: () => doClaimShift(shiftId, venueId) },
+      ]
+    )
   }
 
   async function clockShift(shiftId: string, action: 'clock-in' | 'clock-out') {
@@ -493,7 +506,7 @@ export default function HomeScreen() {
                   fontFamily="InterBold"
                   fontSize={12}
                   disabled={claiming === s.id}
-                  onPress={() => claimShift(s.id, s.venueId)}
+                  onPress={() => claimShift(s.id, s.venueId, `${s.venueName}${s.roleName ? ` · ${s.roleName}` : ''}\n${formatST(s.scheduledStart, 'datetime')} – ${formatST(s.scheduledEnd, 'datetime')} ST`)}
                   pressStyle={{ opacity: 0.85 }}
                 >
                   {claiming === s.id ? <Spinner size="small" color="$base" /> : 'Claim'}
