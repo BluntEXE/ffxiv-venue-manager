@@ -19,9 +19,8 @@ export async function GET(request: Request) {
     prisma.event.count({
       where: { status: "COMPLETED", endTime: { gte: weekStart, lte: weekEnd } },
     }),
-    prisma.patronLog.aggregate({
-      where: { timestamp: { gte: weekStart, lte: weekEnd }, countChange: { gt: 0 } },
-      _sum: { countChange: true },
+    prisma.patronLog.count({
+      where: { timestamp: { gte: weekStart, lte: weekEnd }, action: "ENTER" },
     }),
     prisma.membership.count({
       where: {
@@ -32,7 +31,7 @@ export async function GET(request: Request) {
     }),
   ])
 
-  const visits = patronVisits._sum.countChange ?? 0
+  const visits = patronVisits
 
   await postWeeklySummary({ newVenues, eventsHosted, patronVisits: visits, newStaff, weekStart })
 
