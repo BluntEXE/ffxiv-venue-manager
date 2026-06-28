@@ -14,6 +14,7 @@ import { getServerTimezone, getServerTimeLabel } from "@/lib/server-time"
 import { OverviewRevenueChart } from "@/components/overview-revenue-chart"
 import { formatGil } from "@/lib/format"
 import { OverviewTasks } from "@/components/overview-tasks"
+import { AnnouncementBanner } from "@/components/announcement-banner"
 import { format, subDays, subWeeks, formatDistanceToNow } from "date-fns"
 import {
   Radio, ArrowRight, Users, TrendingUp, Calendar,
@@ -146,6 +147,16 @@ export default async function VenueDashboardPage({
     select: { id: true, title: true, dueDate: true, priority: true },
   })
 
+  // Announcements
+  const announcements = await prisma.announcement.findMany({
+    where: {
+      OR: [{ expiresAt: null }, { expiresAt: { gt: now } }],
+      dismissals: { none: { userId: session.user.id } },
+    },
+    select: { id: true, title: true, message: true, link: true, linkLabel: true },
+    orderBy: { createdAt: "desc" },
+  })
+
   // My upcoming shifts
   const myShifts = await prisma.shift.findMany({
     where: {
@@ -166,6 +177,8 @@ export default async function VenueDashboardPage({
   return (
     <VenueLayout venueSlug={venue.slug} venueName={venue.name} userRole={userRole}>
       <div className="page-inner space-y-6">
+
+        <AnnouncementBanner announcements={announcements} />
 
         {/* Page header */}
         <div>
