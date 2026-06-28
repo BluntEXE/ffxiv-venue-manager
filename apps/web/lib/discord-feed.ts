@@ -51,6 +51,36 @@ export function postNewVenue(venue: {
   })
 }
 
+export function postWeeklySummary(stats: {
+  newVenues: number
+  eventsHosted: number
+  patronVisits: number
+  newStaff: number
+  weekStart: Date
+}) {
+  const weekLabel = stats.weekStart.toLocaleDateString("en-GB", {
+    day: "numeric",
+    month: "long",
+    timeZone: "UTC",
+  })
+
+  const lines = [
+    `🏛️ **${stats.newVenues}** new venue${stats.newVenues !== 1 ? "s" : ""} joined`,
+    `🟢 **${stats.eventsHosted}** event${stats.eventsHosted !== 1 ? "s" : ""} hosted`,
+    `👥 **${stats.patronVisits}** patron visit${stats.patronVisits !== 1 ? "s" : ""} logged`,
+    `✨ **${stats.newStaff}** new staff member${stats.newStaff !== 1 ? "s" : ""} joined`,
+  ]
+
+  postActivityFeed({
+    title: "📋 Weekly Summary",
+    description: `Here's what happened in the realm this week (w/c ${weekLabel}):\n\n${lines.join("\n")}`,
+    color: XIV_BLUE,
+    url: "https://xivvenuemanager.com/discover",
+    footer: { text: "XIV Venue Manager" },
+    timestamp: new Date().toISOString(),
+  })
+}
+
 export function postEventLive(event: {
   title: string
   startTime: Date
