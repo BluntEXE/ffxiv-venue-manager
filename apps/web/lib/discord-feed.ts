@@ -51,6 +51,32 @@ export function postNewVenue(venue: {
   })
 }
 
+export function postPartakeDigest(
+  events: { title: string; startTime: Date; endTime: Date; venue: { name: string; slug: string } }[]
+) {
+  const fmt = (d: Date) =>
+    d.toLocaleDateString("en-GB", { weekday: "short", day: "numeric", month: "short", timeZone: "UTC" }) +
+    " · " +
+    d.toLocaleTimeString("en-GB", { hour: "2-digit", minute: "2-digit", timeZone: "UTC" }) +
+    " ST"
+
+  const fields = events.map((e) => ({
+    name: `${e.venue.name}`,
+    value: `[${e.title}](https://xivvenuemanager.com/venues/${e.venue.slug}) · ${fmt(e.startTime)}`,
+    inline: false,
+  }))
+
+  postActivityFeed({
+    title: "📅 Upcoming Events This Week",
+    description: "Events from our partner venues on [Partake.gg](https://partake.gg) coming up in the next 7 days:",
+    color: XIV_BLUE,
+    fields,
+    url: "https://xivvenuemanager.com/discover",
+    footer: { text: "XIV Venue Manager · Powered by Partake.gg" },
+    timestamp: new Date().toISOString(),
+  })
+}
+
 export function postWeeklySummary(stats: {
   newVenues: number
   eventsHosted: number
