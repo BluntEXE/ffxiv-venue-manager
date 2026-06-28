@@ -12,8 +12,8 @@ import { assignMember } from "./assign.js"
 import { getAllDiscordIds } from "./db.js"
 
 const GUILD_ID = process.env.DISCORD_GUILD_ID!
-const BOT_TOKEN = process.env.DISCORD_BOT_TOKEN!
-const APP_ID = process.env.DISCORD_APPLICATION_ID!
+const BOT_TOKEN = process.env.DISCORD_ROLE_BOT_TOKEN!
+const APP_ID = process.env.DISCORD_ROLE_APP_ID!
 
 const client = new Client({
   intents: [GatewayIntentBits.Guilds, GatewayIntentBits.GuildMembers],
@@ -35,7 +35,7 @@ async function registerCommands() {
 
 client.once("ready", async () => {
   console.log(`Logged in as ${client.user!.tag}`)
-  await registerCommands()
+  await registerCommands().catch((err) => console.error("Command registration failed:", err))
 })
 
 client.on("guildMemberAdd", async (member) => {
@@ -49,6 +49,7 @@ client.on("guildMemberAdd", async (member) => {
 })
 
 client.on("interactionCreate", async (interaction) => {
+  console.log(`[interaction] type=${interaction.type} cmd=${(interaction as any).commandName ?? "n/a"} guild=${interaction.guildId}`)
   if (!interaction.isChatInputCommand() || interaction.commandName !== "sync") return
   if (interaction.guildId !== GUILD_ID) return
 
