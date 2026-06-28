@@ -28,15 +28,15 @@ function abbreviateVenue(name: string): string {
 
 function buildNickname(displayName: string, venueName: string, role: MembershipRole): string {
   const fullRole = ROLE_LABEL[role]
-  const full = `${displayName} | ${venueName} | ${fullRole}`
+  const full = `${displayName}|${venueName}|${fullRole}`
   if (full.length <= 32) return full
 
   // Abbreviate venue to initials (e.g. "The Final Act" → "TFA")
-  const short = `${displayName} | ${abbreviateVenue(venueName)} | ${fullRole}`
+  const short = `${displayName}|${abbreviateVenue(venueName)}|${fullRole}`
   if (short.length <= 32) return short
 
   // Last resort: truncate display name too
-  return short.slice(0, 32)
+  return `${displayName}|${abbreviateVenue(venueName)}|${fullRole}`.slice(0, 32)
 }
 
 export async function assignMember(member: GuildMember): Promise<string> {
