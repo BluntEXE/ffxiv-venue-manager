@@ -61,8 +61,11 @@ export async function assignMember(member: GuildMember): Promise<string> {
   const displayName = membership.displayName || membership.name
   const nickname = buildNickname(displayName, membership.venueName, membership.role)
 
-  const nickError = await member.setNickname(nickname).then(() => null).catch((e: Error) => e.message)
-  if (nickError) console.warn(`[nick-fail] ${member.user.username} (${member.user.id}): ${nickError}`)
+  const isAdmin = member.permissions.has("Administrator") || member.guild.ownerId === member.id
+  if (!isAdmin) {
+    const nickError = await member.setNickname(nickname).then(() => null).catch((e: Error) => e.message)
+    if (nickError) console.warn(`[nick-fail] ${member.user.username} (${member.user.id}): ${nickError}`)
+  }
 
-  return `${member.user.username}: ${nickname}${nickError ? ` [nick failed: ${nickError}]` : ""}`
+  return `${member.user.username}: ${nickname}${isAdmin ? " (nick skipped - admin)" : ""}`
 }
