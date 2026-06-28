@@ -1,4 +1,5 @@
 const WEBHOOK_URL = process.env.DISCORD_ACTIVITY_FEED_WEBHOOK
+const EVENTS_WEBHOOK_URL = process.env.DISCORD_EVENTS_FEED_WEBHOOK
 
 const XIV_BLUE = 0x00b4ff
 
@@ -12,13 +13,16 @@ type Embed = {
   timestamp?: string
 }
 
-async function postActivityFeed(embed: Embed) {
-  if (!WEBHOOK_URL) return
-  fetch(WEBHOOK_URL, {
+function postToWebhook(url: string, embed: Embed) {
+  fetch(url, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({ embeds: [embed] }),
   }).catch(() => {})
+}
+
+function postActivityFeed(embed: Embed) {
+  if (WEBHOOK_URL) postToWebhook(WEBHOOK_URL, embed)
 }
 
 export function postNewVenue(venue: {
@@ -116,7 +120,7 @@ export function postEventLive(event: {
   const fmt = (d: Date) =>
     d.toLocaleTimeString("en-GB", { hour: "2-digit", minute: "2-digit", timeZone: "UTC" })
 
-  postActivityFeed({
+  const embed: Embed = {
     title: "🟢 Now Open",
     description: `**${event.venue.name}** is open tonight!`,
     color: XIV_BLUE,
@@ -131,5 +135,8 @@ export function postEventLive(event: {
     url: `https://xivvenuemanager.com/venues/${event.venue.slug}`,
     footer: { text: "XIV Venue Manager" },
     timestamp: new Date().toISOString(),
-  })
+  }
+
+  postActivityFeed(embed)
+  if (EVENTS_WEBHOOK_URL) postToWebhook(EVENTS_WEBHOOK_URL, embed)
 }
