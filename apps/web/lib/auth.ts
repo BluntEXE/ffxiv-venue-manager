@@ -22,10 +22,13 @@ export const authOptions: NextAuthOptions = {
       // image at account creation, so avatars go stale when users change them.
       // user.id is only present for existing users (new users get their id
       // after the adapter creates them post-callback).
-      if (account?.provider === "discord" && user?.id && user?.image) {
+      if (account?.provider === "discord" && user?.id) {
         prisma.user.update({
           where: { id: user.id },
-          data: { image: user.image },
+          data: {
+            ...(user.image ? { image: user.image } : {}),
+            discordId: account.providerAccountId,
+          },
         }).catch(() => {})
       }
       return true
