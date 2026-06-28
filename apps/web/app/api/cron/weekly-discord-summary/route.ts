@@ -20,7 +20,7 @@ export async function GET(request: Request) {
       where: { status: "COMPLETED", endTime: { gte: weekStart, lte: weekEnd } },
     }),
     prisma.patronLog.aggregate({
-      where: { createdAt: { gte: weekStart, lte: weekEnd }, countChange: { gt: 0 } },
+      where: { timestamp: { gte: weekStart, lte: weekEnd }, countChange: { gt: 0 } },
       _sum: { countChange: true },
     }),
     prisma.membership.count({
