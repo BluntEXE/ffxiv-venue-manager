@@ -9,6 +9,7 @@ import { getOrSet, cacheKeys, cacheTTL, invalidateCache } from "@/lib/redis-cach
 import { ensureManagerRole } from "@/lib/api/venue-setup"
 import { sendEmail } from "@/lib/email"
 import { venueWelcomeEmail, newVenueAlertEmail } from "@/lib/email-templates"
+import { postNewVenue } from "@/lib/discord-feed"
 
 const venueSchema = z.object({
   name: validators.venueName,
@@ -93,6 +94,9 @@ export const POST = withRateLimit(
 
       // Invalidate user's venue cache
       await invalidateCache(cacheKeys.userVenues(session.user.id))
+
+      // Post to Discord activity feed. Fire-and-forget.
+      postNewVenue(venue)
 
       // Notify owner + admin. Fire-and-forget: signup must not fail on email issues.
       const ownerEmail = session.user.email

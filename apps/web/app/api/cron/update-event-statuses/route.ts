@@ -3,6 +3,7 @@ import { prisma } from "@/lib/prisma"
 import { verifyCronAuth } from "@/lib/cron-auth"
 import { generateOccurrences, type RecurrenceRule } from "@/lib/recurrence"
 import { addWeeks } from "date-fns"
+import { postEventLive } from "@/lib/discord-feed"
 
 /**
  * Cron Job: Automatic Event Status Updates
@@ -182,6 +183,16 @@ export async function GET(request: Request) {
         skipDuplicates: true,
       })
       recurringGenerated += newOccurrences.length
+    }
+
+    // Post activated events to Discord activity feed
+    for (const e of eventsToActivate) {
+      postEventLive({
+        title: e.title,
+        startTime: new Date(e.startTime),
+        endTime: new Date(e.endTime),
+        venue: e.venue,
+      })
     }
 
     // Log the results for monitoring
