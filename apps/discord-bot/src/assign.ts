@@ -22,6 +22,23 @@ function findRole(member: GuildMember, name: string): Role | undefined {
   return member.guild.roles.cache.find((r) => r.name === name)
 }
 
+function abbreviateVenue(name: string): string {
+  return name.split(/\s+/).map((w) => w[0].toUpperCase()).join("")
+}
+
+function buildNickname(displayName: string, venueName: string, role: MembershipRole): string {
+  const fullRole = ROLE_LABEL[role]
+  const full = `${displayName} | ${venueName} | ${fullRole}`
+  if (full.length <= 32) return full
+
+  // Abbreviate venue to initials (e.g. "The Final Act" → "TFA")
+  const short = `${displayName} | ${abbreviateVenue(venueName)} | ${fullRole}`
+  if (short.length <= 32) return short
+
+  // Last resort: truncate display name too
+  return short.slice(0, 32)
+}
+
 export async function assignMember(member: GuildMember): Promise<string> {
   const membership = await getHighestMembership(member.user.id)
 
@@ -42,10 +59,10 @@ export async function assignMember(member: GuildMember): Promise<string> {
   if (discordRole) await member.roles.add(discordRole).catch(() => null)
 
   const displayName = membership.displayName || membership.name
-  const nickname = `${displayName} | ${membership.venueName} | ${ROLE_LABEL[membership.role]}`
+  const nickname = buildNickname(displayName, membership.venueName, membership.role)
 
-  // Setting nickname fails silently for server owner - that's fine
-  await member.setNickname(nickname).catch(() => null)
+  const nickError = await member.setNickname(nickname).then(() => null).catch((e: Error) => e.message)
+  if (nickError) console.warn(`[nick-fail] ${member.user.username} (${member.user.id}): ${nickError}`)
 
-  return `${member.user.username}: ${nickname}`
+  return `${member.user.username}: ${nickname}${nickError ? ` [nick failed: ${nickError}]` : ""}`
 }
