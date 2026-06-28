@@ -7,6 +7,8 @@ import {
   SlashCommandBuilder,
   ChatInputCommandInteraction,
   GuildMember,
+  TextChannel,
+  EmbedBuilder,
 } from "discord.js"
 import { assignMember } from "./assign.js"
 import { getAllDiscordIds } from "./db.js"
@@ -14,6 +16,7 @@ import { getAllDiscordIds } from "./db.js"
 const GUILD_ID = process.env.DISCORD_GUILD_ID!
 const BOT_TOKEN = process.env.DISCORD_ROLE_BOT_TOKEN!
 const APP_ID = process.env.DISCORD_ROLE_APP_ID!
+const WELCOME_CHANNEL_ID = "1509618671880896732"
 
 const client = new Client({
   intents: [GatewayIntentBits.Guilds, GatewayIntentBits.GuildMembers],
@@ -45,6 +48,29 @@ client.on("guildMemberAdd", async (member) => {
     console.log(`[join] ${result}`)
   } catch (err) {
     console.error(`[join] Failed for ${member.user.username}:`, err)
+  }
+
+  try {
+    const channel = await client.channels.fetch(WELCOME_CHANNEL_ID)
+    if (!channel || !(channel instanceof TextChannel)) return
+    const embed = new EmbedBuilder()
+      .setColor(0x00b4ff)
+      .setTitle(`Welcome to XIV Venue Manager, ${member.user.displayName}!`)
+      .setDescription(
+        "We're a community platform for FFXIV venue owners, staff, and patrons.\n\n" +
+        "**Getting started:**\n" +
+        "• Sign up at **[xivvenuemanager.com](https://xivvenuemanager.com)** to manage or discover venues\n" +
+        "• Install the **Dalamud plugin** to log patron visits and sales in-game\n" +
+        "• Browse **[#whats-happening](https://discord.com/channels/1509616350337962024/1520717088635752519)** to see what's going on\n\n" +
+        "Need help with the plugin? Ask in **#plugin-support**."
+      )
+      .setThumbnail(member.user.displayAvatarURL())
+      .setFooter({ text: "XIV Venue Manager" })
+      .setTimestamp()
+    await channel.send({ embeds: [embed] })
+    console.log(`[join] Welcome message sent for ${member.user.username}`)
+  } catch (err) {
+    console.error(`[join] Welcome message failed for ${member.user.username}:`, err)
   }
 })
 
