@@ -47,6 +47,7 @@ export async function GET(request: Request) {
         venue: {
           select: {
             name: true,
+            slug: true,
           },
         },
       },
