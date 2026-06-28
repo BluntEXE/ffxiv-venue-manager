@@ -71,7 +71,6 @@ export default function OwnerManagerGuidePage() {
             <ul className="space-y-1 text-sm text-muted-foreground">
               <li><span className="font-medium text-foreground">Website redesign</span>: The dashboard and every page has a new look. Navigation, cards, and layout are all updated.</li>
               <li><span className="font-medium text-foreground">Plugin UI redesign (v3.8.0)</span>: The plugin has a new XIV blue design to match the website, including a changelog window that opens automatically after updates.</li>
-              <li><span className="font-medium text-foreground">Slash commands renamed</span>: <code className="bg-[rgba(0,180,255,0.08)] text-[var(--xiv-blue)] px-1.5 py-0.5 rounded text-xs font-mono">/vm</code> is now <code className="bg-[rgba(0,180,255,0.08)] text-[var(--xiv-blue)] px-1.5 py-0.5 rounded text-xs font-mono">/xvm</code> and <code className="bg-[rgba(0,180,255,0.08)] text-[var(--xiv-blue)] px-1.5 py-0.5 rounded text-xs font-mono">/venue</code> is now <code className="bg-[rgba(0,180,255,0.08)] text-[var(--xiv-blue)] px-1.5 py-0.5 rounded text-xs font-mono">/xvenue</code>. Update any macros your team uses.</li>
               <li><span className="font-medium text-foreground">Auto-greeter (v3.7.0)</span>: The plugin can now automatically send a <code className="bg-[rgba(0,180,255,0.08)] text-[var(--xiv-blue)] px-1.5 py-0.5 rounded text-xs font-mono">/tell</code> to patrons when they enter your venue. Configure in plugin Settings.</li>
             </ul>
           </div>
