@@ -35,6 +35,8 @@ const updateSettingsSchema = z.object({
   partakeTeamId: z.number().int().positive().nullable().optional(),
   // ffxivvenues.com integration
   ffxivVenueId: z.string().nullable().optional(),
+  // Venue type
+  venueType: z.enum(["BAR_TAVERN","NIGHTCLUB","LOUNGE","HOST_CLUB","CABARET","BATHHOUSE","CASINO","STUDIO","OTHER","TEST_VENUE"]).nullable().optional(),
   // Venue profile extras stored in settings JSON
   tagline: z.string().max(200).optional(),
   tags: z.array(z.string().max(50)).max(20).optional(),
@@ -43,14 +45,6 @@ const updateSettingsSchema = z.object({
   isAdult: z.boolean().optional(),
   // Notification preferences
   notifications: z.record(z.string(), z.boolean()).optional(),
-  // Analytics — owner-configured discovery source percentages
-  discoverySources: z.object({
-    partake:    z.number().min(0).max(100).optional(),
-    shout:      z.number().min(0).max(100).optional(),
-    discord:    z.number().min(0).max(100).optional(),
-    wordOfMouth:z.number().min(0).max(100).optional(),
-    other:      z.number().min(0).max(100).optional(),
-  }).optional(),
   // Discord Shift Bot
   shiftBot: z.object({
     enabled: z.boolean(),
@@ -105,6 +99,7 @@ export const GET = withRateLimit<{ params: Promise<{ venueId: string }> }>(
         settings: true,
         discordWebhookUrl: true,
         partakeTeamId: true,
+        venueType: true,
         ffxivVenueId: true,
         ffxivVenueLinkedAt: true,
         venueSchedule: { select: { syncedAt: true } },
@@ -119,6 +114,7 @@ export const GET = withRateLimit<{ params: Promise<{ venueId: string }> }>(
         ...parseVenueSettings(venue.settings),
         discordWebhookUrl: venue.discordWebhookUrl,
         partakeTeamId: venue.partakeTeamId,
+        venueType: venue.venueType,
         ffxivVenueId: venue.ffxivVenueId,
         ffxivVenueLinkedAt: venue.ffxivVenueLinkedAt,
         ffxivVenueSyncedAt: venue.venueSchedule?.syncedAt ?? null,
@@ -179,7 +175,7 @@ export const PUT = withRateLimit<{ params: Promise<{ venueId: string }> }>(
     }
 
     // Extract top-level venue columns from validated data
-    const { discordWebhookUrl, partakeTeamId, ffxivVenueId, ...settingsData } = validatedData
+    const { discordWebhookUrl, partakeTeamId, venueType, ffxivVenueId, ...settingsData } = validatedData
 
     // Merge new settings with existing settings (type-safe)
     const currentSettings = parseVenueSettings(venue.settings)
@@ -199,6 +195,9 @@ export const PUT = withRateLimit<{ params: Promise<{ venueId: string }> }>(
         ...(partakeTeamId !== undefined && {
           partakeTeamId: partakeTeamId,
         }),
+        ...(venueType !== undefined && {
+          venueType: venueType,
+        }),
         ...(ffxivVenueId !== undefined && {
           ffxivVenueId: ffxivVenueId,
           ffxivVenueLinkedAt: ffxivVenueId ? new Date() : null,
@@ -209,6 +208,7 @@ export const PUT = withRateLimit<{ params: Promise<{ venueId: string }> }>(
         settings: true,
         discordWebhookUrl: true,
         partakeTeamId: true,
+        venueType: true,
         ffxivVenueId: true,
       },
     })
@@ -222,6 +222,7 @@ export const PUT = withRateLimit<{ params: Promise<{ venueId: string }> }>(
         ...parseVenueSettings(updatedVenue.settings),
         discordWebhookUrl: updatedVenue.discordWebhookUrl,
         partakeTeamId: updatedVenue.partakeTeamId,
+        venueType: updatedVenue.venueType,
         ffxivVenueId: updatedVenue.ffxivVenueId,
       })
     } catch (error) {

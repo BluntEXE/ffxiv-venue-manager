@@ -34,14 +34,9 @@ export default async function StatsPage() {
   const todayDOW = new Date().getUTCDay() // 0=Sun
   const maxDC = stats.dcBreakdown[0]?.count || 1
 
-  // Venue type breakdown — derived from what we have
-  const venueTypes = [
-    { label: "Bar / Tavern",  pct: 34 },
-    { label: "Lounge",        pct: 25 },
-    { label: "Club",          pct: 18 },
-    { label: "Cabaret",       pct: 13 },
-    { label: "RP / Other",    pct: 10 },
-  ]
+  const venueTypes = stats.venueTypeBreakdown.length > 0
+    ? stats.venueTypeBreakdown
+    : [] as Array<{ label: string; pct: number }>
 
   return (
     <div className="min-h-screen">

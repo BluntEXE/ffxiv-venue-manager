@@ -75,7 +75,7 @@ export default function SettingsPage({
       revenue: "",
     },
     partakeTeamId: null,
-    discoverySources: {},
+    venueType: null,
   })
   // Venue profile DB fields (saved separately)
   const [venueName, setVenueName] = useState("")
@@ -181,7 +181,7 @@ export default function SettingsPage({
               revenue: "",
             },
             partakeTeamId: settingsData.partakeTeamId ?? null,
-            discoverySources: settingsData.discoverySources ?? {},
+            venueType: settingsData.venueType ?? null,
           })
           setFfxivVenueId(settingsData.ffxivVenueId ?? null)
           setFfxivVenueLinkedAt(settingsData.ffxivVenueLinkedAt ?? null)
@@ -651,6 +651,28 @@ export default function SettingsPage({
                       disabled={isSaving} className="bg-background border-[var(--blue-015)] focus:border-[var(--blue-035)]" />
                   </div>
                 </div>
+                <div className="space-y-1.5">
+                  <Label htmlFor="venue-type">Venue type</Label>
+                  <select
+                    id="venue-type"
+                    value={settings.venueType ?? ""}
+                    onChange={e => setSettings({ ...settings, venueType: e.target.value || null })}
+                    disabled={isSaving}
+                    className="w-full h-9 rounded-md border border-[var(--blue-015)] bg-background px-3 text-sm focus:border-[var(--blue-035)] focus:outline-none"
+                  >
+                    <option value="">Select a type...</option>
+                    <option value="BAR_TAVERN">Bar / Tavern</option>
+                    <option value="NIGHTCLUB">Nightclub</option>
+                    <option value="LOUNGE">Lounge</option>
+                    <option value="HOST_CLUB">Host Club</option>
+                    <option value="CABARET">Cabaret</option>
+                    <option value="BATHHOUSE">Bathhouse / Spa</option>
+                    <option value="CASINO">Casino</option>
+                    <option value="STUDIO">Creative Studio</option>
+                    <option value="OTHER">Other</option>
+                    <option value="TEST_VENUE">Test Venue</option>
+                  </select>
+                </div>
                 <div className="setrow" style={{ paddingLeft: 0, paddingRight: 0, border: "none" }}>
                   <div className="sinfo">
                     <div className="stitle">Adult (18+) venue</div>
@@ -1010,55 +1032,6 @@ export default function SettingsPage({
                     )}
                   </div>
                 ))}
-              </div>
-            </section>
-
-            {/* ── How patrons find you ── */}
-            <section className="panel">
-              <div className="ph"><span className="pt"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></svg>How patrons find you</span><span className="ph-spacer" /><span className="pcount">Shown in Analytics</span></div>
-              <div className="pbody space-y-4">
-                <p className="text-xs text-muted-foreground">
-                  Estimate how patrons typically discover your venue. These percentages appear in your Analytics dashboard.
-                  They don&apos;t need to add up to 100%.
-                </p>
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                  {[
-                    { key: "partake",     label: "Partake.gg listing",  placeholder: "e.g. 50" },
-                    { key: "shout",       label: "In-game /shout",      placeholder: "e.g. 25" },
-                    { key: "discord",     label: "Discord",             placeholder: "e.g. 15" },
-                    { key: "wordOfMouth", label: "Word of mouth",       placeholder: "e.g. 10" },
-                    { key: "other",       label: "Other",               placeholder: "e.g. 0"  },
-                  ].map(({ key, label, placeholder }) => {
-                    const val = (settings.discoverySources as Record<string, number | undefined> | undefined)?.[key] ?? ""
-                    return (
-                      <div key={key} className="flex items-center gap-3">
-                        <Label className="flex-1 text-sm">{label}</Label>
-                        <div className="flex items-center gap-1.5">
-                          <Input
-                            type="number"
-                            min={0}
-                            max={100}
-                            placeholder={placeholder}
-                            value={val}
-                            onChange={(e) => {
-                              const num = e.target.value === "" ? undefined : Math.min(100, Math.max(0, parseInt(e.target.value, 10) || 0))
-                              setSettings({
-                                ...settings,
-                                discoverySources: {
-                                  ...settings.discoverySources,
-                                  [key]: num,
-                                },
-                              })
-                            }}
-                            disabled={isSaving}
-                            className="w-20 h-8 text-sm bg-background border-[var(--blue-015)] text-right"
-                          />
-                          <span className="text-xs text-muted-foreground w-4">%</span>
-                        </div>
-                      </div>
-                    )
-                  })}
-                </div>
               </div>
             </section>
 

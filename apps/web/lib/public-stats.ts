@@ -17,6 +17,7 @@ export interface PublicStats {
   gilTracked: number
   dataCenters: number
   dcBreakdown: Array<{ dataCenter: string; count: number }>
+  venueTypeBreakdown: Array<{ type: string; label: string; count: number; pct: number }>
   busiestNights: Array<{ day: string; count: number; pct: number }>
   firstVenueAt: string | null
   lastActivityAt: string | null
@@ -46,6 +47,7 @@ async function computeStats(): Promise<PublicStats> {
     firstVenue,
     lastSale,
     lastPatron,
+    venueTypeCounts,
   ] = await Promise.all([
     prisma.venue.count({ where: { isActive: true } }),
     prisma.venue.findMany({
@@ -84,6 +86,12 @@ async function computeStats(): Promise<PublicStats> {
     prisma.venue.findFirst({ where: { isActive: true }, orderBy: { createdAt: "asc" }, select: { createdAt: true } }),
     prisma.transaction.findFirst({ orderBy: { createdAt: "desc" }, select: { createdAt: true } }),
     prisma.patronLog.findFirst({ orderBy: { loggedAt: "desc" }, select: { loggedAt: true } }),
+    prisma.venue.groupBy({
+      by: ["venueType"],
+      where: { isActive: true, venueType: { not: null }, NOT: { venueType: "TEST_VENUE" } },
+      _count: { _all: true },
+      orderBy: { _count: { venueType: "desc" } },
+    }),
   ])
 
   // Busiest nights: count events per UTC day-of-week
@@ -95,6 +103,25 @@ async function computeStats(): Promise<PublicStats> {
     day,
     count: dayCounts[i],
     pct: Math.round((dayCounts[i] / maxDay) * 100),
+  }))
+
+  const venueTypeLabels: Record<string, string> = {
+    BAR_TAVERN: "Bar / Tavern",
+    NIGHTCLUB:  "Nightclub",
+    LOUNGE:     "Lounge",
+    HOST_CLUB:  "Host Club",
+    CABARET:    "Cabaret",
+    BATHHOUSE:  "Bathhouse",
+    CASINO:     "Casino",
+    STUDIO:     "Creative Studio",
+    OTHER:      "Other",
+  }
+  const totalTyped = venueTypeCounts.reduce((s, r) => s + r._count._all, 0) || 1
+  const venueTypeBreakdown = venueTypeCounts.map(r => ({
+    type:  r.venueType as string,
+    label: venueTypeLabels[r.venueType as string] ?? r.venueType as string,
+    count: r._count._all,
+    pct:   Math.round((r._count._all / totalTyped) * 100),
   }))
 
   const lastActivity = [lastSale?.createdAt, lastPatron?.loggedAt]
@@ -117,6 +144,7 @@ async function computeStats(): Promise<PublicStats> {
     gilTracked: Number(salesAgg._sum.amount ?? 0),
     dataCenters: dcRows.length,
     dcBreakdown: dcCounts.map(r => ({ dataCenter: r.dataCenter, count: r._count._all })),
+    venueTypeBreakdown,
     busiestNights,
     firstVenueAt: firstVenue?.createdAt.toISOString() ?? null,
     lastActivityAt: lastActivity ? lastActivity.toISOString() : null,

@@ -174,6 +174,9 @@ model Venue {
   currencyName String @default("Gil")
   settings     Json   @default("{\"taskVisibility\":\"all\",\"salesVisibility\":\"all\",\"revenueVisibility\":\"all\",\"eventVisibility\":\"all\",\"webhooks\":{\"taskCreated\":false,\"taskCompleted\":false,\"partakeEvent\":false,\"saleLogged\":false,\"dailySalesSummary\":false,\"staffJoined\":false},\"discordWebhooks\":{\"staff\":\"\",\"events\":\"\",\"revenue\":\"\"}}")
 
+  // Venue type (owner-set category)
+  venueType     VenueType?
+
   // Partake Integration
   partakeTeamId Int?
 
@@ -250,6 +253,19 @@ model VenueSchedule {
 // ============================================
 // MEMBERSHIPS & ROLES
 // ============================================
+
+enum VenueType {
+  BAR_TAVERN
+  NIGHTCLUB
+  LOUNGE
+  HOST_CLUB
+  CABARET
+  BATHHOUSE
+  CASINO
+  STUDIO
+  OTHER
+  TEST_VENUE
+}
 
 enum ScheduleInterval {
   WEEKLY
