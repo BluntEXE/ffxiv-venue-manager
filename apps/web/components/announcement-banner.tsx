@@ -1,7 +1,7 @@
 "use client"
 
 import { useState } from "react"
-import { X, Megaphone, ExternalLink } from "lucide-react"
+import { X, ExternalLink } from "lucide-react"
 
 type Announcement = {
   id: string
@@ -23,31 +23,58 @@ export function AnnouncementBanner({ announcements }: { announcements: Announcem
   }
 
   return (
-    <div className="space-y-2 mb-6">
+    <div className="space-y-3 mb-6">
       {visible.map(a => (
         <div
           key={a.id}
-          className="relative flex items-start gap-3 rounded-xl border border-[rgba(0,180,255,0.28)] bg-[rgba(0,180,255,0.07)] px-4 py-3.5 pr-10"
+          className="relative rounded-xl overflow-hidden"
+          style={{
+            background: "linear-gradient(135deg, rgba(0,180,255,0.10) 0%, rgba(0,180,255,0.04) 100%)",
+            border: "1px solid rgba(0,180,255,0.35)",
+            boxShadow: "0 0 24px rgba(0,180,255,0.08), inset 0 1px 0 rgba(0,180,255,0.15)",
+          }}
         >
-          <Megaphone className="h-4 w-4 text-[var(--xiv-blue)] shrink-0 mt-0.5" />
-          <div className="min-w-0">
-            <p className="text-sm font-semibold text-[var(--xiv-blue)]">{a.title}</p>
-            <p className="text-sm text-muted-foreground mt-0.5 leading-relaxed">{a.message}</p>
+          {/* Top accent line */}
+          <div
+            className="absolute top-0 left-0 right-0 h-[2px]"
+            style={{ background: "linear-gradient(90deg, transparent, rgba(0,180,255,0.8) 40%, rgba(0,180,255,0.8) 60%, transparent)" }}
+          />
+
+          <div className="px-5 py-4 pr-10">
+            {/* Title row */}
+            <div className="flex items-center gap-2.5 mb-2">
+              <span
+                className="w-2 h-2 shrink-0 rotate-45"
+                style={{ background: "var(--xiv-blue)", boxShadow: "0 0 8px rgba(0,180,255,0.7)" }}
+              />
+              <p className="font-cinzel text-sm font-semibold tracking-wide text-[var(--xiv-blue)]">
+                {a.title}
+              </p>
+            </div>
+
+            {/* Message — respects newlines */}
+            <div className="text-sm text-muted-foreground leading-relaxed space-y-2 pl-[18px]">
+              {a.message.split("\n\n").map((para, i) => (
+                <p key={i} style={{ whiteSpace: "pre-wrap" }}>{para}</p>
+              ))}
+            </div>
+
             {a.link && (
               <a
                 href={a.link}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="inline-flex items-center gap-1 text-xs text-[var(--xiv-blue)] hover:underline mt-1.5"
+                className="inline-flex items-center gap-1.5 text-xs font-semibold text-[var(--xiv-blue)] hover:underline mt-3 pl-[18px]"
               >
                 {a.linkLabel ?? "Learn more"}
                 <ExternalLink className="h-3 w-3" />
               </a>
             )}
           </div>
+
           <button
             onClick={() => dismiss(a.id)}
-            className="absolute top-3 right-3 text-[var(--fg-faint)] hover:text-foreground transition-colors"
+            className="absolute top-3.5 right-3.5 text-[var(--fg-faint)] hover:text-foreground transition-colors"
             aria-label="Dismiss"
           >
             <X className="h-3.5 w-3.5" />
