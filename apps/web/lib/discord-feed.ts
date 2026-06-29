@@ -1,5 +1,6 @@
 const WEBHOOK_URL = process.env.DISCORD_ACTIVITY_FEED_WEBHOOK
 const EVENTS_WEBHOOK_URL = process.env.DISCORD_EVENTS_FEED_WEBHOOK
+const TONIGHT_WEBHOOK_URL = process.env.DISCORD_TONIGHT_WEBHOOK
 
 const XIV_BLUE = 0x00b4ff
 
@@ -107,6 +108,47 @@ export function postWeeklySummary(stats: {
     color: XIV_BLUE,
     url: "https://xivvenuemanager.com/discover",
     footer: { text: "XIV Venue Manager" },
+    timestamp: new Date().toISOString(),
+  })
+}
+
+export function postTonightList(
+  venues: {
+    name: string
+    slug: string
+    dataCenter: string
+    world: string
+    district?: string | null
+    ward?: number | null
+    plot?: number | null
+    scheduledStart: Date
+    scheduledEnd: Date
+  }[]
+) {
+  if (!TONIGHT_WEBHOOK_URL) return
+
+  const fmt = (d: Date) =>
+    d.toLocaleTimeString("en-GB", { hour: "2-digit", minute: "2-digit", timeZone: "UTC" })
+
+  const fields = venues.map((v) => {
+    const location = [v.dataCenter, v.world, v.district, v.ward != null ? `W${v.ward}` : null, v.plot != null ? `P${v.plot}` : null]
+      .filter(Boolean)
+      .join(" · ")
+
+    return {
+      name: v.name,
+      value: `${location}\n[View profile](https://xivvenuemanager.com/venues/${v.slug}) · ${fmt(v.scheduledStart)} – ${fmt(v.scheduledEnd)} ST`,
+      inline: false,
+    }
+  })
+
+  postToWebhook(TONIGHT_WEBHOOK_URL, {
+    title: "📅 Venues Open Tonight",
+    description: "Here's what's on in the realm this evening:",
+    color: XIV_BLUE,
+    fields,
+    url: "https://xivvenuemanager.com/discover",
+    footer: { text: "XIV Venue Manager · All times in Server Time (UTC)" },
     timestamp: new Date().toISOString(),
   })
 }
