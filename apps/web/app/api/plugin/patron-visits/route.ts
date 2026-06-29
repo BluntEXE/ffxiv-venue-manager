@@ -3,6 +3,10 @@ import { validateApiKey, checkPermission, logPatronVisit, getPatronVisits } from
 import { enforcePluginRateLimit, enforcePluginIpRateLimit } from '@/lib/api/plugin-rate-limit'
 import { venueEventBus } from '@/lib/sse/venue-events'
 import { nanoid } from 'nanoid'
+import { prisma } from '@/lib/prisma'
+import { postVenueGraduation } from '@/lib/discord-feed'
+
+const GRADUATION_MILESTONES = [100, 500, 1000]
 
 interface PatronVisitPayload {
   venueId: string
@@ -76,6 +80,19 @@ export async function POST(request: NextRequest) {
         timestamp: new Date(timestamp).toISOString(),
         data: { characterName, world },
       })
+    }
+
+    if (!result.deduped && action === 'enter') {
+      const totalEnters = await prisma.patronLog.count({
+        where: { venueId, action: 'ENTER' },
+      })
+      if (GRADUATION_MILESTONES.includes(totalEnters)) {
+        const venue = await prisma.venue.findUnique({
+          where: { id: venueId },
+          select: { name: true, slug: true },
+        })
+        if (venue) postVenueGraduation(venue, totalEnters)
+      }
     }
 
     return NextResponse.json({

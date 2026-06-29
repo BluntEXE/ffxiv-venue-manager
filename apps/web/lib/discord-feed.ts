@@ -112,6 +112,17 @@ export function postWeeklySummary(stats: {
   })
 }
 
+export function postVenueGraduation(venue: { name: string; slug: string }, milestone: number) {
+  postActivityFeed({
+    title: "🎉 Milestone Reached!",
+    description: `**${venue.name}** just logged their **${milestone.toLocaleString()}th patron visit!** Congratulations to the whole team on this incredible milestone.`,
+    color: XIV_BLUE,
+    url: `https://xivvenuemanager.com/venues/${venue.slug}`,
+    footer: { text: "XIV Venue Manager" },
+    timestamp: new Date().toISOString(),
+  })
+}
+
 export function postTonightList(
   venues: {
     name: string
