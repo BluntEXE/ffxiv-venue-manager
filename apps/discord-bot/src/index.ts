@@ -62,7 +62,7 @@ client.on("guildMemberAdd", async (member) => {
         "• Sign up at **[xivvenuemanager.com](https://xivvenuemanager.com)** to manage or discover venues\n" +
         "• Install the **Dalamud plugin** to log patron visits and sales in-game\n" +
         "• Browse **[#whats-happening](https://discord.com/channels/1509616350337962024/1520717088635752519)** to see what's going on\n\n" +
-        "Need help with the plugin? Ask in **#plugin-support**."
+        "Need help with the plugin? Ask in <#1509618673675931769>."
       )
       .setThumbnail(member.user.displayAvatarURL())
       .setFooter({ text: "XIV Venue Manager" })
