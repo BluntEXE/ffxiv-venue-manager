@@ -69,6 +69,7 @@ services:
              echo '0 8 * * * curl -s -H \"Authorization: Bearer '$$CRON_SECRET'\" http://venue-manager:3000/api/cron/sync-shift-embeds >> /var/log/cron.log 2>&1' >> /etc/crontabs/root &&
              echo '0 20 * * 0 curl -s -H \"Authorization: Bearer '$$CRON_SECRET'\" http://venue-manager:3000/api/cron/weekly-discord-summary >> /var/log/cron.log 2>&1' >> /etc/crontabs/root &&
              echo '0 12 * * * curl -s -H \"Authorization: Bearer '$$CRON_SECRET'\" http://venue-manager:3000/api/cron/partake-daily-digest >> /var/log/cron.log 2>&1' >> /etc/crontabs/root &&
+             echo '0 18 * * * curl -s -H \"Authorization: Bearer '$$CRON_SECRET'\" http://venue-manager:3000/api/cron/tonight-post >> /var/log/cron.log 2>&1' >> /etc/crontabs/root &&
              crond -f -l 2"
 
   static-ehno:
