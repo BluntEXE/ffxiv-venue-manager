@@ -1,6 +1,6 @@
 "use client"
 
-import { useEffect, useState } from "react"
+import { useEffect, useRef, useState } from "react"
 import { useRouter } from "next/navigation"
 import Link from "next/link"
 import { Button } from "@/components/ui/button"
@@ -118,6 +118,8 @@ export default function SettingsPage({
   const [shiftBotTemplates, setShiftBotTemplates] = useState<Array<{
     name: string; startOffsetHours: number; durationHours: number; slots: number
   }>>([])
+  const [isDirty, setIsDirty] = useState(false)
+  const settingsReadyRef = useRef(false)
 
   // Unwrap params
   useEffect(() => {
@@ -204,11 +206,20 @@ export default function SettingsPage({
         setError(error instanceof Error ? error.message : "Failed to load settings")
       } finally {
         setIsLoading(false)
+        settingsReadyRef.current = true
       }
     }
 
     fetchSettings()
   }, [slug])
+
+  useEffect(() => {
+    if (!settingsReadyRef.current) return
+    setIsDirty(true)
+  }, [
+    settings, venueName, venueDescription, venueDistrict, venueWard, venuePlot,
+    shiftBotEnabled, shiftBotChannelId, shiftBotDaysBefore, shiftBotThumbnailUrl, shiftBotTemplates,
+  ])
 
   const handleSave = async () => {
     setIsSaving(true)
@@ -256,6 +267,7 @@ export default function SettingsPage({
       }
 
       setSuccess(true)
+      setIsDirty(false)
       setTimeout(() => setSuccess(false), 3000)
     } catch (error: unknown) {
       setError(error instanceof Error ? error.message : "Failed to save settings")
@@ -1171,6 +1183,22 @@ export default function SettingsPage({
           </div>
         )}
       </div>
+      {isDirty && (
+        <div className="fixed bottom-0 left-0 right-0 z-50 border-t border-[var(--blue-015)] bg-[#070b14]/95 backdrop-blur-md">
+          <div className="max-w-3xl mx-auto px-4 py-3 flex items-center justify-between gap-4">
+            <p className="text-sm text-[var(--fg-faint)]">You have unsaved changes</p>
+            <Button
+              variant="cta"
+              size="sm"
+              onClick={handleSave}
+              disabled={isSaving}
+              className="xiv-btn-shimmer"
+            >
+              {isSaving ? "Saving…" : "Save changes"}
+            </Button>
+          </div>
+        </div>
+      )}
     </VenueLayoutClient>
   )
 }
