@@ -1185,7 +1185,7 @@ export default function SettingsPage({
       </div>
       {isDirty && (
         <div className="fixed bottom-0 left-0 [@media(min-width:1081px)]:left-[300px] right-0 z-50 border-t border-[var(--blue-015)] bg-[#070b14]/95 backdrop-blur-md">
-          <div className="max-w-3xl mx-auto px-4 py-3 flex items-center justify-between gap-4">
+          <div className="px-6 py-3 flex items-center justify-between gap-4">
             <p className="text-sm text-[var(--fg-faint)]">You have unsaved changes</p>
             <Button
               variant="cta"
