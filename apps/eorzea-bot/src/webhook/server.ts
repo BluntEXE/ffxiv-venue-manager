@@ -1,7 +1,8 @@
 import express from 'express';
-import { Client } from 'discord.js';
+import { Client, GuildMember } from 'discord.js';
 import { postEmbed } from '../utils/channels.js';
 import { awardXp } from './xpWebhook.js';
+import prisma from '../utils/prisma.js';
 import {
   newVenueEmbed,
   weeklySummaryEmbed,
@@ -11,6 +12,47 @@ import {
   tonightListEmbed,
   type VenueInfo,
 } from '../utils/embeds.js';
+
+const LOYALTY_TIERS = [
+  { threshold: 150, env: 'LOYALTY_GOLD_ROLE' },
+  { threshold: 50,  env: 'LOYALTY_SILVER_ROLE' },
+  { threshold: 10,  env: 'LOYALTY_BRONZE_ROLE' },
+] as const;
+
+async function assignLoyaltyRole(client: Client, discordId: string) {
+  try {
+    const rows = await prisma.$queryRaw<{ visit_count: bigint }[]>`
+      SELECT COUNT(*)::bigint AS visit_count
+      FROM patron_logs pl
+      JOIN user_characters uc ON uc."characterName" = pl."characterName" AND uc.world = pl.world
+      JOIN users u ON u.id = uc."userId"
+      WHERE u."discordId" = ${discordId}
+        AND pl.action = 'ENTER'
+    `;
+    const count = Number(rows[0]?.visit_count ?? 0);
+    const tier = LOYALTY_TIERS.find(t => count >= t.threshold);
+    if (!tier) return;
+
+    const roleId = process.env[tier.env];
+    if (!roleId) return;
+
+    const guild = client.guilds.cache.get(process.env.GUILD_ID!);
+    if (!guild) return;
+
+    const member = await guild.members.fetch(discordId).catch(() => null) as GuildMember | null;
+    if (!member) return;
+
+    // Remove any lower loyalty roles, add the correct one
+    const allRoleIds = LOYALTY_TIERS.map(t => process.env[t.env]).filter(Boolean) as string[];
+    const toRemove = allRoleIds.filter(id => id !== roleId && member.roles.cache.has(id));
+    if (toRemove.length) await member.roles.remove(toRemove).catch(() => null);
+    if (!member.roles.cache.has(roleId)) {
+      await member.roles.add(roleId).catch(() => null);
+    }
+  } catch (err) {
+    console.error('[Loyalty] Role assignment failed:', err);
+  }
+}
 
 export function startWebhookServer(client: Client) {
   const app = express();
@@ -74,6 +116,7 @@ export function startWebhookServer(client: Client) {
     const { discordId, venueName } = req.body as { discordId: string; venueName: string };
     if (!discordId) { res.status(400).json({ error: 'discordId required' }); return; }
     await awardXp(client, discordId, 100, `visited ${venueName}`);
+    await assignLoyaltyRole(client, discordId);
     res.json({ ok: true });
   });
 
