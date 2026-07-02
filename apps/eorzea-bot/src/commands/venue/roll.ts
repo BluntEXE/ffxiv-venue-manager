@@ -41,7 +41,7 @@ export default {
           JOIN shifts s ON s."venueId" = v.id
           WHERE v."isActive" = true
             AND v."venueType" != 'TEST_VENUE'
-            AND s.status = 'SCHEDULED'
+            AND s.status IN ('SCHEDULED', 'OPEN', 'ACTIVE')
             AND s."scheduledStart" <= ${now}
             AND s."scheduledEnd" >= ${now}
             AND v."dataCenter" ILIKE ${dc}
@@ -55,7 +55,7 @@ export default {
           JOIN shifts s ON s."venueId" = v.id
           WHERE v."isActive" = true
             AND v."venueType" != 'TEST_VENUE'
-            AND s.status = 'SCHEDULED'
+            AND s.status IN ('SCHEDULED', 'OPEN', 'ACTIVE')
             AND s."scheduledStart" <= ${now}
             AND s."scheduledEnd" >= ${now}
           ORDER BY RANDOM()
