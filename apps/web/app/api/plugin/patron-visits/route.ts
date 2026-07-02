@@ -4,7 +4,7 @@ import { enforcePluginRateLimit, enforcePluginIpRateLimit } from '@/lib/api/plug
 import { venueEventBus } from '@/lib/sse/venue-events'
 import { nanoid } from 'nanoid'
 import { prisma } from '@/lib/prisma'
-import { postVenueGraduation } from '@/lib/discord-feed'
+import { postVenueGraduation, postPatronVisitXp } from '@/lib/discord-feed'
 
 const GRADUATION_MILESTONES = [100, 500, 1000]
 
@@ -93,6 +93,7 @@ export async function POST(request: NextRequest) {
         })
         if (venue) postVenueGraduation(venue, totalEnters)
       }
+      postPatronVisitXp(venueId, characterName, world)
     }
 
     return NextResponse.json({

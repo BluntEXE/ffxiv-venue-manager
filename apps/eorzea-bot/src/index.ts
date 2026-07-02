@@ -1,0 +1,32 @@
+import 'dotenv/config';
+import { Client, GatewayIntentBits, Collection } from 'discord.js';
+import { BotClient } from './types/index.js';
+import { loadCommands } from './handlers/commandHandler.js';
+import { loadEvents } from './handlers/eventHandler.js';
+import { startWebhookServer } from './webhook/server.js';
+import { startShiftReminder } from './jobs/shiftReminder.js';
+
+const client = new Client({
+  intents: [
+    GatewayIntentBits.Guilds,
+    GatewayIntentBits.GuildMembers,
+    GatewayIntentBits.GuildMessages,
+    GatewayIntentBits.GuildMessageReactions,
+    GatewayIntentBits.MessageContent,
+    GatewayIntentBits.GuildModeration,
+  ],
+}) as BotClient;
+
+client.commands = new Collection();
+
+client.on('error', err => console.error('[Client Error]', err));
+
+await loadCommands(client);
+await loadEvents(client);
+
+client.once('clientReady', (c) => {
+  startWebhookServer(c);
+  startShiftReminder(c);
+});
+
+await client.login(process.env.DISCORD_TOKEN);

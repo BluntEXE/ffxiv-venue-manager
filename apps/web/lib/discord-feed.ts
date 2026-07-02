@@ -1,195 +1,78 @@
-const WEBHOOK_URL = process.env.DISCORD_ACTIVITY_FEED_WEBHOOK
-const EVENTS_WEBHOOK_URL = process.env.DISCORD_EVENTS_FEED_WEBHOOK
-const TONIGHT_WEBHOOK_URL = process.env.DISCORD_TONIGHT_WEBHOOK
+const BOT_URL = process.env.EORZEA_BOT_WEBHOOK_URL
+const BOT_SECRET = process.env.EORZEA_BOT_WEBHOOK_SECRET
 
-const XIV_BLUE = 0x00b4ff
-
-type Embed = {
-  title: string
-  description: string
-  color: number
-  fields?: { name: string; value: string; inline?: boolean }[]
-  url?: string
-  footer?: { text: string }
-  timestamp?: string
-}
-
-function postToWebhook(url: string, embed: Embed) {
+async function post(path: string, body: unknown) {
+  if (!BOT_URL) return
+  const url = `${BOT_URL}${path}`
   fetch(url, {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ embeds: [embed] }),
-  }).catch(() => {})
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      ...(BOT_SECRET ? { 'x-webhook-secret': BOT_SECRET } : {}),
+    },
+    body: JSON.stringify(body),
+  }).catch((e) => console.error('[discord-feed] bot webhook failed:', e))
 }
 
-function postActivityFeed(embed: Embed) {
-  if (WEBHOOK_URL) postToWebhook(WEBHOOK_URL, embed)
+export type VenueSlug = { name: string; slug: string }
+
+export type VenueInfo = {
+  name: string; slug: string;
+  dataCenter: string; world: string;
+  district?: string | null; ward?: number | null; plot?: number | null;
 }
 
-export function postNewVenue(venue: {
-  name: string
-  slug: string
-  dataCenter: string
-  world: string
-  district?: string | null
-  ward?: number | null
-  plot?: number | null
-}) {
-  const location = [
-    venue.dataCenter,
-    venue.world,
-    venue.district,
-    venue.ward != null ? `W${venue.ward}` : null,
-    venue.plot != null ? `P${venue.plot}` : null,
-  ]
-    .filter(Boolean)
-    .join(" · ")
-
-  postActivityFeed({
-    title: "🏛️ New Venue Joined",
-    description: `**${venue.name}** has joined XIV Venue Manager!`,
-    color: XIV_BLUE,
-    fields: [{ name: "Location", value: location, inline: true }],
-    url: `https://xivvenuemanager.com/venues/${venue.slug}`,
-    footer: { text: "XIV Venue Manager" },
-    timestamp: new Date().toISOString(),
-  })
-}
-
-export function postPartakeDigest(
-  events: { title: string; startTime: Date; endTime: Date; venue: { name: string; slug: string } }[]
-) {
-  const fmt = (d: Date) =>
-    d.toLocaleDateString("en-GB", { weekday: "short", day: "numeric", month: "short", timeZone: "UTC" }) +
-    " · " +
-    d.toLocaleTimeString("en-GB", { hour: "2-digit", minute: "2-digit", timeZone: "UTC" }) +
-    " ST"
-
-  const fields = events.map((e) => ({
-    name: `${e.venue.name}`,
-    value: `[${e.title}](https://xivvenuemanager.com/venues/${e.venue.slug}) · ${fmt(e.startTime)}`,
-    inline: false,
-  }))
-
-  postActivityFeed({
-    title: "📅 Upcoming Events This Week",
-    description: "Events from our partner venues on [Partake.gg](https://partake.gg) coming up in the next 7 days:",
-    color: XIV_BLUE,
-    fields,
-    url: "https://xivvenuemanager.com/discover",
-    footer: { text: "XIV Venue Manager · Powered by Partake.gg" },
-    timestamp: new Date().toISOString(),
-  })
-}
-
-export function postWeeklySummary(stats: {
-  newVenues: number
-  eventsHosted: number
-  patronVisits: number
-  newStaff: number
-  weekStart: Date
-}) {
-  const weekLabel = stats.weekStart.toLocaleDateString("en-GB", {
-    day: "numeric",
-    month: "long",
-    timeZone: "UTC",
-  })
-
-  const lines = [
-    `🏛️ **${stats.newVenues}** new venue${stats.newVenues !== 1 ? "s" : ""} joined`,
-    `🟢 **${stats.eventsHosted}** event${stats.eventsHosted !== 1 ? "s" : ""} hosted`,
-    `👥 **${stats.patronVisits}** patron visit${stats.patronVisits !== 1 ? "s" : ""} logged`,
-    `✨ **${stats.newStaff}** new staff member${stats.newStaff !== 1 ? "s" : ""} joined`,
-  ]
-
-  postActivityFeed({
-    title: "📋 Weekly Summary",
-    description: `Here's what happened in the realm this week (w/c ${weekLabel}):\n\n${lines.join("\n")}`,
-    color: XIV_BLUE,
-    url: "https://xivvenuemanager.com/discover",
-    footer: { text: "XIV Venue Manager" },
-    timestamp: new Date().toISOString(),
-  })
-}
-
-export function postVenueGraduation(venue: { name: string; slug: string }, milestone: number) {
-  postActivityFeed({
-    title: "🎉 Milestone Reached!",
-    description: `**${venue.name}** just logged their **${milestone.toLocaleString()}th patron visit!** Congratulations to the whole team on this incredible milestone.`,
-    color: XIV_BLUE,
-    url: `https://xivvenuemanager.com/venues/${venue.slug}`,
-    footer: { text: "XIV Venue Manager" },
-    timestamp: new Date().toISOString(),
-  })
+export function postNewVenue(venue: VenueInfo) {
+  post('/webhook/new-venue', venue)
 }
 
 export function postTonightList(
-  venues: {
-    name: string
-    slug: string
-    dataCenter: string
-    world: string
-    district?: string | null
-    ward?: number | null
-    plot?: number | null
-    scheduledStart: Date
-    scheduledEnd: Date
-  }[]
+  venues: (VenueInfo & { scheduledStart: Date; scheduledEnd: Date })[]
 ) {
-  if (!TONIGHT_WEBHOOK_URL) return
+  post('/webhook/tonight', venues)
+}
 
-  const fmt = (d: Date) =>
-    d.toLocaleTimeString("en-GB", { hour: "2-digit", minute: "2-digit", timeZone: "UTC" })
+export function postWeeklySummary(stats: {
+  newVenues: number; eventsHosted: number; patronVisits: number; newStaff: number; weekStart: Date
+}) {
+  post('/webhook/weekly-summary', stats)
+}
 
-  const fields = venues.map((v) => {
-    const location = [v.dataCenter, v.world, v.district, v.ward != null ? `W${v.ward}` : null, v.plot != null ? `P${v.plot}` : null]
-      .filter(Boolean)
-      .join(" · ")
+export function postVenueGraduation(venue: VenueSlug, milestone: number) {
+  post('/webhook/venue-graduation', { venue, milestone })
+}
 
-    return {
-      name: v.name,
-      value: `${location}\n[View profile](https://xivvenuemanager.com/venues/${v.slug}) · ${fmt(v.scheduledStart)} – ${fmt(v.scheduledEnd)} ST`,
-      inline: false,
-    }
-  })
-
-  postToWebhook(TONIGHT_WEBHOOK_URL, {
-    title: "📅 Venues Open Tonight",
-    description: "Here's what's on in the realm this evening:",
-    color: XIV_BLUE,
-    fields,
-    url: "https://xivvenuemanager.com/discover",
-    footer: { text: "XIV Venue Manager · All times in Server Time (UTC)" },
-    timestamp: new Date().toISOString(),
-  })
+export function postPartakeDigest(
+  events: { title: string; startTime: Date; endTime: Date; venue: VenueSlug }[]
+) {
+  post('/webhook/partake-digest', events)
 }
 
 export function postEventLive(event: {
-  title: string
-  startTime: Date
-  endTime: Date
-  venue: { name: string; slug: string }
+  title: string; startTime: Date; endTime: Date; venue: VenueSlug | VenueInfo
 }) {
-  const fmt = (d: Date) =>
-    d.toLocaleTimeString("en-GB", { hour: "2-digit", minute: "2-digit", timeZone: "UTC" })
+  post('/webhook/event-live', { event })
+}
 
-  const embed: Embed = {
-    title: "🟢 Now Open",
-    description: `**${event.venue.name}** is open tonight!`,
-    color: XIV_BLUE,
-    fields: [
-      { name: "Event", value: event.title, inline: true },
-      {
-        name: "Hours (ST)",
-        value: `${fmt(event.startTime)} – ${fmt(event.endTime)}`,
-        inline: true,
-      },
-    ],
-    url: `https://xivvenuemanager.com/venues/${event.venue.slug}`,
-    footer: { text: "XIV Venue Manager" },
-    timestamp: new Date().toISOString(),
-  }
+export async function postPatronVisitXp(venueId: string, characterName: string, world: string) {
+  const { prisma } = await import('@/lib/prisma')
+  const venue = await prisma.venue.findUnique({ where: { id: venueId }, select: { name: true } })
+  const character = await prisma.userCharacter.findUnique({
+    where: { characterName_world: { characterName, world } },
+    select: { user: { select: { discordId: true } } },
+  })
+  const discordId = character?.user?.discordId
+  if (!discordId || !venue) return
+  post('/webhook/patron-visit-xp', { discordId, venueName: venue.name })
+}
 
-  postActivityFeed(embed)
-  if (EVENTS_WEBHOOK_URL) postToWebhook(EVENTS_WEBHOOK_URL, embed)
+export async function postShiftXp(userId: string, venueId: string) {
+  const { prisma } = await import('@/lib/prisma')
+  const [user, venue] = await Promise.all([
+    prisma.user.findUnique({ where: { id: userId }, select: { discordId: true } }),
+    prisma.venue.findUnique({ where: { id: venueId }, select: { name: true } }),
+  ])
+  const discordId = user?.discordId
+  if (!discordId || !venue) return
+  post('/webhook/shift-xp', { discordId, venueName: venue.name })
 }
