@@ -1,6 +1,8 @@
 import { GuildMember, EmbedBuilder, TextChannel } from 'discord.js';
 import { assignMember } from '../utils/membership.js';
 
+const BOT_COMMANDS_CHANNEL_ID = '1522189820989014196';
+
 const GC_MAP: Record<string, { name: string; emoji: string }> = {
   Maelstrom:        { name: 'Maelstrom', emoji: '⚔️' },
   'Twin Adder':     { name: 'Order of the Twin Adder', emoji: '🌿' },
@@ -51,7 +53,7 @@ export default {
         name: 'GET STARTED',
         value:
           '🌐 Link your account at **[xivvenuemanager.com](https://xivvenuemanager.com)**\n' +
-          '⚡ Check <#1522189820989014196> to earn XP & climb the ranks\n' +
+          `⚡ Check <#${BOT_COMMANDS_CHANNEL_ID}> to earn XP & climb the ranks\n` +
           '🔄 Run `/sync` if you\'re venue staff or an owner',
       })
       .setFooter({ text: 'XIV Venue Manager Community' })
