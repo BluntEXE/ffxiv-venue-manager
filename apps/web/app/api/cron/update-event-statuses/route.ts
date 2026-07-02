@@ -48,6 +48,11 @@ export async function GET(request: Request) {
           select: {
             name: true,
             slug: true,
+            dataCenter: true,
+            world: true,
+            district: true,
+            ward: true,
+            plot: true,
           },
         },
       },
