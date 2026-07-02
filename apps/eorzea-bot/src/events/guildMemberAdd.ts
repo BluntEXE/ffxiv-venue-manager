@@ -39,7 +39,7 @@ export default {
 
     const gc = detectGc(member);
     const gcLine = gc
-      ? `You're the **${ordinal(member.guild.memberCount)}** member of the realm — and a proud member of the **${gc.name}**. ${gc.emoji}\n\n`
+      ? `You're the ${ordinal(member.guild.memberCount)} member of the realm — and a proud member of the **${gc.name}**. ${gc.emoji}\n\n`
       : `You're the **${ordinal(member.guild.memberCount)}** member of the realm.\n\n`;
 
     const embed = new EmbedBuilder()
