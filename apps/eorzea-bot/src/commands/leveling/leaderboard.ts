@@ -39,7 +39,7 @@ export default {
       .setColor(0x00b4ff)
       .setTitle('⚔️ Grand Company Leaderboard')
       .setDescription(lines.join('\n'))
-      .setFooter({ text: 'Rankings update in real time · /rank to check your position' })
+      .setFooter({ text: '/rank to check your own position' })
       .setTimestamp();
 
     await interaction.editReply({ embeds: [embed] });

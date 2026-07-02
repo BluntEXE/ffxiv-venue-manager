@@ -16,7 +16,7 @@ export default {
         { name: 'Roundtrip', value: `${latency}ms`, inline: true },
         { name: 'WebSocket', value: `${wsLatency}ms`, inline: true },
       )
-      .setFooter({ text: 'The Aetheryte pulses with life.' });
+      .setFooter({ text: 'Aetherlink · XIV Venue Manager' });
 
     await interaction.reply({ embeds: [embed], flags: MessageFlags.Ephemeral });
   },

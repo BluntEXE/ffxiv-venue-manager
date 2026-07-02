@@ -79,7 +79,7 @@ export default {
     const embed = new EmbedBuilder()
       .setColor(0x00b4ff)
       .setTitle(`🎲 ${v.name}`)
-      .setDescription(`A venue chosen by fate. Go see what awaits you.`)
+      .setDescription(`Open right now and ready for visitors.`)
       .addFields(
         { name: '🌍 World', value: `${v.dataCenter} · ${v.world}`, inline: true },
         { name: '🏠 Location', value: location || 'See profile', inline: true },

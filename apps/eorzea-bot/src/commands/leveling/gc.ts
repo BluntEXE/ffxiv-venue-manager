@@ -69,8 +69,8 @@ async function handleJoin(interaction: ChatInputCommandInteraction) {
         .setColor(0xe74c3c)
         .setTitle('Already Enlisted')
         .setDescription(
-          `You are already a member of the **${GC_LABELS[current]}** ${GC_EMOJI[current]}.\n\n` +
-          `Grand Company allegiance cannot be changed once sworn.`
+          `You're already enlisted in the **${GC_LABELS[current]}** ${GC_EMOJI[current]}.\n\n` +
+          `GC allegiance is permanent and cannot be changed.`
         )],
     });
     return;
@@ -106,12 +106,12 @@ async function handleJoin(interaction: ChatInputCommandInteraction) {
 
   const embed = new EmbedBuilder()
     .setColor(0x00b4ff)
-    .setTitle(`${GC_EMOJI[chosen]} Allegiance Sworn`)
+    .setTitle(`${GC_EMOJI[chosen]} Enlisted`)
     .setDescription(
-      `You have enlisted with the **${GC_LABELS[chosen]}**.\n\n` +
-      `Earn XP by chatting to rise through the ranks. Use **/rank** to track your progress and **/gc info** to see your company standing.`
+      `You've joined the **${GC_LABELS[chosen]}**.\n\n` +
+      `Earn XP by chatting to rise through the ranks. Use **/rank** to track your progress and **/gc info** to check your standing.`
     )
-    .setFooter({ text: 'Your allegiance is permanent. Choose your battles wisely.' });
+    .setFooter({ text: 'GC allegiance is permanent.' });
 
   await interaction.editReply({ embeds: [embed] });
 }

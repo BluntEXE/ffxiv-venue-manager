@@ -50,7 +50,7 @@ export default {
       .setTitle('A new adventurer has arrived!')
       .setDescription(`Welcome, ${member}!\n\n${gcLine}`)
       .addFields({
-        name: 'GET STARTED',
+        name: 'Get Started',
         value:
           '🌐 Link your account at **[xivvenuemanager.com](https://xivvenuemanager.com)**\n' +
           `⚡ Check <#${BOT_COMMANDS_CHANNEL_ID}> to earn XP & climb the ranks\n` +
