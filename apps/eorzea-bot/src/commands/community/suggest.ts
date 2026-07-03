@@ -4,6 +4,7 @@ import {
   MessageFlags,
   SlashCommandBuilder,
 } from 'discord.js';
+import { awardGil } from '../../utils/gil.js';
 
 export default {
   data: new SlashCommandBuilder()
@@ -43,6 +44,10 @@ export default {
     const msg = await channel.send({ embeds: [embed] });
     await msg.react('👍');
     await msg.react('👎');
+
+    if (interaction.guildId) {
+      await awardGil(interaction.user.id, interaction.guildId, 50).catch(() => null);
+    }
 
     await interaction.editReply({ content: 'Your suggestion has been submitted!' });
   },
