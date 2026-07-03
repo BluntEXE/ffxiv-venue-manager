@@ -109,6 +109,15 @@ export function postEventsDigestDay(
   })
 }
 
+export function postVenueStatus(venue: { id: string; name: string; dataCenter: string }, isOpen: boolean) {
+  postToBot('/webhook/venue-status', {
+    venueId: venue.id,
+    venueName: venue.name,
+    dataCenter: venue.dataCenter,
+    isOpen,
+  })
+}
+
 export function postEventLive(event: {
   title: string
   startTime: Date
