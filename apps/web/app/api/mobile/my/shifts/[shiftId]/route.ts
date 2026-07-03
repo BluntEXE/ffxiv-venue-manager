@@ -3,6 +3,7 @@ import { z } from "zod"
 import { prisma } from "@/lib/prisma"
 import { requireMobileAuth, isAuthFailure } from "@/lib/mobile-auth-guard"
 import { logShiftAudit } from "@/lib/shift-audit"
+import { syncVenueOpenStatus } from "@/lib/venue-status"
 
 const patchSchema = z.object({
   action: z.enum(["clock-in", "clock-out"]),
@@ -73,6 +74,7 @@ export async function PATCH(
 
     queueOpenedNowNotifications(shift.venue.id, shift.venue.name, now).catch(() => {})
     await logShiftAudit(shift.id, "CLOCK_IN", userId, "mobile_self")
+    syncVenueOpenStatus(shift.venue.id).catch(() => {})
 
     return NextResponse.json({
       success: true,
@@ -101,6 +103,7 @@ export async function PATCH(
   }
 
   await logShiftAudit(shift.id, "CLOCK_OUT", userId, "mobile_self")
+  syncVenueOpenStatus(shift.venue.id).catch(() => {})
 
   return NextResponse.json({
     success: true,

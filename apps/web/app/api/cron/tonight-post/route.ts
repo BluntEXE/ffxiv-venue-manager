@@ -8,6 +8,8 @@ export async function GET(request: Request) {
   if (authError) return authError
 
   const now = new Date()
+  const startOfDay = new Date(now)
+  startOfDay.setUTCHours(0, 0, 0, 0)
   const endOfDay = new Date(now)
   endOfDay.setUTCHours(23, 59, 59, 999)
 
@@ -17,9 +19,8 @@ export async function GET(request: Request) {
       venueType: { not: "TEST_VENUE" },
       shifts: {
         some: {
-          status: "SCHEDULED",
-          scheduledStart: { lte: endOfDay },
-          scheduledEnd: { gte: now },
+          status: { in: ["SCHEDULED", "ACTIVE"] },
+          scheduledStart: { gte: startOfDay, lte: endOfDay },
         },
       },
     },
@@ -33,9 +34,8 @@ export async function GET(request: Request) {
       plot: true,
       shifts: {
         where: {
-          status: "SCHEDULED",
-          scheduledStart: { lte: endOfDay },
-          scheduledEnd: { gte: now },
+          status: { in: ["SCHEDULED", "ACTIVE"] },
+          scheduledStart: { gte: startOfDay, lte: endOfDay },
         },
         select: { scheduledStart: true, scheduledEnd: true },
         orderBy: { scheduledStart: "asc" },

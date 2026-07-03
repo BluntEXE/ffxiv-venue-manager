@@ -95,6 +95,29 @@ export async function postShiftXp(userId: string, venueId: string) {
   postToBot('/webhook/shift-xp', { discordId: row.discordId, venueName: row.name })
 }
 
+export function postEventsDigestDay(
+  dayOffset: number,
+  dayLabel: string,
+  events: { title: string; startTime: Date; venue: { name: string; slug: string } }[],
+  truncatedCount: number
+) {
+  postToBot('/webhook/events-digest', {
+    dayOffset,
+    dayLabel,
+    truncatedCount,
+    events: events.map(e => ({ ...e, startTime: e.startTime.toISOString() })),
+  })
+}
+
+export function postVenueStatus(venue: { id: string; name: string; dataCenter: string }, isOpen: boolean) {
+  postToBot('/webhook/venue-status', {
+    venueId: venue.id,
+    venueName: venue.name,
+    dataCenter: venue.dataCenter,
+    isOpen,
+  })
+}
+
 export function postEventLive(event: {
   title: string
   startTime: Date

@@ -47,3 +47,21 @@ model GuildConfig {
 
   @@map("discord_guild_config")
 }
+
+model TrackedMessage {
+  key       String   @id
+  channelId String
+  messageId String
+  updatedAt DateTime @updatedAt
+
+  @@map("discord_tracked_messages")
+}
+
+model OpenVenue {
+  venueId    String   @id
+  venueName  String
+  dataCenter String
+  openedAt   DateTime @default(now())
+
+  @@map("discord_open_venues")
+}

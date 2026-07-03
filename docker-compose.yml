@@ -69,7 +69,8 @@ services:
              echo '0 8 * * * curl -s -H \"Authorization: Bearer '$$CRON_SECRET'\" http://venue-manager:3000/api/cron/sync-shift-embeds >> /var/log/cron.log 2>&1' >> /etc/crontabs/root &&
              echo '0 20 * * 0 curl -s -H \"Authorization: Bearer '$$CRON_SECRET'\" http://venue-manager:3000/api/cron/weekly-discord-summary >> /var/log/cron.log 2>&1' >> /etc/crontabs/root &&
              echo '0 12 * * * curl -s -H \"Authorization: Bearer '$$CRON_SECRET'\" http://venue-manager:3000/api/cron/partake-daily-digest >> /var/log/cron.log 2>&1' >> /etc/crontabs/root &&
-             echo '0 18 * * * curl -s -H \"Authorization: Bearer '$$CRON_SECRET'\" http://venue-manager:3000/api/cron/tonight-post >> /var/log/cron.log 2>&1' >> /etc/crontabs/root &&
+             echo '0 12 * * * curl -s -H \"Authorization: Bearer '$$CRON_SECRET'\" http://venue-manager:3000/api/cron/tonight-post >> /var/log/cron.log 2>&1' >> /etc/crontabs/root &&
+             echo '5,20,35,50 * * * * curl -s -H \"Authorization: Bearer '$$CRON_SECRET'\" http://venue-manager:3000/api/cron/events-digest-post >> /var/log/cron.log 2>&1' >> /etc/crontabs/root &&
              crond -f -l 2"
 
   static-ehno:
@@ -159,6 +160,10 @@ services:
       LOYALTY_BRONZE_ROLE: ${EORZEA_BOT_LOYALTY_BRONZE_ROLE}
       LOYALTY_SILVER_ROLE: ${EORZEA_BOT_LOYALTY_SILVER_ROLE}
       LOYALTY_GOLD_ROLE: ${EORZEA_BOT_LOYALTY_GOLD_ROLE}
+      WHATS_HAPPENING_NA_CHANNEL_ID: ${EORZEA_BOT_WHATS_HAPPENING_NA_CHANNEL_ID}
+      WHATS_HAPPENING_EU_CHANNEL_ID: ${EORZEA_BOT_WHATS_HAPPENING_EU_CHANNEL_ID}
+      WHATS_HAPPENING_JP_CHANNEL_ID: ${EORZEA_BOT_WHATS_HAPPENING_JP_CHANNEL_ID}
+      WHATS_HAPPENING_OCE_CHANNEL_ID: ${EORZEA_BOT_WHATS_HAPPENING_OCE_CHANNEL_ID}
     depends_on:
       postgres:
         condition: service_healthy

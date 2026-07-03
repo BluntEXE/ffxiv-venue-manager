@@ -4,6 +4,7 @@ import { verifyCronAuth } from "@/lib/cron-auth"
 import { generateOccurrences, type RecurrenceRule } from "@/lib/recurrence"
 import { addWeeks } from "date-fns"
 import { postEventLive } from "@/lib/discord-feed"
+import { syncVenueOpenStatus } from "@/lib/venue-status"
 
 /**
  * Cron Job: Automatic Event Status Updates
@@ -44,6 +45,7 @@ export async function GET(request: Request) {
         title: true,
         startTime: true,
         endTime: true,
+        venueId: true,
         venue: {
           select: {
             name: true,
@@ -72,6 +74,9 @@ export async function GET(request: Request) {
           status: "ACTIVE",
         },
       })
+      for (const e of eventsToActivate) {
+        syncVenueOpenStatus(e.venueId).catch(() => {})
+      }
     }
 
     // 2. Find ACTIVE events that should be COMPLETED (endTime has passed)
@@ -88,6 +93,7 @@ export async function GET(request: Request) {
         title: true,
         startTime: true,
         endTime: true,
+        venueId: true,
         venue: {
           select: {
             name: true,
@@ -125,6 +131,7 @@ export async function GET(request: Request) {
             revenue: totalRevenue > 0 ? totalRevenue : undefined,
           },
         })
+        syncVenueOpenStatus(event.venueId).catch(() => {})
       }
     }
 

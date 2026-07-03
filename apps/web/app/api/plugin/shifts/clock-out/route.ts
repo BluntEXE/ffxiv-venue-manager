@@ -5,6 +5,7 @@ import { validateApiKey, checkPermission } from "@/lib/api/plugin-auth"
 import { enforcePluginRateLimit, enforcePluginIpRateLimit } from "@/lib/api/plugin-rate-limit"
 import { logShiftAudit } from "@/lib/shift-audit"
 import { postShiftXp } from "@/lib/discord-feed"
+import { syncVenueOpenStatus } from "@/lib/venue-status"
 
 /**
  * POST /api/plugin/shifts/clock-out
@@ -107,6 +108,7 @@ export async function POST(request: NextRequest) {
 
     await logShiftAudit(shift.id, "CLOCK_OUT", auth.userId, "plugin")
     postShiftXp(auth.userId, shift.venueId)
+    syncVenueOpenStatus(shift.venueId).catch(() => {})
 
     return NextResponse.json({
       success: true,
