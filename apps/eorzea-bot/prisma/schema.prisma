@@ -47,3 +47,12 @@ model GuildConfig {
 
   @@map("discord_guild_config")
 }
+
+model TrackedMessage {
+  key       String   @id
+  channelId String
+  messageId String
+  updatedAt DateTime @updatedAt
+
+  @@map("discord_tracked_messages")
+}
