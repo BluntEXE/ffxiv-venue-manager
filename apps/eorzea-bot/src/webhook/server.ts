@@ -1,6 +1,6 @@
 import express from 'express';
 import { Client, GuildMember } from 'discord.js';
-import { postEmbed } from '../utils/channels.js';
+import { postEmbed, postOrEditEmbed } from '../utils/channels.js';
 import { awardXp } from './xpWebhook.js';
 import prisma from '../utils/prisma.js';
 import {
@@ -9,6 +9,7 @@ import {
   venueGraduationEmbed,
   partakeDigestEmbed,
   eventLiveEmbed,
+  eventsDigestDayEmbed,
   tonightListEmbed,
   type VenueInfo,
 } from '../utils/embeds.js';
@@ -61,6 +62,7 @@ export function startWebhookServer(client: Client) {
   const FEED_CHANNEL = process.env.ACTIVITY_FEED_CHANNEL_ID!;
   const EVENTS_CHANNEL = process.env.EVENTS_FEED_CHANNEL_ID!;
   const TONIGHT_CHANNEL = process.env.TONIGHT_CHANNEL_ID!;
+  const EVENTS_CHANNEL_DIGEST = process.env.EVENTS_FEED_CHANNEL_ID!;
   const SECRET = process.env.WEBHOOK_SECRET;
 
   // Simple shared-secret auth
@@ -132,6 +134,23 @@ export function startWebhookServer(client: Client) {
     const parsed = { ...event, startTime: new Date(event.startTime), endTime: new Date(event.endTime) };
     await postEmbed(client, FEED_CHANNEL, eventLiveEmbed(parsed));
     if (EVENTS_CHANNEL) await postEmbed(client, EVENTS_CHANNEL, eventLiveEmbed(parsed));
+    res.json({ ok: true });
+  });
+
+  app.post('/webhook/events-digest', async (req, res) => {
+    const { dayOffset, dayLabel, events, truncatedCount } = req.body as {
+      dayOffset: number
+      dayLabel: string
+      events: { title: string; startTime: string; venue: { name: string; slug: string } }[]
+      truncatedCount: number
+    };
+    const parsed = events.map(e => ({ ...e, startTime: new Date(e.startTime) }));
+    await postOrEditEmbed(
+      client,
+      `events:day-${dayOffset}`,
+      EVENTS_CHANNEL_DIGEST,
+      eventsDigestDayEmbed(dayLabel, parsed, truncatedCount)
+    );
     res.json({ ok: true });
   });
 
