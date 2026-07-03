@@ -14,15 +14,17 @@ datasource db {
 // ============================================
 
 model DiscordMember {
-  id        String   @id @default(cuid())
-  discordId String   @unique
-  guildId   String
-  xp        Int      @default(0)
-  level     Int      @default(1)
-  gil       Int      @default(0)
-  warns     Int      @default(0)
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  id                String    @id @default(cuid())
+  discordId         String    @unique
+  guildId           String
+  xp                Int       @default(0)
+  level             Int       @default(1)
+  gil               Int       @default(0)
+  xpBoostExpiresAt  DateTime?
+  cooldownSkips     Int       @default(0)
+  warns             Int       @default(0)
+  createdAt         DateTime  @default(now())
+  updatedAt         DateTime  @updatedAt
 
   @@map("discord_members")
 }
@@ -64,4 +66,14 @@ model OpenVenue {
   openedAt   DateTime @default(now())
 
   @@map("discord_open_venues")
+}
+
+model GilReactionReward {
+  id        String   @id @default(cuid())
+  discordId String
+  messageId String
+  createdAt DateTime @default(now())
+
+  @@unique([discordId, messageId])
+  @@map("discord_gil_reaction_rewards")
 }
