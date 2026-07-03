@@ -4,6 +4,7 @@ import {
   MessageFlags,
   SlashCommandBuilder,
 } from 'discord.js';
+import { awardGil } from '../../utils/gil.js';
 
 function requireEnv(key: string): string {
   const value = process.env[key];
@@ -67,6 +68,10 @@ export default {
         content: `✅ You're already clocked in at **${data.venueName}** since ${fmt(data.actualStart)} ST.`,
       });
       return;
+    }
+
+    if (interaction.guildId) {
+      await awardGil(interaction.user.id, interaction.guildId, 100).catch(() => null);
     }
 
     const embed = new EmbedBuilder()
