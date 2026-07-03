@@ -1,6 +1,7 @@
 import { Message, GuildMember } from 'discord.js';
 import prisma from '../utils/prisma.js';
 import { messageXp, rankForXp, type GrandCompany } from '../utils/xp.js';
+import { hasActiveXpBoost, consumeCooldownSkip } from '../utils/gil.js';
 
 function detectGcFromRoles(member: GuildMember): GrandCompany | null {
   const map: [string | undefined, GrandCompany][] = [
@@ -25,10 +26,16 @@ export default {
 
     const now = Date.now();
     const last = cooldowns.get(message.author.id) ?? 0;
-    if (now - last < COOLDOWN_MS) return;
+    if (now - last < COOLDOWN_MS) {
+      const skipped = await consumeCooldownSkip(message.author.id);
+      if (!skipped) return;
+    }
     cooldowns.set(message.author.id, now);
 
-    const earned = messageXp();
+    let earned = messageXp();
+    if (await hasActiveXpBoost(message.author.id)) {
+      earned *= 2;
+    }
 
     try {
       const rows = await prisma.$queryRaw<{ old_xp: string; new_xp: string; gc: string | null }[]>`
