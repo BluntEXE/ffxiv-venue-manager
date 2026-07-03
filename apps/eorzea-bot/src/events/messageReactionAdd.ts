@@ -1,4 +1,4 @@
-import { MessageReaction, PartialMessageReaction, User, PartialUser, Client } from 'discord.js';
+import { MessageReaction, PartialMessageReaction, User, PartialUser } from 'discord.js';
 import prisma from '../utils/prisma.js';
 import { awardGil } from '../utils/gil.js';
 
@@ -7,17 +7,13 @@ const REACTION_GIL_AMOUNT = 25;
 export default {
   name: 'messageReactionAdd',
   once: false,
-  async execute(reaction: MessageReaction | PartialMessageReaction, user: User | PartialUser, client: Client) {
-    console.log('[Gil][debug] messageReactionAdd fired', { channelId: reaction.message.channelId, userId: user.id, userBot: user.bot, partial: reaction.partial });
+  async execute(reaction: MessageReaction | PartialMessageReaction, user: User | PartialUser) {
     if (user.bot) return;
 
     const tonightChannelId = process.env.TONIGHT_CHANNEL_ID;
     const eventsChannelId = process.env.EVENTS_FEED_CHANNEL_ID;
     const channelId = reaction.message.channelId;
-    if (channelId !== tonightChannelId && channelId !== eventsChannelId) {
-      console.log('[Gil][debug] channel mismatch', { channelId, tonightChannelId, eventsChannelId });
-      return;
-    }
+    if (channelId !== tonightChannelId && channelId !== eventsChannelId) return;
 
     if (reaction.partial) {
       await reaction.fetch().catch(() => null);
@@ -25,12 +21,8 @@ export default {
     const message = reaction.message.partial
       ? await reaction.message.fetch().catch(() => null)
       : reaction.message;
-    if (!message) {
-      console.log('[Gil][debug] message fetch failed/null');
-      return;
-    }
-    console.log('[Gil][debug] message author', { authorId: message.author?.id, clientUserId: client.user?.id });
-    if (message.author?.id !== client.user?.id) return; // only our own bot-posted embeds pay out
+    if (!message) return;
+    if (message.author?.id !== reaction.client.user.id) return; // only our own bot-posted embeds pay out
 
     const guildId = message.guildId;
     if (!guildId) return;
