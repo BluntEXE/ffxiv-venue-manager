@@ -1,9 +1,9 @@
-import { Client, EmbedBuilder, TextChannel } from 'discord.js';
+import { Client, EmbedBuilder } from 'discord.js';
 import prisma from './prisma.js';
 
 export async function postEmbed(client: Client, channelId: string, embed: EmbedBuilder): Promise<void> {
   const channel = client.channels.cache.get(channelId) ?? await client.channels.fetch(channelId).catch(() => null);
-  if (!channel || !(channel instanceof TextChannel)) {
+  if (!channel || !channel.isTextBased() || channel.isDMBased()) {
     console.warn(`[post] Channel ${channelId} not found or not a text channel`);
     return;
   }
@@ -18,7 +18,7 @@ export async function postOrEditEmbed(
   embed: EmbedBuilder
 ): Promise<void> {
   const channel = client.channels.cache.get(channelId) ?? await client.channels.fetch(channelId).catch(() => null);
-  if (!channel || !(channel instanceof TextChannel)) {
+  if (!channel || !channel.isTextBased() || channel.isDMBased()) {
     console.warn(`[postOrEdit] Channel ${channelId} not found or not a text channel`);
     return;
   }
