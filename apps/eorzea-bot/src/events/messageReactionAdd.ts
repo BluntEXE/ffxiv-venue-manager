@@ -22,6 +22,7 @@ export default {
       ? await reaction.message.fetch().catch(() => null)
       : reaction.message;
     if (!message) return;
+    console.log('[Gil][debug]', { authorId: message.author?.id, reactionClientUserId: reaction.client.user?.id });
     if (message.author?.id !== reaction.client.user.id) return; // only our own bot-posted embeds pay out
 
     const guildId = message.guildId;
