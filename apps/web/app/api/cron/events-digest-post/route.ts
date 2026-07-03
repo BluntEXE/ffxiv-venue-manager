@@ -48,7 +48,10 @@ export async function GET(request: Request) {
     const shown = events.slice(0, MAX_EVENTS_PER_DAY)
     const truncatedCount = events.length - shown.length
 
-    postEventsDigestDay(dayOffset, dayLabel, shown, truncatedCount)
+    // Awaited sequentially (not fire-and-forget) so the bot sends/edits each
+    // day's message in order — 7 concurrent posts land in whatever order the
+    // bot's async handler finishes them, not day order.
+    await postEventsDigestDay(dayOffset, dayLabel, shown, truncatedCount)
   }
 
   return NextResponse.json({ success: true, timestamp: now.toISOString() })

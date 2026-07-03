@@ -4,8 +4,8 @@ const BOT_URL = process.env.EORZEA_BOT_WEBHOOK_URL
 const BOT_SECRET = process.env.EORZEA_BOT_WEBHOOK_SECRET
 
 function postToBot(path: string, body: unknown) {
-  if (!BOT_URL) return
-  fetch(`${BOT_URL}${path}`, {
+  if (!BOT_URL) return Promise.resolve()
+  return fetch(`${BOT_URL}${path}`, {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
@@ -101,7 +101,7 @@ export function postEventsDigestDay(
   events: { title: string; startTime: Date; venue: { name: string; slug: string } }[],
   truncatedCount: number
 ) {
-  postToBot('/webhook/events-digest', {
+  return postToBot('/webhook/events-digest', {
     dayOffset,
     dayLabel,
     truncatedCount,
