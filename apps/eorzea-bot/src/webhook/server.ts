@@ -19,7 +19,6 @@ import {
   REGION_LABELS,
   regionChannelId,
   dataCentersForRegion,
-  type Region,
 } from '../utils/regions.js';
 
 const LOYALTY_TIERS = [
@@ -188,7 +187,11 @@ export function startWebhookServer(client: Client) {
     }
 
     if (isOpen) {
-      await prisma.openVenue.create({ data: { venueId, venueName, dataCenter } });
+      await prisma.openVenue.upsert({
+        where: { venueId },
+        create: { venueId, venueName, dataCenter },
+        update: { venueName, dataCenter },
+      }).catch(() => null);
     } else {
       await prisma.openVenue.delete({ where: { venueId } }).catch(() => null);
     }

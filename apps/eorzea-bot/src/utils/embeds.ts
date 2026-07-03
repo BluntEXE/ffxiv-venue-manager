@@ -150,7 +150,7 @@ export function regionBoardEmbed(
       .setTimestamp();
   }
 
-  const lines = openVenues
+  const lines = [...openVenues]
     .sort((a, b) => a.venueName.localeCompare(b.venueName))
     .map(v => `🟢 **${v.venueName}** (${v.dataCenter}) — open since ${fmtTime(v.openedAt)} ST`);
 

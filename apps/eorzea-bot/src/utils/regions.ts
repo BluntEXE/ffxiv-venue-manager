@@ -3,7 +3,7 @@ export type Region = 'na' | 'eu' | 'jp' | 'oce';
 const DATA_CENTER_TO_REGION: Record<string, Region> = {
   Aether: 'na', Crystal: 'na', Dynamis: 'na', Primal: 'na',
   Chaos: 'eu', Light: 'eu',
-  Elemental: 'jp', Gaia: 'jp', Mana: 'jp',
+  Elemental: 'jp', Gaia: 'jp', Mana: 'jp', Meteor: 'jp',
   Materia: 'oce',
 };
 
