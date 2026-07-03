@@ -103,6 +103,40 @@ export function partakeDigestEmbed(
     .setTimestamp();
 }
 
+export function eventsDigestDayEmbed(
+  dayLabel: string,
+  events: { title: string; startTime: Date; venue: { name: string; slug: string } }[],
+  truncatedCount: number
+) {
+  if (events.length === 0) {
+    return new EmbedBuilder()
+      .setColor(XIV_BLUE)
+      .setTitle(`📅 Events — ${dayLabel}`)
+      .setDescription('Nothing scheduled.')
+      .setFooter({ text: 'XIV Venue Manager · All times Server Time (UTC)' })
+      .setTimestamp();
+  }
+
+  const fields = events.map(e => ({
+    name: e.venue.name,
+    value: `[${e.title}](${SITE}/venues/${e.venue.slug}) · ${fmtTime(e.startTime)} ST`,
+    inline: false,
+  }));
+
+  const embed = new EmbedBuilder()
+    .setColor(XIV_BLUE)
+    .setTitle(`📅 Events — ${dayLabel}`)
+    .addFields(fields)
+    .setFooter({ text: 'XIV Venue Manager · All times Server Time (UTC)' })
+    .setTimestamp();
+
+  if (truncatedCount > 0) {
+    embed.setDescription(`+${truncatedCount} more event${truncatedCount !== 1 ? 's' : ''} today not shown.`);
+  }
+
+  return embed;
+}
+
 export function eventLiveEmbed(event: { title: string; startTime: Date; endTime: Date; venue: VenueInfo }) {
   return new EmbedBuilder()
     .setColor(XIV_BLUE)
