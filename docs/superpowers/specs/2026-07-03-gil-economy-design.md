@@ -56,6 +56,11 @@ On `apps/eorzea-bot/prisma/schema.prisma`:
 - `DiscordMember` gains `xpBoostExpiresAt DateTime?` and `cooldownSkips Int @default(0)`
 - `DiscordMember.gil` (already exists, currently unused) becomes the live balance
 
+### Retroactive launch bonus
+
+One-time backfill, run manually after deploy (not an automated migration): every row in
+`discord_members` with `xp > 0` gets a flat **+200 Gil** — `UPDATE discord_members SET gil = gil + 200 WHERE xp > 0`. Members with `xp = 0` (onboarding/role-assignment rows with no real activity) are skipped. This is a one-shot operation, not a recurring job — run once, verify the row count matches expectations, done.
+
 ## Error handling
 
 - Reacting to a message that isn't a tracked bot embed in the Tonight/Events channels → ignored, no error, no Gil.
@@ -72,4 +77,6 @@ No automated test suite in this codebase — verify manually:
 - Run `/clockin` against a real or test shift, confirm `+100 Gil` on the real success path; confirm the `alreadyActive` no-op path awards nothing.
 - `/gil buy xp_boost`, confirm `xpBoostExpiresAt` is set and the next chat message awards double XP; buy again before it expires, confirm the timer extends rather than resets.
 - `/gil buy cooldown_skip`, chat immediately (inside the normal 60s window), confirm XP is awarded anyway and `cooldownSkips` decrements by exactly 1.
+- Attempt `/gil buy` with insufficient Gil, confirm the ephemeral error and no balance change.
+- After the retroactive backfill runs, spot-check a member with `xp > 0` gained exactly 200 Gil, and a member with `xp = 0` (if one exists) gained none.
 - Attempt `/gil buy` with insufficient Gil, confirm the ephemeral error and no balance change.
