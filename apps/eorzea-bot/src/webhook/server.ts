@@ -62,7 +62,6 @@ export function startWebhookServer(client: Client) {
   const FEED_CHANNEL = process.env.ACTIVITY_FEED_CHANNEL_ID!;
   const EVENTS_CHANNEL = process.env.EVENTS_FEED_CHANNEL_ID!;
   const TONIGHT_CHANNEL = process.env.TONIGHT_CHANNEL_ID!;
-  const EVENTS_CHANNEL_DIGEST = process.env.EVENTS_FEED_CHANNEL_ID!;
   const SECRET = process.env.WEBHOOK_SECRET;
 
   // Simple shared-secret auth
@@ -148,7 +147,7 @@ export function startWebhookServer(client: Client) {
     await postOrEditEmbed(
       client,
       `events:day-${dayOffset}`,
-      EVENTS_CHANNEL_DIGEST,
+      EVENTS_CHANNEL,
       eventsDigestDayEmbed(dayLabel, parsed, truncatedCount)
     );
     res.json({ ok: true });
