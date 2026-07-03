@@ -56,3 +56,12 @@ model TrackedMessage {
 
   @@map("discord_tracked_messages")
 }
+
+model OpenVenue {
+  venueId    String   @id
+  venueName  String
+  dataCenter String
+  openedAt   DateTime @default(now())
+
+  @@map("discord_open_venues")
+}
