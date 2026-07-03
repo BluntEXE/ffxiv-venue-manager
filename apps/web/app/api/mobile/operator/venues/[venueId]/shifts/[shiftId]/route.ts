@@ -3,6 +3,7 @@ import { z } from "zod"
 import { prisma } from "@/lib/prisma"
 import { requireOperator, isOperatorContext } from "@/lib/mobile-operator-auth"
 import { logShiftAudit } from "@/lib/shift-audit"
+import { syncVenueOpenStatus } from "@/lib/venue-status"
 
 const patchSchema = z.object({
   action: z.enum(["clock-in", "clock-out", "approve", "reject"]),
@@ -58,6 +59,7 @@ export async function PATCH(
     }
 
     await logShiftAudit(shift.id, "CLOCK_IN", ctx.userId, "mobile_operator")
+    syncVenueOpenStatus(venueId).catch(() => {})
 
     return NextResponse.json({
       success: true,
@@ -118,6 +120,7 @@ export async function PATCH(
   }
 
   await logShiftAudit(shift.id, "CLOCK_OUT", ctx.userId, "mobile_operator")
+  syncVenueOpenStatus(venueId).catch(() => {})
 
   return NextResponse.json({
     success: true,

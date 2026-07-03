@@ -4,6 +4,7 @@ import { authOptions } from "@/lib/auth"
 import { prisma } from "@/lib/prisma"
 import { claimShiftWithMerge } from "@/lib/shift-overlap"
 import { logShiftAudit } from "@/lib/shift-audit"
+import { syncVenueOpenStatus } from "@/lib/venue-status"
 import { z } from "zod"
 
 const patchSchema = z.object({
@@ -254,6 +255,7 @@ export async function PATCH(
 
       queueOpenedNowNotifications(venue.id, venue.name, now).catch(() => {})
       await logShiftAudit(shift.id, "CLOCK_IN", session.user.id, "web")
+      syncVenueOpenStatus(venue.id).catch(() => {})
 
       return NextResponse.json({
         success: true,
@@ -282,6 +284,7 @@ export async function PATCH(
     }
 
     await logShiftAudit(shift.id, "CLOCK_OUT", session.user.id, "web")
+    syncVenueOpenStatus(venue.id).catch(() => {})
 
     return NextResponse.json({
       success: true,

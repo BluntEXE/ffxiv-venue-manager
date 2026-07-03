@@ -3,6 +3,7 @@ import { z } from "zod"
 import { prisma } from "@/lib/prisma"
 import { validateApiKey, checkPermission } from "@/lib/api/plugin-auth"
 import { enforcePluginRateLimit, enforcePluginIpRateLimit } from "@/lib/api/plugin-rate-limit"
+import { syncVenueOpenStatus } from "@/lib/venue-status"
 
 async function queueOpenedNowNotifications(venueId: string, now: Date) {
   // Only queue if no VENUE_OPENED_NOW notification was sent for this venue in the last 30 min
@@ -150,6 +151,7 @@ export async function POST(request: NextRequest) {
 
     // Queue VENUE_OPENED_NOW notifications for all followers (best-effort)
     queueOpenedNowNotifications(shift.venueId, now).catch(() => {})
+    syncVenueOpenStatus(shift.venueId).catch(() => {})
 
     return NextResponse.json({
       success: true,
