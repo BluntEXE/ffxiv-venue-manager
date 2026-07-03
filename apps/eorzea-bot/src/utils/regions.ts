@@ -24,3 +24,9 @@ export function regionChannelId(region: Region): string {
   if (!id) throw new Error(`Missing env var ${envKey}`);
   return id;
 }
+
+export function dataCentersForRegion(region: Region): string[] {
+  return Object.entries(DATA_CENTER_TO_REGION)
+    .filter(([, r]) => r === region)
+    .map(([dc]) => dc);
+}
