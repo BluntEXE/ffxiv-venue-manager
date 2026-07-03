@@ -424,6 +424,7 @@ model Event {
   patronLogs        PatronLog[]
   shiftSignupEmbeds ShiftSignupEmbed[]
 
+  @@unique([parentEventId, startTime])
   @@index([venueId, startTime])
   @@index([venueId, status])
   @@index([createdById])
