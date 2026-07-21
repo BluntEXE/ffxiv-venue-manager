@@ -61,6 +61,8 @@ export function GetStartedWizard({ userName }: { userName: string }) {
   const [district, setDistrict] = useState("")
   const [ward, setWard]         = useState("")
   const [plot, setPlot]         = useState("")
+  const [apartment, setApartment] = useState("")
+  const [housingType, setHousingType] = useState<"house" | "apartment">("house")
   const [hours, setHours]       = useState("")
   const [nights, setNights]   = useState("")
   const [adult, setAdult]     = useState(false)
@@ -95,7 +97,8 @@ export function GetStartedWizard({ userName }: { userName: string }) {
             world,
             district: district || null,
             ward: ward ? parseInt(ward, 10) : null,
-            plot: plot ? parseInt(plot, 10) : null,
+            plot: housingType === "house" && plot ? parseInt(plot, 10) : null,
+            apartment: housingType === "apartment" && apartment ? parseInt(apartment, 10) : null,
             settings: {
               tagline: tagline.trim() || undefined,
               tags: adult ? ["18+", ...tags.filter(t => t !== "18+")] : tags.filter(t => t !== "18+"),
@@ -118,7 +121,8 @@ export function GetStartedWizard({ userName }: { userName: string }) {
                 dataCenter: dc, world,
                 district: district || null,
                 ward: ward ? parseInt(ward, 10) : null,
-                plot: plot ? parseInt(plot, 10) : null,
+                plot: housingType === "house" && plot ? parseInt(plot, 10) : null,
+                apartment: housingType === "apartment" && apartment ? parseInt(apartment, 10) : null,
               }),
             })
             if (!res2.ok) { const d2 = await res2.json(); throw new Error(d2.error || "Failed") }
@@ -249,6 +253,24 @@ export function GetStartedWizard({ userName }: { userName: string }) {
                     </select>
                   </div>
                 </div>
+                <div style={{ display: "flex", gap: 8 }}>
+                  <button
+                    type="button"
+                    onClick={() => setHousingType("house")}
+                    className={`gs-sel`}
+                    style={{ flex: 1, cursor: "pointer", fontWeight: housingType === "house" ? 600 : 400, opacity: housingType === "house" ? 1 : 0.6 }}
+                  >
+                    House
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setHousingType("apartment")}
+                    className={`gs-sel`}
+                    style={{ flex: 1, cursor: "pointer", fontWeight: housingType === "apartment" ? 600 : 400, opacity: housingType === "apartment" ? 1 : 0.6 }}
+                  >
+                    Apartment
+                  </button>
+                </div>
                 <div className="gs-field-3" style={{ display: "grid", gridTemplateColumns: "2fr 1fr 1fr", gap: 10 }}>
                   <div className="gs-field">
                     <label>District <span style={{ color: "var(--fg-faint)", fontWeight: 400 }}>(optional)</span></label>
@@ -261,10 +283,17 @@ export function GetStartedWizard({ userName }: { userName: string }) {
                     <label>Ward</label>
                     <input className="gs-inp" type="number" min={1} max={30} placeholder="1–30" value={ward} onChange={e => setWard(e.target.value)} />
                   </div>
-                  <div className="gs-field">
-                    <label>Plot</label>
-                    <input className="gs-inp" type="number" min={1} max={60} placeholder="1–60" value={plot} onChange={e => setPlot(e.target.value)} />
-                  </div>
+                  {housingType === "house" ? (
+                    <div className="gs-field">
+                      <label>Plot</label>
+                      <input className="gs-inp" type="number" min={1} max={60} placeholder="1–60" value={plot} onChange={e => setPlot(e.target.value)} />
+                    </div>
+                  ) : (
+                    <div className="gs-field">
+                      <label>Apt</label>
+                      <input className="gs-inp" type="number" min={1} max={99} placeholder="1–99" value={apartment} onChange={e => setApartment(e.target.value)} />
+                    </div>
+                  )}
                 </div>
                 <div className="gs-field-2">
                   <div className="gs-field">
@@ -290,7 +319,7 @@ export function GetStartedWizard({ userName }: { userName: string }) {
               <>
                 {[
                   { k: "Venue",    v: name || "—" },
-                  { k: "Location", v: [dc, world, [district, ward ? `W${ward}` : null, plot ? `P${plot}` : null].filter(Boolean).join(" ")].filter(Boolean).join(" · ") || "—" },
+                  { k: "Location", v: [dc, world, [district, ward ? `W${ward}` : null, housingType === "house" ? (plot ? `P${plot}` : null) : (apartment ? `Apt${apartment}` : null)].filter(Boolean).join(" ")].filter(Boolean).join(" · ") || "—" },
                   { k: "Hours",    v: [hours, nights].filter(Boolean).join(" · ") || "TBD" },
                   { k: "Tags",     v: tags.length ? null : "None" },
                 ].map(({ k, v }) => (

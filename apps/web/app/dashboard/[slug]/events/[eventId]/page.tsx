@@ -15,6 +15,7 @@ import { ServerTime } from "@/components/server-time"
 import { SERVER_TIME_LABEL } from "@/lib/server-time"
 import { extractPartakeImages, extractPartakeTextBody } from "@/lib/discord-webhook"
 import { renderPartakeProse } from "@/lib/render-partake-prose"
+import { formatVenueLocationShort } from "@/lib/venue-location"
 
 const statusColors = {
   DRAFT: "bg-zinc-500",
@@ -305,9 +306,9 @@ export default async function EventDetailsPage({
               <p className="text-sm text-muted-foreground">
                 {venue.world} ({venue.dataCenter})
               </p>
-              {(venue.district || venue.ward || venue.plot || venue.location) && (
+              {formatVenueLocationShort(venue) && (
                 <p className="text-sm text-muted-foreground mt-2">
-                  📍 {[venue.district, venue.ward ? `W${venue.ward}` : null, venue.plot ? `P${venue.plot}` : null].filter(Boolean).join(" ") || venue.location}
+                  📍 {formatVenueLocationShort(venue)}
                 </p>
               )}
             </CardContent>

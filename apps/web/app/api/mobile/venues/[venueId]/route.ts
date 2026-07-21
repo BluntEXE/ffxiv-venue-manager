@@ -21,6 +21,7 @@ export async function GET(
       district: true,
       ward: true,
       plot: true,
+      apartment: true,
       location: true,
       logoUrl: true,
       bannerUrl: true,

@@ -15,6 +15,7 @@ type FollowingVenue = {
   district: string | null
   ward: number | null
   plot: number | null
+  apartment: number | null
   location: string | null
   followCount: number
   isOpenNow: boolean

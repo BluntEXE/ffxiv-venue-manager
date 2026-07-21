@@ -46,6 +46,7 @@ export default function NewVenuePage() {
   const [selectedDataCenter, setSelectedDataCenter] = useState("")
   const [selectedWorld, setSelectedWorld] = useState("")
   const [selectedDistrict, setSelectedDistrict] = useState("")
+  const [housingType, setHousingType] = useState<"house" | "apartment">("house")
   const [slugPreview, setSlugPreview] = useState("")
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
@@ -68,7 +69,8 @@ export default function NewVenuePage() {
       world: selectedWorld,
       district: selectedDistrict || undefined,
       ward: (formData.get("ward") as string) ? Number(formData.get("ward")) : undefined,
-      plot: (formData.get("plot") as string) ? Number(formData.get("plot")) : undefined,
+      plot: housingType === "house" && formData.get("plot") ? Number(formData.get("plot")) : undefined,
+      apartment: housingType === "apartment" && formData.get("apartment") ? Number(formData.get("apartment")) : undefined,
     }
 
     try {
@@ -206,9 +208,27 @@ export default function NewVenuePage() {
               </Select>
             </div>
 
-            {/* District / Ward / Plot */}
+            {/* District / Ward / Plot or Apartment */}
             <div className="space-y-2">
               <Label>In-Game Location</Label>
+              <div className="flex gap-2">
+                <Button
+                  type="button"
+                  variant={housingType === "house" ? "default" : "outline"}
+                  size="sm"
+                  onClick={() => setHousingType("house")}
+                >
+                  House
+                </Button>
+                <Button
+                  type="button"
+                  variant={housingType === "apartment" ? "default" : "outline"}
+                  size="sm"
+                  onClick={() => setHousingType("apartment")}
+                >
+                  Apartment
+                </Button>
+              </div>
               <div className="grid grid-cols-3 gap-3">
                 <Select name="district" value={selectedDistrict} onValueChange={setSelectedDistrict}>
                   <SelectTrigger>
@@ -230,14 +250,25 @@ export default function NewVenuePage() {
                   max={30}
                   placeholder="Ward (1-30)"
                 />
-                <Input
-                  id="plot"
-                  name="plot"
-                  type="number"
-                  min={1}
-                  max={60}
-                  placeholder="Plot (1-60)"
-                />
+                {housingType === "house" ? (
+                  <Input
+                    id="plot"
+                    name="plot"
+                    type="number"
+                    min={1}
+                    max={60}
+                    placeholder="Plot (1-60)"
+                  />
+                ) : (
+                  <Input
+                    id="apartment"
+                    name="apartment"
+                    type="number"
+                    min={1}
+                    max={99}
+                    placeholder="Apt (1-99)"
+                  />
+                )}
               </div>
               <p className="text-sm text-muted-foreground">
                 Help visitors find your venue in-game

@@ -14,18 +14,19 @@ export interface VenueLocationFields {
   district?: string | null
   ward?: number | null
   plot?: number | null
+  apartment?: number | null
   location?: string | null
 }
 
-/** Returns a formatted "Datacenter · World · District W# P#" string. Falls back to legacy location text. */
+/** Returns a formatted "Datacenter · World · District W# P#/Apt#" string. Falls back to legacy location text. */
 export function formatVenueAddress(v: VenueLocationFields): string {
   const parts: string[] = [v.dataCenter, v.world]
 
-  if (v.district || v.ward || v.plot) {
+  if (v.district || v.ward || v.plot || v.apartment) {
     const loc = [
       v.district ?? null,
-      v.ward  != null ? `W${v.ward}`  : null,
-      v.plot  != null ? `P${v.plot}`  : null,
+      v.ward != null ? `W${v.ward}` : null,
+      v.plot != null ? `P${v.plot}` : v.apartment != null ? `Apt${v.apartment}` : null,
     ].filter(Boolean).join(" ")
     if (loc) parts.push(loc)
   } else if (v.location) {
@@ -35,13 +36,13 @@ export function formatVenueAddress(v: VenueLocationFields): string {
   return parts.join(" · ")
 }
 
-/** Short location string (district + ward + plot only, no DC/world). */
-export function formatVenueLocationShort(v: Pick<VenueLocationFields, "district" | "ward" | "plot" | "location">): string | null {
-  if (v.district || v.ward || v.plot) {
+/** Short location string (district + ward + plot/apartment only, no DC/world). */
+export function formatVenueLocationShort(v: Pick<VenueLocationFields, "district" | "ward" | "plot" | "apartment" | "location">): string | null {
+  if (v.district || v.ward || v.plot || v.apartment) {
     return [
       v.district ?? null,
-      v.ward  != null ? `W${v.ward}`  : null,
-      v.plot  != null ? `P${v.plot}`  : null,
+      v.ward != null ? `W${v.ward}` : null,
+      v.plot != null ? `P${v.plot}` : v.apartment != null ? `Apt${v.apartment}` : null,
     ].filter(Boolean).join(" ") || null
   }
   return v.location ?? null

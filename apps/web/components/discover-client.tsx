@@ -15,6 +15,7 @@ export type DiscoverVenue = {
   district: string | null
   ward: number | null
   plot: number | null
+  apartment: number | null
   location: string | null
   description: string | null
   followCount: number

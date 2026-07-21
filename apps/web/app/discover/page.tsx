@@ -67,6 +67,7 @@ export default async function DiscoverPage() {
       district:      v.district,
       ward:          v.ward,
       plot:          v.plot,
+      apartment:     v.apartment,
       location:      v.location,
       description:   v.description,
       followCount:   v._count.follows,

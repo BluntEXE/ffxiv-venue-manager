@@ -20,6 +20,7 @@ const venueSchema = z.object({
   district: validators.venueDistrict,
   ward: validators.venueWard,
   plot: validators.venuePlot,
+  apartment: validators.venueApartment,
   location: validators.venueLocation,
 })
 
@@ -68,6 +69,7 @@ export const POST = withRateLimit(
             district: validatedData.district ?? null,
             ward: validatedData.ward ?? null,
             plot: validatedData.plot ?? null,
+            apartment: validatedData.apartment ?? null,
             location: validatedData.location,
             ownerId: userId,
             memberships: {

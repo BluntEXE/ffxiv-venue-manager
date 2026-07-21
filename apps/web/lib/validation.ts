@@ -11,6 +11,7 @@ export const validators = {
   venueDistrict: z.string().max(50).optional().nullable(),
   venueWard: z.number().int().min(1).max(30).optional().nullable(),
   venuePlot: z.number().int().min(1).max(60).optional().nullable(),
+  venueApartment: z.number().int().min(1).max(99).optional().nullable(),
   eventTitle: z.string().min(1, "Title is required").max(150, "Title too long (max 150 characters)"),
   eventDescription: z.string().max(3000, "Description too long (max 3000 characters)").optional(),
   customerName: z.string().max(100, "Customer name too long (max 100 characters)").optional(),

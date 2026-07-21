@@ -30,6 +30,7 @@ export default async function FollowingPage() {
           district: true,
           ward: true,
           plot: true,
+          apartment: true,
           location: true,
           _count: { select: { follows: true } },
           events: {
@@ -52,6 +53,7 @@ export default async function FollowingPage() {
     district:    f.venue.district,
     ward:        f.venue.ward,
     plot:        f.venue.plot,
+    apartment:   f.venue.apartment,
     location:    f.venue.location,
     followCount: f.venue._count.follows,
     isOpenNow:   f.venue.events.length > 0,

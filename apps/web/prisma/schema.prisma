@@ -166,7 +166,8 @@ model Venue {
   world      String
   district   String?
   ward       Int?
-  plot       Int?
+  plot       Int? // mutually exclusive with apartment
+  apartment  Int? // mutually exclusive with plot
   location   String? @db.Text // legacy free-text fallback
 
   // Settings

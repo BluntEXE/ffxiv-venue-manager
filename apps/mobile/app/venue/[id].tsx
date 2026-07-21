@@ -61,6 +61,10 @@ type VenueDetail = {
   description: string | null
   dataCenter: string
   world: string
+  district: string | null
+  ward: number | null
+  plot: number | null
+  apartment: number | null
   location: string | null
   logoUrl: string | null
   bannerUrl: string | null
@@ -239,12 +243,18 @@ export default function VenueDetailScreen() {
         <YStack padding="$4" gap="$4" paddingTop={venue.logoUrl ? '$7' : '$4'}>
           <YStack gap="$1">
             <Text color="$subtext0" fontSize={13}>{venue.world} · {venue.dataCenter}</Text>
-            {venue.location && (
-              <XStack alignItems="center" gap="$1">
-                <Ionicons name="location-outline" size={13} color="#a6adc8" />
-                <Text color="$subtext0" fontSize={13}>{venue.location}</Text>
-              </XStack>
-            )}
+            {(() => {
+              const locationText = venue.district || venue.ward != null || venue.plot != null || venue.apartment != null
+                ? [venue.district ?? null, venue.ward != null ? `W${venue.ward}` : null, venue.plot != null ? `P${venue.plot}` : venue.apartment != null ? `Apt${venue.apartment}` : null]
+                    .filter(Boolean).join(" ")
+                : venue.location
+              return locationText ? (
+                <XStack alignItems="center" gap="$1">
+                  <Ionicons name="location-outline" size={13} color="#a6adc8" />
+                  <Text color="$subtext0" fontSize={13}>{locationText}</Text>
+                </XStack>
+              ) : null
+            })()}
             {venue.description && (
               <Text color="$text" fontSize={14} marginTop="$2">{venue.description}</Text>
             )}

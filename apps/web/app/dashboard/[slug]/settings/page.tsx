@@ -83,6 +83,8 @@ export default function SettingsPage({
   const [venueDistrict, setVenueDistrict] = useState<string>("__none__")
   const [venueWard, setVenueWard] = useState<string>("")
   const [venuePlot, setVenuePlot] = useState<string>("")
+  const [venueApartment, setVenueApartment] = useState<string>("")
+  const [housingType, setHousingType] = useState<"house" | "apartment">("house")
   const [venueDataCenter, setVenueDataCenter] = useState("")
   const [venueWorld, setVenueWorld] = useState("")
   const [tagInput, setTagInput] = useState("")
@@ -150,6 +152,8 @@ export default function SettingsPage({
         setVenueDistrict(venue.district ?? "__none__")
         setVenueWard(venue.ward != null ? String(venue.ward) : "")
         setVenuePlot(venue.plot != null ? String(venue.plot) : "")
+        setVenueApartment(venue.apartment != null ? String(venue.apartment) : "")
+        setHousingType(venue.apartment != null ? "apartment" : "house")
         setVenueDataCenter(venue.dataCenter ?? "")
         setVenueWorld(venue.world ?? "")
         setGalleryImages(venue.galleryImages ?? [])
@@ -217,7 +221,7 @@ export default function SettingsPage({
     if (!settingsReadyRef.current) return
     setIsDirty(true)
   }, [
-    settings, venueName, venueDescription, venueDistrict, venueWard, venuePlot,
+    settings, venueName, venueDescription, venueDistrict, venueWard, venuePlot, venueApartment, housingType,
     shiftBotEnabled, shiftBotChannelId, shiftBotDaysBefore, shiftBotThumbnailUrl, shiftBotTemplates,
   ])
 
@@ -238,7 +242,8 @@ export default function SettingsPage({
           description: venueDescription || null,
           district: (venueDistrict && venueDistrict !== "__none__") ? venueDistrict : null,
           ward: venueWard ? parseInt(venueWard, 10) : null,
-          plot: venuePlot ? parseInt(venuePlot, 10) : null,
+          plot: housingType === "house" && venuePlot ? parseInt(venuePlot, 10) : null,
+          apartment: housingType === "apartment" && venueApartment ? parseInt(venueApartment, 10) : null,
         }),
       })
       if (!profileRes.ok) {
@@ -598,6 +603,26 @@ export default function SettingsPage({
                       placeholder="Set during venue creation" />
                   </div>
                 </div>
+                <div className="flex gap-2">
+                  <Button
+                    type="button"
+                    variant={housingType === "house" ? "default" : "outline"}
+                    size="sm"
+                    disabled={isSaving}
+                    onClick={() => setHousingType("house")}
+                  >
+                    House
+                  </Button>
+                  <Button
+                    type="button"
+                    variant={housingType === "apartment" ? "default" : "outline"}
+                    size="sm"
+                    disabled={isSaving}
+                    onClick={() => setHousingType("apartment")}
+                  >
+                    Apartment
+                  </Button>
+                </div>
                 <div className="grid grid-cols-3 gap-3">
                   <div className="space-y-1.5">
                     <Label htmlFor="venue-district">District</Label>
@@ -631,20 +656,37 @@ export default function SettingsPage({
                       className="bg-background border-[var(--blue-015)] focus:border-[var(--blue-035)]"
                     />
                   </div>
-                  <div className="space-y-1.5">
-                    <Label htmlFor="venue-plot">Plot</Label>
-                    <Input
-                      id="venue-plot"
-                      type="number"
-                      min={1}
-                      max={60}
-                      placeholder="1–60"
-                      value={venuePlot}
-                      onChange={e => setVenuePlot(e.target.value)}
-                      disabled={isSaving}
-                      className="bg-background border-[var(--blue-015)] focus:border-[var(--blue-035)]"
-                    />
-                  </div>
+                  {housingType === "house" ? (
+                    <div className="space-y-1.5">
+                      <Label htmlFor="venue-plot">Plot</Label>
+                      <Input
+                        id="venue-plot"
+                        type="number"
+                        min={1}
+                        max={60}
+                        placeholder="1–60"
+                        value={venuePlot}
+                        onChange={e => setVenuePlot(e.target.value)}
+                        disabled={isSaving}
+                        className="bg-background border-[var(--blue-015)] focus:border-[var(--blue-035)]"
+                      />
+                    </div>
+                  ) : (
+                    <div className="space-y-1.5">
+                      <Label htmlFor="venue-apartment">Apartment</Label>
+                      <Input
+                        id="venue-apartment"
+                        type="number"
+                        min={1}
+                        max={99}
+                        placeholder="1–99"
+                        value={venueApartment}
+                        onChange={e => setVenueApartment(e.target.value)}
+                        disabled={isSaving}
+                        className="bg-background border-[var(--blue-015)] focus:border-[var(--blue-035)]"
+                      />
+                    </div>
+                  )}
                 </div>
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   <p className="col-span-full text-[0.72rem] text-[var(--fg-faint)] mb-2">
