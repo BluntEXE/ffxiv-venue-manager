@@ -27,7 +27,6 @@ export async function GET(req: NextRequest) {
       ward: true,
       plot: true,
       apartment: true,
-      location: true,
       logoUrl: true,
       bannerUrl: true,
       shifts: {
@@ -68,7 +67,6 @@ export async function GET(req: NextRequest) {
       ward: v.ward,
       plot: v.plot,
       apartment: v.apartment,
-      location: v.location,
       logoUrl: v.logoUrl,
       bannerUrl: v.bannerUrl,
       openSince: activeShift
