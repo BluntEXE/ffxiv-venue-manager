@@ -8,6 +8,7 @@ import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Textarea } from "@/components/ui/textarea"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
+import { FFXIV_DISTRICTS } from "@/lib/venue-location"
 
 // FFXIV Data Centers and Worlds
 const DATA_CENTERS = {
@@ -44,6 +45,7 @@ export default function NewVenuePage() {
   const [error, setError] = useState("")
   const [selectedDataCenter, setSelectedDataCenter] = useState("")
   const [selectedWorld, setSelectedWorld] = useState("")
+  const [selectedDistrict, setSelectedDistrict] = useState("")
   const [slugPreview, setSlugPreview] = useState("")
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
@@ -64,7 +66,9 @@ export default function NewVenuePage() {
       description: (formData.get("description") as string) || undefined,
       dataCenter: selectedDataCenter,
       world: selectedWorld,
-      location: (formData.get("location") as string) || undefined,
+      district: selectedDistrict || undefined,
+      ward: (formData.get("ward") as string) ? Number(formData.get("ward")) : undefined,
+      plot: (formData.get("plot") as string) ? Number(formData.get("plot")) : undefined,
     }
 
     try {
@@ -202,14 +206,39 @@ export default function NewVenuePage() {
               </Select>
             </div>
 
-            {/* Location */}
+            {/* District / Ward / Plot */}
             <div className="space-y-2">
-              <Label htmlFor="location">In-Game Location</Label>
-              <Input
-                id="location"
-                name="location"
-                placeholder="Ul'dah - Steps of Nald, Plot 12, Ward 5"
-              />
+              <Label>In-Game Location</Label>
+              <div className="grid grid-cols-3 gap-3">
+                <Select name="district" value={selectedDistrict} onValueChange={setSelectedDistrict}>
+                  <SelectTrigger>
+                    <SelectValue placeholder="District" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {FFXIV_DISTRICTS.map((d) => (
+                      <SelectItem key={d} value={d}>
+                        {d}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+                <Input
+                  id="ward"
+                  name="ward"
+                  type="number"
+                  min={1}
+                  max={30}
+                  placeholder="Ward (1-30)"
+                />
+                <Input
+                  id="plot"
+                  name="plot"
+                  type="number"
+                  min={1}
+                  max={60}
+                  placeholder="Plot (1-60)"
+                />
+              </div>
               <p className="text-sm text-muted-foreground">
                 Help visitors find your venue in-game
               </p>
