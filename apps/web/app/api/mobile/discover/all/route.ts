@@ -11,7 +11,7 @@ export async function GET(req: NextRequest) {
   const venues = await prisma.venue.findMany({
     where: {
       isActive: true,
-      ...(dc ? { dataCenter: dc } : {}),
+      ...(dc ? { dataCenter: { equals: dc, mode: "insensitive" } } : {}),
     },
     select: {
       id: true,
