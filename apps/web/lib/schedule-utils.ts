@@ -47,6 +47,50 @@ export function isOpenNow(entries: ScheduleEntry[]): boolean {
   return entries.some(isEntryActiveNow)
 }
 
+export type ResolvedOpening = { start: string; end: string | null }
+
+/**
+ * Resolves recurring schedule entries into concrete upcoming openings with
+ * UTC start/end timestamps, e.g. for external consumers that render a
+ * chronological Today/Upcoming list instead of just "open now".
+ */
+export function resolveUpcomingOccurrences(
+  entries: ScheduleEntry[],
+  opts: { days?: number; limit?: number } = {}
+): ResolvedOpening[] {
+  const days  = opts.days ?? 14
+  const limit = opts.limit ?? 5
+  const now   = new Date()
+  const results: ResolvedOpening[] = []
+
+  for (let offset = 0; offset < days; offset++) {
+    const day = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate() + offset))
+    const weekday = day.getUTCDay()
+
+    for (const entry of entries) {
+      if (entry.day !== weekday) continue
+      if (!matchesInterval(entry, day)) continue
+
+      const start = new Date(day)
+      start.setUTCHours(entry.startHour, entry.startMin, 0, 0)
+
+      let end: Date | null = null
+      if (entry.endHour != null) {
+        end = new Date(day)
+        end.setUTCHours(entry.endHour, entry.endMin ?? 0, 0, 0)
+        if (entry.crossesMidnight) end.setUTCDate(end.getUTCDate() + 1)
+      }
+
+      if (end ? end < now : start < now) continue
+
+      results.push({ start: start.toISOString(), end: end ? end.toISOString() : null })
+    }
+  }
+
+  results.sort((a, b) => a.start.localeCompare(b.start))
+  return results.slice(0, limit)
+}
+
 function isEntryActiveNow(entry: ScheduleEntry): boolean {
   const now        = new Date()
   const todayDay   = now.getUTCDay()

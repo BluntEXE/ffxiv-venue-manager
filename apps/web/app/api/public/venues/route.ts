@@ -5,6 +5,8 @@
 // (e.g. staffOnShift) never leak here.
 import { NextRequest, NextResponse } from "next/server"
 import { prisma } from "@/lib/prisma"
+import { parseVenueSettings } from "@/lib/types/venue-settings"
+import { isOpenNow, resolveUpcomingOccurrences, type ScheduleEntry } from "@/lib/schedule-utils"
 
 export async function GET(req: NextRequest) {
   const dc = req.nextUrl.searchParams.get("dc") ?? undefined
@@ -29,6 +31,24 @@ export async function GET(req: NextRequest) {
       apartment: true,
       logoUrl: true,
       bannerUrl: true,
+      settings: true,
+      ffxivVenueId: true,
+      scheduleEntries: {
+        select: {
+          id: true,
+          venueId: true,
+          day: true,
+          startHour: true,
+          startMin: true,
+          endHour: true,
+          endMin: true,
+          crossesMidnight: true,
+          interval: true,
+          weekOfMonth: true,
+          commencing: true,
+          label: true,
+        },
+      },
       shifts: {
         where: {
           OR: [
@@ -57,6 +77,8 @@ export async function GET(req: NextRequest) {
   const mapped = venues.map((v) => {
     const activeShift = v.shifts.find((s) => s.status === "ACTIVE")
     const tonightShift = v.shifts.find((s) => s.status === "SCHEDULED")
+    const settings = parseVenueSettings(v.settings)
+    const scheduleEntries = v.scheduleEntries as ScheduleEntry[]
     return {
       id: v.id,
       name: v.name,
@@ -69,12 +91,30 @@ export async function GET(req: NextRequest) {
       apartment: v.apartment,
       logoUrl: v.logoUrl,
       bannerUrl: v.bannerUrl,
+      isAdult: settings.isAdult ?? false,
+      ffxivVenuesId: v.ffxivVenueId,
       openSince: activeShift
         ? (activeShift.actualStart ?? activeShift.scheduledStart)
         : null,
       scheduledEnd:
         activeShift?.scheduledEnd ?? tonightShift?.scheduledEnd ?? null,
       nextOpen: tonightShift?.scheduledStart ?? null,
+      // Recurring opening-hours pattern, all times UTC / FFXIV Server Time.
+      schedule: scheduleEntries.map((e) => ({
+        day: e.day,
+        startHour: e.startHour,
+        startMin: e.startMin,
+        endHour: e.endHour,
+        endMin: e.endMin,
+        crossesMidnight: e.crossesMidnight,
+        interval: e.interval,
+        weekOfMonth: e.weekOfMonth,
+        commencing: e.commencing,
+        label: e.label,
+      })),
+      openNow: isOpenNow(scheduleEntries),
+      // Next few resolved occurrences within the next 14 days, UTC start/end.
+      nextOpenings: resolveUpcomingOccurrences(scheduleEntries, { days: 14, limit: 5 }),
     }
   })
 
