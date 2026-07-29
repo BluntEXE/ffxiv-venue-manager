@@ -101,6 +101,7 @@ const createShiftSchema = z
     scheduledEnd: z.string().datetime(),
     notes: z.string().optional(),
     recurrenceRule: z.enum(["WEEKLY", "BIWEEKLY", "MONTHLY"]).optional(),
+    slotGroupId: z.string().optional(),
   })
   // Cross-field rule (spans membershipId and roleId), so the error is form-level: no single field is "wrong" on its own.
   .refine((data) => Boolean(data.membershipId) !== Boolean(data.roleId), {
@@ -190,6 +191,7 @@ export async function POST(
         scheduledEnd,
         notes: parsed.data.notes ?? null,
         recurrenceRule: recurrenceRule ?? null,
+        slotGroupId: parsed.data.slotGroupId ?? null,
       },
     })
 
