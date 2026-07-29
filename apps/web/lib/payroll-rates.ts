@@ -58,7 +58,13 @@ export function resolveShiftRates(
   let totalAmount = new Decimal(0)
 
   for (const shift of shifts) {
-    if (!shift.actualStart || !shift.actualEnd) continue
+    if (!shift.actualStart || !shift.actualEnd) {
+      // Anomalous data (missing one of the two actual timestamps) — surface it as an
+      // unresolved shift (0 hours, no rate) instead of silently dropping it, so it shows
+      // up in excludedShiftIds/unresolvedShiftCount rather than vanishing with no trace.
+      resolved.push({ id: shift.id, hours: new Decimal(0), rate: null })
+      continue
+    }
 
     const hoursRaw = (shift.actualEnd.getTime() - shift.actualStart.getTime()) / (1000 * 60 * 60)
     const hours = new Decimal(Math.round(hoursRaw * 100) / 100)

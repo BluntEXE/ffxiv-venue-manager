@@ -198,18 +198,25 @@ export function CreateShiftDialog({ venueSlug, staff, roles, trigger, prefill }:
               </div>
               <div className="space-y-2">
                 <Label htmlFor="assign-role">Role (optional, for pay)</Label>
-                <Select value={roleId} onValueChange={setRoleId}>
-                  <SelectTrigger>
-                    <SelectValue placeholder="No specific role tagged" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {roles.map((r) => (
-                      <SelectItem key={r.id} value={r.id}>
-                        {r.name}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
+                <div className="flex gap-2">
+                  <Select value={roleId} onValueChange={setRoleId}>
+                    <SelectTrigger>
+                      <SelectValue placeholder="No specific role tagged" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {roles.map((r) => (
+                        <SelectItem key={r.id} value={r.id}>
+                          {r.name}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                  {roleId && (
+                    <Button type="button" variant="outline" size="sm" onClick={() => setRoleId("")}>
+                      Clear
+                    </Button>
+                  )}
+                </div>
                 <p className="text-xs text-muted-foreground">
                   Tags this shift with a role for pay purposes. The role's rate is used
                   instead of the staff member's own rate when payroll is generated.
