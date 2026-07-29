@@ -25,3 +25,21 @@ export function generateOccurrences(
   }
   return result
 }
+
+// Weeks between one occurrence and the next, per rule. MONTHLY approximated as 4 weeks —
+// good enough for sizing a rolling window, not used for actual date math.
+const WEEKS_PER_OCCURRENCE: Record<RecurrenceRule, number> = {
+  WEEKLY: 1,
+  BIWEEKLY: 2,
+  MONTHLY: 4,
+}
+
+/**
+ * How many occurrences of `rule` are needed to cover `windowWeeks` of future time.
+ * Used both when first creating a recurring shift (fill a 6-week window) and when the
+ * roll-forward cron tops the window back up.
+ */
+export function occurrencesToFillWindow(rule: RecurrenceRule, windowWeeks: number): number {
+  if (windowWeeks <= 0) return 0
+  return Math.ceil(windowWeeks / WEEKS_PER_OCCURRENCE[rule])
+}
