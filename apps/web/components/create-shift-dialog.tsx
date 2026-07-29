@@ -106,7 +106,9 @@ export function CreateShiftDialog({ venueSlug, staff, roles, trigger, prefill }:
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({
-            ...(mode === "assign" ? { membershipId } : { roleId }),
+            ...(mode === "assign"
+              ? { membershipId, ...(roleId ? { roleId } : {}) }
+              : { roleId }),
             scheduledStart,
             scheduledEnd,
             notes: notes || undefined,
@@ -178,20 +180,41 @@ export function CreateShiftDialog({ venueSlug, staff, roles, trigger, prefill }:
           </div>
 
           {mode === "assign" ? (
-            <div className="space-y-2">
-              <Label htmlFor="staff">Staff Member</Label>
-              <Select value={membershipId} onValueChange={setMembershipId}>
-                <SelectTrigger>
-                  <SelectValue placeholder="Select staff member" />
-                </SelectTrigger>
-                <SelectContent>
-                  {staff.map((s) => (
-                    <SelectItem key={s.id} value={s.id}>
-                      {s.name}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
+            <div className="space-y-4">
+              <div className="space-y-2">
+                <Label htmlFor="staff">Staff Member</Label>
+                <Select value={membershipId} onValueChange={setMembershipId}>
+                  <SelectTrigger>
+                    <SelectValue placeholder="Select staff member" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {staff.map((s) => (
+                      <SelectItem key={s.id} value={s.id}>
+                        {s.name}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="assign-role">Role (optional, for pay)</Label>
+                <Select value={roleId} onValueChange={setRoleId}>
+                  <SelectTrigger>
+                    <SelectValue placeholder="No specific role tagged" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {roles.map((r) => (
+                      <SelectItem key={r.id} value={r.id}>
+                        {r.name}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+                <p className="text-xs text-muted-foreground">
+                  Tags this shift with a role for pay purposes. The role's rate is used
+                  instead of the staff member's own rate when payroll is generated.
+                </p>
+              </div>
             </div>
           ) : (
             <div className="space-y-2">
