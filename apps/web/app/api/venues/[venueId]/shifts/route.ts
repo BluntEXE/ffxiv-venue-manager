@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server"
 import { getServerSession } from "next-auth"
 import { authOptions } from "@/lib/auth"
 import { prisma } from "@/lib/prisma"
+import { queueShiftReminder } from "@/lib/shift-notifications"
 import { z } from "zod"
 
 /**
@@ -188,19 +189,7 @@ export async function POST(
 
     // Queue shift reminder 1 hour before start: only meaningful for assigned shifts
     if (targetMembership?.userId) {
-      const reminderAt = new Date(scheduledStart.getTime() - 60 * 60 * 1000)
-      if (reminderAt > new Date()) {
-        prisma.pendingNotification.create({
-          data: {
-            userId: targetMembership.userId,
-            type: "SHIFT_REMINDER",
-            title: "Shift starting soon",
-            body: `Your shift at ${venue.name} starts in 1 hour.`,
-            data: { venueId: venue.id, shiftId: shift.id },
-            scheduledFor: reminderAt,
-          },
-        }).catch(() => {}) // non-blocking
-      }
+      queueShiftReminder(targetMembership.userId, venue.id, venue.name, shift.id, scheduledStart)
     }
 
     return NextResponse.json({ shift }, { status: 201 })
