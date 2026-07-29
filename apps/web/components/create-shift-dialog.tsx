@@ -97,7 +97,10 @@ export function CreateShiftDialog({ venueSlug, staff, roles, trigger, prefill }:
     setError(null)
 
     try {
-      const count = mode === "open" && !repeating ? Math.max(1, Math.min(20, quantity)) : 1
+      const count = mode === "open" ? Math.max(1, Math.min(20, quantity)) : 1
+      // Only tag with a shared group when there's actually a group to tag: quantity > 1
+      // AND repeating. A single recurring shift (quantity 1) needs no group ID.
+      const slotGroupId = mode === "open" && repeating && count > 1 ? crypto.randomUUID() : undefined
       for (let i = 0; i < count; i++) {
         const res = await fetch(`/api/venues/${venueSlug}/shifts`, {
           method: "POST",
@@ -108,6 +111,7 @@ export function CreateShiftDialog({ venueSlug, staff, roles, trigger, prefill }:
             scheduledEnd,
             notes: notes || undefined,
             ...(repeating ? { recurrenceRule } : {}),
+            ...(slotGroupId ? { slotGroupId } : {}),
           }),
         })
 
@@ -212,7 +216,7 @@ export function CreateShiftDialog({ venueSlug, staff, roles, trigger, prefill }:
             </div>
           )}
 
-          {mode === "open" && !repeating && (
+          {mode === "open" && (
             <div className="space-y-2">
               <Label htmlFor="quantity">How many open slots?</Label>
               <Input
@@ -225,7 +229,9 @@ export function CreateShiftDialog({ venueSlug, staff, roles, trigger, prefill }:
                 className="w-24"
               />
               <p className="text-xs text-muted-foreground">
-                Creates this many identical open shifts for staff to claim.
+                {repeating
+                  ? "Creates this many independent repeating slots — each gets its own weekly/biweekly/monthly instances."
+                  : "Creates this many identical open shifts for staff to claim."}
               </p>
             </div>
           )}
