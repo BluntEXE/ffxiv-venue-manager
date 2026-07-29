@@ -420,6 +420,7 @@ export default async function ShiftsPage({
                               shiftId={shift.id}
                               hasPayroll={false}
                               isRecurring={Boolean(shift.recurrenceRule || shift.parentShiftId)}
+                              slotGroupId={shift.slotGroupId}
                             />
                           )}
                         </div>
