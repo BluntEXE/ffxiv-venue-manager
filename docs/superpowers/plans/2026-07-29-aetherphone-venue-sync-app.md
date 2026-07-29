@@ -341,6 +341,51 @@ git commit -m "feat(venue-sync): add DTOs and JSON source-gen context"
 
 ---
 
+## Task 3a: HttpService — add x-api-key header support
+
+**Discovered during implementation, not anticipated in the original design:** `HttpService`'s only auth mechanism is `bearer` → sent as `Authorization: Bearer <value>` (`Core/Net/HttpService.cs:295-306`, `ApplyHeaders`). The xivvenuemanager.com `/api/plugin/*` endpoints authenticate via a plain `x-api-key` header (confirmed against `app/api/plugin/venues/route.ts` and siblings), not Bearer. No existing Aetherphone app calls an x-api-key-authenticated API through `HttpService` — Venues/Aethernet only hit public unauthenticated third-party APIs. This is a small, additive change to shared infrastructure: a new optional `apiKey` parameter threaded through the two methods Venue Sync actually needs (`GetJsonAsync`, `PostJsonAsync`) down to `ApplyHeaders`, defaulting to `null` so every existing caller is unaffected.
+
+**Files:**
+- Modify: `src/Aetherphone/Core/Net/HttpService.cs`
+
+- [ ] **Step 1: Add the parameter to `ApplyHeaders`**
+
+```csharp
+private static void ApplyHeaders(HttpRequestMessage request, string? bearer, string? appScope, string? apiKey = null)
+{
+    if (!string.IsNullOrEmpty(bearer))
+        request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", bearer);
+    if (!string.IsNullOrEmpty(appScope))
+        request.Headers.TryAddWithoutValidation("X-Aep-App", appScope);
+    if (!string.IsNullOrEmpty(apiKey))
+        request.Headers.TryAddWithoutValidation("x-api-key", apiKey);
+}
+```
+
+- [ ] **Step 2: Thread `apiKey` through `GetJsonAsync` and `PostJsonAsync` down to `SendForJsonAsync`/`SendJsonAsync`**
+
+Add `string? apiKey = null` as a new optional trailing parameter on `GetJsonAsync<T>` (`HttpService.cs:89-94`), `PostJsonAsync<TRequest,TResponse>` (`:96-101`), `SendJsonAsync<TRequest,TResponse>` (`:103-111`), and `SendForJsonAsync<T>` (`:228-...`) — pass it straight through each call chain to the final `ApplyHeaders(request, bearer, appScope, apiKey)` call at `:237`. Also update the `GetJsonAsync` call site at `:93`'s `SendForJsonAsync(request, typeInfo, bearer, onStatus, appScope, token)` to include `apiKey`.
+
+Do NOT modify `PutBytesAsync`, `SendJsonForStatusAsync`, `SendAsync`, or `RequestJsonAsync` — Venue Sync doesn't need those paths, and touching every overload for a feature that only needs two of them is unnecessary surface area.
+
+- [ ] **Step 3: Build**
+
+```bash
+cd /home/ehno/plugin-research/FFXIV-Aetherphone && dotnet build 2>&1 | tail -60
+```
+
+Expected: 0 errors. All existing call sites across the codebase call these methods without the new trailing optional parameter, so nothing else needs to change — confirm this by checking the build has no new errors outside `HttpService.cs` itself.
+
+- [ ] **Step 4: Commit**
+
+```bash
+cd /home/ehno/plugin-research/FFXIV-Aetherphone
+git add src/Aetherphone/Core/Net/HttpService.cs
+git commit -m "feat(http): add optional x-api-key header support to GetJsonAsync/PostJsonAsync"
+```
+
+---
+
 ## Task 3: Core/VenueSync — API client
 
 **Files:**
@@ -377,43 +422,43 @@ internal sealed class VenueSyncApiClient
 
     public Task<VenueSyncVenuesResponse?> GetVenuesAsync(CancellationToken token) =>
         http.GetJsonAsync($"{BaseUrl}/api/plugin/venues", VenueSyncJsonContext.Default.VenueSyncVenuesResponse,
-            ApiKey, token, appScope: "venue-sync");
+            null, token, appScope: "venue-sync", apiKey: ApiKey);
 
     public Task<VenueSyncShiftsResponse?> GetShiftsAsync(string venueId, CancellationToken token) =>
         http.GetJsonAsync($"{BaseUrl}/api/plugin/shifts?venueId={Uri.EscapeDataString(venueId)}",
-            VenueSyncJsonContext.Default.VenueSyncShiftsResponse, ApiKey, token, appScope: "venue-sync");
+            VenueSyncJsonContext.Default.VenueSyncShiftsResponse, null, token, appScope: "venue-sync", apiKey: ApiKey);
 
     public Task<VenueSyncClockResult?> ClockInAsync(string shiftId, CancellationToken token) =>
         http.PostJsonAsync($"{BaseUrl}/api/plugin/shifts/clock-in", new VenueSyncShiftIdRequest { ShiftId = shiftId },
             VenueSyncJsonContext.Default.VenueSyncShiftIdRequest, VenueSyncJsonContext.Default.VenueSyncClockResult,
-            ApiKey, token, appScope: "venue-sync");
+            null, token, appScope: "venue-sync", apiKey: ApiKey);
 
     public Task<VenueSyncClockResult?> ClockOutAsync(string shiftId, CancellationToken token) =>
         http.PostJsonAsync($"{BaseUrl}/api/plugin/shifts/clock-out", new VenueSyncShiftIdRequest { ShiftId = shiftId },
             VenueSyncJsonContext.Default.VenueSyncShiftIdRequest, VenueSyncJsonContext.Default.VenueSyncClockResult,
-            ApiKey, token, appScope: "venue-sync");
+            null, token, appScope: "venue-sync", apiKey: ApiKey);
 
     public Task<VenueSyncClockResult?> ClaimShiftAsync(string shiftId, CancellationToken token) =>
         http.PostJsonAsync($"{BaseUrl}/api/plugin/shifts/claim", new VenueSyncShiftIdRequest { ShiftId = shiftId },
             VenueSyncJsonContext.Default.VenueSyncShiftIdRequest, VenueSyncJsonContext.Default.VenueSyncClockResult,
-            ApiKey, token, appScope: "venue-sync");
+            null, token, appScope: "venue-sync", apiKey: ApiKey);
 
     public Task<VenueSyncServicesResponse?> GetServicesAsync(string venueId, CancellationToken token) =>
         http.GetJsonAsync($"{BaseUrl}/api/plugin/services?venueId={Uri.EscapeDataString(venueId)}",
-            VenueSyncJsonContext.Default.VenueSyncServicesResponse, ApiKey, token, appScope: "venue-sync");
+            VenueSyncJsonContext.Default.VenueSyncServicesResponse, null, token, appScope: "venue-sync", apiKey: ApiKey);
 
     public Task<VenueSyncTransactionResult?> LogTransactionAsync(VenueSyncTransactionRequest request,
         CancellationToken token) =>
         http.PostJsonAsync($"{BaseUrl}/api/plugin/transactions", request,
             VenueSyncJsonContext.Default.VenueSyncTransactionRequest,
-            VenueSyncJsonContext.Default.VenueSyncTransactionResult, ApiKey, token, appScope: "venue-sync");
+            VenueSyncJsonContext.Default.VenueSyncTransactionResult, null, token, appScope: "venue-sync", apiKey: ApiKey);
 
     public Task<VenueSyncLinkCharacterResponse?> LinkCharacterAsync(string characterName, string world,
         CancellationToken token) =>
         http.PostJsonAsync($"{BaseUrl}/api/plugin/characters",
             new VenueSyncLinkCharacterRequest { CharacterName = characterName, World = world },
             VenueSyncJsonContext.Default.VenueSyncLinkCharacterRequest,
-            VenueSyncJsonContext.Default.VenueSyncLinkCharacterResponse, ApiKey, token, appScope: "venue-sync");
+            VenueSyncJsonContext.Default.VenueSyncLinkCharacterResponse, null, token, appScope: "venue-sync", apiKey: ApiKey);
 }
 ```
 
