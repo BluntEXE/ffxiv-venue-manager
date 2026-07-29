@@ -59,6 +59,7 @@ interface Role {
   responsibilities: string | null
   color: string | null
   permissions: any
+  hourlyRate: string | null
   _count?: {
     memberships: number
   }
@@ -83,6 +84,7 @@ export default function RolesPage({
     name: "",
     responsibilities: "",
     color: "#6366f1",
+    hourlyRate: "",
   })
   const [formError, setFormError] = useState("")
   const [isSubmitting, setIsSubmitting] = useState(false)
@@ -143,7 +145,10 @@ export default function RolesPage({
       const response = await fetch(`/api/venues/${venue.id}/roles`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(formData),
+        body: JSON.stringify({
+          ...formData,
+          hourlyRate: formData.hourlyRate ? Number(formData.hourlyRate) : null,
+        }),
       })
 
       if (!response.ok) {
@@ -154,7 +159,7 @@ export default function RolesPage({
       const newRole = await response.json()
       setRoles([newRole, ...roles])
       setIsCreateDialogOpen(false)
-      setFormData({ name: "", responsibilities: "", color: "#6366f1" })
+      setFormData({ name: "", responsibilities: "", color: "#6366f1", hourlyRate: "" })
     } catch (error: unknown) {
       setFormError(error instanceof Error ? error.message : "Failed to create role")
     } finally {
@@ -182,7 +187,10 @@ export default function RolesPage({
         {
           method: "PUT",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify(formData),
+          body: JSON.stringify({
+            ...formData,
+            hourlyRate: formData.hourlyRate ? Number(formData.hourlyRate) : null,
+          }),
         }
       )
 
@@ -195,7 +203,7 @@ export default function RolesPage({
       setRoles(roles.map((r) => (r.id === updatedRole.id ? updatedRole : r)))
       setIsEditDialogOpen(false)
       setEditingRole(null)
-      setFormData({ name: "", responsibilities: "", color: "#6366f1" })
+      setFormData({ name: "", responsibilities: "", color: "#6366f1", hourlyRate: "" })
     } catch (error: unknown) {
       setFormError(error instanceof Error ? error.message : "Failed to update role")
     } finally {
@@ -231,13 +239,14 @@ export default function RolesPage({
       name: role.name,
       responsibilities: role.responsibilities || "",
       color: role.color || "#6366f1",
+      hourlyRate: role.hourlyRate ?? "",
     })
     setFormError("")
     setIsEditDialogOpen(true)
   }
 
   const openCreateDialog = () => {
-    setFormData({ name: "", responsibilities: "", color: "#6366f1" })
+    setFormData({ name: "", responsibilities: "", color: "#6366f1", hourlyRate: "" })
     setFormError("")
     setIsCreateDialogOpen(true)
   }
@@ -299,10 +308,15 @@ export default function RolesPage({
                       </CardDescription>
                     </div>
                   </div>
-                  <Badge variant="outline" className="shrink-0 ml-2">
-                    {role._count?.memberships || 0}{" "}
-                    {(role._count?.memberships || 0) === 1 ? "member" : "members"}
-                  </Badge>
+                  <div className="flex flex-col items-end gap-1 shrink-0 ml-2">
+                    <Badge variant="outline">
+                      {role._count?.memberships || 0}{" "}
+                      {(role._count?.memberships || 0) === 1 ? "member" : "members"}
+                    </Badge>
+                    {role.hourlyRate && (
+                      <Badge variant="outline">{Number(role.hourlyRate).toLocaleString()}/hr</Badge>
+                    )}
+                  </div>
                 </div>
               </CardHeader>
               <CardContent>
@@ -394,6 +408,21 @@ export default function RolesPage({
                 }
                 disabled={isSubmitting}
                 rows={3}
+              />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="create-hourly-rate">Hourly Rate (Optional)</Label>
+              <Input
+                id="create-hourly-rate"
+                type="number"
+                min={0}
+                step="0.01"
+                placeholder="Used as this role's default pay rate"
+                value={formData.hourlyRate}
+                onChange={(e) =>
+                  setFormData({ ...formData, hourlyRate: e.target.value })
+                }
+                disabled={isSubmitting}
               />
             </div>
             <div className="space-y-2">
@@ -507,6 +536,20 @@ export default function RolesPage({
                 }
                 disabled={isSubmitting}
                 rows={3}
+              />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="edit-hourly-rate">Hourly Rate (Optional)</Label>
+              <Input
+                id="edit-hourly-rate"
+                type="number"
+                min={0}
+                step="0.01"
+                value={formData.hourlyRate}
+                onChange={(e) =>
+                  setFormData({ ...formData, hourlyRate: e.target.value })
+                }
+                disabled={isSubmitting}
               />
             </div>
             <div className="space-y-2">
