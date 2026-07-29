@@ -800,6 +800,11 @@ model Shift {
   status ShiftStatus @default(SCHEDULED)
   notes  String?     @db.Text
 
+  // Recurrence: null recurrenceRule = one-off shift. Set only on the parent;
+  // children reference it via parentShiftId (same pattern as Event/parentEventId).
+  recurrenceRule String?
+  parentShiftId  String?
+
   shiftSignupEmbedId String?
   shiftSignupEmbed   ShiftSignupEmbed? @relation(fields: [shiftSignupEmbedId], references: [id], onDelete: SetNull)
 
@@ -811,6 +816,9 @@ model Shift {
   role         Role?         @relation(fields: [roleId], references: [id], onDelete: SetNull)
   payrollEntry PayrollEntry? @relation(fields: [payrollEntryId], references: [id], onDelete: SetNull)
   auditLogs    ShiftAuditLog[]
+
+  parentShift Shift?  @relation("ShiftRecurrence", fields: [parentShiftId], references: [id])
+  childShifts Shift[] @relation("ShiftRecurrence")
 
   @@index([venueId, scheduledStart])
   @@index([membershipId, status])
