@@ -415,7 +415,12 @@ export default async function ShiftsPage({
                             />
                           )}
                           {canManage && (
-                            <DeleteShiftButton venueSlug={slug} shiftId={shift.id} hasPayroll={false} />
+                            <DeleteShiftButton
+                              venueSlug={slug}
+                              shiftId={shift.id}
+                              hasPayroll={false}
+                              isRecurring={Boolean(shift.recurrenceRule || shift.parentShiftId)}
+                            />
                           )}
                         </div>
                       ))}
