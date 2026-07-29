@@ -170,13 +170,15 @@ export const POST = withRateLimit<{ params: Promise<{ venueId: string }> }>(
         linkedShiftIds = resolution.includedShiftIds
       }
 
+      // Informational effective rate for display — computed before any bonus is folded
+      // in, same as the original flat-rate behavior (bonus is a separate line item, not
+      // part of the hourly rate). The real math happened per-shift above (unless the
+      // manual override path ran, in which case it's just that flat rate).
+      const effectiveRate = totalHours.gt(0) ? totalAmount.div(totalHours) : new Decimal(0)
+
       if (bonusAmount) {
         totalAmount = totalAmount.add(new Decimal(bonusAmount))
       }
-
-      // Informational effective rate for display — the real math happened per-shift
-      // above (unless the manual override path ran, in which case it's just that flat rate).
-      const effectiveRate = totalHours.gt(0) ? totalAmount.div(totalHours) : new Decimal(0)
 
       // Create payroll entry and link shifts in a single transaction
       const result = await prisma.$transaction(async (tx) => {
