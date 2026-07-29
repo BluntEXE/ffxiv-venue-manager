@@ -104,8 +104,8 @@ const createShiftSchema = z
     slotGroupId: z.string().optional(),
   })
   // Cross-field rule (spans membershipId and roleId), so the error is form-level: no single field is "wrong" on its own.
-  .refine((data) => Boolean(data.membershipId) !== Boolean(data.roleId), {
-    message: "Provide exactly one of membershipId (assign now) or roleId (leave open), not both",
+  .refine((data) => Boolean(data.membershipId) || Boolean(data.roleId), {
+    message: "Provide a staff member (assign now), a role (leave open), or both (assign now with a role tagged for pay)",
   })
 
 export async function POST(
@@ -162,8 +162,11 @@ export async function POST(
         )
       }
       targetMembership = member
-    } else if (parsed.data.roleId) {
-      // Leaving the shift open: verify the role belongs to this venue
+    }
+
+    // Verified independently of assign/open mode: an assigned shift can optionally
+    // also carry a role (for pay resolution), and an open shift always requires one.
+    if (parsed.data.roleId) {
       const role = await prisma.role.findFirst({
         where: { id: parsed.data.roleId, venueId: venue.id },
         select: { id: true },
