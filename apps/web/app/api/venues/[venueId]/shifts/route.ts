@@ -2,6 +2,8 @@ import { NextRequest, NextResponse } from "next/server"
 import { getServerSession } from "next-auth"
 import { authOptions } from "@/lib/auth"
 import { prisma } from "@/lib/prisma"
+import { queueShiftReminder } from "@/lib/shift-notifications"
+import { generateOccurrences, occurrencesToFillWindow, type RecurrenceRule } from "@/lib/recurrence"
 import { z } from "zod"
 
 /**
@@ -98,6 +100,8 @@ const createShiftSchema = z
     scheduledStart: z.string().datetime(),
     scheduledEnd: z.string().datetime(),
     notes: z.string().optional(),
+    recurrenceRule: z.enum(["WEEKLY", "BIWEEKLY", "MONTHLY"]).optional(),
+    slotGroupId: z.string().optional(),
   })
   // Cross-field rule (spans membershipId and roleId), so the error is form-level: no single field is "wrong" on its own.
   .refine((data) => Boolean(data.membershipId) !== Boolean(data.roleId), {
@@ -174,6 +178,9 @@ export async function POST(
     }
 
     const scheduledStart = new Date(parsed.data.scheduledStart)
+    const scheduledEnd = new Date(parsed.data.scheduledEnd)
+    const recurrenceRule = parsed.data.recurrenceRule
+
     const shift = await prisma.shift.create({
       data: {
         venueId: venue.id,
@@ -181,25 +188,40 @@ export async function POST(
         roleId: verifiedRoleId,
         status: parsed.data.membershipId ? "SCHEDULED" : "OPEN",
         scheduledStart,
-        scheduledEnd: new Date(parsed.data.scheduledEnd),
+        scheduledEnd,
         notes: parsed.data.notes ?? null,
+        recurrenceRule: recurrenceRule ?? null,
+        slotGroupId: parsed.data.slotGroupId ?? null,
       },
     })
 
-    // Queue shift reminder 1 hour before start: only meaningful for assigned shifts
+    let childShifts: { id: string; scheduledStart: Date }[] = []
+    if (recurrenceRule) {
+      const count = occurrencesToFillWindow(recurrenceRule as RecurrenceRule, 6)
+      const occurrences = generateOccurrences(scheduledStart, scheduledEnd, recurrenceRule as RecurrenceRule, count)
+      await prisma.shift.createMany({
+        data: occurrences.map((o) => ({
+          venueId: venue.id,
+          membershipId: parsed.data.membershipId ?? null,
+          roleId: verifiedRoleId,
+          status: parsed.data.membershipId ? "SCHEDULED" : "OPEN",
+          scheduledStart: o.startTime,
+          scheduledEnd: o.endTime,
+          notes: parsed.data.notes ?? null,
+          parentShiftId: shift.id,
+        })),
+      })
+      childShifts = await prisma.shift.findMany({
+        where: { parentShiftId: shift.id },
+        select: { id: true, scheduledStart: true },
+      })
+    }
+
+    // Queue shift reminders 1 hour before start for every assigned occurrence (parent + children)
     if (targetMembership?.userId) {
-      const reminderAt = new Date(scheduledStart.getTime() - 60 * 60 * 1000)
-      if (reminderAt > new Date()) {
-        prisma.pendingNotification.create({
-          data: {
-            userId: targetMembership.userId,
-            type: "SHIFT_REMINDER",
-            title: "Shift starting soon",
-            body: `Your shift at ${venue.name} starts in 1 hour.`,
-            data: { venueId: venue.id, shiftId: shift.id },
-            scheduledFor: reminderAt,
-          },
-        }).catch(() => {}) // non-blocking
+      queueShiftReminder(targetMembership.userId, venue.id, venue.name, shift.id, scheduledStart)
+      for (const child of childShifts) {
+        queueShiftReminder(targetMembership.userId, venue.id, venue.name, child.id, child.scheduledStart)
       }
     }
 
