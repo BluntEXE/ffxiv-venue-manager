@@ -805,6 +805,13 @@ model Shift {
   recurrenceRule String?
   parentShiftId  String?
 
+  // Set only on parent rows, only when quantity > 1 was combined with repeating at
+  // creation time. Ties together N independent recurring series (each with its own
+  // parentShiftId chain) created from a single "N open slots, repeating" submission,
+  // so they can optionally be cancelled together via cancel-group. Null for everything
+  // else — including quantity=1 recurring shifts and non-recurring quantity>1 shifts.
+  slotGroupId String?
+
   // Set by eorzea-bot's reminder poll job when it sends a shift-starting-soon DM.
   // Owned by this model (it's a real Shift column) even though the bot, not this
   // app, writes to it.
