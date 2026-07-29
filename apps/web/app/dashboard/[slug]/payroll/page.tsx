@@ -116,6 +116,7 @@ interface GeneratePreview {
     shiftCount: number
     totalHours: number
     estimatedTotal: number | null
+    unresolvedShiftCount: number
   }
 }
 
@@ -166,8 +167,9 @@ export default function PayrollPage() {
   const [genAllEnd, setGenAllEnd] = useState("")
   const [genAllPreview, setGenAllPreview] = useState<{
     membershipId: string; name: string; image: string | null
-    shiftCount: number; totalHours: number; rate: number | null
+    shiftCount: number; totalHours: number
     estimatedTotal: number | null; skipped: boolean; skipReason: string | null
+    unresolvedShiftCount: number
   }[] | null>(null)
   const [genAllLoading, setGenAllLoading] = useState(false)
   const [genAllCreating, setGenAllCreating] = useState(false)
@@ -370,10 +372,9 @@ export default function PayrollPage() {
       }
       const data = await response.json()
       setGenPreview(data)
-      // Auto-fill rate from staff default if no override set
-      if (!genRateOverride && data.staff.defaultHourlyRate) {
-        setGenRateOverride(String(data.staff.defaultHourlyRate))
-      }
+      // Deliberately not auto-filling genRateOverride from the staff default anymore.
+      // Leaving it empty means the manager gets real per-shift resolution by default;
+      // typing a value here is now an explicit opt-in to bypass that with a flat rate.
     } catch (error) {
       console.error("Error fetching generate preview:", error)
       const msg = error instanceof Error ? error.message : "Failed to fetch preview"
@@ -459,11 +460,16 @@ export default function PayrollPage() {
     }
   }
 
-  const genEffectiveRate = genRateOverride
-    ? parseFloat(genRateOverride)
-    : genPreview?.staff.defaultHourlyRate ?? 0
+  // With no override, trust the server's real per-shift resolution (genPreview.summary.estimatedTotal)
+  // instead of recomputing a flat number client-side — that's the whole point of per-shift rates.
+  // An override, when the manager explicitly types one, still applies flat to every eligible hour,
+  // same as before this feature existed.
+  const genEffectiveRate = genRateOverride ? parseFloat(genRateOverride) : null
   const genEstimatedTotal = genPreview
-    ? Math.round(genEffectiveRate * genPreview.summary.totalHours) + (genBonus ? parseFloat(genBonus) || 0 : 0)
+    ? (genRateOverride && genEffectiveRate !== null
+        ? Math.round(genEffectiveRate * genPreview.summary.totalHours)
+        : (genPreview.summary.estimatedTotal ?? 0)
+      ) + (genBonus ? parseFloat(genBonus) || 0 : 0)
     : 0
 
   const calculateTotal = () => {
@@ -567,7 +573,12 @@ export default function PayrollPage() {
                             <AvatarFallback className="text-[0.6rem]">{m.name[0]}</AvatarFallback>
                           </Avatar>
                           <span className="font-medium">{m.name}</span>
-                          <span className="text-muted-foreground">{m.shiftCount} shift{m.shiftCount !== 1 ? "s" : ""} · {m.totalHours}h</span>
+                          <span className="text-muted-foreground">
+                            {m.shiftCount} shift{m.shiftCount !== 1 ? "s" : ""} · {m.totalHours}h
+                            {m.unresolvedShiftCount > 0 && (
+                              <span className="text-amber-500"> · {m.unresolvedShiftCount} unresolved</span>
+                            )}
+                          </span>
                         </div>
                         <span className="font-semibold text-[var(--xiv-blue)]">
                           {m.estimatedTotal?.toLocaleString()} gil
@@ -706,21 +717,19 @@ export default function PayrollPage() {
 
                         {/* Rate Override */}
                         <div className="space-y-2">
-                          <Label>
-                            Hourly Rate
-                            {genPreview.staff.defaultHourlyRate && (
-                              <span className="text-muted-foreground font-normal ml-1">
-                                (default: {genPreview.staff.defaultHourlyRate} Gil/hr)
-                              </span>
-                            )}
-                          </Label>
+                          <Label>Hourly Rate Override (Optional)</Label>
                           <Input
                             type="number"
                             step="0.01"
-                            placeholder={genPreview.staff.defaultHourlyRate?.toString() || "Enter rate"}
+                            placeholder="Leave blank to use per-shift resolved rates"
                             value={genRateOverride}
                             onChange={(e) => setGenRateOverride(e.target.value)}
                           />
+                          <p className="text-xs text-muted-foreground">
+                            By default, pay is resolved per shift (a shift's tagged role rate, then the
+                            staff member's own rate, then their primary role's rate). Setting a value here
+                            overrides all of that and pays every hour in this period at this one flat rate.
+                          </p>
                         </div>
 
                         {/* Bonus */}
@@ -753,7 +762,11 @@ export default function PayrollPage() {
                           </div>
                           <div className="flex justify-between text-sm">
                             <span>Rate</span>
-                            <span className="font-mono">{genEffectiveRate} Gil/hr</span>
+                            <span className="font-mono">
+                              {genRateOverride && genEffectiveRate !== null
+                                ? `${genEffectiveRate} Gil/hr (override)`
+                                : "Resolved per shift"}
+                            </span>
                           </div>
                           {genBonus && parseFloat(genBonus) > 0 && (
                             <div className="flex justify-between text-sm">
@@ -766,6 +779,14 @@ export default function PayrollPage() {
                             <span className="text-lg">{Math.round(genEstimatedTotal).toLocaleString()} Gil</span>
                           </div>
                         </div>
+                        {!genRateOverride && genPreview.summary.unresolvedShiftCount > 0 && (
+                          <p className="text-xs text-amber-500">
+                            {genPreview.summary.unresolvedShiftCount} shift
+                            {genPreview.summary.unresolvedShiftCount !== 1 ? "s" : ""} skipped — no rate could
+                            be resolved (no role rate on the shift, no personal rate, no primary role rate).
+                            They'll stay eligible for a future payroll run once a rate exists.
+                          </p>
+                        )}
                       </>
                     )}
                   </>
@@ -781,7 +802,9 @@ export default function PayrollPage() {
                   disabled={
                     !genPreview ||
                     genPreview.shifts.length === 0 ||
-                    genEffectiveRate <= 0 ||
+                    (genRateOverride
+                      ? genEffectiveRate === null || genEffectiveRate <= 0
+                      : genPreview.summary.estimatedTotal === null) ||
                     genCreating
                   }
                 >

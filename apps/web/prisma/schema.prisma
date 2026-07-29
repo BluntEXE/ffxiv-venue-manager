@@ -322,12 +322,13 @@ model Membership {
 }
 
 model Role {
-  id               String  @id @default(cuid())
+  id               String   @id @default(cuid())
   venueId          String
   name             String
-  color            String? @default("#6366f1")
-  responsibilities String? @db.Text
-  permissions      Json    @default("{}")
+  color            String?  @default("#6366f1")
+  responsibilities String?  @db.Text
+  permissions      Json     @default("{}")
+  hourlyRate       Decimal? @db.Decimal(10, 2)
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -800,6 +801,18 @@ model Shift {
   status ShiftStatus @default(SCHEDULED)
   notes  String?     @db.Text
 
+  // Recurrence: null recurrenceRule = one-off shift. Set only on the parent;
+  // children reference it via parentShiftId (same pattern as Event/parentEventId).
+  recurrenceRule String?
+  parentShiftId  String?
+
+  // Set only on parent rows, only when quantity > 1 was combined with repeating at
+  // creation time. Ties together N independent recurring series (each with its own
+  // parentShiftId chain) created from a single "N open slots, repeating" submission,
+  // so they can optionally be cancelled together via cancel-group. Null for everything
+  // else — including quantity=1 recurring shifts and non-recurring quantity>1 shifts.
+  slotGroupId String?
+
   // Set by eorzea-bot's reminder poll job when it sends a shift-starting-soon DM.
   // Owned by this model (it's a real Shift column) even though the bot, not this
   // app, writes to it.
@@ -816,6 +829,9 @@ model Shift {
   role         Role?         @relation(fields: [roleId], references: [id], onDelete: SetNull)
   payrollEntry PayrollEntry? @relation(fields: [payrollEntryId], references: [id], onDelete: SetNull)
   auditLogs    ShiftAuditLog[]
+
+  parentShift Shift?  @relation("ShiftRecurrence", fields: [parentShiftId], references: [id])
+  childShifts Shift[] @relation("ShiftRecurrence")
 
   @@index([venueId, scheduledStart])
   @@index([membershipId, status])

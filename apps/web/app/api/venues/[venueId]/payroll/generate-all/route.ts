@@ -3,6 +3,7 @@ import { getServerSession } from "next-auth"
 import { authOptions } from "@/lib/auth"
 import { prisma } from "@/lib/prisma"
 import { withRateLimit } from "@/lib/middleware/with-rate-limit"
+import { fetchRoleRates, resolveShiftRates } from "@/lib/payroll-rates"
 import { Prisma } from "@/generated/prisma/client"
 const Decimal = Prisma.Decimal
 
@@ -41,7 +42,7 @@ async function getEligibleShiftsPerMember(venueId: string, startDate: Date, endD
     },
   })
 
-  const results = await Promise.all(
+  const perMember = await Promise.all(
     activeMembers.map(async (member) => {
       const shifts = await prisma.shift.findMany({
         where: {
@@ -53,30 +54,37 @@ async function getEligibleShiftsPerMember(venueId: string, startDate: Date, endD
         },
         orderBy: { actualStart: "asc" },
       })
-
-      let totalHours = 0
-      for (const s of shifts) {
-        if (s.actualStart && s.actualEnd) {
-          totalHours += (s.actualEnd.getTime() - s.actualStart.getTime()) / (1000 * 60 * 60)
-        }
-      }
-      totalHours = Math.round(totalHours * 100) / 100
-
-      const rate = member.hourlyRate ? Number(member.hourlyRate) : null
-
-      return {
-        member,
-        shifts,
-        totalHours,
-        rate,
-        estimatedTotal: rate ? Math.round(rate * totalHours) : null,
-        skipped: shifts.length === 0 || rate === null,
-        skipReason: shifts.length === 0 ? "no_shifts" : rate === null ? "no_rate" : null,
-      }
+      return { member, shifts }
     })
   )
 
-  return results
+  // Gather every role ID this venue's members/shifts might need in one pass, so
+  // role rates are fetched once for the whole venue instead of once per member.
+  const allRoleIds = perMember.flatMap(({ member, shifts }) => [
+    member.roleId,
+    ...shifts.map((s) => s.roleId),
+  ])
+  const roleRates = await fetchRoleRates(allRoleIds)
+
+  return perMember.map(({ member, shifts }) => {
+    const resolution = resolveShiftRates(shifts, member, roleRates)
+    const totalHours = Number(resolution.totalHours)
+
+    return {
+      member,
+      shifts,
+      resolution,
+      totalHours,
+      estimatedTotal: resolution.includedShiftIds.length > 0 ? Math.round(Number(resolution.totalAmount)) : null,
+      skipped: shifts.length === 0 || resolution.includedShiftIds.length === 0,
+      skipReason:
+        shifts.length === 0
+          ? "no_shifts"
+          : resolution.includedShiftIds.length === 0
+            ? "no_rate"
+            : null,
+    }
+  })
 }
 
 export const GET = withRateLimit<{ params: Promise<{ venueId: string }> }>(
@@ -112,10 +120,10 @@ export const GET = withRateLimit<{ params: Promise<{ venueId: string }> }>(
           image: r.member.user?.image ?? null,
           shiftCount: r.shifts.length,
           totalHours: r.totalHours,
-          rate: r.rate,
           estimatedTotal: r.estimatedTotal,
           skipped: r.skipped,
           skipReason: r.skipReason,
+          unresolvedShiftCount: r.resolution.excludedShiftIds.length,
         })),
       })
     } catch (e) {
@@ -157,9 +165,10 @@ export const POST = withRateLimit<{ params: Promise<{ venueId: string }> }>(
       const created = await prisma.$transaction(async (tx) => {
         const entries = []
         for (const r of eligible) {
-          const totalHours = new Decimal(r.totalHours)
-          const baseRate = new Decimal(r.rate!)
-          const totalAmount = baseRate.mul(totalHours)
+          const totalHours = r.resolution.totalHours
+          const totalAmount = r.resolution.totalAmount
+          // Informational effective rate — the real math happened per-shift.
+          const baseRate = totalHours.gt(0) ? totalAmount.div(totalHours) : new Decimal(0)
 
           const entry = await tx.payrollEntry.create({
             data: {
@@ -174,15 +183,16 @@ export const POST = withRateLimit<{ params: Promise<{ venueId: string }> }>(
             },
           })
 
+          // Link only the shifts that resolved to a rate — see resolveShiftRates.
           await tx.shift.updateMany({
-            where: { id: { in: r.shifts.map((s) => s.id) } },
+            where: { id: { in: r.resolution.includedShiftIds } },
             data: { payrollEntryId: entry.id },
           })
 
           entries.push({
             membershipId: r.member.id,
             name: r.member.user?.displayName || r.member.user?.name || "Unknown",
-            shiftCount: r.shifts.length,
+            shiftCount: r.resolution.includedShiftIds.length,
             totalHours: r.totalHours,
             totalAmount: Math.round(Number(totalAmount)),
           })

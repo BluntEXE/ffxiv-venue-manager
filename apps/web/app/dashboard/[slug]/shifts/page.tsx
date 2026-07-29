@@ -189,21 +189,24 @@ export default async function ShiftsPage({
   }
   const hasOpenShifts = openShiftsByDay.size > 0
 
-  // KPI counts
+  // KPI counts. Cancelled shifts still render in the grid (crossed out, for visibility/
+  // audit trail) but shouldn't count toward "how many shifts are happening this week" —
+  // exclude them from the weekly total and from the coverage/reliability denominators.
+  const activeWeekShifts = weekShifts.filter((s) => s.status !== "CANCELLED")
   const scheduledCount = weekShifts.filter((s) => s.status === "SCHEDULED").length
   const activeCount = activeShifts.length
   const openSlots = weekShifts.filter((s) => s.status === "OPEN" || s.status === "CLAIMED").length
   const missedCount = weekShifts.filter((s) => s.status === "MISSED").length
   // Fill rate: % of this week's shifts that have someone assigned (not OPEN/CLAIMED-unfilled)
   const coverPct =
-    weekShifts.length === 0
+    activeWeekShifts.length === 0
       ? 100
-      : Math.round(((weekShifts.length - openSlots) / weekShifts.length) * 100)
+      : Math.round(((activeWeekShifts.length - openSlots) / activeWeekShifts.length) * 100)
   // Reliability: % of shifts that weren't a no-show
   const reliabilityPct =
-    weekShifts.length === 0
+    activeWeekShifts.length === 0
       ? 100
-      : Math.round(((weekShifts.length - missedCount) / weekShifts.length) * 100)
+      : Math.round(((activeWeekShifts.length - missedCount) / activeWeekShifts.length) * 100)
 
   // Upcoming shifts that need action (clock-in/out for this week)
   const actionShifts = weekShifts.filter(
@@ -236,7 +239,7 @@ export default async function ShiftsPage({
         {/* KPIs */}
         <div className="kpis mb-6">
           {[
-            { k: "Shifts this week", v: weekShifts.length,  sub: fmtWeekLabel(weekStart) + "–" + fmtWeekLabel(addUTCDays(weekStart, 6)), icon: "M12 2a10 10 0 1 1 0 20A10 10 0 0 1 12 2zm0 2v8l4 2" },
+            { k: "Shifts this week", v: activeWeekShifts.length,  sub: fmtWeekLabel(weekStart) + "–" + fmtWeekLabel(addUTCDays(weekStart, 6)), icon: "M12 2a10 10 0 1 1 0 20A10 10 0 0 1 12 2zm0 2v8l4 2" },
             { k: "Open shifts",       v: openSlots,           sub: "needs cover",     icon: "M10.29 3.86 1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0zM12 9v4m0 4h.01" },
             { k: "Active now",       v: activeCount,         sub: "on shift",        icon: "M12 2v4m0 12v4M4.93 4.93l2.83 2.83m8.48 8.48 2.83 2.83M2 12h4m12 0h4M4.93 19.07l2.83-2.83m8.48-8.48 2.83-2.83" },
             { k: "Coverage",         v: `${coverPct}%`,      sub: "shifts filled",   icon: "M9 12l2 2 4-4m6 2a9 9 0 1 1-18 0 9 9 0 0 1 18 0" },
@@ -415,7 +418,13 @@ export default async function ShiftsPage({
                             />
                           )}
                           {canManage && (
-                            <DeleteShiftButton venueSlug={slug} shiftId={shift.id} hasPayroll={false} />
+                            <DeleteShiftButton
+                              venueSlug={slug}
+                              shiftId={shift.id}
+                              hasPayroll={false}
+                              isRecurring={Boolean(shift.recurrenceRule || shift.parentShiftId)}
+                              slotGroupId={shift.slotGroupId}
+                            />
                           )}
                         </div>
                       ))}
