@@ -322,12 +322,13 @@ model Membership {
 }
 
 model Role {
-  id               String  @id @default(cuid())
+  id               String   @id @default(cuid())
   venueId          String
   name             String
-  color            String? @default("#6366f1")
-  responsibilities String? @db.Text
-  permissions      Json    @default("{}")
+  color            String?  @default("#6366f1")
+  responsibilities String?  @db.Text
+  permissions      Json     @default("{}")
+  hourlyRate       Decimal? @db.Decimal(10, 2)
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
