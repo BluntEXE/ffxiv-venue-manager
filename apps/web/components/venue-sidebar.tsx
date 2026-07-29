@@ -196,7 +196,7 @@ export function VenueSidebar({
           )}
         >
           <Settings className={cn("h-[18px] w-[18px] shrink-0", isActive(`/dashboard/${venueSlug}/settings`) ? "text-[var(--xiv-navy)]" : "text-muted-foreground")} />
-          <span>Settings</span>
+          <span>Venue settings</span>
         </Link>
       </div>
 
