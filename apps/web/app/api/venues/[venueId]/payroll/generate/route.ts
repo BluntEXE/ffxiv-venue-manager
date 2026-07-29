@@ -3,6 +3,7 @@ import { getServerSession } from "next-auth"
 import { authOptions } from "@/lib/auth"
 import { prisma } from "@/lib/prisma"
 import { withRateLimit } from "@/lib/middleware/with-rate-limit"
+import { fetchRoleRates, resolveShiftRates } from "@/lib/payroll-rates"
 import { Prisma } from "@/generated/prisma/client"
 const Decimal = Prisma.Decimal
 type Decimal = InstanceType<typeof Prisma.Decimal>
@@ -110,18 +111,6 @@ export const POST = withRateLimit<{ params: Promise<{ venueId: string }> }>(
         )
       }
 
-      // Determine the rate: explicit override > membership default
-      const effectiveRate = baseRate !== undefined && baseRate !== null
-        ? new Decimal(baseRate)
-        : staffMembership.hourlyRate
-
-      if (!effectiveRate) {
-        return NextResponse.json(
-          { error: "No hourly rate provided and staff member has no default rate set" },
-          { status: 400 }
-        )
-      }
-
       // Find completed shifts with no payroll entry in the date range
       const eligibleShifts = await prisma.shift.findMany({
         where: {
@@ -144,20 +133,50 @@ export const POST = withRateLimit<{ params: Promise<{ venueId: string }> }>(
         )
       }
 
-      // Recalculate hours from timestamps (authoritative for payroll)
-      let totalHours = new Decimal(0)
-      for (const shift of eligibleShifts) {
-        if (shift.actualStart && shift.actualEnd) {
-          const hours = (shift.actualEnd.getTime() - shift.actualStart.getTime()) / (1000 * 60 * 60)
-          totalHours = totalHours.add(new Decimal(Math.round(hours * 100) / 100))
+      let totalHours: Decimal
+      let totalAmount: Decimal
+      let linkedShiftIds: string[]
+
+      if (baseRate !== undefined && baseRate !== null) {
+        // Explicit manual override: applies flat to every eligible shift, same as before —
+        // this is the one path that intentionally bypasses per-shift role resolution.
+        const overrideRate = new Decimal(baseRate)
+        totalHours = new Decimal(0)
+        for (const shift of eligibleShifts) {
+          if (shift.actualStart && shift.actualEnd) {
+            const hours = (shift.actualEnd.getTime() - shift.actualStart.getTime()) / (1000 * 60 * 60)
+            totalHours = totalHours.add(new Decimal(Math.round(hours * 100) / 100))
+          }
         }
+        totalAmount = overrideRate.mul(totalHours)
+        linkedShiftIds = eligibleShifts.map((s) => s.id)
+      } else {
+        const roleIds = [
+          ...eligibleShifts.map((s) => s.roleId),
+          staffMembership.roleId,
+        ]
+        const roleRates = await fetchRoleRates(roleIds)
+        const resolution = resolveShiftRates(eligibleShifts, staffMembership, roleRates)
+
+        if (resolution.includedShiftIds.length === 0) {
+          return NextResponse.json(
+            { error: "No hourly rate could be resolved for any shift in this period (no personal rate, no role rate on the shifts, and no primary role rate set)" },
+            { status: 400 }
+          )
+        }
+
+        totalHours = resolution.totalHours
+        totalAmount = resolution.totalAmount
+        linkedShiftIds = resolution.includedShiftIds
       }
 
-      // Calculate total amount
-      let totalAmount = new Decimal(effectiveRate).mul(totalHours)
       if (bonusAmount) {
         totalAmount = totalAmount.add(new Decimal(bonusAmount))
       }
+
+      // Informational effective rate for display — the real math happened per-shift
+      // above (unless the manual override path ran, in which case it's just that flat rate).
+      const effectiveRate = totalHours.gt(0) ? totalAmount.div(totalHours) : new Decimal(0)
 
       // Create payroll entry and link shifts in a single transaction
       const result = await prisma.$transaction(async (tx) => {
@@ -191,10 +210,11 @@ export const POST = withRateLimit<{ params: Promise<{ venueId: string }> }>(
           },
         })
 
-        // Link all eligible shifts to this payroll entry
+        // Link only the shifts that actually resolved to a rate — see the rate
+        // resolution above for why this can be fewer than eligibleShifts.length.
         await tx.shift.updateMany({
           where: {
-            id: { in: eligibleShifts.map((s) => s.id) },
+            id: { in: linkedShiftIds },
           },
           data: {
             payrollEntryId: payrollEntry.id,
@@ -207,7 +227,8 @@ export const POST = withRateLimit<{ params: Promise<{ venueId: string }> }>(
       return NextResponse.json(
         {
           ...result,
-          shiftsLinked: eligibleShifts.length,
+          shiftsLinked: linkedShiftIds.length,
+          shiftsExcluded: eligibleShifts.length - linkedShiftIds.length,
         },
         { status: 201 }
       )
@@ -339,28 +360,27 @@ export const GET = withRateLimit<{ params: Promise<{ venueId: string }> }>(
         orderBy: { actualStart: "asc" },
       })
 
-      // Calculate totals from timestamps
-      let totalHours = 0
+      const roleIds = [
+        ...eligibleShifts.map((s) => s.roleId),
+        staffMembership.roleId,
+      ]
+      const roleRates = await fetchRoleRates(roleIds)
+      const resolution = resolveShiftRates(eligibleShifts, staffMembership, roleRates)
+      const resolvedById = new Map(resolution.resolved.map((r) => [r.id, r]))
+
       const shiftDetails = eligibleShifts.map((shift) => {
-        let hours = 0
-        if (shift.actualStart && shift.actualEnd) {
-          hours = Math.round(
-            ((shift.actualEnd.getTime() - shift.actualStart.getTime()) / (1000 * 60 * 60)) * 100
-          ) / 100
-          totalHours += hours
-        }
+        const r = resolvedById.get(shift.id)
         return {
           id: shift.id,
           scheduledStart: shift.scheduledStart.toISOString(),
           scheduledEnd: shift.scheduledEnd.toISOString(),
           actualStart: shift.actualStart?.toISOString() ?? null,
           actualEnd: shift.actualEnd?.toISOString() ?? null,
-          hoursWorked: hours,
+          hoursWorked: r ? Number(r.hours) : 0,
+          resolvedRate: r?.rate ? Number(r.rate) : null,
           storedHoursWorked: shift.hoursWorked ? Number(shift.hoursWorked) : null,
         }
       })
-
-      totalHours = Math.round(totalHours * 100) / 100
 
       const defaultRate = staffMembership.hourlyRate
         ? Number(staffMembership.hourlyRate)
@@ -376,8 +396,9 @@ export const GET = withRateLimit<{ params: Promise<{ venueId: string }> }>(
         shifts: shiftDetails,
         summary: {
           shiftCount: eligibleShifts.length,
-          totalHours,
-          estimatedTotal: defaultRate ? Math.round(defaultRate * totalHours * 100) / 100 : null,
+          totalHours: Number(resolution.totalHours),
+          estimatedTotal: resolution.totalHours.gt(0) ? Number(resolution.totalAmount) : null,
+          unresolvedShiftCount: resolution.excludedShiftIds.length,
         },
       })
     } catch (error) {
