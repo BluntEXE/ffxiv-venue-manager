@@ -254,8 +254,18 @@ export async function checkPermission(
  * (membership but no active shift) are logged as patrons - that's the
  * visit-as-a-friend case the venue owner wants tracked as attendance.
  *
- * Dedupe: 60s sliding window on (venueId, character, world, action).
- * Multiple staff plugins observing the same arrival collapse to one row.
+ * Dedupe: state-based, not time-windowed. A character can only actually
+ * transition ENTER -> LEAVE -> ENTER -> ...; if the incoming action
+ * matches the character's last known state, it's a redundant observation
+ * (another staff member's plugin independently detecting the same
+ * arrival/departure, or the same plugin re-detecting after a brief
+ * derender) and is ignored, no matter how much time has passed.
+ *
+ * A 60s sliding window used to gate this instead, but staff spread across
+ * a large venue detect the same event at genuinely staggered times -
+ * confirmed multi-minute gaps (up to 21 min) between duplicate ENTER rows
+ * for the same character logged by different staff users. State-based
+ * dedupe has no such window to outrun.
  */
 export async function logPatronVisit(data: {
   venueId: string
@@ -268,25 +278,26 @@ export async function logPatronVisit(data: {
 }) {
   const action = (data.action || "ENTER").toUpperCase()
 
-  // 1) Dedupe - sliding 60s window.
-  const dedupeSince = new Date(Date.now() - 60_000)
-  const existing = await prisma.patronLog.findFirst({
+  // 1) Dedupe - compare against the character's last known state.
+  const lastLog = await prisma.patronLog.findFirst({
     where: {
       venueId: data.venueId,
       characterName: data.characterName,
       world: data.world,
-      action,
-      loggedAt: { gte: dedupeSince },
+      action: { in: ["ENTER", "LEAVE", "PRESENT"] },
     },
-    select: { id: true, wasWorking: true, eventId: true },
+    orderBy: { loggedAt: "desc" },
+    select: { id: true, action: true, wasWorking: true, eventId: true },
   })
-  if (existing) {
+  const incomingIsEnter = action === "ENTER" || action === "PRESENT"
+  const currentlyIn = lastLog ? lastLog.action === "ENTER" || lastLog.action === "PRESENT" : false
+  if (lastLog && incomingIsEnter === currentlyIn) {
     return {
       created: null,
       deduped: true,
-      id: existing.id,
-      wasWorking: existing.wasWorking,
-      eventId: existing.eventId,
+      id: lastLog.id,
+      wasWorking: lastLog.wasWorking,
+      eventId: lastLog.eventId,
     }
   }
 
