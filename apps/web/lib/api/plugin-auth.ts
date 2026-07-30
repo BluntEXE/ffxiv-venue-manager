@@ -336,6 +336,13 @@ export async function logPatronVisit(data: {
   })
 
   // 5) Insert.
+  // The Dalamud plugin's request model has no countChange field, so
+  // data.countChange is always undefined for plugin-sourced logs. Derive
+  // it from action instead of trusting the caller - analytics (peak
+  // patrons, attendance-by-hour, totals) sums this column, and a null
+  // countChange silently zeroes every one of those aggregates.
+  const isEnter = action === "ENTER" || action === "PRESENT"
+  const countChange = data.countChange ?? (isEnter ? 1 : -1)
   const created = await prisma.patronLog.create({
     data: {
       id: nanoid(),
@@ -343,7 +350,7 @@ export async function logPatronVisit(data: {
       characterName: data.characterName,
       world: data.world,
       action,
-      countChange: data.countChange,
+      countChange,
       timestamp: data.timestamp,
       loggedBy: data.loggedBy,
       wasWorking,
@@ -356,7 +363,6 @@ export async function logPatronVisit(data: {
   // without polling. Fire-and-forget - bus emit failures must not break
   // the plugin's POST. The live page consumer lives at
   // /api/stream/[venueId]/route.ts.
-  const isEnter = action === "ENTER" || action === "PRESENT"
   try {
     venueEventBus.emit(data.venueId, {
       id: created.id,

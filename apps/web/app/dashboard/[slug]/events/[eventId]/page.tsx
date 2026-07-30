@@ -9,7 +9,6 @@ import { Badge } from "@/components/ui/badge"
 import { prisma } from "@/lib/prisma"
 import { DeleteEventButton } from "@/components/delete-event-button"
 import { CancelSeriesButton } from "@/components/cancel-series-button"
-import { PatronTracking } from "@/components/patron-tracking"
 import { EventAttendanceChart } from "@/components/event-attendance-chart"
 import { ServerTime } from "@/components/server-time"
 import { SERVER_TIME_LABEL } from "@/lib/server-time"
@@ -231,10 +230,9 @@ export default async function EventDetailsPage({
             </CardContent>
           </Card>
 
-          {/* Patron Tracking - Show for published and active events */}
+          {/* Attendance chart - Show for published and active events */}
           {(event.status === "PUBLISHED" || event.status === "ACTIVE") && (
             <div className="space-y-6">
-              <PatronTracking venueId={venue.id} eventId={eventId} />
               <EventAttendanceChart venueId={venue.id} eventId={eventId} />
             </div>
           )}
