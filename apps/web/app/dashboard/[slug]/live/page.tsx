@@ -6,6 +6,7 @@ import { Card, CardContent } from "@/components/ui/card"
 import { prisma } from "@/lib/prisma"
 import { VenueLayout } from "@/components/venue-layout"
 import { LiveDashboard } from "@/components/live-dashboard"
+import { resolveDisplayName } from "@/lib/display-name"
 
 export default async function LivePage({
   params,
@@ -136,7 +137,16 @@ export default async function LivePage({
     where: { venueId: venue.id, status: "ACTIVE" },
     include: {
       membership: {
-        include: { user: { select: { name: true, image: true } } },
+        include: {
+          user: {
+            select: {
+              name: true,
+              displayName: true,
+              image: true,
+              characters: { orderBy: [{ isPrimary: "desc" }, { createdAt: "asc" }], take: 1, select: { characterName: true } },
+            },
+          },
+        },
       },
     },
     take: 10,
@@ -193,10 +203,18 @@ export default async function LivePage({
               name: p.characterName ?? "Unknown",
               arrivedAt: p.loggedAt.toISOString(),
             }))}
-            onShiftStaff={activeShifts.map(s => ({
-              name: s.membership?.nickname ?? s.membership?.user?.name ?? s.membership?.invitedName ?? "Staff",
-              role: s.membership?.role ?? "STAFF",
-            }))}
+            onShiftStaff={activeShifts.map(s => {
+              const name = resolveDisplayName({
+                characterName: s.membership?.user?.characters?.[0]?.characterName,
+                nickname: s.membership?.nickname,
+                displayName: s.membership?.user?.displayName,
+                discordName: s.membership?.user?.name ?? s.membership?.invitedName,
+              })
+              return {
+                name: name === "Unknown" ? "Staff" : name,
+                role: s.membership?.role ?? "STAFF",
+              }
+            })}
           />
         ) : (
           <div>
