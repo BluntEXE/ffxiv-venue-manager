@@ -69,7 +69,11 @@ export function ShiftsCalendar({
     if (shift.membershipId === currentMembershipId) {
       if (!ownByDay.has(key)) ownByDay.set(key, [])
       ownByDay.get(key)!.push(shift)
-    } else if (canManage) {
+    } else if (canManage && shift.status !== "CANCELLED" && shift.status !== "OPEN") {
+      // Only a real, assigned, non-cancelled shift counts as "other staff
+      // scheduled" — a cancelled shift or an unfilled OPEN slot means
+      // nobody is actually covering this day, so the dot shouldn't imply
+      // otherwise.
       otherCoverageDays.add(key)
     }
   }
@@ -136,7 +140,7 @@ export function ShiftsCalendar({
                   {dayShifts.slice(0, 3).map((shift) => (
                     <div
                       key={shift.id}
-                      className={`shift-chip${shift.status === "ACTIVE" ? " em" : shift.status === "MISSED" ? " am" : ""}`}
+                      className={`shift-chip${shift.status === "ACTIVE" ? " em" : shift.status === "MISSED" ? " am" : ""}${shift.status === "CANCELLED" ? " opacity-50 line-through" : ""}`}
                     >
                       {fmtHour(shift.scheduledStart)}–{fmtHour(shift.scheduledEnd)}
                     </div>
