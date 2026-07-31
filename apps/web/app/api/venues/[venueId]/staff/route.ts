@@ -67,6 +67,7 @@ export const GET = withRateLimit<{ params: Promise<{ venueId: string }> }>(
               image: true,
               discordId: true,
               displayName: true,
+              characters: { orderBy: [{ isPrimary: "desc" }, { createdAt: "asc" }], take: 1, select: { characterName: true } },
             },
           },
           customRole: true,
