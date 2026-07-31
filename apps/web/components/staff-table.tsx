@@ -102,7 +102,12 @@ export function StaffTable({
       if (customRoleNames.includes(filter) && m.customRole?.name !== filter) return false
       if (search) {
         const q = search.toLowerCase()
-        if (!memberDisplayName(m).toLowerCase().includes(q) &&
+        // Match on every name this member could be known by, not just the
+        // one that currently wins resolveDisplayName's priority order -
+        // a character name shouldn't shadow a nickname/displayName search.
+        if (!(m.user?.characterName ?? "").toLowerCase().includes(q) &&
+            !(m.nickname ?? "").toLowerCase().includes(q) &&
+            !(m.user?.displayName ?? "").toLowerCase().includes(q) &&
             !(m.user?.name ?? "").toLowerCase().includes(q) &&
             !(m.customRole?.name ?? "").toLowerCase().includes(q)) return false
       }
