@@ -147,8 +147,24 @@ export default async function ShiftsPage({
             lt: new Date(Date.UTC(new Date().getUTCFullYear(), new Date().getUTCMonth() + 4, 1)),
           },
         },
-        include: {
-          membership: { include: { user: { select: { id: true, name: true, image: true } } } },
+        // Explicit select (not include) — this array is passed whole into a
+        // client component (ShiftsCalendar). Prisma's Decimal fields (e.g.
+        // hoursWorked) can't cross the server/client boundary, so only the
+        // fields CalendarShift (lib/shift-format.ts) actually declares are
+        // selected here.
+        select: {
+          id: true,
+          membershipId: true,
+          roleId: true,
+          payrollEntryId: true,
+          scheduledStart: true,
+          scheduledEnd: true,
+          status: true,
+          notes: true,
+          recurrenceRule: true,
+          parentShiftId: true,
+          slotGroupId: true,
+          membership: { select: { nickname: true, user: { select: { id: true, name: true, image: true } } } },
           role: { select: { name: true } },
         },
         orderBy: { scheduledStart: "asc" },
