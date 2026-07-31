@@ -56,8 +56,10 @@ export default async function StaffPage({
         select: {
           id: true,
           name: true,
+          displayName: true,
           image: true,
           discordId: true,
+          characters: { orderBy: [{ isPrimary: "desc" }, { createdAt: "asc" }], take: 1, select: { characterName: true } },
         },
       },
       customRole: true,
@@ -160,7 +162,13 @@ export default async function StaffPage({
             joinedAt: m.createdAt.toISOString(),
             isOnShift: onShiftIds.has(m.id),
             nickname: m.nickname ?? null,
-            user: m.user ? { id: m.user.id, name: m.user.name, image: m.user.image } : null,
+            user: m.user ? {
+              id: m.user.id,
+              name: m.user.name,
+              displayName: m.user.displayName,
+              image: m.user.image,
+              characterName: m.user.characters[0]?.characterName ?? null,
+            } : null,
             venueId: venue.id,
           }))}
           slug={slug}

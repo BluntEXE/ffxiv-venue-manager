@@ -8,6 +8,7 @@ import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuTrigger } from "@/components/ui/dropdown-menu"
 import { ChevronDown, Check, Pencil, X } from "lucide-react"
+import { resolveDisplayName } from "@/lib/display-name"
 
 export type StaffMember = {
   id: string
@@ -17,8 +18,17 @@ export type StaffMember = {
   joinedAt: string
   isOnShift: boolean
   nickname: string | null
-  user: { id: string; name: string | null; image: string | null } | null
+  user: { id: string; name: string | null; displayName: string | null; image: string | null; characterName: string | null } | null
   venueId: string
+}
+
+function memberDisplayName(member: Pick<StaffMember, "nickname" | "user">): string {
+  return resolveDisplayName({
+    characterName: member.user?.characterName,
+    nickname: member.nickname,
+    displayName: member.user?.displayName,
+    discordName: member.user?.name,
+  })
 }
 
 const ROLE_ORDER: Record<string, number> = { OWNER: 0, MANAGER: 1, STAFF: 2 }
@@ -92,7 +102,7 @@ export function StaffTable({
       if (customRoleNames.includes(filter) && m.customRole?.name !== filter) return false
       if (search) {
         const q = search.toLowerCase()
-        if (!(m.nickname ?? m.user?.name ?? "").toLowerCase().includes(q) &&
+        if (!memberDisplayName(m).toLowerCase().includes(q) &&
             !(m.user?.name ?? "").toLowerCase().includes(q) &&
             !(m.customRole?.name ?? "").toLowerCase().includes(q)) return false
       }
@@ -200,7 +210,7 @@ export function StaffTable({
                       <Avatar className="w-8 h-8 flex-shrink-0">
                         <AvatarImage src={member.user?.image ?? undefined} />
                         <AvatarFallback className="text-[0.65rem] font-bold bg-gradient-to-br from-[var(--xiv-blue)] to-blue-700 text-white">
-                          {(member.nickname ?? member.user?.name)?.slice(0, 2).toUpperCase() ?? "??"}
+                          {memberDisplayName(member).slice(0, 2).toUpperCase()}
                         </AvatarFallback>
                       </Avatar>
                       {editingId === member.id ? (
@@ -239,7 +249,7 @@ export function StaffTable({
                         <div className="flex items-center gap-1.5 group">
                           <div>
                             <span className="text-sm font-medium">
-                              {member.nickname ?? member.user?.name ?? "Unknown"}
+                              {memberDisplayName(member)}
                             </span>
                             {member.nickname && (
                               <p className="text-[0.65rem] text-[var(--fg-faint)] leading-tight">
