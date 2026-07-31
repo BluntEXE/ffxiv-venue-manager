@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button"
 import { prisma } from "@/lib/prisma"
 import { Building2, Users, ChevronRight, Plus } from "lucide-react"
 import { AnnouncementBanner } from "@/components/announcement-banner"
+import { CharacterLinkNudge } from "@/components/character-link-nudge"
 
 const roleColors: Record<string, string> = {
   OWNER: "bg-emerald-500/15 text-emerald-400 border-emerald-500/30",
@@ -30,6 +31,10 @@ export default async function DashboardPage() {
     orderBy: { createdAt: "desc" },
   })
 
+  const hasLinkedCharacter = (await prisma.userCharacter.count({
+    where: { userId: session.user.id },
+  })) > 0
+
   const venues = await prisma.venue.findMany({
     where: {
       memberships: {
@@ -50,6 +55,7 @@ export default async function DashboardPage() {
   return (
     <div className="page-inner">
       <AnnouncementBanner announcements={announcements} />
+      {!hasLinkedCharacter && <CharacterLinkNudge />}
       <div className="flex flex-col sm:flex-row sm:justify-between sm:items-start gap-4 mb-8">
         <div>
           <h1 className="page-h1">Dashboard</h1>

@@ -15,6 +15,7 @@ import { OverviewRevenueChart } from "@/components/overview-revenue-chart"
 import { formatGil } from "@/lib/format"
 import { OverviewTasks } from "@/components/overview-tasks"
 import { AnnouncementBanner } from "@/components/announcement-banner"
+import { CharacterLinkNudge } from "@/components/character-link-nudge"
 import { format, subDays, subWeeks, formatDistanceToNow } from "date-fns"
 import {
   Radio, ArrowRight, Users, TrendingUp, Calendar,
@@ -157,6 +158,10 @@ export default async function VenueDashboardPage({
     orderBy: { createdAt: "desc" },
   })
 
+  const hasLinkedCharacter = (await prisma.userCharacter.count({
+    where: { userId: session.user.id },
+  })) > 0
+
   // My upcoming shifts
   const myShifts = await prisma.shift.findMany({
     where: {
@@ -179,6 +184,7 @@ export default async function VenueDashboardPage({
       <div className="page-inner space-y-6">
 
         <AnnouncementBanner announcements={announcements} />
+        {!hasLinkedCharacter && <CharacterLinkNudge />}
 
         {/* Page header */}
         <div>
