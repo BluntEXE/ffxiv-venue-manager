@@ -243,6 +243,14 @@ export default async function ShiftsPage({
 
   // Build staff × day grid
   type ShiftRow = (typeof weekShifts)[0]
+  function shiftStaffName(shift: ShiftRow): string {
+    return resolveDisplayName({
+      characterName: shift.membership?.user?.characters?.[0]?.characterName,
+      nickname: shift.membership?.nickname,
+      displayName: shift.membership?.user?.displayName,
+      discordName: shift.membership?.user?.name,
+    })
+  }
   const staffMap = new Map<string, {
     membershipId: string
     name: string
@@ -256,12 +264,7 @@ export default async function ShiftsPage({
     if (!staffMap.has(mid)) {
       staffMap.set(mid, {
         membershipId: mid,
-        name: resolveDisplayName({
-          characterName: shift.membership?.user?.characters?.[0]?.characterName,
-          nickname: shift.membership?.nickname,
-          displayName: shift.membership?.user?.displayName,
-          discordName: shift.membership?.user?.name,
-        }),
+        name: shiftStaffName(shift),
         image: shift.membership?.user?.image ?? null,
         cells: new Map(),
       })
@@ -587,22 +590,12 @@ export default async function ShiftsPage({
                       <Avatar className="h-8 w-8 flex-shrink-0">
                         <AvatarImage src={shift.membership?.user?.image ?? undefined} />
                         <AvatarFallback className="text-[0.65rem] font-bold">
-                          {resolveDisplayName({
-                            characterName: shift.membership?.user?.characters?.[0]?.characterName,
-                            nickname: shift.membership?.nickname,
-                            displayName: shift.membership?.user?.displayName,
-                            discordName: shift.membership?.user?.name,
-                          }).slice(0, 2).toUpperCase()}
+                          {shiftStaffName(shift).slice(0, 2).toUpperCase()}
                         </AvatarFallback>
                       </Avatar>
                       <div className="flex-1 min-w-0">
                         <p className="text-sm font-medium truncate">
-                          {resolveDisplayName({
-                            characterName: shift.membership?.user?.characters?.[0]?.characterName,
-                            nickname: shift.membership?.nickname,
-                            displayName: shift.membership?.user?.displayName,
-                            discordName: shift.membership?.user?.name,
-                          })}
+                          {shiftStaffName(shift)}
                         </p>
                         <p className="text-xs text-muted-foreground">
                           {formatServerTime(shift.scheduledStart, "time")} — {formatServerTime(shift.scheduledEnd, "time")} {tzLabel}
@@ -613,20 +606,10 @@ export default async function ShiftsPage({
                           {shift.status}
                         </Badge>
                         {canManage && shift.status === "SCHEDULED" && (
-                          <ClockShiftButton venueSlug={slug} shiftId={shift.id} action="clock-in" staffName={resolveDisplayName({
-                            characterName: shift.membership?.user?.characters?.[0]?.characterName,
-                            nickname: shift.membership?.nickname,
-                            displayName: shift.membership?.user?.displayName,
-                            discordName: shift.membership?.user?.name,
-                          })} />
+                          <ClockShiftButton venueSlug={slug} shiftId={shift.id} action="clock-in" staffName={shiftStaffName(shift)} />
                         )}
                         {canManage && shift.status === "ACTIVE" && (
-                          <ClockShiftButton venueSlug={slug} shiftId={shift.id} action="clock-out" staffName={resolveDisplayName({
-                            characterName: shift.membership?.user?.characters?.[0]?.characterName,
-                            nickname: shift.membership?.nickname,
-                            displayName: shift.membership?.user?.displayName,
-                            discordName: shift.membership?.user?.name,
-                          })} />
+                          <ClockShiftButton venueSlug={slug} shiftId={shift.id} action="clock-out" staffName={shiftStaffName(shift)} />
                         )}
                         {!canManage && shift.membershipId === currentMembershipId && shift.status === "SCHEDULED" && (
                           <ClockShiftButton venueSlug={slug} shiftId={shift.id} action="clock-in" staffName="yourself" />
