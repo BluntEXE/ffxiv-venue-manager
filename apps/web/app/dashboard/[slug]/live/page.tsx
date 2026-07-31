@@ -194,6 +194,7 @@ export default async function LivePage({
             showRevenue={showRevenue}
             currentUserId={session.user.id}
             scopeSalesToOwn={!canManage && settings.revenueVisibility === "own"}
+            canManage={canManage}
             revenueLabel={
               canManage || settings.revenueVisibility === "all"
                 ? "Total Revenue"

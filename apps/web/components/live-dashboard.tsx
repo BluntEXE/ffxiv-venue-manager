@@ -7,8 +7,9 @@ import { Card, CardContent } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { StatReadout } from "@/components/ui/stat-readout"
-import { Coins, UserPlus, UserMinus, Users, Clock, Pause, StopCircle, Terminal, Radio } from "lucide-react"
+import { Coins, UserPlus, UserMinus, Users, Clock, StopCircle, Terminal, Radio } from "lucide-react"
 import { formatDistanceToNowStrict } from "date-fns"
+import { useRouter } from "next/navigation"
 
 function formatDuration(ms: number): string {
   const s = Math.floor(ms / 1000)
@@ -52,6 +53,7 @@ interface LiveDashboardProps {
   onShiftStaff: StaffRosterItem[]
   currentUserId: string
   scopeSalesToOwn: boolean
+  canManage: boolean
 }
 
 export function LiveDashboard({
@@ -68,7 +70,9 @@ export function LiveDashboard({
   onShiftStaff,
   currentUserId,
   scopeSalesToOwn,
+  canManage,
 }: LiveDashboardProps) {
+  const router = useRouter()
   const [patronCount, setPatronCount] = useState(initialPatronCount)
   const [revenue, setRevenue] = useState(initialRevenue ?? 0)
   const [saleCount, setSaleCount] = useState(initialSaleCount)
@@ -77,6 +81,29 @@ export function LiveDashboard({
   const [elapsed, setElapsed] = useState("")
   const [connected, setConnected] = useState(false)
   const [roster, setRoster] = useState<PatronRosterItem[]>(initialRoster)
+  const [ending, setEnding] = useState(false)
+
+  async function handleEndEvent() {
+    if (!confirm(`End "${event.title}" now?`)) return
+    setEnding(true)
+    try {
+      const res = await fetch(`/api/venues/${venueId}/events/${event.id}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ status: "COMPLETED" }),
+      })
+      if (!res.ok) {
+        const body = await res.json().catch(() => ({}))
+        alert(body.error || `Failed to end event (${res.status})`)
+        return
+      }
+      router.refresh()
+    } catch {
+      alert("Network error ending event.")
+    } finally {
+      setEnding(false)
+    }
+  }
 
   // Elapsed timer
   useEffect(() => {
@@ -180,10 +207,17 @@ export function LiveDashboard({
           <div className="text-[0.84rem] text-muted-foreground flex items-center gap-2">
             <Clock className="w-[14px] h-[14px] text-[var(--xiv-blue)]" />
             Started {formatServerTime(event.startTime, "time")} {SERVER_TIME_LABEL}
-            {!isUpcoming && (
+            {!isUpcoming && canManage && (
               <div className="flex gap-2 ml-4">
-                <Button variant="outline-blue" size="sm"><Pause className="h-3.5 w-3.5" /> Pause</Button>
-                <Button variant="destructive" size="sm" className="opacity-80 hover:opacity-100"><StopCircle className="h-3.5 w-3.5" /> End</Button>
+                <Button
+                  variant="destructive"
+                  size="sm"
+                  className="opacity-80 hover:opacity-100"
+                  onClick={handleEndEvent}
+                  disabled={ending}
+                >
+                  <StopCircle className="h-3.5 w-3.5" /> {ending ? "Ending…" : "End"}
+                </Button>
               </div>
             )}
           </div>
