@@ -28,6 +28,17 @@ export const statusBadgeClass: Record<string, string> = {
   CANCELLED: "bg-red-500/10 text-red-400 border-red-500/20",
 }
 
+export interface StaffMember {
+  id: string
+  name: string
+  image: string | null
+}
+
+export interface RoleOption {
+  id: string
+  name: string
+}
+
 export interface CalendarShift {
   id: string
   membershipId: string | null

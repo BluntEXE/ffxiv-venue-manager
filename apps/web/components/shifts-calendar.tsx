@@ -5,19 +5,8 @@ import { useState } from "react"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent } from "@/components/ui/card"
 import { ChevronLeft, ChevronRight } from "lucide-react"
-import { fmtHour, utcDayKey, type CalendarShift } from "@/lib/shift-format"
+import { fmtHour, utcDayKey, type CalendarShift, type StaffMember, type RoleOption } from "@/lib/shift-format"
 import { ShiftDayDialog } from "@/components/shift-day-dialog"
-
-interface StaffMember {
-  id: string
-  name: string
-  image: string | null
-}
-
-interface RoleOption {
-  id: string
-  name: string
-}
 
 interface ShiftsCalendarProps {
   shifts: CalendarShift[]

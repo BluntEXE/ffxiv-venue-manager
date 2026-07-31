@@ -17,18 +17,7 @@ import { DeleteShiftButton } from "@/components/delete-shift-button"
 import { OpenShiftChip } from "@/components/open-shift-chip"
 import { ClaimedShiftChip } from "@/components/claimed-shift-chip"
 import { Copy } from "lucide-react"
-import { fmtHour, statusBadgeClass, utcDayKey, type CalendarShift } from "@/lib/shift-format"
-
-interface StaffMember {
-  id: string
-  name: string
-  image: string | null
-}
-
-interface RoleOption {
-  id: string
-  name: string
-}
+import { fmtHour, statusBadgeClass, utcDayKey, type CalendarShift, type StaffMember, type RoleOption } from "@/lib/shift-format"
 
 interface ShiftDayDialogProps {
   date: Date | null
