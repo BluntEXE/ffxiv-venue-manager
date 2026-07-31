@@ -12,6 +12,7 @@ import {
   eventsDigestDayEmbed,
   tonightListEmbed,
   regionBoardEmbed,
+  announcementEmbed,
   type VenueInfo,
 } from '../utils/embeds.js';
 import {
@@ -83,6 +84,25 @@ export function startWebhookServer(client: Client) {
   app.post('/webhook/new-venue', async (req, res) => {
     const venue: VenueInfo = req.body;
     await postEmbed(client, FEED_CHANNEL, newVenueEmbed(venue));
+    res.json({ ok: true });
+  });
+
+  // Manual "What's New?" style posts (previously sent by hand). Takes an
+  // explicit channelId rather than a fixed env-configured channel since
+  // this is posted ad hoc, not on a recurring schedule like the other
+  // feed types above.
+  app.post('/webhook/announcement', async (req, res) => {
+    const { channelId, title, intro, sections } = req.body as {
+      channelId: string;
+      title: string;
+      intro?: string;
+      sections: { heading: string; body: string }[];
+    };
+    if (!channelId || !title || !Array.isArray(sections)) {
+      res.status(400).json({ error: 'channelId, title, and sections are required' });
+      return;
+    }
+    await postEmbed(client, channelId, announcementEmbed({ title, intro, sections }));
     res.json({ ok: true });
   });
 

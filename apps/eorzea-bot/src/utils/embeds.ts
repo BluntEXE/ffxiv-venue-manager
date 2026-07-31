@@ -175,3 +175,24 @@ export function eventLiveEmbed(event: { title: string; startTime: Date; endTime:
     .setFooter({ text: 'XIV Venue Manager' })
     .setTimestamp();
 }
+
+// "What's New?" style manual update post - same shape as the ones already
+// posted by hand in #announcements (bold section headers inline in the
+// description, no fields). intro is the opening paragraph under the title;
+// sections are rendered as **Heading**\nbody, blank-line separated.
+export function announcementEmbed(input: {
+  title: string;
+  intro?: string;
+  sections: { heading: string; body: string }[];
+}) {
+  const parts = [];
+  if (input.intro) parts.push(input.intro);
+  parts.push(...input.sections.map(s => `**${s.heading}**\n${s.body}`));
+
+  return new EmbedBuilder()
+    .setColor(XIV_BLUE)
+    .setTitle(input.title)
+    .setDescription(parts.join('\n\n'))
+    .setFooter({ text: 'XIV Venue Manager' })
+    .setTimestamp();
+}
