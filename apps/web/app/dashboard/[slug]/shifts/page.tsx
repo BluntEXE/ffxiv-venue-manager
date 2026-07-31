@@ -17,6 +17,7 @@ import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { Copy } from "lucide-react"
 import { ShiftsCalendar } from "@/components/shifts-calendar"
+import { resolveDisplayName } from "@/lib/display-name"
 
 const DAY_SHORT = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"]
 
@@ -122,7 +123,19 @@ export default async function ShiftsPage({
         scheduledStart: { gte: weekStart, lt: weekEnd },
       },
       include: {
-        membership: { include: { user: { select: { id: true, name: true, image: true } } } },
+        membership: {
+          include: {
+            user: {
+              select: {
+                id: true,
+                name: true,
+                displayName: true,
+                image: true,
+                characters: { orderBy: [{ isPrimary: "desc" }, { createdAt: "asc" }], take: 1, select: { characterName: true } },
+              },
+            },
+          },
+        },
         role: { select: { name: true } },
       },
       orderBy: { scheduledStart: "asc" },
@@ -130,7 +143,19 @@ export default async function ShiftsPage({
     prisma.shift.findMany({
       where: { venueId: venue.id, status: "ACTIVE" },
       include: {
-        membership: { include: { user: { select: { id: true, name: true, image: true } } } },
+        membership: {
+          include: {
+            user: {
+              select: {
+                id: true,
+                name: true,
+                displayName: true,
+                image: true,
+                characters: { orderBy: [{ isPrimary: "desc" }, { createdAt: "asc" }], take: 1, select: { characterName: true } },
+              },
+            },
+          },
+        },
       },
     }),
   ])
@@ -164,7 +189,20 @@ export default async function ShiftsPage({
           recurrenceRule: true,
           parentShiftId: true,
           slotGroupId: true,
-          membership: { select: { nickname: true, user: { select: { id: true, name: true, image: true } } } },
+          membership: {
+            select: {
+              nickname: true,
+              user: {
+                select: {
+                  id: true,
+                  name: true,
+                  displayName: true,
+                  image: true,
+                  characters: { orderBy: [{ isPrimary: "desc" }, { createdAt: "asc" }], take: 1, select: { characterName: true } },
+                },
+              },
+            },
+          },
           role: { select: { name: true } },
         },
         orderBy: { scheduledStart: "asc" },
@@ -174,11 +212,26 @@ export default async function ShiftsPage({
   // Staff list for create dialog
   const activeStaff = await prisma.membership.findMany({
     where: { venueId: venue.id, status: "active", userId: { not: null } },
-    include: { user: { select: { id: true, name: true, image: true } } },
+    include: {
+      user: {
+        select: {
+          id: true,
+          name: true,
+          displayName: true,
+          image: true,
+          characters: { orderBy: [{ isPrimary: "desc" }, { createdAt: "asc" }], take: 1, select: { characterName: true } },
+        },
+      },
+    },
   })
   const staffForDialog = activeStaff.map((m) => ({
     id: m.id,
-    name: m.nickname ?? m.user?.name ?? "Unknown",
+    name: resolveDisplayName({
+      characterName: m.user?.characters?.[0]?.characterName,
+      nickname: m.nickname,
+      displayName: m.user?.displayName,
+      discordName: m.user?.name,
+    }),
     image: m.user?.image ?? null,
   }))
 
@@ -203,7 +256,12 @@ export default async function ShiftsPage({
     if (!staffMap.has(mid)) {
       staffMap.set(mid, {
         membershipId: mid,
-        name: shift.membership?.nickname ?? shift.membership?.user?.name ?? "Unknown",
+        name: resolveDisplayName({
+          characterName: shift.membership?.user?.characters?.[0]?.characterName,
+          nickname: shift.membership?.nickname,
+          displayName: shift.membership?.user?.displayName,
+          discordName: shift.membership?.user?.name,
+        }),
         image: shift.membership?.user?.image ?? null,
         cells: new Map(),
       })
@@ -529,12 +587,22 @@ export default async function ShiftsPage({
                       <Avatar className="h-8 w-8 flex-shrink-0">
                         <AvatarImage src={shift.membership?.user?.image ?? undefined} />
                         <AvatarFallback className="text-[0.65rem] font-bold">
-                          {(shift.membership?.nickname ?? shift.membership?.user?.name)?.slice(0, 2).toUpperCase() ?? "??"}
+                          {resolveDisplayName({
+                            characterName: shift.membership?.user?.characters?.[0]?.characterName,
+                            nickname: shift.membership?.nickname,
+                            displayName: shift.membership?.user?.displayName,
+                            discordName: shift.membership?.user?.name,
+                          }).slice(0, 2).toUpperCase()}
                         </AvatarFallback>
                       </Avatar>
                       <div className="flex-1 min-w-0">
                         <p className="text-sm font-medium truncate">
-                          {shift.membership?.nickname ?? shift.membership?.user?.name ?? "Unknown"}
+                          {resolveDisplayName({
+                            characterName: shift.membership?.user?.characters?.[0]?.characterName,
+                            nickname: shift.membership?.nickname,
+                            displayName: shift.membership?.user?.displayName,
+                            discordName: shift.membership?.user?.name,
+                          })}
                         </p>
                         <p className="text-xs text-muted-foreground">
                           {formatServerTime(shift.scheduledStart, "time")} — {formatServerTime(shift.scheduledEnd, "time")} {tzLabel}
@@ -545,10 +613,20 @@ export default async function ShiftsPage({
                           {shift.status}
                         </Badge>
                         {canManage && shift.status === "SCHEDULED" && (
-                          <ClockShiftButton venueSlug={slug} shiftId={shift.id} action="clock-in" staffName={shift.membership?.nickname ?? shift.membership?.user?.name ?? "staff"} />
+                          <ClockShiftButton venueSlug={slug} shiftId={shift.id} action="clock-in" staffName={resolveDisplayName({
+                            characterName: shift.membership?.user?.characters?.[0]?.characterName,
+                            nickname: shift.membership?.nickname,
+                            displayName: shift.membership?.user?.displayName,
+                            discordName: shift.membership?.user?.name,
+                          })} />
                         )}
                         {canManage && shift.status === "ACTIVE" && (
-                          <ClockShiftButton venueSlug={slug} shiftId={shift.id} action="clock-out" staffName={shift.membership?.nickname ?? shift.membership?.user?.name ?? "staff"} />
+                          <ClockShiftButton venueSlug={slug} shiftId={shift.id} action="clock-out" staffName={resolveDisplayName({
+                            characterName: shift.membership?.user?.characters?.[0]?.characterName,
+                            nickname: shift.membership?.nickname,
+                            displayName: shift.membership?.user?.displayName,
+                            discordName: shift.membership?.user?.name,
+                          })} />
                         )}
                         {!canManage && shift.membershipId === currentMembershipId && shift.status === "SCHEDULED" && (
                           <ClockShiftButton venueSlug={slug} shiftId={shift.id} action="clock-in" staffName="yourself" />
