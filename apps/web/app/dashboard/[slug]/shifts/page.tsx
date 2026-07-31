@@ -311,6 +311,23 @@ export default async function ShiftsPage({
     (s) => s.status === "SCHEDULED" || s.status === "ACTIVE"
   )
 
+  const tomorrowKey = utcDayKey(addUTCDays(new Date(), 1))
+  function dayLabel(key: string): string {
+    if (key === todayKey) return "Today"
+    if (key === tomorrowKey) return "Tomorrow"
+    return fmtWeekLabel(new Date(key + "T00:00:00Z"))
+  }
+  // Group by scheduled day, across the whole week (not just today/tomorrow) —
+  // a manager mistook a shift on a different day for today's and nearly
+  // deleted the wrong one because the flat list showed only times.
+  const actionShiftsByDay = new Map<string, ShiftRow[]>()
+  for (const shift of actionShifts) {
+    const key = utcDayKey(new Date(shift.scheduledStart))
+    if (!actionShiftsByDay.has(key)) actionShiftsByDay.set(key, [])
+    actionShiftsByDay.get(key)!.push(shift)
+  }
+  const actionDayKeys = [...actionShiftsByDay.keys()].sort()
+
   return (
     <VenueLayout venueSlug={venue.slug} venueName={venue.name} userRole={userRole}>
       <div className="page-inner">
@@ -583,47 +600,57 @@ export default async function ShiftsPage({
               {activeShifts.length > 0 ? "On shift now" : "Upcoming: actions needed"}
             </h2>
             <div className="grid grid-cols-1 gap-2">
-              {actionShifts.map((shift) => (
-                <Card key={shift.id}>
-                  <CardContent className="p-3 md:p-4">
-                    <div className="flex items-center gap-3">
-                      <Avatar className="h-8 w-8 flex-shrink-0">
-                        <AvatarImage src={shift.membership?.user?.image ?? undefined} />
-                        <AvatarFallback className="text-[0.65rem] font-bold">
-                          {shiftStaffName(shift).slice(0, 2).toUpperCase()}
-                        </AvatarFallback>
-                      </Avatar>
-                      <div className="flex-1 min-w-0">
-                        <p className="text-sm font-medium truncate">
-                          {shiftStaffName(shift)}
-                        </p>
-                        <p className="text-xs text-muted-foreground">
-                          {formatServerTime(shift.scheduledStart, "time")} — {formatServerTime(shift.scheduledEnd, "time")} {tzLabel}
-                        </p>
-                      </div>
-                      <div className="flex items-center gap-2 flex-shrink-0">
-                        <Badge variant="outline" className={statusBadge[shift.status] ?? ""}>
-                          {shift.status}
-                        </Badge>
-                        {canManage && shift.status === "SCHEDULED" && (
-                          <ClockShiftButton venueSlug={slug} shiftId={shift.id} action="clock-in" staffName={shiftStaffName(shift)} />
-                        )}
-                        {canManage && shift.status === "ACTIVE" && (
-                          <ClockShiftButton venueSlug={slug} shiftId={shift.id} action="clock-out" staffName={shiftStaffName(shift)} />
-                        )}
-                        {!canManage && shift.membershipId === currentMembershipId && shift.status === "SCHEDULED" && (
-                          <ClockShiftButton venueSlug={slug} shiftId={shift.id} action="clock-in" staffName="yourself" />
-                        )}
-                        {!canManage && shift.membershipId === currentMembershipId && shift.status === "ACTIVE" && (
-                          <ClockShiftButton venueSlug={slug} shiftId={shift.id} action="clock-out" staffName="yourself" />
-                        )}
-                        {canManage && (
-                          <DeleteShiftButton venueSlug={slug} shiftId={shift.id} hasPayroll={!!shift.payrollEntryId} />
-                        )}
-                      </div>
-                    </div>
-                  </CardContent>
-                </Card>
+              {actionDayKeys.map((dayKey) => (
+                <Fragment key={dayKey}>
+                  <div className="flex items-center gap-2 mt-2 first:mt-0">
+                    <span className="text-xs font-semibold uppercase tracking-[0.08em] text-muted-foreground">
+                      {dayLabel(dayKey)}
+                    </span>
+                    <span className="flex-1 h-px bg-[var(--blue-015)]" />
+                  </div>
+                  {actionShiftsByDay.get(dayKey)!.map((shift) => (
+                    <Card key={shift.id}>
+                      <CardContent className="p-3 md:p-4">
+                        <div className="flex items-center gap-3">
+                          <Avatar className="h-8 w-8 flex-shrink-0">
+                            <AvatarImage src={shift.membership?.user?.image ?? undefined} />
+                            <AvatarFallback className="text-[0.65rem] font-bold">
+                              {shiftStaffName(shift).slice(0, 2).toUpperCase()}
+                            </AvatarFallback>
+                          </Avatar>
+                          <div className="flex-1 min-w-0">
+                            <p className="text-sm font-medium truncate">
+                              {shiftStaffName(shift)}
+                            </p>
+                            <p className="text-xs text-muted-foreground">
+                              {formatServerTime(shift.scheduledStart, "time")} — {formatServerTime(shift.scheduledEnd, "time")} {tzLabel}
+                            </p>
+                          </div>
+                          <div className="flex items-center gap-2 flex-shrink-0">
+                            <Badge variant="outline" className={statusBadge[shift.status] ?? ""}>
+                              {shift.status}
+                            </Badge>
+                            {canManage && shift.status === "SCHEDULED" && (
+                              <ClockShiftButton venueSlug={slug} shiftId={shift.id} action="clock-in" staffName={shiftStaffName(shift)} />
+                            )}
+                            {canManage && shift.status === "ACTIVE" && (
+                              <ClockShiftButton venueSlug={slug} shiftId={shift.id} action="clock-out" staffName={shiftStaffName(shift)} />
+                            )}
+                            {!canManage && shift.membershipId === currentMembershipId && shift.status === "SCHEDULED" && (
+                              <ClockShiftButton venueSlug={slug} shiftId={shift.id} action="clock-in" staffName="yourself" />
+                            )}
+                            {!canManage && shift.membershipId === currentMembershipId && shift.status === "ACTIVE" && (
+                              <ClockShiftButton venueSlug={slug} shiftId={shift.id} action="clock-out" staffName="yourself" />
+                            )}
+                            {canManage && (
+                              <DeleteShiftButton venueSlug={slug} shiftId={shift.id} hasPayroll={!!shift.payrollEntryId} />
+                            )}
+                          </div>
+                        </div>
+                      </CardContent>
+                    </Card>
+                  ))}
+                </Fragment>
               ))}
             </div>
           </div>
