@@ -9,6 +9,7 @@ import {
   type VenueWebhookConfig,
 } from "@/lib/discord-webhook"
 import { invalidateCache } from "@/lib/redis-cache"
+import { resolveDisplayName } from "@/lib/display-name"
 
 /**
  * Shared validation schema for transaction creation. Used by both the
@@ -90,10 +91,30 @@ export async function createTransaction(
         select: {
           id: true,
           name: true,
+          displayName: true,
+          characters: { orderBy: [{ isPrimary: "desc" }, { createdAt: "asc" }], take: 1, select: { characterName: true } },
         },
       },
     },
   })
+
+  // The nickname is venue-specific and Transaction has no direct Membership
+  // relation (only staffId -> User), so look it up separately.
+  const staffMembership = newTransaction.staff
+    ? await prisma.membership.findFirst({
+        where: { userId: newTransaction.staff.id, venueId },
+        select: { nickname: true },
+      })
+    : null
+
+  const resolvedStaffName = newTransaction.staff
+    ? resolveDisplayName({
+        characterName: newTransaction.staff.characters[0]?.characterName,
+        nickname: staffMembership?.nickname,
+        displayName: newTransaction.staff.displayName,
+        discordName: newTransaction.staff.name,
+      })
+    : null
 
   // Discord webhook (fire-and-forget - never block the response)
   const venue = await prisma.venue.findUnique({
@@ -120,7 +141,7 @@ export async function createTransaction(
           maxLength: 100,
           stripUrls: true,
         }),
-        staff: newTransaction.staff,
+        staff: resolvedStaffName ? { name: resolvedStaffName } : null,
       })
 
       sendDiscordWebhook(webhookUrl, { embeds: [embed] }).catch((error) =>
@@ -142,7 +163,7 @@ export async function createTransaction(
       amount: Number(newTransaction.amount),
       customerName: newTransaction.customerName,
       service: newTransaction.service,
-      staff: newTransaction.staff,
+      staff: resolvedStaffName ? { id: newTransaction.staff?.id, name: resolvedStaffName } : null,
       notes: newTransaction.notes,
     },
   })
