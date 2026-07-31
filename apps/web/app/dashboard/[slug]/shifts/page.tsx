@@ -16,6 +16,7 @@ import { Card, CardContent } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { Copy } from "lucide-react"
+import { ShiftsCalendar } from "@/components/shifts-calendar"
 
 const DAY_SHORT = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"]
 
@@ -76,13 +77,13 @@ export default async function ShiftsPage({
   searchParams,
 }: {
   params: Promise<{ slug: string }>
-  searchParams: Promise<{ w?: string }>
+  searchParams: Promise<{ w?: string; view?: string }>
 }) {
   const session = await getServerSession(authOptions)
   if (!session?.user) redirect("/auth/signin")
 
   const { slug } = await params
-  const { w } = await searchParams
+  const { w, view = "week" } = await searchParams
 
   const venue = await prisma.venue.findUnique({
     where: { slug },
@@ -133,6 +134,26 @@ export default async function ShiftsPage({
       },
     }),
   ])
+
+  // Calendar view only: 6-month rolling window (3 back, 3 forward), independent
+  // of the week grid's ?w= offset. Only fetched when actually viewing the
+  // calendar tab, to avoid pulling months of shift history on every page load.
+  const calendarShifts = view === "calendar"
+    ? await prisma.shift.findMany({
+        where: {
+          venueId: venue.id,
+          scheduledStart: {
+            gte: new Date(Date.UTC(new Date().getUTCFullYear(), new Date().getUTCMonth() - 3, 1)),
+            lt: new Date(Date.UTC(new Date().getUTCFullYear(), new Date().getUTCMonth() + 4, 1)),
+          },
+        },
+        include: {
+          membership: { include: { user: { select: { id: true, name: true, image: true } } } },
+          role: { select: { name: true } },
+        },
+        orderBy: { scheduledStart: "asc" },
+      })
+    : []
 
   // Staff list for create dialog
   const activeStaff = await prisma.membership.findMany({
@@ -260,6 +281,30 @@ export default async function ShiftsPage({
           ))}
         </div>
 
+        {/* View Tabs */}
+        <div className="flex items-center gap-3 mb-4">
+          <div className="flex gap-1 bg-[var(--card)] border border-[var(--blue-015)] rounded-full p-1">
+            {([
+              { key: "week", label: "Week" },
+              { key: "calendar", label: "Calendar" },
+            ] as const).map(({ key, label }) => (
+              <Link
+                key={key}
+                href={`/dashboard/${slug}/shifts?view=${key}`}
+                className={`text-sm font-semibold px-3 sm:px-4 py-1.5 rounded-full transition-colors ${
+                  view === key
+                    ? "bg-[var(--xiv-blue)] text-[var(--xiv-navy)]"
+                    : "text-muted-foreground hover:text-foreground hover:bg-[var(--blue-007)]"
+                }`}
+              >
+                {label}
+              </Link>
+            ))}
+          </div>
+        </div>
+
+        {view === "week" ? (
+        <>
         {/* Week nav toolbar */}
         <div className="flex items-center gap-3 mb-4 flex-wrap">
           <div className="flex items-center gap-1 bg-[var(--card)] border border-[var(--blue-015)] rounded-full px-1 py-1">
@@ -495,6 +540,18 @@ export default async function ShiftsPage({
               ))}
             </div>
           </div>
+        )}
+        </>
+        ) : (
+          <ShiftsCalendar
+            shifts={calendarShifts}
+            currentMembershipId={currentMembershipId}
+            canManage={canManage}
+            venueSlug={slug}
+            venueId={venue.id}
+            staffForDialog={staffForDialog}
+            roles={venueRoles}
+          />
         )}
       </div>
     </VenueLayout>
