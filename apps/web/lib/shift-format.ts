@@ -1,0 +1,48 @@
+// apps/web/lib/shift-format.ts
+
+// FFXIV server time = UTC (see apps/web/app/dashboard/[slug]/shifts/page.tsx).
+// These mirror that page's private utcDayKey/fmtHour helpers so the calendar
+// and day-detail dialog group/label shifts identically to the week grid,
+// regardless of the viewer's browser timezone.
+
+/** "2026-07-31" in UTC, used as a day-bucket key. */
+export function utcDayKey(d: Date): string {
+  return d.toISOString().slice(0, 10)
+}
+
+/** "10PM" or "10:30PM", read in UTC. */
+export function fmtHour(iso: string | Date): string {
+  const d = new Date(iso)
+  const h = d.getUTCHours()
+  const m = d.getUTCMinutes()
+  const ampm = h >= 12 ? "PM" : "AM"
+  const h12 = h % 12 || 12
+  return m === 0 ? `${h12}${ampm}` : `${h12}:${String(m).padStart(2, "0")}${ampm}`
+}
+
+export const statusBadgeClass: Record<string, string> = {
+  SCHEDULED: "bg-[rgba(0,180,255,0.12)] text-[var(--xiv-blue)] border-[rgba(0,180,255,0.35)]",
+  ACTIVE:    "bg-emerald-500/10 text-emerald-500 border-emerald-500/20",
+  COMPLETED: "bg-zinc-500/10 text-zinc-400 border-zinc-500/20",
+  MISSED:    "bg-amber-500/10 text-amber-500 border-amber-500/20",
+  CANCELLED: "bg-red-500/10 text-red-400 border-red-500/20",
+}
+
+export interface CalendarShift {
+  id: string
+  membershipId: string | null
+  roleId: string | null
+  payrollEntryId: string | null
+  scheduledStart: Date
+  scheduledEnd: Date
+  status: string
+  notes: string | null
+  recurrenceRule: string | null
+  parentShiftId: string | null
+  slotGroupId: string | null
+  membership: {
+    nickname: string | null
+    user: { id: string; name: string | null; image: string | null } | null
+  } | null
+  role: { name: string } | null
+}
