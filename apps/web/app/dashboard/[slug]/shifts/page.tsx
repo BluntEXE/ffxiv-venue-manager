@@ -303,7 +303,17 @@ export default async function ShiftsPage({
           </div>
         </div>
 
-        {view === "week" ? (
+        {view === "calendar" ? (
+          <ShiftsCalendar
+            shifts={calendarShifts}
+            currentMembershipId={currentMembershipId}
+            canManage={canManage}
+            venueSlug={slug}
+            venueId={venue.id}
+            staffForDialog={staffForDialog}
+            roles={venueRoles}
+          />
+        ) : (
         <>
         {/* Week nav toolbar */}
         <div className="flex items-center gap-3 mb-4 flex-wrap">
@@ -542,16 +552,6 @@ export default async function ShiftsPage({
           </div>
         )}
         </>
-        ) : (
-          <ShiftsCalendar
-            shifts={calendarShifts}
-            currentMembershipId={currentMembershipId}
-            canManage={canManage}
-            venueSlug={slug}
-            venueId={venue.id}
-            staffForDialog={staffForDialog}
-            roles={venueRoles}
-          />
         )}
       </div>
     </VenueLayout>
