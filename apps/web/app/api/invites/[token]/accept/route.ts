@@ -9,6 +9,7 @@ import {
   type VenueWebhookConfig,
 } from "@/lib/discord-webhook"
 import { notifyVenueOwners } from "@/lib/notify"
+import { resolveDisplayName } from "@/lib/display-name"
 
 export async function POST(
   request: Request,
@@ -98,6 +99,8 @@ export async function POST(
         user: {
           select: {
             name: true,
+            displayName: true,
+            characters: { orderBy: [{ isPrimary: "desc" }, { createdAt: "asc" }], take: 1, select: { characterName: true } },
           },
         },
       },
@@ -121,7 +124,12 @@ export async function POST(
     const webhookUrl = getWebhookUrlForType(webhookConfig, "staffJoined")
     if (webhookUrl) {
       const embed = formatStaffJoinedEmbed({
-        name: session.user.name || null,
+        name: resolveDisplayName({
+          characterName: updatedMembership.user?.characters?.[0]?.characterName,
+          nickname: updatedMembership.nickname,
+          displayName: updatedMembership.user?.displayName,
+          discordName: updatedMembership.user?.name ?? session.user.name,
+        }),
         role: membership.role,
       })
 
