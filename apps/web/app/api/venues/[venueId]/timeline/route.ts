@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server"
 import { getServerSession } from "next-auth"
 import { authOptions } from "@/lib/auth"
 import { prisma } from "@/lib/prisma"
+import { resolveDisplayName } from "@/lib/display-name"
 
 export async function GET(
   request: NextRequest,
@@ -49,10 +50,13 @@ export async function GET(
           select: {
             id: true,
             name: true,
+            displayName: true,
             image: true,
+            characters: { orderBy: [{ isPrimary: "desc" }, { createdAt: "asc" }], take: 1, select: { characterName: true } },
             memberships: {
               where: { venueId },
               select: {
+                nickname: true,
                 role: true,
                 customRole: { select: { name: true, color: true } },
               },
@@ -65,6 +69,14 @@ export async function GET(
     })
 
     for (const t of transactions) {
+      const resolvedStaffName = t.staff
+        ? resolveDisplayName({
+            characterName: t.staff.characters[0]?.characterName,
+            nickname: t.staff.memberships[0]?.nickname,
+            displayName: t.staff.displayName,
+            discordName: t.staff.name,
+          })
+        : null
       items.push({
         id: `sale_${t.id}`,
         type: "sale",
@@ -75,7 +87,7 @@ export async function GET(
           notes: t.notes,
           service: t.service,
           event: t.event,
-          staff: t.staff,
+          staff: t.staff ? { ...t.staff, name: resolvedStaffName } : null,
         },
       })
     }
@@ -128,7 +140,15 @@ export async function GET(
       include: {
         membership: {
           include: {
-            user: { select: { id: true, name: true, image: true } },
+            user: {
+              select: {
+                id: true,
+                name: true,
+                displayName: true,
+                image: true,
+                characters: { orderBy: [{ isPrimary: "desc" }, { createdAt: "asc" }], take: 1, select: { characterName: true } },
+              },
+            },
             customRole: { select: { name: true, color: true } },
           },
         },
@@ -138,7 +158,12 @@ export async function GET(
     })
 
     for (const s of shifts) {
-      const staffName = s.membership?.user?.name ?? "Unknown"
+      const staffName = resolveDisplayName({
+        characterName: s.membership?.user?.characters?.[0]?.characterName,
+        nickname: s.membership?.nickname,
+        displayName: s.membership?.user?.displayName,
+        discordName: s.membership?.user?.name,
+      })
       const roleName = s.membership?.customRole?.name ?? s.membership?.role ?? "Staff"
 
       // Clock-in event
