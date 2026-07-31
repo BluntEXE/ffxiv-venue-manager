@@ -4,6 +4,7 @@ import { authOptions } from "@/lib/auth"
 import { prisma } from "@/lib/prisma"
 import { withRateLimit } from "@/lib/middleware/with-rate-limit"
 import { fetchRoleRates, resolveShiftRates } from "@/lib/payroll-rates"
+import { resolveDisplayName } from "@/lib/display-name"
 import { Prisma } from "@/generated/prisma/client"
 const Decimal = Prisma.Decimal
 
@@ -38,7 +39,15 @@ async function getEligibleShiftsPerMember(venueId: string, startDate: Date, endD
   const activeMembers = await prisma.membership.findMany({
     where: { venueId, status: "active" },
     include: {
-      user: { select: { id: true, name: true, displayName: true, image: true } },
+      user: {
+        select: {
+          id: true,
+          name: true,
+          displayName: true,
+          image: true,
+          characters: { orderBy: [{ isPrimary: "desc" }, { createdAt: "asc" }], take: 1, select: { characterName: true } },
+        },
+      },
     },
   })
 
@@ -116,7 +125,12 @@ export const GET = withRateLimit<{ params: Promise<{ venueId: string }> }>(
       return NextResponse.json({
         members: results.map((r) => ({
           membershipId: r.member.id,
-          name: r.member.user?.displayName || r.member.user?.name || "Unknown",
+          name: resolveDisplayName({
+            characterName: r.member.user?.characters?.[0]?.characterName,
+            nickname: r.member.nickname,
+            displayName: r.member.user?.displayName,
+            discordName: r.member.user?.name,
+          }),
           image: r.member.user?.image ?? null,
           shiftCount: r.shifts.length,
           totalHours: r.totalHours,
@@ -191,7 +205,12 @@ export const POST = withRateLimit<{ params: Promise<{ venueId: string }> }>(
 
           entries.push({
             membershipId: r.member.id,
-            name: r.member.user?.displayName || r.member.user?.name || "Unknown",
+            name: resolveDisplayName({
+              characterName: r.member.user?.characters?.[0]?.characterName,
+              nickname: r.member.nickname,
+              displayName: r.member.user?.displayName,
+              discordName: r.member.user?.name,
+            }),
             shiftCount: r.resolution.includedShiftIds.length,
             totalHours: r.totalHours,
             totalAmount: Math.round(Number(totalAmount)),

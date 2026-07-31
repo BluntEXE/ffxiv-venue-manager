@@ -176,6 +176,7 @@ export const PATCH = withRateLimit<{ params: Promise<{ venueId: string; payrollI
                   name: true,
                   image: true,
                   displayName: true,
+                  characters: { orderBy: [{ isPrimary: "desc" }, { createdAt: "asc" }], take: 1, select: { characterName: true } },
                 },
               },
               customRole: true,

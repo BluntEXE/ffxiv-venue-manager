@@ -4,6 +4,7 @@ import { authOptions } from "@/lib/auth"
 import { prisma } from "@/lib/prisma"
 import { withRateLimit } from "@/lib/middleware/with-rate-limit"
 import { fetchRoleRates, resolveShiftRates } from "@/lib/payroll-rates"
+import { resolveDisplayName } from "@/lib/display-name"
 import { Prisma } from "@/generated/prisma/client"
 const Decimal = Prisma.Decimal
 type Decimal = InstanceType<typeof Prisma.Decimal>
@@ -204,6 +205,7 @@ export const POST = withRateLimit<{ params: Promise<{ venueId: string }> }>(
                     name: true,
                     image: true,
                     displayName: true,
+                    characters: { orderBy: [{ isPrimary: "desc" }, { createdAt: "asc" }], take: 1, select: { characterName: true } },
                   },
                 },
                 customRole: true,
@@ -335,6 +337,7 @@ export const GET = withRateLimit<{ params: Promise<{ venueId: string }> }>(
               name: true,
               displayName: true,
               image: true,
+              characters: { orderBy: [{ isPrimary: "desc" }, { createdAt: "asc" }], take: 1, select: { characterName: true } },
             },
           },
         },
@@ -391,7 +394,12 @@ export const GET = withRateLimit<{ params: Promise<{ venueId: string }> }>(
       return NextResponse.json({
         staff: {
           membershipId: staffMembership.id,
-          name: staffMembership.user?.displayName || staffMembership.user?.name || "Unknown",
+          name: resolveDisplayName({
+            characterName: staffMembership.user?.characters?.[0]?.characterName,
+            nickname: staffMembership.nickname,
+            displayName: staffMembership.user?.displayName,
+            discordName: staffMembership.user?.name,
+          }),
           image: staffMembership.user?.image,
           defaultHourlyRate: defaultRate,
         },

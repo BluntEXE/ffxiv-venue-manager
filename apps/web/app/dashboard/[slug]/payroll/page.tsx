@@ -39,6 +39,7 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { format } from "date-fns"
 import { Plus, DollarSign, Clock, CheckCircle2, XCircle, Zap, Trash2, Users } from "lucide-react"
 import { PageLoading } from "@/components/ui/loading-spinner"
+import { resolveDisplayName } from "@/lib/display-name"
 
 interface PayrollEntry {
   id: string
@@ -62,6 +63,7 @@ interface PayrollEntry {
       id: string
       name: string | null
       displayName: string | null
+      characters: { characterName: string }[]
       image: string | null
     } | null
     customRole: {
@@ -87,6 +89,7 @@ interface StaffMember {
     id: string
     name: string | null
     displayName: string | null
+    characters: { characterName: string }[]
     image: string | null
   } | null
   customRole: {
@@ -649,7 +652,12 @@ export default function PayrollPage() {
                     <SelectContent>
                       {staff.map((member) => (
                         <SelectItem key={member.id} value={member.id}>
-                          {member.nickname ?? member.user?.displayName ?? member.user?.name ?? "Unknown"}
+                          {resolveDisplayName({
+                            characterName: member.user?.characters?.[0]?.characterName,
+                            nickname: member.nickname,
+                            displayName: member.user?.displayName,
+                            discordName: member.user?.name,
+                          })}
                           {member.hourlyRate ? ` (${member.hourlyRate} Gil/hr)` : ""}
                         </SelectItem>
                       ))}
@@ -862,7 +870,12 @@ export default function PayrollPage() {
                       <SelectContent>
                         {staff.map((member) => (
                           <SelectItem key={member.id} value={member.id}>
-                            {member.nickname ?? member.user?.displayName ?? member.user?.name ?? "Unknown"}
+                            {resolveDisplayName({
+                              characterName: member.user?.characters?.[0]?.characterName,
+                              nickname: member.nickname,
+                              displayName: member.user?.displayName,
+                              discordName: member.user?.name,
+                            })}
                           </SelectItem>
                         ))}
                       </SelectContent>
@@ -1082,7 +1095,12 @@ export default function PayrollPage() {
                 {filteredEntries.map((entry) => {
                   const name = entry.isManualEntry
                     ? entry.manualEntryName || "Unknown"
-                    : entry.membership?.nickname ?? entry.membership?.user?.displayName ?? entry.membership?.user?.name ?? "Unknown"
+                    : resolveDisplayName({
+                        characterName: entry.membership?.user?.characters?.[0]?.characterName,
+                        nickname: entry.membership?.nickname,
+                        displayName: entry.membership?.user?.displayName,
+                        discordName: entry.membership?.user?.name,
+                      })
                   const initials = name.charAt(0).toUpperCase()
                   const total = Math.round(parseFloat(entry.totalAmount))
                   return (
