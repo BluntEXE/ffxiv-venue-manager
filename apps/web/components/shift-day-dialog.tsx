@@ -18,6 +18,7 @@ import { OpenShiftChip } from "@/components/open-shift-chip"
 import { ClaimedShiftChip } from "@/components/claimed-shift-chip"
 import { Copy } from "lucide-react"
 import { fmtHour, statusBadgeClass, utcDayKey, type CalendarShift, type StaffMember, type RoleOption } from "@/lib/shift-format"
+import { resolveDisplayName } from "@/lib/display-name"
 
 interface ShiftDayDialogProps {
   date: Date | null
@@ -32,7 +33,12 @@ interface ShiftDayDialogProps {
 }
 
 function staffLabel(shift: CalendarShift): string {
-  return shift.membership?.nickname ?? shift.membership?.user?.name ?? "Unknown"
+  return resolveDisplayName({
+    characterName: shift.membership?.user?.characters?.[0]?.characterName,
+    nickname: shift.membership?.nickname,
+    displayName: shift.membership?.user?.displayName,
+    discordName: shift.membership?.user?.name,
+  })
 }
 
 export function ShiftDayDialog({

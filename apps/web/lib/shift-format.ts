@@ -53,7 +53,13 @@ export interface CalendarShift {
   slotGroupId: string | null
   membership: {
     nickname: string | null
-    user: { id: string; name: string | null; image: string | null } | null
+    user: {
+      id: string
+      name: string | null
+      displayName: string | null
+      image: string | null
+      characters: { characterName: string }[]
+    } | null
   } | null
   role: { name: string } | null
 }
