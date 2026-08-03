@@ -241,6 +241,21 @@ export default async function ShiftsPage({
     orderBy: { name: "asc" },
   })
 
+  const venuePotSettings = await prisma.venuePotSettings.findUnique({
+    where: { venueId: venue.id },
+  })
+  const potModeEnabled = venuePotSettings?.enabled ?? false
+
+  const venueEvents = potModeEnabled
+    ? await prisma.event.findMany({
+        where: { venueId: venue.id },
+        select: { id: true, title: true },
+        orderBy: { startTime: "desc" },
+        take: 50,
+      })
+    : []
+  const eventsForDialog = venueEvents.map((e) => ({ id: e.id, name: e.title }))
+
   // Build staff × day grid
   type ShiftRow = (typeof weekShifts)[0]
   function shiftStaffName(shift: ShiftRow): string {
@@ -347,6 +362,8 @@ export default async function ShiftsPage({
               roles={venueRoles}
               timezone={timezone}
               tzLabel={tzLabel}
+              potModeEnabled={potModeEnabled}
+              events={eventsForDialog}
             />
           )}
         </div>
@@ -500,6 +517,8 @@ export default async function ShiftsPage({
                                 venueSlug={slug}
                                 staff={staffForDialog}
                                 roles={venueRoles}
+                                potModeEnabled={potModeEnabled}
+                                events={eventsForDialog}
                                 trigger={
                                   <Button variant="ghost" size="sm" aria-label="Duplicate shift" className="h-6 w-6 p-0">
                                     <Copy className="h-3.5 w-3.5" />
@@ -551,6 +570,8 @@ export default async function ShiftsPage({
                               venueSlug={slug}
                               staff={staffForDialog}
                               roles={venueRoles}
+                              potModeEnabled={potModeEnabled}
+                              events={eventsForDialog}
                               trigger={
                                 <Button variant="ghost" size="sm" aria-label="Duplicate shift" className="h-6 w-6 p-0">
                                   <Copy className="h-3.5 w-3.5" />
