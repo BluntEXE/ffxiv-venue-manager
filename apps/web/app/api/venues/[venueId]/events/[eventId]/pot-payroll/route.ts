@@ -1,0 +1,258 @@
+import { NextRequest, NextResponse } from "next/server"
+import { getServerSession } from "next-auth"
+import { authOptions } from "@/lib/auth"
+import { prisma } from "@/lib/prisma"
+import { Prisma } from "@/generated/prisma/client"
+import { computePotDistribution, type PotStaffMember, type PotTransactionInput } from "@/lib/pot-payroll"
+import { withRateLimit } from "@/lib/middleware/with-rate-limit"
+
+const Decimal = Prisma.Decimal
+
+async function resolvePotInputs(venueId: string, eventId: string) {
+  const venue = await prisma.venue.findFirst({ where: { OR: [{ id: venueId }, { slug: venueId }] } })
+  if (!venue) return null
+
+  const event = await prisma.event.findFirst({ where: { id: eventId, venueId: venue.id } })
+  if (!event) return null
+
+  const settings = await prisma.venuePotSettings.findUnique({ where: { venueId: venue.id } })
+
+  const shifts = await prisma.shift.findMany({
+    where: { eventId, status: "COMPLETED" },
+    include: { membership: true },
+  })
+  const transactionsRaw = await prisma.transaction.findMany({ where: { eventId } })
+
+  // Resolve every role referenced by either a shift's own roleId or a membership's
+  // roleId, in one batch — mirrors lib/payroll-rates.ts's fetchRoleRates pattern.
+  const roleIdsToFetch = new Set<string>()
+  for (const shift of shifts) {
+    if (shift.roleId) roleIdsToFetch.add(shift.roleId)
+    if (shift.membership?.roleId) roleIdsToFetch.add(shift.membership.roleId)
+  }
+  const roles = await prisma.role.findMany({
+    where: { id: { in: Array.from(roleIdsToFetch) } },
+    select: { id: true, potPayoutMode: true, contractorSharesPot: true },
+  })
+  const roleById = new Map(roles.map((r) => [r.id, r]))
+
+  // One PotStaffMember per membership that has at least one shift on this event.
+  const staffByMembership = new Map<string, PotStaffMember>()
+  for (const shift of shifts) {
+    if (!shift.membershipId || !shift.membership) continue
+    const hasActuals = Boolean(shift.actualStart && shift.actualEnd)
+
+    const existing = staffByMembership.get(shift.membershipId)
+    if (existing) {
+      existing.hasQualifyingShift = existing.hasQualifyingShift || hasActuals
+      continue
+    }
+
+    // Role precedence: this shift's own tagged role first, else the membership's
+    // primary custom role — same precedence lib/payroll-rates.ts uses for pay rates.
+    const resolvedRoleId = shift.roleId ?? shift.membership.roleId
+    const resolvedRole = resolvedRoleId ? roleById.get(resolvedRoleId) : undefined
+
+    staffByMembership.set(shift.membershipId, {
+      membershipId: shift.membershipId,
+      potPayoutMode: resolvedRole?.potPayoutMode ?? "STANDARD",
+      contractorSharesPot: resolvedRole?.contractorSharesPot ?? false,
+      tipPooled: shift.membership.tipPooled ?? settings?.defaultTipPooled ?? false,
+      hasQualifyingShift: hasActuals,
+    })
+  }
+
+  // Transactions reference staff via Transaction.staffId (a User id, not a Membership
+  // id) — map each to the membership id of whichever shift-having membership shares
+  // that userId, so computePotDistribution can key everything by membershipId.
+  const membershipIdByUserId = new Map<string, string>()
+  for (const shift of shifts) {
+    if (shift.membership?.userId && shift.membershipId) {
+      membershipIdByUserId.set(shift.membership.userId, shift.membershipId)
+    }
+  }
+
+  const transactions: PotTransactionInput[] = transactionsRaw
+    .filter((t) => t.type === "SALE" || t.type === "TIP")
+    .map((t) => ({
+      type: t.type as "SALE" | "TIP",
+      amount: t.amount,
+      membershipId: t.staffId ? membershipIdByUserId.get(t.staffId) ?? null : null,
+    }))
+
+  const staff = Array.from(staffByMembership.values())
+  const result = computePotDistribution(staff, transactions, {
+    taxPercent: settings?.taxPercent ?? new Decimal(0),
+    includeSalesInPot: settings?.includeSalesInPot ?? false,
+  })
+
+  return { venue, event, settings, result }
+}
+
+export const GET = withRateLimit<{ params: Promise<{ venueId: string; eventId: string }> }>(
+  async (request, context) => {
+    if (!context?.params) return NextResponse.json({ error: "Invalid request" }, { status: 400 })
+    try {
+      const session = await getServerSession(authOptions)
+      if (!session?.user?.id) return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
+      const { venueId, eventId } = await context.params
+
+      const venue = await prisma.venue.findFirst({ where: { OR: [{ id: venueId }, { slug: venueId }] } })
+      if (!venue) return NextResponse.json({ error: "Venue not found" }, { status: 404 })
+
+      const callerMembership = await prisma.membership.findFirst({
+        where: { userId: session.user.id, venueId: venue.id, status: "active" },
+      })
+      if (!callerMembership) {
+        return NextResponse.json(
+          { error: "You don't have access to this venue" },
+          { status: 403 }
+        )
+      }
+
+      const resolved = await resolvePotInputs(venueId, eventId)
+      if (!resolved) return NextResponse.json({ error: "Event not found" }, { status: 404 })
+
+      return NextResponse.json({ preview: resolved.result })
+    } catch (error) {
+      console.error("Error previewing pot payroll:", error)
+      return NextResponse.json({ error: "Internal server error" }, { status: 500 })
+    }
+  },
+  { requests: 30, window: "1 m" }
+)
+
+export const POST = withRateLimit<{ params: Promise<{ venueId: string; eventId: string }> }>(
+  async (request, context) => {
+    if (!context?.params) return NextResponse.json({ error: "Invalid request" }, { status: 400 })
+    try {
+      const session = await getServerSession(authOptions)
+      if (!session?.user?.id) return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
+      const { venueId, eventId } = await context.params
+
+      const venue = await prisma.venue.findFirst({ where: { OR: [{ id: venueId }, { slug: venueId }] } })
+      if (!venue) return NextResponse.json({ error: "Venue not found" }, { status: 404 })
+
+      const callerMembership = await prisma.membership.findFirst({
+        where: { userId: session.user.id, venueId: venue.id, status: "active" },
+      })
+      if (!callerMembership || !["OWNER", "MANAGER"].includes(callerMembership.role)) {
+        return NextResponse.json(
+          { error: "Only owners and managers can generate pot payroll" },
+          { status: 403 }
+        )
+      }
+
+      const event = await prisma.event.findFirst({ where: { id: eventId, venueId: venue.id } })
+      if (!event) return NextResponse.json({ error: "Event not found" }, { status: 404 })
+      if (event.status !== "COMPLETED") {
+        return NextResponse.json(
+          { error: "Pot payroll can only be generated for completed events" },
+          { status: 400 }
+        )
+      }
+
+      const existing = await prisma.potDistribution.findUnique({ where: { eventId } })
+      if (existing) {
+        return NextResponse.json(
+          { error: "Pot payroll has already been generated for this event" },
+          { status: 409 }
+        )
+      }
+
+      const resolved = await resolvePotInputs(venueId, eventId)
+      if (!resolved) return NextResponse.json({ error: "Event not found" }, { status: 404 })
+      const { result, settings } = resolved
+
+      const distribution = await prisma.$transaction(async (tx) => {
+        const dist = await tx.potDistribution.create({
+          data: {
+            venueId: venue.id,
+            eventId,
+            regularSales: result.regularSales,
+            contractorSales: result.contractorSales,
+            pooledTips: result.pooledTips,
+            taxPercent: settings?.taxPercent ?? new Decimal(0),
+            potTotal: result.potTotal,
+            recipientCount: result.recipientCount,
+            perPersonShare: result.perPersonShare,
+            generatedById: session.user.id,
+          },
+        })
+
+        const handled = new Set<string>()
+        const contractorPayoutMembershipIds = new Set(
+          result.contractorPayouts.map((p) => p.membershipId)
+        )
+
+        for (const membershipId of result.recipientMembershipIds) {
+          // If this membership also gets a CONTRACTOR_PAYOUT entry below, the kept-tips
+          // bonus is folded in there instead — otherwise it would be double-paid.
+          const bonus = contractorPayoutMembershipIds.has(membershipId)
+            ? null
+            : result.keptTipsByMembership.get(membershipId) ?? null
+          await tx.payrollEntry.create({
+            data: {
+              venueId: venue.id,
+              membershipId,
+              paymentType: "POT_SHARE",
+              baseRate: result.perPersonShare,
+              bonusAmount: bonus,
+              totalAmount: bonus ? result.perPersonShare.plus(bonus) : result.perPersonShare,
+              periodStart: event.startTime,
+              periodEnd: event.endTime,
+              potDistributionId: dist.id,
+            },
+          })
+          handled.add(membershipId)
+        }
+
+        for (const payout of result.contractorPayouts) {
+          const bonus = result.keptTipsByMembership.get(payout.membershipId) ?? null
+          await tx.payrollEntry.create({
+            data: {
+              venueId: venue.id,
+              membershipId: payout.membershipId,
+              paymentType: "CONTRACTOR_PAYOUT",
+              baseRate: payout.payout,
+              bonusAmount: bonus,
+              totalAmount: bonus ? payout.payout.plus(bonus) : payout.payout,
+              periodStart: event.startTime,
+              periodEnd: event.endTime,
+              potDistributionId: dist.id,
+            },
+          })
+          handled.add(payout.membershipId)
+        }
+
+        // Kept tips for staff who are neither a pot recipient nor a paid contractor
+        // (e.g. a STANDARD-role member who kept their own tips) still need their own
+        // entry so the money isn't lost — a zero-base, bonus-only entry.
+        for (const [membershipId, bonus] of result.keptTipsByMembership) {
+          if (handled.has(membershipId)) continue
+          await tx.payrollEntry.create({
+            data: {
+              venueId: venue.id,
+              membershipId,
+              paymentType: "POT_SHARE",
+              baseRate: new Decimal(0),
+              bonusAmount: bonus,
+              totalAmount: bonus,
+              periodStart: event.startTime,
+              periodEnd: event.endTime,
+              potDistributionId: dist.id,
+            },
+          })
+        }
+
+        return dist
+      })
+
+      return NextResponse.json({ distribution }, { status: 201 })
+    } catch (error) {
+      console.error("Error generating pot payroll:", error)
+      return NextResponse.json({ error: "Internal server error" }, { status: 500 })
+    }
+  },
+  { requests: 5, window: "1 m" }
+)
