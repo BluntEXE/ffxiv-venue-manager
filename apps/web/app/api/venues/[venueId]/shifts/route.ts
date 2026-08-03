@@ -97,6 +97,7 @@ const createShiftSchema = z
   .object({
     membershipId: z.string().min(1).optional(),
     roleId: z.string().min(1).optional(),
+    eventId: z.string().min(1).optional(),
     scheduledStart: z.string().datetime(),
     scheduledEnd: z.string().datetime(),
     notes: z.string().optional(),
@@ -180,6 +181,21 @@ export async function POST(
       verifiedRoleId = role.id
     }
 
+    let verifiedEventId: string | null = null
+    if (parsed.data.eventId) {
+      const event = await prisma.event.findFirst({
+        where: { id: parsed.data.eventId, venueId: venue.id },
+        select: { id: true },
+      })
+      if (!event) {
+        return NextResponse.json(
+          { error: "Event not found at this venue" },
+          { status: 400 }
+        )
+      }
+      verifiedEventId = event.id
+    }
+
     const scheduledStart = new Date(parsed.data.scheduledStart)
     const scheduledEnd = new Date(parsed.data.scheduledEnd)
     const recurrenceRule = parsed.data.recurrenceRule
@@ -189,6 +205,7 @@ export async function POST(
         venueId: venue.id,
         membershipId: parsed.data.membershipId ?? null,
         roleId: verifiedRoleId,
+        eventId: verifiedEventId,
         status: parsed.data.membershipId ? "SCHEDULED" : "OPEN",
         scheduledStart,
         scheduledEnd,
@@ -207,6 +224,7 @@ export async function POST(
           venueId: venue.id,
           membershipId: parsed.data.membershipId ?? null,
           roleId: verifiedRoleId,
+          eventId: verifiedEventId,
           status: parsed.data.membershipId ? "SCHEDULED" : "OPEN",
           scheduledStart: o.startTime,
           scheduledEnd: o.endTime,
