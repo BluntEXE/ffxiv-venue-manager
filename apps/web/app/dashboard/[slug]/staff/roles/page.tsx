@@ -8,6 +8,13 @@ import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Textarea } from "@/components/ui/textarea"
 import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select"
+import {
   Card,
   CardContent,
   CardDescription,
@@ -60,6 +67,8 @@ interface Role {
   color: string | null
   permissions: any
   hourlyRate: string | null
+  potPayoutMode: "STANDARD" | "POT" | "CONTRACTOR"
+  contractorSharesPot: boolean
   _count?: {
     memberships: number
   }
@@ -85,6 +94,8 @@ export default function RolesPage({
     responsibilities: "",
     color: "#6366f1",
     hourlyRate: "",
+    potPayoutMode: "STANDARD" as "STANDARD" | "POT" | "CONTRACTOR",
+    contractorSharesPot: false,
   })
   const [formError, setFormError] = useState("")
   const [isSubmitting, setIsSubmitting] = useState(false)
@@ -159,7 +170,14 @@ export default function RolesPage({
       const newRole = await response.json()
       setRoles([newRole, ...roles])
       setIsCreateDialogOpen(false)
-      setFormData({ name: "", responsibilities: "", color: "#6366f1", hourlyRate: "" })
+      setFormData({
+        name: "",
+        responsibilities: "",
+        color: "#6366f1",
+        hourlyRate: "",
+        potPayoutMode: "STANDARD",
+        contractorSharesPot: false,
+      })
     } catch (error: unknown) {
       setFormError(error instanceof Error ? error.message : "Failed to create role")
     } finally {
@@ -203,7 +221,14 @@ export default function RolesPage({
       setRoles(roles.map((r) => (r.id === updatedRole.id ? updatedRole : r)))
       setIsEditDialogOpen(false)
       setEditingRole(null)
-      setFormData({ name: "", responsibilities: "", color: "#6366f1", hourlyRate: "" })
+      setFormData({
+        name: "",
+        responsibilities: "",
+        color: "#6366f1",
+        hourlyRate: "",
+        potPayoutMode: "STANDARD",
+        contractorSharesPot: false,
+      })
     } catch (error: unknown) {
       setFormError(error instanceof Error ? error.message : "Failed to update role")
     } finally {
@@ -240,13 +265,22 @@ export default function RolesPage({
       responsibilities: role.responsibilities || "",
       color: role.color || "#6366f1",
       hourlyRate: role.hourlyRate ?? "",
+      potPayoutMode: role.potPayoutMode ?? "STANDARD",
+      contractorSharesPot: role.contractorSharesPot ?? false,
     })
     setFormError("")
     setIsEditDialogOpen(true)
   }
 
   const openCreateDialog = () => {
-    setFormData({ name: "", responsibilities: "", color: "#6366f1", hourlyRate: "" })
+    setFormData({
+      name: "",
+      responsibilities: "",
+      color: "#6366f1",
+      hourlyRate: "",
+      potPayoutMode: "STANDARD",
+      contractorSharesPot: false,
+    })
     setFormError("")
     setIsCreateDialogOpen(true)
   }
@@ -426,6 +460,37 @@ export default function RolesPage({
               />
             </div>
             <div className="space-y-2">
+              <Label htmlFor="create-payout-mode">Pot Payroll Mode</Label>
+              <Select
+                value={formData.potPayoutMode}
+                onValueChange={(v) =>
+                  setFormData({ ...formData, potPayoutMode: v as typeof formData.potPayoutMode })
+                }
+                disabled={isSubmitting}
+              >
+                <SelectTrigger id="create-payout-mode">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="STANDARD">Standard (unaffected by pot payroll)</SelectItem>
+                  <SelectItem value="POT">Pot (shares equally in the pot split)</SelectItem>
+                  <SelectItem value="CONTRACTOR">Contractor (own priced services)</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+            {formData.potPayoutMode === "CONTRACTOR" && (
+              <div className="flex items-center gap-2">
+                <input
+                  type="checkbox"
+                  id="create-contractor-shares-pot"
+                  checked={formData.contractorSharesPot}
+                  onChange={(e) => setFormData({ ...formData, contractorSharesPot: e.target.checked })}
+                  disabled={isSubmitting}
+                />
+                <Label htmlFor="create-contractor-shares-pot">Also shares in the pot split</Label>
+              </div>
+            )}
+            <div className="space-y-2">
               <Label>Role Color</Label>
               <div className="flex items-center gap-3">
                 <div className="flex gap-2 flex-wrap">
@@ -552,6 +617,37 @@ export default function RolesPage({
                 disabled={isSubmitting}
               />
             </div>
+            <div className="space-y-2">
+              <Label htmlFor="edit-payout-mode">Pot Payroll Mode</Label>
+              <Select
+                value={formData.potPayoutMode}
+                onValueChange={(v) =>
+                  setFormData({ ...formData, potPayoutMode: v as typeof formData.potPayoutMode })
+                }
+                disabled={isSubmitting}
+              >
+                <SelectTrigger id="edit-payout-mode">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="STANDARD">Standard (unaffected by pot payroll)</SelectItem>
+                  <SelectItem value="POT">Pot (shares equally in the pot split)</SelectItem>
+                  <SelectItem value="CONTRACTOR">Contractor (own priced services)</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+            {formData.potPayoutMode === "CONTRACTOR" && (
+              <div className="flex items-center gap-2">
+                <input
+                  type="checkbox"
+                  id="edit-contractor-shares-pot"
+                  checked={formData.contractorSharesPot}
+                  onChange={(e) => setFormData({ ...formData, contractorSharesPot: e.target.checked })}
+                  disabled={isSubmitting}
+                />
+                <Label htmlFor="edit-contractor-shares-pot">Also shares in the pot split</Label>
+              </div>
+            )}
             <div className="space-y-2">
               <Label>Role Color</Label>
               <div className="flex items-center gap-3">
