@@ -1,9 +1,9 @@
-# Pot Payroll Mode — Design
+# Pot Payroll Mode - Design
 
 ## Background
 
-Feature request from TurboGFF, a venue manager, via Ehno's Aetherphone support work:
-venues that want a nightly-revenue-share payroll model instead of (or alongside) the
+Feature request from TurboGFF for XIV Venue Manager.
+Venues that want a nightly-revenue-share payroll model instead of (or alongside) the
 existing hourly/fixed pay — gross sales go into a pot, the venue takes a tax cut, the
 rest splits evenly among staff who worked. Tips can be kept individually or pooled into
 the same split. Some staff ("contractors" — photographers, court/gamba runners) set
