@@ -55,6 +55,7 @@ interface StaffMember {
     responsibilities: string | null
   } | null
   additionalRoles: { role: CustomRole }[]
+  tipPooled: boolean | null
 }
 
 interface CustomRole {
@@ -92,6 +93,10 @@ export default function ManageStaffMemberPage({
   const [selectedAdditionalRoleIds, setSelectedAdditionalRoleIds] = useState<string[]>([])
   const [isSaving, setIsSaving] = useState(false)
   const [isDeleting, setIsDeleting] = useState(false)
+  const [tipPooled, setTipPooled] = useState<boolean>(false)
+  const [potModeEnabled, setPotModeEnabled] = useState(false)
+  const [isSavingTipPooled, setIsSavingTipPooled] = useState(false)
+  const [tipPooledError, setTipPooledError] = useState("")
 
   // Unwrap params
   useEffect(() => {
@@ -140,12 +145,20 @@ export default function ManageStaffMemberPage({
         setSelectedRole(member.role)
         setSelectedCustomRole(member.roleId)
         setSelectedAdditionalRoleIds(member.additionalRoles.map((ar: { role: CustomRole }) => ar.role.id))
+        setTipPooled(member.tipPooled ?? false)
 
         // Get custom roles
         const rolesResponse = await fetch(`/api/venues/${venue.id}/roles`)
         if (rolesResponse.ok) {
           const rolesData = await rolesResponse.json()
           setCustomRoles(rolesData)
+        }
+
+        // Get pot settings
+        const potSettingsResponse = await fetch(`/api/venues/${venue.id}/pot-settings`)
+        if (potSettingsResponse.ok) {
+          const potSettingsData = await potSettingsResponse.json()
+          setPotModeEnabled(potSettingsData.settings?.enabled ?? false)
         }
       } catch (error: unknown) {
         setError(error instanceof Error ? error.message : "Failed to load staff member")
@@ -232,6 +245,34 @@ export default function ManageStaffMemberPage({
     } catch (error: unknown) {
       setError(error instanceof Error ? error.message : "Failed to remove staff member")
       setIsDeleting(false)
+    }
+  }
+
+  const handleSaveTipPooled = async (newValue: boolean) => {
+    setIsSavingTipPooled(true)
+    setTipPooledError("")
+
+    try {
+      const venueResponse = await fetch(`/api/venues?slug=${slug}`)
+      const venues = await venueResponse.json()
+      const venue = venues.find((v: { slug: string }) => v.slug === slug)
+
+      const response = await fetch(`/api/venues/${venue.id}/staff/${membershipId}`, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ tipPooled: newValue }),
+      })
+
+      if (!response.ok) {
+        const data = await response.json()
+        throw new Error(data.error || "Failed to update tip-pooling preference")
+      }
+
+      setTipPooled(newValue)
+    } catch (error: unknown) {
+      setTipPooledError(error instanceof Error ? error.message : "Failed to update tip-pooling preference")
+    } finally {
+      setIsSavingTipPooled(false)
     }
   }
 
@@ -450,6 +491,32 @@ export default function ManageStaffMemberPage({
           </Button>
         </CardContent>
       </Card>
+
+      {/* Tip Pooling */}
+      {potModeEnabled && (
+        <Card className="mb-6">
+          <CardHeader>
+            <CardTitle>Tip Pooling</CardTitle>
+            <CardDescription>
+              Pool tips into the venue's pot, or keep them individually.
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            <label className="flex items-center gap-2 cursor-pointer">
+              <input
+                type="checkbox"
+                checked={tipPooled}
+                onChange={(e) => handleSaveTipPooled(e.target.checked)}
+                disabled={isSavingTipPooled}
+              />
+              <span>Pool my tips</span>
+            </label>
+            {tipPooledError && (
+              <p className="text-sm text-red-400 mt-2">{tipPooledError}</p>
+            )}
+          </CardContent>
+        </Card>
+      )}
 
       {/* Danger Zone */}
       <Card className="border-red-200">
