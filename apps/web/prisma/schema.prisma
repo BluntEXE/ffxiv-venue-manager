@@ -27,32 +27,33 @@ model User {
   updatedAt     DateTime  @updatedAt
 
   // Relations
-  accounts               Account[]
-  sessions               Session[]
-  memberships            Membership[]
-  createdEvents          Event[]                 @relation("EventCreator")
-  createdEventTemplates  EventTemplate[]         @relation("EventTemplateCreator")
-  assignedTasks          Task[]                  @relation("AssignedTasks")
-  completedTasks         Task[]                  @relation("TaskCompleter")
-  transactions           Transaction[]
-  paidPayrollEntries     PayrollEntry[]          @relation("PayrollPaidBy")
-  feedback               Feedback[]
-  reviewedFeedback       Feedback[]              @relation("FeedbackReviewer")
-  patronLogs             PatronLog[]             @relation("PatronLogger")
-  patronLogsWorking      PatronLog[]             @relation("PatronLogWorking")
-  patronLogsReclassified PatronLog[]             @relation("PatronLogReclassifier")
-  characters             UserCharacter[]
-  apiKeys                ApiKey[]
-  refreshTokens          RefreshToken[]
-  deviceTokens           DeviceToken[]
-  pendingNotifications   PendingNotification[]
-  notificationPreference NotificationPreference?
-  venueFollows           VenueFollow[]
-  shoutTemplates         ShoutTemplate[]
-  shiftAuditLogs         ShiftAuditLog[]
-  notifications          Notification[]
-  announcementDismissals AnnouncementDismissal[]
-  announcements          Announcement[]
+  accounts                  Account[]
+  sessions                  Session[]
+  memberships               Membership[]
+  createdEvents             Event[]                 @relation("EventCreator")
+  createdEventTemplates     EventTemplate[]         @relation("EventTemplateCreator")
+  assignedTasks             Task[]                  @relation("AssignedTasks")
+  completedTasks            Task[]                  @relation("TaskCompleter")
+  transactions              Transaction[]
+  paidPayrollEntries        PayrollEntry[]          @relation("PayrollPaidBy")
+  potDistributionsGenerated PotDistribution[]       @relation("PotDistributionGeneratedBy")
+  feedback                  Feedback[]
+  reviewedFeedback          Feedback[]              @relation("FeedbackReviewer")
+  patronLogs                PatronLog[]             @relation("PatronLogger")
+  patronLogsWorking         PatronLog[]             @relation("PatronLogWorking")
+  patronLogsReclassified    PatronLog[]             @relation("PatronLogReclassifier")
+  characters                UserCharacter[]
+  apiKeys                   ApiKey[]
+  refreshTokens             RefreshToken[]
+  deviceTokens              DeviceToken[]
+  pendingNotifications      PendingNotification[]
+  notificationPreference    NotificationPreference?
+  venueFollows              VenueFollow[]
+  shoutTemplates            ShoutTemplate[]
+  shiftAuditLogs            ShiftAuditLog[]
+  notifications             Notification[]
+  announcementDismissals    AnnouncementDismissal[]
+  announcements             Announcement[]
 
   @@map("users")
 }
@@ -176,7 +177,7 @@ model Venue {
   settings     Json   @default("{\"taskVisibility\":\"all\",\"salesVisibility\":\"all\",\"revenueVisibility\":\"all\",\"eventVisibility\":\"all\",\"webhooks\":{\"taskCreated\":false,\"taskCompleted\":false,\"partakeEvent\":false,\"saleLogged\":false,\"dailySalesSummary\":false,\"staffJoined\":false},\"discordWebhooks\":{\"staff\":\"\",\"events\":\"\",\"revenue\":\"\"}}")
 
   // Venue type (owner-set category)
-  venueType     VenueType?
+  venueType VenueType?
 
   // Partake Integration
   partakeTeamId Int?
@@ -197,41 +198,43 @@ model Venue {
   updatedAt DateTime @updatedAt
 
   // Relations
-  memberships    Membership[]
-  events         Event[]
-  eventTemplates EventTemplate[]
-  roles          Role[]
-  services       Service[]
-  transactions   Transaction[]
-  tasks          Task[]
-  webhooks       Webhook[]
-  payrollEntries PayrollEntry[]
-  shifts         Shift[]
-  patronLogs     PatronLog[]
-  apiKeys        ApiKey[]
+  memberships       Membership[]
+  events            Event[]
+  eventTemplates    EventTemplate[]
+  roles             Role[]
+  services          Service[]
+  transactions      Transaction[]
+  tasks             Task[]
+  webhooks          Webhook[]
+  payrollEntries    PayrollEntry[]
+  shifts            Shift[]
+  patronLogs        PatronLog[]
+  apiKeys           ApiKey[]
   follows           VenueFollow[]
   scheduleEntries   VenueScheduleEntry[]
   venueSchedule     VenueSchedule?
   shiftSignupEmbeds ShiftSignupEmbed[]
+  venuePotSettings  VenuePotSettings?
+  potDistributions  PotDistribution[]
 
   @@map("venues")
 }
 
 model VenueScheduleEntry {
-  id              String    @id @default(cuid())
+  id              String           @id @default(cuid())
   venueId         String
-  day             Int       // 0=Sun, 1=Mon, 2=Tue, 3=Wed, 4=Thu, 5=Fri, 6=Sat
-  startHour       Int       // 0-23 UTC / Server Time
-  startMin        Int       // 0-59
-  endHour         Int?      // null = no fixed end time
+  day             Int // 0=Sun, 1=Mon, 2=Tue, 3=Wed, 4=Thu, 5=Fri, 6=Sat
+  startHour       Int // 0-23 UTC / Server Time
+  startMin        Int // 0-59
+  endHour         Int? // null = no fixed end time
   endMin          Int?
-  crossesMidnight Boolean   @default(false) // end time is next calendar day
+  crossesMidnight Boolean          @default(false) // end time is next calendar day
   interval        ScheduleInterval @default(WEEKLY)
-  weekOfMonth     Int?      // monthly only: 1=first 2=second 3=third 4=fourth 5=last
+  weekOfMonth     Int? // monthly only: 1=first 2=second 3=third 4=fourth 5=last
   commencing      DateTime? // biweekly only: anchor date to determine which weeks
-  label           String?   // optional e.g. "DJ Night"
-  createdAt       DateTime  @default(now())
-  updatedAt       DateTime  @updatedAt
+  label           String? // optional e.g. "DJ Night"
+  createdAt       DateTime         @default(now())
+  updatedAt       DateTime         @updatedAt
 
   venue Venue @relation(fields: [venueId], references: [id], onDelete: Cascade)
 
@@ -299,6 +302,7 @@ model Membership {
 
   // Compensation
   hourlyRate Decimal? @db.Decimal(10, 2) // Default hourly rate for this member at this venue
+  tipPooled  Boolean?
 
   // Temporary role system (for deputizing staff)
   temporaryRole          MembershipRole? // Elevated role while deputized
@@ -322,13 +326,15 @@ model Membership {
 }
 
 model Role {
-  id               String   @id @default(cuid())
-  venueId          String
-  name             String
-  color            String?  @default("#6366f1")
-  responsibilities String?  @db.Text
-  permissions      Json     @default("{}")
-  hourlyRate       Decimal? @db.Decimal(10, 2)
+  id                  String        @id @default(cuid())
+  venueId             String
+  name                String
+  color               String?       @default("#6366f1")
+  responsibilities    String?       @db.Text
+  permissions         Json          @default("{}")
+  hourlyRate          Decimal?      @db.Decimal(10, 2)
+  potPayoutMode       PotPayoutMode @default(STANDARD)
+  contractorSharesPot Boolean       @default(false)
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -418,13 +424,15 @@ model Event {
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
 
-  venue             Venue             @relation(fields: [venueId], references: [id], onDelete: Cascade)
-  createdBy         User              @relation("EventCreator", fields: [createdById], references: [id])
-  parentEvent       Event?            @relation("EventRecurrence", fields: [parentEventId], references: [id])
-  childEvents       Event[]           @relation("EventRecurrence")
+  venue             Venue              @relation(fields: [venueId], references: [id], onDelete: Cascade)
+  createdBy         User               @relation("EventCreator", fields: [createdById], references: [id])
+  parentEvent       Event?             @relation("EventRecurrence", fields: [parentEventId], references: [id])
+  childEvents       Event[]            @relation("EventRecurrence")
   transactions      Transaction[]
   patronLogs        PatronLog[]
   shiftSignupEmbeds ShiftSignupEmbed[]
+  shifts            Shift[]
+  potDistribution   PotDistribution?
 
   @@unique([parentEventId, startTime])
   @@index([venueId, startTime])
@@ -619,6 +627,14 @@ model Task {
 enum PaymentType {
   FIXED_SALARY // Set pay per period
   HOURLY // Pay per hour worked
+  POT_SHARE
+  CONTRACTOR_PAYOUT
+}
+
+enum PotPayoutMode {
+  STANDARD
+  POT
+  CONTRACTOR
 }
 
 model PayrollEntry {
@@ -649,19 +665,62 @@ model PayrollEntry {
   // Additional details
   notes String? @db.Text
 
+  potDistributionId String?
+
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
-  venue      Venue       @relation(fields: [venueId], references: [id], onDelete: Cascade)
-  membership Membership? @relation(fields: [membershipId], references: [id], onDelete: Cascade)
-  paidByUser User?       @relation("PayrollPaidBy", fields: [paidBy], references: [id])
-  shifts     Shift[] // Shifts covered by this payroll entry
+  venue           Venue            @relation(fields: [venueId], references: [id], onDelete: Cascade)
+  membership      Membership?      @relation(fields: [membershipId], references: [id], onDelete: Cascade)
+  paidByUser      User?            @relation("PayrollPaidBy", fields: [paidBy], references: [id])
+  shifts          Shift[] // Shifts covered by this payroll entry
+  potDistribution PotDistribution? @relation(fields: [potDistributionId], references: [id], onDelete: SetNull)
 
   @@index([venueId, periodEnd])
   @@index([membershipId, isPaid])
   @@index([venueId, isPaid])
   @@index([venueId, isManualEntry])
   @@map("payroll_entries")
+}
+
+model PotDistribution {
+  id              String   @id @default(cuid())
+  venueId         String
+  eventId         String
+  regularSales    Decimal  @db.Decimal(10, 2)
+  contractorSales Decimal  @db.Decimal(10, 2)
+  pooledTips      Decimal  @db.Decimal(10, 2)
+  taxPercent      Decimal  @db.Decimal(5, 2)
+  potTotal        Decimal  @db.Decimal(10, 2)
+  recipientCount  Int
+  perPersonShare  Decimal  @db.Decimal(10, 2)
+  generatedById   String
+  generatedAt     DateTime @default(now())
+
+  venue       Venue          @relation(fields: [venueId], references: [id], onDelete: Cascade)
+  event       Event          @relation(fields: [eventId], references: [id], onDelete: Cascade)
+  generatedBy User           @relation("PotDistributionGeneratedBy", fields: [generatedById], references: [id])
+  entries     PayrollEntry[]
+
+  @@unique([eventId])
+  @@index([venueId])
+  @@map("pot_distributions")
+}
+
+model VenuePotSettings {
+  id                String  @id @default(cuid())
+  venueId           String  @unique
+  enabled           Boolean @default(false)
+  taxPercent        Decimal @default(0) @db.Decimal(5, 2)
+  includeSalesInPot Boolean @default(false)
+  defaultTipPooled  Boolean @default(false)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  venue Venue @relation(fields: [venueId], references: [id], onDelete: Cascade)
+
+  @@map("venue_pot_settings")
 }
 
 // ============================================
@@ -787,6 +846,7 @@ model Shift {
   venueId        String
   membershipId   String?
   roleId         String?
+  eventId        String?
   payrollEntryId String? // Links to the payroll entry that paid for this shift
 
   // Schedule (set by manager when creating the shift)
@@ -824,10 +884,11 @@ model Shift {
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
-  venue        Venue         @relation(fields: [venueId], references: [id], onDelete: Cascade)
-  membership   Membership?   @relation(fields: [membershipId], references: [id], onDelete: Cascade)
-  role         Role?         @relation(fields: [roleId], references: [id], onDelete: SetNull)
-  payrollEntry PayrollEntry? @relation(fields: [payrollEntryId], references: [id], onDelete: SetNull)
+  venue        Venue           @relation(fields: [venueId], references: [id], onDelete: Cascade)
+  membership   Membership?     @relation(fields: [membershipId], references: [id], onDelete: Cascade)
+  role         Role?           @relation(fields: [roleId], references: [id], onDelete: SetNull)
+  event        Event?          @relation(fields: [eventId], references: [id], onDelete: SetNull)
+  payrollEntry PayrollEntry?   @relation(fields: [payrollEntryId], references: [id], onDelete: SetNull)
   auditLogs    ShiftAuditLog[]
 
   parentShift Shift?  @relation("ShiftRecurrence", fields: [parentShiftId], references: [id])
@@ -838,6 +899,7 @@ model Shift {
   @@index([venueId, status])
   @@index([payrollEntryId])
   @@index([roleId])
+  @@index([eventId, status])
   @@index([shiftSignupEmbedId])
   @@map("shifts")
 }
@@ -853,7 +915,7 @@ model ShiftAuditLog {
   createdAt   DateTime @default(now())
 
   shift Shift @relation(fields: [shiftId], references: [id], onDelete: Cascade)
-  actor User?  @relation(fields: [actorUserId], references: [id], onDelete: SetNull)
+  actor User? @relation(fields: [actorUserId], references: [id], onDelete: SetNull)
 
   @@index([shiftId])
   @@index([actorUserId])
@@ -865,7 +927,7 @@ model ShiftSignupEmbed {
   venueId          String
   eventId          String
   templateName     String
-  discordMessageId String @unique
+  discordMessageId String    @unique
   channelId        String
   scheduledStart   DateTime
   scheduledEnd     DateTime
