@@ -33,6 +33,11 @@ interface RoleOption {
   name: string
 }
 
+interface EventOption {
+  id: string
+  name: string
+}
+
 interface ShiftPrefill {
   mode?: "assign" | "open"
   membershipId?: string
@@ -41,6 +46,7 @@ interface ShiftPrefill {
   startTime?: string
   endTime?: string
   notes?: string
+  eventId?: string
 }
 
 interface CreateShiftDialogProps {
@@ -51,9 +57,11 @@ interface CreateShiftDialogProps {
   tzLabel?: string
   trigger?: React.ReactNode
   prefill?: ShiftPrefill
+  potModeEnabled?: boolean
+  events?: EventOption[]
 }
 
-export function CreateShiftDialog({ venueSlug, staff, roles, trigger, prefill }: CreateShiftDialogProps) {
+export function CreateShiftDialog({ venueSlug, staff, roles, trigger, prefill, potModeEnabled, events }: CreateShiftDialogProps) {
   const router = useRouter()
   const [open, setOpen] = useState(false)
   const [submitting, setSubmitting] = useState(false)
@@ -66,6 +74,7 @@ export function CreateShiftDialog({ venueSlug, staff, roles, trigger, prefill }:
   const [startTime, setStartTime] = useState(prefill?.startTime ?? "19:00")
   const [endTime, setEndTime] = useState(prefill?.endTime ?? "23:00")
   const [notes, setNotes] = useState(prefill?.notes ?? "")
+  const [eventId, setEventId] = useState(prefill?.eventId ?? "")
   const [quantity, setQuantity] = useState(1)
   const [repeating, setRepeating] = useState(false)
   const [recurrenceRule, setRecurrenceRule] = useState<"WEEKLY" | "BIWEEKLY" | "MONTHLY">("WEEKLY")
@@ -112,6 +121,7 @@ export function CreateShiftDialog({ venueSlug, staff, roles, trigger, prefill }:
             scheduledStart,
             scheduledEnd,
             notes: notes || undefined,
+            ...(eventId ? { eventId } : {}),
             ...(repeating ? { recurrenceRule } : {}),
             ...(slotGroupId ? { slotGroupId } : {}),
           }),
@@ -131,6 +141,7 @@ export function CreateShiftDialog({ venueSlug, staff, roles, trigger, prefill }:
       setStartTime(prefill?.startTime ?? "19:00")
       setEndTime(prefill?.endTime ?? "23:00")
       setNotes(prefill?.notes ?? "")
+      setEventId(prefill?.eventId ?? "")
       setQuantity(1)
       setRepeating(false)
       setRecurrenceRule("WEEKLY")
@@ -243,6 +254,31 @@ export function CreateShiftDialog({ venueSlug, staff, roles, trigger, prefill }:
                   No custom roles set up yet. Create one in Staff settings first.
                 </p>
               )}
+            </div>
+          )}
+
+          {potModeEnabled && events && events.length > 0 && (
+            <div className="space-y-2">
+              <Label htmlFor="event">Event (optional, for pot payroll)</Label>
+              <div className="flex gap-2">
+                <Select value={eventId} onValueChange={setEventId}>
+                  <SelectTrigger id="event">
+                    <SelectValue placeholder="No event" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {events.map((e) => (
+                      <SelectItem key={e.id} value={e.id}>
+                        {e.name}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+                {eventId && (
+                  <Button type="button" variant="outline" size="sm" onClick={() => setEventId("")}>
+                    Clear
+                  </Button>
+                )}
+              </div>
             </div>
           )}
 
