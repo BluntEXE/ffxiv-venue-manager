@@ -16,6 +16,7 @@ const updateStaffSchema = z.object({
   temporaryRoleExpiresAt: z.string().nullable().optional(),
   permanentRole: z.enum(["OWNER", "MANAGER", "STAFF"]).nullable().optional(),
   additionalRoleIds: z.array(z.string()).optional(),
+  tipPooled: z.boolean().nullable().optional(),
 })
 
 async function cleanupMemberData(
@@ -61,7 +62,8 @@ export const PUT = withRateLimit<{ params: Promise<{ venueId: string; membership
       const { params } = context
       const { venueId, membershipId } = await params
 
-    // Check permissions
+    // Caller's own membership at this venue (used both for the permission gate below
+    // and to detect the self-service tip-pooling-only case)
     const userMembership = await prisma.membership.findFirst({
       where: {
         userId: session.user.id,
@@ -70,7 +72,7 @@ export const PUT = withRateLimit<{ params: Promise<{ venueId: string; membership
       },
     })
 
-    if (!userMembership || !["OWNER", "MANAGER"].includes(userMembership.role)) {
+    if (!userMembership) {
       return NextResponse.json(
         { error: "You don't have permission to update staff" },
         { status: 403 }
@@ -86,15 +88,32 @@ export const PUT = withRateLimit<{ params: Promise<{ venueId: string; membership
       return NextResponse.json({ error: "Staff member not found" }, { status: 404 })
     }
 
-    // Managers cannot modify owners
-    if (userMembership.role === "MANAGER" && targetMembership.role === "OWNER") {
-      return NextResponse.json(
-        { error: "Managers cannot modify owners" },
-        { status: 403 }
-      )
+    const body = await request.json()
+
+    // A staff member may always update their own tip-pooling preference, regardless
+    // of their venue role — but only when the request touches nothing else.
+    const isSelfTipPreferenceOnly =
+      targetMembership.userId === session.user.id &&
+      Object.keys(body).length > 0 &&
+      Object.keys(body).every((k) => k === "tipPooled")
+
+    if (!isSelfTipPreferenceOnly) {
+      if (!["OWNER", "MANAGER"].includes(userMembership.role)) {
+        return NextResponse.json(
+          { error: "You don't have permission to update staff" },
+          { status: 403 }
+        )
+      }
+
+      // Managers cannot modify owners
+      if (userMembership.role === "MANAGER" && targetMembership.role === "OWNER") {
+        return NextResponse.json(
+          { error: "Managers cannot modify owners" },
+          { status: 403 }
+        )
+      }
     }
 
-    const body = await request.json()
     const validatedData = updateStaffSchema.parse(body)
 
     // Only OWNERs can grant or change role to OWNER
@@ -134,6 +153,7 @@ export const PUT = withRateLimit<{ params: Promise<{ venueId: string; membership
         : null
     }
     if (validatedData.permanentRole !== undefined) updateData.permanentRole = validatedData.permanentRole
+    if (validatedData.tipPooled !== undefined) updateData.tipPooled = validatedData.tipPooled
 
     let validAdditionalRoleIds: string[] | undefined
     if (validatedData.additionalRoleIds !== undefined) {
