@@ -11,6 +11,8 @@ const createRoleSchema = z.object({
   color: z.string().optional(),
   permissions: z.record(z.string(), z.boolean()).optional(),
   hourlyRate: z.number().positive().nullable().optional(),
+  potPayoutMode: z.enum(["STANDARD", "POT", "CONTRACTOR"]).optional(),
+  contractorSharesPot: z.boolean().optional(),
 })
 
 export const GET = withRateLimit<{ params: Promise<{ venueId: string }> }>(
@@ -128,6 +130,8 @@ export const POST = withRateLimit<{ params: Promise<{ venueId: string }> }>(
         color: validatedData.color,
         permissions: validatedData.permissions || {},
         hourlyRate: validatedData.hourlyRate,
+        potPayoutMode: validatedData.potPayoutMode,
+        contractorSharesPot: validatedData.contractorSharesPot,
       },
     })
 

@@ -11,6 +11,8 @@ const updateRoleSchema = z.object({
   color: z.string().optional(),
   permissions: z.record(z.string(), z.boolean()).optional(),
   hourlyRate: z.number().positive().nullable().optional(),
+  potPayoutMode: z.enum(["STANDARD", "POT", "CONTRACTOR"]).optional(),
+  contractorSharesPot: z.boolean().optional(),
 })
 
 export const GET = withRateLimit<{ params: Promise<{ venueId: string; roleId: string }> }>(
