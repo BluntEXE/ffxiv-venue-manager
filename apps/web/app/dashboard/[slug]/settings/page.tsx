@@ -117,6 +117,13 @@ export default function SettingsPage({
   const [shiftBotChannelId, setShiftBotChannelId] = useState("")
   const [shiftBotDaysBefore, setShiftBotDaysBefore] = useState(3)
   const [shiftBotThumbnailUrl, setShiftBotThumbnailUrl] = useState("")
+  const [potEnabled, setPotEnabled] = useState(false)
+  const [potTaxPercent, setPotTaxPercent] = useState(0)
+  const [potIncludeSalesInPot, setPotIncludeSalesInPot] = useState(false)
+  const [potDefaultTipPooled, setPotDefaultTipPooled] = useState(false)
+  const [isSavingPotSettings, setIsSavingPotSettings] = useState(false)
+  const [potSettingsError, setPotSettingsError] = useState("")
+  const [potSettingsSuccess, setPotSettingsSuccess] = useState(false)
   const [shiftBotTemplates, setShiftBotTemplates] = useState<Array<{
     name: string; startOffsetHours: number; durationHours: number; slots: number
   }>>([])
@@ -206,6 +213,17 @@ export default function SettingsPage({
             setScheduleLoaded(true)
           })
           .catch(() => setScheduleLoaded(true))
+
+        fetch(`/api/venues/${venue.id}/pot-settings`)
+          .then(r => r.ok ? r.json() : null)
+          .then((data) => {
+            if (!data) return
+            setPotEnabled(data.settings.enabled)
+            setPotTaxPercent(data.settings.taxPercent)
+            setPotIncludeSalesInPot(data.settings.includeSalesInPot)
+            setPotDefaultTipPooled(data.settings.defaultTipPooled)
+          })
+          .catch(() => {})
       } catch (error: unknown) {
         setError(error instanceof Error ? error.message : "Failed to load settings")
       } finally {
@@ -401,6 +419,33 @@ export default function SettingsPage({
       setFfxivVenueSyncedAt(null)
     } finally {
       setFfxivUnlinking(false)
+    }
+  }
+
+  async function handleSavePotSettings() {
+    setIsSavingPotSettings(true)
+    setPotSettingsError("")
+    setPotSettingsSuccess(false)
+    try {
+      const res = await fetch(`/api/venues/${venueId}/pot-settings`, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          enabled: potEnabled,
+          taxPercent: potTaxPercent,
+          includeSalesInPot: potIncludeSalesInPot,
+          defaultTipPooled: potDefaultTipPooled,
+        }),
+      })
+      if (!res.ok) {
+        const err = await res.json()
+        throw new Error(err.error ?? "Failed to save pot payroll settings")
+      }
+      setPotSettingsSuccess(true)
+    } catch (e) {
+      setPotSettingsError(e instanceof Error ? e.message : "Failed to save pot payroll settings")
+    } finally {
+      setIsSavingPotSettings(false)
     }
   }
 
@@ -1013,6 +1058,70 @@ export default function SettingsPage({
                           </div>
                         ))}
                       </div>
+                    </div>
+                  </div>
+                )}
+              </div>
+            </section>
+
+            {/* ── Pot Payroll ── */}
+            <section className="panel">
+              <div className="ph"><span className="pt"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><circle cx="12" cy="12" r="8"/><path d="M12 8v8"/><path d="M9 10.5a2.5 2.5 0 0 1 2.5-2.5h1a2.5 2.5 0 0 1 0 5h-1a2.5 2.5 0 0 0 0 5h1a2.5 2.5 0 0 0 2.5-2.5"/></svg>Pot Payroll</span></div>
+              <div className="introw" style={{ flexWrap: "wrap", gap: 14 }}>
+                <span className="iconbadge ii" style={{ width: 40, height: 40 }}>
+                  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><circle cx="12" cy="12" r="8"/><path d="M12 8v8"/><path d="M9 10.5a2.5 2.5 0 0 1 2.5-2.5h1a2.5 2.5 0 0 1 0 5h-1a2.5 2.5 0 0 0 0 5h1a2.5 2.5 0 0 0 2.5-2.5"/></svg>
+                </span>
+                <div className="iinfo">
+                  <div className="iname">Pot Payroll</div>
+                  <div className="idesc">Nightly revenue/tip pooling instead of (or alongside) hourly pay</div>
+                </div>
+                <label className="flex items-center gap-2 cursor-pointer ml-auto shrink-0">
+                  <input
+                    type="checkbox"
+                    checked={potEnabled}
+                    onChange={(e) => setPotEnabled(e.target.checked)}
+                    className="rounded"
+                  />
+                  <span className="text-sm">{potEnabled ? "Enabled" : "Disabled"}</span>
+                </label>
+                {potEnabled && (
+                  <div className="w-full pl-[54px] space-y-4">
+                    <div>
+                      <label className="block text-sm font-medium mb-1">Tax percent</label>
+                      <input
+                        type="number"
+                        min={0}
+                        max={100}
+                        step="0.01"
+                        value={potTaxPercent}
+                        onChange={(e) => setPotTaxPercent(Number(e.target.value))}
+                        className="rounded-[var(--radius-sm)] border border-[var(--blue-015)] bg-background px-3 py-1.5 text-sm focus:border-[var(--blue-035)] focus:outline-none w-24 text-center"
+                      />
+                    </div>
+                    <label className="flex items-center gap-2 cursor-pointer">
+                      <input
+                        type="checkbox"
+                        checked={potIncludeSalesInPot}
+                        onChange={(e) => setPotIncludeSalesInPot(e.target.checked)}
+                        className="rounded"
+                      />
+                      <span className="text-sm">Include regular sales in the pot (off = tips-only pot)</span>
+                    </label>
+                    <label className="flex items-center gap-2 cursor-pointer">
+                      <input
+                        type="checkbox"
+                        checked={potDefaultTipPooled}
+                        onChange={(e) => setPotDefaultTipPooled(e.target.checked)}
+                        className="rounded"
+                      />
+                      <span className="text-sm">Default new staff to pooling their tips</span>
+                    </label>
+                    <div className="flex items-center gap-3">
+                      <Button type="button" variant="outline-blue" size="sm" onClick={handleSavePotSettings} disabled={isSavingPotSettings}>
+                        {isSavingPotSettings ? "Saving…" : "Save Pot Payroll Settings"}
+                      </Button>
+                      {potSettingsSuccess && <span className="text-xs text-green-400">Saved</span>}
+                      {potSettingsError && <span className="text-xs text-red-400">{potSettingsError}</span>}
                     </div>
                   </div>
                 )}
