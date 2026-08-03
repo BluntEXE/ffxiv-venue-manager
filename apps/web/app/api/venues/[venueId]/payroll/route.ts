@@ -104,6 +104,7 @@ export const GET = withRateLimit<{ params: Promise<{ venueId: string }> }>(
               displayName: true,
             },
           },
+          potDistribution: true,
         },
         orderBy: {
           periodEnd: "desc",

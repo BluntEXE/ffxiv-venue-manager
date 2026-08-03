@@ -1,6 +1,6 @@
 "use client"
 
-import { useEffect, useState } from "react"
+import { Fragment, useEffect, useState } from "react"
 import { useSession } from "next-auth/react"
 import { useParams, useRouter } from "next/navigation"
 import { Button } from "@/components/ui/button"
@@ -43,7 +43,7 @@ import { resolveDisplayName } from "@/lib/display-name"
 
 interface PayrollEntry {
   id: string
-  paymentType: "FIXED_SALARY" | "HOURLY"
+  paymentType: "FIXED_SALARY" | "HOURLY" | "POT_SHARE" | "CONTRACTOR_PAYOUT"
   baseRate: string
   hoursWorked: string | null
   bonusAmount: string | null
@@ -76,6 +76,15 @@ interface PayrollEntry {
     id: string
     name: string | null
     displayName: string | null
+  } | null
+  potDistribution: {
+    eventId: string
+    regularSales: string
+    contractorSales: string
+    pooledTips: string
+    potTotal: string
+    recipientCount: number
+    perPersonShare: string
   } | null
 }
 
@@ -139,6 +148,16 @@ export default function PayrollPage() {
   const [dateTo, setDateTo] = useState("")
   const [isCreating, setIsCreating] = useState(false)
   const [updatingId, setUpdatingId] = useState<string | null>(null)
+  const [expandedEntryIds, setExpandedEntryIds] = useState<Set<string>>(new Set())
+
+  function toggleExpanded(entryId: string) {
+    setExpandedEntryIds((prev) => {
+      const next = new Set(prev)
+      if (next.has(entryId)) next.delete(entryId)
+      else next.add(entryId)
+      return next
+    })
+  }
 
   // Form state
   const [isManualEntry, setIsManualEntry] = useState(false)
@@ -1104,7 +1123,8 @@ export default function PayrollPage() {
                   const initials = name.charAt(0).toUpperCase()
                   const total = Math.round(parseFloat(entry.totalAmount))
                   return (
-                    <tr key={entry.id} className="border-b border-[var(--blue-008)] last:border-0 hover:bg-[var(--blue-004)] transition-colors">
+                    <Fragment key={entry.id}>
+                    <tr className="border-b border-[var(--blue-008)] last:border-0 hover:bg-[var(--blue-004)] transition-colors">
                       {/* Staff */}
                       <td className="xiv-td">
                         <div className="flex items-center gap-3">
@@ -1133,6 +1153,15 @@ export default function PayrollPage() {
                         </span>
                         {entry.bonusAmount && parseFloat(entry.bonusAmount) > 0 && (
                           <p className="text-[0.68rem] text-emerald-400">+{parseFloat(entry.bonusAmount).toLocaleString()} bonus</p>
+                        )}
+                        {(entry.paymentType === "POT_SHARE" || entry.paymentType === "CONTRACTOR_PAYOUT") && entry.potDistribution && (
+                          <button
+                            type="button"
+                            className="text-[0.68rem] text-[var(--fg-faint)] underline hover:text-[var(--xiv-blue)] mt-0.5"
+                            onClick={() => toggleExpanded(entry.id)}
+                          >
+                            {expandedEntryIds.has(entry.id) ? "Hide" : "Show"} breakdown
+                          </button>
                         )}
                       </td>
                       {/* Status */}
@@ -1168,6 +1197,19 @@ export default function PayrollPage() {
                         </div>
                       </td>
                     </tr>
+                    {expandedEntryIds.has(entry.id) && entry.potDistribution && (
+                      <tr className="border-b border-[var(--blue-008)] last:border-0 bg-[var(--blue-004)]">
+                        <td colSpan={6} className="px-5 py-3 text-xs text-muted-foreground">
+                          Regular sales: {Number(entry.potDistribution.regularSales).toLocaleString()} gil
+                          {" · "}Contractor sales: {Number(entry.potDistribution.contractorSales).toLocaleString()} gil
+                          {" · "}Pooled tips: {Number(entry.potDistribution.pooledTips).toLocaleString()} gil
+                          {" · "}Pot total: {Number(entry.potDistribution.potTotal).toLocaleString()} gil
+                          {" · "}Recipients: {entry.potDistribution.recipientCount}
+                          {" · "}Per person: {Number(entry.potDistribution.perPersonShare).toLocaleString()} gil
+                        </td>
+                      </tr>
+                    )}
+                    </Fragment>
                   )
                 })}
               </tbody>
