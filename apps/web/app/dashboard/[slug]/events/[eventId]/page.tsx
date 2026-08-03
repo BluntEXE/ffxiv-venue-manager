@@ -9,6 +9,7 @@ import { Badge } from "@/components/ui/badge"
 import { prisma } from "@/lib/prisma"
 import { DeleteEventButton } from "@/components/delete-event-button"
 import { CancelSeriesButton } from "@/components/cancel-series-button"
+import { GeneratePotPayrollButton } from "@/components/generate-pot-payroll-button"
 import { EventAttendanceChart } from "@/components/event-attendance-chart"
 import { ServerTime } from "@/components/server-time"
 import { SERVER_TIME_LABEL } from "@/lib/server-time"
@@ -55,6 +56,7 @@ export default async function EventDetailsPage({
           userId: session.user.id,
         },
       },
+      venuePotSettings: true,
     },
   })
 
@@ -72,6 +74,7 @@ export default async function EventDetailsPage({
           image: true,
         },
       },
+      potDistribution: true,
     },
   })
 
@@ -81,6 +84,7 @@ export default async function EventDetailsPage({
 
   const userRole = venue.memberships[0].role
   const canEdit = ["OWNER", "MANAGER"].includes(userRole)
+  const potModeEnabled = venue.venuePotSettings?.enabled ?? false
 
   return (
     <VenueLayout venueSlug={venue.slug} venueName={venue.name} userRole={userRole}>
@@ -275,6 +279,31 @@ export default async function EventDetailsPage({
               </div>
             </CardContent>
           </Card>
+
+          {/* Pot Payroll */}
+          {event.status === "COMPLETED" && potModeEnabled && canEdit && (
+            <Card>
+              <CardHeader>
+                <CardTitle>Pot Payroll</CardTitle>
+                <CardDescription>Generate the nightly pot split for this event.</CardDescription>
+              </CardHeader>
+              <CardContent>
+                <GeneratePotPayrollButton
+                  venueSlug={slug}
+                  eventId={eventId}
+                  existingDistribution={
+                    event.potDistribution
+                      ? {
+                          generatedAt: event.potDistribution.generatedAt.toISOString(),
+                          recipientCount: event.potDistribution.recipientCount,
+                          perPersonShare: event.potDistribution.perPersonShare.toString(),
+                        }
+                      : null
+                  }
+                />
+              </CardContent>
+            </Card>
+          )}
 
           {/* Partake Source */}
           {event.partakeEventId && (
