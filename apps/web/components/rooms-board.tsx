@@ -61,6 +61,10 @@ export function RoomsBoard({
         body: JSON.stringify({ isOccupied: nextOccupied, note: room.note ?? undefined }),
       })
       if (!res.ok) throw new Error("request failed")
+      const updated = await res.json()
+      setLocalRooms((prev) =>
+        prev.map((r) => (r.id === room.id ? { ...r, isOccupied: updated.isOccupied, note: updated.note } : r))
+      )
     } catch {
       setLocalRooms((prev) =>
         prev.map((r) => (r.id === room.id ? { ...r, isOccupied: room.isOccupied } : r))
@@ -91,6 +95,10 @@ export function RoomsBoard({
         body: JSON.stringify({ isOccupied: room.isOccupied, note: trimmed || undefined }),
       })
       if (!res.ok) throw new Error("request failed")
+      const updated = await res.json()
+      setLocalRooms((prev) =>
+        prev.map((r) => (r.id === room.id ? { ...r, isOccupied: updated.isOccupied, note: updated.note } : r))
+      )
     } catch {
       setLocalRooms((prev) =>
         prev.map((r) => (r.id === room.id ? { ...r, note: prevNote } : r))
@@ -133,7 +141,8 @@ export function RoomsBoard({
     const name = renameInput.trim()
     setRenamingId(null)
     setRenameInput("")
-    if (!name || name === room.name) return
+    if (!name || name === room.name || pendingIds.has(room.id)) return
+    setPendingIds((prev) => new Set(prev).add(room.id))
     const prevName = room.name
     setLocalRooms((prev) => prev.map((r) => (r.id === room.id ? { ...r, name } : r)))
     try {
@@ -146,6 +155,12 @@ export function RoomsBoard({
     } catch {
       setLocalRooms((prev) => prev.map((r) => (r.id === room.id ? { ...r, name: prevName } : r)))
       alert("Failed to rename room.")
+    } finally {
+      setPendingIds((prev) => {
+        const next = new Set(prev)
+        next.delete(room.id)
+        return next
+      })
     }
   }
 
