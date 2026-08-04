@@ -209,7 +209,7 @@ export async function getVenueRoles(venueId: string, userId: string) {
 export async function checkPermission(
   userId: string,
   venueId: string,
-  action: 'view' | 'log_service' | 'log_transaction' | 'log_patron' | 'view_shifts' | 'clock_shift'
+  action: 'view' | 'log_service' | 'log_transaction' | 'log_patron' | 'view_shifts' | 'clock_shift' | 'toggle_room'
 ): Promise<boolean> {
   const membership = await prisma.membership.findFirst({
     where: {
@@ -238,7 +238,8 @@ export async function checkPermission(
       action === 'log_patron' ||
       action === 'log_transaction' ||
       action === 'view_shifts' ||
-      action === 'clock_shift'
+      action === 'clock_shift' ||
+      action === 'toggle_room'
     )
   }
   

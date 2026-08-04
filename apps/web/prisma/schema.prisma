@@ -44,6 +44,7 @@ model User {
   patronLogsReclassified    PatronLog[]             @relation("PatronLogReclassifier")
   vipPatronsSet             Patron[]                @relation("PatronVipSetBy")
   bannedPatronsSet          Patron[]                @relation("PatronBannedBy")
+  roomsUpdated              Room[]
   characters                UserCharacter[]
   apiKeys                   ApiKey[]
   refreshTokens             RefreshToken[]
@@ -212,6 +213,7 @@ model Venue {
   shifts            Shift[]
   patronLogs        PatronLog[]
   patrons           Patron[]
+  rooms             Room[]
   apiKeys           ApiKey[]
   follows           VenueFollow[]
   scheduleEntries   VenueScheduleEntry[]
@@ -537,6 +539,23 @@ model Patron {
   @@index([venueId, isVip])
   @@index([venueId, isBanned])
   @@map("patrons")
+}
+
+model Room {
+  id          String   @id @default(cuid())
+  venueId     String
+  name        String
+  isOccupied  Boolean  @default(false)
+  note        String?
+  updatedAt   DateTime @updatedAt
+  updatedById String?
+
+  venue     Venue @relation(fields: [venueId], references: [id], onDelete: Cascade)
+  updatedBy User? @relation(fields: [updatedById], references: [id], onDelete: SetNull)
+
+  @@unique([venueId, name])
+  @@index([venueId])
+  @@map("rooms")
 }
 
 // ============================================
