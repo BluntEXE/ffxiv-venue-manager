@@ -525,10 +525,11 @@ model Patron {
   createdAt     DateTime  @default(now())
 
   venue    Venue @relation(fields: [venueId], references: [id], onDelete: Cascade)
-  vipSetBy User? @relation(fields: [vipSetById], references: [id])
+  vipSetBy User? @relation(fields: [vipSetById], references: [id], onDelete: SetNull)
 
   @@unique([venueId, characterName, world])
   @@index([venueId, isVip])
+  @@map("patrons")
 }
 
 // ============================================
