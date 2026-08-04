@@ -84,6 +84,7 @@ export default function RolesPage({
   const [roles, setRoles] = useState<Role[]>([])
   const [isLoading, setIsLoading] = useState(true)
   const [error, setError] = useState("")
+  const [potModeEnabled, setPotModeEnabled] = useState(false)
 
   // Form state
   const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false)
@@ -128,6 +129,12 @@ export default function RolesPage({
 
         const rolesData = await rolesResponse.json()
         setRoles(rolesData)
+
+        const potSettingsResponse = await fetch(`/api/venues/${venue.id}/pot-settings`)
+        if (potSettingsResponse.ok) {
+          const potSettingsData = await potSettingsResponse.json()
+          setPotModeEnabled(potSettingsData.settings?.enabled ?? false)
+        }
       } catch (error: unknown) {
         setError(error instanceof Error ? error.message : "Failed to load roles")
       } finally {
@@ -459,36 +466,40 @@ export default function RolesPage({
                 disabled={isSubmitting}
               />
             </div>
-            <div className="space-y-2">
-              <Label htmlFor="create-payout-mode">Pot Payroll Mode</Label>
-              <Select
-                value={formData.potPayoutMode}
-                onValueChange={(v) =>
-                  setFormData({ ...formData, potPayoutMode: v as typeof formData.potPayoutMode })
-                }
-                disabled={isSubmitting}
-              >
-                <SelectTrigger id="create-payout-mode">
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="STANDARD">Standard (unaffected by pot payroll)</SelectItem>
-                  <SelectItem value="POT">Pot (shares equally in the pot split)</SelectItem>
-                  <SelectItem value="CONTRACTOR">Contractor (own priced services)</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-            {formData.potPayoutMode === "CONTRACTOR" && (
-              <div className="flex items-center gap-2">
-                <input
-                  type="checkbox"
-                  id="create-contractor-shares-pot"
-                  checked={formData.contractorSharesPot}
-                  onChange={(e) => setFormData({ ...formData, contractorSharesPot: e.target.checked })}
-                  disabled={isSubmitting}
-                />
-                <Label htmlFor="create-contractor-shares-pot">Also shares in the pot split</Label>
-              </div>
+            {potModeEnabled && (
+              <>
+                <div className="space-y-2">
+                  <Label htmlFor="create-payout-mode">Pot Payroll Mode</Label>
+                  <Select
+                    value={formData.potPayoutMode}
+                    onValueChange={(v) =>
+                      setFormData({ ...formData, potPayoutMode: v as typeof formData.potPayoutMode })
+                    }
+                    disabled={isSubmitting}
+                  >
+                    <SelectTrigger id="create-payout-mode">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="STANDARD">Standard (unaffected by pot payroll)</SelectItem>
+                      <SelectItem value="POT">Pot (shares equally in the pot split)</SelectItem>
+                      <SelectItem value="CONTRACTOR">Contractor (own priced services)</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+                {formData.potPayoutMode === "CONTRACTOR" && (
+                  <div className="flex items-center gap-2">
+                    <input
+                      type="checkbox"
+                      id="create-contractor-shares-pot"
+                      checked={formData.contractorSharesPot}
+                      onChange={(e) => setFormData({ ...formData, contractorSharesPot: e.target.checked })}
+                      disabled={isSubmitting}
+                    />
+                    <Label htmlFor="create-contractor-shares-pot">Also shares in the pot split</Label>
+                  </div>
+                )}
+              </>
             )}
             <div className="space-y-2">
               <Label>Role Color</Label>
@@ -617,36 +628,40 @@ export default function RolesPage({
                 disabled={isSubmitting}
               />
             </div>
-            <div className="space-y-2">
-              <Label htmlFor="edit-payout-mode">Pot Payroll Mode</Label>
-              <Select
-                value={formData.potPayoutMode}
-                onValueChange={(v) =>
-                  setFormData({ ...formData, potPayoutMode: v as typeof formData.potPayoutMode })
-                }
-                disabled={isSubmitting}
-              >
-                <SelectTrigger id="edit-payout-mode">
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="STANDARD">Standard (unaffected by pot payroll)</SelectItem>
-                  <SelectItem value="POT">Pot (shares equally in the pot split)</SelectItem>
-                  <SelectItem value="CONTRACTOR">Contractor (own priced services)</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-            {formData.potPayoutMode === "CONTRACTOR" && (
-              <div className="flex items-center gap-2">
-                <input
-                  type="checkbox"
-                  id="edit-contractor-shares-pot"
-                  checked={formData.contractorSharesPot}
-                  onChange={(e) => setFormData({ ...formData, contractorSharesPot: e.target.checked })}
-                  disabled={isSubmitting}
-                />
-                <Label htmlFor="edit-contractor-shares-pot">Also shares in the pot split</Label>
-              </div>
+            {potModeEnabled && (
+              <>
+                <div className="space-y-2">
+                  <Label htmlFor="edit-payout-mode">Pot Payroll Mode</Label>
+                  <Select
+                    value={formData.potPayoutMode}
+                    onValueChange={(v) =>
+                      setFormData({ ...formData, potPayoutMode: v as typeof formData.potPayoutMode })
+                    }
+                    disabled={isSubmitting}
+                  >
+                    <SelectTrigger id="edit-payout-mode">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="STANDARD">Standard (unaffected by pot payroll)</SelectItem>
+                      <SelectItem value="POT">Pot (shares equally in the pot split)</SelectItem>
+                      <SelectItem value="CONTRACTOR">Contractor (own priced services)</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+                {formData.potPayoutMode === "CONTRACTOR" && (
+                  <div className="flex items-center gap-2">
+                    <input
+                      type="checkbox"
+                      id="edit-contractor-shares-pot"
+                      checked={formData.contractorSharesPot}
+                      onChange={(e) => setFormData({ ...formData, contractorSharesPot: e.target.checked })}
+                      disabled={isSubmitting}
+                    />
+                    <Label htmlFor="edit-contractor-shares-pot">Also shares in the pot split</Label>
+                  </div>
+                )}
+              </>
             )}
             <div className="space-y-2">
               <Label>Role Color</Label>
