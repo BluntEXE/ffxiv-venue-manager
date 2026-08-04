@@ -1,0 +1,93 @@
+import { NextRequest, NextResponse } from 'next/server'
+import { validateApiKey, checkPermission } from '@/lib/api/plugin-auth'
+import { enforcePluginRateLimit, enforcePluginIpRateLimit } from '@/lib/api/plugin-rate-limit'
+import { prisma } from '@/lib/prisma'
+import { venueEventBus } from '@/lib/sse/venue-events'
+
+interface SetRoomStatusPayload {
+  venueId: string
+  roomId: string
+  isOccupied: boolean
+  note?: string
+}
+
+/**
+ * POST /api/plugin/rooms/status
+ *
+ * Toggle a room's status from the plugin's Rooms tab. Any active
+ * staff member (via checkPermission's 'toggle_room' action) — not
+ * OWNER/MANAGER only, unlike the ban write endpoint. Also broadcasts
+ * to the dashboard's live SSE feed, same as the web status route.
+ */
+export async function POST(request: NextRequest) {
+  try {
+    const __ipLimited = await enforcePluginIpRateLimit(request)
+    if (__ipLimited) return __ipLimited
+
+    const apiKey = request.headers.get('x-api-key')
+    if (!apiKey) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+
+    const auth = await validateApiKey(apiKey)
+    if (!auth || !auth.userId) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+    }
+
+    const limited = await enforcePluginRateLimit(apiKey, 'write')
+    if (limited) return limited
+
+    const body: SetRoomStatusPayload = await request.json()
+    const { venueId, roomId, isOccupied, note } = body
+
+    if (!venueId || !roomId || typeof isOccupied !== 'boolean') {
+      return NextResponse.json(
+        { error: 'Missing required fields: venueId, roomId, isOccupied' },
+        { status: 400 }
+      )
+    }
+
+    if (!auth.venues.includes(venueId)) {
+      return NextResponse.json({ error: 'Invalid venue' }, { status: 400 })
+    }
+
+    const canToggle = await checkPermission(auth.userId, venueId, 'toggle_room')
+    if (!canToggle) {
+      return NextResponse.json({ error: 'Permission denied' }, { status: 403 })
+    }
+
+    const room = await prisma.room.findFirst({ where: { id: roomId, venueId } })
+    if (!room) {
+      return NextResponse.json({ error: 'Room not found in this venue' }, { status: 404 })
+    }
+
+    const updated = await prisma.room.update({
+      where: { id: roomId },
+      data: {
+        isOccupied,
+        // Preserve room.note when `note` is omitted from the request;
+        // only clear it when the caller sends an explicit empty string.
+        note: note !== undefined ? note.trim() || null : room.note,
+        updatedById: auth.userId,
+      },
+      include: { updatedBy: { select: { name: true } } },
+    })
+
+    venueEventBus.emit(venueId, {
+      id: `room-${updated.id}-${updated.updatedAt.getTime()}`,
+      type: 'room_status',
+      venueId,
+      timestamp: updated.updatedAt.toISOString(),
+      data: {
+        roomId: updated.id,
+        name: updated.name,
+        isOccupied: updated.isOccupied,
+        note: updated.note,
+        updatedByName: updated.updatedBy?.name ?? null,
+      },
+    })
+
+    return NextResponse.json({ success: true })
+  } catch (error) {
+    console.error('[Plugin API] Error setting room status:', error)
+    return NextResponse.json({ error: 'Internal server error' }, { status: 500 })
+  }
+}
