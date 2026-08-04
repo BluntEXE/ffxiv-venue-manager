@@ -1157,7 +1157,7 @@ export default function PayrollPage() {
                         {(entry.paymentType === "POT_SHARE" || entry.paymentType === "CONTRACTOR_PAYOUT") && entry.potDistribution && (
                           <button
                             type="button"
-                            className="text-[0.68rem] text-[var(--fg-faint)] underline hover:text-[var(--xiv-blue)] mt-0.5"
+                            className="block text-[0.68rem] text-[var(--fg-faint)] underline hover:text-[var(--xiv-blue)] mt-1"
                             onClick={() => toggleExpanded(entry.id)}
                           >
                             {expandedEntryIds.has(entry.id) ? "Hide" : "Show"} breakdown
