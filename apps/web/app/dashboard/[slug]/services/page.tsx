@@ -42,6 +42,7 @@ import {
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog"
 import { PageLoading } from "@/components/ui/loading-spinner"
+import { ItemSearchCombobox } from "@/components/item-search-combobox"
 
 interface Role {
   id: string
@@ -60,6 +61,10 @@ interface Service {
   _count?: {
     transactions: number
   }
+  linkedItemId?: number | null
+  linkedItemName?: string | null
+  linkedItemIcon?: number | null
+  stockCount?: number | null
 }
 
 
@@ -70,6 +75,8 @@ export default function ServicesPage({
 }) {
   const router = useRouter()
   const [slug, setSlug] = useState<string>("")
+  const [venueId, setVenueId] = useState<string>("")
+  const [inventoryEnabled, setInventoryEnabled] = useState(false)
   const [services, setServices] = useState<Service[]>([])
   const [roles, setRoles] = useState<Role[]>([])
   const [isLoading, setIsLoading] = useState(true)
@@ -85,6 +92,8 @@ export default function ServicesPage({
     price: "",
     selectedRoleIds: [] as string[],
     isActive: true,
+    linkedItem: null as { itemId: number; name: string; iconId: number | null } | null,
+    stockCount: "" as string,
   })
   const [formError, setFormError] = useState("")
   const [categoryFilter, setCategoryFilter] = useState("All")
@@ -112,11 +121,17 @@ export default function ServicesPage({
         const venues = await venueResponse.json()
         const venue = venues.find((v: { slug: string }) => v.slug === slug)
         if (!venue) throw new Error("Venue not found")
+        setVenueId(venue.id)
 
-        // Get services and roles
+        // Get services, roles, and inventory settings
         const [servicesResponse, rolesResponse] = await Promise.all([
           fetch(`/api/venues/${venue.id}/services`),
           fetch(`/api/venues/${venue.id}/roles`),
+          fetch(`/api/venues/${venue.id}/inventory-settings`)
+            .then((r) => (r.ok ? r.json() : null))
+            .then((data) => {
+              if (data) setInventoryEnabled(data.settings.enabled)
+            }),
         ])
 
         if (!servicesResponse.ok) throw new Error("Failed to fetch services")
@@ -147,12 +162,7 @@ export default function ServicesPage({
     setFormError("")
 
     try {
-      // Get venue ID
-      const venueResponse = await fetch(`/api/venues`)
-      const venues = await venueResponse.json()
-      const venue = venues.find((v: { slug: string }) => v.slug === slug)
-
-      const response = await fetch(`/api/venues/${venue.id}/services`, {
+      const response = await fetch(`/api/venues/${venueId}/services`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
@@ -161,6 +171,10 @@ export default function ServicesPage({
           price: parseFloat(formData.price),
           roleIds: formData.selectedRoleIds,
           isActive: formData.isActive,
+          linkedItemId: formData.linkedItem?.itemId ?? null,
+          linkedItemName: formData.linkedItem?.name ?? null,
+          linkedItemIcon: formData.linkedItem?.iconId ?? null,
+          stockCount: formData.stockCount.trim() === "" ? null : parseInt(formData.stockCount, 10),
         }),
       })
 
@@ -172,7 +186,7 @@ export default function ServicesPage({
       const newService = await response.json()
       setServices([newService, ...services])
       setIsCreateDialogOpen(false)
-      setFormData({ name: "", description: "", price: "", selectedRoleIds: [] as string[], isActive: true })
+      setFormData({ name: "", description: "", price: "", selectedRoleIds: [] as string[], isActive: true, linkedItem: null, stockCount: "" })
     } catch (error: unknown) {
       setFormError(error instanceof Error ? error.message : "Failed to create service")
     } finally {
@@ -190,13 +204,8 @@ export default function ServicesPage({
     setFormError("")
 
     try {
-      // Get venue ID
-      const venueResponse = await fetch(`/api/venues`)
-      const venues = await venueResponse.json()
-      const venue = venues.find((v: { slug: string }) => v.slug === slug)
-
       const response = await fetch(
-        `/api/venues/${venue.id}/services/${editingService.id}`,
+        `/api/venues/${venueId}/services/${editingService.id}`,
         {
           method: "PUT",
           headers: { "Content-Type": "application/json" },
@@ -206,6 +215,10 @@ export default function ServicesPage({
             price: parseFloat(formData.price),
             roleIds: formData.selectedRoleIds,
             isActive: formData.isActive,
+            linkedItemId: formData.linkedItem?.itemId ?? null,
+            linkedItemName: formData.linkedItem?.name ?? null,
+            linkedItemIcon: formData.linkedItem?.iconId ?? null,
+            stockCount: formData.stockCount.trim() === "" ? null : parseInt(formData.stockCount, 10),
           }),
         }
       )
@@ -219,7 +232,7 @@ export default function ServicesPage({
       setServices(services.map((s) => (s.id === updatedService.id ? updatedService : s)))
       setIsEditDialogOpen(false)
       setEditingService(null)
-      setFormData({ name: "", description: "", price: "", selectedRoleIds: [] as string[], isActive: true })
+      setFormData({ name: "", description: "", price: "", selectedRoleIds: [] as string[], isActive: true, linkedItem: null, stockCount: "" })
     } catch (error: unknown) {
       setFormError(error instanceof Error ? error.message : "Failed to update service")
     } finally {
@@ -229,12 +242,7 @@ export default function ServicesPage({
 
   const handleDeleteService = async (service: Service) => {
     try {
-      // Get venue ID
-      const venueResponse = await fetch(`/api/venues`)
-      const venues = await venueResponse.json()
-      const venue = venues.find((v: { slug: string }) => v.slug === slug)
-
-      const response = await fetch(`/api/venues/${venue.id}/services/${service.id}`, {
+      const response = await fetch(`/api/venues/${venueId}/services/${service.id}`, {
         method: "DELETE",
       })
 
@@ -251,10 +259,7 @@ export default function ServicesPage({
 
   const handleToggleService = async (service: Service) => {
     try {
-      const venueResponse = await fetch(`/api/venues`)
-      const venues = await venueResponse.json()
-      const venue = venues.find((v: { slug: string }) => v.slug === slug)
-      const response = await fetch(`/api/venues/${venue.id}/services/${service.id}`, {
+      const response = await fetch(`/api/venues/${venueId}/services/${service.id}`, {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ isActive: !service.isActive }),
@@ -275,13 +280,17 @@ export default function ServicesPage({
       price: service.price.toString(),
       selectedRoleIds: service.roles?.map(r => r.id) || [],
       isActive: service.isActive,
+      linkedItem: service.linkedItemId
+        ? { itemId: service.linkedItemId, name: service.linkedItemName ?? "", iconId: service.linkedItemIcon ?? null }
+        : null,
+      stockCount: service.stockCount != null ? String(service.stockCount) : "",
     })
     setFormError("")
     setIsEditDialogOpen(true)
   }
 
   const openCreateDialog = () => {
-    setFormData({ name: "", description: "", price: "", selectedRoleIds: [] as string[], isActive: true })
+    setFormData({ name: "", description: "", price: "", selectedRoleIds: [] as string[], isActive: true, linkedItem: null, stockCount: "" })
     setFormError("")
     setIsCreateDialogOpen(true)
   }
@@ -387,6 +396,11 @@ export default function ServicesPage({
                     <p className="font-[var(--font-outfit)] font-semibold text-base leading-tight">{service.name}</p>
                     <p className="text-[0.72rem] text-[var(--fg-faint)] mt-0.5">{service.category ?? "Service"}</p>
                   </div>
+                  {service.stockCount != null && service.stockCount <= 5 && (
+                    <Badge variant="destructive">
+                      {service.stockCount === 0 ? "Out of stock" : `Low stock: ${service.stockCount}`}
+                    </Badge>
+                  )}
                 </div>
                 {/* Description */}
                 {service.description
@@ -527,6 +541,23 @@ export default function ServicesPage({
                 />
                 <Label htmlFor="create-active">Active (available for sale)</Label>
               </div>
+              {inventoryEnabled && (
+                <div className="space-y-2 border-t pt-4">
+                  <Label>Linked FFXIV Item (optional)</Label>
+                  <ItemSearchCombobox
+                    venueId={venueId}
+                    value={formData.linkedItem}
+                    onChange={(item) => setFormData({ ...formData, linkedItem: item })}
+                  />
+                  <Label>Stock Count (leave blank if not tracked)</Label>
+                  <Input
+                    type="number"
+                    min="0"
+                    value={formData.stockCount}
+                    onChange={(e) => setFormData({ ...formData, stockCount: e.target.value })}
+                  />
+                </div>
+              )}
             </div>
             <DialogFooter>
               <Button variant="outline" onClick={() => setIsCreateDialogOpen(false)} disabled={isSubmitting}>
@@ -623,6 +654,23 @@ export default function ServicesPage({
                 />
                 <Label htmlFor="edit-active">Active (available for sale)</Label>
               </div>
+              {inventoryEnabled && (
+                <div className="space-y-2 border-t pt-4">
+                  <Label>Linked FFXIV Item (optional)</Label>
+                  <ItemSearchCombobox
+                    venueId={venueId}
+                    value={formData.linkedItem}
+                    onChange={(item) => setFormData({ ...formData, linkedItem: item })}
+                  />
+                  <Label>Stock Count (leave blank if not tracked)</Label>
+                  <Input
+                    type="number"
+                    min="0"
+                    value={formData.stockCount}
+                    onChange={(e) => setFormData({ ...formData, stockCount: e.target.value })}
+                  />
+                </div>
+              )}
             </div>
             <DialogFooter>
               <Button variant="outline" onClick={() => setIsEditDialogOpen(false)} disabled={isSubmitting}>
