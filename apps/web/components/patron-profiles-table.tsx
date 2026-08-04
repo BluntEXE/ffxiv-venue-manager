@@ -34,10 +34,12 @@ export function PatronProfilesTable({
   const [activeTab, setActiveTab] = useState<TabKey>("all")
   const [search, setSearch] = useState("")
   const [localProfiles, setLocalProfiles] = useState(profiles)
+  const [pendingVipIds, setPendingVipIds] = useState<Set<string>>(new Set())
 
   async function toggleVip(patron: PatronProfile) {
-    if (!canSetVip || !patron.id) return
+    if (!canSetVip || !patron.id || pendingVipIds.has(patron.id)) return
     const nextIsVip = !patron.isVip
+    setPendingVipIds((prev) => new Set(prev).add(patron.id))
     setLocalProfiles((prev) =>
       prev.map((p) => (p.id === patron.id ? { ...p, isVip: nextIsVip } : p))
     )
@@ -53,6 +55,12 @@ export function PatronProfilesTable({
       setLocalProfiles((prev) =>
         prev.map((p) => (p.id === patron.id ? { ...p, isVip: patron.isVip } : p))
       )
+    } finally {
+      setPendingVipIds((prev) => {
+        const next = new Set(prev)
+        next.delete(patron.id)
+        return next
+      })
     }
   }
 
@@ -103,7 +111,7 @@ export function PatronProfilesTable({
           <div className="top"><span className="sb am"><Crown /></span></div>
           <div className="k">VIPs</div>
           <div className="v">{counts.vip}</div>
-          <div className="delta flat">10+ visits</div>
+          <div className="delta flat">staff-flagged</div>
         </div>
       </div>
 
@@ -174,12 +182,13 @@ export function PatronProfilesTable({
                     <td>
                       <div style={{ display: "flex", gap: 6, flexWrap: "wrap" }}>
                         {t === "vip" && <span className="tag vip">VIP</span>}
-                        {canSetVip && (
+                        {canSetVip && p.id && (
                           <button
                             type="button"
                             onClick={() => toggleVip(p)}
+                            disabled={pendingVipIds.has(p.id)}
                             className="tag neutral"
-                            style={{ cursor: "pointer" }}
+                            style={{ cursor: pendingVipIds.has(p.id) ? "default" : "pointer", opacity: pendingVipIds.has(p.id) ? 0.6 : 1 }}
                           >
                             {t === "vip" ? "Unmark VIP" : "Mark VIP"}
                           </button>
