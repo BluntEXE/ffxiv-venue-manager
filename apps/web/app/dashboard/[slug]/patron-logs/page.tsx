@@ -80,10 +80,7 @@ export default async function PatronLogsPage({
     }
 
     const patronRecords = await prisma.patron.findMany({
-      where: {
-        venueId: venue.id,
-        OR: distinctPairs.map((p) => ({ characterName: p.characterName, world: p.world })),
-      },
+      where: { venueId: venue.id },
       select: { id: true, characterName: true, world: true, isVip: true },
     })
     const patronMap = new Map(
