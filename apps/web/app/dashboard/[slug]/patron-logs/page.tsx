@@ -62,6 +62,31 @@ export default async function PatronLogsPage({
       orderBy: { characterName: "asc" },
       take: 500,
     })
+    // Ensure a canonical Patron row exists for every distinct character
+    // seen in this venue's logs, then pull isVip/id for the profile list.
+    const distinctPairs = grouped
+      .filter((r) => r.characterName)
+      .map((r) => ({ characterName: r.characterName!, world: r.world ?? "" }))
+
+    if (distinctPairs.length > 0) {
+      await prisma.patron.createMany({
+        data: distinctPairs.map((p) => ({
+          venueId: venue.id,
+          characterName: p.characterName,
+          world: p.world,
+        })),
+        skipDuplicates: true,
+      })
+    }
+
+    const patronRecords = await prisma.patron.findMany({
+      where: { venueId: venue.id },
+      select: { id: true, characterName: true, world: true, isVip: true },
+    })
+    const patronMap = new Map(
+      patronRecords.map((p) => [`${p.characterName}|${p.world}`, p])
+    )
+
     // Total spent: match transaction.customerName to characterName (fuzzy)
     const spendGroups = await prisma.transaction.groupBy({
       by: ["customerName"],
@@ -77,13 +102,19 @@ export default async function PatronLogsPage({
     patronProfiles = grouped
       .filter((r) => r.characterName)
       .sort((a, b) => b._count._all - a._count._all)
-      .map((r) => ({
-        characterName: r.characterName!,
-        world: r.world ?? "",
-        visits: r._count._all,
-        lastSeen: (r._max.timestamp ?? new Date()).toISOString(),
-        totalSpent: spendMap.get(r.characterName!.toLowerCase().trim()) ?? 0,
-      }))
+      .map((r) => {
+        const key = `${r.characterName}|${r.world ?? ""}`
+        const patron = patronMap.get(key)
+        return {
+          id: patron?.id ?? "",
+          characterName: r.characterName!,
+          world: r.world ?? "",
+          visits: r._count._all,
+          lastSeen: (r._max.timestamp ?? new Date()).toISOString(),
+          totalSpent: spendMap.get(r.characterName!.toLowerCase().trim()) ?? 0,
+          isVip: patron?.isVip ?? false,
+        }
+      })
   }
 
   // ── Log tab: existing filtered query ─────────────────────────────────
@@ -190,7 +221,7 @@ export default async function PatronLogsPage({
         </div>
 
         {activeTab === "profiles" ? (
-          <PatronProfilesTable profiles={patronProfiles} />
+          <PatronProfilesTable profiles={patronProfiles} venueId={venue.id} canSetVip={["OWNER", "MANAGER"].includes(userRole)} />
         ) : (
           <PatronLogsManager
             venueId={venue.id}

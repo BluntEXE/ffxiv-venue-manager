@@ -42,6 +42,7 @@ model User {
   patronLogs                PatronLog[]             @relation("PatronLogger")
   patronLogsWorking         PatronLog[]             @relation("PatronLogWorking")
   patronLogsReclassified    PatronLog[]             @relation("PatronLogReclassifier")
+  vipPatronsSet             Patron[]
   characters                UserCharacter[]
   apiKeys                   ApiKey[]
   refreshTokens             RefreshToken[]
@@ -209,6 +210,7 @@ model Venue {
   payrollEntries    PayrollEntry[]
   shifts            Shift[]
   patronLogs        PatronLog[]
+  patrons           Patron[]
   apiKeys           ApiKey[]
   follows           VenueFollow[]
   scheduleEntries   VenueScheduleEntry[]
@@ -510,6 +512,24 @@ model PatronLog {
   @@index([venueId, characterName])
   @@index([venueId, wasWorking, timestamp])
   @@map("patron_logs")
+}
+
+model Patron {
+  id            String    @id @default(cuid())
+  venueId       String
+  characterName String
+  world         String
+  isVip         Boolean   @default(false)
+  vipSetAt      DateTime?
+  vipSetById    String?
+  createdAt     DateTime  @default(now())
+
+  venue    Venue @relation(fields: [venueId], references: [id], onDelete: Cascade)
+  vipSetBy User? @relation(fields: [vipSetById], references: [id], onDelete: SetNull)
+
+  @@unique([venueId, characterName, world])
+  @@index([venueId, isVip])
+  @@map("patrons")
 }
 
 // ============================================
