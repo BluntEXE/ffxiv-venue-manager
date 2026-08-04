@@ -56,7 +56,7 @@ export const PATCH = withRateLimit<{
         where: { id: roomId },
         data: {
           isOccupied,
-          note: note ?? null,
+          note: note !== undefined ? note || null : room.note,
           updatedById: session.user.id,
         },
         include: { updatedBy: { select: { name: true } } },
