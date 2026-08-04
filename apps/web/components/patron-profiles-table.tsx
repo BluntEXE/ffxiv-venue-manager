@@ -12,6 +12,8 @@ export type PatronProfile = {
   lastSeen: string // ISO
   totalSpent?: number
   isVip: boolean
+  isBanned: boolean
+  banReason: string | null
 }
 
 export function patronTag(visits: number, isVip: boolean): "vip" | "regular" | "new" {

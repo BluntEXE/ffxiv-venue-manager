@@ -81,7 +81,7 @@ export default async function PatronLogsPage({
 
     const patronRecords = await prisma.patron.findMany({
       where: { venueId: venue.id },
-      select: { id: true, characterName: true, world: true, isVip: true },
+      select: { id: true, characterName: true, world: true, isVip: true, isBanned: true, banReason: true },
     })
     const patronMap = new Map(
       patronRecords.map((p) => [`${p.characterName}|${p.world}`, p])
@@ -113,6 +113,8 @@ export default async function PatronLogsPage({
           lastSeen: (r._max.timestamp ?? new Date()).toISOString(),
           totalSpent: spendMap.get(r.characterName!.toLowerCase().trim()) ?? 0,
           isVip: patron?.isVip ?? false,
+          isBanned: patron?.isBanned ?? false,
+          banReason: patron?.banReason ?? null,
         }
       })
   }
