@@ -88,10 +88,6 @@ export function PatronProfilesTable({
         body: JSON.stringify(isBanned ? { isBanned: true, reason } : { isBanned: false }),
       })
       if (!res.ok) throw new Error("request failed")
-      if (isBanned) {
-        setBanningId(null)
-        setBanReasonInput("")
-      }
     } catch {
       setLocalProfiles((prev) =>
         prev.map((p) => (p.id === patron.id ? { ...p, isBanned: prevBanned, banReason: prevReason } : p))
@@ -268,7 +264,13 @@ export function PatronProfilesTable({
                             />
                             <button
                               type="button"
-                              onClick={() => banReasonInput.trim() && setBan(p, true, banReasonInput.trim())}
+                              onClick={() => {
+                                if (!banReasonInput.trim()) return
+                                const reason = banReasonInput.trim()
+                                setBanningId(null)
+                                setBanReasonInput("")
+                                setBan(p, true, reason)
+                              }}
                               disabled={!banReasonInput.trim() || pendingBanIds.has(p.id)}
                               className="tag danger"
                               style={{ cursor: "pointer" }}
