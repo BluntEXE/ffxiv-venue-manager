@@ -25,7 +25,6 @@ export function BanListManager({
   async function unban(patron: BannedPatron) {
     if (pendingIds.has(patron.id)) return
     setPendingIds((prev) => new Set(prev).add(patron.id))
-    const prevList = localPatrons
     setLocalPatrons((prev) => prev.filter((p) => p.id !== patron.id))
     try {
       const res = await fetch(`/api/venues/${venueId}/patrons/${patron.id}/ban`, {
@@ -35,7 +34,7 @@ export function BanListManager({
       })
       if (!res.ok) throw new Error("request failed")
     } catch {
-      setLocalPatrons(prevList)
+      setLocalPatrons((prev) => (prev.some((p) => p.id === patron.id) ? prev : [...prev, patron]))
     } finally {
       setPendingIds((prev) => {
         const next = new Set(prev)
