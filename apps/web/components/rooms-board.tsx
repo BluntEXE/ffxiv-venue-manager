@@ -92,7 +92,7 @@ export function RoomsBoard({
       const res = await fetch(`/api/venues/${venueId}/rooms/${room.id}/status`, {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ isOccupied: room.isOccupied, note: trimmed || undefined }),
+        body: JSON.stringify({ isOccupied: room.isOccupied, note: trimmed }),
       })
       if (!res.ok) throw new Error("request failed")
       const updated = await res.json()
