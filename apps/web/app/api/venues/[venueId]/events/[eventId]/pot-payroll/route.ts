@@ -250,6 +250,12 @@ export const POST = withRateLimit<{ params: Promise<{ venueId: string; eventId: 
 
       return NextResponse.json({ distribution }, { status: 201 })
     } catch (error) {
+      if (error instanceof Prisma.PrismaClientKnownRequestError && error.code === "P2002") {
+        return NextResponse.json(
+          { error: "Pot payroll has already been generated for this event" },
+          { status: 409 }
+        )
+      }
       console.error("Error generating pot payroll:", error)
       return NextResponse.json({ error: "Internal server error" }, { status: 500 })
     }
