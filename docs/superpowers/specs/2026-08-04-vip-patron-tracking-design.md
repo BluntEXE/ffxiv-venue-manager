@@ -51,17 +51,21 @@ Setting `isVip` is gated to OWNER/MANAGER, matching the existing reclassificatio
 - Body: `{ isVip: boolean }`
 - Sets `isVip`, `vipSetAt = now()`, `vipSetById = current user`
 
-`isVip` added to the patron payload returned by `XIVAppPatronApi.cs`'s backing endpoint — the plugin already polls this for guest list data, so no new polling path is needed.
+**Correction from initial draft:** the plugin does NOT already poll a patron-data endpoint — `XIVAppPatronApi.cs` is write-only (POST visits/services/transactions). The in-game guest list is built from local game-state scanning (`GuestList.cs`), not fetched from the server. A new read endpoint is required.
+
+New endpoint: `GET /api/plugin/patrons/vip?venueId=` (API-key auth via `x-api-key` header + `validateApiKey`, same pattern as `GET /api/plugin/roles`). Returns the list of `{ characterName, world }` pairs flagged VIP for the venue.
+
+**Fetch lifecycle — cache-once, matching `xivAppRoles`/`availableServices`:** fetched alongside roles/services in `AutoLoadXivAppDataAsync` (startup hydration) and `LoadVenueDataWithFeedbackAsync` (manual venue reselect in Settings tab), cached in a new `Plugin.xivAppVipPatrons` field. Not polled live — a VIP flag set on the dashboard won't show in-game until next venue reselect or plugin restart, same staleness window roles/services already have.
 
 ## Surfaces
 
-### 1. Dashboard — `patron-logs` page
+### 1. Dashboard — `patron-logs` page, Patron Profiles tab
 
-VIP toggle and badge added per patron row (`app/dashboard/[slug]/patron-logs/page.tsx`). Only surface where OWNER/MANAGER can set the flag.
+`components/patron-profiles-table.tsx` already has a `patronTag()` helper and a "VIPs" tab/badge — but it's auto-computed from visit count (10+ visits = VIP), unrelated to staff judgment. Per user decision, this table doesn't meaningfully use that auto tier today, so it gets **replaced**: `patronTag()`'s vip case switches from `visits >= 10` to `patron.isVip`, and the VIP toggle lives directly on this table. The separate auto-VIP tier used in venue analytics (`analytics/route.ts`, `dashboard/[slug]/analytics/page.tsx`) is untouched — different page, different question, out of scope here.
 
 ### 2. Plugin — live Patrons tab
 
-`UI/Widgets/GuestListWidget.cs` renders each guest row (`player.Value.Name` at line 160). Add a VIP icon/color treatment next to the name when the corresponding patron record has `isVip = true`.
+`UI/Widgets/GuestListWidget.cs` renders each guest row (`player.Value.Name` at line 160). Add a VIP icon/color treatment next to the name when `(player.Value.Name, player.Value.WorldName)` matches an entry in `plugin.xivAppVipPatrons`.
 
 ### 3. Plugin — entry chat alert
 
@@ -80,8 +84,12 @@ VIP toggle and badge added per patron row (`app/dashboard/[slug]/patron-logs/pag
 | File | Action |
 |------|--------|
 | `apps/web/prisma/schema.prisma` | Modify — add `Patron` model |
-| `apps/web/app/api/venues/[venueId]/patrons/[patronId]/vip/route.ts` | Create |
-| `apps/web/app/dashboard/[slug]/patron-logs/page.tsx` | Modify — VIP toggle + badge |
-| `VenueManager/XIVAppPatronApi.cs` | Modify — include `isVip` in patron payload |
+| `apps/web/app/api/venues/[venueId]/patrons/[patronId]/vip/route.ts` | Create — dashboard toggle endpoint |
+| `apps/web/app/api/plugin/patrons/vip/route.ts` | Create — plugin read endpoint |
+| `apps/web/app/dashboard/[slug]/patron-logs/page.tsx` | Modify — upsert/fetch `Patron` rows for profiles tab |
+| `apps/web/components/patron-profiles-table.tsx` | Modify — `isVip`-driven tag/tab + toggle control |
+| `VenueManager/XIVAppVenueApi.cs` | Modify — add `GetVipPatronsAsync(venueId)` |
+| `VenueManager/XIVAppApiModels.cs` | Modify — add `VipPatron`/`VipPatronsResponse` models |
+| `VenueManager/Plugin.cs` | Modify — cache `xivAppVipPatrons`, fetch in `AutoLoadXivAppDataAsync`, VIP chat alert in `showGuestEnterChatAlert` |
+| `VenueManager/UI/Tabs/SettingsTab.cs` | Modify — fetch in `LoadVenueDataWithFeedbackAsync` |
 | `VenueManager/UI/Widgets/GuestListWidget.cs` | Modify — VIP badge on guest row |
-| `VenueManager/Plugin.cs` | Modify — VIP chat alert in `showGuestEnterChatAlert` |
