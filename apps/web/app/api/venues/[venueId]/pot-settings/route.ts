@@ -53,12 +53,9 @@ export const GET = withRateLimit<{ params: Promise<{ venueId: string }> }>(
       })
 
       return NextResponse.json({
-        settings: {
-          enabled: settings?.enabled ?? false,
-          taxPercent: settings ? Number(settings.taxPercent) : 0,
-          includeSalesInPot: settings?.includeSalesInPot ?? false,
-          defaultTipPooled: settings?.defaultTipPooled ?? false,
-        },
+        settings: settings
+          ? { ...settings, taxPercent: Number(settings.taxPercent) }
+          : { enabled: false, taxPercent: 0, includeSalesInPot: false, defaultTipPooled: false },
       })
     } catch (error) {
       console.error("Error fetching pot settings:", error)
@@ -95,14 +92,7 @@ export const PUT = withRateLimit<{ params: Promise<{ venueId: string }> }>(
         update: data,
       })
 
-      return NextResponse.json({
-        settings: {
-          enabled: settings.enabled,
-          taxPercent: Number(settings.taxPercent),
-          includeSalesInPot: settings.includeSalesInPot,
-          defaultTipPooled: settings.defaultTipPooled,
-        },
-      })
+      return NextResponse.json({ settings: { ...settings, taxPercent: Number(settings.taxPercent) } })
     } catch (error) {
       if (error instanceof z.ZodError) {
         return NextResponse.json(
