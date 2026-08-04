@@ -24,6 +24,7 @@ import {
   Settings,
   Compass,
   BookHeart,
+  Ban,
   type LucideIcon,
 } from "lucide-react"
 
@@ -113,6 +114,12 @@ export function VenueSidebar({
           href: `/dashboard/${venueSlug}/patron-logs`,
           label: "Patron Logs",
           icon: History,
+          roles: ["OWNER", "MANAGER"],
+        },
+        {
+          href: `/dashboard/${venueSlug}/ban-list`,
+          label: "Ban List",
+          icon: Ban,
           roles: ["OWNER", "MANAGER"],
         },
       ],
