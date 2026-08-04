@@ -37,6 +37,9 @@ export function PatronProfilesTable({
   const [search, setSearch] = useState("")
   const [localProfiles, setLocalProfiles] = useState(profiles)
   const [pendingVipIds, setPendingVipIds] = useState<Set<string>>(new Set())
+  const [banningId, setBanningId] = useState<string | null>(null) // row currently showing the reason input
+  const [banReasonInput, setBanReasonInput] = useState("")
+  const [pendingBanIds, setPendingBanIds] = useState<Set<string>>(new Set())
 
   async function toggleVip(patron: PatronProfile) {
     if (!canSetVip || !patron.id || pendingVipIds.has(patron.id)) return
@@ -59,6 +62,42 @@ export function PatronProfilesTable({
       )
     } finally {
       setPendingVipIds((prev) => {
+        const next = new Set(prev)
+        next.delete(patron.id)
+        return next
+      })
+    }
+  }
+
+  async function setBan(patron: PatronProfile, isBanned: boolean, reason?: string) {
+    if (!patron.id || pendingBanIds.has(patron.id)) return
+    setPendingBanIds((prev) => new Set(prev).add(patron.id))
+    const prevBanned = patron.isBanned
+    const prevReason = patron.banReason
+    setLocalProfiles((prev) =>
+      prev.map((p) =>
+        p.id === patron.id
+          ? { ...p, isBanned, banReason: isBanned ? reason ?? p.banReason : p.banReason }
+          : p
+      )
+    )
+    try {
+      const res = await fetch(`/api/venues/${venueId}/patrons/${patron.id}/ban`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(isBanned ? { isBanned: true, reason } : { isBanned: false }),
+      })
+      if (!res.ok) throw new Error("request failed")
+      if (isBanned) {
+        setBanningId(null)
+        setBanReasonInput("")
+      }
+    } catch {
+      setLocalProfiles((prev) =>
+        prev.map((p) => (p.id === patron.id ? { ...p, isBanned: prevBanned, banReason: prevReason } : p))
+      )
+    } finally {
+      setPendingBanIds((prev) => {
         const next = new Set(prev)
         next.delete(patron.id)
         return next
@@ -182,7 +221,8 @@ export function PatronProfilesTable({
                       }
                     </td>
                     <td>
-                      <div style={{ display: "flex", gap: 6, flexWrap: "wrap" }}>
+                      <div style={{ display: "flex", gap: 6, flexWrap: "wrap", alignItems: "center" }}>
+                        {p.isBanned && <span className="tag danger" title={p.banReason ?? undefined}>Banned</span>}
                         {t === "vip" && <span className="tag vip">VIP</span>}
                         {canSetVip && p.id && (
                           <button
@@ -194,6 +234,56 @@ export function PatronProfilesTable({
                           >
                             {t === "vip" ? "Unmark VIP" : "Mark VIP"}
                           </button>
+                        )}
+                        {canSetVip && p.id && !p.isBanned && banningId !== p.id && (
+                          <button
+                            type="button"
+                            onClick={() => { setBanningId(p.id); setBanReasonInput("") }}
+                            className="tag danger"
+                            style={{ cursor: "pointer" }}
+                          >
+                            Ban
+                          </button>
+                        )}
+                        {canSetVip && p.id && p.isBanned && (
+                          <button
+                            type="button"
+                            onClick={() => setBan(p, false)}
+                            disabled={pendingBanIds.has(p.id)}
+                            className="tag neutral"
+                            style={{ cursor: pendingBanIds.has(p.id) ? "default" : "pointer", opacity: pendingBanIds.has(p.id) ? 0.6 : 1 }}
+                          >
+                            Unban
+                          </button>
+                        )}
+                        {canSetVip && p.id && banningId === p.id && (
+                          <div style={{ display: "flex", gap: 4, alignItems: "center" }}>
+                            <input
+                              type="text"
+                              value={banReasonInput}
+                              onChange={(e) => setBanReasonInput(e.target.value)}
+                              placeholder="Reason…"
+                              style={{ fontSize: "0.75rem", padding: "2px 6px", width: 120 }}
+                              autoFocus
+                            />
+                            <button
+                              type="button"
+                              onClick={() => banReasonInput.trim() && setBan(p, true, banReasonInput.trim())}
+                              disabled={!banReasonInput.trim() || pendingBanIds.has(p.id)}
+                              className="tag danger"
+                              style={{ cursor: "pointer" }}
+                            >
+                              Confirm
+                            </button>
+                            <button
+                              type="button"
+                              onClick={() => { setBanningId(null); setBanReasonInput("") }}
+                              className="tag neutral"
+                              style={{ cursor: "pointer" }}
+                            >
+                              Cancel
+                            </button>
+                          </div>
                         )}
                         {(t === "vip" || t === "regular") && <span className="tag neutral">Regular</span>}
                         {t === "new" && <span className="tag em">New</span>}
