@@ -53,12 +53,15 @@ export const POST = withRateLimit<{ params: Promise<{ venueId: string }> }>(
       })
 
       return NextResponse.json({ id: room.id, name: room.name, isOccupied: room.isOccupied, note: room.note })
-    } catch (err) {
+    } catch (err: any) {
       if (err instanceof z.ZodError) {
         return NextResponse.json(
           { error: "Invalid request", details: err.flatten() },
           { status: 400 }
         )
+      }
+      if (err?.code === "P2002") {
+        return NextResponse.json({ error: "A room with this name already exists" }, { status: 409 })
       }
       console.error("[rooms] error:", err)
       return NextResponse.json({ error: "Internal server error" }, { status: 500 })
