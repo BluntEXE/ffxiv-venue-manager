@@ -1,4 +1,4 @@
-import { NextRequest, NextResponse } from "next/server"
+import { NextResponse } from "next/server"
 import { getServerSession } from "next-auth"
 import { authOptions } from "@/lib/auth"
 import { prisma } from "@/lib/prisma"
@@ -8,20 +8,43 @@ import { withRateLimit } from "@/lib/middleware/with-rate-limit"
 
 const Decimal = Prisma.Decimal
 
-async function resolvePotInputs(venueId: string, eventId: string) {
-  const venue = await prisma.venue.findFirst({ where: { OR: [{ id: venueId }, { slug: venueId }] } })
-  if (!venue) return null
-
-  const event = await prisma.event.findFirst({ where: { id: eventId, venueId: venue.id } })
-  if (!event) return null
-
-  const settings = await prisma.venuePotSettings.findUnique({ where: { venueId: venue.id } })
-
-  const shifts = await prisma.shift.findMany({
-    where: { eventId, status: "COMPLETED" },
-    include: { membership: true },
+async function resolveVenueAndMembership(
+  venueId: string,
+  userId: string
+): Promise<
+  | { error: NextResponse }
+  | {
+      venue: NonNullable<Awaited<ReturnType<typeof prisma.venue.findFirst>>>
+      membership: NonNullable<Awaited<ReturnType<typeof prisma.membership.findFirst>>>
+    }
+> {
+  const venue = await prisma.venue.findFirst({
+    where: { OR: [{ id: venueId }, { slug: venueId }] },
   })
-  const transactionsRaw = await prisma.transaction.findMany({ where: { eventId } })
+  if (!venue) return { error: NextResponse.json({ error: "Venue not found" }, { status: 404 }) }
+
+  const membership = await prisma.membership.findFirst({
+    where: { userId, venueId: venue.id, status: "active" },
+  })
+  if (!membership) {
+    return { error: NextResponse.json({ error: "You don't have access to this venue" }, { status: 403 }) }
+  }
+  return { venue, membership }
+}
+
+async function resolvePotInputs(
+  venueId: string,
+  eventId: string,
+  event: NonNullable<Awaited<ReturnType<typeof prisma.event.findFirst>>>
+) {
+  const [settings, shifts, transactionsRaw] = await Promise.all([
+    prisma.venuePotSettings.findUnique({ where: { venueId } }),
+    prisma.shift.findMany({
+      where: { eventId, status: "COMPLETED" },
+      include: { membership: true },
+    }),
+    prisma.transaction.findMany({ where: { eventId } }),
+  ])
 
   // Resolve every role referenced by either a shift's own roleId or a membership's
   // roleId, in one batch — mirrors lib/payroll-rates.ts's fetchRoleRates pattern.
@@ -86,7 +109,7 @@ async function resolvePotInputs(venueId: string, eventId: string) {
     includeSalesInPot: settings?.includeSalesInPot ?? false,
   })
 
-  return { venue, event, settings, result }
+  return { settings, result }
 }
 
 export const GET = withRateLimit<{ params: Promise<{ venueId: string; eventId: string }> }>(
@@ -97,21 +120,14 @@ export const GET = withRateLimit<{ params: Promise<{ venueId: string; eventId: s
       if (!session?.user?.id) return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
       const { venueId, eventId } = await context.params
 
-      const venue = await prisma.venue.findFirst({ where: { OR: [{ id: venueId }, { slug: venueId }] } })
-      if (!venue) return NextResponse.json({ error: "Venue not found" }, { status: 404 })
+      const resolvedAuth = await resolveVenueAndMembership(venueId, session.user.id)
+      if ("error" in resolvedAuth) return resolvedAuth.error
+      const { venue } = resolvedAuth
 
-      const callerMembership = await prisma.membership.findFirst({
-        where: { userId: session.user.id, venueId: venue.id, status: "active" },
-      })
-      if (!callerMembership) {
-        return NextResponse.json(
-          { error: "You don't have access to this venue" },
-          { status: 403 }
-        )
-      }
+      const event = await prisma.event.findFirst({ where: { id: eventId, venueId: venue.id } })
+      if (!event) return NextResponse.json({ error: "Event not found" }, { status: 404 })
 
-      const resolved = await resolvePotInputs(venueId, eventId)
-      if (!resolved) return NextResponse.json({ error: "Event not found" }, { status: 404 })
+      const resolved = await resolvePotInputs(venue.id, eventId, event)
 
       return NextResponse.json({ preview: resolved.result })
     } catch (error) {
@@ -130,13 +146,10 @@ export const POST = withRateLimit<{ params: Promise<{ venueId: string; eventId: 
       if (!session?.user?.id) return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
       const { venueId, eventId } = await context.params
 
-      const venue = await prisma.venue.findFirst({ where: { OR: [{ id: venueId }, { slug: venueId }] } })
-      if (!venue) return NextResponse.json({ error: "Venue not found" }, { status: 404 })
-
-      const callerMembership = await prisma.membership.findFirst({
-        where: { userId: session.user.id, venueId: venue.id, status: "active" },
-      })
-      if (!callerMembership || !["OWNER", "MANAGER"].includes(callerMembership.role)) {
+      const resolvedAuth = await resolveVenueAndMembership(venueId, session.user.id)
+      if ("error" in resolvedAuth) return resolvedAuth.error
+      const { venue, membership: callerMembership } = resolvedAuth
+      if (!["OWNER", "MANAGER"].includes(callerMembership.role)) {
         return NextResponse.json(
           { error: "Only owners and managers can generate pot payroll" },
           { status: 403 }
@@ -160,8 +173,7 @@ export const POST = withRateLimit<{ params: Promise<{ venueId: string; eventId: 
         )
       }
 
-      const resolved = await resolvePotInputs(venueId, eventId)
-      if (!resolved) return NextResponse.json({ error: "Event not found" }, { status: 404 })
+      const resolved = await resolvePotInputs(venue.id, eventId, event)
       const { result, settings } = resolved
 
       const distribution = await prisma.$transaction(async (tx) => {
