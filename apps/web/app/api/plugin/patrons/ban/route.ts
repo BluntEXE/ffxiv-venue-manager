@@ -37,9 +37,9 @@ export async function POST(request: NextRequest) {
     const body: BanPatronPayload = await request.json()
     const { venueId, characterName, world, reason } = body
 
-    if (!venueId || !characterName || !reason || !reason.trim()) {
+    if (!venueId || !characterName || !world || !reason || !reason.trim()) {
       return NextResponse.json(
-        { error: 'Missing required fields: venueId, characterName, reason' },
+        { error: 'Missing required fields: venueId, characterName, world, reason' },
         { status: 400 }
       )
     }
@@ -55,16 +55,14 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Owner or Manager role required' }, { status: 403 })
     }
 
-    const worldValue = world ?? ''
-
     await prisma.patron.upsert({
       where: {
-        venueId_characterName_world: { venueId, characterName, world: worldValue },
+        venueId_characterName_world: { venueId, characterName, world },
       },
       create: {
         venueId,
         characterName,
-        world: worldValue,
+        world,
         isBanned: true,
         banReason: reason.trim(),
         bannedAt: new Date(),
