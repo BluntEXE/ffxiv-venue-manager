@@ -42,7 +42,8 @@ model User {
   patronLogs                PatronLog[]             @relation("PatronLogger")
   patronLogsWorking         PatronLog[]             @relation("PatronLogWorking")
   patronLogsReclassified    PatronLog[]             @relation("PatronLogReclassifier")
-  vipPatronsSet             Patron[]
+  vipPatronsSet             Patron[]                @relation("PatronVipSetBy")
+  bannedPatronsSet          Patron[]                @relation("PatronBannedBy")
   characters                UserCharacter[]
   apiKeys                   ApiKey[]
   refreshTokens             RefreshToken[]
@@ -522,13 +523,19 @@ model Patron {
   isVip         Boolean   @default(false)
   vipSetAt      DateTime?
   vipSetById    String?
+  isBanned      Boolean   @default(false)
+  banReason     String?
+  bannedAt      DateTime?
+  bannedById    String?
   createdAt     DateTime  @default(now())
 
   venue    Venue @relation(fields: [venueId], references: [id], onDelete: Cascade)
-  vipSetBy User? @relation(fields: [vipSetById], references: [id], onDelete: SetNull)
+  vipSetBy User? @relation("PatronVipSetBy", fields: [vipSetById], references: [id], onDelete: SetNull)
+  bannedBy User? @relation("PatronBannedBy", fields: [bannedById], references: [id], onDelete: SetNull)
 
   @@unique([venueId, characterName, world])
   @@index([venueId, isVip])
+  @@index([venueId, isBanned])
   @@map("patrons")
 }
 
