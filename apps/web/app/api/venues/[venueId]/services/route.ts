@@ -13,6 +13,10 @@ const createServiceSchema = z.object({
   price: z.number().min(0, "Price must be positive"),
   roleIds: z.array(z.string()).optional().default([]),
   isActive: z.boolean().default(true),
+  linkedItemId: z.number().int().positive().nullable().optional(),
+  linkedItemName: z.string().nullable().optional(),
+  linkedItemIcon: z.number().int().nullable().optional(),
+  stockCount: z.number().int().min(0).nullable().optional(),
 })
 
 export const GET = withRateLimit<{ params: Promise<{ venueId: string }> }>(
@@ -139,6 +143,10 @@ export const POST = withRateLimit<{ params: Promise<{ venueId: string }> }>(
         description: validatedData.description,
         price: validatedData.price,
         isActive: validatedData.isActive,
+        linkedItemId: validatedData.linkedItemId,
+        linkedItemName: validatedData.linkedItemName,
+        linkedItemIcon: validatedData.linkedItemIcon,
+        stockCount: validatedData.stockCount,
         roles: {
           connect: finalRoleIds.map(id => ({ id })),
         },

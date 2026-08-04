@@ -79,6 +79,7 @@ export async function GET(request: NextRequest) {
       description: svc.description,
       price: svc.price.toString(),
       category: svc.category,
+      stockCount: svc.stockCount,
     }))
 
     return NextResponse.json({

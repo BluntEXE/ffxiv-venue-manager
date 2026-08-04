@@ -12,6 +12,10 @@ const updateServiceSchema = z.object({
   price: z.number().min(0).optional(),
   roleIds: z.array(z.string()).optional(),
   isActive: z.boolean().optional(),
+  linkedItemId: z.number().int().positive().nullable().optional(),
+  linkedItemName: z.string().nullable().optional(),
+  linkedItemIcon: z.number().int().nullable().optional(),
+  stockCount: z.number().int().min(0).nullable().optional(),
 })
 
 export const GET = withRateLimit<{ params: Promise<{ venueId: string; serviceId: string }> }>(
