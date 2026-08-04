@@ -7,6 +7,7 @@ import { withRateLimit } from "@/lib/middleware/with-rate-limit"
 import {
   createTransaction,
   createTransactionSchema,
+  InsufficientStockError,
 } from "@/lib/api/transactions"
 
 export const GET = withRateLimit<{ params: Promise<{ venueId: string }> }>(
@@ -220,6 +221,10 @@ export const POST = withRateLimit<{ params: Promise<{ venueId: string }> }>(
           { error: "Validation error", details: error.issues },
           { status: 400 }
         )
+      }
+
+      if (error instanceof InsufficientStockError) {
+        return NextResponse.json({ error: error.message }, { status: 409 })
       }
 
       console.error("Error creating transaction:", error)

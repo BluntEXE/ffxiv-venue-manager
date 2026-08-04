@@ -30,6 +30,18 @@ export const createTransactionSchema = z.object({
 export type CreateTransactionInput = z.infer<typeof createTransactionSchema>
 
 /**
+ * Thrown by createTransaction when the target service has stockCount <= 0.
+ * Callers translate this into a 409 response - it is a hard block, not a
+ * warning, matching the approved bar-inventory-mapping design.
+ */
+export class InsufficientStockError extends Error {
+  constructor(serviceId: string) {
+    super(`Service ${serviceId} is out of stock`)
+    this.name = "InsufficientStockError"
+  }
+}
+
+/**
  * Create a transaction row, fire the sale-logged Discord webhook, and
  * invalidate the services + transactions caches. Callers are responsible
  * for auth, venue access verification, and permission checks - this
@@ -62,40 +74,77 @@ export async function createTransaction(
     eventId = activeEvent?.id
   }
 
-  const newTransaction = await prisma.transaction.create({
-    data: {
-      venueId,
-      serviceId: input.serviceId,
-      eventId,
-      staffId: staffUserId,
-      type: input.type ?? "SALE",
-      amount: input.amount,
-      customerName: input.customerName,
-      notes: input.notes,
-    },
-    include: {
-      service: {
-        select: {
-          id: true,
-          name: true,
-          price: true,
+  // Stock check + create + decrement happen in one DB transaction so a
+  // concurrent sale can't oversell the last unit. updateMany's gt:0 filter
+  // is the atomic guard: if two requests race, only one's updateMany
+  // affects a row, and the loser gets a hard 409 rather than a negative
+  // stockCount.
+  if (input.serviceId) {
+    const service = await prisma.service.findUnique({
+      where: { id: input.serviceId },
+      select: { stockCount: true },
+    })
+    if (service && service.stockCount !== null && service.stockCount <= 0) {
+      throw new InsufficientStockError(input.serviceId)
+    }
+  }
+
+  const newTransaction = await prisma.$transaction(async (tx) => {
+    if (input.serviceId) {
+      const decremented = await tx.service.updateMany({
+        where: { id: input.serviceId, stockCount: { gt: 0 } },
+        data: { stockCount: { decrement: 1 } },
+      })
+      // decremented.count === 0 means either the service isn't
+      // stock-tracked (stockCount is null, filtered out by gt:0 - fine,
+      // not an error) or it hit zero between our findUnique check and
+      // here (a real race - re-check to distinguish the two).
+      if (decremented.count === 0) {
+        const current = await tx.service.findUnique({
+          where: { id: input.serviceId },
+          select: { stockCount: true },
+        })
+        if (current && current.stockCount !== null && current.stockCount <= 0) {
+          throw new InsufficientStockError(input.serviceId)
+        }
+      }
+    }
+
+    return tx.transaction.create({
+      data: {
+        venueId,
+        serviceId: input.serviceId,
+        eventId,
+        staffId: staffUserId,
+        type: input.type ?? "SALE",
+        amount: input.amount,
+        customerName: input.customerName,
+        notes: input.notes,
+      },
+      include: {
+        service: {
+          select: {
+            id: true,
+            name: true,
+            price: true,
+          },
+        },
+        event: {
+          select: {
+            id: true,
+            title: true,
+          },
+        },
+        staff: {
+          select: {
+            id: true,
+            name: true,
+            displayName: true,
+            characters: { orderBy: [{ isPrimary: "desc" }, { createdAt: "asc" }], take: 1, select: { characterName: true } },
+          },
         },
       },
-      event: {
-        select: {
-          id: true,
-          title: true,
-        },
-      },
-      staff: {
-        select: {
-          id: true,
-          name: true,
-          displayName: true,
-          characters: { orderBy: [{ isPrimary: "desc" }, { createdAt: "asc" }], take: 1, select: { characterName: true } },
-        },
-      },
-    },
+    })
   })
 
   // The nickname is venue-specific and Transaction has no direct Membership

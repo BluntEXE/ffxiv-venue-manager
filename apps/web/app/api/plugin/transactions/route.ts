@@ -5,6 +5,7 @@ import { enforcePluginRateLimit, enforcePluginIpRateLimit } from "@/lib/api/plug
 import {
   createTransaction,
   createTransactionSchema,
+  InsufficientStockError,
 } from "@/lib/api/transactions"
 
 /**
@@ -89,6 +90,10 @@ export async function POST(request: NextRequest) {
       },
     })
   } catch (error) {
+    if (error instanceof InsufficientStockError) {
+      return NextResponse.json({ error: error.message }, { status: 409 })
+    }
+
     console.error("[Plugin API] Error logging transaction:", error)
     return NextResponse.json(
       { error: "Internal server error" },
