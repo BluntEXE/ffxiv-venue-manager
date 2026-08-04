@@ -25,6 +25,7 @@ import {
   Compass,
   BookHeart,
   Ban,
+  DoorOpen,
   type LucideIcon,
 } from "lucide-react"
 
@@ -97,6 +98,7 @@ export function VenueSidebar({
         { href: `/dashboard/${venueSlug}/shifts`, label: "Shifts", icon: Clock },
         { href: `/dashboard/${venueSlug}/tasks`, label: "Tasks", icon: CheckSquare },
         { href: `/dashboard/${venueSlug}/services`, label: "Services", icon: ShoppingBag },
+        { href: `/dashboard/${venueSlug}/rooms`, label: "Rooms", icon: DoorOpen },
       ],
     },
     {
