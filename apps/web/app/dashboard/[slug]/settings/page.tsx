@@ -121,6 +121,7 @@ export default function SettingsPage({
   const [potTaxPercent, setPotTaxPercent] = useState(0)
   const [potIncludeSalesInPot, setPotIncludeSalesInPot] = useState(false)
   const [potDefaultTipPooled, setPotDefaultTipPooled] = useState(false)
+  const [inventoryEnabled, setInventoryEnabled] = useState(false)
   const [shiftBotTemplates, setShiftBotTemplates] = useState<Array<{
     name: string; startOffsetHours: number; durationHours: number; slots: number
   }>>([])
@@ -221,6 +222,14 @@ export default function SettingsPage({
             setPotDefaultTipPooled(data.settings.defaultTipPooled)
           })
           .catch(() => {})
+
+        fetch(`/api/venues/${venue.id}/inventory-settings`)
+          .then(r => r.ok ? r.json() : null)
+          .then((data) => {
+            if (!data) return
+            setInventoryEnabled(data.settings.enabled)
+          })
+          .catch(() => {})
       } catch (error: unknown) {
         setError(error instanceof Error ? error.message : "Failed to load settings")
       } finally {
@@ -239,6 +248,7 @@ export default function SettingsPage({
     settings, venueName, venueDescription, venueDistrict, venueWard, venuePlot, venueApartment, housingType,
     shiftBotEnabled, shiftBotChannelId, shiftBotDaysBefore, shiftBotThumbnailUrl, shiftBotTemplates,
     potEnabled, potTaxPercent, potIncludeSalesInPot, potDefaultTipPooled,
+    inventoryEnabled,
   ])
 
   const handleSave = async () => {
@@ -301,6 +311,19 @@ export default function SettingsPage({
       if (!potSettingsRes.ok) {
         const d = await potSettingsRes.json()
         throw new Error(d.error || "Failed to save pot payroll settings")
+      }
+
+      // Save bar inventory tracking settings (separate relational table, own route)
+      const inventorySettingsRes = await fetch(`/api/venues/${venueId}/inventory-settings`, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          enabled: inventoryEnabled,
+        }),
+      })
+      if (!inventorySettingsRes.ok) {
+        const d = await inventorySettingsRes.json()
+        throw new Error(d.error || "Failed to save bar inventory settings")
       }
 
       setSuccess(true)
@@ -1105,6 +1128,29 @@ export default function SettingsPage({
                     </label>
                   </div>
                 )}
+              </div>
+            </section>
+
+            {/* ── Bar Inventory Tracking ── */}
+            <section className="panel">
+              <div className="ph"><span className="pt"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M8 2h8"/><path d="M9 2v6.5L4.5 18a2 2 0 0 0 1.8 3h11.4a2 2 0 0 0 1.8-3L15 8.5V2"/></svg>Bar Inventory Tracking</span></div>
+              <div className="introw" style={{ flexWrap: "wrap", gap: 14 }}>
+                <span className="iconbadge ii" style={{ width: 40, height: 40 }}>
+                  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M8 2h8"/><path d="M9 2v6.5L4.5 18a2 2 0 0 0 1.8 3h11.4a2 2 0 0 0 1.8-3L15 8.5V2"/></svg>
+                </span>
+                <div className="iinfo">
+                  <div className="iname">Bar Inventory Tracking</div>
+                  <div className="idesc">Map menu items to bar stock and track inventory levels</div>
+                </div>
+                <label className="flex items-center gap-2 cursor-pointer ml-auto shrink-0">
+                  <input
+                    type="checkbox"
+                    checked={inventoryEnabled}
+                    onChange={(e) => setInventoryEnabled(e.target.checked)}
+                    className="rounded"
+                  />
+                  <span className="text-sm">{inventoryEnabled ? "Enabled" : "Disabled"}</span>
+                </label>
               </div>
             </section>
 
