@@ -121,9 +121,6 @@ export default function SettingsPage({
   const [potTaxPercent, setPotTaxPercent] = useState(0)
   const [potIncludeSalesInPot, setPotIncludeSalesInPot] = useState(false)
   const [potDefaultTipPooled, setPotDefaultTipPooled] = useState(false)
-  const [isSavingPotSettings, setIsSavingPotSettings] = useState(false)
-  const [potSettingsError, setPotSettingsError] = useState("")
-  const [potSettingsSuccess, setPotSettingsSuccess] = useState(false)
   const [shiftBotTemplates, setShiftBotTemplates] = useState<Array<{
     name: string; startOffsetHours: number; durationHours: number; slots: number
   }>>([])
@@ -241,6 +238,7 @@ export default function SettingsPage({
   }, [
     settings, venueName, venueDescription, venueDistrict, venueWard, venuePlot, venueApartment, housingType,
     shiftBotEnabled, shiftBotChannelId, shiftBotDaysBefore, shiftBotThumbnailUrl, shiftBotTemplates,
+    potEnabled, potTaxPercent, potIncludeSalesInPot, potDefaultTipPooled,
   ])
 
   const handleSave = async () => {
@@ -287,6 +285,22 @@ export default function SettingsPage({
       if (!settingsRes.ok) {
         const d = await settingsRes.json()
         throw new Error(d.error || "Failed to save settings")
+      }
+
+      // Save pot payroll settings (separate relational table, own route)
+      const potSettingsRes = await fetch(`/api/venues/${venueId}/pot-settings`, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          enabled: potEnabled,
+          taxPercent: potTaxPercent,
+          includeSalesInPot: potIncludeSalesInPot,
+          defaultTipPooled: potDefaultTipPooled,
+        }),
+      })
+      if (!potSettingsRes.ok) {
+        const d = await potSettingsRes.json()
+        throw new Error(d.error || "Failed to save pot payroll settings")
       }
 
       setSuccess(true)
@@ -419,33 +433,6 @@ export default function SettingsPage({
       setFfxivVenueSyncedAt(null)
     } finally {
       setFfxivUnlinking(false)
-    }
-  }
-
-  async function handleSavePotSettings() {
-    setIsSavingPotSettings(true)
-    setPotSettingsError("")
-    setPotSettingsSuccess(false)
-    try {
-      const res = await fetch(`/api/venues/${venueId}/pot-settings`, {
-        method: "PUT",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          enabled: potEnabled,
-          taxPercent: potTaxPercent,
-          includeSalesInPot: potIncludeSalesInPot,
-          defaultTipPooled: potDefaultTipPooled,
-        }),
-      })
-      if (!res.ok) {
-        const err = await res.json()
-        throw new Error(err.error ?? "Failed to save pot payroll settings")
-      }
-      setPotSettingsSuccess(true)
-    } catch (e) {
-      setPotSettingsError(e instanceof Error ? e.message : "Failed to save pot payroll settings")
-    } finally {
-      setIsSavingPotSettings(false)
     }
   }
 
@@ -1116,13 +1103,6 @@ export default function SettingsPage({
                       />
                       <span className="text-sm">Default new staff to pooling their tips</span>
                     </label>
-                    <div className="flex items-center gap-3">
-                      <Button type="button" variant="outline-blue" size="sm" onClick={handleSavePotSettings} disabled={isSavingPotSettings}>
-                        {isSavingPotSettings ? "Saving…" : "Save Pot Payroll Settings"}
-                      </Button>
-                      {potSettingsSuccess && <span className="text-xs text-green-400">Saved</span>}
-                      {potSettingsError && <span className="text-xs text-red-400">{potSettingsError}</span>}
-                    </div>
                   </div>
                 )}
               </div>
