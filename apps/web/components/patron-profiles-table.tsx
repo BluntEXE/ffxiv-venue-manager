@@ -5,34 +5,66 @@ import { formatServerTime } from "@/lib/server-time"
 import { History, Repeat, UserPlus, Crown } from "lucide-react"
 
 export type PatronProfile = {
+  id: string
   characterName: string
   world: string
   visits: number
   lastSeen: string // ISO
   totalSpent?: number
+  isVip: boolean
 }
 
-function patronTag(visits: number): "vip" | "regular" | "new" {
-  if (visits >= 10) return "vip"
+export function patronTag(visits: number, isVip: boolean): "vip" | "regular" | "new" {
+  if (isVip) return "vip"
   if (visits >= 3) return "regular"
   return "new"
 }
 
 type TabKey = "all" | "vip" | "regular" | "new"
 
-export function PatronProfilesTable({ profiles }: { profiles: PatronProfile[] }) {
+export function PatronProfilesTable({
+  profiles,
+  venueId,
+  canSetVip,
+}: {
+  profiles: PatronProfile[]
+  venueId: string
+  canSetVip: boolean
+}) {
   const [activeTab, setActiveTab] = useState<TabKey>("all")
   const [search, setSearch] = useState("")
+  const [localProfiles, setLocalProfiles] = useState(profiles)
 
-  const counts = {
-    all:     profiles.length,
-    vip:     profiles.filter((p) => patronTag(p.visits) === "vip").length,
-    regular: profiles.filter((p) => patronTag(p.visits) === "regular").length,
-    new:     profiles.filter((p) => patronTag(p.visits) === "new").length,
+  async function toggleVip(patron: PatronProfile) {
+    if (!canSetVip || !patron.id) return
+    const nextIsVip = !patron.isVip
+    setLocalProfiles((prev) =>
+      prev.map((p) => (p.id === patron.id ? { ...p, isVip: nextIsVip } : p))
+    )
+    try {
+      const res = await fetch(`/api/venues/${venueId}/patrons/${patron.id}/vip`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ isVip: nextIsVip }),
+      })
+      if (!res.ok) throw new Error("request failed")
+    } catch {
+      // Roll back on failure
+      setLocalProfiles((prev) =>
+        prev.map((p) => (p.id === patron.id ? { ...p, isVip: patron.isVip } : p))
+      )
+    }
   }
 
-  const visible = profiles.filter((p) => {
-    if (activeTab !== "all" && patronTag(p.visits) !== activeTab) return false
+  const counts = {
+    all:     localProfiles.length,
+    vip:     localProfiles.filter((p) => patronTag(p.visits, p.isVip) === "vip").length,
+    regular: localProfiles.filter((p) => patronTag(p.visits, p.isVip) === "regular").length,
+    new:     localProfiles.filter((p) => patronTag(p.visits, p.isVip) === "new").length,
+  }
+
+  const visible = localProfiles.filter((p) => {
+    if (activeTab !== "all" && patronTag(p.visits, p.isVip) !== activeTab) return false
     if (search && !p.characterName.toLowerCase().includes(search.toLowerCase()) &&
         !p.world.toLowerCase().includes(search.toLowerCase())) return false
     return true
@@ -52,7 +84,7 @@ export function PatronProfilesTable({ profiles }: { profiles: PatronProfile[] })
         <div className="stat">
           <div className="top"><span className="sb"><History /></span></div>
           <div className="k">Unique patrons</div>
-          <div className="v">{profiles.length}</div>
+          <div className="v">{localProfiles.length}</div>
           <div className="delta flat">all time</div>
         </div>
         <div className="stat">
@@ -120,7 +152,7 @@ export function PatronProfilesTable({ profiles }: { profiles: PatronProfile[] })
             </thead>
             <tbody>
               {visible.map((p) => {
-                const t = patronTag(p.visits)
+                const t = patronTag(p.visits, p.isVip)
                 const initials = p.characterName.split(" ").map((n) => n[0]).join("").slice(0, 2).toUpperCase()
                 return (
                   <tr key={`${p.characterName}|${p.world}`}>
@@ -142,6 +174,16 @@ export function PatronProfilesTable({ profiles }: { profiles: PatronProfile[] })
                     <td>
                       <div style={{ display: "flex", gap: 6, flexWrap: "wrap" }}>
                         {t === "vip" && <span className="tag vip">VIP</span>}
+                        {canSetVip && (
+                          <button
+                            type="button"
+                            onClick={() => toggleVip(p)}
+                            className="tag neutral"
+                            style={{ cursor: "pointer" }}
+                          >
+                            {t === "vip" ? "Unmark VIP" : "Mark VIP"}
+                          </button>
+                        )}
                         {(t === "vip" || t === "regular") && <span className="tag neutral">Regular</span>}
                         {t === "new" && <span className="tag em">New</span>}
                       </div>
