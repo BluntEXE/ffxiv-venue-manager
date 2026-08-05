@@ -29,21 +29,50 @@ jobs:
         run: pnpm install --ignore-scripts --frozen-lockfile
       - name: Audit web app (high+)
         run: |
-          pnpm audit --json 2>/dev/null > audit.json || true
+          pnpm audit --prod --json 2>/dev/null > audit.json || true
           python3 - <<'EOF'
           import json, sys
           with open("audit.json") as f:
               data = json.load(f)
           advisories = data.get("advisories", {})
+
+          # Accepted risk, reviewed 2026-08-05 - keep this in sync with the
+          # matching list in pnpm-workspace.yaml's auditConfig.ignoreCves
+          # (that list documents the same decision for humans running
+          # `pnpm audit` locally, but does NOT affect this script's own
+          # --json parsing, so the actual enforcement has to live here too).
+          # All DoS-class (glob/URI parsing complexity), only reachable
+          # through @sentry/nextjs's own bundler/webpack-plugin chain or
+          # Prisma CLI's dev-mode tooling (@prisma/dev>@prisma/streams-local)
+          # - never fed attacker-controlled input in production. No fix
+          # available without forcing an incompatible major version several
+          # levels down a transitive chain we don't control.
+          ACCEPTED_RISK_GHSA = {
+              "GHSA-3jxr-9vmj-r5cp",  # brace-expansion, via @sentry/nextjs bundler chain
+              "GHSA-mh99-v99m-4gvg",  # brace-expansion, via @sentry/nextjs bundler chain
+              "GHSA-rgw5-rvv9-x895",  # brace-expansion, via @sentry/nextjs bundler chain
+              "GHSA-v2hh-gcrm-f6hx",  # fast-uri, via prisma dev-mode tooling
+              "GHSA-7p8r-x3mc-p8w7",  # fast-uri, via prisma dev-mode tooling
+              "GHSA-4c8g-83qw-93j6",  # fast-uri, via prisma dev-mode tooling
+          }
+
           failures = []
           for adv in advisories.values():
               severity = adv.get("severity", "")
               if severity not in ("high", "critical"):
                   continue
+              ghsa_id = adv.get("url", "").rsplit("/", 1)[-1]
+              if ghsa_id in ACCEPTED_RISK_GHSA:
+                  continue
               paths = [f.get("paths", []) for f in adv.get("findings", [])]
               flat = [p for group in paths for p in group]
-              # Skip vulnerabilities that only affect mobile build tooling
-              if all("apps__mobile" in p for p in flat):
+              # This job only cares about the production web app. Skip
+              # anything that doesn't touch apps__web at all - mobile build
+              # tooling, the discord bot, shout-crafter's eslint devDeps,
+              # etc. all live in the same pnpm workspace and would otherwise
+              # fail this job for vulnerabilities nothing in apps/web can
+              # reach.
+              if not any("apps__web" in p for p in flat):
                   continue
               failures.append(f"{severity}: {adv.get('title')} ({adv.get('url')})")
           if failures:
