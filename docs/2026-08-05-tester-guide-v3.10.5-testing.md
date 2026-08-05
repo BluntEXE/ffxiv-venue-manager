@@ -1,10 +1,10 @@
-# XIV Venue Manager — What's New (Testing Build v3.10.5)
+# XIV Venue Manager: What's New (Testing Build v3.10.5)
 
 Five new features, all live on the website now, plugin available on the testing channel. Read this before testing, then report anything that breaks.
 
 ## Get the testing build
 
-In-game, open Dalamud's Plugin Installer, go to Settings → Experimental, and enable "Get all plugin testing versions." Then check for updates. You should land on v3.10.5-testing or later — check the version number in the plugin's header.
+In-game, open Dalamud's Plugin Installer, go to Settings → Experimental, and enable "Get all plugin testing versions." Then check for updates. You should land on v3.10.5-testing or later. Check the version number in the plugin's header.
 
 This build has not been promoted to the stable channel yet. If you don't opt into testing versions, you won't get it, and that's intentional until it's confirmed solid.
 
@@ -24,7 +24,7 @@ Mark a patron as VIP from the dashboard, and the plugin flags them automatically
 
 ## 2. Ban list
 
-Ban a patron with a reason, from the dashboard or in-game. This is a warning to staff, not an automated block — the plugin has no way to eject or lock anyone out.
+Ban a patron with a reason, from the dashboard or in-game. This is a warning to staff, not an automated block. The plugin has no way to eject or lock anyone out.
 
 **To use it, dashboard:** Dashboard → Ban List. Ban or unban a patron, reason required.
 
@@ -52,7 +52,7 @@ Track which rooms in your venue are occupied or free, from the dashboard and in-
 
 ## 4. Bar inventory mapping
 
-Link a drink (a Service) to a real FFXIV item, track how many you have, and stop selling it automatically at zero. Opt-in — off by default, does nothing until a venue turns it on.
+Link a drink (a Service) to a real FFXIV item, track how many you have, and stop selling it automatically at zero. Opt-in. Off by default, does nothing until a venue turns it on.
 
 **To turn it on:** Dashboard → Settings → Bar Inventory Tracking, toggle Enabled.
 
@@ -60,14 +60,14 @@ Link a drink (a Service) to a real FFXIV item, track how many you have, and stop
 - Dashboard → Services → edit a service → search for the item by name, pick it, set a stock count.
 - In-game, plugin's new Inventory tab (only visible once the venue has inventory tracking on) → Link Item on a service → search in-game, pick it, set a stock count.
 
-Both ways write to the same place — link from either side, doesn't matter which.
+Both ways write to the same place. Link from either side, doesn't matter which.
 
 **What to expect:**
 - The plugin's Sales tab shows "(N left)" next to a stocked drink in the dropdown.
 - Selling one decrements the count, from either the dashboard or the plugin.
 - Hit zero, the next sale gets rejected with an out-of-stock error naming the drink.
-- Restock from the plugin's Inventory tab or the dashboard's Services page — only Owner/Manager can restock or relink, staff can sell and see the count.
-- A service with no stock count set is never tracked, even with the venue-wide toggle on — this is opt-in per drink too, not just per venue.
+- Restock from the plugin's Inventory tab or the dashboard's Services page. Only Owner/Manager can restock or relink, staff can sell and see the count.
+- A service with no stock count set is never tracked, even with the venue-wide toggle on. It's opt-in per drink too, not just per venue.
 
 **Test:** turn it on, link a drink, set stock to 2, sell it twice, confirm the third sale is blocked with the drink's name (not a raw ID) in the error. Restock, confirm selling works again.
 
@@ -75,11 +75,11 @@ Both ways write to the same place — link from either side, doesn't matter whic
 
 ## 5. Patron tracking now covers the plot exterior
 
-Previously, the plugin only tracked patrons while they were inside your house. Standing outside on your own plot's yard, at the door, didn't count for anything — no guest-list entry, no header update, nothing.
+Previously, the plugin only tracked patrons while they were inside your house. Standing outside on your own plot's yard, at the door, didn't count for anything. No guest-list entry, no header update, nothing.
 
-**What's different:** the plugin now tracks both. Someone standing on your plot's exterior shows up the same way someone inside does — same guest list, same header, same VIP/ban badges. Walking through the door doesn't create a second, separate visit — it's the same tracked presence the whole time, in and out.
+**What's different:** the plugin now tracks both. Someone standing on your plot's exterior shows up the same way someone inside does: same guest list, same header, same VIP/ban badges. Walking through the door doesn't create a second, separate visit. It's the same tracked presence the whole time, in and out.
 
-**Nothing to turn on** — this is always active, not a toggle.
+**Nothing to turn on.** This is always active, not a toggle.
 
 **Test:** walk onto your own plot without going inside, confirm the header shows your venue name and the patron count updates. Walk inside, confirm it's still the same session (name doesn't flicker or reset). Walk away entirely, confirm the header clears back to "(no venue)" within a couple seconds.
 
