@@ -74,12 +74,18 @@ export async function createTransaction(
     eventId = activeEvent?.id
   }
 
+  // Stock enforcement only applies to actual sales - a TIP or COVER_CHARGE
+  // logged against a serviceId must not consume inventory. resolvedType is
+  // the same value that ends up in `type: ...` on the create() below, so
+  // this condition can never diverge from what's actually inserted.
+  const resolvedType = input.type ?? "SALE"
+
   // Stock check + create + decrement happen in one DB transaction so a
   // concurrent sale can't oversell the last unit. updateMany's gt:0 filter
   // is the atomic guard: if two requests race, only one's updateMany
   // affects a row, and the loser gets a hard 409 rather than a negative
   // stockCount.
-  if (input.serviceId) {
+  if (input.serviceId && resolvedType === "SALE") {
     const service = await prisma.service.findUnique({
       where: { id: input.serviceId },
       select: { stockCount: true },
@@ -90,7 +96,7 @@ export async function createTransaction(
   }
 
   const newTransaction = await prisma.$transaction(async (tx) => {
-    if (input.serviceId) {
+    if (input.serviceId && resolvedType === "SALE") {
       const decremented = await tx.service.updateMany({
         where: { id: input.serviceId, stockCount: { gt: 0 } },
         data: { stockCount: { decrement: 1 } },
@@ -116,7 +122,7 @@ export async function createTransaction(
         serviceId: input.serviceId,
         eventId,
         staffId: staffUserId,
-        type: input.type ?? "SALE",
+        type: resolvedType,
         amount: input.amount,
         customerName: input.customerName,
         notes: input.notes,

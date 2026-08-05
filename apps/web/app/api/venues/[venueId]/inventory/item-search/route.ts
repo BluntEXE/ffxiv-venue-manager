@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server"
 import { getServerSession } from "next-auth"
 import { authOptions } from "@/lib/auth"
+import { prisma } from "@/lib/prisma"
 import { withRateLimit } from "@/lib/middleware/with-rate-limit"
 
 const XIVAPI_BASE_URL = process.env.XIVAPI_BASE_URL ?? "https://v2.xivapi.com"
@@ -23,12 +24,28 @@ export interface ItemSearchResult {
   iconId: number | null
 }
 
-export const GET = withRateLimit(
-  async (request: NextRequest) => {
+export const GET = withRateLimit<{ params: Promise<{ venueId: string }> }>(
+  async (request: NextRequest, context) => {
+    if (!context?.params) return NextResponse.json({ error: "Invalid request" }, { status: 400 })
     try {
       const session = await getServerSession(authOptions)
       if (!session?.user?.id) {
         return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
+      }
+
+      const { venueId } = await context.params
+      const venue = await prisma.venue.findFirst({
+        where: { OR: [{ id: venueId }, { slug: venueId }] },
+      })
+      if (!venue) {
+        return NextResponse.json({ error: "Venue not found" }, { status: 404 })
+      }
+
+      const membership = await prisma.membership.findFirst({
+        where: { userId: session.user.id, venueId: venue.id, status: "active" },
+      })
+      if (!membership || !["OWNER", "MANAGER"].includes(membership.role)) {
+        return NextResponse.json({ error: "Owner or Manager role required" }, { status: 403 })
       }
 
       const { searchParams } = new URL(request.url)
@@ -37,8 +54,9 @@ export const GET = withRateLimit(
         return NextResponse.json({ error: "query must be at least 2 characters" }, { status: 400 })
       }
 
+      const sanitizedQuery = query.replace(/"/g, "")
       const apiParams = new URLSearchParams({
-        query: `Name~"${query}"`,
+        query: `Name~"${sanitizedQuery}"`,
         sheets: "Item",
         fields: "Name,Icon",
         limit: "20",

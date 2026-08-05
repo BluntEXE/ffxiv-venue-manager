@@ -80,6 +80,9 @@ export async function GET(request: NextRequest) {
       price: svc.price.toString(),
       category: svc.category,
       stockCount: svc.stockCount,
+      linkedItemId: svc.linkedItemId,
+      linkedItemName: svc.linkedItemName,
+      linkedItemIcon: svc.linkedItemIcon,
     }))
 
     return NextResponse.json({

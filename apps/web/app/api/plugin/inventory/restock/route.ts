@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { validateApiKey } from '@/lib/api/plugin-auth'
 import { enforcePluginRateLimit, enforcePluginIpRateLimit } from '@/lib/api/plugin-rate-limit'
 import { prisma } from '@/lib/prisma'
+import { invalidateCache, cacheKeys } from '@/lib/redis-cache'
 
 interface RestockPayload {
   venueId: string
@@ -63,6 +64,8 @@ export async function POST(request: NextRequest) {
       where: { id: serviceId },
       data: { stockCount },
     })
+
+    await invalidateCache(cacheKeys.venueServices(venueId))
 
     return NextResponse.json({ success: true })
   } catch (error) {

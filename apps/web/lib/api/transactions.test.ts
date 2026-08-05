@@ -96,4 +96,20 @@ describe("createTransaction stock enforcement", () => {
     expect(mockTx).toHaveBeenCalled()
     expect(mockTransaction.create).toHaveBeenCalled()
   })
+
+  it("allows a TIP against an out-of-stock service and does not decrement stock", async () => {
+    mockService.findUnique.mockResolvedValue({ stockCount: 0 })
+
+    await expect(
+      createTransaction("venue1", "user1", {
+        serviceId: "svc1",
+        type: "TIP",
+        amount: 10,
+        customerName: "Bob",
+      } as any)
+    ).resolves.toBeDefined()
+
+    expect(mockService.findUnique).not.toHaveBeenCalled()
+    expect(mockTransaction.create).toHaveBeenCalled()
+  })
 })
