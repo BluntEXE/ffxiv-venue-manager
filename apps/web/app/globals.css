@@ -989,6 +989,37 @@
 .dtable .hide { display: none; }
 @media (min-width: 640px) { .dtable .hide { display: table-cell; } }
 
+/* .tag — small pill used for status badges (VIP/Banned/Occupied/New) and
+   inline row actions (Save/Cancel/Rename/Delete) across patron, ban-list,
+   and rooms tables. Never had a CSS definition until now, despite the
+   <Badge variant="tag"> React component already covering this exact look —
+   these usages are plain <span>/<button> markup, not that component, so
+   they need their own class. Sized/shaped to match Badge's own Tailwind
+   classes (rounded-full, px-2 py-0.5, text-xs) for visual consistency. */
+.tag {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  border-radius: 999px;
+  border: 1px solid var(--blue-018);
+  background: var(--blue-010);
+  color: var(--xiv-blue);
+  padding: 2px 10px;
+  font-size: 0.72rem;
+  font-weight: 500;
+  line-height: 1.5;
+  white-space: nowrap;
+}
+button.tag { cursor: pointer; transition: border-color 0.15s, background 0.15s; }
+button.tag:hover:not(:disabled) { border-color: var(--blue-035); background: var(--blue-012); }
+button.tag:disabled { cursor: default; }
+.tag.neutral { border-color: var(--blue-018); background: var(--blue-010); color: var(--xiv-blue); }
+.tag.danger { border-color: rgba(243, 139, 168, 0.20); background: rgba(243, 139, 168, 0.10); color: var(--destructive); }
+button.tag.danger:hover:not(:disabled) { border-color: rgba(243, 139, 168, 0.40); background: rgba(243, 139, 168, 0.18); }
+.tag.vip { border-color: rgba(249, 226, 175, 0.25); background: rgba(249, 226, 175, 0.12); color: var(--warning); }
+button.tag.vip:hover:not(:disabled) { border-color: rgba(249, 226, 175, 0.45); background: rgba(249, 226, 175, 0.20); }
+.tag.em { border-color: var(--blue-020); background: var(--blue-012); color: var(--xiv-blue); font-weight: 600; }
+
 /* .svc-grid — service card auto-fill grid */
 .svc-grid {
   display: grid;
