@@ -35,8 +35,8 @@ export type CreateTransactionInput = z.infer<typeof createTransactionSchema>
  * warning, matching the approved bar-inventory-mapping design.
  */
 export class InsufficientStockError extends Error {
-  constructor(serviceId: string) {
-    super(`Service ${serviceId} is out of stock`)
+  constructor(serviceName: string) {
+    super(`${serviceName} is out of stock`)
     this.name = "InsufficientStockError"
   }
 }
@@ -88,10 +88,10 @@ export async function createTransaction(
   if (input.serviceId && resolvedType === "SALE") {
     const service = await prisma.service.findUnique({
       where: { id: input.serviceId },
-      select: { stockCount: true },
+      select: { name: true, stockCount: true },
     })
     if (service && service.stockCount !== null && service.stockCount <= 0) {
-      throw new InsufficientStockError(input.serviceId)
+      throw new InsufficientStockError(service.name)
     }
   }
 
@@ -108,10 +108,10 @@ export async function createTransaction(
       if (decremented.count === 0) {
         const current = await tx.service.findUnique({
           where: { id: input.serviceId },
-          select: { stockCount: true },
+          select: { name: true, stockCount: true },
         })
         if (current && current.stockCount !== null && current.stockCount <= 0) {
-          throw new InsufficientStockError(input.serviceId)
+          throw new InsufficientStockError(current.name)
         }
       }
     }

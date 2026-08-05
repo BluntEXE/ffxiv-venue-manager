@@ -53,17 +53,18 @@ describe("createTransaction stock enforcement", () => {
     })
   })
 
-  it("rejects a sale when the service is out of stock", async () => {
-    mockService.findUnique.mockResolvedValue({ stockCount: 0 })
+  it("rejects a sale when the service is out of stock, naming the service not its id", async () => {
+    mockService.findUnique.mockResolvedValue({ name: "Potion", stockCount: 0 })
 
-    await expect(
-      createTransaction("venue1", "user1", {
-        serviceId: "svc1",
-        type: "SALE",
-        amount: 10,
-        customerName: "Bob",
-      } as any)
-    ).rejects.toThrow(InsufficientStockError)
+    const call = createTransaction("venue1", "user1", {
+      serviceId: "svc1",
+      type: "SALE",
+      amount: 10,
+      customerName: "Bob",
+    } as any)
+
+    await expect(call).rejects.toThrow(InsufficientStockError)
+    await expect(call).rejects.toThrow("Potion is out of stock")
 
     expect(mockTransaction.create).not.toHaveBeenCalled()
   })
@@ -98,7 +99,7 @@ describe("createTransaction stock enforcement", () => {
   })
 
   it("allows a TIP against an out-of-stock service and does not decrement stock", async () => {
-    mockService.findUnique.mockResolvedValue({ stockCount: 0 })
+    mockService.findUnique.mockResolvedValue({ name: "Potion", stockCount: 0 })
 
     await expect(
       createTransaction("venue1", "user1", {
