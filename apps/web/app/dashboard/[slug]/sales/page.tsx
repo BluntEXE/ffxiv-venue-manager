@@ -10,6 +10,7 @@ import { VenueEyebrow } from "@/components/venue-eyebrow"
 import { SalesLogDialog } from "@/components/sales-log-dialog"
 import { TransactionsList } from "@/components/transactions-list"
 import { Alert, AlertDescription } from "@/components/ui/alert"
+import { resolveDisplayName } from "@/lib/display-name"
 
 interface PageProps {
   params: Promise<{ slug: string }>
@@ -116,10 +117,13 @@ export default async function SalesPage({ params }: PageProps) {
           select: {
             id: true,
             name: true,
+            displayName: true,
+            characters: { orderBy: [{ isPrimary: "desc" }, { createdAt: "asc" }], take: 1, select: { characterName: true } },
             memberships: {
               where: { venueId: venue.id },
               select: {
                 role: true,
+                nickname: true,
                 customRole: {
                   select: {
                     name: true,
@@ -173,7 +177,16 @@ export default async function SalesPage({ params }: PageProps) {
   ])
 
   const hasMore = transactionsData.length > 50
-  const transactions = hasMore ? transactionsData.slice(0, 50) : transactionsData
+  const transactions = (hasMore ? transactionsData.slice(0, 50) : transactionsData).map((t) => {
+    if (!t.staff) return t
+    const resolvedName = resolveDisplayName({
+      characterName: t.staff.characters[0]?.characterName,
+      nickname: t.staff.memberships[0]?.nickname,
+      displayName: t.staff.displayName,
+      discordName: t.staff.name,
+    })
+    return { ...t, staff: { ...t.staff, name: resolvedName } }
+  })
   const nextCursor = hasMore ? transactions[transactions.length - 1]?.id : null
 
   // Convert Prisma Decimal to number for services

@@ -131,7 +131,7 @@ export function LiveDashboard({
             type: item.type as ActivityItem["type"],
             timestamp: item.timestamp,
             text: item.type === "sale"
-              ? `${item.data?.customerName || "Someone"} — ${Number(item.data?.amount || 0).toLocaleString()} gil${item.data?.staff?.name ? " · " + item.data.staff.name : ""}`
+              ? `${item.data?.service?.name ? item.data.service.name + " · " : ""}${item.data?.customerName || "Someone"} — ${Number(item.data?.amount || 0).toLocaleString()} gil${item.data?.staff?.name ? " · " + item.data.staff.name : ""}`
               : item.type === "patron_enter"
               ? `${item.data?.characterName || "Unknown"} entered`
               : `${item.data?.characterName || "Unknown"} left`,
@@ -155,14 +155,14 @@ export function LiveDashboard({
           if (!scopeSalesToOwn || isOwnSale) setSaleCount(prev => prev + 1)
           setActivity(prev => prev.some(a => a.id === data.id) ? prev : [{
             id: data.id, type: "sale" as const, timestamp: data.timestamp,
-            text: `${data.data.customerName || "Someone"} — ${amt.toLocaleString()} gil${data.data.staff?.name ? " · " + data.data.staff.name : ""}`,
+            text: `${data.data.service?.name ? data.data.service.name + " · " : ""}${data.data.customerName || "Someone"} — ${amt.toLocaleString()} gil${data.data.staff?.name ? " · " + data.data.staff.name : ""}`,
           }, ...prev].slice(0, 50))
         }
         if (data.type === "patron_enter") {
           setPatronCount(prev => prev + 1)
           setNewTonight(prev => prev + 1)
           const name = data.data.characterName || "Unknown"
-          setRoster(prev => [{ name, arrivedAt: data.timestamp }, ...prev].slice(0, 20))
+          setRoster(prev => [{ name, arrivedAt: data.timestamp }, ...prev.filter(p => p.name !== name)].slice(0, 20))
           setActivity(prev => prev.some(a => a.id === data.id) ? prev : [{
             id: data.id, type: "patron_enter" as const, timestamp: data.timestamp,
             text: `${name} entered`,

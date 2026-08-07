@@ -150,6 +150,8 @@ export const PUT = withRateLimit<{ params: Promise<{ venueId: string; eventId: s
   { requests: 20, window: "1 m" }
 )
 
+export const PATCH = PUT
+
 export const DELETE = withRateLimit<{ params: Promise<{ venueId: string; eventId: string }> }>(
   async (request, context) => {
     if (!context?.params) {

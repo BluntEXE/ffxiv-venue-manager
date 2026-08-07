@@ -133,6 +133,7 @@ export async function createTransaction(
             id: true,
             name: true,
             price: true,
+            stockCount: true,
           },
         },
         event: {

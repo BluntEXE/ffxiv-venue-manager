@@ -86,6 +86,7 @@ export async function POST(request: NextRequest) {
         customerName: transaction.customerName,
         serviceId: transaction.serviceId,
         serviceName: transaction.service?.name ?? null,
+        serviceStockCount: transaction.service?.stockCount ?? null,
         createdAt: transaction.createdAt,
       },
     })
