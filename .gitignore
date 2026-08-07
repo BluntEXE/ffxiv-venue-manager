@@ -46,6 +46,8 @@ docker/homepage/config/.env
 # typescript
 *.tsbuildinfo
 next-env.d.ts
+apps/web/AGENTS.md
+apps/web/CLAUDE.md
 
 /app/generated/prisma
 
