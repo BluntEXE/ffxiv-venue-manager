@@ -8,7 +8,7 @@ import { Button } from "@/components/ui/button"
 import { UserMenu } from "./user-menu"
 import { FeedbackDialog } from "./feedback-dialog"
 import { useSidebar } from "./sidebar-context"
-import { Menu, Heart, Bell, CheckCheck } from "lucide-react"
+import { Menu, Heart, Bell, CheckCheck, LayoutDashboard } from "lucide-react"
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover"
 import type { Session } from "next-auth"
 
@@ -120,6 +120,16 @@ export function NavbarClient({ session, venues }: NavbarClientProps) {
         <div className="flex items-center gap-[14px]">
           {session ? (
             <>
+              {/* Dashboard shortcut — hidden once you're already on a venue page, the sidebar covers it there */}
+              {!isVenuePage && venues.length > 0 && (
+                <Button asChild variant="ghost" size="sm" className="text-muted-foreground hover:text-foreground hover:bg-[var(--blue-007)]">
+                  <Link href={venues.length === 1 ? `/dashboard/${venues[0].slug}` : "/dashboard"}>
+                    <LayoutDashboard className="h-4 w-4 sm:mr-1" />
+                    <span className="hidden sm:inline">Dashboard</span>
+                  </Link>
+                </Button>
+              )}
+
               {/* Sync pill — hidden on mobile, only shown when plugin recently synced */}
               {isVenuePage && pluginSynced && (
                 <div className="hidden [@media(min-width:1081px)]:inline-flex items-center gap-2 px-[11px] py-[5px] rounded-full text-[0.74rem] font-medium font-mono border border-[rgba(16,185,129,0.25)] bg-[rgba(16,185,129,0.08)] text-[var(--success-text)]">
