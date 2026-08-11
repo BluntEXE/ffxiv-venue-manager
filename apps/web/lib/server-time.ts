@@ -43,6 +43,12 @@ export type ServerTimeKind =
   | "datetimelong"  // Apr 28, 2026, 8:54 PM
   | "isoDate"       // 2026-04-28
   | "isoDateTime"   // 2026-04-28 20:54:10
+  | "weekdatelong"  // Tuesday, April 28, 2026
+  | "weekdate"      // Tuesday, April 28
+  | "shiftdate"     // Tue, 28 Apr
+  | "dayheader"     // Tuesday, 28 Apr
+  | "datewithyear"  // Apr 28, 2026
+  | "monthyear"     // April 2026
 
 export function formatServerTime(
   date: string | Date,
@@ -52,6 +58,18 @@ export function formatServerTime(
 
   if (kind === "isoDate") return d.toISOString().slice(0, 10)
   if (kind === "isoDateTime") return d.toISOString().replace("T", " ").slice(0, 19)
+
+  // en-US locale ordering always puts month before day, so "day month"
+  // kinds are built manually from individually formatted parts.
+  if (kind === "shiftdate" || kind === "dayheader") {
+    const weekday = d.toLocaleString("en-US", {
+      timeZone: ST_TZ,
+      weekday: kind === "shiftdate" ? "short" : "long",
+    })
+    const day = d.toLocaleString("en-US", { timeZone: ST_TZ, day: "numeric" })
+    const month = d.toLocaleString("en-US", { timeZone: ST_TZ, month: "short" })
+    return `${weekday}, ${day} ${month}`
+  }
 
   const opts: Intl.DateTimeFormatOptions = { timeZone: ST_TZ }
   if (kind === "time") {
@@ -66,6 +84,14 @@ export function formatServerTime(
   } else if (kind === "datetimelong") {
     opts.year = "numeric"; opts.month = "short"; opts.day = "numeric"
     opts.hour = "numeric"; opts.minute = "2-digit"
+  } else if (kind === "weekdatelong") {
+    opts.weekday = "long"; opts.year = "numeric"; opts.month = "long"; opts.day = "numeric"
+  } else if (kind === "weekdate") {
+    opts.weekday = "long"; opts.month = "long"; opts.day = "numeric"
+  } else if (kind === "datewithyear") {
+    opts.month = "short"; opts.day = "numeric"; opts.year = "numeric"
+  } else if (kind === "monthyear") {
+    opts.month = "long"; opts.year = "numeric"
   }
   return d.toLocaleString("en-US", opts)
 }
