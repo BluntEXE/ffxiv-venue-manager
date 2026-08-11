@@ -9,6 +9,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { format } from "date-fns"
 import { TrendingUp, DollarSign, Users, Calendar, Target, Download } from "lucide-react"
 import { StatReadout } from "@/components/ui/stat-readout"
+import { LocalTime } from "@/components/server-time"
 import { PageLoading } from "@/components/ui/loading-spinner"
 import { AttendanceOverview } from "@/components/analytics/attendance-overview"
 
@@ -636,7 +637,7 @@ export default function AnalyticsPage() {
               <Card className="px-[18px] py-4"><StatReadout label="Total followers" value={data.followers?.total ?? 0} subtext="app users following" icon={<Users />} iconVariant="blue" /></Card>
               {Object.entries(data.followers?.byMonth ?? {}).map(([month, count]) => (
                 <Card key={month} className="p-4">
-                  <StatReadout label={new Date(month + '-01').toLocaleDateString('en-GB', { month: 'short', year: 'numeric' })} value={`+${count as number}`} subtext="new followers" />
+                  <StatReadout label={<LocalTime date={`${month}-01`} formatStr="monthyear" />} value={`+${count as number}`} subtext="new followers" />
                 </Card>
               ))}
             </div>

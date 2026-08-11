@@ -5,7 +5,7 @@ import { cn } from "@/lib/utils"
 type IconVariant = "blue" | "success" | "warning" | "default"
 
 interface StatReadoutProps {
-  label: string
+  label: React.ReactNode
   value: React.ReactNode
   delta?: string
   deltaDirection?: "up" | "down" | "neutral"

@@ -300,7 +300,7 @@ export function formatTaskCreatedEmbed(task: {
   if (task.dueDate) {
     fields.push({
       name: "Due Date",
-      value: new Date(task.dueDate).toLocaleString(),
+      value: `<t:${Math.floor(new Date(task.dueDate).getTime() / 1000)}:F>`,
       inline: true,
     })
   }

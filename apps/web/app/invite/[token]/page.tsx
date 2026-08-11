@@ -5,6 +5,7 @@ import { useSession, signIn } from "next-auth/react"
 import { useRouter } from "next/navigation"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
+import { LocalTime } from "@/components/server-time"
 import { AlertCircle, CheckCircle2, Loader2, Users } from "lucide-react"
 import { Alert, AlertDescription } from "@/components/ui/alert"
 
@@ -220,7 +221,7 @@ export default function InvitePage({
             </div>
 
             <div className="text-xs text-center text-muted-foreground">
-              Invite expires: {new Date(inviteDetails.expiresAt).toLocaleString()}
+              Invite expires: <LocalTime date={inviteDetails.expiresAt} formatStr="datetimelong" />
             </div>
           </CardContent>
         </Card>
