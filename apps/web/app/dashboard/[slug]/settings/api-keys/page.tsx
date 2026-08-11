@@ -16,6 +16,7 @@ import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Badge } from "@/components/ui/badge"
 import { Alert, AlertDescription } from "@/components/ui/alert"
+import { LocalTime } from "@/components/server-time"
 
 interface ApiKey {
   id: string
@@ -448,9 +449,9 @@ export default function ApiKeysPage({
                         {key.venue ? `Venue: ${key.venue.name}` : "Account wide"}
                       </span>
                       <span>·</span>
-                      <span>Created: {new Date(key.createdAt).toLocaleDateString()}</span>
+                      <span>Created: <LocalTime date={key.createdAt} formatStr="datewithyear" /></span>
                       {key.lastUsedAt && (
-                        <><span>·</span><span>Last used: {new Date(key.lastUsedAt).toLocaleDateString()}</span></>
+                        <><span>·</span><span>Last used: <LocalTime date={key.lastUsedAt} formatStr="datewithyear" /></span></>
                       )}
                     </div>
                   </div>

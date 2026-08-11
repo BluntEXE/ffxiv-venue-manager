@@ -15,6 +15,7 @@ import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Badge } from "@/components/ui/badge"
 import { Alert, AlertDescription } from "@/components/ui/alert"
+import { LocalTime } from "@/components/server-time"
 
 interface ApiKey {
   id: string
@@ -475,11 +476,13 @@ export default function UnifiedApiKeysPage() {
                         </div>
                         <div className="text-xs text-muted-foreground mt-1">
                           Created:{" "}
-                          {new Date(key.createdAt).toLocaleDateString()}
-                          {key.lastUsedAt &&
-                            ` • Last used: ${new Date(
-                              key.lastUsedAt
-                            ).toLocaleDateString()}`}
+                          <LocalTime date={key.createdAt} formatStr="datewithyear" />
+                          {key.lastUsedAt && (
+                            <>
+                              {" • Last used: "}
+                              <LocalTime date={key.lastUsedAt} formatStr="datewithyear" />
+                            </>
+                          )}
                         </div>
                       </div>
                       <div className="flex items-center gap-2 ml-4">
