@@ -91,8 +91,6 @@ export function CreateShiftDialog({ venueSlug, staff, roles, trigger, prefill, p
       return
     }
 
-    // No Z suffix → interpreted as the operator's own local time, converted
-    // to UTC below via toISOString()
     const scheduledStartDate = new Date(`${date}T${startTime}:00`)
     let scheduledEndDate = new Date(`${date}T${endTime}:00`)
 

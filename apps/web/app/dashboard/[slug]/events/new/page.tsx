@@ -97,7 +97,6 @@ export default function NewEventPage() {
         eventType: template.eventType,
       })
 
-      // Set start and end times from template default times (using today's date, in the operator's local time)
       const today = new Date()
       const [startHours, startMinutes] = template.defaultStartTime.split(':').map(Number)
       const [endHours, endMinutes] = template.defaultEndTime.split(':').map(Number)
