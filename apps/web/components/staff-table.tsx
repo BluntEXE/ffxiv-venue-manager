@@ -2,6 +2,7 @@
 
 import { useState } from "react"
 import Link from "next/link"
+import { LocalTime } from "@/components/server-time"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
@@ -326,7 +327,7 @@ export function StaffTable({
 
                   {/* Joined */}
                   <td className="px-5 py-3.5 text-sm text-muted-foreground hidden sm:table-cell whitespace-nowrap">
-                    {new Date(member.joinedAt).toLocaleDateString("en-GB", { day: "numeric", month: "short", year: "numeric" })}
+                    <LocalTime date={member.joinedAt} formatStr="datewithyear" />
                   </td>
 
                   {/* Actions */}

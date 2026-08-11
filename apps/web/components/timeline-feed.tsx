@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useCallback, useRef } from "react"
 import { formatServerTime, SERVER_TIME_LABEL } from "@/lib/server-time"
+import { formatLocalTime } from "@/components/server-time"
 import { Button } from "@/components/ui/button"
 
 type TimelineFilter = "all" | "sales" | "patrons" | "staff"
@@ -42,6 +43,8 @@ export function TimelineFeed({ venueId, initialFilter = "all" }: TimelineFeedPro
   const [loading, setLoading] = useState(true)
   const [loadingMore, setLoadingMore] = useState(false)
   const [liveCount, setLiveCount] = useState(0)
+  const [mounted, setMounted] = useState(false)
+  useEffect(() => setMounted(true), [])
   const filterRef = useRef(filter)
   filterRef.current = filter
 
@@ -112,14 +115,9 @@ export function TimelineFeed({ venueId, initialFilter = "all" }: TimelineFeedPro
 
   const visibleItems = items.filter((item) => matchesFilter(item, filter))
 
-  // Group by UTC day for day headers
+  const formatDay = mounted ? formatLocalTime : formatServerTime
   const grouped = visibleItems.reduce<{ day: string; items: TimelineItem[] }[]>((acc, item) => {
-    const day = new Date(item.timestamp).toLocaleDateString("en-GB", {
-      timeZone: "UTC",
-      weekday: "long",
-      day: "numeric",
-      month: "short",
-    })
+    const day = formatDay(item.timestamp, "dayheader")
     const last = acc[acc.length - 1]
     if (last && last.day === day) last.items.push(item)
     else acc.push({ day, items: [item] })

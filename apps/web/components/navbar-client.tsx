@@ -10,6 +10,7 @@ import { FeedbackDialog } from "./feedback-dialog"
 import { useSidebar } from "./sidebar-context"
 import { Menu, Heart, Bell, CheckCheck, LayoutDashboard } from "lucide-react"
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover"
+import { LocalTime } from "@/components/server-time"
 import type { Session } from "next-auth"
 
 interface NavbarClientProps {
@@ -177,7 +178,7 @@ export function NavbarClient({ session, venues }: NavbarClientProps) {
                             <p className="text-sm font-medium leading-tight">{n.title}</p>
                             <p className="text-xs text-muted-foreground mt-0.5 leading-snug">{n.body}</p>
                             <p className="text-[0.68rem] text-[var(--fg-faint)] mt-1">
-                              {new Date(n.createdAt).toLocaleDateString(undefined, { month: "short", day: "numeric", hour: "2-digit", minute: "2-digit" })}
+                              <LocalTime date={n.createdAt} formatStr="datetime" />
                             </p>
                           </div>
                         </a>
