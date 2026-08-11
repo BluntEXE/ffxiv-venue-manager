@@ -5,6 +5,7 @@ import { prisma } from "@/lib/prisma"
 import { claimShiftWithMerge } from "@/lib/shift-overlap"
 import { logShiftAudit } from "@/lib/shift-audit"
 import { syncVenueOpenStatus } from "@/lib/venue-status"
+import { formatServerTime } from "@/lib/server-time"
 import { z } from "zod"
 
 const patchSchema = z.object({
@@ -88,7 +89,7 @@ export async function PATCH(
           }),
         ]).then(([managers, claimant]) => {
           const staffName = claimant?.displayName ?? claimant?.name ?? "A staff member"
-          const shiftDate = shift.scheduledStart.toLocaleDateString("en-GB", { weekday: "short", day: "numeric", month: "short", timeZone: "UTC" })
+          const shiftDate = formatServerTime(shift.scheduledStart, "shiftdate")
           return prisma.pendingNotification.createMany({
             data: managers.filter(m => m.userId).map((m) => ({
               userId: m.userId!,
@@ -139,7 +140,7 @@ export async function PATCH(
         })
         if (claimant?.userId) {
           const now = new Date()
-          const shiftDate = shift.scheduledStart.toLocaleDateString("en-GB", { weekday: "short", day: "numeric", month: "short", timeZone: "UTC" })
+          const shiftDate = formatServerTime(shift.scheduledStart, "shiftdate")
           // Immediate approval notification
           prisma.pendingNotification.create({
             data: {
@@ -196,7 +197,7 @@ export async function PATCH(
           select: { userId: true },
         })
         if (claimant?.userId) {
-          const shiftDate = shift.scheduledStart.toLocaleDateString("en-GB", { weekday: "short", day: "numeric", month: "short", timeZone: "UTC" })
+          const shiftDate = formatServerTime(shift.scheduledStart, "shiftdate")
           prisma.pendingNotification.create({
             data: {
               userId: claimant.userId,

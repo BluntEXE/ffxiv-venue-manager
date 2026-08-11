@@ -4,6 +4,7 @@ import { prisma } from "@/lib/prisma"
 import { validateApiKey } from "@/lib/api/plugin-auth"
 import { enforcePluginRateLimit, enforcePluginIpRateLimit } from "@/lib/api/plugin-rate-limit"
 import { claimShiftWithMerge } from "@/lib/shift-overlap"
+import { formatServerTime } from "@/lib/server-time"
 
 /**
  * POST /api/plugin/shifts/claim
@@ -93,7 +94,7 @@ export async function POST(request: NextRequest) {
       ]).then(([managers, claimant, venue]) => {
         const staffName = claimant?.displayName ?? claimant?.name ?? "A staff member"
         const venueName = venue?.name ?? "your venue"
-        const shiftDate = shift.scheduledStart.toLocaleDateString("en-GB", { weekday: "short", day: "numeric", month: "short", timeZone: "UTC" })
+        const shiftDate = formatServerTime(shift.scheduledStart, "shiftdate")
         return prisma.pendingNotification.createMany({
           data: managers.filter(m => m.userId).map((m) => ({
             userId: m.userId!,
