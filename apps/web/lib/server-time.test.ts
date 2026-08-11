@@ -14,15 +14,15 @@ describe("formatServerTime", () => {
     )
   })
 
-  it("formats 'shiftdate' as short weekday, day, short month", () => {
+  it("formats 'shiftdate' as short weekday, day, short month, no comma (en-GB, matches shift-claim/shift-detail routes)", () => {
     expect(formatServerTime("2026-04-28T20:54:00Z", "shiftdate")).toBe(
-      "Tue, 28 Apr"
+      "Tue 28 Apr"
     )
   })
 
-  it("formats 'dayheader' as long weekday, day, short month", () => {
+  it("formats 'dayheader' as long weekday, day, short month, no comma (en-GB, matches timeline-feed)", () => {
     expect(formatServerTime("2026-04-28T20:54:00Z", "dayheader")).toBe(
-      "Tuesday, 28 Apr"
+      "Tuesday 28 Apr"
     )
   })
 
@@ -49,10 +49,10 @@ describe("formatServerTime", () => {
 
   it("formats 'shiftdate'/'dayheader' with single-digit day, no zero padding", () => {
     expect(formatServerTime("2026-01-01T00:30:00Z", "shiftdate")).toBe(
-      "Thu, 1 Jan"
+      "Thu 1 Jan"
     )
     expect(formatServerTime("2026-01-01T00:30:00Z", "dayheader")).toBe(
-      "Thursday, 1 Jan"
+      "Thursday 1 Jan"
     )
   })
 })
@@ -67,8 +67,9 @@ describe("getServerTimeIntlOptions", () => {
     expect(opts.minute).toBe("2-digit")
   })
 
-  it("returns locale 'en-IE' for 'shiftdate', 'en-GB' for 'weekdate', and 'en-US' for other kinds", () => {
-    expect(getServerTimeIntlOptions("shiftdate").locale).toBe("en-IE")
+  it("returns locale 'en-GB' for 'shiftdate', 'dayheader', and 'weekdate', and 'en-US' for other kinds", () => {
+    expect(getServerTimeIntlOptions("shiftdate").locale).toBe("en-GB")
+    expect(getServerTimeIntlOptions("dayheader").locale).toBe("en-GB")
     expect(getServerTimeIntlOptions("weekdate").locale).toBe("en-GB")
     expect(getServerTimeIntlOptions("datetime").locale).toBe("en-US")
   })
