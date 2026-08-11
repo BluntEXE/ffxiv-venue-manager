@@ -197,7 +197,7 @@ export default function StaffGuidePage() {
 
             <div className="space-y-3">
               <h3 className="text-base font-semibold text-foreground/80">Server Time (ST)</h3>
-              <p className="text-sm leading-relaxed">All times show in <span className="font-medium">Server Time (ST)</span>, the standard FFXIV time for your data center. Your timezone doesn&apos;t matter.</p>
+              <p className="text-sm leading-relaxed">Shift times use <span className="font-medium">Server Time (ST)</span> — always UTC, the same for every data center. When you view your dashboard elsewhere (like notifications), times show in your own local time automatically.</p>
             </div>
           </section>
 

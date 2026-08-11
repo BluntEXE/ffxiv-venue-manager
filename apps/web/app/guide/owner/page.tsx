@@ -395,13 +395,8 @@ export default function OwnerManagerGuidePage() {
           <section id="server-time" className="space-y-6 scroll-mt-[84px]">
             <h2 className="font-cinzel text-2xl font-semibold border-b border-[rgba(0,180,255,0.2)] pb-3 tracking-wide">Server Time (ST)</h2>
 
-            <p className="text-sm leading-relaxed">All times are displayed in <span className="font-medium">Server Time (ST)</span>:</p>
-            <ul className="list-disc list-inside space-y-1.5 pl-4 text-sm leading-relaxed">
-              <li>NA (Aether, Primal, Crystal, Dynamis): Eastern Time</li>
-              <li>EU (Chaos, Light): UTC</li>
-              <li>JP (Elemental, Gaia, Mana, Meteor): JST</li>
-              <li>OCE (Materia): AEST</li>
-            </ul>
+            <p className="text-sm leading-relaxed">All times are displayed in <span className="font-medium">Server Time (ST)</span> — always UTC, regardless of your data center. Shift schedules, opening hours, and Discord posts use Server Time so everyone reads the same times the same way.</p>
+            <p className="text-sm leading-relaxed">Your dashboard is different: notifications, staff join dates, analytics, and other things you view are shown in your own local time automatically, based on your device&apos;s clock.</p>
           </section>
 
           {/* Tips */}
