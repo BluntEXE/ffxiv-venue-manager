@@ -1,8 +1,8 @@
 "use client"
 
 import { useState, useEffect, useCallback, useRef } from "react"
-import { formatServerTime, SERVER_TIME_LABEL } from "@/lib/server-time"
-import { formatLocalTime } from "@/components/server-time"
+import { formatServerTime } from "@/lib/server-time"
+import { formatLocalTime, LocalTime } from "@/components/server-time"
 import { Button } from "@/components/ui/button"
 
 type TimelineFilter = "all" | "sales" | "patrons" | "staff"
@@ -186,13 +186,13 @@ export function TimelineFeed({ venueId, initialFilter = "all" }: TimelineFeedPro
 }
 
 function TimelineRow({ item, isLast }: { item: TimelineItem; isLast: boolean }) {
-  const timeStr = formatServerTime(item.timestamp, "time") + " " + SERVER_TIME_LABEL
+  const timeEl = <LocalTime date={item.timestamp} formatStr="time" />
 
   if (item.type === "sale") {
     const { amount, customerName, service, staff } = item.data
     return (
       <div className={`tl-item${isLast ? " last" : ""}`}>
-        <div className="tl-time">{timeStr}</div>
+        <div className="tl-time">{timeEl}</div>
         <div className="tl-node em">
           <div className="tl-title">
             <strong>Sale logged</strong>
@@ -216,7 +216,7 @@ function TimelineRow({ item, isLast }: { item: TimelineItem; isLast: boolean }) 
     const isStart = item.type === "shift_start"
     return (
       <div className={`tl-item${isLast ? " last" : ""}`}>
-        <div className="tl-time">{timeStr}</div>
+        <div className="tl-time">{timeEl}</div>
         <div className="tl-node">
           <div className="tl-title">
             <strong>{String(staffName ?? "Staff")}</strong>
@@ -233,7 +233,7 @@ function TimelineRow({ item, isLast }: { item: TimelineItem; isLast: boolean }) 
 
   return (
     <div className={`tl-item${isLast ? " last" : ""}`}>
-      <div className="tl-time">{timeStr}</div>
+      <div className="tl-time">{timeEl}</div>
       <div className={`tl-node${isEnter ? "" : " am"}`}>
         <div className="tl-title">
           <strong>{characterName ? String(characterName) : "Unknown"}</strong>
