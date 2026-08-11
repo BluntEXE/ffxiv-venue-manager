@@ -6,7 +6,7 @@ import Link from "next/link"
 import { prisma } from "@/lib/prisma"
 import { VenueLayout } from "@/components/venue-layout"
 import { CreateShiftDialog } from "@/components/create-shift-dialog"
-import { getServerTimezone, getServerTimeLabel, formatServerTime } from "@/lib/server-time"
+import { getServerTimeLabel, formatServerTime } from "@/lib/server-time"
 import { DeleteShiftButton } from "@/components/delete-shift-button"
 import { ClockShiftButton } from "@/components/clock-shift-button"
 import { OpenShiftChip } from "@/components/open-shift-chip"
@@ -98,7 +98,6 @@ export default async function ShiftsPage({
   const userRole = venue.memberships[0].role
   const currentMembershipId = venue.memberships[0].id
   const canManage = ["OWNER", "MANAGER"].includes(userRole)
-  const timezone = getServerTimezone(venue.dataCenter)
   const tzLabel = getServerTimeLabel(venue.dataCenter)
 
   // Week bounds
@@ -360,8 +359,6 @@ export default async function ShiftsPage({
               venueSlug={slug}
               staff={staffForDialog}
               roles={venueRoles}
-              timezone={timezone}
-              tzLabel={tzLabel}
               potModeEnabled={potModeEnabled}
               events={eventsForDialog}
             />

@@ -53,8 +53,6 @@ interface CreateShiftDialogProps {
   venueSlug: string
   staff: StaffMember[]
   roles: RoleOption[]
-  timezone?: string
-  tzLabel?: string
   trigger?: React.ReactNode
   prefill?: ShiftPrefill
   potModeEnabled?: boolean

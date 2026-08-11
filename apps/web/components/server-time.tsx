@@ -38,14 +38,10 @@ export function ServerTimeRange({
   start,
   end,
   className,
-  timezone: _tz,
-  tzLabel: _label,
 }: {
   start: string | Date
   end: string | Date
   className?: string
-  timezone?: string
-  tzLabel?: string
 }) {
   const formatted = useMemo(() => formatServerTimeRange(start, end), [start, end])
   return <span className={className}>{formatted}</span>
