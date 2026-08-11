@@ -61,6 +61,7 @@ Build `apiFetch()`/mutation hook to replace raw `fetch` + `try/catch` + `alert()
 - Web: shared `DataTable` primitive for staff-table/patron-profiles-table/ban-list-manager/rooms-board — defer until those feature areas are confirmed stable (in-game verify resolved).
 - Web: zod validation registry widened to remaining 133/135 API routes — do incrementally, admin/low-traffic routes first, once Phase 3's pattern is proven.
 - Mobile app — out of scope, may be superseded by Aetherphone integration.
+- **Bug, not cleanup — found 2026-08-11 while creating test shift data:** `components/create-shift-dialog.tsx:95-99` builds `scheduledStart`/`scheduledEnd` from the same `date` field, so any shift where the end time is numerically earlier than the start (e.g. 10 PM–2 AM — normal nightclub hours) hits `scheduledEnd <= scheduledStart` and gets rejected with "End time must be after start time." No overnight shift can currently be scheduled at all, for any venue. Needs the end date to roll to the next day when `endTime < startTime`, matching the midnight-crossover handling `handleTemplateChange`/the auto-calculate `useEffect` already do elsewhere in the same file (search `86400000` / `1440` in that file for the existing pattern to reuse) — the create path just doesn't apply it.
 
 ---
 
