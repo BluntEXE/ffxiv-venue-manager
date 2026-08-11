@@ -59,19 +59,8 @@ export function formatServerTime(
   if (kind === "isoDate") return d.toISOString().slice(0, 10)
   if (kind === "isoDateTime") return d.toISOString().replace("T", " ").slice(0, 19)
 
-  // en-US locale ordering always puts month before day, so "day month"
-  // kinds are built manually from individually formatted parts.
-  if (kind === "shiftdate" || kind === "dayheader") {
-    const weekday = d.toLocaleString("en-US", {
-      timeZone: ST_TZ,
-      weekday: kind === "shiftdate" ? "short" : "long",
-    })
-    const day = d.toLocaleString("en-US", { timeZone: ST_TZ, day: "numeric" })
-    const month = d.toLocaleString("en-US", { timeZone: ST_TZ, month: "short" })
-    return `${weekday}, ${day} ${month}`
-  }
-
   const opts: Intl.DateTimeFormatOptions = { timeZone: ST_TZ }
+  let locale = "en-US"
   if (kind === "time") {
     opts.hour = "numeric"; opts.minute = "2-digit"
   } else if (kind === "datetime") {
@@ -88,12 +77,18 @@ export function formatServerTime(
     opts.weekday = "long"; opts.year = "numeric"; opts.month = "long"; opts.day = "numeric"
   } else if (kind === "weekdate") {
     opts.weekday = "long"; opts.month = "long"; opts.day = "numeric"
+  } else if (kind === "shiftdate") {
+    opts.weekday = "short"; opts.day = "numeric"; opts.month = "short"
+    locale = "en-IE"
+  } else if (kind === "dayheader") {
+    opts.weekday = "long"; opts.day = "numeric"; opts.month = "short"
+    locale = "en-IE"
   } else if (kind === "datewithyear") {
     opts.month = "short"; opts.day = "numeric"; opts.year = "numeric"
   } else if (kind === "monthyear") {
     opts.month = "long"; opts.year = "numeric"
   }
-  return d.toLocaleString("en-US", opts)
+  return d.toLocaleString(locale, opts)
 }
 
 export function formatServerTimeRange(start: string | Date, end: string | Date): string {

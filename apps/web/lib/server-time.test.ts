@@ -37,4 +37,22 @@ describe("formatServerTime", () => {
       "April 2026"
     )
   })
+
+  it("formats 'weekdatelong' correctly across a year rollover", () => {
+    expect(formatServerTime("2025-12-31T23:30:00Z", "weekdatelong")).toBe(
+      "Wednesday, December 31, 2025"
+    )
+    expect(formatServerTime("2026-01-01T00:30:00Z", "weekdatelong")).toBe(
+      "Thursday, January 1, 2026"
+    )
+  })
+
+  it("formats 'shiftdate'/'dayheader' with single-digit day, no zero padding", () => {
+    expect(formatServerTime("2026-01-01T00:30:00Z", "shiftdate")).toBe(
+      "Thu, 1 Jan"
+    )
+    expect(formatServerTime("2026-01-01T00:30:00Z", "dayheader")).toBe(
+      "Thursday, 1 Jan"
+    )
+  })
 })
