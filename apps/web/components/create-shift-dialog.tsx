@@ -91,14 +91,21 @@ export function CreateShiftDialog({ venueSlug, staff, roles, trigger, prefill, p
       return
     }
 
-    // Z suffix → interpret as UTC (Server Time)
-    const scheduledStart = new Date(`${date}T${startTime}:00Z`).toISOString()
-    const scheduledEnd = new Date(`${date}T${endTime}:00Z`).toISOString()
+    // No Z suffix → interpreted as the operator's own local time, converted
+    // to UTC below via toISOString()
+    const scheduledStartDate = new Date(`${date}T${startTime}:00`)
+    let scheduledEndDate = new Date(`${date}T${endTime}:00`)
 
-    if (scheduledEnd <= scheduledStart) {
+    if (scheduledEndDate.getTime() === scheduledStartDate.getTime()) {
       setError("End time must be after start time")
       return
     }
+    if (scheduledEndDate < scheduledStartDate) {
+      scheduledEndDate = new Date(scheduledEndDate.getTime() + 86400000)
+    }
+
+    const scheduledStart = scheduledStartDate.toISOString()
+    const scheduledEnd = scheduledEndDate.toISOString()
 
     setSubmitting(true)
     setError(null)
@@ -368,7 +375,7 @@ export function CreateShiftDialog({ venueSlug, staff, roles, trigger, prefill, p
           </div>
 
           <p className="text-xs text-muted-foreground">
-            All times are in Server Time (ST)
+            Times shown in your local time
           </p>
 
           <div className="space-y-2">

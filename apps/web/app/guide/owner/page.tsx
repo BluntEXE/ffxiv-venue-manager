@@ -257,7 +257,7 @@ export default function OwnerManagerGuidePage() {
               <ol className="list-decimal list-inside space-y-1.5 pl-2 text-sm leading-relaxed">
                 <li>Go to Shifts and click &quot;Schedule Shift&quot;</li>
                 <li>Select a staff member, date, start time, and end time</li>
-                <li>All times are in <span className="font-medium">Server Time (ST)</span></li>
+                <li>Times are entered in your own local time — converted automatically, no need to think in Server Time</li>
               </ol>
             </div>
 
@@ -395,7 +395,7 @@ export default function OwnerManagerGuidePage() {
           <section id="server-time" className="space-y-6 scroll-mt-[84px]">
             <h2 className="font-cinzel text-2xl font-semibold border-b border-[rgba(0,180,255,0.2)] pb-3 tracking-wide">Server Time (ST)</h2>
 
-            <p className="text-sm leading-relaxed">All times are displayed in <span className="font-medium">Server Time (ST)</span> — always UTC, regardless of your data center. Shift schedules, opening hours, and Discord posts use Server Time so everyone reads the same times the same way.</p>
+            <p className="text-sm leading-relaxed">Shift and event scheduling is entered and shown in your own local time — the dashboard converts it automatically, so a time set by someone in a different timezone still lines up correctly for everyone. Opening hours and Discord posts still use <span className="font-medium">Server Time (ST)</span> — always UTC, regardless of your data center — since those are shared references rather than something one person schedules.</p>
             <p className="text-sm leading-relaxed">Your dashboard is different: notifications, staff join dates, analytics, and other things you view are shown in your own local time automatically, based on your device&apos;s clock.</p>
           </section>
 

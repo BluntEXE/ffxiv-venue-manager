@@ -77,7 +77,7 @@ export function DateTimePicker({ date, onDateChange, placeholder = "Pick a date 
           className="w-32"
         />
       </div>
-      <p className="text-xs text-muted-foreground">24-hour format (00:00 = midnight, 12:00 = noon)</p>
+      <p className="text-xs text-muted-foreground">Your local time — 24-hour format (00:00 = midnight, 12:00 = noon)</p>
     </div>
   )
 }

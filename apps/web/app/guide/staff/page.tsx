@@ -197,7 +197,7 @@ export default function StaffGuidePage() {
 
             <div className="space-y-3">
               <h3 className="text-base font-semibold text-foreground/80">Server Time (ST)</h3>
-              <p className="text-sm leading-relaxed">Shift times use <span className="font-medium">Server Time (ST)</span> — always UTC, the same for every data center. When you view your dashboard elsewhere (like notifications), times show in your own local time automatically.</p>
+              <p className="text-sm leading-relaxed">Shift and event times are entered and shown in your own local time — the dashboard converts everything behind the scenes so a shift scheduled by someone in a different timezone still lines up correctly. Discord posts and broadcast messages use <span className="font-medium">Server Time (ST)</span> instead, since those are shared with everyone at once.</p>
             </div>
           </section>
 
