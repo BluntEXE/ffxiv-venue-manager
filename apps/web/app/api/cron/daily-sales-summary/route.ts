@@ -8,6 +8,7 @@ import {
   type VenueWebhookConfig,
 } from "@/lib/discord-webhook"
 import { parseVenueSettings } from "@/lib/types/venue-settings"
+import { formatServerTime } from "@/lib/server-time"
 
 /**
  * Cron Job: Daily Sales Summary
@@ -118,13 +119,7 @@ export async function GET(request: Request) {
         }
       }
 
-      // Format date string
-      const dateString = yesterday.toLocaleDateString("en-US", {
-        weekday: "long",
-        year: "numeric",
-        month: "long",
-        day: "numeric",
-      })
+      const dateString = formatServerTime(yesterday, "weekdatelong")
 
       // Format and send notification
       const embed = formatDailySalesSummaryEmbed({

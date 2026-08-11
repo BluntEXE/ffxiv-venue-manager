@@ -2,6 +2,7 @@ import { NextResponse } from "next/server"
 import { prisma } from "@/lib/prisma"
 import { verifyCronAuth } from "@/lib/cron-auth"
 import { postEventsDigestDay } from "@/lib/discord-feed"
+import { formatServerTime } from "@/lib/server-time"
 
 const MAX_EVENTS_PER_DAY = 20
 
@@ -38,12 +39,7 @@ export async function GET(request: Request) {
       orderBy: { startTime: "asc" },
     })
 
-    const dayLabel = dayStart.toLocaleDateString("en-GB", {
-      weekday: "long",
-      day: "numeric",
-      month: "long",
-      timeZone: "UTC",
-    })
+    const dayLabel = formatServerTime(dayStart, "weekdate")
 
     const shown = events.slice(0, MAX_EVENTS_PER_DAY)
     const truncatedCount = events.length - shown.length
