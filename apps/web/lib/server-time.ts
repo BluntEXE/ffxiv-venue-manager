@@ -50,16 +50,10 @@ export type ServerTimeKind =
   | "datewithyear"  // Apr 28, 2026
   | "monthyear"     // April 2026
 
-export function formatServerTime(
-  date: string | Date,
-  kind: ServerTimeKind = "time"
-): string {
-  const d = new Date(date)
-
-  if (kind === "isoDate") return d.toISOString().slice(0, 10)
-  if (kind === "isoDateTime") return d.toISOString().replace("T", " ").slice(0, 19)
-
-  const opts: Intl.DateTimeFormatOptions = { timeZone: ST_TZ }
+export function getServerTimeIntlOptions(
+  kind: ServerTimeKind
+): { opts: Intl.DateTimeFormatOptions; locale: string } {
+  const opts: Intl.DateTimeFormatOptions = {}
   let locale = "en-US"
   if (kind === "time") {
     opts.hour = "numeric"; opts.minute = "2-digit"
@@ -88,7 +82,20 @@ export function formatServerTime(
   } else if (kind === "monthyear") {
     opts.month = "long"; opts.year = "numeric"
   }
-  return d.toLocaleString(locale, opts)
+  return { opts, locale }
+}
+
+export function formatServerTime(
+  date: string | Date,
+  kind: ServerTimeKind = "time"
+): string {
+  const d = new Date(date)
+
+  if (kind === "isoDate") return d.toISOString().slice(0, 10)
+  if (kind === "isoDateTime") return d.toISOString().replace("T", " ").slice(0, 19)
+
+  const { opts, locale } = getServerTimeIntlOptions(kind)
+  return d.toLocaleString(locale, { ...opts, timeZone: ST_TZ })
 }
 
 export function formatServerTimeRange(start: string | Date, end: string | Date): string {

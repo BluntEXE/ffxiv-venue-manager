@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest"
-import { formatServerTime } from "./server-time"
+import { formatServerTime, getServerTimeIntlOptions } from "./server-time"
 
 describe("formatServerTime", () => {
   it("formats 'weekdatelong' as weekday, month, day, year", () => {
@@ -54,5 +54,21 @@ describe("formatServerTime", () => {
     expect(formatServerTime("2026-01-01T00:30:00Z", "dayheader")).toBe(
       "Thursday, 1 Jan"
     )
+  })
+})
+
+describe("getServerTimeIntlOptions", () => {
+  it("returns options for 'datetime' with no timeZone set", () => {
+    const { opts } = getServerTimeIntlOptions("datetime")
+    expect(opts.timeZone).toBeUndefined()
+    expect(opts.month).toBe("short")
+    expect(opts.day).toBe("numeric")
+    expect(opts.hour).toBe("numeric")
+    expect(opts.minute).toBe("2-digit")
+  })
+
+  it("returns locale 'en-IE' for 'shiftdate' and 'en-US' for other kinds", () => {
+    expect(getServerTimeIntlOptions("shiftdate").locale).toBe("en-IE")
+    expect(getServerTimeIntlOptions("datetime").locale).toBe("en-US")
   })
 })
