@@ -44,7 +44,7 @@ export type ServerTimeKind =
   | "isoDate"       // 2026-04-28
   | "isoDateTime"   // 2026-04-28 20:54:10
   | "weekdatelong"  // Tuesday, April 28, 2026
-  | "weekdate"      // Tuesday, April 28
+  | "weekdate"      // Tuesday 28 April
   | "shiftdate"     // Tue, 28 Apr
   | "dayheader"     // Tuesday, 28 Apr
   | "datewithyear"  // Apr 28, 2026
@@ -71,6 +71,7 @@ export function getServerTimeIntlOptions(
     opts.weekday = "long"; opts.year = "numeric"; opts.month = "long"; opts.day = "numeric"
   } else if (kind === "weekdate") {
     opts.weekday = "long"; opts.month = "long"; opts.day = "numeric"
+    locale = "en-GB"
   } else if (kind === "shiftdate") {
     opts.weekday = "short"; opts.day = "numeric"; opts.month = "short"
     locale = "en-IE"

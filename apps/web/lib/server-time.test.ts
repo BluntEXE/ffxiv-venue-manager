@@ -8,9 +8,9 @@ describe("formatServerTime", () => {
     )
   })
 
-  it("formats 'weekdate' as weekday, month, day (no year)", () => {
+  it("formats 'weekdate' as weekday, day, month, no comma (en-GB order, matches events-digest-post broadcast text)", () => {
     expect(formatServerTime("2026-04-28T20:54:00Z", "weekdate")).toBe(
-      "Tuesday, April 28"
+      "Tuesday 28 April"
     )
   })
 
@@ -67,8 +67,9 @@ describe("getServerTimeIntlOptions", () => {
     expect(opts.minute).toBe("2-digit")
   })
 
-  it("returns locale 'en-IE' for 'shiftdate' and 'en-US' for other kinds", () => {
+  it("returns locale 'en-IE' for 'shiftdate', 'en-GB' for 'weekdate', and 'en-US' for other kinds", () => {
     expect(getServerTimeIntlOptions("shiftdate").locale).toBe("en-IE")
+    expect(getServerTimeIntlOptions("weekdate").locale).toBe("en-GB")
     expect(getServerTimeIntlOptions("datetime").locale).toBe("en-US")
   })
 })
