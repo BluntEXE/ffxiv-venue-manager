@@ -23,6 +23,8 @@ import {
   SelectValue,
 } from "@/components/ui/select"
 import { MessageSquare, Check } from "lucide-react"
+import { toast } from "sonner"
+import { apiFetch, ApiError } from "@/lib/api-fetch"
 
 export function FeedbackDialog() {
   const { data: session } = useSession()
@@ -45,7 +47,7 @@ export function FeedbackDialog() {
     setIsSubmitting(true)
 
     try {
-      const response = await fetch("/api/feedback", {
+      await apiFetch("/api/feedback", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -57,10 +59,6 @@ export function FeedbackDialog() {
           url: window.location.href,
         }),
       })
-
-      if (!response.ok) {
-        throw new Error("Failed to submit feedback")
-      }
 
       // Show success state
       setIsSuccess(true)
@@ -74,8 +72,7 @@ export function FeedbackDialog() {
         setIsOpen(false)
       }, 2000)
     } catch (error) {
-      console.error("Error submitting feedback:", error)
-      alert("Failed to submit feedback. Please try again.")
+      toast.error(error instanceof ApiError ? error.message : "Failed to submit feedback. Please try again.")
     } finally {
       setIsSubmitting(false)
     }
