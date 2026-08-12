@@ -1,4 +1,4 @@
-# Shared DataTable Primitive Implementation Plan
+# Shared DataTable Primitive Implementation Plan — **DONE, deployed 2026-08-12**
 
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
 
