@@ -5,6 +5,7 @@ import { Navbar } from "@/components/navbar"
 import { SessionProvider } from "@/components/session-provider"
 import { VenueProvider } from "@/components/venue-context"
 import { SidebarProvider } from "@/components/sidebar-context"
+import { Toaster } from "sonner"
 
 const inter = Inter({
   variable: "--font-inter",
@@ -91,6 +92,17 @@ export default function RootLayout({
             </main>
           </VenueProvider>
           </SidebarProvider>
+          <Toaster
+            theme="dark"
+            position="top-right"
+            toastOptions={{
+              style: {
+                background: "rgba(7,11,20,0.95)",
+                border: "1px solid var(--blue-020)",
+                color: "var(--foreground)",
+              },
+            }}
+          />
         </SessionProvider>
       </body>
     </html>
