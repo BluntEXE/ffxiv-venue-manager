@@ -105,6 +105,10 @@ export default async function ShiftsPage({
   const weekStart = getWeekMonday(base)
   const weekEnd = addUTCDays(weekStart, 7) // exclusive upper bound
 
+  const FETCH_LOOKBACK_MS = 24 * 60 * 60 * 1000 // covers the full negative-offset range (UTC-12); positive offsets never shift the day backward from weekStart's UTC grid
+  const fetchWindowStart = new Date(weekStart.getTime() - FETCH_LOOKBACK_MS)
+  const fetchWindowEnd = weekEnd
+
   const todayKey = utcDayKey(new Date())
   const thisWeekKey = utcDayKey(getWeekMonday(new Date()))
   const isCurrentWeek = utcDayKey(weekStart) === thisWeekKey
@@ -119,7 +123,7 @@ export default async function ShiftsPage({
     prisma.shift.findMany({
       where: {
         venueId: venue.id,
-        scheduledStart: { gte: weekStart, lt: weekEnd },
+        scheduledStart: { gte: fetchWindowStart, lt: fetchWindowEnd },
       },
       include: {
         membership: {
