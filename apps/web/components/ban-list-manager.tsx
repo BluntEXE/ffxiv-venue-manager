@@ -2,6 +2,7 @@
 
 import { useState } from "react"
 import { formatServerTime } from "@/lib/server-time"
+import { DataTable } from "@/components/ui/data-table"
 
 export type BannedPatron = {
   id: string
@@ -44,46 +45,41 @@ export function BanListManager({
     }
   }
 
-  if (localPatrons.length === 0) {
-    return <p className="text-center text-sm text-muted-foreground py-12">No patrons currently banned.</p>
-  }
-
   return (
     <div className="panel">
-      <table className="dtable">
-        <thead>
-          <tr>
-            <th>Patron</th>
-            <th className="hide">World</th>
-            <th>Reason</th>
-            <th className="hide">Banned by</th>
-            <th className="hide">Banned at</th>
-            <th></th>
+      <DataTable
+        columns={[
+          { label: "Patron" },
+          { label: "World", hideOnMobile: true },
+          { label: "Reason" },
+          { label: "Banned by", hideOnMobile: true },
+          { label: "Banned at", hideOnMobile: true },
+          { label: "" },
+        ]}
+        isEmpty={localPatrons.length === 0}
+        emptyMessage="No patrons currently banned."
+      >
+        {localPatrons.map((p) => (
+          <tr key={p.id}>
+            <td className="t-name">{p.characterName}</td>
+            <td className="hide t-muted">{p.world || "—"}</td>
+            <td>{p.banReason || <span className="t-muted">—</span>}</td>
+            <td className="hide t-muted">{p.bannedBy?.name ?? "—"}</td>
+            <td className="hide t-muted">{p.bannedAt ? formatServerTime(p.bannedAt, "datetime") : "—"}</td>
+            <td>
+              <button
+                type="button"
+                onClick={() => unban(p)}
+                disabled={pendingIds.has(p.id)}
+                className="tag neutral"
+                style={{ cursor: pendingIds.has(p.id) ? "default" : "pointer", opacity: pendingIds.has(p.id) ? 0.6 : 1 }}
+              >
+                Unban
+              </button>
+            </td>
           </tr>
-        </thead>
-        <tbody>
-          {localPatrons.map((p) => (
-            <tr key={p.id}>
-              <td className="t-name">{p.characterName}</td>
-              <td className="hide t-muted">{p.world || "—"}</td>
-              <td>{p.banReason || <span className="t-muted">—</span>}</td>
-              <td className="hide t-muted">{p.bannedBy?.name ?? "—"}</td>
-              <td className="hide t-muted">{p.bannedAt ? formatServerTime(p.bannedAt, "datetime") : "—"}</td>
-              <td>
-                <button
-                  type="button"
-                  onClick={() => unban(p)}
-                  disabled={pendingIds.has(p.id)}
-                  className="tag neutral"
-                  style={{ cursor: pendingIds.has(p.id) ? "default" : "pointer", opacity: pendingIds.has(p.id) ? 0.6 : 1 }}
-                >
-                  Unban
-                </button>
-              </td>
-            </tr>
-          ))}
-        </tbody>
-      </table>
+        ))}
+      </DataTable>
     </div>
   )
 }

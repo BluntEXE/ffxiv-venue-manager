@@ -1,6 +1,7 @@
 "use client"
 
 import { useState, useEffect } from "react"
+import { DataTable } from "@/components/ui/data-table"
 
 export type RoomItem = {
   id: string
@@ -179,22 +180,19 @@ export function RoomsBoard({
 
   return (
     <div>
-      {localRooms.length === 0 ? (
-        <p className="text-center text-sm text-muted-foreground py-12">No rooms yet.</p>
-      ) : (
-        <div className="panel">
-          <table className="dtable">
-            <thead>
-              <tr>
-                <th>Room</th>
-                <th>Status</th>
-                <th>Note</th>
-                <th className="hide">Last updated by</th>
-                <th></th>
-              </tr>
-            </thead>
-            <tbody>
-              {localRooms.map((room) => (
+      <div className="panel">
+        <DataTable
+          columns={[
+            { label: "Room" },
+            { label: "Status" },
+            { label: "Note" },
+            { label: "Last updated by", hideOnMobile: true },
+            { label: "" },
+          ]}
+          isEmpty={localRooms.length === 0}
+          emptyMessage="No rooms yet."
+        >
+          {localRooms.map((room) => (
                 <tr key={room.id}>
                   <td className="t-name">
                     {renamingId === room.id ? (
@@ -258,11 +256,9 @@ export function RoomsBoard({
                     )}
                   </td>
                 </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
-      )}
+          ))}
+        </DataTable>
+      </div>
 
       {canManage && (
         <div style={{ display: "flex", gap: 6, marginTop: 16 }}>

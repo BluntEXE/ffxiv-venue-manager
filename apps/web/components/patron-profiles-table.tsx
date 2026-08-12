@@ -3,6 +3,7 @@
 import { useState } from "react"
 import { formatServerTime } from "@/lib/server-time"
 import { History, Repeat, UserPlus, Crown } from "lucide-react"
+import { DataTable } from "@/components/ui/data-table"
 
 export type PatronProfile = {
   id: string
@@ -181,22 +182,19 @@ export function PatronProfilesTable({
 
       {/* Table */}
       <div className="panel">
-        {visible.length === 0 ? (
-          <p className="text-center text-sm text-muted-foreground py-12">No patrons found.</p>
-        ) : (
-          <table className="dtable">
-            <thead>
-              <tr>
-                <th>Patron</th>
-                <th className="hide">World</th>
-                <th className="t-num">Visits</th>
-                <th className="hide">Last seen</th>
-                <th className="t-num hide">Total spent</th>
-                <th>Tags</th>
-              </tr>
-            </thead>
-            <tbody>
-              {visible.map((p) => {
+        <DataTable
+          columns={[
+            { label: "Patron" },
+            { label: "World", hideOnMobile: true },
+            { label: "Visits", align: "right" },
+            { label: "Last seen", hideOnMobile: true },
+            { label: "Total spent", align: "right", hideOnMobile: true },
+            { label: "Tags" },
+          ]}
+          isEmpty={visible.length === 0}
+          emptyMessage="No patrons found."
+        >
+          {visible.map((p) => {
                 const t = patronTag(p.visits, p.isVip)
                 const initials = p.characterName.split(" ").map((n) => n[0]).join("").slice(0, 2).toUpperCase()
                 return (
@@ -294,9 +292,7 @@ export function PatronProfilesTable({
                   </tr>
                 )
               })}
-            </tbody>
-          </table>
-        )}
+        </DataTable>
       </div>
     </div>
   )
