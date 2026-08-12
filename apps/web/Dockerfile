@@ -12,6 +12,12 @@ RUN pnpm install --frozen-lockfile --ignore-scripts
 # Builder
 FROM base AS builder
 WORKDIR /app
+# NEXT_PUBLIC_* vars are inlined into the client bundle at build time, not read
+# from the runtime container env — must be passed as build args here.
+ARG NEXT_PUBLIC_SENTRY_DSN
+ENV NEXT_PUBLIC_SENTRY_DSN=$NEXT_PUBLIC_SENTRY_DSN
+ARG NEXT_PUBLIC_DISCORD_APPLICATION_ID
+ENV NEXT_PUBLIC_DISCORD_APPLICATION_ID=$NEXT_PUBLIC_DISCORD_APPLICATION_ID
 COPY --from=deps /app/node_modules ./node_modules
 COPY --from=deps /app/apps/web/node_modules ./apps/web/node_modules
 COPY pnpm-workspace.yaml package.json .npmrc ./
