@@ -208,7 +208,7 @@ export function LogoUpload({ venueId, initialUrl, galleryImages, onUpdate }: Log
           {/* eslint-disable-next-line @next/next/no-img-element */}
           <img src={savedUrl} alt="Venue logo" className="w-20 h-20 rounded-lg object-cover border border-[var(--blue-015)]" />
           <div className="flex flex-col gap-2">
-            <Button size="sm" variant="outline" onClick={() => fileInputRef.current?.click()}
+            <Button size="sm" variant="outline" onClick={() => fileInputRef.current?.click()} disabled={removing}
               className="h-7 text-xs border-[var(--blue-020)] hover:border-[var(--xiv-blue)]">
               <Upload className="w-3 h-3 mr-1" /> Change
             </Button>
