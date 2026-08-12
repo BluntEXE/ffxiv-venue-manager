@@ -11,7 +11,7 @@ import { ClaimedShiftChip } from "@/components/claimed-shift-chip"
 import { OpenShiftChip } from "@/components/open-shift-chip"
 import { DeleteShiftButton } from "@/components/delete-shift-button"
 import { ClockShiftButton } from "@/components/clock-shift-button"
-import { localDayKey, localHourLabel, browserTimeZone } from "@/lib/local-day"
+import { localDayKey, localHourLabel, browserTimeZone, localTimeInput } from "@/lib/local-day"
 import { resolveDisplayName } from "@/lib/display-name"
 import type { ShiftRow } from "@/lib/shift-format"
 
@@ -27,13 +27,6 @@ function utcDayKey(d: Date): string {
 function addDayToKey(key: string): string {
   const [y, m, d] = key.split("-").map(Number)
   return utcDayKey(new Date(Date.UTC(y, m - 1, d + 1)))
-}
-
-// Shared formatter for the CreateShiftDialog prefill start/end time inputs
-// (HH:mm, 24h) — only meaningful once mounted, since it reads the viewer's
-// timezone.
-function localTimeInput(d: Date | string, timeZone: string): string {
-  return new Intl.DateTimeFormat("en-GB", { timeZone, hour: "2-digit", minute: "2-digit", hourCycle: "h23" }).format(new Date(d))
 }
 
 interface StaffOption {

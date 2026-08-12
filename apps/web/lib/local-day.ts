@@ -24,3 +24,8 @@ export function localHourLabel(d: Date | string, timeZone: string): string {
 export function browserTimeZone(): string {
   return Intl.DateTimeFormat().resolvedOptions().timeZone
 }
+
+/** "HH:mm" (24h) for a date in the given timezone, for form input prefill. */
+export function localTimeInput(d: Date | string, timeZone: string): string {
+  return new Intl.DateTimeFormat("en-GB", { timeZone, hour: "2-digit", minute: "2-digit", hourCycle: "h23" }).format(new Date(d))
+}

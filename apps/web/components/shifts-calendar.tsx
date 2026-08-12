@@ -17,6 +17,7 @@ interface ShiftsCalendarProps {
   venueId: string
   staffForDialog: StaffMember[]
   roles: RoleOption[]
+  todayKeyST: string
 }
 
 const DAY_HEADERS = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"]
@@ -45,6 +46,7 @@ export function ShiftsCalendar({
   venueId,
   staffForDialog,
   roles,
+  todayKeyST,
 }: ShiftsCalendarProps) {
   const [monthCursor, setMonthCursor] = useState(() => utcMonthStart(new Date()))
   const [selectedDate, setSelectedDate] = useState<Date | null>(null)
@@ -52,7 +54,7 @@ export function ShiftsCalendar({
   useEffect(() => setMounted(true), [])
   const timeZone = mounted ? browserTimeZone() : null
 
-  const todayKey = dayKeyFor(new Date(), timeZone)
+  const todayKey = mounted ? dayKeyFor(new Date(), timeZone) : todayKeyST
   const firstOfMonth = utcMonthStart(monthCursor)
   const leadingBlanks = firstOfMonth.getUTCDay() // 0 = Sunday
   const totalDays = daysInUTCMonth(monthCursor)

@@ -19,7 +19,7 @@ import { OpenShiftChip } from "@/components/open-shift-chip"
 import { ClaimedShiftChip } from "@/components/claimed-shift-chip"
 import { Copy } from "lucide-react"
 import { dayKeyFor, hourLabelFor, statusBadgeClass, type CalendarShift, type StaffMember, type RoleOption } from "@/lib/shift-format"
-import { browserTimeZone } from "@/lib/local-day"
+import { browserTimeZone, localTimeInput } from "@/lib/local-day"
 import { resolveDisplayName } from "@/lib/display-name"
 
 interface ShiftDayDialogProps {
@@ -118,10 +118,10 @@ export function ShiftDayDialog({
                           roleId: shift.roleId ?? undefined,
                           date: dayKeyFor(date, timeZone),
                           startTime: mounted
-                            ? new Intl.DateTimeFormat("en-GB", { timeZone: browserTimeZone(), hour: "2-digit", minute: "2-digit", hourCycle: "h23" }).format(new Date(shift.scheduledStart))
+                            ? localTimeInput(shift.scheduledStart, timeZone!)
                             : new Date(shift.scheduledStart).toISOString().slice(11, 16),
                           endTime: mounted
-                            ? new Intl.DateTimeFormat("en-GB", { timeZone: browserTimeZone(), hour: "2-digit", minute: "2-digit", hourCycle: "h23" }).format(new Date(shift.scheduledEnd))
+                            ? localTimeInput(shift.scheduledEnd, timeZone!)
                             : new Date(shift.scheduledEnd).toISOString().slice(11, 16),
                           notes: shift.notes ?? undefined,
                         }}

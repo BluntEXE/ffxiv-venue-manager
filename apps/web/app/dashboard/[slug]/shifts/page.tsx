@@ -246,6 +246,7 @@ export default async function ShiftsPage({
             venueId={venue.id}
             staffForDialog={staffForDialog}
             roles={venueRoles}
+            todayKeyST={todayKeyST}
           />
         ) : (
         <>
