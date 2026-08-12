@@ -1,11 +1,12 @@
 // apps/web/components/shifts-calendar.tsx
 "use client"
 
-import { useState } from "react"
+import { useEffect, useState } from "react"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent } from "@/components/ui/card"
 import { ChevronLeft, ChevronRight } from "lucide-react"
-import { fmtHour, utcDayKey, type CalendarShift, type StaffMember, type RoleOption } from "@/lib/shift-format"
+import { dayKeyFor, hourLabelFor, type CalendarShift, type StaffMember, type RoleOption } from "@/lib/shift-format"
+import { browserTimeZone } from "@/lib/local-day"
 import { ShiftDayDialog } from "@/components/shift-day-dialog"
 
 interface ShiftsCalendarProps {
@@ -16,6 +17,7 @@ interface ShiftsCalendarProps {
   venueId: string
   staffForDialog: StaffMember[]
   roles: RoleOption[]
+  todayKeyST: string
 }
 
 const DAY_HEADERS = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"]
@@ -44,11 +46,15 @@ export function ShiftsCalendar({
   venueId,
   staffForDialog,
   roles,
+  todayKeyST,
 }: ShiftsCalendarProps) {
   const [monthCursor, setMonthCursor] = useState(() => utcMonthStart(new Date()))
   const [selectedDate, setSelectedDate] = useState<Date | null>(null)
+  const [mounted, setMounted] = useState(false)
+  useEffect(() => setMounted(true), [])
+  const timeZone = mounted ? browserTimeZone() : null
 
-  const todayKey = utcDayKey(new Date())
+  const todayKey = mounted ? dayKeyFor(new Date(), timeZone) : todayKeyST
   const firstOfMonth = utcMonthStart(monthCursor)
   const leadingBlanks = firstOfMonth.getUTCDay() // 0 = Sunday
   const totalDays = daysInUTCMonth(monthCursor)
@@ -65,7 +71,7 @@ export function ShiftsCalendar({
   const otherCoverageDays = new Set<string>()
 
   for (const shift of shifts) {
-    const key = utcDayKey(new Date(shift.scheduledStart))
+    const key = dayKeyFor(new Date(shift.scheduledStart), timeZone)
     if (shift.membershipId === currentMembershipId) {
       if (!ownByDay.has(key)) ownByDay.set(key, [])
       ownByDay.get(key)!.push(shift)
@@ -117,7 +123,7 @@ export function ShiftsCalendar({
         {cells.map((day, index) => {
           if (!day) return <div key={index} />
 
-          const key = utcDayKey(day)
+          const key = dayKeyFor(day, timeZone)
           const isToday = key === todayKey
           const dayShifts = ownByDay.get(key) ?? []
           const hasOtherCoverage = otherCoverageDays.has(key)
@@ -142,7 +148,7 @@ export function ShiftsCalendar({
                       key={shift.id}
                       className={`shift-chip${shift.status === "ACTIVE" ? " em" : shift.status === "MISSED" ? " am" : ""}${shift.status === "CANCELLED" ? " opacity-50 line-through" : ""}`}
                     >
-                      {fmtHour(shift.scheduledStart)}–{fmtHour(shift.scheduledEnd)}
+                      {hourLabelFor(shift.scheduledStart, timeZone)}–{hourLabelFor(shift.scheduledEnd, timeZone)}
                     </div>
                   ))}
                   {dayShifts.length > 3 && (

@@ -1,5 +1,8 @@
 // apps/web/lib/shift-format.ts
 
+import { Prisma } from "@/generated/prisma/client"
+import { localDayKey, localHourLabel } from "./local-day"
+
 // FFXIV server time = UTC (see apps/web/app/dashboard/[slug]/shifts/page.tsx).
 // These mirror that page's private utcDayKey/fmtHour helpers so the calendar
 // and day-detail dialog group/label shifts identically to the week grid,
@@ -20,6 +23,16 @@ export function fmtHour(iso: string | Date): string {
   return m === 0 ? `${h12}${ampm}` : `${h12}:${String(m).padStart(2, "0")}${ampm}`
 }
 
+/** Local-timezone day key, or the UTC one if `mounted` is false (SSR/first paint). */
+export function dayKeyFor(d: Date | string, timeZone: string | null): string {
+  return timeZone ? localDayKey(d, timeZone) : utcDayKey(new Date(d))
+}
+
+/** Local-timezone hour label, or the UTC one if `mounted` is false (SSR/first paint). */
+export function hourLabelFor(d: Date | string, timeZone: string | null): string {
+  return timeZone ? localHourLabel(d, timeZone) : fmtHour(d)
+}
+
 export const statusBadgeClass: Record<string, string> = {
   SCHEDULED: "bg-[rgba(0,180,255,0.12)] text-[var(--xiv-blue)] border-[rgba(0,180,255,0.35)]",
   ACTIVE:    "bg-emerald-500/10 text-emerald-500 border-emerald-500/20",
@@ -38,6 +51,43 @@ export interface RoleOption {
   id: string
   name: string
 }
+
+// Explicit select (not include) for the shifts week grid — passed whole into
+// a client component (ShiftsWeekView). Prisma's Decimal fields (e.g.
+// Shift.hoursWorked, Membership.hourlyRate) can't cross the server/client
+// boundary and hourlyRate is also pay data non-managers shouldn't receive in
+// the RSC payload, so only the fields ShiftsWeekView actually reads are
+// selected here — same constraint/pattern as CalendarShift above.
+export const shiftSelect = {
+  id: true,
+  membershipId: true,
+  roleId: true,
+  payrollEntryId: true,
+  scheduledStart: true,
+  scheduledEnd: true,
+  status: true,
+  notes: true,
+  recurrenceRule: true,
+  parentShiftId: true,
+  slotGroupId: true,
+  membership: {
+    select: {
+      nickname: true,
+      user: {
+        select: {
+          id: true,
+          name: true,
+          displayName: true,
+          image: true,
+          characters: { orderBy: [{ isPrimary: "desc" }, { createdAt: "asc" }], take: 1, select: { characterName: true } },
+        },
+      },
+    },
+  },
+  role: { select: { name: true } },
+} satisfies Prisma.ShiftSelect
+
+export type ShiftRow = Prisma.ShiftGetPayload<{ select: typeof shiftSelect }>
 
 export interface CalendarShift {
   id: string

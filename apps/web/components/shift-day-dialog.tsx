@@ -1,6 +1,7 @@
 // apps/web/components/shift-day-dialog.tsx
 "use client"
 
+import { useEffect, useState } from "react"
 import {
   Dialog,
   DialogContent,
@@ -17,7 +18,8 @@ import { DeleteShiftButton } from "@/components/delete-shift-button"
 import { OpenShiftChip } from "@/components/open-shift-chip"
 import { ClaimedShiftChip } from "@/components/claimed-shift-chip"
 import { Copy } from "lucide-react"
-import { fmtHour, statusBadgeClass, utcDayKey, type CalendarShift, type StaffMember, type RoleOption } from "@/lib/shift-format"
+import { dayKeyFor, hourLabelFor, statusBadgeClass, type CalendarShift, type StaffMember, type RoleOption } from "@/lib/shift-format"
+import { browserTimeZone, localTimeInput } from "@/lib/local-day"
 import { resolveDisplayName } from "@/lib/display-name"
 
 interface ShiftDayDialogProps {
@@ -52,8 +54,12 @@ export function ShiftDayDialog({
   staffForDialog,
   roles,
 }: ShiftDayDialogProps) {
+  const [mounted, setMounted] = useState(false)
+  useEffect(() => setMounted(true), [])
+  const timeZone = mounted ? browserTimeZone() : null
+
   const open = date !== null
-  const dayShifts = date ? shifts.filter((s) => utcDayKey(new Date(s.scheduledStart)) === utcDayKey(date)) : []
+  const dayShifts = date ? shifts.filter((s) => dayKeyFor(new Date(s.scheduledStart), timeZone) === dayKeyFor(date, timeZone)) : []
   const visibleShifts = canManage
     ? dayShifts
     : dayShifts.filter((s) => s.membershipId === currentMembershipId)
@@ -87,14 +93,14 @@ export function ShiftDayDialog({
                     <span className="av-sm flex-shrink-0 border border-dashed border-amber-500/40 bg-amber-500/10 text-amber-400">!</span>
                     <div className="text-sm">
                       <div className="font-medium text-amber-400">Open{shift.role?.name ? ` · ${shift.role.name}` : ""}</div>
-                      <div className="text-xs text-muted-foreground">{fmtHour(shift.scheduledStart)}–{fmtHour(shift.scheduledEnd)}</div>
+                      <div className="text-xs text-muted-foreground">{hourLabelFor(shift.scheduledStart, timeZone)}–{hourLabelFor(shift.scheduledEnd, timeZone)}</div>
                     </div>
                   </div>
                   <div className="flex items-center gap-1 flex-shrink-0">
                     <OpenShiftChip
                       shiftId={shift.id}
                       venueId={venueId}
-                      timeLabel={`${fmtHour(shift.scheduledStart)}–${fmtHour(shift.scheduledEnd)}`}
+                      timeLabel={`${hourLabelFor(shift.scheduledStart, timeZone)}–${hourLabelFor(shift.scheduledEnd, timeZone)}`}
                       canClaim={!canManage}
                     />
                     {canManage && (
@@ -110,9 +116,13 @@ export function ShiftDayDialog({
                         prefill={{
                           mode: "open",
                           roleId: shift.roleId ?? undefined,
-                          date: utcDayKey(date),
-                          startTime: fmtHour(shift.scheduledStart),
-                          endTime: fmtHour(shift.scheduledEnd),
+                          date: dayKeyFor(date, timeZone),
+                          startTime: mounted
+                            ? localTimeInput(shift.scheduledStart, timeZone!)
+                            : new Date(shift.scheduledStart).toISOString().slice(11, 16),
+                          endTime: mounted
+                            ? localTimeInput(shift.scheduledEnd, timeZone!)
+                            : new Date(shift.scheduledEnd).toISOString().slice(11, 16),
                           notes: shift.notes ?? undefined,
                         }}
                       />
@@ -145,7 +155,7 @@ export function ShiftDayDialog({
                   <div className="min-w-0">
                     {canManage && <div className="text-sm font-medium truncate">{staffLabel(shift)}</div>}
                     <div className="text-xs text-muted-foreground">
-                      {fmtHour(shift.scheduledStart)}–{fmtHour(shift.scheduledEnd)}
+                      {hourLabelFor(shift.scheduledStart, timeZone)}–{hourLabelFor(shift.scheduledEnd, timeZone)}
                       {shift.role?.name ? ` · ${shift.role.name}` : ""}
                     </div>
                   </div>
@@ -158,7 +168,7 @@ export function ShiftDayDialog({
                     <ClaimedShiftChip
                       shiftId={shift.id}
                       venueId={venueId}
-                      timeLabel={`${fmtHour(shift.scheduledStart)}–${fmtHour(shift.scheduledEnd)}`}
+                      timeLabel={`${hourLabelFor(shift.scheduledStart, timeZone)}–${hourLabelFor(shift.scheduledEnd, timeZone)}`}
                       canManage={canManage}
                     />
                   ) : (
@@ -202,7 +212,7 @@ export function ShiftDayDialog({
             staff={staffForDialog}
             roles={roles}
             trigger={<Button className="w-full">Add shift</Button>}
-            prefill={{ mode: "assign", date: utcDayKey(date) }}
+            prefill={{ mode: "assign", date: dayKeyFor(date, timeZone) }}
           />
         )}
       </DialogContent>
