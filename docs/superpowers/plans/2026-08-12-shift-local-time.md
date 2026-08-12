@@ -157,14 +157,12 @@ Current (`apps/web/app/dashboard/[slug]/shifts/page.tsx:104-106`):
 Add directly below it:
 
 ```typescript
-  // Widen the fetch window so shifts near the ST week boundary are still
-  // fetched even if a viewer's local day places them outside it — bucketing
-  // in ShiftsWeekView (Task 3) assigns each shift to the viewer's actual
-  // local day, or drops it if that day falls outside the 7 displayed columns.
-  const FETCH_PADDING_MS = 14 * 60 * 60 * 1000 // covers UTC-12..UTC+14
-  const fetchWindowStart = new Date(weekStart.getTime() - FETCH_PADDING_MS)
-  const fetchWindowEnd = new Date(weekEnd.getTime() + FETCH_PADDING_MS)
+  const FETCH_LOOKBACK_MS = 24 * 60 * 60 * 1000 // covers the full negative-offset range (UTC-12); positive offsets never shift the day backward from weekStart's UTC grid
+  const fetchWindowStart = new Date(weekStart.getTime() - FETCH_LOOKBACK_MS)
+  const fetchWindowEnd = weekEnd
 ```
+
+**Correction, found in code review during execution (2026-08-12):** an earlier draft of this step used a symmetric ±14h pad. That's wrong — `weekDays[i]` are exact UTC midnights, so a negative-offset viewer's `dayKeyOf` shifts the *whole column* back one calendar day (not just individual shift times), while a positive-offset viewer's day-key never shifts at all (adding a positive offset to a UTC midnight stays within the same UTC calendar day). The union of what any real-world offset (UTC-12 to UTC+14) can need is `[weekStart - 24h, weekEnd)` — asymmetric, lookback-only. The trailing pad after `weekEnd` is never needed by any viewer. 24h (not a smaller precise-per-offset value) is used because the offset at a column's local midnight can differ from the offset at `weekStart` across a DST transition inside the displayed week.
 
 - [ ] **Step 2: Use the padded window in the query**
 
