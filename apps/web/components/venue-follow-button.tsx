@@ -27,7 +27,7 @@ export function VenueFollowButton({ venueId, isFollowing: initial, followCount: 
       setFollowing(!following)
       setCount(c => following ? c - 1 : c + 1)
     } catch (e) {
-      toast.error(e instanceof ApiError ? e.message : "Couldn't update follow status. Try again.")
+      toast.error(e instanceof ApiError ? e.message : "Failed to update follow status. Please try again.")
     } finally {
       setLoading(false)
     }
