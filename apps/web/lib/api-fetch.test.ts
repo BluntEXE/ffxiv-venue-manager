@@ -34,6 +34,18 @@ describe("apiFetch", () => {
     })
   })
 
+  it("prefers the server's message field over error when both are present", async () => {
+    mockFetchOnce({
+      ok: false,
+      status: 429,
+      body: { error: "Too many requests", message: "You have exceeded the rate limit. Please try again later." },
+    })
+    await expect(apiFetch("/api/x")).rejects.toMatchObject({
+      message: "You have exceeded the rate limit. Please try again later.",
+      status: 429,
+    })
+  })
+
   it("throws ApiError when a 2xx response has a non-JSON body", async () => {
     mockFetchOnce({ ok: true, status: 200, text: "<html>not json</html>" })
     await expect(apiFetch("/api/x")).rejects.toMatchObject({

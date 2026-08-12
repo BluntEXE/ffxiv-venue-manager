@@ -27,8 +27,10 @@ async function parseBody(res: Response): Promise<unknown> {
 }
 
 function extractErrorMessage(body: unknown, status: number): string {
-  if (body && typeof body === "object" && "error" in body && typeof (body as { error: unknown }).error === "string") {
-    return (body as { error: string }).error
+  if (body && typeof body === "object") {
+    const b = body as { error?: unknown; message?: unknown }
+    if (typeof b.message === "string" && b.message) return b.message
+    if (typeof b.error === "string" && b.error) return b.error
   }
   return `Request failed (${status})`
 }
