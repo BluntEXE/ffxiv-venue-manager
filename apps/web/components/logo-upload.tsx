@@ -1,8 +1,10 @@
 "use client"
 
 import { useRef, useState, useCallback, useEffect } from "react"
-import { ImageIcon, Trash2, Upload, X } from "lucide-react"
+import { ImageIcon, Trash2, Upload } from "lucide-react"
+import { toast } from "sonner"
 import { Button } from "@/components/ui/button"
+import { apiFetch, ApiError } from "@/lib/api-fetch"
 
 const CONTAINER_W = 320
 const CONTAINER_H = 220
@@ -39,7 +41,7 @@ export function LogoUpload({ venueId, initialUrl, galleryImages, onUpdate }: Log
   const [tab, setTab]             = useState<Tab>("upload")
   const [stage, setStage]         = useState<Stage>("idle")
   const [crop, setCrop]           = useState<CropState | null>(null)
-  const [error, setError]         = useState("")
+  const [removing, setRemoving]   = useState(false)
   const fileInputRef              = useRef<HTMLInputElement>(null)
   const dragRef                   = useRef<{ startX: number; startY: number; origImgX: number; origImgY: number; renderedW: number; renderedH: number } | null>(null)
   const canvasRef                 = useRef<HTMLCanvasElement>(null)
@@ -60,26 +62,24 @@ export function LogoUpload({ venueId, initialUrl, galleryImages, onUpdate }: Log
       })
       setStage("cropping")
     }
-    img.onerror = () => setError("Failed to load image")
+    img.onerror = () => toast.error("Failed to load image")
     img.src = src
   }, [])
 
   const handleFile = (file: File) => {
     if (!["image/jpeg", "image/png", "image/webp"].includes(file.type)) {
-      setError("JPEG, PNG or WebP only"); return
+      toast.error("JPEG, PNG or WebP only"); return
     }
     if (file.size > 10 * 1024 * 1024) {
-      setError("Max 10 MB"); return
+      toast.error("Max 10 MB"); return
     }
-    setError("")
     const reader = new FileReader()
     reader.onload = (e) => { if (e.target?.result) loadImage(e.target.result as string) }
-    reader.onerror = () => setError("Failed to read file")
+    reader.onerror = () => toast.error("Failed to read file")
     reader.readAsDataURL(file)
   }
 
   const handleGalleryPick = (url: string) => {
-    setError("")
     loadImage(`/api/proxy-image?url=${encodeURIComponent(url)}`)
   }
 
@@ -137,7 +137,6 @@ export function LogoUpload({ venueId, initialUrl, galleryImages, onUpdate }: Log
   // ── Crop + upload ───────────────────────────────────────────────────────
   const confirmCrop = async () => {
     if (!crop) return
-    setError("")
     setStage("saving")
     try {
       const canvas = document.createElement("canvas")
@@ -154,62 +153,55 @@ export function LogoUpload({ venueId, initialUrl, galleryImages, onUpdate }: Log
         canvas.toBlob(b => b ? resolve(b) : reject(new Error("Canvas export failed")), "image/jpeg", 0.9)
       )
 
-      const uploadRes = await fetch("/api/upload", {
+      const { uploadUrl, storedUrl } = await apiFetch<{ uploadUrl: string; storedUrl: string }>("/api/upload", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ filename: "logo.jpg", contentType: "image/jpeg", size: blob.size }),
       })
-      if (!uploadRes.ok) { const d = await uploadRes.json(); throw new Error(d.error || "Upload URL failed") }
-      const { uploadUrl, storedUrl } = await uploadRes.json()
 
-      const put = await fetch(uploadUrl, { method: "PUT", body: blob, headers: { "Content-Type": "image/jpeg" } })
-      if (!put.ok) throw new Error("Upload failed")
+      await apiFetch(uploadUrl, { method: "PUT", body: blob, headers: { "Content-Type": "image/jpeg" } })
 
-      const patch = await fetch(`/api/venues/${venueId}`, {
+      await apiFetch(`/api/venues/${venueId}`, {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ logoUrl: storedUrl }),
       })
-      if (!patch.ok) { const d = await patch.json(); throw new Error(d.error || "Failed to save") }
 
       setSavedUrl(storedUrl)
       onUpdate(storedUrl)
       setStage("idle")
       setCrop(null)
+      toast.success("Logo updated")
     } catch (e: unknown) {
-      setError(e instanceof Error ? e.message : "Failed to save logo")
+      toast.error(e instanceof ApiError ? e.message : "Failed to save logo. Please try again.")
       setStage("cropping")
     }
   }
 
   const remove = async () => {
-    setError("")
+    if (removing) return
+    setRemoving(true)
     try {
-      const patch = await fetch(`/api/venues/${venueId}`, {
+      await apiFetch(`/api/venues/${venueId}`, {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ logoUrl: null }),
       })
-      if (!patch.ok) { const d = await patch.json(); throw new Error(d.error || "Failed to remove") }
       setSavedUrl(null)
       onUpdate(null)
+      toast.success("Logo removed")
     } catch (e: unknown) {
-      setError(e instanceof Error ? e.message : "Failed to remove")
+      toast.error(e instanceof ApiError ? e.message : "Failed to remove logo. Please try again.")
+    } finally {
+      setRemoving(false)
     }
   }
 
-  const cancelCrop = () => { setStage("idle"); setCrop(null); setError("") }
+  const cancelCrop = () => { setStage("idle"); setCrop(null) }
 
   // ── Render ──────────────────────────────────────────────────────────────
   return (
     <div className="space-y-3">
-      {error && (
-        <div className="flex items-center gap-2 px-3 py-2 rounded-lg bg-[var(--destructive-soft)] border border-[rgba(243,139,168,0.2)] text-xs text-[var(--destructive)]">
-          <X className="w-3.5 h-3.5 shrink-0 cursor-pointer" onClick={() => setError("")} />
-          {error}
-        </div>
-      )}
-
       {/* Saved state */}
       {stage === "idle" && savedUrl && (
         <div className="flex items-center gap-3">
@@ -220,9 +212,9 @@ export function LogoUpload({ venueId, initialUrl, galleryImages, onUpdate }: Log
               className="h-7 text-xs border-[var(--blue-020)] hover:border-[var(--xiv-blue)]">
               <Upload className="w-3 h-3 mr-1" /> Change
             </Button>
-            <Button size="sm" variant="outline" onClick={remove}
+            <Button size="sm" variant="outline" onClick={remove} disabled={removing}
               className="h-7 text-xs border-[rgba(243,139,168,0.3)] text-[var(--destructive)] hover:bg-[var(--destructive-soft)]">
-              <Trash2 className="w-3 h-3 mr-1" /> Remove
+              <Trash2 className="w-3 h-3 mr-1" /> {removing ? "Removing..." : "Remove"}
             </Button>
           </div>
         </div>
