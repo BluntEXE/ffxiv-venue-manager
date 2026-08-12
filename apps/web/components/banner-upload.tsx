@@ -1,8 +1,10 @@
 "use client"
 
 import { useRef, useState } from "react"
-import { ImageIcon, Trash2, Upload, X } from "lucide-react"
+import { ImageIcon, Trash2, Upload } from "lucide-react"
+import { toast } from "sonner"
 import { Button } from "@/components/ui/button"
+import { apiFetch, ApiError } from "@/lib/api-fetch"
 
 interface BannerUploadProps {
   venueId: string
@@ -13,35 +15,30 @@ interface BannerUploadProps {
 export function BannerUpload({ venueId, initialUrl, onUpdate }: BannerUploadProps) {
   const [url, setUrl] = useState<string | null>(initialUrl)
   const [uploading, setUploading] = useState(false)
-  const [error, setError] = useState("")
   const inputRef = useRef<HTMLInputElement>(null)
 
   const upload = async (file: File) => {
-    setError("")
     setUploading(true)
     try {
-      const res = await fetch("/api/upload", {
+      const { uploadUrl, storedUrl } = await apiFetch<{ uploadUrl: string; storedUrl: string }>("/api/upload", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ filename: file.name, contentType: file.type, size: file.size }),
       })
-      if (!res.ok) { const d = await res.json(); throw new Error(d.error || "Failed to get upload URL") }
-      const { uploadUrl, storedUrl } = await res.json()
 
-      const put = await fetch(uploadUrl, { method: "PUT", body: file, headers: { "Content-Type": file.type } })
-      if (!put.ok) throw new Error("Upload failed")
+      await apiFetch(uploadUrl, { method: "PUT", body: file, headers: { "Content-Type": file.type } })
 
-      const patch = await fetch(`/api/venues/${venueId}`, {
+      await apiFetch(`/api/venues/${venueId}`, {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ bannerUrl: storedUrl }),
       })
-      if (!patch.ok) { const d = await patch.json(); throw new Error(d.error || "Failed to save") }
 
       setUrl(storedUrl)
       onUpdate(storedUrl)
+      toast.success("Banner updated")
     } catch (e: unknown) {
-      setError(e instanceof Error ? e.message : "Upload failed")
+      toast.error(e instanceof ApiError ? e.message : "Failed to upload banner. Please try again.")
     } finally {
       setUploading(false)
       if (inputRef.current) inputRef.current.value = ""
@@ -49,30 +46,22 @@ export function BannerUpload({ venueId, initialUrl, onUpdate }: BannerUploadProp
   }
 
   const remove = async () => {
-    setError("")
     try {
-      const patch = await fetch(`/api/venues/${venueId}`, {
+      await apiFetch(`/api/venues/${venueId}`, {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ bannerUrl: null }),
       })
-      if (!patch.ok) { const d = await patch.json(); throw new Error(d.error || "Failed to remove") }
       setUrl(null)
       onUpdate(null)
+      toast.success("Banner removed")
     } catch (e: unknown) {
-      setError(e instanceof Error ? e.message : "Failed to remove")
+      toast.error(e instanceof ApiError ? e.message : "Failed to remove banner. Please try again.")
     }
   }
 
   return (
     <div className="space-y-2">
-      {error && (
-        <div className="flex items-center gap-2 px-3 py-2 rounded-lg bg-[var(--destructive-soft)] border border-[rgba(243,139,168,0.2)] text-xs text-[var(--destructive)]">
-          <X className="w-3.5 h-3.5 shrink-0 cursor-pointer" onClick={() => setError("")} />
-          {error}
-        </div>
-      )}
-
       {url ? (
         <div className="relative rounded-xl overflow-hidden border border-[var(--blue-015)] bg-[var(--blue-007)]">
           {/* eslint-disable-next-line @next/next/no-img-element */}
