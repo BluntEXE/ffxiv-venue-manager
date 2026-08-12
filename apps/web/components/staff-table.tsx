@@ -10,6 +10,7 @@ import { Input } from "@/components/ui/input"
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuTrigger } from "@/components/ui/dropdown-menu"
 import { ChevronDown, Check, Pencil, X } from "lucide-react"
 import { resolveDisplayName } from "@/lib/display-name"
+import { DataTable } from "@/components/ui/data-table"
 
 export type StaffMember = {
   id: string
@@ -185,164 +186,151 @@ export function StaffTable({
       </div>
 
       {/* Table */}
-      <div className="rounded-xl border border-[var(--blue-018)] bg-[var(--card)] overflow-hidden">
-        {visible.length === 0 ? (
-          <p className="text-center text-sm text-muted-foreground py-10">No staff found.</p>
-        ) : (
-          <table className="w-full border-collapse">
-            <thead>
-              <tr>
-                {["Staff", "Role", "Status", "Joined", ""].map((h, i) => (
-                  <th
-                    key={h || i}
-                    className={`text-left text-[0.68rem] font-medium uppercase tracking-[0.06em] text-[var(--xiv-blue)] px-3 sm:px-5 py-3 border-b border-[var(--blue-008)] whitespace-nowrap ${
-                      i === 2 || i === 3 ? "hidden sm:table-cell" : ""
-                    } ${i === 4 ? "text-right" : ""}`}
-                  >
-                    {h}
-                  </th>
-                ))}
-              </tr>
-            </thead>
-            <tbody>
-              {visible.map(member => (
-                <tr
-                  key={member.id}
-                  className="border-b border-[var(--blue-008)] last:border-0 hover:bg-[var(--blue-004)] transition-colors"
-                >
-                  {/* Name */}
-                  <td className="px-3 sm:px-5 py-3.5">
-                    <div className="flex items-center gap-3">
-                      <Avatar className="w-8 h-8 flex-shrink-0">
-                        <AvatarImage src={member.user?.image ?? undefined} />
-                        <AvatarFallback className="text-[0.65rem] font-bold bg-gradient-to-br from-[var(--xiv-blue)] to-blue-700 text-white">
-                          {memberDisplayName(member).slice(0, 2).toUpperCase()}
-                        </AvatarFallback>
-                      </Avatar>
-                      {editingId === member.id ? (
-                        <div className="flex items-center gap-1.5">
-                          <Input
-                            autoFocus
-                            value={editValue}
-                            onChange={e => setEditValue(e.target.value)}
-                            onKeyDown={e => {
-                              if (e.key === "Enter") saveNickname(member)
-                              if (e.key === "Escape") setEditingId(null)
-                            }}
-                            placeholder={member.user?.name ?? "Nickname…"}
-                            className="h-7 w-36 text-sm py-0 px-2"
-                            maxLength={50}
-                            disabled={saving}
-                          />
-                          <button
-                            onClick={() => saveNickname(member)}
-                            disabled={saving}
-                            className="text-[var(--xiv-blue)] hover:opacity-70 transition-opacity disabled:opacity-40"
-                            aria-label="Save nickname"
-                          >
-                            <Check className="w-3.5 h-3.5" />
-                          </button>
-                          <button
-                            onClick={() => setEditingId(null)}
-                            disabled={saving}
-                            className="text-[var(--fg-faint)] hover:opacity-70 transition-opacity"
-                            aria-label="Cancel"
-                          >
-                            <X className="w-3.5 h-3.5" />
-                          </button>
-                        </div>
-                      ) : (
-                        <div className="flex items-center gap-1.5 group">
-                          <div>
-                            <span className="text-sm font-medium">
-                              {memberDisplayName(member)}
-                            </span>
-                            {member.nickname && (
-                              <p className="text-[0.65rem] text-[var(--fg-faint)] leading-tight">
-                                {member.user?.name}
-                              </p>
-                            )}
-                          </div>
-                          {canManage && (
-                            <button
-                              onClick={() => startEdit(member)}
-                              className="opacity-0 group-hover:opacity-100 transition-opacity text-[var(--fg-faint)] hover:text-[var(--xiv-blue)]"
-                              aria-label="Edit nickname"
-                            >
-                              <Pencil className="w-3 h-3" />
-                            </button>
-                          )}
-                        </div>
+      <div className="panel">
+        <DataTable
+          columns={[
+            { label: "Staff" },
+            { label: "Role" },
+            { label: "Status", hideOnMobile: true },
+            { label: "Joined", hideOnMobile: true },
+            { label: "", align: "right" },
+          ]}
+          isEmpty={visible.length === 0}
+          emptyMessage="No staff found."
+        >
+          {visible.map(member => (
+            <tr key={member.id}>
+              {/* Name */}
+              <td>
+                <div className="flex items-center gap-3">
+                  <Avatar className="w-8 h-8 flex-shrink-0">
+                    <AvatarImage src={member.user?.image ?? undefined} />
+                    <AvatarFallback className="text-[0.65rem] font-bold bg-gradient-to-br from-[var(--xiv-blue)] to-blue-700 text-white">
+                      {memberDisplayName(member).slice(0, 2).toUpperCase()}
+                    </AvatarFallback>
+                  </Avatar>
+                  {editingId === member.id ? (
+                    <div className="flex items-center gap-1.5">
+                      <Input
+                        autoFocus
+                        value={editValue}
+                        onChange={e => setEditValue(e.target.value)}
+                        onKeyDown={e => {
+                          if (e.key === "Enter") saveNickname(member)
+                          if (e.key === "Escape") setEditingId(null)
+                        }}
+                        placeholder={member.user?.name ?? "Nickname…"}
+                        className="h-7 w-36 text-sm py-0 px-2"
+                        maxLength={50}
+                        disabled={saving}
+                      />
+                      <button
+                        onClick={() => saveNickname(member)}
+                        disabled={saving}
+                        className="text-[var(--xiv-blue)] hover:opacity-70 transition-opacity disabled:opacity-40"
+                        aria-label="Save nickname"
+                      >
+                        <Check className="w-3.5 h-3.5" />
+                      </button>
+                      <button
+                        onClick={() => setEditingId(null)}
+                        disabled={saving}
+                        className="text-[var(--fg-faint)] hover:opacity-70 transition-opacity"
+                        aria-label="Cancel"
+                      >
+                        <X className="w-3.5 h-3.5" />
+                      </button>
+                    </div>
+                  ) : (
+                    <div className="flex items-center gap-1.5 group">
+                      <div>
+                        <span className="text-sm font-medium">
+                          {memberDisplayName(member)}
+                        </span>
+                        {member.nickname && (
+                          <p className="text-[0.65rem] text-[var(--fg-faint)] leading-tight">
+                            {member.user?.name}
+                          </p>
+                        )}
+                      </div>
+                      {canManage && (
+                        <button
+                          onClick={() => startEdit(member)}
+                          className="opacity-0 group-hover:opacity-100 transition-opacity text-[var(--fg-faint)] hover:text-[var(--xiv-blue)]"
+                          aria-label="Edit nickname"
+                        >
+                          <Pencil className="w-3 h-3" />
+                        </button>
                       )}
                     </div>
-                  </td>
+                  )}
+                </div>
+              </td>
 
-                  {/* Role */}
-                  <td className="px-3 sm:px-5 py-3.5">
-                    <div className="flex items-center gap-1.5 flex-wrap">
-                      <span className={`text-[0.7rem] font-medium px-2.5 py-0.5 rounded-full ${rolePill[member.role]}`}>
-                        {member.role.charAt(0) + member.role.slice(1).toLowerCase()}
-                      </span>
-                      {member.customRole && (
-                        <span
-                          className="text-[0.7rem] font-medium px-2.5 py-0.5 rounded-full border"
-                          style={{
-                            color: member.customRole.color,
-                            borderColor: member.customRole.color + "55",
-                            background: member.customRole.color + "18",
-                          }}
-                        >
-                          {member.customRole.name}
-                        </span>
-                      )}
-                      {member.additionalRoles.map((role) => (
-                        <span
-                          key={role.name}
-                          className="text-[0.7rem] font-medium px-2.5 py-0.5 rounded-full border"
-                          style={{
-                            color: role.color,
-                            borderColor: role.color + "55",
-                            background: role.color + "18",
-                          }}
-                        >
-                          {role.name}
-                        </span>
-                      ))}
-                    </div>
-                  </td>
+              {/* Role */}
+              <td>
+                <div className="flex items-center gap-1.5 flex-wrap">
+                  <span className={`text-[0.7rem] font-medium px-2.5 py-0.5 rounded-full ${rolePill[member.role]}`}>
+                    {member.role.charAt(0) + member.role.slice(1).toLowerCase()}
+                  </span>
+                  {member.customRole && (
+                    <span
+                      className="text-[0.7rem] font-medium px-2.5 py-0.5 rounded-full border"
+                      style={{
+                        color: member.customRole.color,
+                        borderColor: member.customRole.color + "55",
+                        background: member.customRole.color + "18",
+                      }}
+                    >
+                      {member.customRole.name}
+                    </span>
+                  )}
+                  {member.additionalRoles.map((role) => (
+                    <span
+                      key={role.name}
+                      className="text-[0.7rem] font-medium px-2.5 py-0.5 rounded-full border"
+                      style={{
+                        color: role.color,
+                        borderColor: role.color + "55",
+                        background: role.color + "18",
+                      }}
+                    >
+                      {role.name}
+                    </span>
+                  ))}
+                </div>
+              </td>
 
-                  {/* On-shift status */}
-                  <td className="px-5 py-3.5 hidden sm:table-cell">
-                    {member.isOnShift ? (
-                      <span className="inline-flex items-center gap-1.5 text-[0.72rem] font-semibold uppercase tracking-[0.04em] px-2.5 py-1 rounded-full bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">
-                        <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 relative">
-                          <span className="absolute inset-0 rounded-full bg-emerald-400 animate-ping opacity-75" />
-                        </span>
-                        On shift
-                      </span>
-                    ) : (
-                      <span className="text-[0.72rem] text-[var(--fg-faint)]">Off shift</span>
-                    )}
-                  </td>
+              {/* On-shift status */}
+              <td className="hide">
+                {member.isOnShift ? (
+                  <span className="inline-flex items-center gap-1.5 text-[0.72rem] font-semibold uppercase tracking-[0.04em] px-2.5 py-1 rounded-full bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">
+                    <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 relative">
+                      <span className="absolute inset-0 rounded-full bg-emerald-400 animate-ping opacity-75" />
+                    </span>
+                    On shift
+                  </span>
+                ) : (
+                  <span className="text-[0.72rem] text-[var(--fg-faint)]">Off shift</span>
+                )}
+              </td>
 
-                  {/* Joined */}
-                  <td className="px-5 py-3.5 text-sm text-muted-foreground hidden sm:table-cell whitespace-nowrap">
-                    <LocalTime date={member.joinedAt} formatStr="datewithyear" />
-                  </td>
+              {/* Joined */}
+              <td className="hide t-muted whitespace-nowrap">
+                <LocalTime date={member.joinedAt} formatStr="datewithyear" />
+              </td>
 
-                  {/* Actions */}
-<td className="px-3 sm:px-5 py-3.5 text-right">
-                    {canManage && (
-                      <Button variant="outline" size="sm" asChild>
-                        <Link href={`/dashboard/${slug}/staff/${member.id}`}>Edit</Link>
-                      </Button>
-                    )}
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        )}
+              {/* Actions */}
+              <td className="t-num">
+                {canManage && (
+                  <Button variant="outline" size="sm" asChild>
+                    <Link href={`/dashboard/${slug}/staff/${member.id}`}>Edit</Link>
+                  </Button>
+                )}
+              </td>
+            </tr>
+          ))}
+        </DataTable>
       </div>
     </div>
   )
