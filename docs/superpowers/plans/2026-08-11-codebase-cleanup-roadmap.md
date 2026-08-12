@@ -19,21 +19,27 @@
 
 ---
 
-## Phase 1 — Web: date/time formatting consolidation
+## Phase 1 — Web: date/time formatting consolidation — **DONE, deployed 2026-08-12**
 **Risk: low.** Read-only display pages mostly; 2 files (staff-table, shifts-calendar) touch scheduling — treat those as medium.
 
 Replace hand-rolled `toLocaleDateString`/`toLocaleTimeString`/`Intl.DateTimeFormat` calls (28 files) with `lib/server-time.ts`. Fix `events/new/page.tsx`'s direct `Intl.DateTimeFormat` call. Swap `analytics/page.tsx:304`'s inline gil-compact logic for the existing `formatGilCompact` helper while in the area.
 
 **Verify:** visual diff per page (dates render identically), no logic change.
 
-## Phase 2 — Plugin: shared HTTP request wrapper
+Shipped as the detailed [server-time-consolidation plan](2026-08-11-server-time-consolidation.md) — scope expanded mid-flight (viewer-local time split, `formatLocalTime`/`<LocalTime>`) per direct stakeholder direction, plus caught/fixed two real scheduling bugs (overnight shifts, event-creation timezone) along the way. Commits `369bb93` and earlier pushed to `origin/main` and deployed via `deploy-xiv-web.sh --green` 2026-08-12 — 13/13 smoke checks passed, tests 10/10.
+
+## Phase 2 — Plugin: shared HTTP request wrapper — **DONE, verified in-game (2026-08-11)**
 **Risk: low.** Pure refactor behind the existing `XIVAppApiClient` seam, no hooks/game-state involved.
 
 Add a single `SendAsync<T>` (or similar) helper to `XIVAppApiClient` that owns the `GetAsync → IsSuccessStatusCode → ReadFromJsonAsync → catch(HttpRequestException)/catch(TaskCanceledException)/catch(Exception)` shape. Migrate `XIVAppVenueApi.cs` (11 try/catch → ~1), `XIVAppShiftApi.cs`, `XIVAppPatronApi.cs` (4 each) onto it.
 
 **Verify:** existing behavior unchanged — each migrated call site should produce identical success/error handling; smoke-test one call per API class against the live server.
 
-## Phase 3 — Web: shared client fetch/error wrapper (low-stakes surfaces only)
+Shipped as `~/VenueManager` commits `ae91426`..`09caa87`, released as **v3.10.7-testing** (2026-08-11), live-verified in-game by the user.
+
+## Phase 3 — Web: shared client fetch/error wrapper (low-stakes surfaces only) — **plan written 2026-08-12**
+Detailed plan: [2026-08-12-shared-fetch-toast-wrapper.md](2026-08-12-shared-fetch-toast-wrapper.md).
+
 **Risk: low, if scoped correctly.** Start on `feedback-dialog`, `banner-upload`, `logo-upload`, `venue-follow-button` — explicitly **not** patron/VIP/ban-list/room-status.
 
 Build `apiFetch()`/mutation hook to replace raw `fetch` + `try/catch` + `alert()`. Wire an actual toast library (none currently used — 0 hits for sonner/use-toast) as part of this, since `alert()` is the current fallback everywhere.
@@ -61,6 +67,7 @@ Build `apiFetch()`/mutation hook to replace raw `fetch` + `try/catch` + `alert()
 - Web: shared `DataTable` primitive for staff-table/patron-profiles-table/ban-list-manager/rooms-board — defer until those feature areas are confirmed stable (in-game verify resolved).
 - Web: zod validation registry widened to remaining 133/135 API routes — do incrementally, admin/low-traffic routes first, once Phase 3's pattern is proven.
 - Mobile app — out of scope, may be superseded by Aetherphone integration.
+- **Product decision raised 2026-08-12, not yet built:** shift times (shifts list at `app/dashboard/[slug]/shifts/page.tsx:644`, plugin claim/cancel/reminder notification text in `app/api/plugin/shifts/claim/route.ts` and `app/api/venues/[venueId]/shifts/[shiftId]/route.ts`) currently render in Server Time (ST), unchanged by the server-time-consolidation plan (deliberate — a shift is shared roster content with no single "owner" viewer, same bucket as opening hours/Discord broadcast text, not the per-viewer bucket that switched to local time). User asked whether this should switch to viewer-local time instead. Technically straightforward — `formatLocalTime`/`<LocalTime>` already exist from Task 1B — but changing it means every staff member sees a *different* clock-face time for the same shift, which could confuse cross-timezone coordination ("is the 8pm shift MY 8pm or THEIRS?"). Needs its own small plan and an explicit decision before building, not bundled into Phase 3.
 - ~~**Bug, found 2026-08-11 while creating test shift data:** overnight shifts couldn't be scheduled at all.~~ **Fixed 2026-08-12**, commit `a52d696` (worktree `shift-event-timezone-fixes`, merged to `main`, not yet deployed). `create-shift-dialog.tsx` now rolls the end date to the next day when the end time is earlier than the start.
 - ~~**Bug, found 2026-08-11 while creating a test event:** event creation silently used the operator's browser timezone with no indication, while shift creation forced literal Server-Time digits with no indication either — two different unlabeled input models.~~ **Fixed 2026-08-12**, same commit. Resolved by standardizing on "operator enters in their own local time, app converts to UTC for storage" for both forms (matching how `DateTimePicker` already behaved, and how the dashboard now displays times back to viewers in their own local time) — not by forcing literal Server-Time input as originally proposed below. Server Time (ST) stays the model only for things with no single "owner" of the input: opening hours, Discord/broadcast text. Both forms now explicitly labeled "your local time." Guide pages (`guide/owner`, `guide/staff`) updated to match.
 
