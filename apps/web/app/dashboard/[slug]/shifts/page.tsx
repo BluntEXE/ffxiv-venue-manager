@@ -100,13 +100,17 @@ export default async function ShiftsPage({
   const canManage = ["OWNER", "MANAGER"].includes(userRole)
   const tzLabel = getServerTimeLabel(venue.dataCenter)
 
+  // Single "now" for this request — every other date derived below reuses
+  // it, so nothing here can disagree with anything else in the same render.
+  const now = new Date()
+
   // Week bounds
-  const base = w ? new Date(w + "T00:00:00Z") : new Date()
+  const base = w ? new Date(w + "T00:00:00Z") : now
   const weekStart = getWeekMonday(base)
   const weekEnd = addUTCDays(weekStart, 7) // exclusive upper bound
 
-  const todayKey = utcDayKey(new Date())
-  const thisWeekKey = utcDayKey(getWeekMonday(new Date()))
+  const todayKey = utcDayKey(now)
+  const thisWeekKey = utcDayKey(getWeekMonday(now))
   const isCurrentWeek = utcDayKey(weekStart) === thisWeekKey
 
   const prevWeekParam = utcDayKey(addUTCDays(weekStart, -7))
@@ -167,8 +171,8 @@ export default async function ShiftsPage({
         where: {
           venueId: venue.id,
           scheduledStart: {
-            gte: new Date(Date.UTC(new Date().getUTCFullYear(), new Date().getUTCMonth() - 3, 1)),
-            lt: new Date(Date.UTC(new Date().getUTCFullYear(), new Date().getUTCMonth() + 4, 1)),
+            gte: new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth() - 3, 1)),
+            lt: new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth() + 4, 1)),
           },
         },
         // Explicit select (not include) — this array is passed whole into a
@@ -325,7 +329,7 @@ export default async function ShiftsPage({
     (s) => s.status === "SCHEDULED" || s.status === "ACTIVE"
   )
 
-  const tomorrowKey = utcDayKey(addUTCDays(new Date(), 1))
+  const tomorrowKey = utcDayKey(addUTCDays(now, 1))
   function dayLabel(key: string): string {
     if (key === todayKey) return "Today"
     if (key === tomorrowKey) return "Tomorrow"
