@@ -3,6 +3,8 @@
 import { useState } from "react"
 import { Button } from "@/components/ui/button"
 import { Heart } from "lucide-react"
+import { toast } from "sonner"
+import { apiFetch, ApiError } from "@/lib/api-fetch"
 
 interface VenueFollowButtonProps {
   venueId: string
@@ -19,13 +21,13 @@ export function VenueFollowButton({ venueId, isFollowing: initial, followCount: 
   const toggle = async () => {
     setLoading(true)
     try {
-      const res = await fetch(`/api/venues/${venueId}/follow`, {
+      await apiFetch(`/api/venues/${venueId}/follow`, {
         method: following ? "DELETE" : "POST",
       })
-      if (res.ok) {
-        setFollowing(!following)
-        setCount(c => following ? c - 1 : c + 1)
-      }
+      setFollowing(!following)
+      setCount(c => following ? c - 1 : c + 1)
+    } catch (e) {
+      toast.error(e instanceof ApiError ? e.message : "Couldn't update follow status. Try again.")
     } finally {
       setLoading(false)
     }
