@@ -46,6 +46,7 @@ export function BannerUpload({ venueId, initialUrl, onUpdate }: BannerUploadProp
   }
 
   const remove = async () => {
+    setUploading(true)
     try {
       await apiFetch(`/api/venues/${venueId}`, {
         method: "PATCH",
@@ -57,6 +58,8 @@ export function BannerUpload({ venueId, initialUrl, onUpdate }: BannerUploadProp
       toast.success("Banner removed")
     } catch (e: unknown) {
       toast.error(e instanceof ApiError ? e.message : "Failed to remove banner. Please try again.")
+    } finally {
+      setUploading(false)
     }
   }
 
