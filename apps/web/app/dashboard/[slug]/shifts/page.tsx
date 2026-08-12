@@ -1,4 +1,3 @@
-import { Fragment } from "react"
 import { getServerSession } from "next-auth"
 import { authOptions } from "@/lib/auth"
 import { redirect, notFound } from "next/navigation"
@@ -6,20 +5,10 @@ import Link from "next/link"
 import { prisma } from "@/lib/prisma"
 import { VenueLayout } from "@/components/venue-layout"
 import { CreateShiftDialog } from "@/components/create-shift-dialog"
-import { getServerTimeLabel, formatServerTime } from "@/lib/server-time"
-import { DeleteShiftButton } from "@/components/delete-shift-button"
-import { ClockShiftButton } from "@/components/clock-shift-button"
-import { OpenShiftChip } from "@/components/open-shift-chip"
-import { ClaimedShiftChip } from "@/components/claimed-shift-chip"
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
-import { Card, CardContent } from "@/components/ui/card"
-import { Badge } from "@/components/ui/badge"
-import { Button } from "@/components/ui/button"
-import { Copy } from "lucide-react"
 import { ShiftsCalendar } from "@/components/shifts-calendar"
+import { ShiftsWeekView } from "@/components/shifts-week-view"
 import { resolveDisplayName } from "@/lib/display-name"
-
-const DAY_SHORT = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"]
+import { shiftSelect } from "@/lib/shift-format"
 
 // Week start = Monday in UTC (FFXIV server time = UTC)
 function getWeekMonday(base: Date): Date {
@@ -37,21 +26,6 @@ function utcDayKey(d: Date): string {
   return d.toISOString().slice(0, 10)
 }
 
-// "22:00"
-function utcTimeKey(d: Date | string): string {
-  return new Date(d).toISOString().slice(11, 16)
-}
-
-// "10PM" or "10:30PM"
-function fmtHour(iso: string | Date): string {
-  const d = new Date(iso)
-  const h = d.getUTCHours()
-  const m = d.getUTCMinutes()
-  const ampm = h >= 12 ? "PM" : "AM"
-  const h12 = h % 12 || 12
-  return m === 0 ? `${h12}${ampm}` : `${h12}:${String(m).padStart(2, "0")}${ampm}`
-}
-
 // "Mon 2 Jun"
 function fmtWeekLabel(d: Date): string {
   return d.toLocaleString("en-GB", { timeZone: "UTC", weekday: "short", day: "numeric", month: "short" })
@@ -63,14 +37,6 @@ const statusChip: Record<string, string> = {
   COMPLETED: "bg-zinc-500/10 text-zinc-400 border-zinc-500/20",
   MISSED:    "bg-amber-500/10 text-amber-400 border-amber-500/20",
   CANCELLED: "bg-zinc-500/10 text-zinc-400 border-zinc-500/15 line-through",
-}
-
-const statusBadge: Record<string, string> = {
-  SCHEDULED: "bg-[rgba(0,180,255,0.12)] text-[var(--xiv-blue)] border-[rgba(0,180,255,0.35)]",
-  ACTIVE:    "bg-emerald-500/10 text-emerald-500 border-emerald-500/20",
-  COMPLETED: "bg-zinc-500/10 text-zinc-400 border-zinc-500/20",
-  MISSED:    "bg-amber-500/10 text-amber-500 border-amber-500/20",
-  CANCELLED: "bg-red-500/10 text-red-400 border-red-500/20",
 }
 
 export default async function ShiftsPage({
@@ -98,7 +64,6 @@ export default async function ShiftsPage({
   const userRole = venue.memberships[0].role
   const currentMembershipId = venue.memberships[0].id
   const canManage = ["OWNER", "MANAGER"].includes(userRole)
-  const tzLabel = getServerTimeLabel(venue.dataCenter)
 
   // Week bounds
   const base = w ? new Date(w + "T00:00:00Z") : new Date()
@@ -109,57 +74,25 @@ export default async function ShiftsPage({
   const fetchWindowStart = new Date(weekStart.getTime() - FETCH_LOOKBACK_MS)
   const fetchWindowEnd = weekEnd
 
-  const todayKey = utcDayKey(new Date())
+  const todayKeyST = utcDayKey(new Date())
   const thisWeekKey = utcDayKey(getWeekMonday(new Date()))
   const isCurrentWeek = utcDayKey(weekStart) === thisWeekKey
 
   const prevWeekParam = utcDayKey(addUTCDays(weekStart, -7))
   const nextWeekParam = utcDayKey(addUTCDays(weekStart, 7))
 
-  const weekDays = Array.from({ length: 7 }, (_, i) => addUTCDays(weekStart, i))
-
-  // Fetch shifts for this week + active shifts (may have started before this week)
-  const [weekShifts, activeShifts] = await Promise.all([
+  // Fetch shifts for this week + count of active shifts (may have started before this week)
+  const [weekShifts, activeCount] = await Promise.all([
     prisma.shift.findMany({
       where: {
         venueId: venue.id,
         scheduledStart: { gte: fetchWindowStart, lt: fetchWindowEnd },
       },
-      include: {
-        membership: {
-          include: {
-            user: {
-              select: {
-                id: true,
-                name: true,
-                displayName: true,
-                image: true,
-                characters: { orderBy: [{ isPrimary: "desc" }, { createdAt: "asc" }], take: 1, select: { characterName: true } },
-              },
-            },
-          },
-        },
-        role: { select: { name: true } },
-      },
+      select: shiftSelect,
       orderBy: { scheduledStart: "asc" },
     }),
-    prisma.shift.findMany({
+    prisma.shift.count({
       where: { venueId: venue.id, status: "ACTIVE" },
-      include: {
-        membership: {
-          include: {
-            user: {
-              select: {
-                id: true,
-                name: true,
-                displayName: true,
-                image: true,
-                characters: { orderBy: [{ isPrimary: "desc" }, { createdAt: "asc" }], take: 1, select: { characterName: true } },
-              },
-            },
-          },
-        },
-      },
     }),
   ])
 
@@ -259,93 +192,6 @@ export default async function ShiftsPage({
     : []
   const eventsForDialog = venueEvents.map((e) => ({ id: e.id, name: e.title }))
 
-  // Build staff × day grid
-  type ShiftRow = (typeof weekShifts)[0]
-  function shiftStaffName(shift: ShiftRow): string {
-    return resolveDisplayName({
-      characterName: shift.membership?.user?.characters?.[0]?.characterName,
-      nickname: shift.membership?.nickname,
-      displayName: shift.membership?.user?.displayName,
-      discordName: shift.membership?.user?.name,
-    })
-  }
-  const staffMap = new Map<string, {
-    membershipId: string
-    name: string
-    image: string | null
-    cells: Map<string, ShiftRow[]>
-  }>()
-
-  for (const shift of weekShifts) {
-    if (!shift.membershipId) continue // open shifts get their own row, built separately below
-    const mid = shift.membershipId
-    if (!staffMap.has(mid)) {
-      staffMap.set(mid, {
-        membershipId: mid,
-        name: shiftStaffName(shift),
-        image: shift.membership?.user?.image ?? null,
-        cells: new Map(),
-      })
-    }
-    const member = staffMap.get(mid)!
-    const key = utcDayKey(new Date(shift.scheduledStart))
-    if (!member.cells.has(key)) member.cells.set(key, [])
-    member.cells.get(key)!.push(shift)
-  }
-
-  const staffRows = [...staffMap.values()]
-
-  // Open shifts (no member assigned yet): shown in their own row, grouped by required role
-  const openShiftsByDay = new Map<string, ShiftRow[]>()
-  for (const shift of weekShifts) {
-    if (shift.status !== "OPEN") continue
-    const key = utcDayKey(new Date(shift.scheduledStart))
-    if (!openShiftsByDay.has(key)) openShiftsByDay.set(key, [])
-    openShiftsByDay.get(key)!.push(shift)
-  }
-  const hasOpenShifts = openShiftsByDay.size > 0
-
-  // KPI counts. Cancelled shifts still render in the grid (crossed out, for visibility/
-  // audit trail) but shouldn't count toward "how many shifts are happening this week" —
-  // exclude them from the weekly total and from the coverage/reliability denominators.
-  const activeWeekShifts = weekShifts.filter((s) => s.status !== "CANCELLED")
-  const scheduledCount = weekShifts.filter((s) => s.status === "SCHEDULED").length
-  const activeCount = activeShifts.length
-  const openSlots = weekShifts.filter((s) => s.status === "OPEN" || s.status === "CLAIMED").length
-  const missedCount = weekShifts.filter((s) => s.status === "MISSED").length
-  // Fill rate: % of this week's shifts that have someone assigned (not OPEN/CLAIMED-unfilled)
-  const coverPct =
-    activeWeekShifts.length === 0
-      ? 100
-      : Math.round(((activeWeekShifts.length - openSlots) / activeWeekShifts.length) * 100)
-  // Reliability: % of shifts that weren't a no-show
-  const reliabilityPct =
-    activeWeekShifts.length === 0
-      ? 100
-      : Math.round(((activeWeekShifts.length - missedCount) / activeWeekShifts.length) * 100)
-
-  // Upcoming shifts that need action (clock-in/out for this week)
-  const actionShifts = weekShifts.filter(
-    (s) => s.status === "SCHEDULED" || s.status === "ACTIVE"
-  )
-
-  const tomorrowKey = utcDayKey(addUTCDays(new Date(), 1))
-  function dayLabel(key: string): string {
-    if (key === todayKey) return "Today"
-    if (key === tomorrowKey) return "Tomorrow"
-    return fmtWeekLabel(new Date(key + "T00:00:00Z"))
-  }
-  // Group by scheduled day, across the whole week (not just today/tomorrow) —
-  // a manager mistook a shift on a different day for today's and nearly
-  // deleted the wrong one because the flat list showed only times.
-  const actionShiftsByDay = new Map<string, ShiftRow[]>()
-  for (const shift of actionShifts) {
-    const key = utcDayKey(new Date(shift.scheduledStart))
-    if (!actionShiftsByDay.has(key)) actionShiftsByDay.set(key, [])
-    actionShiftsByDay.get(key)!.push(shift)
-  }
-  const actionDayKeys = [...actionShiftsByDay.keys()].sort()
-
   return (
     <VenueLayout venueSlug={venue.slug} venueName={venue.name} userRole={userRole}>
       <div className="page-inner">
@@ -367,30 +213,6 @@ export default async function ShiftsPage({
               events={eventsForDialog}
             />
           )}
-        </div>
-
-        {/* KPIs */}
-        <div className="kpis mb-6">
-          {[
-            { k: "Shifts this week", v: activeWeekShifts.length,  sub: fmtWeekLabel(weekStart) + "–" + fmtWeekLabel(addUTCDays(weekStart, 6)), icon: "M12 2a10 10 0 1 1 0 20A10 10 0 0 1 12 2zm0 2v8l4 2" },
-            { k: "Open shifts",       v: openSlots,           sub: "needs cover",     icon: "M10.29 3.86 1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0zM12 9v4m0 4h.01" },
-            { k: "Active now",       v: activeCount,         sub: "on shift",        icon: "M12 2v4m0 12v4M4.93 4.93l2.83 2.83m8.48 8.48 2.83 2.83M2 12h4m12 0h4M4.93 19.07l2.83-2.83m8.48-8.48 2.83-2.83" },
-            { k: "Coverage",         v: `${coverPct}%`,      sub: "shifts filled",   icon: "M9 12l2 2 4-4m6 2a9 9 0 1 1-18 0 9 9 0 0 1 18 0" },
-            { k: "Reliability",      v: `${reliabilityPct}%`, sub: "no-shows excl.", icon: "M9 12l2 2 4-4m6 2a9 9 0 1 1-18 0 9 9 0 0 1 18 0" },
-          ].map(({ k, v, sub, icon }) => (
-            <div key={k} className="stat">
-              <div className="top">
-                <span className="sb">
-                  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                    <path d={icon} />
-                  </svg>
-                </span>
-              </div>
-              <div className="k">{k}</div>
-              <div className="v">{v}</div>
-              <div className="delta flat">{sub}</div>
-            </div>
-          ))}
         </div>
 
         {/* View Tabs */}
@@ -436,9 +258,6 @@ export default async function ShiftsPage({
             >
               <svg className="w-4 h-4" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><polyline points="15 18 9 12 15 6"/></svg>
             </Link>
-            <span className="px-3 text-sm font-semibold min-w-[90px] text-center">
-              {isCurrentWeek ? "This week" : fmtWeekLabel(weekStart)}
-            </span>
             <Link
               href={`/dashboard/${slug}/shifts?w=${nextWeekParam}`}
               className="w-8 h-7 flex items-center justify-center rounded-full text-muted-foreground hover:text-foreground hover:bg-[var(--blue-007)] transition-colors"
@@ -446,14 +265,6 @@ export default async function ShiftsPage({
               <svg className="w-4 h-4" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><polyline points="9 18 15 12 9 6"/></svg>
             </Link>
           </div>
-          {!isCurrentWeek && (
-            <Link
-              href={`/dashboard/${slug}/shifts`}
-              className="text-xs text-[var(--xiv-blue)] hover:underline"
-            >
-              Back to current week
-            </Link>
-          )}
           <div className="flex-1" />
           <div className="flex items-center gap-3 text-[0.7rem] text-muted-foreground">
             <span className="flex items-center gap-1.5">
@@ -467,216 +278,22 @@ export default async function ShiftsPage({
           </div>
         </div>
 
-        {/* Weekly grid */}
-        <div className="panel mb-6 sched">
-          <div className="sched-grid">
-            {/* Header row */}
-            <div className="sg-h staffcol">Staff</div>
-            {weekDays.map((day, i) => {
-              const isToday = utcDayKey(day) === todayKey
-              return (
-                <div key={i} className={`sg-h${isToday ? " today-col" : ""}`}>
-                  {DAY_SHORT[i]} <span className="dnum">{day.getUTCDate()}</span>
-                </div>
-              )
-            })}
-
-            {/* Staff rows */}
-            {staffRows.map((member) => (
-              <Fragment key={member.membershipId}>
-                <div key={`${member.membershipId}-name`} className="sg-staff">
-                  <span className="av-sm flex-shrink-0">
-                    {member.name.split(" ").map((n: string) => n[0]).join("").slice(0, 2).toUpperCase()}
-                  </span>
-                  <span className="truncate">{member.name}</span>
-                </div>
-                {weekDays.map((day) => {
-                  const key = utcDayKey(day)
-                  const dayShifts = member.cells.get(key) ?? []
-                  const isToday = key === todayKey
-                  return (
-                    <div key={`${member.membershipId}-${key}`} className={`sg-cell${isToday ? " today-col" : ""}`}>
-                      {dayShifts.map((shift) =>
-                        shift.status === "CLAIMED" ? (
-                          <ClaimedShiftChip
-                            key={shift.id}
-                            shiftId={shift.id}
-                            venueId={venue.id}
-                            timeLabel={`${fmtHour(shift.scheduledStart)}–${fmtHour(shift.scheduledEnd)}${shift.role?.name ? ` · ${shift.role.name}` : ""}`}
-                            canManage={canManage}
-                          />
-                        ) : (
-                          <div key={shift.id} className="flex items-center gap-1">
-                            <span
-                              className={`shift-chip${shift.status === "ACTIVE" ? " em" : shift.status === "MISSED" ? " am" : ""}`}
-                            >
-                              {fmtHour(shift.scheduledStart)}–{fmtHour(shift.scheduledEnd)}
-                              {shift.role?.name ? ` · ${shift.role.name}` : ""}
-                            </span>
-                            {canManage && (
-                              <CreateShiftDialog
-                                venueSlug={slug}
-                                staff={staffForDialog}
-                                roles={venueRoles}
-                                potModeEnabled={potModeEnabled}
-                                events={eventsForDialog}
-                                trigger={
-                                  <Button variant="ghost" size="sm" aria-label="Duplicate shift" className="h-6 w-6 p-0">
-                                    <Copy className="h-3.5 w-3.5" />
-                                  </Button>
-                                }
-                                prefill={{
-                                  mode: "assign",
-                                  membershipId: shift.membershipId ?? undefined,
-                                  date: utcDayKey(new Date(shift.scheduledStart)),
-                                  startTime: utcTimeKey(shift.scheduledStart),
-                                  endTime: utcTimeKey(shift.scheduledEnd),
-                                  notes: shift.notes ?? undefined,
-                                }}
-                              />
-                            )}
-                          </div>
-                        )
-                      )}
-                    </div>
-                  )
-                })}
-              </Fragment>
-            ))}
-
-            {hasOpenShifts && (
-              <>
-                <div key="open-shifts-name" className="sg-staff">
-                  <span className="av-sm flex-shrink-0 border border-dashed border-amber-500/40 bg-amber-500/10 text-amber-400">
-                    !
-                  </span>
-                  <span className="truncate text-amber-400">Open shifts</span>
-                </div>
-                {weekDays.map((day) => {
-                  const key = utcDayKey(day)
-                  const dayShifts = openShiftsByDay.get(key) ?? []
-                  const isToday = key === todayKey
-                  return (
-                    <div key={`open-${key}`} className={`sg-cell${isToday ? " today-col" : ""}`}>
-                      {dayShifts.map((shift) => (
-                        <div key={shift.id} className="flex items-center gap-1">
-                          <OpenShiftChip
-                            shiftId={shift.id}
-                            venueId={venue.id}
-                            timeLabel={`${fmtHour(shift.scheduledStart)}–${fmtHour(shift.scheduledEnd)}${shift.role?.name ? ` · ${shift.role.name}` : ""}`}
-                            canClaim={!canManage}
-                          />
-                          {canManage && (
-                            <CreateShiftDialog
-                              venueSlug={slug}
-                              staff={staffForDialog}
-                              roles={venueRoles}
-                              potModeEnabled={potModeEnabled}
-                              events={eventsForDialog}
-                              trigger={
-                                <Button variant="ghost" size="sm" aria-label="Duplicate shift" className="h-6 w-6 p-0">
-                                  <Copy className="h-3.5 w-3.5" />
-                                </Button>
-                              }
-                              prefill={{
-                                mode: "open",
-                                roleId: shift.roleId ?? undefined,
-                                date: utcDayKey(new Date(shift.scheduledStart)),
-                                startTime: utcTimeKey(shift.scheduledStart),
-                                endTime: utcTimeKey(shift.scheduledEnd),
-                                notes: shift.notes ?? undefined,
-                              }}
-                            />
-                          )}
-                          {canManage && (
-                            <DeleteShiftButton
-                              venueSlug={slug}
-                              shiftId={shift.id}
-                              hasPayroll={false}
-                              isRecurring={Boolean(shift.recurrenceRule || shift.parentShiftId)}
-                              slotGroupId={shift.slotGroupId}
-                            />
-                          )}
-                        </div>
-                      ))}
-                    </div>
-                  )
-                })}
-              </>
-            )}
-
-            {/* Empty state */}
-            {staffRows.length === 0 && !hasOpenShifts && (
-              <div className="col-span-8 py-12 text-center text-sm text-muted-foreground">
-                No shifts scheduled for this week.
-                {canManage && " Use the button above to add shifts."}
-              </div>
-            )}
-          </div>
-        </div>
-
-        {/* Actions section — clock-in/out for shifts that need it */}
-        {actionShifts.length > 0 && (
-          <div>
-            <h2 className="font-cinzel text-base font-bold tracking-[0.02em] mb-3">
-              {activeShifts.length > 0 ? "On shift now" : "Upcoming: actions needed"}
-            </h2>
-            <div className="grid grid-cols-1 gap-2">
-              {actionDayKeys.map((dayKey) => (
-                <Fragment key={dayKey}>
-                  <div className="flex items-center gap-2 mt-2 first:mt-0">
-                    <span className="text-xs font-semibold uppercase tracking-[0.08em] text-muted-foreground">
-                      {dayLabel(dayKey)}
-                    </span>
-                    <span className="flex-1 h-px bg-[var(--blue-015)]" />
-                  </div>
-                  {actionShiftsByDay.get(dayKey)!.map((shift) => (
-                    <Card key={shift.id}>
-                      <CardContent className="p-3 md:p-4">
-                        <div className="flex items-center gap-3">
-                          <Avatar className="h-8 w-8 flex-shrink-0">
-                            <AvatarImage src={shift.membership?.user?.image ?? undefined} />
-                            <AvatarFallback className="text-[0.65rem] font-bold">
-                              {shiftStaffName(shift).slice(0, 2).toUpperCase()}
-                            </AvatarFallback>
-                          </Avatar>
-                          <div className="flex-1 min-w-0">
-                            <p className="text-sm font-medium truncate">
-                              {shiftStaffName(shift)}
-                            </p>
-                            <p className="text-xs text-muted-foreground">
-                              {formatServerTime(shift.scheduledStart, "time")} — {formatServerTime(shift.scheduledEnd, "time")} {tzLabel}
-                            </p>
-                          </div>
-                          <div className="flex items-center gap-2 flex-shrink-0">
-                            <Badge variant="outline" className={statusBadge[shift.status] ?? ""}>
-                              {shift.status}
-                            </Badge>
-                            {canManage && shift.status === "SCHEDULED" && (
-                              <ClockShiftButton venueSlug={slug} shiftId={shift.id} action="clock-in" staffName={shiftStaffName(shift)} />
-                            )}
-                            {canManage && shift.status === "ACTIVE" && (
-                              <ClockShiftButton venueSlug={slug} shiftId={shift.id} action="clock-out" staffName={shiftStaffName(shift)} />
-                            )}
-                            {!canManage && shift.membershipId === currentMembershipId && shift.status === "SCHEDULED" && (
-                              <ClockShiftButton venueSlug={slug} shiftId={shift.id} action="clock-in" staffName="yourself" />
-                            )}
-                            {!canManage && shift.membershipId === currentMembershipId && shift.status === "ACTIVE" && (
-                              <ClockShiftButton venueSlug={slug} shiftId={shift.id} action="clock-out" staffName="yourself" />
-                            )}
-                            {canManage && (
-                              <DeleteShiftButton venueSlug={slug} shiftId={shift.id} hasPayroll={!!shift.payrollEntryId} />
-                            )}
-                          </div>
-                        </div>
-                      </CardContent>
-                    </Card>
-                  ))}
-                </Fragment>
-              ))}
-            </div>
-          </div>
-        )}
+        <ShiftsWeekView
+          weekShifts={weekShifts}
+          activeCount={activeCount}
+          weekStartISO={weekStart.toISOString()}
+          todayKeyST={todayKeyST}
+          isCurrentWeek={isCurrentWeek}
+          fmtWeekLabelST={fmtWeekLabel(weekStart)}
+          slug={slug}
+          venueId={venue.id}
+          currentMembershipId={currentMembershipId}
+          canManage={canManage}
+          staffForDialog={staffForDialog}
+          venueRoles={venueRoles}
+          potModeEnabled={potModeEnabled}
+          eventsForDialog={eventsForDialog}
+        />
         </>
         )}
       </div>

@@ -1,5 +1,7 @@
 // apps/web/lib/shift-format.ts
 
+import { Prisma } from "@/generated/prisma/client"
+
 // FFXIV server time = UTC (see apps/web/app/dashboard/[slug]/shifts/page.tsx).
 // These mirror that page's private utcDayKey/fmtHour helpers so the calendar
 // and day-detail dialog group/label shifts identically to the week grid,
@@ -38,6 +40,43 @@ export interface RoleOption {
   id: string
   name: string
 }
+
+// Explicit select (not include) for the shifts week grid — passed whole into
+// a client component (ShiftsWeekView). Prisma's Decimal fields (e.g.
+// Shift.hoursWorked, Membership.hourlyRate) can't cross the server/client
+// boundary and hourlyRate is also pay data non-managers shouldn't receive in
+// the RSC payload, so only the fields ShiftsWeekView actually reads are
+// selected here — same constraint/pattern as CalendarShift above.
+export const shiftSelect = {
+  id: true,
+  membershipId: true,
+  roleId: true,
+  payrollEntryId: true,
+  scheduledStart: true,
+  scheduledEnd: true,
+  status: true,
+  notes: true,
+  recurrenceRule: true,
+  parentShiftId: true,
+  slotGroupId: true,
+  membership: {
+    select: {
+      nickname: true,
+      user: {
+        select: {
+          id: true,
+          name: true,
+          displayName: true,
+          image: true,
+          characters: { orderBy: [{ isPrimary: "desc" }, { createdAt: "asc" }], take: 1, select: { characterName: true } },
+        },
+      },
+    },
+  },
+  role: { select: { name: true } },
+} satisfies Prisma.ShiftSelect
+
+export type ShiftRow = Prisma.ShiftGetPayload<{ select: typeof shiftSelect }>
 
 export interface CalendarShift {
   id: string
