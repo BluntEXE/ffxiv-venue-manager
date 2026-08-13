@@ -8,7 +8,7 @@ import { invalidateCache, cacheKeys } from '@/lib/redis-cache'
 const linkItemSchema = z.object({
   venueId: z.string().min(1, 'venueId is required'),
   serviceId: z.string().min(1, 'serviceId is required'),
-  itemId: z.number().int().min(0, 'itemId must be a non-negative integer'),
+  itemId: z.number().int().positive('itemId must be a positive integer'),
   itemName: z.string().min(1, 'itemName is required').max(200, 'Item name too long (max 200 characters)'),
   iconId: z.number().int().min(0).optional().nullable(),
 })
