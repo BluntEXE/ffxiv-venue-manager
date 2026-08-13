@@ -12,7 +12,7 @@
 
 ## Ground rules for every phase
 
-1. **Fragile-feature freeze.** Do not touch patron tracking, VIP tracking, ban list, room status board, or bar inventory mapping (web tables) — nor `LifestreamIpc.cs` / `TerritoryUtils.cs` / house-entry polling (plugin) — until their "in-game verify" / "-testing" status is resolved. Cross-check current status against memory before starting any phase that brushes these.
+1. **Fragile-feature freeze — LIFTED 2026-08-13.** Patron tracking, VIP tracking, ban list, room status board, and bar inventory mapping all in-game verified 2026-08-13 (see memory). Phases touching these areas may now proceed. `LifestreamIpc.cs` / `TerritoryUtils.cs` / house-entry polling (plugin) were never gated by this rule — no open freeze remains.
 2. **One phase = one PR/branch.** No bundling. Verify (tests/manual) before moving to the next phase.
 3. **Comments:** don't blanket-strip. Extract WHY-rationale to docs first (Phase 5), then thin comments in the same diff. WHAT-comments (redundant) can go immediately wherever encountered, no separate phase needed.
 4. **Docs destination:** `docs/specs/<feature>.md` per feature area, created/updated as each phase touches that area. Commit messages still carry the immediate "why" for the change itself (existing convention, unchanged).
@@ -78,4 +78,4 @@ Shipped via `superpowers:subagent-driven-development` (7 tasks, each with spec-c
 ---
 
 ## Next step
-Phase 1 is the safest, most mechanical starting point (no behavior change, easy visual verification, doesn't touch fragile areas). Recommend writing the full detailed `writing-plans`-format plan for Phase 1 next.
+Phases 1-3 + DataTable + shift-local-time are done and deployed. Fragile-feature freeze lifted 2026-08-13. Two open candidates: zod-validation-admin-routes (plan written, not executed) and Phase 4 (plugin tab base + packages/ hoisting, now unblocked). Phase 4 detailed plan being scoped next (2026-08-13).
