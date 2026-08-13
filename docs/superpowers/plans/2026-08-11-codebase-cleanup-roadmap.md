@@ -82,4 +82,4 @@ packages/ hoisting: no second consumer exists yet (mobile deferred, Aetherphone 
 ---
 
 ## Next step
-Phases 1-3 + DataTable + shift-local-time + zod-validation increment 1 are done and deployed. Fragile-feature freeze lifted 2026-08-13. Phase 4 (plugin tab base + packages/ hoisting) plan is written and unblocked, not yet executed — [2026-08-13-plugin-tab-base.md](2026-08-13-plugin-tab-base.md). Manual admin-session verification of the zod-validation deploy (invalid status/oversized adminNotes → 400) still needs a human with a real admin session — not yet confirmed.
+Phases 1-3 + DataTable + shift-local-time + zod-validation increment 1 are done, deployed, and fully verified (including manual admin-session checks, confirmed by the user 2026-08-13). Fragile-feature freeze lifted 2026-08-13. Phase 4 (plugin tab base + packages/ hoisting) plan is written and unblocked, not yet executed — [2026-08-13-plugin-tab-base.md](2026-08-13-plugin-tab-base.md). That's the only remaining open item from this roadmap.

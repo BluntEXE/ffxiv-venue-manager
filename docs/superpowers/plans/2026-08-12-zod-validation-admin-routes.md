@@ -1,6 +1,6 @@
 # Zod Validation Registry — Admin Routes (Increment 1) Implementation Plan
 
-**DONE, deployed 2026-08-13** — commit `e9420c4`, merged to `main` via `zod-validation-admin-routes` branch (isolated worktree, subagent-driven-development, 4 tasks + final whole-branch review). 45/45 tests, typecheck, build all green; 13/13 smoke checks post-deploy. Manual admin-session verification (Task 5 Step 2) not yet confirmed by a human — needs a real admin login, see roadmap doc.
+**DONE, deployed and fully verified 2026-08-13** — commit `e9420c4`, merged to `main` via `zod-validation-admin-routes` branch (isolated worktree, subagent-driven-development, 4 tasks + final whole-branch review). 45/45 tests, typecheck, build all green; 13/13 smoke checks post-deploy. Manual admin-session verification (Task 5 Step 2) confirmed by the user: `?status=NOT_A_REAL_STATUS` returns 400 with the real enum values listed, an over-2000-char admin note is rejected, and creating an announcement with a link still works (also exercised the migrated `validators.url` reuse from Task 4).
 
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
 
