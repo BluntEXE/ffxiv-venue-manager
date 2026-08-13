@@ -1,8 +1,15 @@
 import { NextRequest, NextResponse } from "next/server"
 import { getServerSession } from "next-auth"
+import { z } from "zod"
 import { authOptions } from "@/lib/auth"
 import { prisma } from "@/lib/prisma"
 import { withRateLimit } from "@/lib/middleware/with-rate-limit"
+import { validators } from "@/lib/validation"
+
+const querySchema = z.object({
+  status: validators.feedbackStatus.optional(),
+  category: validators.feedbackCategory.optional(),
+})
 
 // GET /api/admin/feedback - List all feedback (admin only)
 export const GET = withRateLimit(
@@ -26,14 +33,22 @@ export const GET = withRateLimit(
         )
       }
 
-      const searchParams = request.nextUrl.searchParams
-      const status = searchParams.get("status")
-      const category = searchParams.get("category")
+      const queryResult = querySchema.safeParse({
+        status: request.nextUrl.searchParams.get("status") ?? undefined,
+        category: request.nextUrl.searchParams.get("category") ?? undefined,
+      })
+      if (!queryResult.success) {
+        return NextResponse.json(
+          { error: "Invalid query parameters", details: queryResult.error.issues },
+          { status: 400 }
+        )
+      }
+      const { status, category } = queryResult.data
 
       const feedback = await prisma.feedback.findMany({
         where: {
-          ...(status && { status: status as any }),
-          ...(category && { category: category as any }),
+          ...(status && { status }),
+          ...(category && { category }),
         },
         include: {
           user: {
