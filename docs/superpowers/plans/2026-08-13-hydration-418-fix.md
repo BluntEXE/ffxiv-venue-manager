@@ -36,68 +36,27 @@ Per Cloudflare's own docs (confirmed 2026-08-13): *"To apply it to specific host
 
 ---
 
-## Task 2: Re-enable GlitchTip sourcemap upload
+## Task 2: Re-enable GlitchTip sourcemap upload — **DONE, deployed 2026-08-13**
 
-**Files:**
-- Modify: `apps/web/next.config.ts:76-81`
+Actual implementation ended up more involved than originally scoped — three real issues found only by building and checking GlitchTip directly, not by reading docs:
 
-- [ ] **Step 1: Check what auth GlitchTip's Sentry-compatible sourcemap upload needs**
+1. **`url` isn't a valid `SentryBuildOptions` field** in the installed `@sentry/nextjs@10.51.0` — a build-time TypeScript error caught this immediately. Correct field is `sentryUrl` (confirmed by reading the package's own `.d.ts`, not assumed from memory).
+2. **`SENTRY_AUTH_TOKEN` via `ARG`/`ENV` triggered Docker's own `SecretsUsedInArgOrEnv` warning** — the token would persist in `docker history` on every subsequent layer, readable by anyone with image access. Fixed with a proper BuildKit secret mount (`RUN --mount=type=secret`) instead, wired through `docker-compose.yml`'s `secrets:` block (`environment: SENTRY_AUTH_TOKEN`) rather than `args:`.
+3. **The upload silently no-ops with zero uploaded files unless an explicit `release.name` is set** — the Docker build context has no `.git` (only `apps/web`, `packages/types` etc. are `COPY`'d in), so the plugin's auto-detection has nothing to find. This wasn't documented anywhere obvious; found by watching GlitchTip's Releases page stay at "(7)" through two full builds with `debug: true` on, until an explicit release name was set, at which point a matching release with chunk-upload requests appeared immediately. Fixed by threading the deploying commit's SHA through: deploy script computes `SENTRY_RELEASE=$(git rev-parse HEAD)` on the server (post-`git pull`, so it's the SHA actually being deployed) → `docker-compose.yml` build arg → `Dockerfile` `ARG`/`ENV` (not a secret, a public commit SHA) → `next.config.ts`'s `release: { name: process.env.SENTRY_RELEASE }`. This also makes the upload's release name match what the runtime SDK auto-tags events with, which is what actually lets GlitchTip symbolicate a given error against the right sourcemaps.
 
-GlitchTip implements the same self-hosted sourcemap upload API as Sentry — the `@sentry/nextjs` build plugin needs an org slug, project slug, and an auth token with upload permission, normally read from `SENTRY_AUTH_TOKEN` (and `SENTRY_ORG`/`SENTRY_PROJECT` or explicit `org`/`project` options passed to `withSentryConfig`). Check whether these already exist anywhere:
+**Files changed (final):**
+- `apps/web/next.config.ts` — `sentryUrl`, `org: "xiv-venue-manager"`, `project: "xiv-app-web"` (both slugs read from GlitchTip's own DB, `organizations_ext_organization`/`projects_project` tables), `release: { name: process.env.SENTRY_RELEASE }`, `sourcemaps: { disable: false }`.
+- `apps/web/Dockerfile` — `ARG`/`ENV SENTRY_RELEASE` (not secret); `pnpm build` now runs under `RUN --mount=type=secret,id=sentry_auth_token SENTRY_AUTH_TOKEN="$(cat /run/secrets/sentry_auth_token)" pnpm build`.
+- `docker-compose.yml` — both `venue-manager` and `venue-manager-next` build blocks get `SENTRY_RELEASE` in `args:` and `secrets: [sentry_auth_token]`; top-level `secrets: { sentry_auth_token: { environment: SENTRY_AUTH_TOKEN } }` added.
+- `~/bin/deploy-xiv-web.sh` (not in this repo — separate local script) — both the `--green` and default branches now `export SENTRY_RELEASE=$(git rev-parse HEAD)` on the server, right after `git pull`, before the `docker compose build` call.
+- New GlitchTip auth token created via its web UI (Profile → Auth Tokens), labeled `web-sourcemap-upload`, scope `project:releases` only (least-privilege — the existing `Homepage-Stats` token is `project:read, event:read` and was correctly *not* reused, since it's a different service's token for a different purpose). Placed directly in `~/xiv-app/.env` on the server as `SENTRY_AUTH_TOKEN` by the user via SSH — never passed through this chat.
 
-```bash
-ssh server@192.168.1.122 'grep -rn "SENTRY_AUTH_TOKEN\|SENTRY_ORG\|SENTRY_PROJECT\|GLITCHTIP" ~/xiv-app/apps/web/.env* ~/xiv-env 2>/dev/null; grep -n "org:\|project:\|url:" ~/xiv-app/apps/web/next.config.ts ~/xiv-app/apps/web/sentry.*.config.ts'
-```
+**Real incident during testing:** repeated `--no-cache` builds while diagnosing the release-name issue filled the server's root disk to 100% (0 bytes free) via Docker's build cache (20GB, only ~4GB reclaimable). Live production container (`venue-manager`) stayed up and unaffected throughout, but this was close to affecting it. Fixed with `docker builder prune -af` (build cache only — regenerable, doesn't touch running containers or their images). Recovered 17GB. Lesson: don't chain multiple `--no-cache` builds without checking `df -h` between them on this server.
 
-If no auth token exists yet, generate one from the GlitchTip web UI (errors.xivvenuemanager.com → Settings → Auth Tokens, scope: `project:releases` / `project:write` — GlitchTip's UI labels these, check what's available) and add it to the server's env as `SENTRY_AUTH_TOKEN` (deploy script already sources `~/.xiv-env`-style files per [[reference_xiv_app_deploy_script]] — add it there, not committed to the repo).
-
-- [ ] **Step 2: Flip the config**
-
-Current (`apps/web/next.config.ts:76-81`):
-```typescript
-export default withSentryConfig(nextConfig, {
-  silent: !process.env.CI,
-  widenClientFileUpload: false,
-  disableLogger: true,
-  sourcemaps: { disable: true },
-})
-```
-
-New:
-```typescript
-export default withSentryConfig(nextConfig, {
-  silent: !process.env.CI,
-  widenClientFileUpload: false,
-  disableLogger: true,
-  sourcemaps: { disable: false },
-})
-```
-
-(`widenClientFileUpload: false` stays as-is — that's a separate setting about which client chunks get uploaded, not whether uploading happens at all. Don't touch it as part of this task; if source-mapped traces are still incomplete after this ships, that's a separate follow-up, not part of this fix.)
-
-- [ ] **Step 3: Build locally to confirm the plugin doesn't fail without a token** (sanity check before deploying — if `SENTRY_AUTH_TOKEN` isn't set yet, the build should still succeed, just skip the upload with a warning, not hard-fail)
-
-```bash
-ssh server@192.168.1.122 'cd ~/xiv-app/apps/web && pnpm build 2>&1 | tail -30'
-```
-
-Expected: build succeeds. If `SENTRY_AUTH_TOKEN` is set, look for a line confirming sourcemap upload (exact wording varies by `@sentry/nextjs` version — check the build output). If not set, expect a skip/warning, not a failure.
-
-- [ ] **Step 4: Commit**
-
-```bash
-cd ~/xiv-app
-git add apps/web/next.config.ts
-git commit -m "fix: re-enable GlitchTip sourcemap upload for readable prod stacktraces"
-```
-
-- [ ] **Step 5: Deploy**
-
-```bash
-~/bin/deploy-xiv-web.sh --green
-```
-
-Per [[reference_xiv_app_deploy_script]] — standard flow, run smoke checks after.
+**Verified end-to-end:**
+- Real deploy (`~/bin/deploy-xiv-web.sh --green`, commit `67226ae`) succeeded, 13/13 smoke checks passed, production flipped to the new build.
+- GlitchTip Releases list shows `67226aec61297dc4ae3def08fce60d3e65da237e` (matching the deployed commit) created at deploy time, alongside earlier test releases (`14a0809...`, a real prior commit; `debug-test-release`, a throwaway test name — left in place, GlitchTip 6.1.6's UI has no release-delete option, harmless clutter).
+- Definitive proof of *readable* stacktraces (vs. just "upload happened") is still only checkable opportunistically on the next real production error — a `captureMessage` diag call (`/api/diag/sentry-test`) confirmed connectivity end-to-end but doesn't exercise a thrown-error stack, and there was no practical way to trigger a genuine client-side JS error against the isolated pre-flip green container from outside the LAN.
 
 - [ ] **Step 6: Verify on the next real error**
 
