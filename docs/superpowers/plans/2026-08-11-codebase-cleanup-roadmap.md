@@ -50,13 +50,17 @@ Shipped via `superpowers:subagent-driven-development` (7 tasks, each with spec-c
 
 **Verify:** manual QA on the 4 target surfaces — success + error + network-failure paths.
 
-## Phase 4 — Plugin: shared tab base + web: packages/ hoisting
+## Phase 4 — Plugin: shared tab base + web: packages/ hoisting — **SCOPED 2026-08-13**
+Detailed plan: [2026-08-13-plugin-tab-base.md](2026-08-13-plugin-tab-base.md).
+
 **Risk: medium.** Touches every tab's entry point (plugin) — no hooks/game-state, verify visually. Web packages/ move is low risk (mechanical) but do after Phase 1/3 land so there's less to move twice.
 
 - Plugin: introduce `ITab`/base-tab abstraction for the 8 tab classes (`VenuesTab`, `SettingsTab`, `GuestsTab`, `GuestLogTab`, `SalesTab`, `ShiftsTab`, `RoomsTab`, `InventoryTab`) currently drawn ad hoc by `MainWindow`.
 - Web: hoist `lib/format.ts`, `lib/server-time.ts`, `lib/validation.ts` into `packages/` now that mobile is deferred — do only if/when a second consumer actually needs them; otherwise defer indefinitely (YAGNI — don't hoist for a consumer that doesn't exist yet).
 
 **Verify:** every tab still opens/closes/draws correctly (plugin); web build + existing tests pass after the move.
+
+packages/ hoisting: no second consumer exists yet (mobile deferred, Aetherphone integration still at outreach stage) — plan defers it explicitly, no task scheduled.
 
 ## Phase 5 — Docs: extract WHY-rationale, thin comments
 **Risk: low, mechanical, but needs care not to lose rationale.**
