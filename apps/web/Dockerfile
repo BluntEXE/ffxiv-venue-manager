@@ -16,6 +16,10 @@ ARG NEXT_PUBLIC_SENTRY_DSN
 ENV NEXT_PUBLIC_SENTRY_DSN=$NEXT_PUBLIC_SENTRY_DSN
 ARG NEXT_PUBLIC_DISCORD_APPLICATION_ID
 ENV NEXT_PUBLIC_DISCORD_APPLICATION_ID=$NEXT_PUBLIC_DISCORD_APPLICATION_ID
+# Not a secret — a git commit SHA. Ties uploaded sourcemaps to the release
+# name the runtime SDK auto-tags events with, so GlitchTip can symbolicate.
+ARG SENTRY_RELEASE
+ENV SENTRY_RELEASE=$SENTRY_RELEASE
 COPY --from=deps /app/node_modules ./node_modules
 COPY --from=deps /app/apps/web/node_modules ./apps/web/node_modules
 COPY pnpm-workspace.yaml package.json .npmrc ./
@@ -23,7 +27,12 @@ COPY apps/web ./apps/web
 COPY packages/types ./packages/types
 WORKDIR /app/apps/web
 RUN npx prisma generate
-RUN pnpm build
+# SENTRY_AUTH_TOKEN is a secret (grants release-write access) — mounted for
+# this RUN only via BuildKit secrets, never baked into an ARG/ENV layer
+# (those persist in `docker history`, unlike the two NEXT_PUBLIC_* values
+# above which aren't secrets).
+RUN --mount=type=secret,id=sentry_auth_token \
+    SENTRY_AUTH_TOKEN="$(cat /run/secrets/sentry_auth_token)" pnpm build
 
 # Production image
 FROM base AS runner

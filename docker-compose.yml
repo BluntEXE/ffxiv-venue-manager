@@ -40,6 +40,9 @@ services:
       args:
         NEXT_PUBLIC_SENTRY_DSN: ${NEXT_PUBLIC_SENTRY_DSN}
         NEXT_PUBLIC_DISCORD_APPLICATION_ID: ${NEXT_PUBLIC_DISCORD_APPLICATION_ID}
+        SENTRY_RELEASE: ${SENTRY_RELEASE}
+      secrets:
+        - sentry_auth_token
     container_name: venue-manager
     working_dir: /app
     ports:
@@ -195,6 +198,9 @@ services:
       args:
         NEXT_PUBLIC_SENTRY_DSN: ${NEXT_PUBLIC_SENTRY_DSN}
         NEXT_PUBLIC_DISCORD_APPLICATION_ID: ${NEXT_PUBLIC_DISCORD_APPLICATION_ID}
+        SENTRY_RELEASE: ${SENTRY_RELEASE}
+      secrets:
+        - sentry_auth_token
     container_name: venue-manager-next
     working_dir: /app
     ports:
@@ -227,3 +233,7 @@ services:
 networks:
   app-network:
     driver: bridge
+
+secrets:
+  sentry_auth_token:
+    environment: SENTRY_AUTH_TOKEN

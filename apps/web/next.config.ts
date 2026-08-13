@@ -77,5 +77,17 @@ export default withSentryConfig(nextConfig, {
   silent: !process.env.CI,
   widenClientFileUpload: false,
   disableLogger: true,
-  sourcemaps: { disable: true },
+  // GlitchTip (self-hosted, Sentry-protocol compatible) needs its own URL —
+  // the plugin defaults to sentry.io otherwise.
+  sentryUrl: "https://errors.xivvenuemanager.com/",
+  org: "xiv-venue-manager",
+  project: "xiv-app-web",
+  // Docker build context has no .git, so auto-detection can't find a
+  // release — without an explicit name, the plugin silently skips upload
+  // entirely (confirmed by testing: zero sourcemaps uploaded until this was
+  // set). SENTRY_RELEASE is the deploy script's `git rev-parse HEAD`, so
+  // uploaded sourcemaps match the release the runtime SDK auto-tags events
+  // with.
+  release: { name: process.env.SENTRY_RELEASE },
+  sourcemaps: { disable: false },
 })
