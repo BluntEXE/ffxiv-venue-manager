@@ -1,15 +1,16 @@
 import { NextRequest, NextResponse } from 'next/server'
+import { z } from 'zod'
 import { validateApiKey, checkPermission } from '@/lib/api/plugin-auth'
 import { enforcePluginRateLimit, enforcePluginIpRateLimit } from '@/lib/api/plugin-rate-limit'
 import { prisma } from '@/lib/prisma'
 import { venueEventBus } from '@/lib/sse/venue-events'
 
-interface SetRoomStatusPayload {
-  venueId: string
-  roomId: string
-  isOccupied: boolean
-  note?: string
-}
+const roomStatusSchema = z.object({
+  venueId: z.string().min(1, 'venueId is required'),
+  roomId: z.string().min(1, 'roomId is required'),
+  isOccupied: z.boolean(),
+  note: z.string().max(500, 'Note too long (max 500 characters)').optional(),
+})
 
 /**
  * POST /api/plugin/rooms/status
@@ -35,15 +36,8 @@ export async function POST(request: NextRequest) {
     const limited = await enforcePluginRateLimit(apiKey, 'write')
     if (limited) return limited
 
-    const body: SetRoomStatusPayload = await request.json()
-    const { venueId, roomId, isOccupied, note } = body
-
-    if (!venueId || !roomId || typeof isOccupied !== 'boolean') {
-      return NextResponse.json(
-        { error: 'Missing required fields: venueId, roomId, isOccupied' },
-        { status: 400 }
-      )
-    }
+    const body = await request.json()
+    const { venueId, roomId, isOccupied, note } = roomStatusSchema.parse(body)
 
     if (!auth.venues.includes(venueId)) {
       return NextResponse.json({ error: 'Invalid venue' }, { status: 400 })
@@ -87,6 +81,9 @@ export async function POST(request: NextRequest) {
 
     return NextResponse.json({ success: true })
   } catch (error) {
+    if (error instanceof z.ZodError) {
+      return NextResponse.json({ error: 'Validation error', details: error.issues }, { status: 400 })
+    }
     console.error('[Plugin API] Error setting room status:', error)
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 })
   }
