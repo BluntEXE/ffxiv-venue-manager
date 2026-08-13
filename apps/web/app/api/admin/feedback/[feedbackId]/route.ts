@@ -1,8 +1,15 @@
 import { NextRequest, NextResponse } from "next/server"
 import { getServerSession } from "next-auth"
+import { z } from "zod"
 import { authOptions } from "@/lib/auth"
 import { prisma } from "@/lib/prisma"
 import { withRateLimit } from "@/lib/middleware/with-rate-limit"
+import { validators } from "@/lib/validation"
+
+const updateSchema = z.object({
+  status: validators.feedbackStatus.optional(),
+  adminNotes: validators.adminNotes,
+})
 
 // PATCH /api/admin/feedback/[feedbackId] - Update feedback status/notes (admin only)
 export const PATCH = withRateLimit<{ params: Promise<{ feedbackId: string }> }>(
@@ -32,16 +39,7 @@ export const PATCH = withRateLimit<{ params: Promise<{ feedbackId: string }> }>(
 
       const { feedbackId } = await params
       const body = await request.json()
-      const { status, adminNotes } = body
-
-      // Validate status if provided
-      const validStatuses = ["NEW", "UNDER_REVIEW", "PLANNED", "IN_PROGRESS", "COMPLETED", "WONT_FIX"]
-      if (status && !validStatuses.includes(status)) {
-        return NextResponse.json(
-          { error: `Invalid status. Must be one of: ${validStatuses.join(", ")}` },
-          { status: 400 }
-        )
-      }
+      const { status, adminNotes } = updateSchema.parse(body)
 
       // Update the feedback
       const updateData: any = {}
@@ -78,6 +76,9 @@ export const PATCH = withRateLimit<{ params: Promise<{ feedbackId: string }> }>(
 
       return NextResponse.json(updatedFeedback)
     } catch (error) {
+      if (error instanceof z.ZodError) {
+        return NextResponse.json({ error: "Validation error", details: error.issues }, { status: 400 })
+      }
       console.error("Error updating feedback:", error)
       return NextResponse.json(
         { error: "Internal server error" },
