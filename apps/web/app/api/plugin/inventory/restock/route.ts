@@ -1,14 +1,15 @@
 import { NextRequest, NextResponse } from 'next/server'
+import { z } from 'zod'
 import { validateApiKey } from '@/lib/api/plugin-auth'
 import { enforcePluginRateLimit, enforcePluginIpRateLimit } from '@/lib/api/plugin-rate-limit'
 import { prisma } from '@/lib/prisma'
 import { invalidateCache, cacheKeys } from '@/lib/redis-cache'
 
-interface RestockPayload {
-  venueId: string
-  serviceId: string
-  stockCount: number
-}
+const restockSchema = z.object({
+  venueId: z.string().min(1, 'venueId is required'),
+  serviceId: z.string().min(1, 'serviceId is required'),
+  stockCount: z.number().int('stockCount must be a whole number').min(0, 'stockCount must be non-negative'),
+})
 
 /**
  * POST /api/plugin/inventory/restock
@@ -34,15 +35,8 @@ export async function POST(request: NextRequest) {
     const limited = await enforcePluginRateLimit(apiKey, 'write')
     if (limited) return limited
 
-    const body: RestockPayload = await request.json()
-    const { venueId, serviceId, stockCount } = body
-
-    if (!venueId || !serviceId || typeof stockCount !== 'number' || stockCount < 0) {
-      return NextResponse.json(
-        { error: 'Missing or invalid fields: venueId, serviceId, stockCount (>= 0)' },
-        { status: 400 }
-      )
-    }
+    const body = await request.json()
+    const { venueId, serviceId, stockCount } = restockSchema.parse(body)
 
     if (!auth.venues.includes(venueId)) {
       return NextResponse.json({ error: 'Invalid venue' }, { status: 400 })
@@ -69,6 +63,9 @@ export async function POST(request: NextRequest) {
 
     return NextResponse.json({ success: true })
   } catch (error) {
+    if (error instanceof z.ZodError) {
+      return NextResponse.json({ error: 'Validation error', details: error.issues }, { status: 400 })
+    }
     console.error('[Plugin API] Error restocking:', error)
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 })
   }
