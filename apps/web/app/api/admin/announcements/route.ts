@@ -4,6 +4,7 @@ import { authOptions } from "@/lib/auth"
 import { prisma } from "@/lib/prisma"
 import { z } from "zod"
 import { withRateLimit } from "@/lib/middleware/with-rate-limit"
+import { validators } from "@/lib/validation"
 
 async function requireAdmin(session: any) {
   if (!session?.user?.id) return false
@@ -17,7 +18,7 @@ async function requireAdmin(session: any) {
 const createSchema = z.object({
   title: z.string().min(1).max(100),
   message: z.string().min(1).max(500),
-  link: z.string().url().optional().nullable(),
+  link: validators.url.nullable(),
   linkLabel: z.string().max(50).optional().nullable(),
   expiresAt: z.string().optional().nullable(),
 })
