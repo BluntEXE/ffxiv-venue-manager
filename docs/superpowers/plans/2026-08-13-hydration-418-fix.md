@@ -7,7 +7,7 @@
 **Architecture:** Root cause confirmed by live reproduction (2026-08-13, logged-in session against `https://xivvenuemanager.com/dashboard/rapture/shifts`): the page renders a raw email address (`forxbox1992@live.co.uk`, the logged-in user's own account email) in its initial HTML. Cloudflare's zone-level **Email Address Obfuscation** feature rewrites any raw email text it sees in the HTML response at the edge, replacing it with an obfuscated span plus a decode script (`cdn-cgi/scripts/.../email-decode.min.js`) that's supposed to restore the plain text client-side before paint. That decode script is blocked by this site's own CSP (`script-src 'self' 'nonce-...' 'strict-dynamic'` — a third-party edge-injected script has neither the nonce nor a `'self'` origin match). Result: the server-sent HTML contains Cloudflare's obfuscated markup, React's client render computes the original (correct) text, hydration diff fails → error #418. This explains the breadth (any page rendering any user's/staff's email, on any browser) and why the CSP itself is not the thing to change (it's correctly strict; loosening it to allow an arbitrary Cloudflare edge-injected script would be the wrong fix).
 
 Two independent fixes, bundled here since both are small:
-1. **Primary:** turn off Email Address Obfuscation at the Cloudflare zone level (a dashboard/API setting, not a code change) — removes the edge rewrite entirely, so there's nothing to mismatch.
+1. **Primary:** scope Email Address Obfuscation off on `/dashboard/*` only, via a Cloudflare Configuration Rule (dashboard action, not a code change) — removes the edge rewrite exactly where it breaks hydration, while keeping obfuscation active on public pages (`/discover`, marketing pages) where it still protects real venue contact emails from scraping. Deliberately not a zone-wide disable — that would give up scraping protection everywhere for a bug that only shows up on authenticated pages.
 2. **Secondary/hardening:** re-enable sourcemap upload to GlitchTip (`sourcemaps: { disable: true }` in `next.config.ts` — currently off), so the *next* production error, of any kind, has a readable stacktrace instead of single-letter minified function names.
 
 **Tech Stack:** Cloudflare Zone Settings API, `@sentry/nextjs` (GlitchTip's Sentry-compatible ingestion), Next.js.
@@ -16,29 +16,21 @@ Two independent fixes, bundled here since both are small:
 
 ---
 
-## Task 1: Disable Cloudflare Email Address Obfuscation for the zone
+## Task 1: Add a Configuration Rule disabling Email Address Obfuscation on `/dashboard/*`
 
 **Files:** none — this is a Cloudflare dashboard/API setting, not a repo change.
 
-- [ ] **Step 1: Confirm current state** (already done during investigation, repeat if time has passed)
+Per Cloudflare's own docs (confirmed 2026-08-13): *"To apply it to specific hostnames only, use a Configuration Rule instead of disabling it zone-wide."* Configuration Rules are path/hostname-scoped, so this keeps obfuscation active on public pages.
 
-```bash
-ssh server@192.168.1.122 'source ~/.xiv-env && ZONE_ID=$(curl -s -X GET "https://api.cloudflare.com/client/v4/zones?name=xivvenuemanager.com" -H "Authorization: Bearer $CF_API_TOKEN" | python3 -c "import sys,json; print(json.load(sys.stdin)[\"result\"][0][\"id\"])") && curl -s -X GET "https://api.cloudflare.com/client/v4/zones/$ZONE_ID/settings/email_obfuscation" -H "Authorization: Bearer $CF_API_TOKEN"'
-```
+- [ ] **Step 1: Create the rule** (manual, dashboard) — the server's `CF_API_TOKEN` (in `~/.xiv-env`) only has DNS/Tunnel scope, not `Zone WAF`/ruleset edit, so this needs to be done in the dashboard rather than scripted, unless the token is deliberately widened for it (not worth it for a one-time rule):
 
-**Known blocker:** this returned `{"success": false, "errors": [{"code": 10000, "message": "Authentication error"}]}` during investigation — the `CF_API_TOKEN` in `~/.xiv-env` has DNS/Tunnel scope only, not `Zone Settings:Edit`. Two options, pick one:
+  1. Cloudflare dashboard → xivvenuemanager.com zone → **Rules** → **Configuration Rules** → **Create rule**.
+  2. Rule name: `Disable email obfuscation on dashboard`.
+  3. Match: `URI Path` `starts with` `/dashboard/`.
+  4. Setting: turn **Email Obfuscation** off (leave every other setting in the rule untouched — this rule should only affect this one setting).
+  5. Save and deploy.
 
-- [ ] **Step 2a (if a broader token is obtained):** flip the setting via API
-
-```bash
-ssh server@192.168.1.122 'source ~/.xiv-env && ZONE_ID=$(curl -s -X GET "https://api.cloudflare.com/client/v4/zones?name=xivvenuemanager.com" -H "Authorization: Bearer $CF_API_TOKEN" | python3 -c "import sys,json; print(json.load(sys.stdin)[\"result\"][0][\"id\"])") && curl -s -X PATCH "https://api.cloudflare.com/client/v4/zones/$ZONE_ID/settings/email_obfuscation" -H "Authorization: Bearer $CF_API_TOKEN" -H "Content-Type: application/json" --data "{\"value\":\"off\"}"'
-```
-
-Expected: `"success": true`, `"result": {"id": "email_obfuscation", "value": "off", ...}`.
-
-- [ ] **Step 2b (if no broader token — the likely path):** ask the user to flip it manually — Cloudflare dashboard → xivvenuemanager.com zone → Scrape Shield → **Email Address Obfuscation** → toggle Off. Two-minute manual action, no reason to widen API token scope for a one-time toggle.
-
-- [ ] **Step 3: Verify the decode-script request is gone**
+- [ ] **Step 2: Verify the decode-script request is gone on a dashboard page**
 
 Re-run the same reproduction that caught this originally — navigate to `https://xivvenuemanager.com/dashboard/rapture/shifts` while logged in, check console.
 
@@ -47,13 +39,17 @@ mcp__playwright-brave__browser_navigate → https://xivvenuemanager.com/dashboar
 mcp__playwright-brave__browser_console_messages (level: error)
 ```
 
-Expected: zero errors (neither the CSP violation for `cloudflare-static/email-decode.min.js` nor the #418 hydration error). Note: Cloudflare's edge cache may still serve an already-obfuscated cached HTML response for a few minutes after the setting flips — if the CSP error is gone but #418 still fires once, wait ~5 min (cache TTL) and retry before concluding the fix didn't work.
+Expected: zero errors (neither the CSP violation for `cloudflare-static/email-decode.min.js` nor the #418 hydration error). Note: Cloudflare's edge cache may still serve an already-obfuscated cached HTML response for a few minutes after the rule deploys — if the CSP error is gone but #418 still fires once, wait ~5 min (cache TTL) and retry before concluding the fix didn't work.
 
-- [ ] **Step 4: Spot-check 2-3 more of the originally-affected URLs**
+- [ ] **Step 3: Spot-check 2-3 more of the originally-affected dashboard URLs**
 
-`/discover`, `/dashboard/velvet-rift/staff`, `/dashboard/account` — confirm no #418 on any.
+`/dashboard/velvet-rift/staff`, `/dashboard/account` — confirm no #418 on either.
 
-- [ ] **Step 5: No commit needed** — this task has no repo changes. Note the completion (date + who flipped it) in this plan file's own history when merged, or in a follow-up memory update.
+- [ ] **Step 4: Confirm the rule is properly scoped, not zone-wide**
+
+Load a page under `/discover` (public, not under `/dashboard/`) and view source (`curl -s https://xivvenuemanager.com/discover | grep -o 'cdn-cgi/l/email-protection' | head -1`). If Cloudflare still injects its obfuscation markup on public pages, the rule is correctly scoped to `/dashboard/*` only. (This page doesn't currently render a raw email, so it won't itself show #418 either way — this step is purely to confirm the rule's path match is correctly scoped, not a repro check.)
+
+- [ ] **Step 5: No commit needed** — this task has no repo changes. Note the completion (date + who created the rule) in a follow-up memory update.
 
 ---
 
@@ -130,6 +126,6 @@ No error to check yet post-deploy — this can't be verified synthetically witho
 
 **Spec coverage:** primary fix (Cloudflare setting, Task 1) and the requested sourcemap follow-up (Task 2) both covered. Root-cause explanation given in the Architecture section, backed by the actual reproduction (email address found in page snapshot, CSP-block console error captured, correlated to the exact decode-script Cloudflare injects for its Email Obfuscation feature).
 
-**Placeholder scan:** Task 1 has a real blocker (token scope) documented as two concrete alternate paths (2a/2b), not glossed over. Task 2's auth-token step is conditional on what's discovered — this is a genuine "check first" step (the plan can't know what's already configured on the server without looking), not a vague TODO; both branches (token exists / needs creating) are spelled out.
+**Placeholder scan:** Task 1's manual-dashboard step is a real constraint (no API token scope for ruleset edits), stated plainly rather than scripted around. Task 2's auth-token step is conditional on what's discovered — this is a genuine "check first" step (the plan can't know what's already configured on the server without looking), not a vague TODO; both branches (token exists / needs creating) are spelled out.
 
 **Type consistency:** N/A — no new types/functions introduced, this is a config-only fix.
