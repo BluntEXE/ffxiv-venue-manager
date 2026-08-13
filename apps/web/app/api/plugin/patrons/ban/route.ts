@@ -1,14 +1,16 @@
 import { NextRequest, NextResponse } from 'next/server'
+import { z } from 'zod'
 import { validateApiKey } from '@/lib/api/plugin-auth'
 import { enforcePluginRateLimit, enforcePluginIpRateLimit } from '@/lib/api/plugin-rate-limit'
 import { prisma } from '@/lib/prisma'
+import { validators } from '@/lib/validation'
 
-interface BanPatronPayload {
-  venueId: string
-  characterName: string
-  world: string
-  reason: string
-}
+const banSchema = z.object({
+  venueId: z.string().min(1, 'venueId is required'),
+  characterName: validators.characterName,
+  world: validators.world,
+  reason: z.string().min(1, 'Reason is required').max(500, 'Reason too long (max 500 characters)'),
+})
 
 /**
  * POST /api/plugin/patrons/ban
@@ -34,15 +36,8 @@ export async function POST(request: NextRequest) {
     const limited = await enforcePluginRateLimit(apiKey, 'write')
     if (limited) return limited
 
-    const body: BanPatronPayload = await request.json()
-    const { venueId, characterName, world, reason } = body
-
-    if (!venueId || !characterName || !world || !reason || !reason.trim()) {
-      return NextResponse.json(
-        { error: 'Missing required fields: venueId, characterName, world, reason' },
-        { status: 400 }
-      )
-    }
+    const body = await request.json()
+    const { venueId, characterName, world, reason } = banSchema.parse(body)
 
     if (!auth.venues.includes(venueId)) {
       return NextResponse.json({ error: 'Invalid venue' }, { status: 400 })
@@ -78,6 +73,9 @@ export async function POST(request: NextRequest) {
 
     return NextResponse.json({ success: true })
   } catch (error) {
+    if (error instanceof z.ZodError) {
+      return NextResponse.json({ error: 'Validation error', details: error.issues }, { status: 400 })
+    }
     console.error('[Plugin API] Error banning patron:', error)
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 })
   }
