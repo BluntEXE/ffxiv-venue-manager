@@ -1,5 +1,17 @@
 # Zod Validation Registry — Plugin Write Routes (Increment 2) Implementation Plan
 
+**DONE, deployed 2026-08-13** — commit `463d906`, merged to `main` via `zod-plugin-routes` branch (isolated worktree, subagent-driven-development, 5 tasks including 2 real fix-cycles + final whole-branch review). 51/51 tests, typecheck, build all green.
+
+**Two of this plan's own premises were wrong and got corrected during review, not before shipping:**
+1. **Task 2 (ban route):** the `reason` schema below (`z.string().min(1,...).max(500,...)`) was missing `.trim()`, which let whitespace-only ban reasons silently pass validation and write an empty `banReason` to the database. Fixed in review by adding `.trim()`: `z.string().trim().min(1,...).max(500,...)`.
+2. **Task 4 (link-item route):** this plan's stated goal (line 5, "a logic bug where `link-item`'s `!itemId` check incorrectly rejects `itemId: 0` as 'missing'") was itself wrong. `linkedItemId` is documented in `apps/web/prisma/schema.prisma:576` as the real FFXIV item ID, and two sibling routes (`apps/web/app/api/venues/[venueId]/services/route.ts:16`, `.../[serviceId]/route.ts:15`) already establish `.positive()` as the correct convention — item ID `0` is FFXIV's "no item" sentinel, not a real linkable item, and the dashboard's own `service.linkedItemId ? {...} : null` truthy check (`apps/web/app/dashboard/[slug]/services/page.tsx:283`) would have desynced against a stored `0`. The shipped code uses `itemId: z.number().int().positive('itemId must be a positive integer')`, NOT the `.min(0)` shown in Task 4 below — the old `!itemId` check was accidentally correct all along. Commit reframed from `fix:` to `refactor:` accordingly.
+
+**One additional deviation, not a bug fix but a correction to an invented constraint:** Task 5's `stockCount` field below shows a `.max(1000000, 'stockCount too large')` upper bound. This was never a real gap — two sibling routes (`apps/web/app/api/venues/[venueId]/services/route.ts:19`, `.../[serviceId]/route.ts:18`) validate the same field with no upper bound at all (`z.number().int().min(0)`, unbounded). The shipped code matches that convention and does NOT have a `.max()`. The `.int()` check (the actual real gap — floats like `3.7` previously passed silently) was implemented as planned.
+
+Read the task bodies below for the original planning rationale — they're left as originally written for historical accuracy, corrected only by this header note and by the code that actually shipped (see git history on the `zod-plugin-routes`-derived commits on `main` for the literal diffs, including the fix-cycle commits `c49a1d6` and `315198e`).
+
+---
+
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
 
 **Goal:** Bring the 4 Dalamud-plugin-facing write API routes (`/api/plugin/patrons/ban`, `/api/plugin/rooms/status`, `/api/plugin/inventory/link-item`, `/api/plugin/inventory/restock`) onto `lib/validation.ts`'s shared `validators` registry, closing five real gaps found by reading the actual source: unbounded `characterName`/`world`/`reason` strings on the ban route, an unbounded `note` on the room-status route, a logic bug where `link-item`'s `!itemId` check incorrectly rejects `itemId: 0` as "missing", an unbounded `itemName`, and an unbounded/non-integer-checked `stockCount` on the restock route.
