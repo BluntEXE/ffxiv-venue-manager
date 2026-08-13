@@ -22,34 +22,17 @@ Two independent fixes, bundled here since both are small:
 
 Per Cloudflare's own docs (confirmed 2026-08-13): *"To apply it to specific hostnames only, use a Configuration Rule instead of disabling it zone-wide."* Configuration Rules are path/hostname-scoped, so this keeps obfuscation active on public pages.
 
-- [ ] **Step 1: Create the rule** (manual, dashboard) — the server's `CF_API_TOKEN` (in `~/.xiv-env`) only has DNS/Tunnel scope, not `Zone WAF`/ruleset edit, so this needs to be done in the dashboard rather than scripted, unless the token is deliberately widened for it (not worth it for a one-time rule):
+- [x] **Step 1: Create the rule** (manual, dashboard) — done 2026-08-13, created via the dashboard by the user with live walkthrough. Rule name `Disable email obfuscation on dashboard`, match `URI Path starts with /dashboard/`, setting `Email Obfuscation` → off. Confirmed to have deployed correctly (visible in the zone's Configuration Rules list post-deploy, exact match/setting as specified).
 
-  1. Cloudflare dashboard → xivvenuemanager.com zone → **Rules** → **Configuration Rules** → **Create rule**.
-  2. Rule name: `Disable email obfuscation on dashboard`.
-  3. Match: `URI Path` `starts with` `/dashboard/`.
-  4. Setting: turn **Email Obfuscation** off (leave every other setting in the rule untouched — this rule should only affect this one setting).
-  5. Save and deploy.
+- [x] **Step 2: Verify the decode-script request is gone on a dashboard page** — done. `https://xivvenuemanager.com/dashboard/rapture/shifts` (the worst offender, 31 hits pre-fix): zero console errors, both the CSP violation and #418 gone.
 
-- [ ] **Step 2: Verify the decode-script request is gone on a dashboard page**
+- [x] **Step 3: Spot-check 2-3 more of the originally-affected dashboard URLs** — done. `/dashboard/velvet-rift/staff` and `/dashboard/account`: zero console errors on both.
 
-Re-run the same reproduction that caught this originally — navigate to `https://xivvenuemanager.com/dashboard/rapture/shifts` while logged in, check console.
+- [x] **Step 4: Confirm the rule is properly scoped, not zone-wide** — attempted via `/discover` as originally planned, inconclusive as predicted (that page renders no raw email currently, `curl` found no obfuscation markup either way). Confirmed scoping instead by reading the deployed rule back from the Cloudflare dashboard's Configuration Rules list: match expression is exactly `(starts_with(http.request.uri.path, "/dashboard/"))`, not a zone-wide rule — scoping is correct by definition, not just by inference from public-page behavior.
 
-```
-mcp__playwright-brave__browser_navigate → https://xivvenuemanager.com/dashboard/rapture/shifts
-mcp__playwright-brave__browser_console_messages (level: error)
-```
+- [x] **Step 5: No commit needed** — confirmed, no repo changes were required for this task.
 
-Expected: zero errors (neither the CSP violation for `cloudflare-static/email-decode.min.js` nor the #418 hydration error). Note: Cloudflare's edge cache may still serve an already-obfuscated cached HTML response for a few minutes after the rule deploys — if the CSP error is gone but #418 still fires once, wait ~5 min (cache TTL) and retry before concluding the fix didn't work.
-
-- [ ] **Step 3: Spot-check 2-3 more of the originally-affected dashboard URLs**
-
-`/dashboard/velvet-rift/staff`, `/dashboard/account` — confirm no #418 on either.
-
-- [ ] **Step 4: Confirm the rule is properly scoped, not zone-wide**
-
-Load a page under `/discover` (public, not under `/dashboard/`) and view source (`curl -s https://xivvenuemanager.com/discover | grep -o 'cdn-cgi/l/email-protection' | head -1`). If Cloudflare still injects its obfuscation markup on public pages, the rule is correctly scoped to `/dashboard/*` only. (This page doesn't currently render a raw email, so it won't itself show #418 either way — this step is purely to confirm the rule's path match is correctly scoped, not a repro check.)
-
-- [ ] **Step 5: No commit needed** — this task has no repo changes. Note the completion (date + who created the rule) in a follow-up memory update.
+**Task 1 complete 2026-08-13.** Root cause eliminated on all three previously-broken URLs tested; rule scoped correctly per the dashboard's own rule listing.
 
 ---
 
