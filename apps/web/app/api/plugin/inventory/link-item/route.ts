@@ -1,16 +1,17 @@
 import { NextRequest, NextResponse } from 'next/server'
+import { z } from 'zod'
 import { validateApiKey } from '@/lib/api/plugin-auth'
 import { enforcePluginRateLimit, enforcePluginIpRateLimit } from '@/lib/api/plugin-rate-limit'
 import { prisma } from '@/lib/prisma'
 import { invalidateCache, cacheKeys } from '@/lib/redis-cache'
 
-interface LinkItemPayload {
-  venueId: string
-  serviceId: string
-  itemId: number
-  itemName: string
-  iconId?: number | null
-}
+const linkItemSchema = z.object({
+  venueId: z.string().min(1, 'venueId is required'),
+  serviceId: z.string().min(1, 'serviceId is required'),
+  itemId: z.number().int().min(0, 'itemId must be a non-negative integer'),
+  itemName: z.string().min(1, 'itemName is required').max(200, 'Item name too long (max 200 characters)'),
+  iconId: z.number().int().min(0).optional().nullable(),
+})
 
 /**
  * POST /api/plugin/inventory/link-item
@@ -35,15 +36,8 @@ export async function POST(request: NextRequest) {
     const limited = await enforcePluginRateLimit(apiKey, 'write')
     if (limited) return limited
 
-    const body: LinkItemPayload = await request.json()
-    const { venueId, serviceId, itemId, itemName, iconId } = body
-
-    if (!venueId || !serviceId || !itemId || !itemName) {
-      return NextResponse.json(
-        { error: 'Missing required fields: venueId, serviceId, itemId, itemName' },
-        { status: 400 }
-      )
-    }
+    const body = await request.json()
+    const { venueId, serviceId, itemId, itemName, iconId } = linkItemSchema.parse(body)
 
     if (!auth.venues.includes(venueId)) {
       return NextResponse.json({ error: 'Invalid venue' }, { status: 400 })
@@ -70,6 +64,9 @@ export async function POST(request: NextRequest) {
 
     return NextResponse.json({ success: true })
   } catch (error) {
+    if (error instanceof z.ZodError) {
+      return NextResponse.json({ error: 'Validation error', details: error.issues }, { status: 400 })
+    }
     console.error('[Plugin API] Error linking item:', error)
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 })
   }
