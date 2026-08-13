@@ -40,6 +40,9 @@ export const validators = {
   datetime: z.string().datetime({ message: "Invalid datetime format (ISO 8601 required)" }),
   date: z.string().regex(/^\d{4}-\d{2}-\d{2}$/, "Invalid date format (YYYY-MM-DD required)"),
   timezone: z.string().max(50, "Timezone string too long"),
+  feedbackStatus: z.enum(["NEW", "UNDER_REVIEW", "PLANNED", "IN_PROGRESS", "COMPLETED", "WONT_FIX"]),
+  feedbackCategory: z.enum(["BUG_REPORT", "FEATURE_REQUEST", "IMPROVEMENT", "GENERAL"]),
+  adminNotes: z.string().max(2000, "Notes too long (max 2000 characters)").optional(),
 }
 
 // ============================================
