@@ -38,3 +38,31 @@ describe("validators.adminNotes", () => {
     expect(validators.adminNotes.safeParse("a".repeat(2001)).success).toBe(false)
   })
 })
+
+describe("validators.characterName", () => {
+  it("accepts a normal FFXIV character name", () => {
+    expect(validators.characterName.safeParse("Y'shtola Rhul").success).toBe(true)
+  })
+
+  it("rejects an empty string", () => {
+    expect(validators.characterName.safeParse("").success).toBe(false)
+  })
+
+  it("rejects a string over 40 characters", () => {
+    expect(validators.characterName.safeParse("a".repeat(41)).success).toBe(false)
+  })
+})
+
+describe("validators.world", () => {
+  it("accepts a normal FFXIV world name", () => {
+    expect(validators.world.safeParse("Balmung").success).toBe(true)
+  })
+
+  it("rejects an empty string", () => {
+    expect(validators.world.safeParse("").success).toBe(false)
+  })
+
+  it("rejects a string over 32 characters", () => {
+    expect(validators.world.safeParse("a".repeat(33)).success).toBe(false)
+  })
+})

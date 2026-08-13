@@ -43,6 +43,8 @@ export const validators = {
   feedbackStatus: z.enum(["NEW", "UNDER_REVIEW", "PLANNED", "IN_PROGRESS", "COMPLETED", "WONT_FIX"]),
   feedbackCategory: z.enum(["BUG_REPORT", "FEATURE_REQUEST", "IMPROVEMENT", "GENERAL"]),
   adminNotes: z.string().max(2000, "Notes too long (max 2000 characters)").optional(),
+  characterName: z.string().min(1, "Character name is required").max(40, "Character name too long (max 40 characters)"),
+  world: z.string().min(1, "World is required").max(32, "World name too long (max 32 characters)"),
 }
 
 // ============================================
