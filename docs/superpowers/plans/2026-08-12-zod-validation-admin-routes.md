@@ -1,5 +1,7 @@
 # Zod Validation Registry — Admin Routes (Increment 1) Implementation Plan
 
+**DONE, deployed 2026-08-13** — commit `e9420c4`, merged to `main` via `zod-validation-admin-routes` branch (isolated worktree, subagent-driven-development, 4 tasks + final whole-branch review). 45/45 tests, typecheck, build all green; 13/13 smoke checks post-deploy. Manual admin-session verification (Task 5 Step 2) not yet confirmed by a human — needs a real admin login, see roadmap doc.
+
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
 
 **Goal:** Bring the 4 admin API routes onto `lib/validation.ts`'s shared `validators` registry with one consistent zod-error-handling pattern, closing two real validation gaps found along the way (unchecked feedback status/category, unbounded `adminNotes`).
