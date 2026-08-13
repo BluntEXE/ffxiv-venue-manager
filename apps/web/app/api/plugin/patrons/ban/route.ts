@@ -9,7 +9,7 @@ const banSchema = z.object({
   venueId: z.string().min(1, 'venueId is required'),
   characterName: validators.characterName,
   world: validators.world,
-  reason: z.string().min(1, 'Reason is required').max(500, 'Reason too long (max 500 characters)'),
+  reason: z.string().trim().min(1, 'Reason is required').max(500, 'Reason too long (max 500 characters)'),
 })
 
 /**
