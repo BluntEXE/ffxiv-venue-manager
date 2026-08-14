@@ -4,10 +4,11 @@ import { authOptions } from "@/lib/auth"
 import { prisma } from "@/lib/prisma"
 import { z } from "zod"
 import { withRateLimit } from "@/lib/middleware/with-rate-limit"
+import { validators } from "@/lib/validation"
 
 const createRoleSchema = z.object({
-  name: z.string().min(1, "Role name is required").max(50),
-  responsibilities: z.string().optional(),
+  name: validators.roleName,
+  responsibilities: validators.roleDescription,
   color: z.string().optional(),
   permissions: z.record(z.string(), z.boolean()).optional(),
   hourlyRate: z.number().positive().nullable().optional(),
