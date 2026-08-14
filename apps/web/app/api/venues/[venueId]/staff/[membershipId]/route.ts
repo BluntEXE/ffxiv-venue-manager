@@ -4,13 +4,14 @@ import { authOptions } from "@/lib/auth"
 import { prisma } from "@/lib/prisma"
 import { z } from "zod"
 import { withRateLimit } from "@/lib/middleware/with-rate-limit"
+import { validators } from "@/lib/validation"
 
 const updateStaffSchema = z.object({
   role: z.enum(["OWNER", "MANAGER", "STAFF"]).optional(),
   roleId: z.string().nullable().optional(),
   status: z.string().optional(),
-  invitedName: z.string().nullable().optional(),
-  invitedEmail: z.string().nullable().optional(),
+  invitedName: z.string().max(100, "Name too long (max 100 characters)").nullable().optional(),
+  invitedEmail: validators.email.nullable().optional(),
   nickname: z.string().max(50).nullable().optional(),
   temporaryRole: z.enum(["OWNER", "MANAGER", "STAFF"]).nullable().optional(),
   temporaryRoleExpiresAt: z.string().nullable().optional(),
