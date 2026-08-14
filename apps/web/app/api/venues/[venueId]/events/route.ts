@@ -5,10 +5,11 @@ import { prisma } from "@/lib/prisma"
 import { z } from "zod"
 import { withRateLimit } from "@/lib/middleware/with-rate-limit"
 import { generateOccurrences, type RecurrenceRule } from "@/lib/recurrence"
+import { validators } from "@/lib/validation"
 
 const eventSchema = z.object({
-  title: z.string().min(1, "Event title is required"),
-  description: z.string().optional(),
+  title: validators.eventTitle,
+  description: validators.eventDescription,
   eventType: z.enum(["PERFORMANCE", "GAME_NIGHT", "SPECIAL", "SOCIAL", "PRIVATE", "OTHER"]),
   status: z.enum(["DRAFT", "PUBLISHED", "ACTIVE", "COMPLETED", "CANCELLED"]).default("DRAFT"),
   startTime: z.string().transform((str) => new Date(str)),
