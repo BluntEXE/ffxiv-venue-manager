@@ -27,8 +27,8 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "@/components/ui/dialog"
-import { format } from "date-fns"
 import { Check, Copy, Trash2, Pencil } from "lucide-react"
+import { LocalTime } from "@/components/server-time"
 
 interface PendingInvite {
   id: string
@@ -182,7 +182,7 @@ export function PendingInvites({ invites, slug, canManageStaff }: PendingInvites
                       <p className="text-xs text-muted-foreground">{invite.invitedEmail}</p>
                     )}
                     <p className="text-xs text-muted-foreground mt-1">
-                      Expires: {invite.inviteExpiresAt ? format(new Date(invite.inviteExpiresAt), "PPP") : "Never"}
+                      Expires: {invite.inviteExpiresAt ? <LocalTime date={invite.inviteExpiresAt} formatStr="datelong" /> : "Never"}
                     </p>
 
                     {/* Invite Link */}
