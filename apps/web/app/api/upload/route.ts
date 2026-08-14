@@ -11,9 +11,9 @@ const ALLOWED_TYPES = ["image/jpeg", "image/png", "image/webp", "image/gif"] as 
 const MAX_SIZE = 10 * 1024 * 1024 // 10 MB
 
 const uploadSchema = z.object({
-  filename: z.string().min(1, "Filename is required.").max(255, "Filename too long."),
+  filename: z.string({ error: "Filename is required." }).min(1, "Filename is required.").max(255, "Filename too long."),
   contentType: z.enum(ALLOWED_TYPES, { message: "Only JPEG, PNG, WebP and GIF images are allowed." }),
-  size: z.number().positive("Invalid file size.").max(MAX_SIZE, "Image must be under 10 MB."),
+  size: z.number({ error: "Invalid file size." }).positive("Invalid file size.").max(MAX_SIZE, "Image must be under 10 MB."),
 })
 
 // Ensure bucket exists and is publicly readable on first call
