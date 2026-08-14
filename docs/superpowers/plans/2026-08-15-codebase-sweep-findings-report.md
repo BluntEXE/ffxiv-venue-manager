@@ -13,7 +13,7 @@ Generated 2026-08-15 from `knip`, `jscpd`, and an agent-driven structural pass o
 ### Unused files (16)
 | File | Note |
 |---|---|
-| `apps/shout-crafter/src/App.css` | Genuine deletion candidate — unreferenced CSS. |
+| `apps/shout-crafter/src/App.css` | Genuine deletion candidate — unreferenced CSS. File is already 0 bytes, so this strengthens rather than weakens the case; nothing of value to lose. |
 | `apps/shout-crafter/src/lib/storage.ts` | Verify no dynamic import before deleting. |
 | `apps/web/apply-indexes.js` | One-off script; check if still needed for ops runbooks before deleting. |
 | `apps/web/clean-pending-owner.js` | One-off ops script — likely safe to delete if superseded, verify against recent DB-fix history. |
@@ -27,14 +27,14 @@ Generated 2026-08-15 from `knip`, `jscpd`, and an agent-driven structural pass o
 | `apps/web/scripts/list-users.ts` | Likely an ad-hoc ops script, same caveat as above. |
 | `apps/web/scripts/make-admin.ts` | Same caveat — verify not documented as a manual-run tool before deleting. |
 | `apps/web/test-db-connection.js` | Debug script, likely safe to delete. |
-| `docker/homepage/config/custom.js` | Check whether the homepage dashboard container references this via volume mount / config, not just import — knip won't see non-JS config wiring. |
+| `docker/homepage/config/custom.js` | File is already 0 bytes. A volume-mounted config file being empty would be unusual if it were actually load-bearing — this actually weakens the "check volume mount before deleting" caution rather than strengthening it, but still worth a quick confirm since an empty mount target could be intentional scaffolding. |
 | `scripts/backfill-venue-types.ts` | One-off migration script — verify it already ran in prod before deleting (see prior backfill scripts in the codebase for precedent on keeping them as historical record). |
 
 **Judgment note:** the `scripts/*` and root `*.js` one-off files are the most likely false-positive category here — they're often invoked manually (`node script.js`, `npx tsx script.ts`) rather than imported, so "unused" by static analysis doesn't mean "safe to delete" without checking deploy/runbook docs first. The `components/ui/*` and `dashboard-analytics.tsx` / `manage-staff-role-dialog.tsx` files are more likely genuine dead code.
 
 ### Unused exports (55) and unused exported types (23)
 
-Full list is in `knip-output.txt` (re-run at `/tmp/claude-1000/-home-ehno/ec9b6814-12d0-479d-810e-f04222fe7146/scratchpad/knip-output.txt`) — reproduced here grouped by area since the raw list is long and Stage 2 will want it scannable:
+Full list is in `docs/superpowers/plans/2026-08-15-sweep-raw-data/knip-output.txt` (committed alongside this report) — reproduced here grouped by area since the raw list is long and Stage 2 will want it scannable:
 
 **apps/web/components/ui/* (shadcn primitives, 17 of the 55 unused exports + 2 of the 23 unused types):** `AlertDialogPortal`, `AlertDialogOverlay` (alert-dialog.tsx), `AlertTitle` (alert.tsx), `badgeVariants` (badge.tsx), `CalendarDayButton` (calendar.tsx), `CardFooter`, `CardAction` (card.tsx), `DialogClose`, `DialogOverlay`, `DialogPortal` (dialog.tsx), `DropdownMenuPortal`, `DropdownMenuGroup`, `DropdownMenuLabel`, `DropdownMenuCheckboxItem`, `DropdownMenuRadioGroup`, `DropdownMenuRadioItem`, `DropdownMenuShortcut`, `DropdownMenuSub`, `DropdownMenuSubTrigger`, `DropdownMenuSubContent` (dropdown-menu.tsx), `LoadingSpinner` (loading-spinner.tsx), `PopoverAnchor` (popover.tsx), `SelectGroup`, `SelectLabel`, `SelectScrollDownButton`, `SelectScrollUpButton`, `SelectSeparator` (select.tsx), `TableFooter`, `TableCaption` (table.tsx), plus types `DataTableColumn` (data-table.tsx), `StatReadoutProps`/`IconVariant` (stat-readout.tsx). **Judgment:** near-certain false positives — these are shadcn boilerplate exports kept for API completeness (part of a generated component kit), not evidence of dead functionality. Not a Stage 2 deletion target; standard shadcn practice is to keep the full primitive surface even if only some pieces are used today.
 
@@ -102,14 +102,14 @@ const apiKey = request.headers.get('x-api-key')
 if (!apiKey) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
 ... validateApiKey(...) ...
 ```
-jscpd flagged this pattern repeatedly across pairs at `events/active`, `patrons/vip`, `roles`, `rooms`, `services`, `venues`, `inventory-settings`, `inventory/link-item`, `inventory/restock`, `roles/[venueId]`, `patron-visits`, `patrons/ban`, `rooms/status`, `shifts/claim`, `shifts/clock-in`, `shifts/clock-out`, `shifts`, `transactions`, `characters` (see raw pairs in `jscpd-console-output.txt` lines ~1015–2052).
+jscpd flagged this pattern repeatedly across pairs at `events/active`, `patrons/vip`, `roles`, `rooms`, `services`, `venues`, `inventory-settings`, `inventory/link-item`, `inventory/restock`, `roles/[venueId]`, `patron-visits`, `patrons/ban`, `rooms/status`, `shifts/claim`, `shifts/clock-in`, `shifts/clock-out`, `shifts`, `transactions`, `characters` (see raw pairs in `docs/superpowers/plans/2026-08-15-sweep-raw-data/jscpd-console-output.txt` lines ~1015–2052).
 **Judgment:** genuine, safe extraction target — this is the single largest duplication cluster in the report by file count. A shared `withPluginAuth(handler)` wrapper (IP rate-limit → API-key check → per-key rate-limit → call handler) would collapse ~10-15 duplicated lines × 20 files into one place. Low risk since the logic is already byte-for-byte identical across call sites.
 
-### 2. 429 response body hand-rolled again outside `plugin-rate-limit.ts` — `apps/web/app/api/auth/[...nextauth]/route.ts` (MEDIUM value)
+### 2. 429 response body hand-rolled again outside `plugin-rate-limit.ts` — `apps/web/app/api/auth/[...nextauth]/route.ts` (HIGH value — security-relevant, see "Other observations" below; prioritize alongside #1 and #4, not below them)
 **Files:** `apps/web/lib/api/plugin-rate-limit.ts:27-38` and `:67-79` (the 429 JSON body + `X-RateLimit-*`/`Retry-After` headers, itself duplicated once *within* the file — see #3 below) vs. `apps/web/app/api/auth/[...nextauth]/route.ts:31-42`, which hand-rolls the identical 429 response shape (same header set, same `Retry-After` calculation) instead of importing the existing helper.
 **Judgment:** genuine duplication and a real bug-risk (two independently-maintained copies of security-relevant rate-limit response formatting will drift). `plugin-rate-limit.ts` isn't directly reusable as-is (nextauth route needs a different budget/key), but the 429-response-building logic (`buildRateLimitResponse(rl, budget)`) should be factored out of `plugin-rate-limit.ts` into a shared helper (e.g. `lib/rate-limit.ts`) and reused by both call sites. Also note `getIp()` is duplicated verbatim in both `plugin-rate-limit.ts` and `[...nextauth]/route.ts` — same fix, same helper move.
 
-### 3. 429 response body duplicated within `plugin-rate-limit.ts` itself (MEDIUM value)
+### 3. 429 response body duplicated within `plugin-rate-limit.ts` itself (HIGH value — same fix and same priority as #2, see "Other observations" below)
 **File:** `apps/web/lib/api/plugin-rate-limit.ts:26-38` (`enforcePluginIpRateLimit`) and `:67-79` (`enforcePluginRateLimit`) — same 429 JSON/header-building block, differing only in which budget was exceeded. Confirmed directly (jscpd also flagged this pair at report lines ~10549-10550).
 **Judgment:** same root cause as #2 — extracting a `buildRateLimitResponse(rl)` helper fixes both #2 and #3 in one pass.
 
@@ -129,9 +129,9 @@ jscpd flagged this pattern repeatedly across pairs at `events/active`, `patrons/
 differing only in `if (loc) parts.push(loc)` vs. `... || null` at the call site. Confirmed directly in source and in jscpd output.
 **Judgment:** trivial, safe extraction — pull into a private `buildLocationString(v)` helper used by both call sites in the same file. Smallest fix in this report, but easy and removes drift risk (this string format also has a duplicated type export, `FfxivDistrict`, flagged in the knip section above — worth doing both in the same touch).
 
-### 6. `staffLabel` duplicated verbatim across two components (MEDIUM value)
-**Files:** `apps/web/components/shift-day-dialog.tsx:37-44` and `apps/web/components/shifts-week-view.tsx:89-96` — identical `function staffLabel(shift: CalendarShift): string { ... }`. Confirmed in jscpd output (report lines ~10435-10456).
-**Judgment:** genuine duplication, straightforward fix — move `staffLabel` into a shared module (e.g. `lib/shift-formatting.ts` or a shared `components/shift-utils.ts`) and import in both. Low risk, small function, single source of truth for how staff names are displayed on shift cards.
+### 6. Staff-name-resolution function duplicated with the same body, different name/type — `shift-day-dialog.tsx` vs `shifts-week-view.tsx` (MEDIUM value)
+**Files:** `apps/web/components/shift-day-dialog.tsx:37-44` has `function staffLabel(shift: CalendarShift): string { ... }`. `apps/web/components/shifts-week-view.tsx:89-95` has a *differently-named* function, `shiftStaffName(shift: ShiftRow): string`, NOT `staffLabel` — this report's earlier draft incorrectly claimed an identical name/type; corrected after code-quality review caught the mismatch. Both function bodies call `resolveDisplayName(...)` the same way, but the parameter types (`CalendarShift` vs `ShiftRow`) differ, so this is real body-duplication, not a literal identical function.
+**Judgment:** still genuine duplication worth fixing, but the extraction is slightly more involved than "move the function" — the shared helper needs to accept whatever minimal shape both `CalendarShift` and `ShiftRow` have in common (likely just the staff-identifying fields), not either concrete type as-is. Move the shared logic into `lib/shift-formatting.ts` (or similar) with a narrower parameter type, then have both components map their local type down to it.
 
 ### 7. Internal duplication within `apps/web/components/shifts-week-view.tsx` (LOW-MEDIUM value)
 **File:** `apps/web/components/shifts-week-view.tsx:248-257` / `:297-306`, and `:258-270` / `:307-319` — two more internal near-duplicate blocks beyond the `staffLabel` case, per jscpd pairs. Not independently investigated line-by-line beyond the `staffLabel` case above; flagged for Stage 2 to look at alongside #6 since it's the same file.
@@ -142,7 +142,7 @@ differing only in `if (loc) parts.push(loc)` vs. `... || null` at the call site.
 
 ## VenueManager plugin structural duplication (manual pass)
 
-Full detail in `plugin-duplication-findings.md`; all 5 top claims independently re-confirmed against source during this compile pass (no corrections needed). Summarized:
+Full detail in `docs/superpowers/plans/2026-08-15-sweep-raw-data/plugin-duplication-findings.md`; all 9 findings in the table below were independently re-confirmed against source during this compile pass (no corrections needed). Summarized:
 
 | # | Finding | Files | Value | Fix |
 |---|---|---|---|---|
