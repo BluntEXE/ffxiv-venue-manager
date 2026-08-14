@@ -1,9 +1,15 @@
 import { NextRequest, NextResponse } from "next/server"
 import { getServerSession } from "next-auth"
+import { z } from "zod"
 import { authOptions } from "@/lib/auth"
 import { prisma } from "@/lib/prisma"
 import { nanoid } from "nanoid"
 import { hashApiKey } from "@/lib/api/plugin-auth"
+
+const createKeySchema = z.object({
+  venueId: z.string().min(1).optional(),
+  name: z.string().trim().min(1, "Name is required").max(50, "Name too long (max 50 characters)"),
+})
 
 export async function GET(request: NextRequest) {
   const session = await getServerSession(authOptions)
@@ -48,10 +54,18 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
   }
 
-  const { venueId, name } = await request.json()
-
-  if (!name || !name.trim()) {
-    return NextResponse.json({ error: "Name is required" }, { status: 400 })
+  const body = await request.json()
+  let venueId: string | undefined
+  let name: string
+  try {
+    const parsed = createKeySchema.parse(body)
+    venueId = parsed.venueId
+    name = parsed.name
+  } catch (error) {
+    if (error instanceof z.ZodError) {
+      return NextResponse.json({ error: "Validation error", details: error.issues }, { status: 400 })
+    }
+    throw error
   }
 
   let venueResponse: { id: string; name: string; slug: string } | null = null
@@ -110,7 +124,7 @@ export async function POST(request: NextRequest) {
       id: nanoid(),
       keyHash,
       keyPreview,
-      name: name.trim(),
+      name,
       userId: session.user.id,
       venueId: venueId ?? null,
     },
