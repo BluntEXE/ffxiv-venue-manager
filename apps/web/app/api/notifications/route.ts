@@ -1,7 +1,12 @@
 import { getServerSession } from "next-auth"
+import { z } from "zod"
 import { authOptions } from "@/lib/auth"
 import { NextResponse } from "next/server"
 import { prisma } from "@/lib/prisma"
+
+const markReadSchema = z.object({
+  ids: z.array(z.string()).optional(),
+})
 
 /** GET — fetch latest 30 notifications + unread count */
 export async function GET() {
@@ -29,7 +34,11 @@ export async function PATCH(req: Request) {
   if (!session?.user?.id) return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
 
   const body = await req.json().catch(() => ({}))
-  const ids: string[] | undefined = body.ids
+  const parsed = markReadSchema.safeParse(body)
+  if (!parsed.success) {
+    return NextResponse.json({ error: "Validation error", details: parsed.error.issues }, { status: 400 })
+  }
+  const { ids } = parsed.data
 
   await prisma.notification.updateMany({
     where: {
