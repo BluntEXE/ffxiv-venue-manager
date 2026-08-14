@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server"
 import { getServerSession } from "next-auth"
+import { z } from "zod"
 import { authOptions } from "@/lib/auth"
 import { prisma } from "@/lib/prisma"
 import { withRateLimit } from "@/lib/middleware/with-rate-limit"
@@ -8,6 +9,18 @@ import { resolveDisplayName } from "@/lib/display-name"
 import { Prisma } from "@/generated/prisma/client"
 const Decimal = Prisma.Decimal
 type Decimal = InstanceType<typeof Prisma.Decimal>
+
+const payrollGenerateOptionalsSchema = z.object({
+  baseRate: z.union([
+    z.coerce.number().min(0, "Invalid base rate. Must be a positive number").max(999999999, "Invalid base rate. Must be a positive number"),
+    z.null(),
+  ]).optional(),
+  bonusAmount: z.union([
+    z.coerce.number().min(0, "Invalid bonus amount. Must be a positive number").max(999999999, "Invalid bonus amount. Must be a positive number"),
+    z.null(),
+  ]).optional(),
+  notes: z.string().max(10000, "Notes must be 10,000 characters or less").optional().nullable(),
+})
 
 /**
  * POST /api/venues/[venueId]/payroll/generate
@@ -73,7 +86,20 @@ export const POST = withRateLimit<{ params: Promise<{ venueId: string }> }>(
       }
 
       const body = await request.json()
-      const { membershipId, periodStart, periodEnd, baseRate, bonusAmount, notes } = body
+      const { membershipId, periodStart, periodEnd } = body
+
+      let baseRate: number | null | undefined, bonusAmount: number | null | undefined, notes: string | null | undefined
+      try {
+        const parsedOptionals = payrollGenerateOptionalsSchema.parse(body)
+        baseRate = parsedOptionals.baseRate
+        bonusAmount = parsedOptionals.bonusAmount
+        notes = parsedOptionals.notes
+      } catch (error) {
+        if (error instanceof z.ZodError) {
+          return NextResponse.json({ error: "Validation error", details: error.issues }, { status: 400 })
+        }
+        throw error
+      }
 
       // Validate required fields
       if (!membershipId || !periodStart || !periodEnd) {
