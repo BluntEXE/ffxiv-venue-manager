@@ -10,6 +10,7 @@
     "typecheck": "pnpm --filter web typecheck"
   },
   "devDependencies": {
+    "jscpd": "^5.0.15",
     "knip": "^6.32.2"
   }
 }

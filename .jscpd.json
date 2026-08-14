@@ -1,0 +1,18 @@
+{
+  "threshold": 0,
+  "reporters": ["json", "consoleFull"],
+  "ignore": [
+    "**/node_modules/**",
+    "**/.next/**",
+    "**/dist/**",
+    "**/generated/**",
+    "**/*.d.ts",
+    "**/pnpm-lock.yaml"
+  ],
+  "absolute": true,
+  "gitignore": true,
+  "minLines": 5,
+  "minTokens": 50,
+  "format": ["typescript", "tsx"],
+  "output": "/tmp/claude-1000/-home-ehno/ec9b6814-12d0-479d-810e-f04222fe7146/scratchpad/jscpd-report"
+}
