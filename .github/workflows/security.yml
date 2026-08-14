@@ -67,11 +67,10 @@ jobs:
               paths = [f.get("paths", []) for f in adv.get("findings", [])]
               flat = [p for group in paths for p in group]
               # This job only cares about the production web app. Skip
-              # anything that doesn't touch apps__web at all - mobile build
-              # tooling, the discord bot, shout-crafter's eslint devDeps,
-              # etc. all live in the same pnpm workspace and would otherwise
-              # fail this job for vulnerabilities nothing in apps/web can
-              # reach.
+              # anything that doesn't touch apps__web at all - the discord
+              # bot, shout-crafter's eslint devDeps, etc. all live in the
+              # same pnpm workspace and would otherwise fail this job for
+              # vulnerabilities nothing in apps/web can reach.
               if not any("apps__web" in p for p in flat):
                   continue
               failures.append(f"{severity}: {adv.get('title')} ({adv.get('url')})")
