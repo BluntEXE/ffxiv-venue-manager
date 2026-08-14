@@ -11,10 +11,11 @@ import {
 } from "@/lib/discord-webhook"
 import { withRateLimit } from "@/lib/middleware/with-rate-limit"
 import { notify } from "@/lib/notify"
+import { validators } from "@/lib/validation"
 
 const createTaskSchema = z.object({
-  title: z.string().min(1, "Task title is required").max(200),
-  description: z.string().optional(),
+  title: validators.taskTitle,
+  description: validators.taskDescription,
   status: z.enum(["PENDING", "IN_PROGRESS", "COMPLETED", "CANCELLED"]).default("PENDING"),
   priority: z.enum(["LOW", "MEDIUM", "HIGH", "URGENT"]).default("MEDIUM"),
   category: z.string().optional(),

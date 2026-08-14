@@ -10,10 +10,11 @@ import {
   type VenueWebhookConfig,
 } from "@/lib/discord-webhook"
 import { withRateLimit } from "@/lib/middleware/with-rate-limit"
+import { validators } from "@/lib/validation"
 
 const updateTaskSchema = z.object({
-  title: z.string().min(1).max(200).optional(),
-  description: z.string().nullable().optional(),
+  title: validators.taskTitle.optional(),
+  description: validators.taskDescription,
   status: z.enum(["PENDING", "IN_PROGRESS", "COMPLETED", "CANCELLED"]).optional(),
   priority: z.enum(["LOW", "MEDIUM", "HIGH", "URGENT"]).optional(),
   category: z.string().nullable().optional(),
