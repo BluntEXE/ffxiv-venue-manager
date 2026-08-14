@@ -64,8 +64,8 @@ export async function POST(request: NextRequest) {
   let isPrimary: boolean
   try {
     const parsed = linkCharacterSchema.parse(body)
-    characterName = parsed.characterName.trim()
-    world = parsed.world.trim()
+    characterName = parsed.characterName
+    world = parsed.world
     isPrimary = parsed.isPrimary
   } catch (error) {
     if (error instanceof z.ZodError) {

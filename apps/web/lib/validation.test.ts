@@ -51,6 +51,16 @@ describe("validators.characterName", () => {
   it("rejects a string over 40 characters", () => {
     expect(validators.characterName.safeParse("a".repeat(41)).success).toBe(false)
   })
+
+  it("rejects a whitespace-only string", () => {
+    expect(validators.characterName.safeParse("   ").success).toBe(false)
+  })
+
+  it("trims surrounding whitespace", () => {
+    const result = validators.characterName.safeParse("  Y'shtola Rhul  ")
+    expect(result.success).toBe(true)
+    if (result.success) expect(result.data).toBe("Y'shtola Rhul")
+  })
 })
 
 describe("validators.world", () => {
@@ -64,5 +74,9 @@ describe("validators.world", () => {
 
   it("rejects a string over 32 characters", () => {
     expect(validators.world.safeParse("a".repeat(33)).success).toBe(false)
+  })
+
+  it("rejects a whitespace-only string", () => {
+    expect(validators.world.safeParse("   ").success).toBe(false)
   })
 })
