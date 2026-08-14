@@ -3,6 +3,14 @@ import { getServerSession } from "next-auth"
 import { authOptions } from "@/lib/auth"
 import { prisma } from "@/lib/prisma"
 import { nanoid } from "nanoid"
+import { z } from "zod"
+import { validators } from "@/lib/validation"
+
+const linkCharacterSchema = z.object({
+  characterName: validators.characterName,
+  world: validators.world,
+  isPrimary: z.boolean().optional().default(false),
+})
 
 /**
  * GET /api/user-characters
@@ -51,15 +59,19 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: "Invalid JSON body" }, { status: 400 })
   }
 
-  const characterName = (body.characterName ?? "").trim()
-  const world = (body.world ?? "").trim()
-  const isPrimary = Boolean(body.isPrimary)
-
-  if (!characterName || !world) {
-    return NextResponse.json(
-      { error: "characterName and world are required" },
-      { status: 400 }
-    )
+  let characterName: string
+  let world: string
+  let isPrimary: boolean
+  try {
+    const parsed = linkCharacterSchema.parse(body)
+    characterName = parsed.characterName.trim()
+    world = parsed.world.trim()
+    isPrimary = parsed.isPrimary
+  } catch (error) {
+    if (error instanceof z.ZodError) {
+      return NextResponse.json({ error: "Validation error", details: error.issues }, { status: 400 })
+    }
+    throw error
   }
 
   // If marking this character as primary, demote any existing primary for
