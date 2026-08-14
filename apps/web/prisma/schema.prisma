@@ -47,10 +47,7 @@ model User {
   roomsUpdated              Room[]
   characters                UserCharacter[]
   apiKeys                   ApiKey[]
-  refreshTokens             RefreshToken[]
-  deviceTokens              DeviceToken[]
   pendingNotifications      PendingNotification[]
-  notificationPreference    NotificationPreference?
   venueFollows              VenueFollow[]
   shoutTemplates            ShoutTemplate[]
   shiftAuditLogs            ShiftAuditLog[]
@@ -1019,20 +1016,6 @@ model ShiftSignupEmbed {
 // PUSH NOTIFICATIONS (Phase 4)
 // ============================================
 
-model DeviceToken {
-  id        String   @id @default(cuid())
-  userId    String
-  token     String   @unique
-  platform  String   @default("android")
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-
-  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
-
-  @@index([userId])
-  @@map("device_tokens")
-}
-
 enum NotificationType {
   SHIFT_REMINDER
   SHIFT_CLAIM_APPROVED
@@ -1061,21 +1044,6 @@ model PendingNotification {
   @@map("pending_notifications")
 }
 
-model NotificationPreference {
-  id               String   @id @default(cuid())
-  userId           String   @unique
-  shiftReminder    Boolean  @default(true)
-  venueOpenedNow   Boolean  @default(true)
-  eventReminder    Boolean  @default(true)
-  followVisibility Boolean  @default(false)
-  createdAt        DateTime @default(now())
-  updatedAt        DateTime @updatedAt
-
-  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
-
-  @@map("notification_preferences")
-}
-
 model VenueFollow {
   id                 String   @id @default(cuid())
   userId             String
@@ -1089,23 +1057,6 @@ model VenueFollow {
   @@unique([userId, venueId])
   @@index([venueId])
   @@map("venue_follows")
-}
-
-model RefreshToken {
-  id          String    @id
-  userId      String
-  tokenHash   String    @unique
-  deviceLabel String?
-  createdAt   DateTime  @default(now())
-  expiresAt   DateTime
-  lastUsedAt  DateTime?
-  revokedAt   DateTime?
-
-  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
-
-  @@index([userId])
-  @@index([tokenHash])
-  @@map("refresh_tokens")
 }
 
 // ============================================
