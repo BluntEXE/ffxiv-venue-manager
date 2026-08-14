@@ -6,8 +6,8 @@ import { z } from "zod"
 
 export const validators = {
   venueName: z.string().min(1, "Name is required").max(100, "Name too long (max 100 characters)"),
-  venueDescription: z.string().max(2000, "Description too long (max 2000 characters)").optional(),
-  venueLocation: z.string().max(200, "Location too long (max 200 characters)").optional(),
+  venueDescription: z.string().max(2000, "Description too long (max 2000 characters)").optional().nullable(),
+  venueLocation: z.string().max(200, "Location too long (max 200 characters)").optional().nullable(),
   venueDistrict: z.string().max(50).optional().nullable(),
   venueWard: z.number().int().min(1).max(30).optional().nullable(),
   venuePlot: z.number().int().min(1).max(60).optional().nullable(),
@@ -28,7 +28,7 @@ export const validators = {
   feedbackSubject: z.string().min(1, "Subject is required").max(200, "Subject too long (max 200 characters)"),
   feedbackDescription: z.string().min(10, "Description too short").max(5000, "Description too long (max 5000 characters)"),
   webhookUrl: z.string().url("Invalid webhook URL").max(500, "URL too long").optional(),
-  url: z.string().url("Invalid URL").max(500, "URL too long").optional(),
+  url: z.string().url("Invalid URL").max(500, "URL too long").optional().nullable(),
   slug: z.string()
     .min(1, "Slug is required")
     .max(100, "Slug too long")
