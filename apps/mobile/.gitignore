@@ -1,7 +1,0 @@
-node_modules/
-.expo/
-.tamagui/
-package-lock.json
-android/
-ios/
-dist/
