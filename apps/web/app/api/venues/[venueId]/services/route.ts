@@ -6,10 +6,11 @@ import { z } from "zod"
 import { withRateLimit } from "@/lib/middleware/with-rate-limit"
 import { getOrSet, invalidateCache, cacheKeys, cacheTTL } from "@/lib/redis-cache"
 import { ensureManagerRole } from "@/lib/api/venue-setup"
+import { validators } from "@/lib/validation"
 
 const createServiceSchema = z.object({
-  name: z.string().min(1, "Service name is required").max(100),
-  description: z.string().optional(),
+  name: validators.serviceName,
+  description: validators.serviceDescription,
   price: z.number().min(0, "Price must be positive"),
   roleIds: z.array(z.string()).optional().default([]),
   isActive: z.boolean().default(true),

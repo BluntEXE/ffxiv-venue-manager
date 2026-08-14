@@ -5,10 +5,11 @@ import { prisma } from "@/lib/prisma"
 import { z } from "zod"
 import { withRateLimit } from "@/lib/middleware/with-rate-limit"
 import { invalidateCache, cacheKeys } from "@/lib/redis-cache"
+import { validators } from "@/lib/validation"
 
 const updateServiceSchema = z.object({
-  name: z.string().min(1).max(100).optional(),
-  description: z.string().optional(),
+  name: validators.serviceName.optional(),
+  description: validators.serviceDescription,
   price: z.number().min(0).optional(),
   roleIds: z.array(z.string()).optional(),
   isActive: z.boolean().optional(),
