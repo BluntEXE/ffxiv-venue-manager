@@ -1,9 +1,18 @@
 import { NextRequest, NextResponse } from "next/server"
 import { getServerSession } from "next-auth"
+import { z } from "zod"
 import { authOptions } from "@/lib/auth"
 import { prisma } from "@/lib/prisma"
 import { withRateLimit } from "@/lib/middleware/with-rate-limit"
 import { sendDiscordWebhook, formatFeedbackSubmittedEmbed } from "@/lib/discord-webhook"
+import { validators } from "@/lib/validation"
+
+const feedbackSchema = z.object({
+  category: validators.feedbackCategory,
+  subject: validators.feedbackSubject,
+  description: validators.feedbackDescription,
+  url: validators.url,
+})
 
 const SHOUT_ORIGIN = "https://shout.xivvenuemanager.com"
 
@@ -29,24 +38,16 @@ export const POST = withRateLimit(
       }
 
       const body = await request.json()
-      const { category, subject, description, url } = body
-
-      // Validate required fields
-      if (!category || !subject || !description) {
-        return NextResponse.json(
-          { error: "Missing required fields: category, subject, description" },
-          { status: 400 }
-        )
+      let parsed: z.infer<typeof feedbackSchema>
+      try {
+        parsed = feedbackSchema.parse(body)
+      } catch (error) {
+        if (error instanceof z.ZodError) {
+          return NextResponse.json({ error: "Validation error", details: error.issues }, { status: 400 })
+        }
+        throw error
       }
-
-      // Validate category
-      const validCategories = ["BUG_REPORT", "FEATURE_REQUEST", "IMPROVEMENT", "GENERAL"]
-      if (!validCategories.includes(category)) {
-        return NextResponse.json(
-          { error: "Invalid category. Must be one of: BUG_REPORT, FEATURE_REQUEST, IMPROVEMENT, GENERAL" },
-          { status: 400 }
-        )
-      }
+      const { category, subject, description, url } = parsed
 
       // Get user agent for context
       const userAgent = request.headers.get("user-agent") || undefined
