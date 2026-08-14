@@ -1,8 +1,7 @@
 // apps/web/app/api/public/venues/route.ts
 // Public, unauthenticated venue directory for external integrations (e.g. Aetherphone).
-// Kept separate from /api/mobile/discover/all so external consumers aren't coupled
-// to our mobile app's internal payload shape, and so internal-only fields
-// (e.g. staffOnShift) never leak here.
+// Kept separate from internal dashboard payloads so external consumers aren't coupled
+// to internal shapes, and so internal-only fields (e.g. staffOnShift) never leak here.
 import { NextRequest, NextResponse } from "next/server"
 import { prisma } from "@/lib/prisma"
 import { parseVenueSettings } from "@/lib/types/venue-settings"
