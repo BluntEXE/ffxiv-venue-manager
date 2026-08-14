@@ -14,16 +14,16 @@ const payrollPatchSchema = z.object({
     .max(999999999, "Invalid base rate. Must be a positive number")
     .optional(),
   hoursWorked: z.union([
+    z.null(),
     z.coerce.number()
       .min(0, "Invalid hours worked. Must be a positive number")
       .max(9999, "Invalid hours worked. Must be a positive number"),
-    z.null(),
   ]).optional(),
   bonusAmount: z.union([
+    z.null(),
     z.coerce.number()
       .min(0, "Invalid bonus amount. Must be a positive number")
       .max(999999999, "Invalid bonus amount. Must be a positive number"),
-    z.null(),
   ]).optional(),
   periodStart: z.string()
     .refine((v) => !isNaN(new Date(v).getTime()), "Invalid date format")
