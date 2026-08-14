@@ -22,7 +22,7 @@ export const validators = {
   roleName: z.string().min(1, "Name is required").max(50, "Name too long (max 50 characters)"),
   roleDescription: z.string().max(500, "Description too long (max 500 characters)").optional(),
   taskTitle: z.string().min(1, "Title is required").max(200, "Title too long (max 200 characters)"),
-  taskDescription: z.string().max(2000, "Description too long (max 2000 characters)").optional(),
+  taskDescription: z.string().max(2000, "Description too long (max 2000 characters)").optional().nullable(),
   taskNotes: z.string().max(1000, "Notes too long (max 1000 characters)").optional(),
   payrollNotes: z.string().max(500, "Notes too long (max 500 characters)").optional(),
   feedbackSubject: z.string().min(1, "Subject is required").max(200, "Subject too long (max 200 characters)"),
