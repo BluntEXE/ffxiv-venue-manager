@@ -1,11 +1,38 @@
 import { NextRequest, NextResponse } from "next/server"
 import { getServerSession } from "next-auth"
+import { z } from "zod"
 import { authOptions } from "@/lib/auth"
 import { prisma } from "@/lib/prisma"
 import { withRateLimit } from "@/lib/middleware/with-rate-limit"
 import { Prisma } from "@/generated/prisma/client"
 const Decimal = Prisma.Decimal
 type Decimal = InstanceType<typeof Prisma.Decimal>
+
+const payrollPatchSchema = z.object({
+  baseRate: z.coerce.number()
+    .min(0, "Invalid base rate. Must be a positive number")
+    .max(999999999, "Invalid base rate. Must be a positive number")
+    .optional(),
+  hoursWorked: z.union([
+    z.coerce.number()
+      .min(0, "Invalid hours worked. Must be a positive number")
+      .max(9999, "Invalid hours worked. Must be a positive number"),
+    z.null(),
+  ]).optional(),
+  bonusAmount: z.union([
+    z.coerce.number()
+      .min(0, "Invalid bonus amount. Must be a positive number")
+      .max(999999999, "Invalid bonus amount. Must be a positive number"),
+    z.null(),
+  ]).optional(),
+  periodStart: z.string()
+    .refine((v) => !isNaN(new Date(v).getTime()), "Invalid date format")
+    .optional(),
+  periodEnd: z.string()
+    .refine((v) => !isNaN(new Date(v).getTime()), "Invalid date format")
+    .optional(),
+  notes: z.string().max(10000, "Notes must be 10,000 characters or less").optional().nullable(),
+})
 
 // PATCH /api/venues/[venueId]/payroll/[payrollId] - Update payroll entry (mark as paid, etc.)
 export const PATCH = withRateLimit<{ params: Promise<{ venueId: string; payrollId: string }> }>(
@@ -79,16 +106,28 @@ export const PATCH = withRateLimit<{ params: Promise<{ venueId: string; payrollI
       }
 
       const body = await request.json()
-      const {
-        isPaid,
-        manualEntryName,
-        baseRate,
-        hoursWorked,
-        bonusAmount,
-        periodStart,
-        periodEnd,
-        notes,
-      } = body
+      const { isPaid, manualEntryName } = body
+
+      let baseRate: number | undefined,
+        hoursWorked: number | null | undefined,
+        bonusAmount: number | null | undefined,
+        periodStart: string | undefined,
+        periodEnd: string | undefined,
+        notes: string | null | undefined
+      try {
+        const parsed = payrollPatchSchema.parse(body)
+        baseRate = parsed.baseRate
+        hoursWorked = parsed.hoursWorked
+        bonusAmount = parsed.bonusAmount
+        periodStart = parsed.periodStart
+        periodEnd = parsed.periodEnd
+        notes = parsed.notes
+      } catch (error) {
+        if (error instanceof z.ZodError) {
+          return NextResponse.json({ error: "Validation error", details: error.issues }, { status: 400 })
+        }
+        throw error
+      }
 
       // Prepare update data
       const updateData: {
