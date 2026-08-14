@@ -7,7 +7,7 @@
       "project": ["src/**/*.ts"]
     },
     "apps/eorzea-bot": {
-      "entry": ["src/index.ts", "src/deploy-commands.ts"],
+      "entry": ["src/index.ts", "src/deploy-commands.ts", "src/commands/**/*.ts", "src/events/**/*.ts"],
       "project": ["src/**/*.ts"]
     },
     "apps/shout-crafter": {}
