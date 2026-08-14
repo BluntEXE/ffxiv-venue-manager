@@ -1,4 +1,5 @@
 import { getServerSession } from "next-auth"
+import { z } from "zod"
 import { authOptions } from "@/lib/auth"
 import { NextResponse } from "next/server"
 import { getUploadUrl, BUCKET, s3 } from "@/lib/storage"
@@ -6,8 +7,14 @@ import { CreateBucketCommand, HeadBucketCommand, PutBucketPolicyCommand, PutBuck
 import { randomBytes } from "crypto"
 import path from "path"
 
-const ALLOWED_TYPES = ["image/jpeg", "image/png", "image/webp", "image/gif"]
+const ALLOWED_TYPES = ["image/jpeg", "image/png", "image/webp", "image/gif"] as const
 const MAX_SIZE = 10 * 1024 * 1024 // 10 MB
+
+const uploadSchema = z.object({
+  filename: z.string().min(1, "Filename is required.").max(255, "Filename too long."),
+  contentType: z.enum(ALLOWED_TYPES, { message: "Only JPEG, PNG, WebP and GIF images are allowed." }),
+  size: z.number().positive("Invalid file size.").max(MAX_SIZE, "Image must be under 10 MB."),
+})
 
 // Ensure bucket exists and is publicly readable on first call
 let bucketReady = false
@@ -46,13 +53,21 @@ export async function POST(req: Request) {
   const session = await getServerSession(authOptions)
   if (!session?.user?.id) return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
 
-  const { filename, contentType, size } = await req.json()
-
-  if (!ALLOWED_TYPES.includes(contentType)) {
-    return NextResponse.json({ error: "Only JPEG, PNG, WebP and GIF images are allowed." }, { status: 400 })
-  }
-  if (size > MAX_SIZE) {
-    return NextResponse.json({ error: "Image must be under 10 MB." }, { status: 400 })
+  const body = await req.json()
+  let filename: string, contentType: (typeof ALLOWED_TYPES)[number], size: number
+  try {
+    const parsed = uploadSchema.parse(body)
+    filename = parsed.filename
+    contentType = parsed.contentType
+    size = parsed.size
+  } catch (error) {
+    if (error instanceof z.ZodError) {
+      return NextResponse.json(
+        { error: error.issues[0]?.message ?? "Invalid request", details: error.issues },
+        { status: 400 }
+      )
+    }
+    throw error
   }
 
   await ensureBucket()
