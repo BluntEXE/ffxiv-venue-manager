@@ -1,9 +1,23 @@
 import { NextRequest, NextResponse } from "next/server"
 import { getServerSession } from "next-auth"
+import { z } from "zod"
 import { authOptions } from "@/lib/auth"
 import { prisma } from "@/lib/prisma"
 import { withRateLimit } from "@/lib/middleware/with-rate-limit"
 import { invalidateCache, cacheKeys } from "@/lib/redis-cache"
+import { validators } from "@/lib/validation"
+
+const venueUpdateSchema = z.object({
+  name: validators.venueName.optional(),
+  description: validators.venueDescription,
+  district: validators.venueDistrict,
+  ward: validators.venueWard,
+  plot: validators.venuePlot,
+  apartment: validators.venueApartment,
+  location: validators.venueLocation,
+  bannerUrl: validators.url,
+  logoUrl: validators.url,
+})
 
 export const PATCH = withRateLimit(
   async (
@@ -30,19 +44,29 @@ export const PATCH = withRateLimit(
         return NextResponse.json({ error: "Forbidden" }, { status: 403 })
       }
 
-      const { name, description, location, district, ward, plot, apartment, bannerUrl, logoUrl } = body
+      let parsed: z.infer<typeof venueUpdateSchema>
+      try {
+        parsed = venueUpdateSchema.parse(body)
+      } catch (error) {
+        if (error instanceof z.ZodError) {
+          return NextResponse.json({ error: "Validation error", details: error.issues }, { status: 400 })
+        }
+        throw error
+      }
+      const { name, description, location, district, ward, plot, apartment, bannerUrl, logoUrl } = parsed
+
       const updated = await prisma.venue.update({
         where: { id: venueId },
         data: {
-          ...(name        !== undefined && { name: String(name).trim() }),
-          ...(description !== undefined && { description: description ? String(description).trim() : null }),
-          ...(district    !== undefined && { district: district ? String(district).trim() : null }),
-          ...(ward        !== undefined && { ward: ward != null ? Number(ward) : null }),
-          ...(plot        !== undefined && { plot: plot != null ? Number(plot) : null }),
-          ...(apartment   !== undefined && { apartment: apartment != null ? Number(apartment) : null }),
-          ...(location    !== undefined && { location: location ? String(location).trim() : null }),
-          ...(bannerUrl   !== undefined && { bannerUrl: bannerUrl ? String(bannerUrl) : null }),
-          ...(logoUrl     !== undefined && { logoUrl: logoUrl ? String(logoUrl) : null }),
+          ...(name        !== undefined && { name: name.trim() }),
+          ...(description !== undefined && { description: description ? description.trim() : null }),
+          ...(district    !== undefined && { district: district ? district.trim() : null }),
+          ...(ward        !== undefined && { ward }),
+          ...(plot        !== undefined && { plot }),
+          ...(apartment   !== undefined && { apartment }),
+          ...(location    !== undefined && { location: location ? location.trim() : null }),
+          ...(bannerUrl   !== undefined && { bannerUrl: bannerUrl ?? null }),
+          ...(logoUrl     !== undefined && { logoUrl: logoUrl ?? null }),
         },
       })
 
