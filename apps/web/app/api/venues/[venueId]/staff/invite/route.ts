@@ -1,10 +1,19 @@
 import { NextResponse } from "next/server"
 import { getServerSession } from "next-auth"
+import { z } from "zod"
 import { authOptions } from "@/lib/auth"
 import { prisma } from "@/lib/prisma"
 import crypto from "crypto"
 import { withRateLimit } from "@/lib/middleware/with-rate-limit"
 import { ensureManagerRole } from "@/lib/api/venue-setup"
+import { validators } from "@/lib/validation"
+
+const inviteSchema = z.object({
+  role: z.enum(["STAFF", "MANAGER", "OWNER"], { message: "Invalid role" }),
+  roleId: z.string().min(1).optional().nullable(),
+  invitedName: z.string().max(100, "Name too long (max 100 characters)").optional().nullable(),
+  invitedEmail: validators.email.optional().nullable(),
+})
 
 export const POST = withRateLimit<{ params: Promise<{ venueId: string }> }>(
   async (request, context) => {
@@ -21,11 +30,18 @@ export const POST = withRateLimit<{ params: Promise<{ venueId: string }> }>(
       const { params } = context
       const { venueId } = await params
     const body = await request.json()
-    const { role, roleId, invitedName, invitedEmail } = body
-
-    // Validate role
-    if (!["STAFF", "MANAGER", "OWNER"].includes(role)) {
-      return NextResponse.json({ error: "Invalid role" }, { status: 400 })
+    let role: "STAFF" | "MANAGER" | "OWNER", roleId: string | null | undefined, invitedName: string | null | undefined, invitedEmail: string | null | undefined
+    try {
+      const parsed = inviteSchema.parse(body)
+      role = parsed.role
+      roleId = parsed.roleId
+      invitedName = parsed.invitedName
+      invitedEmail = parsed.invitedEmail
+    } catch (error) {
+      if (error instanceof z.ZodError) {
+        return NextResponse.json({ error: "Validation error", details: error.issues }, { status: 400 })
+      }
+      throw error
     }
 
     // Get venue and verify permissions
