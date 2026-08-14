@@ -2,6 +2,13 @@ import { NextRequest, NextResponse } from "next/server"
 import { prisma } from "@/lib/prisma"
 import { validateApiKey } from "@/lib/api/plugin-auth"
 import { enforcePluginRateLimit, enforcePluginIpRateLimit } from "@/lib/api/plugin-rate-limit"
+import { z } from "zod"
+import { validators } from "@/lib/validation"
+
+const linkCharacterSchema = z.object({
+  characterName: validators.characterName,
+  world: validators.world,
+})
 
 /**
  * POST /api/plugin/characters
@@ -36,13 +43,17 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: "Invalid JSON body" }, { status: 400 })
     }
 
-    const characterName = (body.characterName ?? "").trim()
-    const world = (body.world ?? "").trim()
-    if (!characterName || !world) {
-      return NextResponse.json(
-        { error: "characterName and world are required" },
-        { status: 400 }
-      )
+    let characterName: string
+    let world: string
+    try {
+      const parsed = linkCharacterSchema.parse(body)
+      characterName = parsed.characterName
+      world = parsed.world
+    } catch (error) {
+      if (error instanceof z.ZodError) {
+        return NextResponse.json({ error: "Validation error", details: error.issues }, { status: 400 })
+      }
+      throw error
     }
 
     const existing = await prisma.userCharacter.findUnique({
