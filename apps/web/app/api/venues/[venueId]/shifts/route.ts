@@ -100,7 +100,7 @@ const createShiftSchema = z
     eventId: z.string().min(1).optional(),
     scheduledStart: z.string().datetime(),
     scheduledEnd: z.string().datetime(),
-    notes: z.string().optional(),
+    notes: z.string().max(200, "Notes too long (max 200 characters)").optional(),
     recurrenceRule: z.enum(["WEEKLY", "BIWEEKLY", "MONTHLY"]).optional(),
     slotGroupId: z.string().optional(),
   })
