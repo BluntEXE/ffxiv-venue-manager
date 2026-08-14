@@ -1,9 +1,15 @@
 import { NextResponse } from "next/server"
+import { z } from "zod"
 import { requireMobileAuth, isAuthFailure } from "@/lib/mobile-auth-guard"
 import { prisma } from "@/lib/prisma"
 import { sendDiscordWebhook, formatFeedbackSubmittedEmbed } from "@/lib/discord-webhook"
+import { validators } from "@/lib/validation"
 
-const VALID_CATEGORIES = ["BUG_REPORT", "FEATURE_REQUEST", "IMPROVEMENT", "GENERAL"] as const
+const feedbackSchema = z.object({
+  category: validators.feedbackCategory,
+  subject: validators.feedbackSubject,
+  description: validators.feedbackDescription,
+})
 
 export async function POST(req: Request) {
   const result = await requireMobileAuth(req)
@@ -11,14 +17,16 @@ export async function POST(req: Request) {
   const userId = result
 
   const body = await req.json().catch(() => ({}))
-  const { category, subject, description } = body
-
-  if (!category || !subject || !description) {
-    return NextResponse.json({ error: "Missing required fields: category, subject, description" }, { status: 400 })
+  let parsed: z.infer<typeof feedbackSchema>
+  try {
+    parsed = feedbackSchema.parse(body)
+  } catch (error) {
+    if (error instanceof z.ZodError) {
+      return NextResponse.json({ error: "Validation error", details: error.issues }, { status: 400 })
+    }
+    throw error
   }
-  if (!VALID_CATEGORIES.includes(category)) {
-    return NextResponse.json({ error: "Invalid category" }, { status: 400 })
-  }
+  const { category, subject, description } = parsed
 
   const userAgent = req.headers.get("user-agent") ?? undefined
 
@@ -26,8 +34,8 @@ export async function POST(req: Request) {
     data: {
       userId,
       category,
-      subject: String(subject).trim(),
-      description: String(description).trim(),
+      subject: subject.trim(),
+      description: description.trim(),
       url: "mobile-app",
       userAgent,
     },
