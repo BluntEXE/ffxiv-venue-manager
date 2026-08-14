@@ -4,11 +4,12 @@ import { authOptions } from "@/lib/auth"
 import { prisma } from "@/lib/prisma"
 import { z } from "zod"
 import { withRateLimit } from "@/lib/middleware/with-rate-limit"
+import { validators } from "@/lib/validation"
 
 const createTemplateSchema = z.object({
-  name: z.string().min(1, "Template name is required"),
-  title: z.string().min(1, "Event title is required"),
-  description: z.string().optional(),
+  name: z.string().min(1, "Template name is required").max(100, "Template name too long (max 100 characters)"),
+  title: validators.eventTitle,
+  description: validators.eventDescription,
   eventType: z.enum(["PERFORMANCE", "GAME_NIGHT", "SPECIAL", "SOCIAL", "PRIVATE", "OTHER"]),
   timezone: z.string().default("UTC"),
   defaultStartTime: z.string().regex(/^([01]\d|2[0-3]):([0-5]\d)$/, "Invalid time format. Use HH:MM").default("19:00"),
