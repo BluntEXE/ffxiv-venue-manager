@@ -12,12 +12,12 @@ type Decimal = InstanceType<typeof Prisma.Decimal>
 
 const payrollGenerateOptionalsSchema = z.object({
   baseRate: z.union([
-    z.coerce.number().min(0, "Invalid base rate. Must be a positive number").max(999999999, "Invalid base rate. Must be a positive number"),
     z.null(),
+    z.coerce.number().min(0, "Invalid base rate. Must be a positive number").max(999999999, "Invalid base rate. Must be a positive number"),
   ]).optional(),
   bonusAmount: z.union([
-    z.coerce.number().min(0, "Invalid bonus amount. Must be a positive number").max(999999999, "Invalid bonus amount. Must be a positive number"),
     z.null(),
+    z.coerce.number().min(0, "Invalid bonus amount. Must be a positive number").max(999999999, "Invalid bonus amount. Must be a positive number"),
   ]).optional(),
   notes: z.string().max(10000, "Notes must be 10,000 characters or less").optional().nullable(),
 })
