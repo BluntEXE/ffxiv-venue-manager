@@ -1,21 +1,22 @@
 import { NextRequest, NextResponse } from 'next/server'
+import { z } from 'zod'
 import { validateApiKey, checkPermission, logPatronVisit, getPatronVisits } from '@/lib/api/plugin-auth'
 import { enforcePluginRateLimit, enforcePluginIpRateLimit } from '@/lib/api/plugin-rate-limit'
 import { venueEventBus } from '@/lib/sse/venue-events'
 import { nanoid } from 'nanoid'
 import { prisma } from '@/lib/prisma'
 import { postVenueGraduation, postPatronVisitXp } from '@/lib/discord-feed'
+import { validators } from '@/lib/validation'
 
 const GRADUATION_MILESTONES = [100, 500, 1000]
 
-interface PatronVisitPayload {
-  venueId: string
-  characterName: string
-  world: string
-  action: 'enter' | 'leave' | 'present'
-  timestamp: string
-  countChange?: number
-}
+const patronVisitSchema = z.object({
+  venueId: z.string().min(1, 'venueId is required'),
+  characterName: validators.characterName,
+  world: validators.world,
+  action: z.enum(['enter', 'leave', 'present'], { message: "action must be one of: 'enter', 'leave', 'present'" }),
+  timestamp: validators.datetime,
+})
 
 /**
  * POST /api/plugin/patron-visits
@@ -42,17 +43,22 @@ export async function POST(request: NextRequest) {
     const limited = await enforcePluginRateLimit(apiKey, 'write')
     if (limited) return limited
 
-    const body: PatronVisitPayload = await request.json()
-    const { venueId, characterName, world, action, timestamp, countChange } = body
-    
-    // Validate required fields
-    if (!venueId || !characterName || !action || !timestamp) {
-      return NextResponse.json(
-        { error: 'Missing required fields: venueId, characterName, action, timestamp' },
-        { status: 400 }
-      )
+    const body = await request.json()
+    let venueId: string, characterName: string, world: string, action: 'enter' | 'leave' | 'present', timestamp: string
+    try {
+      const parsed = patronVisitSchema.parse(body)
+      venueId = parsed.venueId
+      characterName = parsed.characterName
+      world = parsed.world
+      action = parsed.action
+      timestamp = parsed.timestamp
+    } catch (error) {
+      if (error instanceof z.ZodError) {
+        return NextResponse.json({ error: 'Validation error', details: error.issues }, { status: 400 })
+      }
+      throw error
     }
-    
+
     // Check permission
     const canLog = await checkPermission(auth.userId, venueId, 'log_patron')
     if (!canLog) {
@@ -67,7 +73,6 @@ export async function POST(request: NextRequest) {
       characterName,
       world,
       action,
-      countChange,
       timestamp: new Date(timestamp),
       loggedBy: auth.userId
     })
