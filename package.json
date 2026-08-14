@@ -8,5 +8,8 @@
     "build": "pnpm --filter web build",
     "lint": "pnpm --filter web lint",
     "typecheck": "pnpm --filter web typecheck"
+  },
+  "devDependencies": {
+    "knip": "^6.32.2"
   }
 }

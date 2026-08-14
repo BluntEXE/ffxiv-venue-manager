@@ -1,0 +1,16 @@
+{
+  "$schema": "https://unpkg.com/knip@5/schema.json",
+  "workspaces": {
+    "apps/web": {},
+    "apps/discord-bot": {
+      "entry": ["src/index.ts"],
+      "project": ["src/**/*.ts"]
+    },
+    "apps/eorzea-bot": {
+      "entry": ["src/index.ts", "src/deploy-commands.ts"],
+      "project": ["src/**/*.ts"]
+    },
+    "apps/shout-crafter": {}
+  },
+  "ignore": ["**/generated/**", "**/.next/**", "**/dist/**"]
+}
