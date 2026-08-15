@@ -73,7 +73,15 @@ code changes or rebuild needed.
 
 ## Resetting
 
-`docker compose -f docker-compose.local.yml down -v` wipes the local DB and
-Redis entirely (the `-v` drops the named volume's backing dir under
-`docker/postgres-local/data`) — re-run `pnpm db:push` (with `dotenv-cli` as
-above) after to rebuild the schema.
+`docker-compose.local.yml` mounts `docker/postgres-local/data` as a host
+bind mount, not a Compose-managed named volume — `down -v` has no effect on
+it. To wipe the local DB and Redis entirely:
+
+```bash
+docker compose -f docker-compose.local.yml down
+rm -rf docker/postgres-local/data
+docker compose -f docker-compose.local.yml up -d
+```
+
+Then re-run `pnpm db:push` (with `dotenv-cli` as above) to rebuild the
+schema.
