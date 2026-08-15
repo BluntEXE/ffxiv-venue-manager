@@ -193,10 +193,7 @@ export async function createTransaction(
       const embed = formatSaleLoggedEmbed({
         amount: Number(newTransaction.amount),
         service: newTransaction.service,
-        customerName: sanitizeDiscordContent(newTransaction.customerName, {
-          maxLength: 100,
-          stripUrls: true,
-        }),
+        customerName: sanitizeDiscordContent(newTransaction.customerName),
         staff: resolvedStaffName ? { name: resolvedStaffName } : null,
       })
 

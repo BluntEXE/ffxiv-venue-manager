@@ -51,37 +51,12 @@ export const validators = {
 // Discord Content Sanitization
 // ============================================
 
-export function sanitizeDiscordContent(
-  text: string | null | undefined,
-  options: {
-    maxLength?: number
-    stripUrls?: boolean
-    escapeMarkdown?: boolean
-  } = {}
-): string {
+export function sanitizeDiscordContent(text: string | null | undefined): string {
   if (!text) return ""
 
-  const {
-    maxLength = 1000,
-    stripUrls = false,
-    escapeMarkdown = false,
-  } = options
+  const sanitized = text
+    .replace(/@(everyone|here)/gi, "@​$1")
+    .replace(/https?:\/\/[^\s]+/gi, "[link removed]")
 
-  let sanitized = text
-
-  sanitized = sanitized.replace(/@(everyone|here)/gi, "@​$1")
-
-  if (stripUrls) {
-    sanitized = sanitized.replace(/https?:\/\/[^\s]+/gi, "[link removed]")
-  }
-
-  if (escapeMarkdown) {
-    sanitized = sanitized
-      .replace(/\*/g, "\\*")
-      .replace(/_/g, "\\_")
-      .replace(/~/g, "\\~")
-      .replace(/`/g, "\\`")
-  }
-
-  return sanitized.slice(0, maxLength)
+  return sanitized.slice(0, 100)
 }
