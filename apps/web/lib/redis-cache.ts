@@ -93,15 +93,6 @@ export async function invalidateCache(keyOrPattern: string): Promise<void> {
   }
 }
 
-export async function invalidateCacheKeys(keys: string[]): Promise<void> {
-  if (!ready() || !redis || keys.length === 0) return
-  try {
-    await redis.del(...keys.map(k))
-  } catch (error) {
-    console.error("[redis-cache] batch invalidate error:", error)
-  }
-}
-
 export async function getOrSet<T>(
   key: string,
   fetchFn: () => Promise<T>,
@@ -113,5 +104,3 @@ export async function getOrSet<T>(
   await setCache(key, data, ttlSeconds)
   return data
 }
-
-export { redis }

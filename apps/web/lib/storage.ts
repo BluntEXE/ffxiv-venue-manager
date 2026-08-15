@@ -39,12 +39,6 @@ export async function deleteObject(key: string): Promise<void> {
   await s3.send(new DeleteObjectCommand({ Bucket: BUCKET, Key: key }))
 }
 
-/** Convert a storage key to a public URL */
-export function publicUrl(key: string): string {
-  const base = process.env.MINIO_PUBLIC_URL ?? process.env.MINIO_ENDPOINT ?? "http://localhost:9000"
-  return `${base}/${BUCKET}/${key}`
-}
-
 /** Extract key from a full URL */
 export function keyFromUrl(url: string): string {
   const prefix = `/${BUCKET}/`

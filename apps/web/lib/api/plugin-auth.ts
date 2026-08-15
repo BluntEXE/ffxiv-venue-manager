@@ -160,50 +160,6 @@ export async function getUserVenues(userId: string) {
 }
 
 /**
- * Get roles and their permissions for a venue
- */
-export async function getVenueRoles(venueId: string, userId: string) {
-  // Check user has access to this venue
-  const membership = await prisma.membership.findFirst({
-    where: {
-      userId,
-      venueId,
-      status: 'active'
-    },
-  })
-
-  if (!membership) {
-    return null
-  }
-  
-  // Get all roles at this venue, with their linked services eagerly loaded
-  // via the Role.services relation (Prisma implicit many-to-many).
-  const rolesRaw = await prisma.role.findMany({
-    where: { venueId },
-    include: { services: true },
-  })
-
-  const rolesWithServices = rolesRaw.map((role) => ({
-    id: role.id,
-    name: role.name,
-    color: role.color,
-    responsibilities: role.responsibilities,
-    services: role.services.map((svc) => ({
-      id: svc.id,
-      name: svc.name,
-      description: svc.description,
-      price: Number(svc.price),
-      category: svc.category,
-    })),
-  }))
-  
-  return {
-    userRole: membership.role,
-    roles: rolesWithServices
-  }
-}
-
-/**
  * Check if a user can perform an action at a venue
  */
 export async function checkPermission(
