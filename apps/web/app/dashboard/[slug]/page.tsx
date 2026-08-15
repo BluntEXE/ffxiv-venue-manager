@@ -9,13 +9,13 @@ import { StatReadout } from "@/components/ui/stat-readout"
 import { CrystalDivider } from "@/components/ui/crystal-divider"
 import { prisma } from "@/lib/prisma"
 import { VenueLayout } from "@/components/venue-layout"
-import { ServerTimeRange } from "@/components/server-time"
-import { getServerTimeLabel } from "@/lib/server-time"
+import { LocalTimeRange } from "@/components/server-time"
 import { OverviewRevenueChart } from "@/components/overview-revenue-chart"
 import { formatGil } from "@/lib/format"
 import { OverviewTasks } from "@/components/overview-tasks"
 import { AnnouncementBanner } from "@/components/announcement-banner"
 import { CharacterLinkNudge } from "@/components/character-link-nudge"
+import { TodayDateLabel } from "@/components/today-date-label"
 import { format, subDays, subWeeks, formatDistanceToNow } from "date-fns"
 import {
   Radio, ArrowRight, Users, TrendingUp, Calendar,
@@ -48,7 +48,6 @@ export default async function VenueDashboardPage({
   const userRole = venue.memberships[0].role
   const membershipId = venue.memberships[0].id
   const canManage = ["OWNER", "MANAGER"].includes(userRole)
-  const tzLabel = getServerTimeLabel(venue.dataCenter)
 
   // Live event
   const liveEvent = await prisma.event.findFirst({
@@ -195,7 +194,7 @@ export default async function VenueDashboardPage({
           </div>
           <h1 className="page-h1">Overview</h1>
           <p className="text-sm text-muted-foreground mt-0.5">
-            {format(now, "EEEE, d MMM")} &middot; {tzLabel}
+            <TodayDateLabel />
           </p>
         </div>
 
@@ -299,7 +298,7 @@ export default async function VenueDashboardPage({
                   </div>
                   <h3 className="font-cinzel text-xl font-bold tracking-wide leading-tight">{nextEvent.title}</h3>
                   <div className="flex flex-col gap-2 text-sm text-muted-foreground">
-                    <ServerTimeRange start={nextEvent.startTime} end={nextEvent.endTime ?? nextEvent.startTime} />
+                    <LocalTimeRange start={nextEvent.startTime} end={nextEvent.endTime ?? nextEvent.startTime} />
                   </div>
                   {/* Countdown pill */}
                   <div className="inline-flex items-center gap-2 text-xs font-semibold text-[var(--xiv-blue)] bg-[var(--blue-010)] border border-[var(--blue-020)] px-3 py-1.5 rounded-full w-fit">
@@ -415,7 +414,7 @@ export default async function VenueDashboardPage({
               {myShifts.map(shift => (
                 <Card key={shift.id} className={`p-4 flex items-center justify-between ${shift.status === "ACTIVE" ? "border-[rgba(16,185,129,0.3)]" : ""}`}>
                   <p className="text-sm">
-                    <ServerTimeRange start={shift.scheduledStart} end={shift.scheduledEnd} />
+                    <LocalTimeRange start={shift.scheduledStart} end={shift.scheduledEnd} />
                   </p>
                   <Badge variant={shift.status === "ACTIVE" ? "status-open" : "tag"}>
                     {shift.status === "ACTIVE" ? "On Shift" : "Upcoming"}
