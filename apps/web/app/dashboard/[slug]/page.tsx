@@ -194,7 +194,7 @@ export default async function VenueDashboardPage({
           </div>
           <h1 className="page-h1">Overview</h1>
           <p className="text-sm text-muted-foreground mt-0.5">
-            <TodayDateLabel />
+            <TodayDateLabel now={now} />
           </p>
         </div>
 
