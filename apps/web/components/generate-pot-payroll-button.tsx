@@ -3,7 +3,7 @@
 import { useState } from "react"
 import { useRouter } from "next/navigation"
 import { Button } from "@/components/ui/button"
-import { ServerTime, SERVER_TIME_LABEL } from "@/components/server-time"
+import { LocalTime } from "@/components/server-time"
 
 interface PotDistributionSummary {
   generatedAt: string
@@ -49,7 +49,7 @@ export function GeneratePotPayrollButton({
   if (existingDistribution) {
     return (
       <p className="text-sm text-muted-foreground">
-        Generated <ServerTime date={existingDistribution.generatedAt} formatStr="datetimelong" /> {SERVER_TIME_LABEL} —{" "}
+        Generated <LocalTime date={existingDistribution.generatedAt} formatStr="datetimelong" /> —{" "}
         {existingDistribution.recipientCount} recipients, {existingDistribution.perPersonShare} gil each.
       </p>
     )
