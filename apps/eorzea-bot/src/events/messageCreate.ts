@@ -1,6 +1,6 @@
 import { Message, GuildMember } from 'discord.js';
 import prisma from '../utils/prisma.js';
-import { messageXp, rankForXp, type GrandCompany } from '../utils/xp.js';
+import { MESSAGE_XP, rankForXp, type GrandCompany } from '../utils/xp.js';
 import { hasActiveXpBoost, consumeCooldownSkip } from '../utils/gil.js';
 
 function detectGcFromRoles(member: GuildMember): GrandCompany | null {
@@ -32,7 +32,7 @@ export default {
     }
     cooldowns.set(message.author.id, now);
 
-    let earned = messageXp();
+    let earned = MESSAGE_XP;
     if (await hasActiveXpBoost(message.author.id)) {
       earned *= 2;
     }

@@ -61,10 +61,6 @@ export function levelFromXp(xp: number): number {
   return Math.max(1, Math.floor(Math.sqrt(xp / 100)));
 }
 
-export function messageXp(): number {
-  return MESSAGE_XP;
-}
-
 export const LOYALTY_TIERS = [
   { visits: 150, label: '🥇 Gold Patron'   },
   { visits: 50,  label: '🥈 Silver Patron' },
