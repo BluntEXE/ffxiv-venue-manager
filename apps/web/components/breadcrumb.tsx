@@ -1,7 +1,7 @@
 import Link from "next/link"
 import { ChevronRight } from "lucide-react"
 
-export interface BreadcrumbItem {
+interface BreadcrumbItem {
   label: string
   href?: string
 }

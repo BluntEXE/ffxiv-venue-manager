@@ -1,7 +1,7 @@
 import { prisma } from "@/lib/prisma"
 import type { MembershipRole } from "../generated/prisma/enums"
 
-export type NotificationType = "NEW_FOLLOWER" | "STAFF_JOINED" | "TASK_ASSIGNED" | "TASK_COMPLETED"
+type NotificationType = "NEW_FOLLOWER" | "STAFF_JOINED" | "TASK_ASSIGNED" | "TASK_COMPLETED"
 
 interface CreateNotificationInput {
   userId: string

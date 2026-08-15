@@ -11,7 +11,7 @@ export interface ShiftForRateResolution {
   actualEnd: Date | null
 }
 
-export interface RateResolvedShift {
+interface RateResolvedShift {
   id: string
   hours: Decimal
   rate: Decimal | null // null = no rate could be resolved anywhere in the chain
