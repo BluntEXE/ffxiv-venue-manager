@@ -1,7 +1,7 @@
 "use client"
 
 import { useState } from "react"
-import { formatServerTime } from "@/lib/server-time"
+import { formatLocalTime } from "@/components/server-time"
 import { DataTable } from "@/components/ui/data-table"
 
 export type BannedPatron = {
@@ -65,7 +65,7 @@ export function BanListManager({
             <td className="hide t-muted">{p.world || "—"}</td>
             <td>{p.banReason || <span className="t-muted">—</span>}</td>
             <td className="hide t-muted">{p.bannedBy?.name ?? "—"}</td>
-            <td className="hide t-muted">{p.bannedAt ? formatServerTime(p.bannedAt, "datetime") : "—"}</td>
+            <td className="hide t-muted">{p.bannedAt ? formatLocalTime(p.bannedAt, "datetime") : "—"}</td>
             <td>
               <button
                 type="button"
