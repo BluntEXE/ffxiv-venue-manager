@@ -39,7 +39,7 @@ import {
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog"
 import { PageLoading } from "@/components/ui/loading-spinner"
-import { ServerTime } from "@/components/server-time"
+import { LocalTime } from "@/components/server-time"
 import type { VenueSettings } from "@xiv-venue-manager/types"
 import { ScheduleEntryForm } from "@/components/schedule-entry-form"
 import type { ScheduleEntry } from "@/lib/schedule-utils"
@@ -827,7 +827,7 @@ export default function SettingsPage({
                   {ffxivVenueId ? (
                     <>
                       <p className="text-xs text-[var(--fg-faint)]">
-                        Schedule synced every 2 hours.{ffxivVenueSyncedAt && <> Last synced: <ServerTime date={ffxivVenueSyncedAt} /> ST</>}
+                        Schedule synced every 2 hours.{ffxivVenueSyncedAt && <> Last synced: <LocalTime date={ffxivVenueSyncedAt} /></>}
                       </p>
                       <div className="flex gap-3">
                         <Button type="button" variant="outline-blue" size="sm" onClick={handleFfxivSyncNow} disabled={ffxivSyncing}>
