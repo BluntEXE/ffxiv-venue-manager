@@ -1,7 +1,7 @@
 import { prisma } from "@/lib/prisma"
 import type { MembershipRole } from "../generated/prisma/enums"
 
-type NotificationType = "NEW_FOLLOWER" | "STAFF_JOINED" | "TASK_ASSIGNED" | "TASK_COMPLETED"
+export type NotificationType = "NEW_FOLLOWER" | "STAFF_JOINED" | "TASK_ASSIGNED" | "TASK_COMPLETED"
 
 interface CreateNotificationInput {
   userId: string
@@ -9,11 +9,6 @@ interface CreateNotificationInput {
   title: string
   body: string
   link?: string
-}
-
-/** Queue a web notification for a user. Fire-and-forget safe. */
-export async function notify(input: CreateNotificationInput): Promise<void> {
-  await prisma.notification.create({ data: input })
 }
 
 /** Notify all owners (and optionally managers) of a venue */
