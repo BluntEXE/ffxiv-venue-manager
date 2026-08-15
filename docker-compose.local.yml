@@ -1,0 +1,32 @@
+# docker-compose.local.yml
+# Laptop-local Postgres + Redis for testing against instead of prod.
+# Loopback-only ports - do not reuse docker-compose.yml (that one binds
+# to the server's LAN IP and is meant to run on the server).
+services:
+  postgres-local:
+    image: postgres:16-alpine
+    container_name: xiv-app-postgres-local
+    ports:
+      - "127.0.0.1:5433:5432"
+    environment:
+      - POSTGRES_PASSWORD=localdev
+      - POSTGRES_DB=venue_manager
+    volumes:
+      - ./docker/postgres-local/data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  redis-local:
+    image: redis:7-alpine
+    container_name: xiv-app-redis-local
+    command: redis-server --save "" --appendonly no
+    ports:
+      - "127.0.0.1:6380:6379"
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 3s
+      retries: 5

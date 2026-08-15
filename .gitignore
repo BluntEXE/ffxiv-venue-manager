@@ -60,6 +60,7 @@ apps/web/CLAUDE.md
 # Local runtime data volumes (mounted into containers)
 /docker/postgres/data
 /docker/redis/data
+docker/postgres-local/
 
 # Playwright artefacts
 test-results/
