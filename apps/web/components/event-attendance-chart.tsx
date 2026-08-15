@@ -10,11 +10,10 @@ interface AttendanceData {
     count: number
 }
 
-import { formatServerTime, SERVER_TIME_LABEL } from "@/components/server-time"
+import { formatLocalTime } from "@/components/server-time"
 
-// Format an ISO timestamp as Server Time (UTC). All viewers see the
-// same axis label regardless of browser timezone.
-const fmtST = (iso: string) => formatServerTime(iso, "time")
+// Format an ISO timestamp in the viewer's own local time.
+const fmtLocal = (iso: string) => formatLocalTime(iso, "time")
 
 interface EventAttendanceChartProps {
     venueId: string
@@ -94,7 +93,7 @@ export function EventAttendanceChart({ venueId, eventId, className }: EventAtten
                             <Users className="h-4 w-4 text-primary" />
                             Patron Attendance
                         </CardTitle>
-                        <CardDescription>Live count tracking over time (Server Time)</CardDescription>
+                        <CardDescription>Live count tracking over time</CardDescription>
                     </div>
                     <div className="text-right">
                         <div className="text-2xl font-bold">{data[data.length - 1]?.count || 0}</div>
@@ -115,7 +114,7 @@ export function EventAttendanceChart({ venueId, eventId, className }: EventAtten
                             <CartesianGrid strokeDasharray="3 3" stroke="#334155" opacity={0.2} vertical={false} />
                             <XAxis
                                 dataKey="time"
-                                tickFormatter={fmtST}
+                                tickFormatter={fmtLocal}
                                 stroke="#94a3b8"
                                 fontSize={12}
                                 tickLine={false}
@@ -140,7 +139,7 @@ export function EventAttendanceChart({ venueId, eventId, className }: EventAtten
                                                             Time
                                                         </span>
                                                         <span className="font-bold text-muted-foreground">
-                                                            {typeof label === "string" ? fmtST(label) : label} {SERVER_TIME_LABEL}
+                                                            {typeof label === "string" ? fmtLocal(label) : label}
                                                         </span>
                                                     </div>
                                                     <div className="flex flex-col">
