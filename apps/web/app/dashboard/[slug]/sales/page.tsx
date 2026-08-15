@@ -227,6 +227,15 @@ export default async function SalesPage({ params }: PageProps) {
   }
   const topEarners = [...earnerMap.values()].sort((a, b) => b.total - a.total).slice(0, 5)
 
+  // Convert Prisma Decimal fields to number before crossing the Server ->
+  // Client Component boundary - RSC serialization rejects Decimal objects.
+  const serializedTransactions = transactions.map((t) => ({
+    ...t,
+    amount: Number(t.amount),
+    createdAt: t.createdAt.toISOString(),
+    service: t.service ? { ...t.service, price: Number(t.service.price) } : null,
+  }))
+
   return (
     <VenueLayoutClient slug={slug}>
       <div className="page-inner">
@@ -268,7 +277,7 @@ export default async function SalesPage({ params }: PageProps) {
                 </div>
                 <div className="p-5">
                 <TransactionsList
-                  initialTransactions={transactions as any}
+                  initialTransactions={serializedTransactions}
                   initialNextCursor={nextCursor}
                   initialHasMore={hasMore}
                   venueId={venue.id}
