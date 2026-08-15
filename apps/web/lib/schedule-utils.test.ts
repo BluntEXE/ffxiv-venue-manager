@@ -1,4 +1,4 @@
-import { describe, it, expect, afterEach } from "vitest"
+import { describe, it, expect, afterEach, vi } from "vitest"
 import { utcWeeklyToLocal, localDayOf, formatLocalEntryTime, type ScheduleEntry } from "./schedule-utils"
 
 const originalTZ = process.env.TZ
@@ -23,6 +23,17 @@ describe("utcWeeklyToLocal", () => {
     // Sunday 00:15 UTC, Pacific/Honolulu is UTC-10 -> Saturday 14:15 local
     process.env.TZ = "Pacific/Honolulu"
     expect(utcWeeklyToLocal(0, 0, 15)).toEqual({ day: 6, hour: 14, minute: 15 })
+  })
+
+  it("anchors to the nearest occurrence across a DST transition, not the raw signed offset", () => {
+    process.env.TZ = "Europe/London"
+    vi.useFakeTimers()
+    vi.setSystemTime(new Date(Date.UTC(2026, 3, 2, 12, 0, 0)))
+    try {
+      expect(utcWeeklyToLocal(0, 0, 30)).toEqual({ day: 0, hour: 1, minute: 30 })
+    } finally {
+      vi.useRealTimers()
+    }
   })
 })
 

@@ -39,7 +39,10 @@ export type LocalDayTime = { day: number; hour: number; minute: number }
 export function utcWeeklyToLocal(day: number, hour: number, minute: number): LocalDayTime {
   const now = new Date()
   const ref = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate(), hour, minute, 0, 0))
-  ref.setUTCDate(ref.getUTCDate() + (day - now.getUTCDay()))
+  let offset = day - now.getUTCDay()
+  if (offset > 3) offset -= 7
+  else if (offset < -3) offset += 7
+  ref.setUTCDate(ref.getUTCDate() + offset)
   return { day: ref.getDay(), hour: ref.getHours(), minute: ref.getMinutes() }
 }
 
