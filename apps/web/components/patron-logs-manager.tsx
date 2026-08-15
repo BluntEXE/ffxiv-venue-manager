@@ -25,7 +25,7 @@ import {
 import { Textarea } from "@/components/ui/textarea"
 import { Badge } from "@/components/ui/badge"
 import { History, Filter, Users, User } from "lucide-react"
-import { formatServerTime, SERVER_TIME_LABEL } from "@/components/server-time"
+import { formatLocalTime } from "@/components/server-time"
 
 type LogRow = {
   id: string
@@ -217,7 +217,7 @@ export function PatronLogsManager({
                   <SelectItem value="none">- Use date range -</SelectItem>
                   {events.map((e) => (
                     <SelectItem key={e.id} value={e.id}>
-                      {e.title} ({formatServerTime(e.startTime, "datelong")})
+                      {e.title} ({formatLocalTime(e.startTime, "datelong")})
                     </SelectItem>
                   ))}
                 </SelectContent>
@@ -364,7 +364,7 @@ export function PatronLogsManager({
                     />
                   </td>
                   <td className="p-3 whitespace-nowrap">
-                    {formatServerTime(l.timestamp, "datetimelong")} {SERVER_TIME_LABEL}
+                    {formatLocalTime(l.timestamp, "datetimelong")}
                   </td>
                   <td className="p-3">
                     {l.characterName ?? "-"}
@@ -389,7 +389,7 @@ export function PatronLogsManager({
                       )}
                       {l.reclassifiedAt && (
                         <span
-                          title={`Reclassified by ${l.reclassifiedBy?.name ?? "?"} on ${formatServerTime(l.reclassifiedAt, "datetimelong")} ${SERVER_TIME_LABEL}${l.reclassifyReason ? ` - ${l.reclassifyReason}` : ""}`}
+                          title={`Reclassified by ${l.reclassifiedBy?.name ?? "?"} on ${formatLocalTime(l.reclassifiedAt, "datetimelong")}${l.reclassifyReason ? ` - ${l.reclassifyReason}` : ""}`}
                           className="inline-flex"
                         >
                           <History className="h-3.5 w-3.5 text-amber-500" />
