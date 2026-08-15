@@ -1,4 +1,7 @@
-import { DAY_NAMES, DAY_SHORT, formatEntryTime, formatIntervalLabel, type ScheduleEntry } from "@/lib/schedule-utils"
+"use client"
+
+import { useEffect, useState } from "react"
+import { DAY_NAMES, DAY_SHORT, formatEntryTime, formatLocalEntryTime, formatIntervalLabel, localDayOf, type ScheduleEntry } from "@/lib/schedule-utils"
 
 type Props = {
   entries: ScheduleEntry[]
@@ -6,6 +9,9 @@ type Props = {
 }
 
 export function VenueScheduleDisplay({ entries, compact = false }: Props) {
+  const [mounted, setMounted] = useState(false)
+  useEffect(() => setMounted(true), [])
+
   if (entries.length === 0) {
     return (
       <>
@@ -22,11 +28,12 @@ export function VenueScheduleDisplay({ entries, compact = false }: Props) {
 
   const byDay = new Map<number, ScheduleEntry[]>()
   for (const e of entries) {
-    if (!byDay.has(e.day)) byDay.set(e.day, [])
-    byDay.get(e.day)!.push(e)
+    const day = mounted ? localDayOf(e) : e.day
+    if (!byDay.has(day)) byDay.set(day, [])
+    byDay.get(day)!.push(e)
   }
 
-  const todayDay = new Date().getUTCDay()
+  const todayDay = mounted ? new Date().getDay() : new Date().getUTCDay()
 
   return (
     <>
@@ -46,7 +53,7 @@ export function VenueScheduleDisplay({ entries, compact = false }: Props) {
             <span className="day">{idx === 0 ? (compact ? DAY_SHORT[i] : DAY_NAMES[i]) : ""}</span>
             <span className="hrs">
               {entry.label && <span className="mr-1 text-[var(--fg-faint)] text-[0.78em]">{entry.label} · </span>}
-              {formatEntryTime(entry)}
+              {mounted ? formatLocalEntryTime(entry) : formatEntryTime(entry)}
               {!compact && entry.interval !== "WEEKLY" && (
                 <span className="ml-1 text-[0.75em] text-[var(--fg-faint)]">({formatIntervalLabel(entry)})</span>
               )}
