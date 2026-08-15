@@ -81,3 +81,14 @@ describe("getServerTimeIntlOptions", () => {
     expect(getServerTimeIntlOptions("datetime").locale).toBe("en-US")
   })
 })
+
+describe("formatServerTime new kinds for date-box tiles", () => {
+  it("formats 'monthShort' as a 3-letter month abbreviation", () => {
+    expect(formatServerTime("2026-04-28T20:54:00Z", "monthShort")).toBe("Apr")
+  })
+
+  it("formats 'dayOfMonth' as a bare day number, no leading zero", () => {
+    expect(formatServerTime("2026-04-05T20:54:00Z", "dayOfMonth")).toBe("5")
+    expect(formatServerTime("2026-04-28T20:54:00Z", "dayOfMonth")).toBe("28")
+  })
+})
