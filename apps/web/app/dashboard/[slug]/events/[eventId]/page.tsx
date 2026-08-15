@@ -11,8 +11,7 @@ import { DeleteEventButton } from "@/components/delete-event-button"
 import { CancelSeriesButton } from "@/components/cancel-series-button"
 import { GeneratePotPayrollButton } from "@/components/generate-pot-payroll-button"
 import { EventAttendanceChart } from "@/components/event-attendance-chart"
-import { ServerTime } from "@/components/server-time"
-import { SERVER_TIME_LABEL } from "@/lib/server-time"
+import { LocalTime } from "@/components/server-time"
 import { extractPartakeImages, extractPartakeTextBody } from "@/lib/discord-webhook"
 import { renderPartakeProse } from "@/lib/render-partake-prose"
 import { formatVenueLocationShort } from "@/lib/venue-location"
@@ -258,19 +257,19 @@ export default async function EventDetailsPage({
               <div>
                 <p className="text-sm text-muted-foreground">Start</p>
                 <p className="font-semibold">
-                  <ServerTime date={event.startTime} formatStr="datelong" />
+                  <LocalTime date={event.startTime} formatStr="datelong" />
                 </p>
                 <p className="text-sm">
-                  <ServerTime date={event.startTime} formatStr="time" /> {SERVER_TIME_LABEL}
+                  <LocalTime date={event.startTime} formatStr="time" />
                 </p>
               </div>
               <div>
                 <p className="text-sm text-muted-foreground">End</p>
                 <p className="font-semibold">
-                  <ServerTime date={event.endTime} formatStr="datelong" />
+                  <LocalTime date={event.endTime} formatStr="datelong" />
                 </p>
                 <p className="text-sm">
-                  <ServerTime date={event.endTime} formatStr="time" /> {SERVER_TIME_LABEL}
+                  <LocalTime date={event.endTime} formatStr="time" />
                 </p>
               </div>
               <div>
