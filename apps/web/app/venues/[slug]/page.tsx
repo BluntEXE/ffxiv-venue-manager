@@ -28,7 +28,7 @@ export async function generateMetadata({ params }: { params: Promise<{ slug: str
 import { format } from "date-fns"
 import { MapPin, Calendar, Clock, Crown, Image as ImageIcon, ChevronLeft, Scroll, Heart } from "lucide-react"
 import { getServerTimeLabel, formatServerTime } from "@/lib/server-time"
-import { formatVenueAddress, formatVenueLocationShort, formatLifestreamCommand } from "@/lib/venue-location"
+import { formatVenueAddress, formatLifestreamCommand } from "@/lib/venue-location"
 import { VenueFollowButton } from "@/components/venue-follow-button"
 import { CopyAddressButton, CopyAddressInline } from "@/components/copy-address-button"
 import { SiteFooter } from "@/components/site-footer"
@@ -371,7 +371,16 @@ export default async function VenueProfilePage({
                   {[
                     { k: "Data Centre", v: venue.dataCenter },
                     { k: "World",       v: venue.world },
-                    ...((() => { const loc = formatVenueLocationShort(venue); return loc ? [{ k: "District, Ward & Plot", v: loc }] : [] })()),
+                    ...(venue.district ? [{ k: "District", v: venue.district }] : []),
+                    ...(venue.ward != null ? [{ k: "Ward", v: String(venue.ward) }] : []),
+                    ...(venue.plot != null
+                      ? [{ k: "Plot", v: String(venue.plot) }]
+                      : venue.apartment != null
+                      ? [{ k: "Room", v: String(venue.apartment) }]
+                      : []),
+                    ...(!venue.district && venue.ward == null && venue.plot == null && venue.apartment == null && venue.location
+                      ? [{ k: "Location", v: venue.location }]
+                      : []),
                   ].map(({ k, v }) => (
                     <div key={k} className="loc-line">
                       <span className="lk">{k}</span>
