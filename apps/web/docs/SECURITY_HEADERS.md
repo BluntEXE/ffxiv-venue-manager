@@ -45,30 +45,44 @@ Disables potentially dangerous browser APIs:
 - No microphone access
 - No geolocation access
 
-### 6. Content-Security-Policy (CSP)
+### 6. Cross-Origin-Opener-Policy: same-origin, Cross-Origin-Resource-Policy: same-site, Cross-Origin-Embedder-Policy: credentialless
+**Protection**: Cross-origin opener attacks, hotlinking/side-channel resource loading
+
+Isolates the browsing context from cross-origin openers and restricts who can load our resources cross-site. `credentialless` (not `require-corp`) on COEP so external CDN images (Discord avatars etc.) still load without needing CORP headers from those third parties.
+
+### 7. X-DNS-Prefetch-Control: on
+**Protection**: N/A — performance, not security
+
+Allows the browser to prefetch DNS for links on the page.
+
+### 8. Content-Security-Policy (CSP)
 **Protection**: XSS, injection attacks, unauthorized resource loading
 
 Nonce-based CSP generated per-request in `proxy.ts`:
 
 ```
 default-src 'self';
-script-src 'self' 'nonce-{per-request-random}';
+script-src 'self' 'nonce-{per-request-random}' 'strict-dynamic';
 style-src 'self' 'unsafe-inline';
-img-src 'self' data: https://cdn.discordapp.com https://raw.githubusercontent.com https://cdn.partake.gg;
+img-src 'self' data: blob: https://cdn.discordapp.com https://raw.githubusercontent.com https://cdn.partake.gg [+ MINIO_PUBLIC_URL if set];
 font-src 'self' data:;
-connect-src 'self' https://discord.com https://api.github.com https://qstash.upstash.io https://errors.xivvenuemanager.com;
+connect-src 'self' https://discord.com https://api.github.com https://qstash.upstash.io https://errors.xivvenuemanager.com [+ MINIO_PUBLIC_URL if set];
 frame-ancestors 'none';
 base-uri 'self';
 form-action 'self';
 upgrade-insecure-requests
 ```
 
+This is the production shape. In development, `script-src` also allows `'unsafe-eval'` (Next.js dev-mode tooling needs it) and `upgrade-insecure-requests` is dropped (local dev serves plain HTTP). See `buildCsp()` in `proxy.ts` for the exact per-environment logic — this doc shows the general shape, not a byte-for-byte copy; don't diff against it literally.
+
 **Nonce implementation (2026-05-07):**
-- `unsafe-inline` and `unsafe-eval` removed from `script-src`
+- `unsafe-inline` and `unsafe-eval` removed from `script-src` in production
 - Per-request nonce via `crypto.randomUUID()`, base64-encoded
 - Next.js automatically stamps the nonce on all generated `<script>` tags
-- CSP lives in `proxy.ts` (not `next.config.ts`) because nonces require per-request generation
+- CSP lives in `proxy.ts` (not `next.config.ts`) because nonces require per-request generation — `next.config.ts`'s `headers()` sets every *other* header in this doc (all static, same value on every request), CSP is the one exception
 - `style-src unsafe-inline` retained - required by Tailwind CSS
+
+**Auth gating lives in the same function.** `proxy.ts`'s `proxy()` does two things per request, not just CSP: it also checks `PUBLIC_PATHS`/`PUBLIC_PREFIXES` and redirects unauthenticated requests to `/auth/signin` (via NextAuth's `getToken()`) before the response with the CSP header is ever built. If you're debugging "why did this route redirect" as well as "why did this header not appear," they're the same file.
 
 **Allowed External Sources:**
 - Discord CDN: For user avatars via Discord OAuth
@@ -150,21 +164,17 @@ These headers help meet compliance requirements for:
 
 ## Configuration Location
 
-Security headers are configured in:
+Security headers are configured in two places:
 ```
-next.config.ts
+next.config.ts   # every static header (X-Frame-Options, HSTS, Permissions-Policy, etc.) - same value every request
+proxy.ts          # Content-Security-Policy only - needs a fresh nonce per request, can't be a static next.config.ts value
 ```
 
-They are applied automatically to **all routes** (`/:path*`) by Next.js.
+Both apply automatically to all routes matched by `proxy.ts`'s `config.matcher` (everything except static assets, plugin/cron/webhook API routes, and a few other exclusions listed there).
 
-## Vercel Deployment
+## Deployment
 
-Vercel automatically applies these headers from `next.config.ts` during deployment:
-
-1. Headers are added to edge network configuration
-2. Applied at CDN level (low latency)
-3. No runtime performance impact
-4. Cached for optimal delivery
+This app runs as a standalone Docker container on the project's own server (not Vercel), behind a Cloudflare tunnel. Both header sources ship as part of the normal build — see `~/bin/deploy-xiv-web.sh` (`git pull` + `docker compose build/up`) for the actual deploy flow. No separate header-specific deploy step; if the code is in the running container, the headers are live.
 
 ## Troubleshooting
 
@@ -174,9 +184,9 @@ Vercel automatically applies these headers from `next.config.ts` during deployme
 
 **Solutions**:
 1. Clear browser cache (Ctrl+Shift+R)
-2. Check Vercel deployment logs
-3. Verify `next.config.ts` is committed to git
-4. Redeploy to Vercel
+2. Confirm the change actually deployed — check `docker compose logs venue-manager` on the server for the current build, or `git log` on the server checkout, rather than assuming a push alone shipped it (pushing to GitHub does not deploy, see the repo's root `CLAUDE.md`)
+3. If it's the CSP specifically and every other header is present: the bug is in `proxy.ts`, not `next.config.ts` — check its `config.matcher` didn't exclude the route in question
+4. Redeploy via `~/bin/deploy-xiv-web.sh`
 
 ### CSP blocking resources
 
@@ -222,3 +232,5 @@ This allows monitoring attempted attacks and identifying CSP issues.
 ## Last Updated
 
 2025-12-03 - Initial implementation
+2026-05-07 - Nonce-based CSP (see "Nonce implementation" above)
+2026-08-15 - Corrected config location (proxy.ts, not next.config.ts, for CSP) and deployment section (own Docker server, not Vercel) - doc had never been updated after the app moved off Vercel; documented the 4 headers (COOP/CORP/COEP/X-DNS-Prefetch-Control) that were configured but not listed here
