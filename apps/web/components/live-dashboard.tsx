@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from "react"
 import Link from "next/link"
-import { formatServerTime, SERVER_TIME_LABEL } from "@/lib/server-time"
+import { LocalTime } from "@/components/server-time"
 import { Card, CardContent } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
@@ -206,7 +206,7 @@ export function LiveDashboard({
           <div className="font-cinzel font-bold text-[1.45rem] tracking-[0.02em] leading-tight">{event.title}</div>
           <div className="text-[0.84rem] text-muted-foreground flex items-center gap-2">
             <Clock className="w-[14px] h-[14px] text-[var(--xiv-blue)]" />
-            Started {formatServerTime(event.startTime, "time")} {SERVER_TIME_LABEL}
+            Started <LocalTime date={event.startTime} formatStr="time" />
             {!isUpcoming && canManage && (
               <div className="flex gap-2 ml-4">
                 <Button
@@ -288,7 +288,7 @@ export function LiveDashboard({
                   <div className="fbody flex-1 min-w-0">
                     <div className="ftext text-[0.88rem] leading-[1.45]">{item.text}</div>
                     <div className="fmeta text-[0.72rem] text-[var(--fg-faint)] mt-1">
-                      {formatServerTime(item.timestamp, "time")} {SERVER_TIME_LABEL}
+                      <LocalTime date={item.timestamp} formatStr="time" />
                     </div>
                   </div>
                 </div>
