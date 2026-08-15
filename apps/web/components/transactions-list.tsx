@@ -10,7 +10,7 @@ import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Textarea } from "@/components/ui/textarea"
 import { Edit, Trash2 } from "lucide-react"
-import { formatServerTime, SERVER_TIME_LABEL } from "@/components/server-time"
+import { formatLocalTime } from "@/components/server-time"
 
 interface Transaction {
   id: string
@@ -122,7 +122,7 @@ export function TransactionsList({
 
     // CSV Rows
     const rows = transactions.map((transaction) => {
-      const date = formatServerTime(transaction.createdAt, "isoDateTime")
+      const date = formatLocalTime(transaction.createdAt, "isoDateTime")
       const event = transaction.event?.title || ""
       const service = transaction.service?.name || "Manual Sale"
       const amount = parseFloat(transaction.amount.toString())
@@ -142,7 +142,7 @@ export function TransactionsList({
     const url = URL.createObjectURL(blob)
 
     link.setAttribute("href", url)
-    link.setAttribute("download", `transactions-${formatServerTime(new Date(), "isoDate")}.csv`)
+    link.setAttribute("download", `transactions-${formatLocalTime(new Date(), "isoDate")}.csv`)
     link.style.visibility = "hidden"
 
     document.body.appendChild(link)
@@ -279,7 +279,7 @@ export function TransactionsList({
                     <span className="text-foreground/70">{transaction.customerName}</span>
                   )}
                   {transaction.customerName && <span>·</span>}
-                  <span>{formatServerTime(transaction.createdAt, "datetimelong")} {SERVER_TIME_LABEL}</span>
+                  <span>{formatLocalTime(transaction.createdAt, "datetimelong")}</span>
                   {transaction.staff && (
                     <>
                       <span>· {transaction.staff.name}</span>
