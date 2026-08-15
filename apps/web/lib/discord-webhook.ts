@@ -72,7 +72,7 @@ export type WebhookType =
   | "dailySalesSummary"
   | "staffJoined"
 
-export type WebhookGroup = "staff" | "events" | "revenue"
+type WebhookGroup = "staff" | "events" | "revenue"
 
 // Map webhook types to their groups
 const WEBHOOK_TYPE_TO_GROUP: Record<WebhookType, WebhookGroup> = {
@@ -183,25 +183,6 @@ export async function editDiscordMessage(
     return true
   } catch (error) {
     console.error("Error patching Discord webhook message:", error)
-    return false
-  }
-}
-
-/**
- * Delete an existing Discord webhook message.
- */
-export async function deleteDiscordMessage(
-  webhookUrl: string | null,
-  messageId: string
-): Promise<boolean> {
-  if (!webhookUrl || !isValidDiscordWebhookUrl(webhookUrl)) return false
-  try {
-    const res = await fetch(`${webhookUrl}/messages/${encodeURIComponent(messageId)}`, {
-      method: "DELETE",
-    })
-    return res.ok
-  } catch (error) {
-    console.error("Error deleting Discord webhook message:", error)
     return false
   }
 }

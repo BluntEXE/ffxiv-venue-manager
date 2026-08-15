@@ -1,12 +1,12 @@
 const API = 'https://xivvenuemanager.com/api/shout-crafter/me'
 
-export interface XivVMUser {
+interface XivVMUser {
   id: string
   name: string | null
   image: string | null
 }
 
-export interface XivVMVenue {
+interface XivVMVenue {
   id: string
   name: string
   slug: string

@@ -9,7 +9,7 @@ export interface DiscordButtonComponent {
   disabled?: boolean
 }
 
-export interface DiscordActionRow {
+interface DiscordActionRow {
   type: 1
   components: DiscordButtonComponent[]
 }
@@ -48,12 +48,6 @@ export async function editBotMessage(channelId: string, messageId: string, paylo
   await botFetch(`/channels/${channelId}/messages/${messageId}`, {
     method: "PATCH",
     body: JSON.stringify(payload),
-  })
-}
-
-export async function deleteBotMessage(channelId: string, messageId: string): Promise<void> {
-  await botFetch(`/channels/${channelId}/messages/${messageId}`, {
-    method: "DELETE",
   })
 }
 
