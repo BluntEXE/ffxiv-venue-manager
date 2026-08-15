@@ -1,4 +1,4 @@
-export const WORLDS: Record<string, string[]> = {
+const WORLDS: Record<string, string[]> = {
   'Aether': ['Adamantoise', 'Cactuar', 'Faerie', 'Gilgamesh', 'Jenova', 'Midgardsormr', 'Sargatanas', 'Siren'],
   'Chaos': ['Cerberus', 'Louisoix', 'Moogle', 'Omega', 'Phantom', 'Ragnarok', 'Sagittarius', 'Spriggan'],
   'Crystal': ['Balmung', 'Brynhildr', 'Coeurl', 'Diabolos', 'Goblin', 'Malboro', 'Mateus', 'Zalera'],
@@ -18,9 +18,4 @@ export const ALL_DATACENTERS = Object.keys(WORLDS).sort()
 export function findWorld(text: string): string | undefined {
   const lower = text.toLowerCase()
   return ALL_WORLDS.find(w => lower.includes(w.toLowerCase()))
-}
-
-export function findDatacenter(text: string): string | undefined {
-  const lower = text.toLowerCase()
-  return ALL_DATACENTERS.find(dc => lower.includes(dc.toLowerCase()))
 }
