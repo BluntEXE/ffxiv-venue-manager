@@ -1,7 +1,7 @@
 "use client"
 
 import { useState } from "react"
-import { formatServerTime } from "@/lib/server-time"
+import { formatLocalTime } from "@/components/server-time"
 import { History, Repeat, UserPlus, Crown } from "lucide-react"
 import { DataTable } from "@/components/ui/data-table"
 
@@ -207,7 +207,7 @@ export function PatronProfilesTable({
                     </td>
                     <td className="hide t-muted">{p.world || "—"}</td>
                     <td className="t-num">{p.visits}</td>
-                    <td className="hide t-muted">{formatServerTime(p.lastSeen, "datetime")}</td>
+                    <td className="hide t-muted">{formatLocalTime(p.lastSeen, "datetime")}</td>
                     <td className="t-num hide">
                       {p.totalSpent && p.totalSpent > 0
                         ? <span className="gil">{p.totalSpent.toLocaleString()}</span>
