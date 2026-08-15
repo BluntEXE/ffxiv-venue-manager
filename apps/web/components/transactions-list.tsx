@@ -1,6 +1,6 @@
 "use client"
 
-import { useState } from "react"
+import { useEffect, useState } from "react"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import { RoleBadge } from "@/components/role-badge"
@@ -57,6 +57,16 @@ export function TransactionsList({
   const [nextCursor, setNextCursor] = useState(initialNextCursor)
   const [hasMore, setHasMore] = useState(initialHasMore)
   const [isLoadingMore, setIsLoadingMore] = useState(false)
+
+  // useState's initial value only runs on first mount - router.refresh()
+  // (e.g. after logging a sale) re-renders the parent Server Component
+  // with fresh props, but this client component's own state won't pick
+  // them up on its own. Re-sync whenever the server sends a new first page.
+  useEffect(() => {
+    setTransactions(initialTransactions)
+    setNextCursor(initialNextCursor)
+    setHasMore(initialHasMore)
+  }, [initialTransactions, initialNextCursor, initialHasMore])
   const [editingTransaction, setEditingTransaction] = useState<Transaction | null>(null)
   const [deletingTransaction, setDeletingTransaction] = useState<Transaction | null>(null)
   const [isSubmitting, setIsSubmitting] = useState(false)
