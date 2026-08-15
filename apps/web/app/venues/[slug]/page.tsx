@@ -27,7 +27,8 @@ export async function generateMetadata({ params }: { params: Promise<{ slug: str
 }
 import { format } from "date-fns"
 import { MapPin, Calendar, Clock, Crown, Image as ImageIcon, ChevronLeft, Scroll, Heart } from "lucide-react"
-import { getServerTimeLabel, formatServerTime } from "@/lib/server-time"
+import { getServerTimeLabel } from "@/lib/server-time"
+import { LocalTime } from "@/components/server-time"
 import { formatVenueAddress, formatLifestreamCommand } from "@/lib/venue-location"
 import { VenueFollowButton } from "@/components/venue-follow-button"
 import { CopyAddressButton, CopyAddressInline } from "@/components/copy-address-button"
@@ -244,7 +245,7 @@ export default async function VenueProfilePage({
             </span>
             <span className="text-[0.92rem]">
               <strong>{liveEvent.title}</strong>
-              {" · "}open until {liveEvent.endTime ? `${formatServerTime(liveEvent.endTime.toISOString(), "time")} ${tzLabel}` : "late"}
+              {" · "}open until {liveEvent.endTime ? <LocalTime date={liveEvent.endTime} formatStr="time" /> : "late"}
             </span>
             <div className="flex-1" />
             <CopyAddressInline address={lifestreamCommand} />
@@ -290,7 +291,7 @@ export default async function VenueProfilePage({
                           <div className="ev-sub">
                             <span className="meta">
                               <Clock />
-                              {format(ev.startTime, "EEE")} · {formatServerTime(ev.startTime.toISOString(), "time")}{ev.endTime ? `–${formatServerTime(ev.endTime.toISOString(), "time")}` : ""} {tzLabel}
+                              {format(ev.startTime, "EEE")} · <LocalTime date={ev.startTime} formatStr="time" />{ev.endTime && <>–<LocalTime date={ev.endTime} formatStr="time" /></>}
                             </span>
                             {ev.eventType && <span className="tag">{ev.eventType}</span>}
                           </div>
