@@ -81,3 +81,12 @@ export function formatServerTimeRange(start: string | Date, end: string | Date):
   const endTime = e.toLocaleString("en-US", { timeZone: ST_TZ, hour: "numeric", minute: "2-digit" })
   return `${dateStr} · ${startTime} — ${endTime} ${SERVER_TIME_LABEL}`
 }
+
+export function formatLocalTimeRange(start: string | Date, end: string | Date): string {
+  const s = new Date(start)
+  const e = new Date(end)
+  const dateStr = s.toLocaleString("en-US", { month: "short", day: "numeric" })
+  const startTime = s.toLocaleString("en-US", { hour: "numeric", minute: "2-digit" })
+  const endTime = e.toLocaleString("en-US", { hour: "numeric", minute: "2-digit" })
+  return `${dateStr} · ${startTime} — ${endTime}`
+}

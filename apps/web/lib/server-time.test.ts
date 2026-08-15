@@ -57,6 +57,13 @@ describe("formatServerTime", () => {
   })
 })
 
+describe("formatServerTime ISO kinds stay UTC", () => {
+  it("isoDateTime always reflects UTC regardless of system timezone", () => {
+    const d = new Date("2026-08-15T23:30:00.000Z")
+    expect(formatServerTime(d, "isoDateTime")).toBe("2026-08-15 23:30:00")
+  })
+})
+
 describe("getServerTimeIntlOptions", () => {
   it("returns options for 'datetime' with no timeZone set", () => {
     const { opts } = getServerTimeIntlOptions("datetime")

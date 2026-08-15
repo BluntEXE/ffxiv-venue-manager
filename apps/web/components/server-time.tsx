@@ -4,6 +4,7 @@ import { useEffect, useMemo, useState } from "react"
 import {
   formatServerTime,
   formatServerTimeRange,
+  formatLocalTimeRange,
   getServerTimeIntlOptions,
   SERVER_TIME_LABEL,
   type ServerTimeKind,
@@ -16,7 +17,12 @@ export type { ServerTimeKind }
 
 export function formatLocalTime(date: string | Date, kind: ServerTimeKind = "time"): string {
   const d = new Date(date)
-  if (kind === "isoDate" || kind === "isoDateTime") return formatServerTime(date, kind)
+  if (kind === "isoDate" || kind === "isoDateTime") {
+    const pad = (n: number) => String(n).padStart(2, "0")
+    const isoDate = `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`
+    if (kind === "isoDate") return isoDate
+    return `${isoDate} ${pad(d.getHours())}:${pad(d.getMinutes())}:${pad(d.getSeconds())}`
+  }
   const { opts, locale } = getServerTimeIntlOptions(kind)
   return d.toLocaleString(locale, opts)
 }
@@ -44,6 +50,24 @@ export function ServerTimeRange({
   className?: string
 }) {
   const formatted = useMemo(() => formatServerTimeRange(start, end), [start, end])
+  return <span className={className}>{formatted}</span>
+}
+
+export function LocalTimeRange({
+  start,
+  end,
+  className,
+}: {
+  start: string | Date
+  end: string | Date
+  className?: string
+}) {
+  const [mounted, setMounted] = useState(false)
+  useEffect(() => setMounted(true), [])
+  const formatted = useMemo(
+    () => (mounted ? formatLocalTimeRange(start, end) : formatServerTimeRange(start, end)),
+    [mounted, start, end]
+  )
   return <span className={className}>{formatted}</span>
 }
 
