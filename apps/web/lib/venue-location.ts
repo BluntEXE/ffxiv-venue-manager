@@ -18,17 +18,15 @@ export interface VenueLocationFields {
   location?: string | null
 }
 
-/** Returns a formatted "Datacenter · World · District W# P#/Apt#" string. Falls back to legacy location text. */
+/** Returns a formatted "Datacenter · World · District · W# · P#/Apt#" string. Falls back to legacy location text. */
 export function formatVenueAddress(v: VenueLocationFields): string {
   const parts: string[] = [v.dataCenter, v.world]
 
   if (v.district || v.ward || v.plot || v.apartment) {
-    const loc = [
-      v.district ?? null,
-      v.ward != null ? `W${v.ward}` : null,
-      v.plot != null ? `P${v.plot}` : v.apartment != null ? `Apt${v.apartment}` : null,
-    ].filter(Boolean).join(" ")
-    if (loc) parts.push(loc)
+    if (v.district) parts.push(v.district)
+    if (v.ward != null) parts.push(`W${v.ward}`)
+    if (v.plot != null) parts.push(`P${v.plot}`)
+    else if (v.apartment != null) parts.push(`Apt${v.apartment}`)
   } else if (v.location) {
     parts.push(v.location)
   }
