@@ -79,7 +79,7 @@ it. To wipe the local DB and Redis entirely:
 
 ```bash
 docker compose -f docker-compose.local.yml down
-rm -rf docker/postgres-local/data
+sudo rm -rf docker/postgres-local/data  # postgres's official image runs as root, so the dir is root-owned
 docker compose -f docker-compose.local.yml up -d
 ```
 
