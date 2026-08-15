@@ -36,6 +36,15 @@ export function formatVenueAddress(v: VenueLocationFields): string {
   return parts.join(" · ")
 }
 
+/** Pasteable Lifestream `/li` teleport command, e.g. "/li Cactuar Lavender Beds W1 P1". Falls back to the display address if the venue has no structured plot data to build a valid command from. */
+export function formatLifestreamCommand(v: VenueLocationFields): string {
+  if (!v.district || v.ward == null || (v.plot == null && v.apartment == null)) {
+    return formatVenueAddress(v)
+  }
+  const plotPart = v.plot != null ? `P${v.plot}` : `A${v.apartment}`
+  return `/li ${v.world} ${v.district} W${v.ward} ${plotPart}`
+}
+
 /** Short location string (district + ward + plot/apartment only, no DC/world). */
 export function formatVenueLocationShort(v: Pick<VenueLocationFields, "district" | "ward" | "plot" | "apartment" | "location">): string | null {
   if (v.district || v.ward || v.plot || v.apartment) {

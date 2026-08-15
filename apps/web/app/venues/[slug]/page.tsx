@@ -28,7 +28,7 @@ export async function generateMetadata({ params }: { params: Promise<{ slug: str
 import { format } from "date-fns"
 import { MapPin, Calendar, Clock, Crown, Image as ImageIcon, ChevronLeft, Scroll, Heart } from "lucide-react"
 import { getServerTimeLabel, formatServerTime } from "@/lib/server-time"
-import { formatVenueAddress, formatVenueLocationShort } from "@/lib/venue-location"
+import { formatVenueAddress, formatVenueLocationShort, formatLifestreamCommand } from "@/lib/venue-location"
 import { VenueFollowButton } from "@/components/venue-follow-button"
 import { CopyAddressButton, CopyAddressInline } from "@/components/copy-address-button"
 import { SiteFooter } from "@/components/site-footer"
@@ -86,6 +86,7 @@ export default async function VenueProfilePage({
   const todayUTCDay   = new Date().getUTCDay()
   const DAY_NAMES     = ["Sunday","Monday","Tuesday","Wednesday","Thursday","Friday","Saturday"]
   const address       = formatVenueAddress(venue)
+  const lifestreamCommand = formatLifestreamCommand(venue)
 
   // Parse hours from settings
   const s = venue.settings as Record<string, unknown> | null
@@ -246,7 +247,7 @@ export default async function VenueProfilePage({
               {" · "}open until {liveEvent.endTime ? `${formatServerTime(liveEvent.endTime.toISOString(), "time")} ${tzLabel}` : "late"}
             </span>
             <div className="flex-1" />
-            <CopyAddressInline address={address} />
+            <CopyAddressInline address={lifestreamCommand} />
           </div>
         </div>
       )}
@@ -377,7 +378,7 @@ export default async function VenueProfilePage({
                       <span className="lv">{v}</span>
                     </div>
                   ))}
-                  <CopyAddressButton address={address} />
+                  <CopyAddressButton address={lifestreamCommand} />
                 </div>
               </div>
 
