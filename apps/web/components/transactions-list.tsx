@@ -1,6 +1,6 @@
 "use client"
 
-import { useEffect, useState } from "react"
+import { useEffect, useRef, useState } from "react"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import { RoleBadge } from "@/components/role-badge"
@@ -57,15 +57,32 @@ export function TransactionsList({
   const [nextCursor, setNextCursor] = useState(initialNextCursor)
   const [hasMore, setHasMore] = useState(initialHasMore)
   const [isLoadingMore, setIsLoadingMore] = useState(false)
+  const hasPaginatedRef = useRef(false)
 
   // useState's initial value only runs on first mount - router.refresh()
   // (e.g. after logging a sale) re-renders the parent Server Component
   // with fresh props, but this client component's own state won't pick
   // them up on its own. Re-sync whenever the server sends a new first page.
+  //
+  // Merge rather than overwrite: initialTransactions is always just the
+  // first page, so a plain overwrite would wipe out any further pages the
+  // user had already loaded via "Load more". Keep those, just fold in
+  // whatever's new/changed on the first page.
+  //
+  // Same reasoning for the cursor - once the user has paginated past page
+  // 1, nextCursor/hasMore reflect how far *they've* gotten, not the fresh
+  // page's cursor (which always points to right after page 1) - leave
+  // those alone once pagination has started.
   useEffect(() => {
-    setTransactions(initialTransactions)
-    setNextCursor(initialNextCursor)
-    setHasMore(initialHasMore)
+    setTransactions((prev) => {
+      const freshIds = new Set(initialTransactions.map((t) => t.id))
+      const extras = prev.filter((t) => !freshIds.has(t.id))
+      return [...initialTransactions, ...extras]
+    })
+    if (!hasPaginatedRef.current) {
+      setNextCursor(initialNextCursor)
+      setHasMore(initialHasMore)
+    }
   }, [initialTransactions, initialNextCursor, initialHasMore])
   const [editingTransaction, setEditingTransaction] = useState<Transaction | null>(null)
   const [deletingTransaction, setDeletingTransaction] = useState<Transaction | null>(null)
@@ -87,6 +104,7 @@ export function TransactionsList({
 
       if (response.ok) {
         const data = await response.json()
+        hasPaginatedRef.current = true
         setTransactions([...transactions, ...data.transactions])
         setNextCursor(data.nextCursor)
         setHasMore(data.hasMore)
