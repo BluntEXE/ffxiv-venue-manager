@@ -16,15 +16,10 @@ export function withRateLimit<T = unknown>(
   options?: {
     requests?: number
     window?: string
-    bypassForDevelopment?: boolean
     getIdentifier?: (req: NextRequest) => Promise<string> | string
   }
 ) {
   return async (req: NextRequest, context?: T): Promise<NextResponse> => {
-    if (options?.bypassForDevelopment && process.env.NODE_ENV === "development") {
-      return handler(req, context)
-    }
-
     const maxRequests = options?.requests || 200
     const windowSec = Math.max(1, Math.floor(parseWindow(options?.window || "1 m") / 1000))
     const identifier = options?.getIdentifier
