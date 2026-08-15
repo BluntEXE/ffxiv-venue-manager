@@ -74,29 +74,6 @@ export async function calculatePayrollExpenses(
 }
 
 /**
- * Calculate net profit (revenue - payroll expenses)
- */
-export function calculateNetProfit(revenue: number, payrollExpenses: number): number {
-  return revenue - payrollExpenses
-}
-
-/**
- * Calculate profit margin as a percentage
- */
-export function calculateProfitMargin(revenue: number, netProfit: number): number {
-  if (revenue === 0) return 0
-  return (netProfit / revenue) * 100
-}
-
-/**
- * Calculate payroll as percentage of revenue
- */
-export function calculatePayrollPercentage(revenue: number, payrollExpenses: number): number {
-  if (revenue === 0) return 0
-  return (payrollExpenses / revenue) * 100
-}
-
-/**
  * Get comprehensive financial summary for a venue
  */
 export async function getFinancialSummary(
@@ -109,9 +86,9 @@ export async function getFinancialSummary(
     calculatePayrollExpenses(venueId, dateRange, includePendingPayroll),
   ])
 
-  const netProfit = calculateNetProfit(totalRevenue, totalPayroll)
-  const profitMargin = calculateProfitMargin(totalRevenue, netProfit)
-  const payrollAsPercentOfRevenue = calculatePayrollPercentage(totalRevenue, totalPayroll)
+  const netProfit = totalRevenue - totalPayroll
+  const profitMargin = totalRevenue === 0 ? 0 : (netProfit / totalRevenue) * 100
+  const payrollAsPercentOfRevenue = totalRevenue === 0 ? 0 : (totalPayroll / totalRevenue) * 100
 
   return {
     totalRevenue,
