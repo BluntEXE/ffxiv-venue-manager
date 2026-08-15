@@ -8,7 +8,7 @@ import { Badge } from "@/components/ui/badge"
 import { prisma } from "@/lib/prisma"
 import { EventsCalendar } from "@/components/events-calendar"
 import { VenueLayout } from "@/components/venue-layout"
-import { formatServerTime, SERVER_TIME_LABEL } from "@/lib/server-time"
+import { LocalTime } from "@/components/server-time"
 import { format } from "date-fns"
 import { SyncPartakeButton } from "@/components/sync-partake-button"
 
@@ -157,8 +157,8 @@ export default async function EventsPage({
               {draftEvents.map((event: typeof draftEvents[number]) => (
                 <div key={event.id} className="xiv-card rounded-xl p-4 flex gap-4 transition-all hover:border-[rgba(0,180,255,0.4)]">
                   <div className="w-10 flex-shrink-0 text-center pt-0.5">
-                    <div className="text-[0.58rem] font-semibold uppercase tracking-wide text-[var(--fg-faint)]">{formatServerTime(event.startTime, "date").split(" ")[0]}</div>
-                    <div className="font-cinzel text-xl font-bold leading-none mt-0.5 text-[var(--fg-faint)]">{new Date(event.startTime).getUTCDate()}</div>
+                    <div className="text-[0.58rem] font-semibold uppercase tracking-wide text-[var(--fg-faint)]"><LocalTime date={event.startTime} formatStr="monthShort" /></div>
+                    <div className="font-cinzel text-xl font-bold leading-none mt-0.5 text-[var(--fg-faint)]"><LocalTime date={event.startTime} formatStr="dayOfMonth" /></div>
                   </div>
                   <div className="flex-1 min-w-0">
                     <div className="flex justify-between items-start gap-3 flex-wrap">
@@ -168,7 +168,7 @@ export default async function EventsPage({
                         <Badge variant="outline">{typeLabels[event.eventType as keyof typeof typeLabels]}</Badge>
                       </div>
                     </div>
-                    <p className="text-xs text-muted-foreground mt-0.5">{formatServerTime(event.startTime, "datelong")} · {formatServerTime(event.startTime, "time")} {SERVER_TIME_LABEL}</p>
+                    <p className="text-xs text-muted-foreground mt-0.5"><LocalTime date={event.startTime} formatStr="datelong" /> · <LocalTime date={event.startTime} formatStr="time" /></p>
                     <div className="flex gap-2 mt-3">
                       <Button asChild variant="cta" size="sm"><Link href={`/dashboard/${slug}/events/${event.id}/edit`}>Edit draft</Link></Button>
                       <Button asChild variant="outline" size="sm"><Link href={`/dashboard/${slug}/events/${event.id}`}>Preview</Link></Button>
@@ -207,13 +207,13 @@ export default async function EventsPage({
                           <Link key={event.id} href={`/dashboard/${slug}/events/${event.id}`} className="block border-b border-[var(--blue-008)] last:border-b-0 hover:bg-[var(--blue-004)] transition-colors">
                             <div className="event-row opacity-75 hover:opacity-100 transition-opacity">
                               <div className="datebox off">
-                                <div className="mo">{formatServerTime(event.startTime, "date").split(" ")[0]}</div>
-                                <div className="dy">{new Date(event.startTime).getUTCDate()}</div>
+                                <div className="mo"><LocalTime date={event.startTime} formatStr="monthShort" /></div>
+                                <div className="dy"><LocalTime date={event.startTime} formatStr="dayOfMonth" /></div>
                               </div>
                               <div className="ev-mid">
                                 <div className="ev-title">{event.title}</div>
                                 <div className="ev-sub">
-                                  <span className="meta">{formatServerTime(event.startTime, "time")} {SERVER_TIME_LABEL}</span>
+                                  <span className="meta"><LocalTime date={event.startTime} formatStr="time" /></span>
                                 </div>
                               </div>
                               <div className="ev-right">
@@ -243,8 +243,8 @@ export default async function EventsPage({
                 {upcomingEvents.map((event: typeof upcomingEvents[number]) => (
                   <div key={event.id} className="event-row border-b border-[var(--blue-008)] last:border-b-0 hover:bg-[var(--blue-004)] transition-colors">
                     <div className="datebox">
-                      <div className="mo">{formatServerTime(event.startTime, "date").split(" ")[0]}</div>
-                      <div className="dy">{new Date(event.startTime).getUTCDate()}</div>
+                      <div className="mo"><LocalTime date={event.startTime} formatStr="monthShort" /></div>
+                      <div className="dy"><LocalTime date={event.startTime} formatStr="dayOfMonth" /></div>
                     </div>
                     <div className="ev-mid">
                       <div className="ev-title">
@@ -256,8 +256,8 @@ export default async function EventsPage({
                       </div>
                       <div className="ev-sub">
                         <span className="meta">
-                          {format(new Date(event.startTime), "EEE")} · {formatServerTime(event.startTime, "time")}
-                          {event.endTime ? ` – ${formatServerTime(event.endTime, "time")} ${SERVER_TIME_LABEL}` : ` ${SERVER_TIME_LABEL}`}
+                          {format(new Date(event.startTime), "EEE")} · <LocalTime date={event.startTime} formatStr="time" />
+                          {event.endTime && <> – <LocalTime date={event.endTime} formatStr="time" /></>}
                         </span>
                         {(event.attendanceCount || event.partakeAttendeeCount || event._count.patronLogs > 0) && (
                           <span className="meta">
