@@ -330,7 +330,13 @@ export function extractPartakeTextBody(description: string | null | undefined): 
   return description
     .replace(/!\[[^\]]*\]\([^)]+\)/g, "")
     .split("\n")
-    .map((l) => l.trim())
+    .map((l) =>
+      l
+        .trim()
+        .replace(/^#{1,6}\s*/, "")
+        .replace(/\*\*\*\*/g, "")
+        .trim()
+    )
     .filter((l) => l.length > 0 && !/^\*+$/.test(l))
     .join("\n")
     .trim()
