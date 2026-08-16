@@ -23,6 +23,8 @@ export type ServerTimeKind =
   | "dayheader"     // Tuesday 28 Apr
   | "datewithyear"  // Apr 28, 2026
   | "monthyear"     // April 2026
+  | "monthShort"    // Apr
+  | "dayOfMonth"    // 28
 
 export function getServerTimeIntlOptions(
   kind: ServerTimeKind
@@ -56,6 +58,10 @@ export function getServerTimeIntlOptions(
     opts.month = "short"; opts.day = "numeric"; opts.year = "numeric"
   } else if (kind === "monthyear") {
     opts.month = "long"; opts.year = "numeric"
+  } else if (kind === "monthShort") {
+    opts.month = "short"
+  } else if (kind === "dayOfMonth") {
+    opts.day = "numeric"
   }
   return { opts, locale }
 }

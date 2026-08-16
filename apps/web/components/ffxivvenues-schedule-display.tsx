@@ -1,14 +1,11 @@
+"use client"
+
+import { useEffect, useState } from "react"
 import type { FfxivVenueData } from "@/lib/ffxivvenues"
-import { ServerTime } from "@/components/server-time"
+import { LocalTime } from "@/components/server-time"
+import { utcWeeklyToLocal, formatHHMM } from "@/lib/schedule-utils"
 
 const DAY_NAMES = ["Sunday","Monday","Tuesday","Wednesday","Thursday","Friday","Saturday"]
-
-function formatUtcTime(hour: number, minute: number): string {
-  const period = hour >= 12 ? "PM" : "AM"
-  const h = hour === 0 ? 12 : hour > 12 ? hour - 12 : hour
-  const m = minute === 0 ? "" : `:${String(minute).padStart(2, "0")}`
-  return `${h}${m} ${period}`
-}
 
 type Props = {
   data: FfxivVenueData
@@ -16,14 +13,18 @@ type Props = {
 }
 
 export function FfxivvenuesScheduleDisplay({ data, syncedAt }: Props) {
+  const [mounted, setMounted] = useState(false)
+  useEffect(() => setMounted(true), [])
+
   const schedule = data.schedule ?? []
-  const todayDay = new Date().getUTCDay()
+  const todayDay = mounted ? new Date().getDay() : new Date().getUTCDay()
 
   const byDay = new Map<number, typeof schedule>()
   for (const entry of schedule) {
-    const d = entry.utc?.day ?? entry.day
-    if (!byDay.has(d)) byDay.set(d, [])
-    byDay.get(d)!.push(entry)
+    const utcDay = entry.utc?.day ?? entry.day
+    const day = mounted ? utcWeeklyToLocal(utcDay, entry.utc.start.hour, entry.utc.start.minute).day : utcDay
+    if (!byDay.has(day)) byDay.set(day, [])
+    byDay.get(day)!.push(entry)
   }
 
   return (
@@ -53,9 +54,21 @@ export function FfxivvenuesScheduleDisplay({ data, syncedAt }: Props) {
             }
             return entries.map((entry, idx) => {
               const utc = entry.utc
-              const startStr = formatUtcTime(utc.start.hour, utc.start.minute)
-              const endStr = utc.end ? formatUtcTime(utc.end.hour, utc.end.minute) : null
-              const timeStr = endStr ? `${startStr} – ${endStr} ST` : `${startStr} ST`
+              let timeStr: string
+              if (mounted) {
+                const start = utcWeeklyToLocal(utc.day, utc.start.hour, utc.start.minute)
+                const startStr = formatHHMM(start.hour, start.minute)
+                if (!utc.end) {
+                  timeStr = startStr
+                } else {
+                  const endDay = utc.end.nextDay ? (utc.day + 1) % 7 : utc.day
+                  const end = utcWeeklyToLocal(endDay, utc.end.hour, utc.end.minute)
+                  timeStr = `${startStr} – ${formatHHMM(end.hour, end.minute)}`
+                }
+              } else {
+                const startStr = formatHHMM(utc.start.hour, utc.start.minute)
+                timeStr = utc.end ? `${startStr} – ${formatHHMM(utc.end.hour, utc.end.minute)} ST` : `${startStr} ST`
+              }
               return (
                 <div key={idx} className={`hours-row${isToday ? " today" : ""}`}>
                   <span className="day">{idx === 0 ? DAY_NAMES[i] : ""}</span>
@@ -76,7 +89,7 @@ export function FfxivvenuesScheduleDisplay({ data, syncedAt }: Props) {
         >
           Schedule via ffxivvenues.com →
         </a>
-        <span className="text-[0.7rem] text-[var(--fg-faint)]">Synced <ServerTime date={syncedAt} formatStr="datetime" /> ST</span>
+        <span className="text-[0.7rem] text-[var(--fg-faint)]">Synced <LocalTime date={syncedAt} formatStr="datetime" /></span>
       </div>
     </div>
   )
