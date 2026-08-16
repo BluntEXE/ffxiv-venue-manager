@@ -7,6 +7,7 @@ This is sub-project 2 of the two-part effort that began with mobile removal (sub
 ## Scope
 
 **Repos in scope:**
+
 - `apps/web` (xiv-app, the largest codebase — 368 TS/TSX files)
 - `apps/discord-bot` (3 files — minimal, included for completeness)
 - `apps/eorzea-bot` (38 files)
@@ -14,11 +15,13 @@ This is sub-project 2 of the two-part effort that began with mobile removal (sub
 - `~/VenueManager` (the Dalamud plugin, C#, 35 files)
 
 **Out of scope:**
+
 - `xiv-admin` — personal ops TUI, not part of the XIV Venue Manager product itself
 - Any new features or behavior changes — this is pure structural cleanup, verified by existing test suites + typecheck + build at every step, never a functional rewrite
 - Mobile removal Stage 3 (DB drop) — separate, already tracked, held for the next Tuesday maintenance window
 
 **Tidying angles included** (beyond just "extract duplicated code into helpers"):
+
 - Dead code / unused exports / unused files
 - Unused dependencies in `package.json`s
 - Duplicate code blocks worth consolidating into shared helpers
@@ -38,6 +41,7 @@ Rather than having agents read through 400+ files hoping to spot patterns by eye
 Findings aren't known yet, so a full task-by-task fix plan can't honestly be written until the tools have actually run. Three stages, each planned/executed after the previous one lands:
 
 ### Stage 1 — Tooling + findings report
+
 - Add `knip` and `jscpd` as dev dependencies, configured to scan the four TS/JS apps (excluding generated/build dirs; `apps/mobile` is already gone).
 - Run both, capture output.
 - Run the agent-driven structural pass on the VenueManager plugin.
@@ -45,12 +49,14 @@ Findings aren't known yet, so a full task-by-task fix plan can't honestly be wri
 - This stage produces a report, not code changes. The report is what Stage 2 gets planned from.
 
 ### Stage 2 — Triage + fix
+
 - Each finding gets one of: extract-to-helper, delete-dead-code, remove-unused-dep, or leave-with-noted-reason (e.g. intentionally duplicated for isolation, or a false positive from the tooling).
 - Executed in increments via subagent-driven-development, same review-gated pattern as the zod-validation rollout and mobile removal (implementer → spec-compliance review → code-quality review per increment).
 - No behavior changes — every increment verified by existing tests + typecheck + build, and for `apps/web` changes, the same live-verification discipline used throughout this project (disposable test venue, real authenticated checks) before considering an increment done.
 - No documentation writing in this stage — the codebase structure is still shifting increment to increment, so docs would need rewriting mid-stream.
 
 ### Stage 3 — Architecture docs
+
 - Written once, after Stage 2's structure has settled.
 - `xiv-app` gets its own `docs/ARCHITECTURE.md` (doesn't currently exist), covering the subsystems a new collaborator needs oriented on: auth/session flow, the plugin-sync surface (`/api/plugin/*`), shift/payroll logic, the Discord bot integrations, the blue-green deploy model.
 - The VenueManager plugin's existing `docs/ARCHITECTURE.md` (from Phase 5) is extended, not rewritten, to cover whatever Stage 2 restructured there.

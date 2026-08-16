@@ -22,7 +22,9 @@ export async function GET(request: Request) {
 
     const results = await syncPartakeEvents()
 
-    console.log(`[Partake Sync] Complete: ${results.created} created, ${results.updated} updated, ${results.skipped} unchanged, ${results.errors} errors`)
+    console.log(
+      `[Partake Sync] Complete: ${results.created} created, ${results.updated} updated, ${results.skipped} unchanged, ${results.errors} errors`
+    )
 
     return NextResponse.json({
       success: true,
@@ -31,9 +33,6 @@ export async function GET(request: Request) {
     })
   } catch (error) {
     console.error("[Partake Sync] Fatal error:", error)
-    return NextResponse.json(
-      { error: "Internal server error" },
-      { status: 500 }
-    )
+    return NextResponse.json({ error: "Internal server error" }, { status: 500 })
   }
 }

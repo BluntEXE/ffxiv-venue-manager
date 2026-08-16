@@ -15,14 +15,16 @@ export function queueShiftReminder(
   const reminderAt = new Date(scheduledStart.getTime() - 60 * 60 * 1000)
   if (reminderAt <= new Date()) return
 
-  return prisma.pendingNotification.create({
-    data: {
-      userId,
-      type: "SHIFT_REMINDER",
-      title: "Shift starting soon",
-      body: `Your shift at ${venueName} starts in 1 hour.`,
-      data: { venueId, shiftId },
-      scheduledFor: reminderAt,
-    },
-  }).catch(() => {}) // non-blocking, matches existing behavior
+  return prisma.pendingNotification
+    .create({
+      data: {
+        userId,
+        type: "SHIFT_REMINDER",
+        title: "Shift starting soon",
+        body: `Your shift at ${venueName} starts in 1 hour.`,
+        data: { venueId, shiftId },
+        scheduledFor: reminderAt,
+      },
+    })
+    .catch(() => {}) // non-blocking, matches existing behavior
 }

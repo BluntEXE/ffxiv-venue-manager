@@ -31,9 +31,10 @@ export default async function DashboardPage() {
     orderBy: { createdAt: "desc" },
   })
 
-  const hasLinkedCharacter = (await prisma.userCharacter.count({
-    where: { userId: session.user.id },
-  })) > 0
+  const hasLinkedCharacter =
+    (await prisma.userCharacter.count({
+      where: { userId: session.user.id },
+    })) > 0
 
   const venues = await prisma.venue.findMany({
     where: {
@@ -74,7 +75,9 @@ export default async function DashboardPage() {
           <Building2 className="h-12 w-12 text-[var(--xiv-blue)] mx-auto opacity-60" />
           <div>
             <p className="font-cinzel text-lg font-semibold tracking-wide">No Venues Yet</p>
-            <p className="text-muted-foreground text-sm mt-1">Create your first venue to start managing events, staff, and more.</p>
+            <p className="text-muted-foreground text-sm mt-1">
+              Create your first venue to start managing events, staff, and more.
+            </p>
           </div>
           <Button asChild className="xiv-cta">
             <Link href="/venues/new">Create Your First Venue</Link>
@@ -82,63 +85,68 @@ export default async function DashboardPage() {
         </div>
       ) : (
         <>
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 md:gap-6">
-          {venues.map((venue: typeof venues[number]) => {
-            const role = venue.memberships[0].role
-            const roleClass = roleColors[role] || roleColors.STAFF
-            return (
-              <Link key={venue.id} href={`/dashboard/${venue.slug}`} className="group block">
-                <div className="xiv-card rounded-xl p-5 h-full flex flex-col gap-4 cursor-pointer transition-all duration-200 group-hover:border-[rgba(0,180,255,0.4)] group-hover:shadow-[0_0_28px_rgba(0,180,255,0.1)]">
-                  {/* Header */}
-                  <div className="flex items-start justify-between gap-3">
-                    <div className="min-w-0">
-                      <p className="font-cinzel font-semibold text-base tracking-wide truncate">{venue.name}</p>
-                      <p className="text-xs text-muted-foreground mt-0.5">{venue.world} · {venue.dataCenter}</p>
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 md:gap-6">
+            {venues.map((venue: (typeof venues)[number]) => {
+              const role = venue.memberships[0].role
+              const roleClass = roleColors[role] || roleColors.STAFF
+              return (
+                <Link key={venue.id} href={`/dashboard/${venue.slug}`} className="group block">
+                  <div className="xiv-card rounded-xl p-5 h-full flex flex-col gap-4 cursor-pointer transition-all duration-200 group-hover:border-[rgba(0,180,255,0.4)] group-hover:shadow-[0_0_28px_rgba(0,180,255,0.1)]">
+                    {/* Header */}
+                    <div className="flex items-start justify-between gap-3">
+                      <div className="min-w-0">
+                        <p className="font-cinzel font-semibold text-base tracking-wide truncate">{venue.name}</p>
+                        <p className="text-xs text-muted-foreground mt-0.5">
+                          {venue.world} · {venue.dataCenter}
+                        </p>
+                      </div>
+                      <span className={`text-xs font-medium px-2 py-0.5 rounded-full border shrink-0 ${roleClass}`}>
+                        {role}
+                      </span>
                     </div>
-                    <span className={`text-xs font-medium px-2 py-0.5 rounded-full border shrink-0 ${roleClass}`}>
-                      {role}
-                    </span>
-                  </div>
 
-                  {/* Description */}
-                  {venue.description && (
-                    <p className="text-sm text-muted-foreground line-clamp-2 leading-relaxed">{venue.description}</p>
-                  )}
+                    {/* Description */}
+                    {venue.description && (
+                      <p className="text-sm text-muted-foreground line-clamp-2 leading-relaxed">{venue.description}</p>
+                    )}
 
-                  {/* Stats */}
-                  <div className="flex gap-4 mt-auto">
-                    <div className="flex items-center gap-1.5 text-sm">
-                      <Building2 className="h-3.5 w-3.5 text-[var(--xiv-blue)] opacity-70" />
-                      <span className="font-semibold">{venue._count.events}</span>
-                      <span className="text-muted-foreground">Events</span>
+                    {/* Stats */}
+                    <div className="flex gap-4 mt-auto">
+                      <div className="flex items-center gap-1.5 text-sm">
+                        <Building2 className="h-3.5 w-3.5 text-[var(--xiv-blue)] opacity-70" />
+                        <span className="font-semibold">{venue._count.events}</span>
+                        <span className="text-muted-foreground">Events</span>
+                      </div>
+                      <div className="flex items-center gap-1.5 text-sm">
+                        <Users className="h-3.5 w-3.5 text-[var(--xiv-blue)] opacity-70" />
+                        <span className="font-semibold">{venue._count.memberships}</span>
+                        <span className="text-muted-foreground">Staff</span>
+                      </div>
                     </div>
-                    <div className="flex items-center gap-1.5 text-sm">
-                      <Users className="h-3.5 w-3.5 text-[var(--xiv-blue)] opacity-70" />
-                      <span className="font-semibold">{venue._count.memberships}</span>
-                      <span className="text-muted-foreground">Staff</span>
+
+                    {/* CTA */}
+                    <div className="flex items-center justify-between pt-3 border-t border-[rgba(0,180,255,0.1)]">
+                      <span className="text-sm text-[var(--xiv-blue)] font-medium">Manage Venue</span>
+                      <ChevronRight className="h-4 w-4 text-[var(--xiv-blue)] transition-transform group-hover:translate-x-1" />
                     </div>
                   </div>
-
-                  {/* CTA */}
-                  <div className="flex items-center justify-between pt-3 border-t border-[rgba(0,180,255,0.1)]">
-                    <span className="text-sm text-[var(--xiv-blue)] font-medium">Manage Venue</span>
-                    <ChevronRight className="h-4 w-4 text-[var(--xiv-blue)] transition-transform group-hover:translate-x-1" />
-                  </div>
-                </div>
-              </Link>
-            )
-          })}
-        </div>
-
-        {/* Add venue nudge when user has few venues */}
-        {venues.length < 3 && (
-          <div className="mt-6 flex items-center justify-center">
-            <Link href="/venues/new" className="group flex items-center gap-2 text-sm text-muted-foreground hover:text-[var(--xiv-blue)] transition-colors">
-              <Plus className="h-4 w-4 opacity-50 group-hover:opacity-100 transition-opacity" />
-              Add another venue
-            </Link>
+                </Link>
+              )
+            })}
           </div>
-        )}
+
+          {/* Add venue nudge when user has few venues */}
+          {venues.length < 3 && (
+            <div className="mt-6 flex items-center justify-center">
+              <Link
+                href="/venues/new"
+                className="group flex items-center gap-2 text-sm text-muted-foreground hover:text-[var(--xiv-blue)] transition-colors"
+              >
+                <Plus className="h-4 w-4 opacity-50 group-hover:opacity-100 transition-opacity" />
+                Add another venue
+              </Link>
+            </div>
+          )}
         </>
       )}
     </div>

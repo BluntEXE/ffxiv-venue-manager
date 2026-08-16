@@ -12,8 +12,14 @@ const createTemplateSchema = z.object({
   description: validators.eventDescription,
   eventType: z.enum(["PERFORMANCE", "GAME_NIGHT", "SPECIAL", "SOCIAL", "PRIVATE", "OTHER"]),
   timezone: z.string().default("UTC"),
-  defaultStartTime: z.string().regex(/^([01]\d|2[0-3]):([0-5]\d)$/, "Invalid time format. Use HH:MM").default("19:00"),
-  defaultEndTime: z.string().regex(/^([01]\d|2[0-3]):([0-5]\d)$/, "Invalid time format. Use HH:MM").default("22:00"),
+  defaultStartTime: z
+    .string()
+    .regex(/^([01]\d|2[0-3]):([0-5]\d)$/, "Invalid time format. Use HH:MM")
+    .default("19:00"),
+  defaultEndTime: z
+    .string()
+    .regex(/^([01]\d|2[0-3]):([0-5]\d)$/, "Invalid time format. Use HH:MM")
+    .default("22:00"),
 })
 
 // GET - List all event templates for a venue
@@ -46,15 +52,12 @@ export const GET = withRateLimit<{ params: Promise<{ venueId: string }> }>(
         where: {
           userId: session.user.id,
           venueId: venue.id,
-        status: "active",
+          status: "active",
         },
       })
 
       if (!membership) {
-        return NextResponse.json(
-          { error: "You don't have access to this venue" },
-          { status: 403 }
-        )
+        return NextResponse.json({ error: "You don't have access to this venue" }, { status: 403 })
       }
 
       // Get all templates for this venue
@@ -79,10 +82,7 @@ export const GET = withRateLimit<{ params: Promise<{ venueId: string }> }>(
       return NextResponse.json(templates)
     } catch (error) {
       console.error("Error fetching event templates:", error)
-      return NextResponse.json(
-        { error: "Internal server error" },
-        { status: 500 }
-      )
+      return NextResponse.json({ error: "Internal server error" }, { status: 500 })
     }
   },
   { requests: 60, window: "1 m" }
@@ -118,15 +118,12 @@ export const POST = withRateLimit<{ params: Promise<{ venueId: string }> }>(
         where: {
           userId: session.user.id,
           venueId: venue.id,
-        status: "active",
+          status: "active",
         },
       })
 
       if (!membership || (membership.role !== "OWNER" && membership.role !== "MANAGER")) {
-        return NextResponse.json(
-          { error: "You don't have permission to create templates" },
-          { status: 403 }
-        )
+        return NextResponse.json({ error: "You don't have permission to create templates" }, { status: 403 })
       }
 
       const body = await request.json()
@@ -158,17 +155,11 @@ export const POST = withRateLimit<{ params: Promise<{ venueId: string }> }>(
       return NextResponse.json(template, { status: 201 })
     } catch (error) {
       if (error instanceof z.ZodError) {
-        return NextResponse.json(
-          { error: "Validation error", details: error.issues },
-          { status: 400 }
-        )
+        return NextResponse.json({ error: "Validation error", details: error.issues }, { status: 400 })
       }
 
       console.error("Error creating event template:", error)
-      return NextResponse.json(
-        { error: "Internal server error" },
-        { status: 500 }
-      )
+      return NextResponse.json({ error: "Internal server error" }, { status: 500 })
     }
   },
   { requests: 10, window: "1 m" }

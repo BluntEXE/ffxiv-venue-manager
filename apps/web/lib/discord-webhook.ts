@@ -32,9 +32,7 @@ function isValidDiscordWebhookUrl(url: string | null | undefined): boolean {
     const parsed = new URL(url)
     return (
       parsed.protocol === "https:" &&
-      ["discord.com", "discordapp.com", "canary.discord.com", "ptb.discord.com"].includes(
-        parsed.hostname
-      ) &&
+      ["discord.com", "discordapp.com", "canary.discord.com", "ptb.discord.com"].includes(parsed.hostname) &&
       parsed.pathname.startsWith("/api/webhooks/")
     )
   } catch {
@@ -65,12 +63,7 @@ export interface DiscordWebhookPayload {
 }
 
 export type WebhookType =
-  | "taskCreated"
-  | "taskCompleted"
-  | "partakeEvent"
-  | "saleLogged"
-  | "dailySalesSummary"
-  | "staffJoined"
+  "taskCreated" | "taskCompleted" | "partakeEvent" | "saleLogged" | "dailySalesSummary" | "staffJoined"
 
 type WebhookGroup = "staff" | "events" | "revenue"
 
@@ -100,10 +93,7 @@ export interface VenueWebhookConfig {
 /**
  * Get the webhook URL for a specific notification type
  */
-export function getWebhookUrlForType(
-  config: VenueWebhookConfig,
-  webhookType: WebhookType
-): string | null {
+export function getWebhookUrlForType(config: VenueWebhookConfig, webhookType: WebhookType): string | null {
   // Check if this webhook type is enabled
   if (config.webhooks && config.webhooks[webhookType] === false) {
     return null
@@ -124,10 +114,7 @@ export function getWebhookUrlForType(
 /**
  * Send a message to Discord via webhook
  */
-export async function sendDiscordWebhook(
-  webhookUrl: string | null,
-  payload: DiscordWebhookPayload
-): Promise<boolean> {
+export async function sendDiscordWebhook(webhookUrl: string | null, payload: DiscordWebhookPayload): Promise<boolean> {
   if (!webhookUrl) {
     console.warn("Discord webhook URL not provided")
     return false
@@ -550,10 +537,7 @@ export function formatDailySalesSummaryEmbed(summary: {
 /**
  * Format a staff joined notification
  */
-export function formatStaffJoinedEmbed(staff: {
-  name: string | null
-  role: string
-}): DiscordEmbed {
+export function formatStaffJoinedEmbed(staff: { name: string | null; role: string }): DiscordEmbed {
   // Sanitize user inputs
   const safeName = sanitizeForDiscord(staff.name, 256)
 

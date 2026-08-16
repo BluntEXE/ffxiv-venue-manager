@@ -48,10 +48,7 @@ export async function POST(request: NextRequest) {
     })
 
     if (existing && existing.userId !== auth.userId) {
-      return NextResponse.json(
-        { error: "That character is already linked to a different account" },
-        { status: 409 }
-      )
+      return NextResponse.json({ error: "That character is already linked to a different account" }, { status: 409 })
     }
 
     if (existing) {

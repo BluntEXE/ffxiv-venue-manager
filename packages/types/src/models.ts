@@ -3,12 +3,17 @@
 // Decimal fields use number | string (Prisma Decimal serialises to string over JSON).
 
 import type {
-  MembershipRole, MembershipStatus,
-  EventType, EventStatus,
+  MembershipRole,
+  MembershipStatus,
+  EventType,
+  EventStatus,
   PatronAction,
-  TaskStatus, TaskPriority,
-  PaymentType, WebhookEvent,
-  FeedbackCategory, FeedbackStatus,
+  TaskStatus,
+  TaskPriority,
+  PaymentType,
+  WebhookEvent,
+  FeedbackCategory,
+  FeedbackStatus,
   ShiftStatus,
 } from "./enums"
 

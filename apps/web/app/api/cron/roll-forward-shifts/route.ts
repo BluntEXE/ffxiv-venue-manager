@@ -58,12 +58,7 @@ export async function GET(request: Request) {
       const count = occurrencesToFillWindow(rule, WINDOW_WEEKS - weeksRemaining)
       if (count <= 0) continue
 
-      const occurrences = generateOccurrences(
-        latestChild.scheduledStart,
-        latestChild.scheduledEnd,
-        rule,
-        count
-      )
+      const occurrences = generateOccurrences(latestChild.scheduledStart, latestChild.scheduledEnd, rule, count)
 
       const created = await prisma.$transaction(
         occurrences.map((o) =>

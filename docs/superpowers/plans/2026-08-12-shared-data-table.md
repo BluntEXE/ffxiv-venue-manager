@@ -13,6 +13,7 @@
 ## Task 1: Build `DataTable` primitive
 
 **Files:**
+
 - Create: `apps/web/components/ui/data-table.tsx`
 - Test: none (this app's Vitest config uses `environment: "node"`, no jsdom — component rendering isn't practically unit-testable here; verification is the manual QA in Task 6)
 
@@ -96,6 +97,7 @@ git commit -m "feat(web): add shared DataTable primitive"
 ## Task 2: Migrate `ban-list-manager.tsx` (smallest file, do first)
 
 **Files:**
+
 - Modify: `apps/web/components/ban-list-manager.tsx`
 
 - [ ] **Step 1: Read the full current file**
@@ -161,6 +163,7 @@ git commit -m "refactor(web): migrate ban-list-manager onto shared DataTable"
 ## Task 3: Migrate `rooms-board.tsx`
 
 **Files:**
+
 - Modify: `apps/web/components/rooms-board.tsx`
 
 - [ ] **Step 1: Read the full current file**
@@ -221,6 +224,7 @@ git commit -m "refactor(web): migrate rooms-board onto shared DataTable"
 ## Task 4: Migrate `patron-profiles-table.tsx`
 
 **Files:**
+
 - Modify: `apps/web/components/patron-profiles-table.tsx`
 
 - [ ] **Step 1: Read the full current file**
@@ -282,6 +286,7 @@ git commit -m "refactor(web): migrate patron-profiles-table onto shared DataTabl
 ## Task 5: Migrate `staff-table.tsx` (the styling outlier — also reconciles onto `.dtable`)
 
 **Files:**
+
 - Modify: `apps/web/components/staff-table.tsx`
 
 This file currently uses `className="w-full border-collapse"` on the `<table>` and inline Tailwind `hidden sm:table-cell` per hidden column, instead of the `.dtable`/`.hide` classes the other 3 files (and the new `DataTable` primitive) use. Migrating it onto `DataTable` fixes this inconsistency as a side effect — no separate styling task needed.
@@ -369,5 +374,6 @@ Visit `https://xivvenuemanager.com`, check Staff, Ban List, Rooms, and Patron Pr
 ---
 
 ## Deferred, not in this plan's scope
+
 - Sort, pagination, and search/filter machinery for `DataTable` — none of the 4 current callers need it; add only if/when a caller genuinely requires it, not speculatively.
 - A generic "no rows match your filter" vs. "no rows exist at all" distinction in `emptyMessage` — none of the 4 files currently distinguish these cases (per what was read during planning); revisit only if a caller's actual behavior turns out to need it once its file is read in full during implementation.

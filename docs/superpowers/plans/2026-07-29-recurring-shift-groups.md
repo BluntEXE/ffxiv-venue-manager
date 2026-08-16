@@ -24,6 +24,7 @@
 ### Task 1: Schema — add `slotGroupId` to `Shift`
 
 **Files:**
+
 - Modify: `apps/web/prisma/schema.prisma` (the `Shift` model — same block Task 1 of the base plan already edited)
 
 - [ ] **Step 1: Add the field**
@@ -103,6 +104,7 @@ git commit -m "feat(shifts): add slotGroupId to Shift for grouped recurring slot
 ### Task 2: Shift creation API — accept and store `slotGroupId`
 
 **Files:**
+
 - Modify: `apps/web/app/api/venues/[venueId]/shifts/route.ts`
 
 - [ ] **Step 1: Extend the request schema**
@@ -110,30 +112,28 @@ git commit -m "feat(shifts): add slotGroupId to Shift for grouped recurring slot
 Find:
 
 ```typescript
-const createShiftSchema = z
-  .object({
-    membershipId: z.string().min(1).optional(),
-    roleId: z.string().min(1).optional(),
-    scheduledStart: z.string().datetime(),
-    scheduledEnd: z.string().datetime(),
-    notes: z.string().optional(),
-    recurrenceRule: z.enum(["WEEKLY", "BIWEEKLY", "MONTHLY"]).optional(),
-  })
+const createShiftSchema = z.object({
+  membershipId: z.string().min(1).optional(),
+  roleId: z.string().min(1).optional(),
+  scheduledStart: z.string().datetime(),
+  scheduledEnd: z.string().datetime(),
+  notes: z.string().optional(),
+  recurrenceRule: z.enum(["WEEKLY", "BIWEEKLY", "MONTHLY"]).optional(),
+})
 ```
 
 Replace with:
 
 ```typescript
-const createShiftSchema = z
-  .object({
-    membershipId: z.string().min(1).optional(),
-    roleId: z.string().min(1).optional(),
-    scheduledStart: z.string().datetime(),
-    scheduledEnd: z.string().datetime(),
-    notes: z.string().optional(),
-    recurrenceRule: z.enum(["WEEKLY", "BIWEEKLY", "MONTHLY"]).optional(),
-    slotGroupId: z.string().optional(),
-  })
+const createShiftSchema = z.object({
+  membershipId: z.string().min(1).optional(),
+  roleId: z.string().min(1).optional(),
+  scheduledStart: z.string().datetime(),
+  scheduledEnd: z.string().datetime(),
+  notes: z.string().optional(),
+  recurrenceRule: z.enum(["WEEKLY", "BIWEEKLY", "MONTHLY"]).optional(),
+  slotGroupId: z.string().optional(),
+})
 ```
 
 (The `.refine(...)` block right after stays exactly as-is — untouched.)
@@ -143,36 +143,36 @@ const createShiftSchema = z
 Find:
 
 ```typescript
-    const shift = await prisma.shift.create({
-      data: {
-        venueId: venue.id,
-        membershipId: parsed.data.membershipId ?? null,
-        roleId: verifiedRoleId,
-        status: parsed.data.membershipId ? "SCHEDULED" : "OPEN",
-        scheduledStart,
-        scheduledEnd,
-        notes: parsed.data.notes ?? null,
-        recurrenceRule: recurrenceRule ?? null,
-      },
-    })
+const shift = await prisma.shift.create({
+  data: {
+    venueId: venue.id,
+    membershipId: parsed.data.membershipId ?? null,
+    roleId: verifiedRoleId,
+    status: parsed.data.membershipId ? "SCHEDULED" : "OPEN",
+    scheduledStart,
+    scheduledEnd,
+    notes: parsed.data.notes ?? null,
+    recurrenceRule: recurrenceRule ?? null,
+  },
+})
 ```
 
 Replace with:
 
 ```typescript
-    const shift = await prisma.shift.create({
-      data: {
-        venueId: venue.id,
-        membershipId: parsed.data.membershipId ?? null,
-        roleId: verifiedRoleId,
-        status: parsed.data.membershipId ? "SCHEDULED" : "OPEN",
-        scheduledStart,
-        scheduledEnd,
-        notes: parsed.data.notes ?? null,
-        recurrenceRule: recurrenceRule ?? null,
-        slotGroupId: parsed.data.slotGroupId ?? null,
-      },
-    })
+const shift = await prisma.shift.create({
+  data: {
+    venueId: venue.id,
+    membershipId: parsed.data.membershipId ?? null,
+    roleId: verifiedRoleId,
+    status: parsed.data.membershipId ? "SCHEDULED" : "OPEN",
+    scheduledStart,
+    scheduledEnd,
+    notes: parsed.data.notes ?? null,
+    recurrenceRule: recurrenceRule ?? null,
+    slotGroupId: parsed.data.slotGroupId ?? null,
+  },
+})
 ```
 
 Children (the `prisma.shift.createMany` block right below, for recurrence) do **not** get `slotGroupId` — only parents carry it, per the design (children are found via `parentShiftId`, not `slotGroupId`). Do not add it there.
@@ -194,6 +194,7 @@ git commit -m "feat(shifts): accept and store slotGroupId on shift creation"
 ### Task 3: `CreateShiftDialog` — combine quantity with repeating
 
 **Files:**
+
 - Modify: `apps/web/components/create-shift-dialog.tsx`
 
 - [ ] **Step 1: Let quantity show alongside repeating**
@@ -201,47 +202,49 @@ git commit -m "feat(shifts): accept and store slotGroupId on shift creation"
 Find:
 
 ```tsx
-          {mode === "open" && !repeating && (
-            <div className="space-y-2">
-              <Label htmlFor="quantity">How many open slots?</Label>
-              <Input
-                id="quantity"
-                type="number"
-                min={1}
-                max={20}
-                value={quantity}
-                onChange={(e) => setQuantity(Number(e.target.value))}
-                className="w-24"
-              />
-              <p className="text-xs text-muted-foreground">
-                Creates this many identical open shifts for staff to claim.
-              </p>
-            </div>
-          )}
+{
+  mode === "open" && !repeating && (
+    <div className="space-y-2">
+      <Label htmlFor="quantity">How many open slots?</Label>
+      <Input
+        id="quantity"
+        type="number"
+        min={1}
+        max={20}
+        value={quantity}
+        onChange={(e) => setQuantity(Number(e.target.value))}
+        className="w-24"
+      />
+      <p className="text-xs text-muted-foreground">Creates this many identical open shifts for staff to claim.</p>
+    </div>
+  )
+}
 ```
 
 Replace with:
 
 ```tsx
-          {mode === "open" && (
-            <div className="space-y-2">
-              <Label htmlFor="quantity">How many open slots?</Label>
-              <Input
-                id="quantity"
-                type="number"
-                min={1}
-                max={20}
-                value={quantity}
-                onChange={(e) => setQuantity(Number(e.target.value))}
-                className="w-24"
-              />
-              <p className="text-xs text-muted-foreground">
-                {repeating
-                  ? "Creates this many independent repeating slots — each gets its own weekly/biweekly/monthly instances."
-                  : "Creates this many identical open shifts for staff to claim."}
-              </p>
-            </div>
-          )}
+{
+  mode === "open" && (
+    <div className="space-y-2">
+      <Label htmlFor="quantity">How many open slots?</Label>
+      <Input
+        id="quantity"
+        type="number"
+        min={1}
+        max={20}
+        value={quantity}
+        onChange={(e) => setQuantity(Number(e.target.value))}
+        className="w-24"
+      />
+      <p className="text-xs text-muted-foreground">
+        {repeating
+          ? "Creates this many independent repeating slots — each gets its own weekly/biweekly/monthly instances."
+          : "Creates this many identical open shifts for staff to claim."}
+      </p>
+    </div>
+  )
+}
 ```
 
 - [ ] **Step 2: Typecheck**
@@ -301,6 +304,7 @@ Expected: no errors
 - [ ] **Step 5: Manually verify in the browser**
 
 Run: `cd apps/web && npm run dev`, open the shifts page, click "Schedule Shift":
+
 - Switch to "Leave open", set quantity to 4, toggle Repeating on, pick Weekly, pick a role, fill in date/time, submit
 - Confirm the dialog closes with no error, and the button read "Create 4 Shifts" before submitting
 - Query the DB for the 4 newly-created parent shifts (same `scheduledStart`, different `id`s) and confirm they all share the same `slotGroupId`, and that each has its own 6 children via `parentShiftId` (24 child rows total): `SELECT id, "slotGroupId", "parentShiftId" FROM shifts WHERE "createdAt" > now() - interval '2 minutes' ORDER BY "slotGroupId", "parentShiftId" NULLS FIRST;`
@@ -318,6 +322,7 @@ git commit -m "feat(shifts): let quantity and repeating combine, tagged with a s
 ### Task 4: `cancel-group` endpoint
 
 **Files:**
+
 - Create: `apps/web/app/api/venues/[venueId]/shifts/[shiftId]/cancel-group/route.ts`
 
 - [ ] **Step 1: Create the route**
@@ -419,6 +424,7 @@ Using the 4-slot group created in Task 3 Step 5:
 curl -s -X POST http://localhost:3000/api/venues/<venueId>/shifts/<oneOfTheFourParentIds>/cancel-group \
   -H "Cookie: next-auth.session-token=<token>"
 ```
+
 Expected: `{"cancelled":28,"seriesCancelled":4}` (4 parents × 7 rows each [1 parent + 6 weekly children] = 28)
 
 Verify: `SELECT status, count(*) FROM shifts WHERE "slotGroupId" = '<theGroupId>' OR "parentShiftId" IN (SELECT id FROM shifts WHERE "slotGroupId" = '<theGroupId>') GROUP BY status;`
@@ -438,6 +444,7 @@ git commit -m "feat(shifts): add cancel-group endpoint for grouped recurring slo
 ### Task 5: UI — second "cancel all slots" button
 
 **Files:**
+
 - Modify: `apps/web/components/delete-shift-button.tsx`
 
 - [ ] **Step 1: Add a `slotGroupId` prop and a second action**
@@ -559,6 +566,7 @@ git commit -m "feat(shifts): add cancel-all-slots button for grouped recurring s
 ### Task 6: Wire `slotGroupId` through the shifts page
 
 **Files:**
+
 - Modify: `apps/web/app/dashboard/[slug]/shifts/page.tsx`
 
 - [ ] **Step 1: Pass the prop**
@@ -566,33 +574,37 @@ git commit -m "feat(shifts): add cancel-all-slots button for grouped recurring s
 Find:
 
 ```tsx
-                          {canManage && (
-                            <DeleteShiftButton
-                              venueSlug={slug}
-                              shiftId={shift.id}
-                              hasPayroll={false}
-                              isRecurring={Boolean(shift.recurrenceRule || shift.parentShiftId)}
-                            />
-                          )}
+{
+  canManage && (
+    <DeleteShiftButton
+      venueSlug={slug}
+      shiftId={shift.id}
+      hasPayroll={false}
+      isRecurring={Boolean(shift.recurrenceRule || shift.parentShiftId)}
+    />
+  )
+}
 ```
 
 Replace with:
 
 ```tsx
-                          {canManage && (
-                            <DeleteShiftButton
-                              venueSlug={slug}
-                              shiftId={shift.id}
-                              hasPayroll={false}
-                              isRecurring={Boolean(shift.recurrenceRule || shift.parentShiftId)}
-                              slotGroupId={shift.slotGroupId}
-                            />
-                          )}
+{
+  canManage && (
+    <DeleteShiftButton
+      venueSlug={slug}
+      shiftId={shift.id}
+      hasPayroll={false}
+      isRecurring={Boolean(shift.recurrenceRule || shift.parentShiftId)}
+      slotGroupId={shift.slotGroupId}
+    />
+  )
+}
 ```
 
 `shift.slotGroupId` is already present on this object — the page's Prisma query uses `include` (not `select`), so every new scalar field on `Shift` (Task 1) comes along automatically, same as `recurrenceRule`/`parentShiftId` did in the base feature. No query change needed.
 
-Note: for a shift that's a *child* in the group (not the parent), `shift.slotGroupId` will be `null` on that row directly (only parents carry it) — but `DeleteShiftButton`'s "cancel all slots" button only needs to render when clicking a *parent* shows it, which is the only row rendered in the open-shifts grid for week 1 of each series (children of future weeks aren't shown as a separate clickable row in the current week's view). This matches the existing `isRecurring` check, which already only lights up correctly for whichever row is being rendered — no additional logic needed here, just confirm this during manual testing (Step 2).
+Note: for a shift that's a _child_ in the group (not the parent), `shift.slotGroupId` will be `null` on that row directly (only parents carry it) — but `DeleteShiftButton`'s "cancel all slots" button only needs to render when clicking a _parent_ shows it, which is the only row rendered in the open-shifts grid for week 1 of each series (children of future weeks aren't shown as a separate clickable row in the current week's view). This matches the existing `isRecurring` check, which already only lights up correctly for whichever row is being rendered — no additional logic needed here, just confirm this during manual testing (Step 2).
 
 - [ ] **Step 2: Typecheck**
 
@@ -602,6 +614,7 @@ Expected: no errors
 - [ ] **Step 3: Manually verify in the browser**
 
 With the dev server running and the 4-slot Greeter group still in the DB (recreate it if Task 4's verification cancelled it):
+
 - Open the shifts grid on the week containing the group's parent shifts
 - Confirm each of the 4 Greeter chips shows **two** amber icons (`Repeat` and `Layers`)
 - Confirm a plain single recurring shift (no group) still shows only the one `Repeat` icon

@@ -15,13 +15,7 @@ import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Textarea } from "@/components/ui/textarea"
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select"
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { MessageSquare, Check } from "lucide-react"
 import { toast } from "sonner"
 import { apiFetch, ApiError } from "@/lib/api-fetch"
@@ -104,9 +98,7 @@ export function FeedbackDialog() {
               <Check className="h-8 w-8 text-emerald-500" />
             </div>
             <h3 className="text-lg font-semibold mb-2">Thank you!</h3>
-            <p className="text-sm text-muted-foreground text-center">
-              Your feedback has been submitted successfully.
-            </p>
+            <p className="text-sm text-muted-foreground text-center">Your feedback has been submitted successfully.</p>
           </div>
         ) : (
           <form onSubmit={handleSubmit}>
@@ -149,25 +141,15 @@ export function FeedbackDialog() {
                   rows={6}
                   maxLength={2000}
                 />
-                <p className="text-xs text-muted-foreground text-right">
-                  {description.length}/2000 characters
-                </p>
+                <p className="text-xs text-muted-foreground text-right">{description.length}/2000 characters</p>
               </div>
             </div>
 
             <DialogFooter>
-              <Button
-                type="button"
-                variant="outline"
-                onClick={() => setIsOpen(false)}
-                disabled={isSubmitting}
-              >
+              <Button type="button" variant="outline" onClick={() => setIsOpen(false)} disabled={isSubmitting}>
                 Cancel
               </Button>
-              <Button
-                type="submit"
-                disabled={isSubmitting || !category || !subject || !description}
-              >
+              <Button type="submit" disabled={isSubmitting || !category || !subject || !description}>
                 {isSubmitting ? "Submitting..." : "Submit Feedback"}
               </Button>
             </DialogFooter>

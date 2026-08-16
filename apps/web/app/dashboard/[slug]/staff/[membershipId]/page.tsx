@@ -5,20 +5,8 @@ import { useRouter } from "next/navigation"
 import Link from "next/link"
 import { Button } from "@/components/ui/button"
 import { Label } from "@/components/ui/label"
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select"
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card"
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import {
   AlertDialog,
   AlertDialogAction,
@@ -73,11 +61,7 @@ const roleColors = {
   STAFF: "bg-emerald-500",
 }
 
-export default function ManageStaffMemberPage({
-  params,
-}: {
-  params: Promise<{ slug: string; membershipId: string }>
-}) {
+export default function ManageStaffMemberPage({ params }: { params: Promise<{ slug: string; membershipId: string }> }) {
   const router = useRouter()
   const [slug, setSlug] = useState<string>("")
   const [membershipId, setMembershipId] = useState<string>("")
@@ -183,18 +167,15 @@ export default function ManageStaffMemberPage({
       const venues = await venueResponse.json()
       const venue = venues.find((v: { slug: string }) => v.slug === slug)
 
-      const response = await fetch(
-        `/api/venues/${venue.id}/staff/${membershipId}`,
-        {
-          method: "PUT",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            role: selectedRole,
-            roleId: selectedCustomRole,
-            additionalRoleIds: selectedAdditionalRoleIds,
-          }),
-        }
-      )
+      const response = await fetch(`/api/venues/${venue.id}/staff/${membershipId}`, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          role: selectedRole,
+          roleId: selectedCustomRole,
+          additionalRoleIds: selectedAdditionalRoleIds,
+        }),
+      })
 
       if (!response.ok) {
         const data = await response.json()
@@ -228,12 +209,9 @@ export default function ManageStaffMemberPage({
       const venues = await venueResponse.json()
       const venue = venues.find((v: { slug: string }) => v.slug === slug)
 
-      const response = await fetch(
-        `/api/venues/${venue.id}/staff/${membershipId}`,
-        {
-          method: "DELETE",
-        }
-      )
+      const response = await fetch(`/api/venues/${venue.id}/staff/${membershipId}`, {
+        method: "DELETE",
+      })
 
       if (!response.ok) {
         const data = await response.json()
@@ -277,13 +255,21 @@ export default function ManageStaffMemberPage({
   }
 
   if (!slug || !membershipId) {
-    return <VenueLayoutClient slug={slug}><div className="page-inner"><PageLoading /></div></VenueLayoutClient>
+    return (
+      <VenueLayoutClient slug={slug}>
+        <div className="page-inner">
+          <PageLoading />
+        </div>
+      </VenueLayoutClient>
+    )
   }
 
   if (isLoading) {
     return (
       <VenueLayoutClient slug={slug}>
-        <div className="page-inner"><PageLoading text="Loading staff member..." /></div>
+        <div className="page-inner">
+          <PageLoading text="Loading staff member..." />
+        </div>
       </VenueLayoutClient>
     )
   }
@@ -307,156 +293,136 @@ export default function ManageStaffMemberPage({
 
   return (
     <VenueLayoutClient slug={slug}>
-    <div className="page-inner max-w-3xl">
-      {/* Header */}
-      <div className="mb-6 md:mb-8">
-        <h1 className="text-2xl md:text-4xl font-bold">Manage Staff Member</h1>
-        <p className="text-muted-foreground mt-2">
-          Update roles and permissions for this team member
-        </p>
-      </div>
+      <div className="page-inner max-w-3xl">
+        {/* Header */}
+        <div className="mb-6 md:mb-8">
+          <h1 className="text-2xl md:text-4xl font-bold">Manage Staff Member</h1>
+          <p className="text-muted-foreground mt-2">Update roles and permissions for this team member</p>
+        </div>
 
-      {/* Success Message */}
-      {success && (
-        <Alert className="mb-6 bg-emerald-500/10 border-emerald-500/20">
-          <AlertDescription className="text-emerald-400">
-            {success}
-          </AlertDescription>
-        </Alert>
-      )}
+        {/* Success Message */}
+        {success && (
+          <Alert className="mb-6 bg-emerald-500/10 border-emerald-500/20">
+            <AlertDescription className="text-emerald-400">{success}</AlertDescription>
+          </Alert>
+        )}
 
-      {/* Error Message */}
-      {error && (
-        <Alert className="mb-6 bg-destructive/10 border-destructive/20">
-          <AlertDescription className="text-destructive">{error}</AlertDescription>
-        </Alert>
-      )}
+        {/* Error Message */}
+        {error && (
+          <Alert className="mb-6 bg-destructive/10 border-destructive/20">
+            <AlertDescription className="text-destructive">{error}</AlertDescription>
+          </Alert>
+        )}
 
-      {/* Staff Member Info */}
-      <Card className="mb-6">
-        <CardHeader>
-          <CardTitle>Staff Information</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <div className="flex items-center gap-4">
-            <Avatar className="h-16 w-16">
-              <AvatarImage src={staffMember.user.image || undefined} />
-              <AvatarFallback>
-                {staffMember.user.name?.substring(0, 2).toUpperCase() || "??"}
-              </AvatarFallback>
-            </Avatar>
-            <div className="flex-1">
-              <p className="text-xl font-semibold">{staffMember.user.name}</p>
-              {staffMember.user.discordId && (
+        {/* Staff Member Info */}
+        <Card className="mb-6">
+          <CardHeader>
+            <CardTitle>Staff Information</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="flex items-center gap-4">
+              <Avatar className="h-16 w-16">
+                <AvatarImage src={staffMember.user.image || undefined} />
+                <AvatarFallback>{staffMember.user.name?.substring(0, 2).toUpperCase() || "??"}</AvatarFallback>
+              </Avatar>
+              <div className="flex-1">
+                <p className="text-xl font-semibold">{staffMember.user.name}</p>
+                {staffMember.user.discordId && (
+                  <p className="text-sm text-muted-foreground">Discord ID: {staffMember.user.discordId}</p>
+                )}
+              </div>
+              <div>
+                <Badge className={roleColors[staffMember.role]}>{staffMember.role}</Badge>
+                {staffMember.customRole && (
+                  <Badge variant="outline" className="ml-2">
+                    {staffMember.customRole.name}
+                  </Badge>
+                )}
+              </div>
+            </div>
+            <div className="mt-4 pt-4 border-t">
+              <p className="text-sm text-muted-foreground">Joined {format(new Date(staffMember.createdAt), "PPP")}</p>
+            </div>
+          </CardContent>
+        </Card>
+
+        {/* Role Management */}
+        <Card className="mb-6">
+          <CardHeader>
+            <CardTitle>Role Management</CardTitle>
+            <CardDescription>Update this staff member's base role and custom role</CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-6">
+            {/* Base Role */}
+            <div className="space-y-2">
+              <Label htmlFor="base-role">Base Role</Label>
+              <Select
+                value={selectedRole}
+                onValueChange={(value: string) => setSelectedRole(value as "OWNER" | "MANAGER" | "STAFF")}
+                disabled={isSaving}
+              >
+                <SelectTrigger id="base-role">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="STAFF">Staff</SelectItem>
+                  <SelectItem value="MANAGER">Manager</SelectItem>
+                  <SelectItem value="OWNER">Owner</SelectItem>
+                </SelectContent>
+              </Select>
+              <div className="text-sm text-muted-foreground space-y-1">
+                <p>
+                  <strong>Staff:</strong> Can view events, log sales, view tasks
+                </p>
+                <p>
+                  <strong>Manager:</strong> Can create/edit events, manage tasks, view reports
+                </p>
+                <p>
+                  <strong>Owner:</strong> Full access to all venue features
+                </p>
+              </div>
+            </div>
+
+            {/* Custom Role */}
+            <div className="space-y-2">
+              <Label htmlFor="custom-role">Custom Role (Optional)</Label>
+              <Select
+                value={selectedCustomRole || "none"}
+                onValueChange={(value) => setSelectedCustomRole(value === "none" ? null : value)}
+                disabled={isSaving}
+              >
+                <SelectTrigger id="custom-role">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="none">No custom role</SelectItem>
+                  {customRoles.map((role) => (
+                    <SelectItem key={role.id} value={role.id}>
+                      {role.name}
+                      {role.responsibilities && ` - ${role.responsibilities}`}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+              {customRoles.length === 0 && (
                 <p className="text-sm text-muted-foreground">
-                  Discord ID: {staffMember.user.discordId}
+                  No custom roles available.{" "}
+                  <Link href={`/dashboard/${slug}/staff/roles`} className="text-blue-600 hover:underline">
+                    Create one
+                  </Link>
                 </p>
               )}
             </div>
-            <div>
-              <Badge className={roleColors[staffMember.role]}>
-                {staffMember.role}
-              </Badge>
-              {staffMember.customRole && (
-                <Badge variant="outline" className="ml-2">
-                  {staffMember.customRole.name}
-                </Badge>
-              )}
-            </div>
-          </div>
-          <div className="mt-4 pt-4 border-t">
-            <p className="text-sm text-muted-foreground">
-              Joined {format(new Date(staffMember.createdAt), "PPP")}
-            </p>
-          </div>
-        </CardContent>
-      </Card>
 
-      {/* Role Management */}
-      <Card className="mb-6">
-        <CardHeader>
-          <CardTitle>Role Management</CardTitle>
-          <CardDescription>
-            Update this staff member's base role and custom role
-          </CardDescription>
-        </CardHeader>
-        <CardContent className="space-y-6">
-          {/* Base Role */}
-          <div className="space-y-2">
-            <Label htmlFor="base-role">Base Role</Label>
-            <Select
-              value={selectedRole}
-              onValueChange={(value: string) => setSelectedRole(value as "OWNER" | "MANAGER" | "STAFF")}
-              disabled={isSaving}
-            >
-              <SelectTrigger id="base-role">
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="STAFF">Staff</SelectItem>
-                <SelectItem value="MANAGER">Manager</SelectItem>
-                <SelectItem value="OWNER">Owner</SelectItem>
-              </SelectContent>
-            </Select>
-            <div className="text-sm text-muted-foreground space-y-1">
-              <p>
-                <strong>Staff:</strong> Can view events, log sales, view tasks
+            {/* Additional Roles */}
+            <div className="space-y-2">
+              <Label>Additional Roles</Label>
+              <p className="text-xs text-muted-foreground">
+                Lets this person provide services and fill shifts for these roles too, on top of their custom role
+                above.
               </p>
-              <p>
-                <strong>Manager:</strong> Can create/edit events, manage tasks,
-                view reports
-              </p>
-              <p>
-                <strong>Owner:</strong> Full access to all venue features
-              </p>
-            </div>
-          </div>
-
-          {/* Custom Role */}
-          <div className="space-y-2">
-            <Label htmlFor="custom-role">Custom Role (Optional)</Label>
-            <Select
-              value={selectedCustomRole || "none"}
-              onValueChange={(value) =>
-                setSelectedCustomRole(value === "none" ? null : value)
-              }
-              disabled={isSaving}
-            >
-              <SelectTrigger id="custom-role">
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="none">No custom role</SelectItem>
-                {customRoles.map((role) => (
-                  <SelectItem key={role.id} value={role.id}>
-                    {role.name}
-                    {role.responsibilities && ` - ${role.responsibilities}`}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-            {customRoles.length === 0 && (
-              <p className="text-sm text-muted-foreground">
-                No custom roles available.{" "}
-                <Link
-                  href={`/dashboard/${slug}/staff/roles`}
-                  className="text-blue-600 hover:underline"
-                >
-                  Create one
-                </Link>
-              </p>
-            )}
-          </div>
-
-          {/* Additional Roles */}
-          <div className="space-y-2">
-            <Label>Additional Roles</Label>
-            <p className="text-xs text-muted-foreground">
-              Lets this person provide services and fill shifts for these roles too,
-              on top of their custom role above.
-            </p>
-            <div className="flex flex-wrap gap-2">
-              {additionalRoleOptions.map((role) => {
+              <div className="flex flex-wrap gap-2">
+                {additionalRoleOptions.map((role) => {
                   const checked = selectedAdditionalRoleIds.includes(role.id)
                   return (
                     <button
@@ -476,98 +442,87 @@ export default function ManageStaffMemberPage({
                       {role.name}
                     </button>
                   )
-              })}
+                })}
+              </div>
+              {additionalRoleOptions.length === 0 && (
+                <p className="text-xs text-muted-foreground">
+                  Create more roles in Staff settings to assign additional roles.
+                </p>
+              )}
             </div>
-            {additionalRoleOptions.length === 0 && (
-              <p className="text-xs text-muted-foreground">
-                Create more roles in Staff settings to assign additional roles.
-              </p>
-            )}
-          </div>
 
-          {/* Save Button */}
-          <Button onClick={handleSave} disabled={isSaving}>
-            {isSaving ? "Saving..." : "Save Changes"}
-          </Button>
-        </CardContent>
-      </Card>
-
-      {/* Tip Pooling */}
-      {potModeEnabled && (
-        <Card className="mb-6">
-          <CardHeader>
-            <CardTitle>Tip Pooling</CardTitle>
-            <CardDescription>
-              Pool tips into the venue's pot, or keep them individually.
-            </CardDescription>
-          </CardHeader>
-          <CardContent>
-            <label className="flex items-center gap-2 cursor-pointer">
-              <input
-                type="checkbox"
-                checked={tipPooled}
-                onChange={(e) => handleSaveTipPooled(e.target.checked)}
-                disabled={isSavingTipPooled}
-              />
-              <span>Pool my tips</span>
-            </label>
-            {tipPooledError && (
-              <p className="text-sm text-red-400 mt-2">{tipPooledError}</p>
-            )}
+            {/* Save Button */}
+            <Button onClick={handleSave} disabled={isSaving}>
+              {isSaving ? "Saving..." : "Save Changes"}
+            </Button>
           </CardContent>
         </Card>
-      )}
 
-      {/* Danger Zone */}
-      <Card className="border-red-200">
-        <CardHeader>
-          <CardTitle className="text-red-400">Danger Zone</CardTitle>
-          <CardDescription>
-            Irreversible actions for this staff member
-          </CardDescription>
-        </CardHeader>
-        <CardContent>
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="font-medium">Remove Staff Member</p>
-              <p className="text-sm text-muted-foreground">
-                This will revoke their access to the venue
-              </p>
+        {/* Tip Pooling */}
+        {potModeEnabled && (
+          <Card className="mb-6">
+            <CardHeader>
+              <CardTitle>Tip Pooling</CardTitle>
+              <CardDescription>Pool tips into the venue's pot, or keep them individually.</CardDescription>
+            </CardHeader>
+            <CardContent>
+              <label className="flex items-center gap-2 cursor-pointer">
+                <input
+                  type="checkbox"
+                  checked={tipPooled}
+                  onChange={(e) => handleSaveTipPooled(e.target.checked)}
+                  disabled={isSavingTipPooled}
+                />
+                <span>Pool my tips</span>
+              </label>
+              {tipPooledError && <p className="text-sm text-red-400 mt-2">{tipPooledError}</p>}
+            </CardContent>
+          </Card>
+        )}
+
+        {/* Danger Zone */}
+        <Card className="border-red-200">
+          <CardHeader>
+            <CardTitle className="text-red-400">Danger Zone</CardTitle>
+            <CardDescription>Irreversible actions for this staff member</CardDescription>
+          </CardHeader>
+          <CardContent>
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="font-medium">Remove Staff Member</p>
+                <p className="text-sm text-muted-foreground">This will revoke their access to the venue</p>
+              </div>
+              <AlertDialog>
+                <AlertDialogTrigger asChild>
+                  <Button variant="destructive" disabled={isDeleting}>
+                    Remove Staff
+                  </Button>
+                </AlertDialogTrigger>
+                <AlertDialogContent>
+                  <AlertDialogHeader>
+                    <AlertDialogTitle>Remove Staff Member?</AlertDialogTitle>
+                    <AlertDialogDescription>
+                      Are you sure you want to remove {staffMember.user.name} from this venue? They will lose all access
+                      immediately. This action cannot be undone.
+                    </AlertDialogDescription>
+                  </AlertDialogHeader>
+                  <AlertDialogFooter>
+                    <AlertDialogCancel>Cancel</AlertDialogCancel>
+                    <AlertDialogAction onClick={handleRemove}>Remove Staff Member</AlertDialogAction>
+                  </AlertDialogFooter>
+                </AlertDialogContent>
+              </AlertDialog>
             </div>
-            <AlertDialog>
-              <AlertDialogTrigger asChild>
-                <Button variant="destructive" disabled={isDeleting}>
-                  Remove Staff
-                </Button>
-              </AlertDialogTrigger>
-              <AlertDialogContent>
-                <AlertDialogHeader>
-                  <AlertDialogTitle>Remove Staff Member?</AlertDialogTitle>
-                  <AlertDialogDescription>
-                    Are you sure you want to remove {staffMember.user.name} from
-                    this venue? They will lose all access immediately. This
-                    action cannot be undone.
-                  </AlertDialogDescription>
-                </AlertDialogHeader>
-                <AlertDialogFooter>
-                  <AlertDialogCancel>Cancel</AlertDialogCancel>
-                  <AlertDialogAction onClick={handleRemove}>
-                    Remove Staff Member
-                  </AlertDialogAction>
-                </AlertDialogFooter>
-              </AlertDialogContent>
-            </AlertDialog>
-          </div>
-        </CardContent>
-      </Card>
+          </CardContent>
+        </Card>
 
-      {/* Back Button */}
-      <div className="mt-6">
-        <Button variant="outline" asChild>
-          <Link href={`/dashboard/${slug}/staff`}>← Back to Staff</Link>
-        </Button>
+        {/* Back Button */}
+        <div className="mt-6">
+          <Button variant="outline" asChild>
+            <Link href={`/dashboard/${slug}/staff`}>← Back to Staff</Link>
+          </Button>
+        </div>
       </div>
-    </div>
     </VenueLayoutClient>
   )
 }

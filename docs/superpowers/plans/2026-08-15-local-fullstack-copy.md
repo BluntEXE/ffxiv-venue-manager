@@ -25,6 +25,7 @@
 ## Task 1: Local Postgres + Redis compose file
 
 **Files:**
+
 - Create: `docker-compose.local.yml`
 - Modify: `.gitignore` (confirm `docker/postgres-local/` and `.env.local` are excluded)
 
@@ -93,6 +94,7 @@ git commit -m "chore: add local docker-compose for postgres+redis"
 ## Task 2: Local env file
 
 **Files:**
+
 - Create: `.env.local` (gitignored, not committed)
 
 - [ ] **Step 1: Generate secrets**
@@ -131,6 +133,7 @@ NODE_ENV="development"
 - [ ] **Step 3: One-time manual step — add localhost redirect URI to the Discord app**
 
 This is a manual action in the Discord Developer Portal, not something to script or automate:
+
 1. Go to https://discord.com/developers/applications, open the XIV Venue Manager app.
 2. OAuth2 → Redirects → add `http://localhost:3000/api/auth/callback/discord`.
 3. Save.
@@ -197,17 +200,19 @@ If the plugin requires an API key tied to a venue (check `XIVAppApiClient.IsConf
 ## Task 5: Document the setup
 
 **Files:**
+
 - Create: `docs/LOCAL_DEV.md`
 
 - [ ] **Step 1: Write the doc**
 
-```markdown
+````markdown
 # Local Full-Stack Development
 
 For testing changes (especially auth/rate-limit work, see the
 codebase-sweep Stage 2 plan) against a real local stack instead of prod.
 
 ## One-time setup
+
 1. `docker compose -f docker-compose.local.yml up -d` — starts local
    Postgres (`localhost:5433`) and Redis (`localhost:6380`).
 2. Create `.env.local` — see
@@ -218,12 +223,14 @@ codebase-sweep Stage 2 plan) against a real local stack instead of prod.
    as a redirect URI on the Discord app (dev portal, OAuth2 → Redirects).
 
 ## Every session
+
 ```bash
 docker compose -f docker-compose.local.yml up -d   # if not already running
 pnpm install
 cd apps/web && pnpm db:push                          # only needed after a schema change
 pnpm dev
 ```
+````
 
 Sign in at `http://localhost:3000/auth/signin` with Discord. Create/reuse a
 disposable local venue for testing — this is a throwaway local DB, not
@@ -231,6 +238,7 @@ prod, so no special naming convention is required (unlike the
 `TEST_VENUE`/"Velvet Rift" discipline used against the shared prod DB).
 
 ## Plugin against local
+
 Change the server URL in the plugin's Settings tab from
 `https://xivvenuemanager.com` to `http://localhost:3000`, and use a plugin
 API key generated from the local dashboard. See
@@ -238,24 +246,27 @@ API key generated from the local dashboard. See
 themselves.
 
 ## Resetting
+
 `docker compose -f docker-compose.local.yml down -v` wipes the local DB and
 Redis entirely (the `-v` drops the named volume's backing dir under
 `docker/postgres-local/data`) — re-run `pnpm db:push` after to rebuild the
 schema.
-```
+
+````
 
 - [ ] **Step 2: Commit**
 
 ```bash
 git add docs/LOCAL_DEV.md
 git commit -m "docs: add local full-stack dev setup guide"
-```
+````
 
 ---
 
 ## Self-review
 
 **Spec coverage:**
+
 - Local docker-compose variant, localhost-bound → Task 1. ✅
 - `.env.local` with local DB/Redis URLs → Task 2. ✅
 - Schema pushed via `prisma db push` → Task 3 Step 2. ✅

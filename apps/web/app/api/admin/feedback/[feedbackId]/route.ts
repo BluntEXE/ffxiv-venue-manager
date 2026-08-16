@@ -31,10 +31,7 @@ export const PATCH = withRateLimit<{ params: Promise<{ feedbackId: string }> }>(
       })
 
       if (!user?.isAdmin) {
-        return NextResponse.json(
-          { error: "Forbidden - Admin access required" },
-          { status: 403 }
-        )
+        return NextResponse.json({ error: "Forbidden - Admin access required" }, { status: 403 })
       }
 
       const { feedbackId } = await params
@@ -80,10 +77,7 @@ export const PATCH = withRateLimit<{ params: Promise<{ feedbackId: string }> }>(
         return NextResponse.json({ error: "Validation error", details: error.issues }, { status: 400 })
       }
       console.error("Error updating feedback:", error)
-      return NextResponse.json(
-        { error: "Internal server error" },
-        { status: 500 }
-      )
+      return NextResponse.json({ error: "Internal server error" }, { status: 500 })
     }
   },
   { requests: 30, window: "1 m" }

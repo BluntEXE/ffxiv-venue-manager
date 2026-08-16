@@ -26,7 +26,6 @@ const filterLabels: Record<TimelineFilter, string> = {
   staff: "Staff",
 }
 
-
 function matchesFilter(item: TimelineItem, filter: TimelineFilter): boolean {
   if (filter === "all") return true
   if (filter === "sales") return item.type === "sale"
@@ -48,15 +47,18 @@ export function TimelineFeed({ venueId, initialFilter = "all" }: TimelineFeedPro
   const filterRef = useRef(filter)
   filterRef.current = filter
 
-  const fetchItems = useCallback(async (cursor?: string) => {
-    const params = new URLSearchParams({ limit: "50" })
-    if (filter !== "all") params.set("type", filter)
-    if (cursor) params.set("cursor", cursor)
+  const fetchItems = useCallback(
+    async (cursor?: string) => {
+      const params = new URLSearchParams({ limit: "50" })
+      if (filter !== "all") params.set("type", filter)
+      if (cursor) params.set("cursor", cursor)
 
-    const res = await fetch("/api/venues/" + venueId + "/timeline?" + params)
-    if (!res.ok) return null
-    return res.json()
-  }, [venueId, filter])
+      const res = await fetch("/api/venues/" + venueId + "/timeline?" + params)
+      if (!res.ok) return null
+      return res.json()
+    },
+    [venueId, filter]
+  )
 
   useEffect(() => {
     setLoading(true)
@@ -132,7 +134,10 @@ export function TimelineFeed({ venueId, initialFilter = "all" }: TimelineFeedPro
           {(Object.keys(filterLabels) as TimelineFilter[]).map((f) => (
             <button
               key={f}
-              onClick={() => { setFilter(f); setLiveCount(0) }}
+              onClick={() => {
+                setFilter(f)
+                setLiveCount(0)
+              }}
               className={`text-sm font-semibold px-4 py-1.5 rounded-full transition-colors ${
                 filter === f
                   ? "bg-[var(--xiv-blue)] text-[var(--xiv-navy)]"
@@ -196,13 +201,17 @@ function TimelineRow({ item, isLast }: { item: TimelineItem; isLast: boolean }) 
         <div className="tl-node em">
           <div className="tl-title">
             <strong>Sale logged</strong>
-            {service && <> — {(service as { name: string }).name}</>}
-            {" "}<span className="gil">{Number(amount).toLocaleString()} gil</span>
+            {service && <> — {(service as { name: string }).name}</>}{" "}
+            <span className="gil">{Number(amount).toLocaleString()} gil</span>
           </div>
           {(customerName || (staff && (staff as { name?: string }).name)) && (
             <div className="tl-desc">
               {customerName && <>{String(customerName)}</>}
-              {staff && (staff as { name?: string }).name && <>{customerName ? " · " : ""}by {(staff as { name: string }).name}</>}
+              {staff && (staff as { name?: string }).name && (
+                <>
+                  {customerName ? " · " : ""}by {(staff as { name: string }).name}
+                </>
+              )}
             </div>
           )}
         </div>
@@ -219,8 +228,7 @@ function TimelineRow({ item, isLast }: { item: TimelineItem; isLast: boolean }) 
         <div className="tl-time">{timeEl}</div>
         <div className="tl-node">
           <div className="tl-title">
-            <strong>{String(staffName ?? "Staff")}</strong>
-            {" "}{isStart ? "clocked in" : "clocked out"}
+            <strong>{String(staffName ?? "Staff")}</strong> {isStart ? "clocked in" : "clocked out"}
             {roleName ? <span className="text-muted-foreground font-normal"> — {String(roleName)}</span> : null}
           </div>
         </div>
@@ -237,8 +245,8 @@ function TimelineRow({ item, isLast }: { item: TimelineItem; isLast: boolean }) 
       <div className={`tl-node${isEnter ? "" : " am"}`}>
         <div className="tl-title">
           <strong>{characterName ? String(characterName) : "Unknown"}</strong>
-          {world ? <span className="text-muted-foreground font-normal"> · {String(world)}</span> : null}
-          {" "}{isEnter ? "entered the venue" : "left the venue"}
+          {world ? <span className="text-muted-foreground font-normal"> · {String(world)}</span> : null}{" "}
+          {isEnter ? "entered the venue" : "left the venue"}
         </div>
       </div>
     </div>

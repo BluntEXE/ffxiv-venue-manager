@@ -51,11 +51,7 @@ function memLimit(id: string, limit: number, windowMs: number): RateLimitResult 
  * @param limit max requests per window
  * @param windowSec window length in seconds
  */
-export async function checkLimit(
-  identifier: string,
-  limit: number,
-  windowSec: number
-): Promise<RateLimitResult> {
+export async function checkLimit(identifier: string, limit: number, windowSec: number): Promise<RateLimitResult> {
   const windowMs = windowSec * 1000
   const now = Date.now()
   const bucket = Math.floor(now / windowMs)

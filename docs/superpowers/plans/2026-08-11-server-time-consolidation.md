@@ -16,7 +16,7 @@
 
 ## Amendment (post-Task-1): backend stays UTC, viewer-facing UI renders in the visitor's own local timezone
 
-Decided after Task 1 landed, via direct stakeholder conversation (Ehno + Raine Whatur, venue owner). Confirmed direction, verbatim intent: *"I set the venue schedule for 8pm est. Someone in PST will log into the dashboard and see the venue open time as 5pm PST. The backend server time will be in UTC, no matter what."*
+Decided after Task 1 landed, via direct stakeholder conversation (Ehno + Raine Whatur, venue owner). Confirmed direction, verbatim intent: _"I set the venue schedule for 8pm est. Someone in PST will log into the dashboard and see the venue open time as 5pm PST. The backend server time will be in UTC, no matter what."_
 
 This **does not replace** Task 1's UTC-based `ServerTimeKind`/`formatServerTime` — it adds a second, viewer-local counterpart and splits later tasks by which one applies:
 
@@ -26,7 +26,7 @@ This **does not replace** Task 1's UTC-based `ServerTimeKind`/`formatServerTime`
 **Two implementation constraints, both already resolved, not open questions:**
 
 1. **VPN doesn't break this.** `Intl.DateTimeFormat().resolvedOptions().timeZone` reads the OS's configured timezone setting, not IP-derived geolocation. A VPN changes apparent network location, not the system clock's timezone — so plain browser `Intl` already gives "physically move → refresh → time updates" behavior without extra work.
-2. **SSR hydration mismatch.** The app server-renders first (Node process — its own local timezone, not the visitor's), then hydrates client-side (visitor's real timezone). If a component renders visitor-local time during the very first render, React's hydration diff can throw or flash the wrong value. Task 1B below builds a mount-guarded client component that renders the *same* UTC-based string during SSR and initial client render, then swaps to local time in a subsequent render once mounted — no mismatch, because the swap happens after hydration completes, not during it.
+2. **SSR hydration mismatch.** The app server-renders first (Node process — its own local timezone, not the visitor's), then hydrates client-side (visitor's real timezone). If a component renders visitor-local time during the very first render, React's hydration diff can throw or flash the wrong value. Task 1B below builds a mount-guarded client component that renders the _same_ UTC-based string during SSR and initial client render, then swaps to local time in a subsequent render once mounted — no mismatch, because the swap happens after hydration completes, not during it.
 
 New Task 1B (below) builds this primitive. Tasks 4, 5, 6 are revised to use it where the display is viewer-facing; the broadcast-text portions of Tasks 2, 3, and 6 are unchanged.
 
@@ -37,7 +37,7 @@ New Task 1B (below) builds this primitive. Tasks 4, 5, 6 are revised to use it w
 Two files matched the original grep sweep but are **not** date-formatting bugs — do not touch them in this plan:
 
 - `components/ui/calendar.tsx:196` — `day.date.toLocaleDateString()` populates a `data-day` DOM attribute (a CSS/test selector key), not a user-facing display string. Locale/timezone doesn't matter here.
-- `app/dashboard/[slug]/events/new/page.tsx:168` — `Intl.DateTimeFormat().resolvedOptions().timeZone` reads the *browser's own* IANA timezone name (for a form default), it doesn't format a date at all.
+- `app/dashboard/[slug]/events/new/page.tsx:168` — `Intl.DateTimeFormat().resolvedOptions().timeZone` reads the _browser's own_ IANA timezone name (for a form default), it doesn't format a date at all.
 
 - [ ] **Step 1: No action needed** — just confirmed above so a future reader doesn't re-flag these as missed work.
 
@@ -46,6 +46,7 @@ Two files matched the original grep sweep but are **not** date-formatting bugs �
 ## Task 1: Add new `ServerTimeKind` variants to `lib/server-time.ts`
 
 **Files:**
+
 - Modify: `apps/web/lib/server-time.ts:38-46` (the `ServerTimeKind` union) and `apps/web/lib/server-time.ts:47-71` (`formatServerTime`)
 - Test: `apps/web/lib/server-time.test.ts` (new file)
 
@@ -58,39 +59,27 @@ import { formatServerTime } from "./server-time"
 
 describe("formatServerTime", () => {
   it("formats 'weekdatelong' as weekday, month, day, year", () => {
-    expect(formatServerTime("2026-04-28T20:54:00Z", "weekdatelong")).toBe(
-      "Tuesday, April 28, 2026"
-    )
+    expect(formatServerTime("2026-04-28T20:54:00Z", "weekdatelong")).toBe("Tuesday, April 28, 2026")
   })
 
   it("formats 'weekdate' as weekday, month, day (no year)", () => {
-    expect(formatServerTime("2026-04-28T20:54:00Z", "weekdate")).toBe(
-      "Tuesday, April 28"
-    )
+    expect(formatServerTime("2026-04-28T20:54:00Z", "weekdate")).toBe("Tuesday, April 28")
   })
 
   it("formats 'shiftdate' as short weekday, day, short month", () => {
-    expect(formatServerTime("2026-04-28T20:54:00Z", "shiftdate")).toBe(
-      "Tue, 28 Apr"
-    )
+    expect(formatServerTime("2026-04-28T20:54:00Z", "shiftdate")).toBe("Tue, 28 Apr")
   })
 
   it("formats 'dayheader' as long weekday, day, short month", () => {
-    expect(formatServerTime("2026-04-28T20:54:00Z", "dayheader")).toBe(
-      "Tuesday, 28 Apr"
-    )
+    expect(formatServerTime("2026-04-28T20:54:00Z", "dayheader")).toBe("Tuesday, 28 Apr")
   })
 
   it("formats 'datewithyear' as short month, day, year", () => {
-    expect(formatServerTime("2026-04-28T20:54:00Z", "datewithyear")).toBe(
-      "Apr 28, 2026"
-    )
+    expect(formatServerTime("2026-04-28T20:54:00Z", "datewithyear")).toBe("Apr 28, 2026")
   })
 
   it("formats 'monthyear' as short month, year", () => {
-    expect(formatServerTime("2026-04-28T20:54:00Z", "monthyear")).toBe(
-      "April 2026"
-    )
+    expect(formatServerTime("2026-04-28T20:54:00Z", "monthyear")).toBe("April 2026")
   })
 })
 ```
@@ -106,51 +95,72 @@ In `apps/web/lib/server-time.ts`, replace the `ServerTimeKind` union (lines 38-4
 
 ```typescript
 export type ServerTimeKind =
-  | "time"          // 8:54 PM
-  | "datetime"      // Apr 28, 8:54 PM
-  | "date"          // Apr 28
-  | "datelong"      // April 28, 2026
-  | "datetimelong"  // Apr 28, 2026, 8:54 PM
-  | "isoDate"       // 2026-04-28
-  | "isoDateTime"   // 2026-04-28 20:54:10
-  | "weekdatelong"  // Tuesday, April 28, 2026
-  | "weekdate"      // Tuesday, April 28
-  | "shiftdate"     // Tue, 28 Apr
-  | "dayheader"     // Tuesday, 28 Apr
-  | "datewithyear"  // Apr 28, 2026
-  | "monthyear"     // April 2026
+  | "time" // 8:54 PM
+  | "datetime" // Apr 28, 8:54 PM
+  | "date" // Apr 28
+  | "datelong" // April 28, 2026
+  | "datetimelong" // Apr 28, 2026, 8:54 PM
+  | "isoDate" // 2026-04-28
+  | "isoDateTime" // 2026-04-28 20:54:10
+  | "weekdatelong" // Tuesday, April 28, 2026
+  | "weekdate" // Tuesday, April 28
+  | "shiftdate" // Tue, 28 Apr
+  | "dayheader" // Tuesday, 28 Apr
+  | "datewithyear" // Apr 28, 2026
+  | "monthyear" // April 2026
 ```
 
 Then replace the `if`/`else if` chain inside `formatServerTime` (lines 56-69) with:
 
 ```typescript
-  const opts: Intl.DateTimeFormatOptions = { timeZone: ST_TZ }
-  if (kind === "time") {
-    opts.hour = "numeric"; opts.minute = "2-digit"
-  } else if (kind === "datetime") {
-    opts.month = "short"; opts.day = "numeric"
-    opts.hour = "numeric"; opts.minute = "2-digit"
-  } else if (kind === "date") {
-    opts.month = "short"; opts.day = "numeric"
-  } else if (kind === "datelong") {
-    opts.year = "numeric"; opts.month = "long"; opts.day = "numeric"
-  } else if (kind === "datetimelong") {
-    opts.year = "numeric"; opts.month = "short"; opts.day = "numeric"
-    opts.hour = "numeric"; opts.minute = "2-digit"
-  } else if (kind === "weekdatelong") {
-    opts.weekday = "long"; opts.year = "numeric"; opts.month = "long"; opts.day = "numeric"
-  } else if (kind === "weekdate") {
-    opts.weekday = "long"; opts.month = "long"; opts.day = "numeric"
-  } else if (kind === "shiftdate") {
-    opts.weekday = "short"; opts.day = "numeric"; opts.month = "short"
-  } else if (kind === "dayheader") {
-    opts.weekday = "long"; opts.day = "numeric"; opts.month = "short"
-  } else if (kind === "datewithyear") {
-    opts.month = "short"; opts.day = "numeric"; opts.year = "numeric"
-  } else if (kind === "monthyear") {
-    opts.month = "long"; opts.year = "numeric"
-  }
-  return d.toLocaleString("en-US", opts)
+const opts: Intl.DateTimeFormatOptions = { timeZone: ST_TZ }
+if (kind === "time") {
+  opts.hour = "numeric"
+  opts.minute = "2-digit"
+} else if (kind === "datetime") {
+  opts.month = "short"
+  opts.day = "numeric"
+  opts.hour = "numeric"
+  opts.minute = "2-digit"
+} else if (kind === "date") {
+  opts.month = "short"
+  opts.day = "numeric"
+} else if (kind === "datelong") {
+  opts.year = "numeric"
+  opts.month = "long"
+  opts.day = "numeric"
+} else if (kind === "datetimelong") {
+  opts.year = "numeric"
+  opts.month = "short"
+  opts.day = "numeric"
+  opts.hour = "numeric"
+  opts.minute = "2-digit"
+} else if (kind === "weekdatelong") {
+  opts.weekday = "long"
+  opts.year = "numeric"
+  opts.month = "long"
+  opts.day = "numeric"
+} else if (kind === "weekdate") {
+  opts.weekday = "long"
+  opts.month = "long"
+  opts.day = "numeric"
+} else if (kind === "shiftdate") {
+  opts.weekday = "short"
+  opts.day = "numeric"
+  opts.month = "short"
+} else if (kind === "dayheader") {
+  opts.weekday = "long"
+  opts.day = "numeric"
+  opts.month = "short"
+} else if (kind === "datewithyear") {
+  opts.month = "short"
+  opts.day = "numeric"
+  opts.year = "numeric"
+} else if (kind === "monthyear") {
+  opts.month = "long"
+  opts.year = "numeric"
+}
+return d.toLocaleString("en-US", opts)
 ```
 
 Note: `"weekdatelong"` and `"weekdate"` and `"shiftdate"`/`"dayheader"` overlap in shape but differ in weekday length or month length to exactly match existing call sites (see Task 2-6) — don't collapse them further, each maps 1:1 to a real call site's current output shape so the migration is format-preserving except for locale/timezone.
@@ -172,6 +182,7 @@ git commit -m "feat(server-time): add weekday/date-with-year/month-year format k
 ## Task 1B: Add viewer-local time formatting (`formatLocalTime`, `<LocalTime>`)
 
 **Files:**
+
 - Modify: `apps/web/lib/server-time.ts` — extract the kind→options mapping so both UTC and local formatting share it
 - Modify: `apps/web/components/server-time.tsx` — add `formatLocalTime` and `<LocalTime>` (mount-guarded)
 - Test: `apps/web/lib/server-time.test.ts` (extend existing file)
@@ -208,25 +219,42 @@ Replace the body of `formatServerTime` (the `if`/`else if` chain plus the two sp
 export function getServerTimeIntlOptions(kind: ServerTimeKind): Intl.DateTimeFormatOptions {
   const opts: Intl.DateTimeFormatOptions = {}
   if (kind === "time") {
-    opts.hour = "numeric"; opts.minute = "2-digit"
+    opts.hour = "numeric"
+    opts.minute = "2-digit"
   } else if (kind === "datetime") {
-    opts.month = "short"; opts.day = "numeric"
-    opts.hour = "numeric"; opts.minute = "2-digit"
+    opts.month = "short"
+    opts.day = "numeric"
+    opts.hour = "numeric"
+    opts.minute = "2-digit"
   } else if (kind === "date") {
-    opts.month = "short"; opts.day = "numeric"
+    opts.month = "short"
+    opts.day = "numeric"
   } else if (kind === "datelong") {
-    opts.year = "numeric"; opts.month = "long"; opts.day = "numeric"
+    opts.year = "numeric"
+    opts.month = "long"
+    opts.day = "numeric"
   } else if (kind === "datetimelong") {
-    opts.year = "numeric"; opts.month = "short"; opts.day = "numeric"
-    opts.hour = "numeric"; opts.minute = "2-digit"
+    opts.year = "numeric"
+    opts.month = "short"
+    opts.day = "numeric"
+    opts.hour = "numeric"
+    opts.minute = "2-digit"
   } else if (kind === "weekdatelong") {
-    opts.weekday = "long"; opts.year = "numeric"; opts.month = "long"; opts.day = "numeric"
+    opts.weekday = "long"
+    opts.year = "numeric"
+    opts.month = "long"
+    opts.day = "numeric"
   } else if (kind === "weekdate") {
-    opts.weekday = "long"; opts.month = "long"; opts.day = "numeric"
+    opts.weekday = "long"
+    opts.month = "long"
+    opts.day = "numeric"
   } else if (kind === "datewithyear") {
-    opts.month = "short"; opts.day = "numeric"; opts.year = "numeric"
+    opts.month = "short"
+    opts.day = "numeric"
+    opts.year = "numeric"
   } else if (kind === "monthyear") {
-    opts.month = "long"; opts.year = "numeric"
+    opts.month = "long"
+    opts.year = "numeric"
   }
   return opts
 }
@@ -305,7 +333,7 @@ export function LocalTime({
 }
 ```
 
-Note: `<LocalTime>` renders the UTC (`formatServerTime`) value on the very first render (matches SSR output exactly, so no hydration mismatch), then swaps to `formatLocalTime` once `mounted` flips true after the `useEffect` fires — this is a render *after* hydration, not part of the hydration diff, so it's safe. Visitors will see a one-frame flash from UTC to their local time on first load; that's expected and acceptable (standard tradeoff for this pattern), not a bug to fix.
+Note: `<LocalTime>` renders the UTC (`formatServerTime`) value on the very first render (matches SSR output exactly, so no hydration mismatch), then swaps to `formatLocalTime` once `mounted` flips true after the `useEffect` fires — this is a render _after_ hydration, not part of the hydration diff, so it's safe. Visitors will see a one-frame flash from UTC to their local time on first load; that's expected and acceptable (standard tradeoff for this pattern), not a bug to fix.
 
 Keep the existing `ServerTimeRange` function in this file unchanged — it's not used by any call site in this plan's remaining tasks.
 
@@ -325,25 +353,28 @@ git commit -m "feat(server-time): add viewer-local time formatting with hydratio
 ## Task 2: Migrate cron routes (`daily-sales-summary`, `events-digest-post`)
 
 **Files:**
+
 - Modify: `apps/web/app/api/cron/daily-sales-summary/route.ts:122-127`
 - Modify: `apps/web/app/api/cron/events-digest-post/route.ts:41-46`
 
 - [ ] **Step 1: Replace in `daily-sales-summary/route.ts`**
 
 Before (lines 121-127):
+
 ```typescript
-      // Format date string
-      const dateString = yesterday.toLocaleDateString("en-US", {
-        weekday: "long",
-        year: "numeric",
-        month: "long",
-        day: "numeric",
-      })
+// Format date string
+const dateString = yesterday.toLocaleDateString("en-US", {
+  weekday: "long",
+  year: "numeric",
+  month: "long",
+  day: "numeric",
+})
 ```
 
 After:
+
 ```typescript
-      const dateString = formatServerTime(yesterday, "weekdatelong")
+const dateString = formatServerTime(yesterday, "weekdatelong")
 ```
 
 Add the import at the top of the file: `import { formatServerTime } from "@/lib/server-time"`
@@ -351,18 +382,20 @@ Add the import at the top of the file: `import { formatServerTime } from "@/lib/
 - [ ] **Step 2: Replace in `events-digest-post/route.ts`**
 
 Before (lines 41-46):
+
 ```typescript
-    const dayLabel = dayStart.toLocaleDateString("en-GB", {
-      weekday: "long",
-      day: "numeric",
-      month: "long",
-      timeZone: "UTC",
-    })
+const dayLabel = dayStart.toLocaleDateString("en-GB", {
+  weekday: "long",
+  day: "numeric",
+  month: "long",
+  timeZone: "UTC",
+})
 ```
 
 After:
+
 ```typescript
-    const dayLabel = formatServerTime(dayStart, "weekdate")
+const dayLabel = formatServerTime(dayStart, "weekdate")
 ```
 
 Add the import at the top of the file: `import { formatServerTime } from "@/lib/server-time"`
@@ -388,10 +421,12 @@ git commit -m "refactor: use formatServerTime in cron message text"
 ## Task 3: Migrate shift-date formatting (true duplicate — 4 call sites)
 
 **Files:**
+
 - Modify: `apps/web/app/api/plugin/shifts/claim/route.ts:96`
 - Modify: `apps/web/app/api/venues/[venueId]/shifts/[shiftId]/route.ts:91,142,199`
 
 These 4 call sites are byte-identical today:
+
 ```typescript
 shift.scheduledStart.toLocaleDateString("en-GB", { weekday: "short", day: "numeric", month: "short", timeZone: "UTC" })
 ```
@@ -399,6 +434,7 @@ shift.scheduledStart.toLocaleDateString("en-GB", { weekday: "short", day: "numer
 - [ ] **Step 1: Replace all 4 occurrences**
 
 In each of the 2 files, replace every instance of the line above with:
+
 ```typescript
 formatServerTime(shift.scheduledStart, "shiftdate")
 ```
@@ -425,6 +461,7 @@ git commit -m "refactor: dedupe shift-date formatting via formatServerTime"
 ## Task 4: Migrate API-key pages (2 files, bare `toLocaleDateString()`) — viewer-local
 
 **Files:**
+
 - Modify: `apps/web/app/dashboard/api-keys/page.tsx:478,482`
 - Modify: `apps/web/app/dashboard/[slug]/settings/api-keys/page.tsx:451,453`
 
@@ -433,6 +470,7 @@ git commit -m "refactor: dedupe shift-date formatting via formatServerTime"
 - [ ] **Step 1: Replace in `app/dashboard/api-keys/page.tsx`**
 
 Before (lines 476-483):
+
 ```typescript
                         <div className="text-xs text-muted-foreground mt-1">
                           Created:{" "}
@@ -445,6 +483,7 @@ Before (lines 476-483):
 ```
 
 After:
+
 ```typescript
                         <div className="text-xs text-muted-foreground mt-1">
                           Created:{" "}
@@ -463,6 +502,7 @@ Add `import { LocalTime } from "@/components/server-time"`.
 - [ ] **Step 2: Replace in `app/dashboard/[slug]/settings/api-keys/page.tsx`**
 
 Before (lines 451,453):
+
 ```typescript
                       <span>Created: {new Date(key.createdAt).toLocaleDateString()}</span>
                       {key.lastUsedAt && (
@@ -471,6 +511,7 @@ Before (lines 451,453):
 ```
 
 After:
+
 ```typescript
                       <span>Created: <LocalTime date={key.createdAt} formatStr="datewithyear" /></span>
                       {key.lastUsedAt && (
@@ -500,6 +541,7 @@ git commit -m "refactor: render API key created/last-used dates in visitor's loc
 ## Task 5: Migrate `navbar-client.tsx`, `staff-table.tsx`, `timeline-feed.tsx` — viewer-local
 
 **Files:**
+
 - Modify: `apps/web/components/navbar-client.tsx:180`
 - Modify: `apps/web/components/staff-table.tsx:329`
 - Modify: `apps/web/components/timeline-feed.tsx:113-131` (grouping logic, not just the display line — see Step 3)
@@ -509,11 +551,20 @@ All three are visitor-facing UI — use `<LocalTime>`/`formatLocalTime` from `co
 - [ ] **Step 1: `navbar-client.tsx`**
 
 Before (line 180):
+
 ```typescript
-                              {new Date(n.createdAt).toLocaleDateString(undefined, { month: "short", day: "numeric", hour: "2-digit", minute: "2-digit" })}
+{
+  new Date(n.createdAt).toLocaleDateString(undefined, {
+    month: "short",
+    day: "numeric",
+    hour: "2-digit",
+    minute: "2-digit",
+  })
+}
 ```
 
 After:
+
 ```typescript
                               <LocalTime date={n.createdAt} formatStr="datetime" />
 ```
@@ -525,11 +576,15 @@ Add `import { LocalTime } from "@/components/server-time"`.
 - [ ] **Step 2: `staff-table.tsx`**
 
 Before (line 329):
+
 ```typescript
-                    {new Date(member.joinedAt).toLocaleDateString("en-GB", { day: "numeric", month: "short", year: "numeric" })}
+{
+  new Date(member.joinedAt).toLocaleDateString("en-GB", { day: "numeric", month: "short", year: "numeric" })
+}
 ```
 
 After:
+
 ```typescript
                     <LocalTime date={member.joinedAt} formatStr="datewithyear" />
 ```
@@ -540,9 +595,10 @@ This is the staff/shift feature area (medium risk per roadmap) — verify agains
 
 - [ ] **Step 3: `timeline-feed.tsx` — grouping logic AND display, not just the label**
 
-This call site is different from the others: `formatServerTime`/`formatLocalTime` produce a *string*, but this code uses that string as a `.reduce()` grouping key to bucket timeline items under day headers (lines 113-124 in the original file — read the current file first since line numbers may have shifted from earlier tasks). Simply swapping the formatter changes what the label *says* but not which items get bucketed together — if bucketing stays on UTC calendar days while the label implies local time, an item at 11pm PST (which is the next UTC day) could show grouped under the wrong local-day header. Fix both together.
+This call site is different from the others: `formatServerTime`/`formatLocalTime` produce a _string_, but this code uses that string as a `.reduce()` grouping key to bucket timeline items under day headers (lines 113-124 in the original file — read the current file first since line numbers may have shifted from earlier tasks). Simply swapping the formatter changes what the label _says_ but not which items get bucketed together — if bucketing stays on UTC calendar days while the label implies local time, an item at 11pm PST (which is the next UTC day) could show grouped under the wrong local-day header. Fix both together.
 
 Before:
+
 ```typescript
   const visibleItems = items.filter((item) => matchesFilter(item, filter))
 
@@ -591,7 +647,7 @@ Run: `cd apps/web && npx tsc --noEmit`
 
 - Navbar: open the notifications dropdown, confirm timestamps render, briefly UTC then local (expected).
 - Staff table: view `/dashboard/[slug]/staff`, confirm "Joined" column renders and updates to local time after mount.
-- Timeline feed: view the venue timeline with items spanning a UTC-day boundary (e.g. one item at 11:30pm UTC, another at 12:30am UTC the next day). With your browser timezone set behind UTC (e.g. US Pacific), confirm both items now group under the *same* local-day header instead of splitting across the UTC boundary — this is the actual behavior change, not just a label swap. Verify with browser devtools' timezone override if you don't have an easy way to generate boundary-spanning test data.
+- Timeline feed: view the venue timeline with items spanning a UTC-day boundary (e.g. one item at 11:30pm UTC, another at 12:30am UTC the next day). With your browser timezone set behind UTC (e.g. US Pacific), confirm both items now group under the _same_ local-day header instead of splitting across the UTC boundary — this is the actual behavior change, not just a label swap. Verify with browser devtools' timezone override if you don't have an easy way to generate boundary-spanning test data.
 
 - [ ] **Step 6: Commit**
 
@@ -605,6 +661,7 @@ git commit -m "refactor: render navbar, staff table, timeline feed in visitor's 
 ## Task 6: Migrate remaining full-datetime call sites (split: 2 viewer-local, 1 stays UTC)
 
 **Files:**
+
 - Modify: `apps/web/app/dashboard/[slug]/analytics/page.tsx:639` — viewer-local
 - Modify: `apps/web/app/invite/[token]/page.tsx:223` — viewer-local
 - Modify: `apps/web/lib/discord-webhook.ts:303` — **switches to Discord's native `<t:UNIX:F>` timestamp markup, not `formatServerTime` and not `LocalTime`.** Correction from an earlier version of this plan: Discord renders `<t:UNIX:FORMAT>` tags in each reader's own local timezone client-side — this file already uses that exact pattern for event start/end times (`lib/discord-webhook.ts:387-389,433-437` — `Math.floor(date.getTime()/1000)` then `` `<t:${unix}:F>` ``). The task-due-date field at line 303 is the one place in this file that doesn't follow that established pattern. Fix it to match, don't introduce a third approach.
@@ -614,11 +671,13 @@ git commit -m "refactor: render navbar, staff table, timeline feed in visitor's 
 - [ ] **Step 1: `analytics/page.tsx` — viewer-local**
 
 Before (line 639):
+
 ```typescript
                   <StatReadout label={new Date(month + '-01').toLocaleDateString('en-GB', { month: 'short', year: 'numeric' })} value={`+${count as number}`} subtext="new followers" />
 ```
 
 After:
+
 ```typescript
                   <StatReadout label={<LocalTime date={`${month}-01`} formatStr="monthyear" />} value={`+${count as number}`} subtext="new followers" />
 ```
@@ -630,11 +689,13 @@ Note: `"monthyear"` uses `month: "long"` (Task 1) producing "April 2026" vs the 
 - [ ] **Step 2: `invite/[token]/page.tsx` — viewer-local**
 
 Before (line 223):
+
 ```typescript
               Invite expires: {new Date(inviteDetails.expiresAt).toLocaleString()}
 ```
 
 After:
+
 ```typescript
               Invite expires: <LocalTime date={inviteDetails.expiresAt} formatStr="datetimelong" />
 ```
@@ -646,11 +707,13 @@ Add `import { LocalTime } from "@/components/server-time"`. Same client-componen
 First, read `lib/discord-webhook.ts:380-395` to see the exact existing pattern (`startUnix`/`endUnix` construction and the `<t:${startUnix}:F>` template) before writing this — copy its style, don't invent a new one.
 
 Before (line 303):
+
 ```typescript
       value: new Date(task.dueDate).toLocaleString(),
 ```
 
 After:
+
 ```typescript
       value: `<t:${Math.floor(new Date(task.dueDate).getTime() / 1000)}:F>`,
 ```
@@ -683,6 +746,7 @@ Every `.toLocaleString()` (no args) hit found in `analytics/page.tsx`, `payroll/
 `patron-profiles-table.tsx`'s one hit (`p.totalSpent.toLocaleString()`) is also a Number call, and that file is in the patron-tracking feature freeze regardless — doubly out of scope here.
 
 **Explicitly flagged and deferred (not fixed in this plan — confirmed with user 2026-08-11), scope as follow-up work once this plan ships:**
+
 - Stored `PendingNotification.body` strings (Task 3 — shift claim/approve/reject) bake a formatted date directly into the sentence at creation time. Making these viewer-local requires storing the raw timestamp separately and re-templating the sentence client-side at render — a schema/architecture change, not a formatting swap. Left on UTC/"ST" text for now.
 - The one-frame flash from UTC → local time on first render (Task 1B's `<LocalTime>` mount-guard) is inherent to doing viewer-local rendering in an SSR app without a timezone-detection cookie. Not fixed here; a cookie-based approach could eliminate it later if it becomes a real complaint.
 - `daily-sales-summary` cron's "yesterday" boundary is computed once in UTC for all venues at a single fixed UTC cron trigger time — not per-venue local midnight. Making this dynamic (each venue gets its own "yesterday" relative to its own local clock) requires the cron to run per-venue or per-timezone-bucket rather than once globally — a scheduling/trigger architecture change, not a formatting one. Flagged 2026-08-11, scope as a real follow-up task alongside the other deferred items above.

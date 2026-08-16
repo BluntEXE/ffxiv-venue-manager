@@ -17,11 +17,7 @@ interface GeneratePotPayrollButtonProps {
   existingDistribution: PotDistributionSummary | null
 }
 
-export function GeneratePotPayrollButton({
-  venueSlug,
-  eventId,
-  existingDistribution,
-}: GeneratePotPayrollButtonProps) {
+export function GeneratePotPayrollButton({ venueSlug, eventId, existingDistribution }: GeneratePotPayrollButtonProps) {
   const router = useRouter()
   const [generating, setGenerating] = useState(false)
   const [error, setError] = useState("")

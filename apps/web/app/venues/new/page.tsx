@@ -13,9 +13,9 @@ import { FFXIV_DISTRICTS } from "@/lib/venue-location"
 // FFXIV Data Centers and Worlds
 const DATA_CENTERS = {
   "North America": ["Aether", "Primal", "Crystal", "Dynamis"],
-  "Europe": ["Chaos", "Light"],
-  "Japan": ["Elemental", "Gaia", "Mana", "Meteor"],
-  "Oceania": ["Materia"],
+  Europe: ["Chaos", "Light"],
+  Japan: ["Elemental", "Gaia", "Mana", "Meteor"],
+  Oceania: ["Materia"],
 }
 
 const WORLDS_BY_DC: Record<string, string[]> = {
@@ -70,7 +70,8 @@ export default function NewVenuePage() {
       district: selectedDistrict || undefined,
       ward: (formData.get("ward") as string) ? Number(formData.get("ward")) : undefined,
       plot: housingType === "house" && formData.get("plot") ? Number(formData.get("plot")) : undefined,
-      apartment: housingType === "apartment" && formData.get("apartment") ? Number(formData.get("apartment")) : undefined,
+      apartment:
+        housingType === "apartment" && formData.get("apartment") ? Number(formData.get("apartment")) : undefined,
     }
 
     try {
@@ -169,7 +170,10 @@ export default function NewVenuePage() {
               <Select
                 name="dataCenter"
                 required
-                onValueChange={(v) => { setSelectedDataCenter(v); setSelectedWorld("") }}
+                onValueChange={(v) => {
+                  setSelectedDataCenter(v)
+                  setSelectedWorld("")
+                }}
               >
                 <SelectTrigger>
                   <SelectValue placeholder="Select data center" />
@@ -177,9 +181,7 @@ export default function NewVenuePage() {
                 <SelectContent>
                   {Object.entries(DATA_CENTERS).map(([region, dcs]) => (
                     <div key={region}>
-                      <div className="px-2 py-1.5 text-sm font-semibold text-muted-foreground">
-                        {region}
-                      </div>
+                      <div className="px-2 py-1.5 text-sm font-semibold text-muted-foreground">{region}</div>
                       {dcs.map((dc) => (
                         <SelectItem key={dc} value={dc}>
                           {dc}
@@ -194,16 +196,23 @@ export default function NewVenuePage() {
             {/* World */}
             <div className="space-y-2">
               <Label htmlFor="world">World (Server) *</Label>
-              <Select name="world" required value={selectedWorld} onValueChange={setSelectedWorld} disabled={!selectedDataCenter}>
+              <Select
+                name="world"
+                required
+                value={selectedWorld}
+                onValueChange={setSelectedWorld}
+                disabled={!selectedDataCenter}
+              >
                 <SelectTrigger>
                   <SelectValue placeholder={selectedDataCenter ? "Select world" : "Select data center first"} />
                 </SelectTrigger>
                 <SelectContent>
-                  {selectedDataCenter && WORLDS_BY_DC[selectedDataCenter]?.map((world) => (
-                    <SelectItem key={world} value={world}>
-                      {world}
-                    </SelectItem>
-                  ))}
+                  {selectedDataCenter &&
+                    WORLDS_BY_DC[selectedDataCenter]?.map((world) => (
+                      <SelectItem key={world} value={world}>
+                        {world}
+                      </SelectItem>
+                    ))}
                 </SelectContent>
               </Select>
             </div>
@@ -242,56 +251,25 @@ export default function NewVenuePage() {
                     ))}
                   </SelectContent>
                 </Select>
-                <Input
-                  id="ward"
-                  name="ward"
-                  type="number"
-                  min={1}
-                  max={30}
-                  placeholder="Ward (1-30)"
-                />
+                <Input id="ward" name="ward" type="number" min={1} max={30} placeholder="Ward (1-30)" />
                 {housingType === "house" ? (
-                  <Input
-                    id="plot"
-                    name="plot"
-                    type="number"
-                    min={1}
-                    max={60}
-                    placeholder="Plot (1-60)"
-                  />
+                  <Input id="plot" name="plot" type="number" min={1} max={60} placeholder="Plot (1-60)" />
                 ) : (
-                  <Input
-                    id="apartment"
-                    name="apartment"
-                    type="number"
-                    min={1}
-                    max={99}
-                    placeholder="Apt (1-99)"
-                  />
+                  <Input id="apartment" name="apartment" type="number" min={1} max={99} placeholder="Apt (1-99)" />
                 )}
               </div>
-              <p className="text-sm text-muted-foreground">
-                Help visitors find your venue in-game
-              </p>
+              <p className="text-sm text-muted-foreground">Help visitors find your venue in-game</p>
             </div>
 
             {/* Error Message */}
-            {error && (
-              <div className="p-3 text-sm text-destructive bg-destructive/10 rounded-md">
-                {error}
-              </div>
-            )}
+            {error && <div className="p-3 text-sm text-destructive bg-destructive/10 rounded-md">{error}</div>}
 
             {/* Submit Button */}
             <div className="flex gap-4">
               <Button type="submit" disabled={isSubmitting} className="flex-1">
                 {isSubmitting ? "Creating..." : "Create Venue"}
               </Button>
-              <Button
-                type="button"
-                variant="outline"
-                onClick={() => router.back()}
-              >
+              <Button type="button" variant="outline" onClick={() => router.back()}>
                 Cancel
               </Button>
             </div>

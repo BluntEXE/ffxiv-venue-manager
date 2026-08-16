@@ -14,9 +14,7 @@ import { checkLimit, budgets, getIp, buildRateLimitResponse } from "@/lib/rate-l
  */
 const ipBudget = { limit: 60, windowSec: 60 }
 
-export async function enforcePluginIpRateLimit(
-  request: NextRequest
-): Promise<NextResponse | null> {
+export async function enforcePluginIpRateLimit(request: NextRequest): Promise<NextResponse | null> {
   const ip = getIp(request)
   const rl = await checkLimit(`plugin-ip:${ip}`, ipBudget.limit, ipBudget.windowSec)
   if (rl.success) return null
@@ -33,10 +31,7 @@ export async function enforcePluginIpRateLimit(
  * Redis. Per-key (not per-IP) because multiple venue staff can share a
  * NAT, and a compromised/runaway key is the actual abuse vector.
  */
-export async function enforcePluginRateLimit(
-  apiKey: string,
-  kind: "read" | "write"
-): Promise<NextResponse | null> {
+export async function enforcePluginRateLimit(apiKey: string, kind: "read" | "write"): Promise<NextResponse | null> {
   const budget = kind === "read" ? budgets.pluginRead : budgets.pluginWrite
   const id = createHash("sha256").update(apiKey).digest("hex").slice(0, 16)
   const rl = await checkLimit(`plugin:${id}`, budget.limit, budget.windowSec)

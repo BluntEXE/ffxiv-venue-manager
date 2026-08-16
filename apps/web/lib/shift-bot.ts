@@ -36,13 +36,10 @@ export function buildShiftEmbed(
   const startTs = Math.floor(embed.scheduledStart.getTime() / 1000)
   const endTs = Math.floor(embed.scheduledEnd.getTime() / 1000)
 
-  const acceptedField = acceptedCount > 0
-    ? acceptedNames.map((n, i) => `${i + 1}. ${n}`).join("\n")
-    : "_No one yet_"
+  const acceptedField = acceptedCount > 0 ? acceptedNames.map((n, i) => `${i + 1}. ${n}`).join("\n") : "_No one yet_"
 
-  const waitlistField = embed.waitlist.length > 0
-    ? embed.waitlist.map((w, i) => `${i + 1}. ${w.discordUsername}`).join("\n")
-    : null
+  const waitlistField =
+    embed.waitlist.length > 0 ? embed.waitlist.map((w, i) => `${i + 1}. ${w.discordUsername}`).join("\n") : null
 
   const fields: object[] = [
     { name: "Time", value: `<t:${startTs}:F> – <t:${endTs}:t> (<t:${startTs}:R>)`, inline: false },
@@ -54,7 +51,12 @@ export function buildShiftEmbed(
   }
 
   const buttons: import("@/lib/discord-bot").DiscordButtonComponent[] = [
-    { type: 2, style: 3, label: `✓ Accept${slotsRemaining <= 0 ? " (Full)" : ""}`, custom_id: `shift_accept:${embed.id}` },
+    {
+      type: 2,
+      style: 3,
+      label: `✓ Accept${slotsRemaining <= 0 ? " (Full)" : ""}`,
+      custom_id: `shift_accept:${embed.id}`,
+    },
     { type: 2, style: 2, label: "? Maybe", custom_id: `shift_maybe:${embed.id}` },
     { type: 2, style: 4, label: "✗ Decline", custom_id: `shift_decline:${embed.id}` },
   ]
@@ -99,9 +101,7 @@ async function refreshEmbed(embedRecord: {
     include: { membership: { include: { user: true } } },
   })
 
-  const acceptedNames = acceptedShifts.map(
-    (s) => s.membership?.user?.name ?? "Unknown"
-  )
+  const acceptedNames = acceptedShifts.map((s) => s.membership?.user?.name ?? "Unknown")
 
   const payload = buildShiftEmbed(
     {
@@ -259,9 +259,14 @@ export async function handleShiftAccept(
       },
     })
     if (overlapping) {
-      const mergedStart = overlapping.scheduledStart < newShift.scheduledStart ? overlapping.scheduledStart : newShift.scheduledStart
-      const mergedEnd = overlapping.scheduledEnd > newShift.scheduledEnd ? overlapping.scheduledEnd : newShift.scheduledEnd
-      await prisma.shift.update({ where: { id: overlapping.id }, data: { scheduledStart: mergedStart, scheduledEnd: mergedEnd } })
+      const mergedStart =
+        overlapping.scheduledStart < newShift.scheduledStart ? overlapping.scheduledStart : newShift.scheduledStart
+      const mergedEnd =
+        overlapping.scheduledEnd > newShift.scheduledEnd ? overlapping.scheduledEnd : newShift.scheduledEnd
+      await prisma.shift.update({
+        where: { id: overlapping.id },
+        data: { scheduledStart: mergedStart, scheduledEnd: mergedEnd },
+      })
       await prisma.shift.delete({ where: { id: newShift.id } })
     }
   }
@@ -270,10 +275,7 @@ export async function handleShiftAccept(
   return { content: `You are signed up for **${embed.templateName}**. See you there!` }
 }
 
-export async function handleShiftDecline(
-  embedId: string,
-  discordUserId: string
-): Promise<{ content: string }> {
+export async function handleShiftDecline(embedId: string, discordUserId: string): Promise<{ content: string }> {
   const embed = await prisma.shiftSignupEmbed.findUnique({
     where: { id: embedId },
     include: { event: { select: { title: true } }, venue: { select: { name: true, settings: true } } },
@@ -367,19 +369,46 @@ export async function postShiftEmbedsForEvent(
     const embedMeta = { eventTitle, venueName, thumbnailUrl: resolvedThumbnail }
 
     const tempPayload = buildShiftEmbed(
-      { id: "pending", templateName: template.name, ...embedMeta, scheduledStart, scheduledEnd, slots: template.slots, waitlist: [] },
-      0, []
+      {
+        id: "pending",
+        templateName: template.name,
+        ...embedMeta,
+        scheduledStart,
+        scheduledEnd,
+        slots: template.slots,
+        waitlist: [],
+      },
+      0,
+      []
     )
 
     const messageId = await postBotMessage(channelId, tempPayload)
 
     const record = await prisma.shiftSignupEmbed.create({
-      data: { venueId, eventId, templateName: template.name, discordMessageId: messageId, channelId, scheduledStart, scheduledEnd, slots: template.slots },
+      data: {
+        venueId,
+        eventId,
+        templateName: template.name,
+        discordMessageId: messageId,
+        channelId,
+        scheduledStart,
+        scheduledEnd,
+        slots: template.slots,
+      },
     })
 
     const finalPayload = buildShiftEmbed(
-      { id: record.id, templateName: template.name, ...embedMeta, scheduledStart, scheduledEnd, slots: template.slots, waitlist: [] },
-      0, []
+      {
+        id: record.id,
+        templateName: template.name,
+        ...embedMeta,
+        scheduledStart,
+        scheduledEnd,
+        slots: template.slots,
+        waitlist: [],
+      },
+      0,
+      []
     )
     try {
       await editBotMessage(channelId, messageId, finalPayload)
@@ -401,11 +430,13 @@ export async function cancelShiftEmbedsForEvent(eventId: string): Promise<void> 
   for (const embed of embeds) {
     try {
       await editBotMessage(embed.channelId, embed.discordMessageId, {
-        embeds: [{
-          title: `~~${embed.templateName}~~ — CANCELLED`,
-          color: 0xff4444,
-          description: "This shift has been cancelled.",
-        }],
+        embeds: [
+          {
+            title: `~~${embed.templateName}~~ — CANCELLED`,
+            color: 0xff4444,
+            description: "This shift has been cancelled.",
+          },
+        ],
         components: [],
       })
     } catch (err) {

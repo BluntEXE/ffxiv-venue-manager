@@ -28,22 +28,23 @@
 
 ## File Map
 
-| File | Action | Purpose |
-|---|---|---|
-| `apps/web/prisma/schema.prisma` | Modify | Add 3 fields to Venue + VenueSchedule model |
-| `apps/web/lib/ffxivvenues.ts` | Create | API client, type definitions, sync functions |
-| `apps/web/app/api/venues/[venueId]/sync-ffxivvenues/route.ts` | Create | GET preview + POST manual sync |
-| `apps/web/app/api/cron/sync-ffxivvenues-schedule/route.ts` | Create | Cron: sync all linked venues |
-| `apps/web/app/api/venues/[venueId]/settings/route.ts` | Modify | Add ffxivVenueId to GET response + PUT schema + link/unlink logic |
-| `apps/web/components/ffxivvenues-schedule-display.tsx` | Create | Read-only schedule display for synced data |
-| `apps/web/app/dashboard/[slug]/settings/page.tsx` | Modify | Add ffxivvenues.com link/unlink/sync UI section |
-| `apps/web/app/venues/[slug]/page.tsx` | Modify | Add synced schedule card + attribution + update Open Now badge |
+| File                                                          | Action | Purpose                                                           |
+| ------------------------------------------------------------- | ------ | ----------------------------------------------------------------- |
+| `apps/web/prisma/schema.prisma`                               | Modify | Add 3 fields to Venue + VenueSchedule model                       |
+| `apps/web/lib/ffxivvenues.ts`                                 | Create | API client, type definitions, sync functions                      |
+| `apps/web/app/api/venues/[venueId]/sync-ffxivvenues/route.ts` | Create | GET preview + POST manual sync                                    |
+| `apps/web/app/api/cron/sync-ffxivvenues-schedule/route.ts`    | Create | Cron: sync all linked venues                                      |
+| `apps/web/app/api/venues/[venueId]/settings/route.ts`         | Modify | Add ffxivVenueId to GET response + PUT schema + link/unlink logic |
+| `apps/web/components/ffxivvenues-schedule-display.tsx`        | Create | Read-only schedule display for synced data                        |
+| `apps/web/app/dashboard/[slug]/settings/page.tsx`             | Modify | Add ffxivvenues.com link/unlink/sync UI section                   |
+| `apps/web/app/venues/[slug]/page.tsx`                         | Modify | Add synced schedule card + attribution + update Open Now badge    |
 
 ---
 
 ## Task 1: Prisma Schema
 
 **Files:**
+
 - Modify: `apps/web/prisma/schema.prisma`
 
 - [ ] **Add 3 fields to the `Venue` model** — after the `// Partake Integration` block (around line 173):
@@ -117,6 +118,7 @@ git commit -m "feat: add ffxivVenueId fields to Venue and VenueSchedule model"
 ## Task 2: ffxivvenues.ts Library
 
 **Files:**
+
 - Create: `apps/web/lib/ffxivvenues.ts`
 
 - [ ] **Create the file:**
@@ -138,7 +140,7 @@ export type FfxivTime = {
 
 export type FfxivUtcSchedule = {
   from: string | null
-  day: number        // 0=Sun … 6=Sat
+  day: number // 0=Sun … 6=Sat
   start: FfxivTime
   end: FfxivTime
   location: unknown
@@ -210,7 +212,7 @@ export type SyncResult = {
   ok: boolean
   venueName?: string
   error?: string
-  unlinked?: boolean   // true if their listing was 404 and we cleared the link
+  unlinked?: boolean // true if their listing was 404 and we cleared the link
 }
 
 /**
@@ -274,7 +276,7 @@ export async function syncAllFfxivVenues(): Promise<BulkSyncResults> {
     else results.errors++
 
     // Rate limit: 3 calls / 10s → 400ms gap keeps us safely under
-    await new Promise(r => setTimeout(r, 400))
+    await new Promise((r) => setTimeout(r, 400))
   }
 
   return results
@@ -293,6 +295,7 @@ git commit -m "feat: add ffxivvenues.com API client and sync functions"
 ## Task 3: Sync Route (Preview + Manual Sync)
 
 **Files:**
+
 - Create: `apps/web/app/api/venues/[venueId]/sync-ffxivvenues/route.ts`
 
 - [ ] **Create the directory and file:**
@@ -319,16 +322,12 @@ async function requireOwner(venueId: string, userId: string) {
  * GET ?ffxivId=xxx — preview: fetch their venue and return name for confirmation UI.
  * Does NOT save anything. Used before the operator confirms a link.
  */
-export async function GET(
-  req: NextRequest,
-  { params }: { params: Promise<{ venueId: string }> }
-) {
+export async function GET(req: NextRequest, { params }: { params: Promise<{ venueId: string }> }) {
   const session = await getServerSession(authOptions)
   if (!session?.user?.id) return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
 
   const { venueId } = await params
-  if (!(await requireOwner(venueId, session.user.id)))
-    return NextResponse.json({ error: "Forbidden" }, { status: 403 })
+  if (!(await requireOwner(venueId, session.user.id))) return NextResponse.json({ error: "Forbidden" }, { status: 403 })
 
   const ffxivId = req.nextUrl.searchParams.get("ffxivId")
   if (!ffxivId) return NextResponse.json({ error: "ffxivId required" }, { status: 400 })
@@ -343,16 +342,12 @@ export async function GET(
  * POST — trigger a sync for this venue's linked ffxivvenues listing.
  * Uses the stored ffxivVenueId. Errors if not linked.
  */
-export async function POST(
-  _req: NextRequest,
-  { params }: { params: Promise<{ venueId: string }> }
-) {
+export async function POST(_req: NextRequest, { params }: { params: Promise<{ venueId: string }> }) {
   const session = await getServerSession(authOptions)
   if (!session?.user?.id) return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
 
   const { venueId } = await params
-  if (!(await requireOwner(venueId, session.user.id)))
-    return NextResponse.json({ error: "Forbidden" }, { status: 403 })
+  if (!(await requireOwner(venueId, session.user.id))) return NextResponse.json({ error: "Forbidden" }, { status: 403 })
 
   const venue = await prisma.venue.findUnique({
     where: { id: venueId },
@@ -364,7 +359,10 @@ export async function POST(
   const result = await syncFfxivVenue(venueId, venue.ffxivVenueId)
 
   if (!result.ok)
-    return NextResponse.json({ error: result.error, unlinked: result.unlinked }, { status: result.unlinked ? 410 : 502 })
+    return NextResponse.json(
+      { error: result.error, unlinked: result.unlinked },
+      { status: result.unlinked ? 410 : 502 }
+    )
 
   return NextResponse.json({ ok: true, venueName: result.venueName })
 }
@@ -382,6 +380,7 @@ git commit -m "feat: add GET preview + POST manual sync for ffxivvenues"
 ## Task 4: Cron Handler
 
 **Files:**
+
 - Create: `apps/web/app/api/cron/sync-ffxivvenues-schedule/route.ts`
 
 - [ ] **Create the file:**
@@ -437,6 +436,7 @@ git commit -m "feat: add cron handler for ffxivvenues schedule sync"
 ## Task 5: Settings Route — Link/Unlink Support
 
 **Files:**
+
 - Modify: `apps/web/app/api/venues/[venueId]/settings/route.ts`
 
 Read the full file first to understand the current structure before editing.
@@ -541,6 +541,7 @@ git commit -m "feat: add ffxivVenueId link/unlink to settings route"
 ## Task 6: FfxivvenuesScheduleDisplay Component
 
 **Files:**
+
 - Create: `apps/web/components/ffxivvenues-schedule-display.tsx`
 
 This is a server component. It displays the synced schedule from `VenueSchedule.data` with attribution.
@@ -550,7 +551,7 @@ This is a server component. It displays the synced schedule from `VenueSchedule.
 ```tsx
 import type { FfxivVenueData } from "@/lib/ffxivvenues"
 
-const DAY_NAMES = ["Sunday","Monday","Tuesday","Wednesday","Thursday","Friday","Saturday"]
+const DAY_NAMES = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"]
 
 function formatUtcTime(hour: number, minute: number): string {
   const period = hour >= 12 ? "PM" : "AM"
@@ -577,15 +578,28 @@ export function FfxivvenuesScheduleDisplay({ data, syncedAt }: Props) {
   }
 
   const syncedDate = new Date(syncedAt)
-  const syncLabel = syncedDate.toLocaleDateString("en-GB", {
-    day: "numeric", month: "short", hour: "2-digit", minute: "2-digit", timeZone: "UTC"
-  }) + " ST"
+  const syncLabel =
+    syncedDate.toLocaleDateString("en-GB", {
+      day: "numeric",
+      month: "short",
+      hour: "2-digit",
+      minute: "2-digit",
+      timeZone: "UTC",
+    }) + " ST"
 
   return (
     <div className="dcard">
       <div className="dh">
-        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="w-4 h-4">
-          <circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/>
+        <svg
+          xmlns="http://www.w3.org/2000/svg"
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          strokeWidth="2"
+          className="w-4 h-4"
+        >
+          <circle cx="12" cy="12" r="10" />
+          <polyline points="12 6 12 12 16 14" />
         </svg>
         Schedule
         <span className="ml-auto text-[0.7rem] text-[var(--fg-faint)] font-normal">via ffxivvenues.com</span>
@@ -595,7 +609,7 @@ export function FfxivvenuesScheduleDisplay({ data, syncedAt }: Props) {
         <p className="px-5 py-3 text-[0.82rem] text-[var(--fg-faint)]">No schedule published on ffxivvenues.com.</p>
       ) : (
         <>
-          {[0,1,2,3,4,5,6].map(i => {
+          {[0, 1, 2, 3, 4, 5, 6].map((i) => {
             const entries = byDay.get(i)
             const isToday = i === todayDay
             if (!entries || entries.length === 0) {
@@ -650,6 +664,7 @@ git commit -m "feat: add FfxivvenuesScheduleDisplay component with ToS attributi
 ## Task 7: Settings Page UI — ffxivvenues Section
 
 **Files:**
+
 - Modify: `apps/web/app/dashboard/[slug]/settings/page.tsx`
 
 Read the full file first to understand the Partake section pattern — the ffxivvenues section should look similar.
@@ -731,7 +746,10 @@ async function handleFfxivSyncNow() {
     const res = await fetch(`/api/venues/${venue.id}/sync-ffxivvenues`, { method: "POST" })
     if (!res.ok) {
       const err = await res.json()
-      if (err.unlinked) { setFfxivVenueId(null); setFfxivVenueSyncedAt(null) }
+      if (err.unlinked) {
+        setFfxivVenueId(null)
+        setFfxivVenueSyncedAt(null)
+      }
       return
     }
     setFfxivVenueSyncedAt(new Date().toISOString())
@@ -761,19 +779,26 @@ async function handleFfxivUnlink() {
 - [ ] **Add the ffxivvenues section in JSX** — add this `<section>` after the Partake section (search for the partake section to find the right location):
 
 ```tsx
-{/* ── ffxivvenues.com Integration ── */}
-<section className="panel">
+{
+  /* ── ffxivvenues.com Integration ── */
+}
+;<section className="panel">
   <div className="ph">
     <span className="pt">
-      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="w-4 h-4">
-        <path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/>
-        <path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/>
+      <svg
+        xmlns="http://www.w3.org/2000/svg"
+        viewBox="0 0 24 24"
+        fill="none"
+        stroke="currentColor"
+        strokeWidth="2"
+        className="w-4 h-4"
+      >
+        <path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71" />
+        <path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71" />
       </svg>
       ffxivvenues.com
     </span>
-    {ffxivVenueId && (
-      <span className="text-[0.72rem] text-emerald-400 ml-2">✓ Linked</span>
-    )}
+    {ffxivVenueId && <span className="text-[0.72rem] text-emerald-400 ml-2">✓ Linked</span>}
   </div>
 
   <div className="px-5 py-4 space-y-3">
@@ -823,7 +848,10 @@ async function handleFfxivUnlink() {
           </button>
           <button
             type="button"
-            onClick={() => { setFfxivPreview(null); setFfxivPreviewError(null) }}
+            onClick={() => {
+              setFfxivPreview(null)
+              setFfxivPreviewError(null)
+            }}
             className="px-3 py-1.5 text-[0.82rem] text-[var(--fg-faint)] hover:opacity-80"
           >
             Cancel
@@ -841,8 +869,8 @@ async function handleFfxivUnlink() {
             type="text"
             placeholder="ffxivvenues.com venue ID"
             value={ffxivInput}
-            onChange={e => setFfxivInput(e.target.value)}
-            onKeyDown={e => e.key === "Enter" && handleFfxivPreview()}
+            onChange={(e) => setFfxivInput(e.target.value)}
+            onKeyDown={(e) => e.key === "Enter" && handleFfxivPreview()}
             className="flex-1 rounded-[var(--radius-sm)] border border-[var(--blue-015)] bg-background px-3 py-1.5 text-sm focus:border-[var(--blue-035)] focus:outline-none"
           />
           <button
@@ -857,10 +885,15 @@ async function handleFfxivUnlink() {
         {ffxivPreviewError && <p className="text-[0.78rem] text-red-400">{ffxivPreviewError}</p>}
         <p className="text-[0.72rem] text-[var(--fg-faint)]">
           Find your venue ID at{" "}
-          <a href="https://ffxivvenues.com" target="_blank" rel="noopener noreferrer" className="text-[var(--xiv-blue)]">
+          <a
+            href="https://ffxivvenues.com"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="text-[var(--xiv-blue)]"
+          >
             ffxivvenues.com
-          </a>
-          {" "}— it appears in your listing URL.
+          </a>{" "}
+          — it appears in your listing URL.
         </p>
       </>
     )}
@@ -886,6 +919,7 @@ git commit -m "feat: add ffxivvenues.com link/unlink/sync section to venue setti
 ## Task 8: Venue Profile — Synced Schedule Card + Open Now Update
 
 **Files:**
+
 - Modify: `apps/web/app/venues/[slug]/page.tsx`
 
 Read the file first (it was modified in the previous branch — familiarise yourself with the current state before editing).
@@ -906,21 +940,25 @@ venueSchedule: true,
 - [ ] **Update the Open Now logic** — find where `openFromSchedule` and `isOpen` are defined (added in the previous branch) and update:
 
 ```tsx
-const openFromSchedule  = isOpenNow(venue.scheduleEntries)
-const ffxivIsNow        = !!(venue.venueSchedule?.data as FfxivVenueData | null)?.resolution?.isNow
-const isOpen            = !!liveEvent || openFromSchedule || ffxivIsNow
+const openFromSchedule = isOpenNow(venue.scheduleEntries)
+const ffxivIsNow = !!(venue.venueSchedule?.data as FfxivVenueData | null)?.resolution?.isNow
+const isOpen = !!liveEvent || openFromSchedule || ffxivIsNow
 ```
 
 - [ ] **Add synced schedule card** — find the `{/* Hours */}` dcard block. Add the ffxivvenues schedule card AFTER the Hours card (as a sibling):
 
 ```tsx
-{/* ffxivvenues.com synced schedule */}
-{venue.venueSchedule && (
-  <FfxivvenuesScheduleDisplay
-    data={venue.venueSchedule.data as FfxivVenueData}
-    syncedAt={venue.venueSchedule.syncedAt}
-  />
-)}
+{
+  /* ffxivvenues.com synced schedule */
+}
+{
+  venue.venueSchedule && (
+    <FfxivvenuesScheduleDisplay
+      data={venue.venueSchedule.data as FfxivVenueData}
+      syncedAt={venue.venueSchedule.syncedAt}
+    />
+  )
+}
 ```
 
 - [ ] **TypeScript check:**

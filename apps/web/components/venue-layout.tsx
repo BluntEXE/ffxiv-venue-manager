@@ -12,12 +12,7 @@ interface VenueLayoutProps {
   userRole: string
 }
 
-export async function VenueLayout({
-  children,
-  venueSlug,
-  venueName,
-  userRole,
-}: VenueLayoutProps) {
+export async function VenueLayout({ children, venueSlug, venueName, userRole }: VenueLayoutProps) {
   const session = await getServerSession(authOptions)
 
   const venues = await prisma.venue.findMany({
@@ -49,9 +44,7 @@ export async function VenueLayout({
         venues={venues}
       />
       {/* margin matches prototype: calc(260px + 20px × 2) = 300px */}
-      <main className="[@media(min-width:1081px)]:ml-[300px] relative z-[1]">
-        {children}
-      </main>
+      <main className="[@media(min-width:1081px)]:ml-[300px] relative z-[1]">{children}</main>
     </div>
   )
 }

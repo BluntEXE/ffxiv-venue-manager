@@ -9,6 +9,7 @@ The Venue Manager uses the **Catppuccin** color palette - a soothing, muted past
 **Theme Applied**: Catppuccin Mocha (Dark) with Catppuccin Latte (Light) variant
 
 **Design Philosophy**:
+
 - Muted, easy-on-the-eyes colors
 - Warm undertones for comfortable long-term use
 - Consistent pastel palette across all components
@@ -21,6 +22,7 @@ The Venue Manager uses the **Catppuccin** color palette - a soothing, muted past
 ### Catppuccin Mocha (Dark Mode - Default)
 
 **Base Colors**:
+
 - `--ctp-base`: `#1e1e2e` - Main background
 - `--ctp-mantle`: `#181825` - Slightly darker for cards
 - `--ctp-crust`: `#11111b` - Darkest shade for contrast
@@ -29,6 +31,7 @@ The Venue Manager uses the **Catppuccin** color palette - a soothing, muted past
 - `--ctp-subtext0`: `#a6adc8` - Tertiary text
 
 **Surface Colors** (Overlays & Backgrounds):
+
 - `--ctp-surface0`: `#313244` - Input fields, borders
 - `--ctp-surface1`: `#45475a` - Hover states
 - `--ctp-surface2`: `#585b70` - Active states
@@ -37,6 +40,7 @@ The Venue Manager uses the **Catppuccin** color palette - a soothing, muted past
 - `--ctp-overlay2`: `#9399b2` - Subtle text
 
 **Accent Colors**:
+
 - `--ctp-mauve`: `#cba6f7` - Primary accent (soft purple)
 - `--ctp-blue`: `#89b4fa` - Links, info
 - `--ctp-lavender`: `#b4befe` - Focus rings
@@ -55,6 +59,7 @@ The Venue Manager uses the **Catppuccin** color palette - a soothing, muted past
 ### Catppuccin Latte (Light Mode)
 
 **Base Colors**:
+
 - `--ctp-base`: `#eff1f5` - Main background (soft white)
 - `--ctp-mantle`: `#e6e9ef` - Slightly darker
 - `--ctp-crust`: `#dce0e8` - Card borders
@@ -70,47 +75,24 @@ The Catppuccin colors are mapped to semantic design tokens for easy component th
 
 ```css
 /* Backgrounds */
---background: var(--ctp-base)           /* Page background */
---card: var(--ctp-mantle)               /* Card backgrounds */
---popover: var(--ctp-surface0)          /* Dropdown/modal backgrounds */
-
-/* Text */
---foreground: var(--ctp-text)           /* Primary text */
---card-foreground: var(--ctp-text)      /* Text on cards */
---muted-foreground: var(--ctp-overlay1) /* Subtle/disabled text */
-
-/* Interactive Elements */
---primary: var(--ctp-mauve)                  /* Primary buttons */
---primary-foreground: var(--ctp-crust)       /* Text on primary buttons */
---secondary: var(--ctp-surface0)             /* Secondary buttons */
---secondary-foreground: var(--ctp-text)      /* Text on secondary buttons */
---accent: var(--ctp-surface1)                /* Hover states */
---accent-foreground: var(--ctp-text)         /* Text on accents */
-
-/* Form Elements */
---input: var(--ctp-surface0)            /* Input backgrounds */
---border: var(--ctp-surface0)           /* Border color */
---ring: var(--ctp-lavender)             /* Focus ring color */
-
-/* Destructive Actions */
---destructive: var(--ctp-red)               /* Delete buttons */
---destructive-foreground: var(--ctp-crust)  /* Text on destructive */
-
-/* Charts & Data Visualization */
---chart-1: var(--ctp-mauve)             /* Primary chart color */
---chart-2: var(--ctp-blue)              /* Secondary chart color */
---chart-3: var(--ctp-green)             /* Tertiary chart color */
---chart-4: var(--ctp-yellow)            /* Quaternary chart color */
---chart-5: var(--ctp-red)               /* Quinary chart color */
-
-/* Sidebar */
---sidebar: var(--ctp-mantle)                 /* Sidebar background */
---sidebar-foreground: var(--ctp-text)        /* Sidebar text */
---sidebar-primary: var(--ctp-mauve)          /* Active sidebar item */
---sidebar-primary-foreground: var(--ctp-crust) /* Active item text */
---sidebar-accent: var(--ctp-surface0)        /* Hover state */
---sidebar-border: var(--ctp-surface0)        /* Sidebar borders */
---sidebar-ring: var(--ctp-lavender)          /* Focus rings */
+--background: var(--ctp-base) /* Page background */ --card: var(--ctp-mantle) /* Card backgrounds */
+  --popover: var(--ctp-surface0) /* Dropdown/modal backgrounds */ /* Text */ --foreground: var(--ctp-text)
+  /* Primary text */ --card-foreground: var(--ctp-text) /* Text on cards */ --muted-foreground: var(--ctp-overlay1)
+  /* Subtle/disabled text */ /* Interactive Elements */ --primary: var(--ctp-mauve) /* Primary buttons */
+  --primary-foreground: var(--ctp-crust) /* Text on primary buttons */ --secondary: var(--ctp-surface0)
+  /* Secondary buttons */ --secondary-foreground: var(--ctp-text) /* Text on secondary buttons */
+  --accent: var(--ctp-surface1) /* Hover states */ --accent-foreground: var(--ctp-text) /* Text on accents */
+  /* Form Elements */ --input: var(--ctp-surface0) /* Input backgrounds */ --border: var(--ctp-surface0)
+  /* Border color */ --ring: var(--ctp-lavender) /* Focus ring color */ /* Destructive Actions */
+  --destructive: var(--ctp-red) /* Delete buttons */ --destructive-foreground: var(--ctp-crust)
+  /* Text on destructive */ /* Charts & Data Visualization */ --chart-1: var(--ctp-mauve) /* Primary chart color */
+  --chart-2: var(--ctp-blue) /* Secondary chart color */ --chart-3: var(--ctp-green) /* Tertiary chart color */
+  --chart-4: var(--ctp-yellow) /* Quaternary chart color */ --chart-5: var(--ctp-red) /* Quinary chart color */
+  /* Sidebar */ --sidebar: var(--ctp-mantle) /* Sidebar background */ --sidebar-foreground: var(--ctp-text)
+  /* Sidebar text */ --sidebar-primary: var(--ctp-mauve) /* Active sidebar item */
+  --sidebar-primary-foreground: var(--ctp-crust) /* Active item text */ --sidebar-accent: var(--ctp-surface0)
+  /* Hover state */ --sidebar-border: var(--ctp-surface0) /* Sidebar borders */ --sidebar-ring: var(--ctp-lavender)
+  /* Focus rings */;
 ```
 
 ---
@@ -120,6 +102,7 @@ The Catppuccin colors are mapped to semantic design tokens for easy component th
 ### Automatically Themed Components
 
 All shadcn/ui components automatically inherit the theme:
+
 - Buttons (primary, secondary, destructive, outline, ghost)
 - Cards
 - Input fields
@@ -138,26 +121,31 @@ All shadcn/ui components automatically inherit the theme:
 ### Application Sections
 
 **Dashboard**:
+
 - Venue cards with Mantle background
 - Stat cards with Surface colors
 - Sidebar with Mauve accents
 
 **Events Page**:
+
 - Event cards with themed borders
 - Status badges (Green for published, Yellow for draft, Red for cancelled)
 - Calendar components with Catppuccin accents
 
 **Tasks Page**:
+
 - Task lists with muted backgrounds
 - Status chips using accent colors
 - Priority indicators (Red for high, Yellow for medium, Green for low)
 
 **Sales Tracker**:
+
 - Transaction table with Surface backgrounds
 - Chart visualizations using chart color palette
 - Revenue stats with Mauve highlights
 
 **Settings Page**:
+
 - Form inputs with Surface0 backgrounds
 - Toggle switches with Lavender focus rings
 - Discord webhook section with accent highlights
@@ -173,11 +161,12 @@ To change the primary accent from Mauve to another color:
 ```css
 /* In app/globals.css */
 :root {
-  --primary: var(--ctp-blue);  /* Change to any Catppuccin color */
+  --primary: var(--ctp-blue); /* Change to any Catppuccin color */
 }
 ```
 
 Options:
+
 - `--ctp-mauve` - Purple (current default)
 - `--ctp-blue` - Blue
 - `--ctp-lavender` - Light purple
@@ -192,11 +181,12 @@ The theme uses rounded corners throughout:
 
 ```css
 :root {
-  --radius: 0.75rem;  /* Default: 12px */
+  --radius: 0.75rem; /* Default: 12px */
 }
 ```
 
 Options:
+
 - `0rem` - Square corners
 - `0.5rem` - Subtle rounded
 - `0.75rem` - Current (balanced)
@@ -208,10 +198,12 @@ Options:
 The theme supports both modes via the `.light` class:
 
 **Dark Mode (Default)**:
+
 - Applied automatically
 - Catppuccin Mocha palette
 
 **Light Mode**:
+
 - Add `.light` class to `<html>` element
 - Catppuccin Latte palette
 
@@ -223,17 +215,13 @@ const [isDark, setIsDark] = useState(true)
 
 useEffect(() => {
   if (isDark) {
-    document.documentElement.classList.remove('light')
+    document.documentElement.classList.remove("light")
   } else {
-    document.documentElement.classList.add('light')
+    document.documentElement.classList.add("light")
   }
 }, [isDark])
 
-return (
-  <button onClick={() => setIsDark(!isDark)}>
-    Toggle Theme
-  </button>
-)
+return <button onClick={() => setIsDark(!isDark)}>Toggle Theme</button>
 ```
 
 ---
@@ -252,6 +240,7 @@ The app uses Geist Sans and Geist Mono fonts:
 ### Spacing & Layout
 
 Consistent spacing using Tailwind scale:
+
 - Small gaps: `gap-2` (8px), `gap-4` (16px)
 - Card padding: `p-6` (24px)
 - Section spacing: `space-y-6` (24px vertical)
@@ -272,6 +261,7 @@ Consistent spacing using Tailwind scale:
 Always use semantic tokens instead of raw Catppuccin colors:
 
 **Good**:
+
 ```tsx
 <div className="bg-background text-foreground border border-border">
   <button className="bg-primary text-primary-foreground">Click</button>
@@ -279,6 +269,7 @@ Always use semantic tokens instead of raw Catppuccin colors:
 ```
 
 **Avoid**:
+
 ```tsx
 <div style={{ background: '#1e1e2e', color: '#cdd6f4' }}>
   <!-- Hard-coded colors won't adapt to light mode -->
@@ -309,16 +300,19 @@ Use consistent status indicators:
 The Catppuccin theme is designed with accessibility in mind:
 
 **Contrast Ratios**:
+
 - Text on background: 7.5:1 (AAA)
 - Buttons: 4.5:1 (AA)
 - Borders: 3:1 (minimum)
 
 **Focus Indicators**:
+
 - Lavender focus rings (`--ring`) are clearly visible
 - 2px thick for easy visibility
 - Applied to all interactive elements
 
 **Color Blindness**:
+
 - Status colors use both color AND icons/text
 - Don't rely on color alone to convey meaning
 
@@ -329,6 +323,7 @@ The Catppuccin theme is designed with accessibility in mind:
 **File Location**: `app/globals.css`
 
 **CSS Custom Properties**: All colors are defined as CSS variables, making them:
+
 - Easy to customize
 - Compatible with Tailwind
 - Automatically inherited by all components
@@ -352,6 +347,7 @@ The Catppuccin theme is designed with accessibility in mind:
 ## Preview
 
 Visit http://localhost:3000 to see the theme in action across:
+
 - Dashboard overview
 - Event calendar
 - Task manager

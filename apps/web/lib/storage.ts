@@ -2,7 +2,7 @@ import { S3Client, PutObjectCommand, DeleteObjectCommand } from "@aws-sdk/client
 import { getSignedUrl } from "@aws-sdk/s3-request-presigner"
 
 const creds = {
-  accessKeyId:     process.env.MINIO_ROOT_USER     ?? "xivvenues",
+  accessKeyId: process.env.MINIO_ROOT_USER ?? "xivvenues",
   secretAccessKey: process.env.MINIO_ROOT_PASSWORD ?? "",
 }
 

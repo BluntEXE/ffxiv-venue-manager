@@ -1,14 +1,14 @@
 @import "tailwindcss";
 
 @font-face {
-  font-family: 'Cinzel';
-  src: url('/fonts/Cinzel-VariableFont_wght.ttf') format('truetype');
+  font-family: "Cinzel";
+  src: url("/fonts/Cinzel-VariableFont_wght.ttf") format("truetype");
   font-weight: 400 900;
   font-style: normal;
   font-display: swap;
 }
 
-@import url('https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700;800&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap');
+@import url("https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700;800&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap");
 
 :root {
   /* ---- XIV brand colors ---- */
@@ -28,21 +28,21 @@
   --blue-004: rgba(0, 180, 255, 0.04);
   --blue-006: rgba(0, 180, 255, 0.06);
   --blue-008: rgba(0, 180, 255, 0.08);
-  --blue-010: rgba(0, 180, 255, 0.10);
+  --blue-010: rgba(0, 180, 255, 0.1);
   --blue-012: rgba(0, 180, 255, 0.12);
   --blue-015: rgba(0, 180, 255, 0.15);
   --blue-018: rgba(0, 180, 255, 0.18);
-  --blue-020: rgba(0, 180, 255, 0.20);
+  --blue-020: rgba(0, 180, 255, 0.2);
   --blue-035: rgba(0, 180, 255, 0.35);
   --blue-045: rgba(0, 180, 255, 0.45);
 
   --glow-card-inset: inset 0 1px 0 rgba(0, 180, 255, 0.12);
 
   /* ---- Type families ---- */
-  --font-display: 'Cinzel', Georgia, serif;
-  --font-heading: 'Outfit', system-ui, sans-serif;
-  --font-sans: 'Inter', system-ui, sans-serif;
-  --font-mono: 'JetBrains Mono', ui-monospace, 'SF Mono', Menlo, monospace;
+  --font-display: "Cinzel", Georgia, serif;
+  --font-heading: "Outfit", system-ui, sans-serif;
+  --font-sans: "Inter", system-ui, sans-serif;
+  --font-mono: "JetBrains Mono", ui-monospace, "SF Mono", Menlo, monospace;
 }
 
 body {
@@ -68,7 +68,7 @@ body {
   overflow: hidden;
 }
 .xiv-btn-shimmer::before {
-  content: '';
+  content: "";
   position: absolute;
   inset: 0;
   background: linear-gradient(120deg, transparent 32%, rgba(255, 255, 255, 0.5) 50%, transparent 68%);
@@ -77,16 +77,31 @@ body {
 }
 
 @keyframes xivShimmer {
-  0% { transform: translateX(-100%); }
-  100% { transform: translateX(100%); }
+  0% {
+    transform: translateX(-100%);
+  }
+  100% {
+    transform: translateX(100%);
+  }
 }
 
 @keyframes starDrift {
-  0%, 100% { transform: scale(1) translate(0, 0); }
-  50% { transform: scale(1.07) translate(-1%, 1%); }
+  0%,
+  100% {
+    transform: scale(1) translate(0, 0);
+  }
+  50% {
+    transform: scale(1.07) translate(-1%, 1%);
+  }
 }
 
 @keyframes fadeSlideUp {
-  from { opacity: 0; transform: translateY(12px); }
-  to   { opacity: 1; transform: translateY(0); }
+  from {
+    opacity: 0;
+    transform: translateY(12px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }

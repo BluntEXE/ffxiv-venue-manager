@@ -69,8 +69,8 @@ export function resolveShiftRates(
     const hoursRaw = (shift.actualEnd.getTime() - shift.actualStart.getTime()) / (1000 * 60 * 60)
     const hours = new Decimal(Math.round(hoursRaw * 100) / 100)
 
-    const shiftRoleRate = shift.roleId ? roleRates.get(shift.roleId) ?? null : null
-    const primaryRoleRate = membership.roleId ? roleRates.get(membership.roleId) ?? null : null
+    const shiftRoleRate = shift.roleId ? (roleRates.get(shift.roleId) ?? null) : null
+    const primaryRoleRate = membership.roleId ? (roleRates.get(membership.roleId) ?? null) : null
     const rate = shiftRoleRate ?? membership.hourlyRate ?? primaryRoleRate ?? null
 
     resolved.push({ id: shift.id, hours, rate })

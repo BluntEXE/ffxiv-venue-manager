@@ -1,12 +1,15 @@
 # Shout Crafter — XIV VM Brand Rebrand
 
 ## Status
+
 Mockup approved. Claude Design produced a working interactive prototype ("Shout Crafter.dc.html", project "Shout Crafter Rebrand" at claude.ai/design/p/d9c11fbf-5b27-4958-8f35-06d293ba2200) covering every section below with the real `buildShout` logic wired in. Full design handoff bundle (exact tokens, layout spec, component breakdown, assets, fonts) saved at `~/Projects/Shout Crafter Rebrand/design_handoff_shout_crafter_rebrand/` (README.md is the primary reference). Ready for implementation plan (writing-plans).
 
 ## Context
+
 Shout Crafter (`shout.xivvenuemanager.com`, source `apps/shout-crafter/`) is a standalone Vite/React tool for crafting FFXIV `/shout` ads (Partake import, Discord paste parsing, templates, saved shouts). It currently uses the original Catppuccin Mocha dark theme and predates the 2026-05-29 XIV blue brand redesign of the main site.
 
 ## Goal
+
 Full visual overhaul to match the XIV Venue Manager brand (XIV blue design system), without changing the existing feature set or page structure (no SND export work — deferred, pending possible script changes).
 
 ## Design decisions
@@ -38,6 +41,7 @@ Full visual overhaul to match the XIV Venue Manager brand (XIV blue design syste
    - Colors/type/glows sourced from design system's `colors_and_type.css` tokens
 
 ## Out of scope
+
 - SND export functionality (deferred — option 1 from earlier brainstorm)
 - VM shout-schedule dashboard (separate sub-project — option 5 from earlier brainstorm)
 - Multi-step/wizard flow
@@ -45,5 +49,6 @@ Full visual overhaul to match the XIV Venue Manager brand (XIV blue design syste
 - Real Partake fetch in prototype was mocked — real `fetchPartakeEvent` API call slots back in unchanged during implementation
 
 ## Next steps
+
 1. ~~Produce mockups via Claude Design~~ — done, prototype approved
 2. Invoke writing-plans skill: port approved prototype styling into `apps/shout-crafter/` (token port into `src/index.css`/`App.css`, restyle each component, keep all existing functionality/feature set and props unchanged)

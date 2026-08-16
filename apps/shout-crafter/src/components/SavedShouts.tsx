@@ -1,10 +1,10 @@
-import { useState, useEffect } from 'react'
-import type { ShoutFields, TemplateId } from '../types'
-import type { SeparatorId, DecorId } from '../lib/shout-templates'
-import { fetchShouts, saveShout, deleteShout } from '../lib/xivvm-shouts'
-import type { SavedShout } from '../lib/xivvm-shouts'
-import { buildShout } from '../lib/shout-templates'
-import { Bookmark, Trash2 } from 'lucide-react'
+import { useState, useEffect } from "react"
+import type { ShoutFields, TemplateId } from "../types"
+import type { SeparatorId, DecorId } from "../lib/shout-templates"
+import { fetchShouts, saveShout, deleteShout } from "../lib/xivvm-shouts"
+import type { SavedShout } from "../lib/xivvm-shouts"
+import { buildShout } from "../lib/shout-templates"
+import { Bookmark, Trash2 } from "lucide-react"
 
 interface Props {
   currentFields: ShoutFields
@@ -15,22 +15,24 @@ interface Props {
 }
 
 const inputClass =
-  'flex-1 bg-[var(--blue-004)] text-[var(--foreground)] placeholder-[var(--fg-faint)] rounded-[0.5rem] px-3 py-2 text-sm border border-[var(--blue-015)] focus:border-[var(--xiv-blue)] focus:outline-none focus:shadow-[0_0_0_3px_rgba(0,180,255,0.12)] transition-colors'
+  "flex-1 bg-[var(--blue-004)] text-[var(--foreground)] placeholder-[var(--fg-faint)] rounded-[0.5rem] px-3 py-2 text-sm border border-[var(--blue-015)] focus:border-[var(--xiv-blue)] focus:outline-none focus:shadow-[0_0_0_3px_rgba(0,180,255,0.12)] transition-colors"
 
 const ghostBtn =
-  'px-3 py-1.5 bg-[var(--blue-006)] text-[var(--muted-foreground)] text-sm font-medium rounded-[0.5rem] hover:bg-[var(--blue-010)] transition-colors'
+  "px-3 py-1.5 bg-[var(--blue-006)] text-[var(--muted-foreground)] text-sm font-medium rounded-[0.5rem] hover:bg-[var(--blue-010)] transition-colors"
 
 const primaryBtn =
-  'px-3 py-2 bg-[var(--xiv-blue)] text-[var(--xiv-navy)] text-sm font-bold rounded-[0.5rem] hover:opacity-90 disabled:opacity-50 transition-opacity'
+  "px-3 py-2 bg-[var(--xiv-blue)] text-[var(--xiv-navy)] text-sm font-bold rounded-[0.5rem] hover:opacity-90 disabled:opacity-50 transition-opacity"
 
 export function SavedShouts({ currentFields, currentTemplate, currentSeparator, currentDecor, onLoad }: Props) {
   const [shouts, setShouts] = useState<SavedShout[]>([])
-  const [label, setLabel] = useState('')
+  const [label, setLabel] = useState("")
   const [saving, setS] = useState(false)
   const [showSave, setShowSave] = useState(false)
   const [error, setError] = useState<string | null>(null)
 
-  useEffect(() => { fetchShouts().then(setShouts) }, [])
+  useEffect(() => {
+    fetchShouts().then(setShouts)
+  }, [])
 
   async function handleSave() {
     if (!label.trim()) return
@@ -44,15 +46,18 @@ export function SavedShouts({ currentFields, currentTemplate, currentSeparator, 
       decorId: currentDecor,
     })
     setS(false)
-    if (!saved) { setError('Save failed. Try again.'); return }
-    setShouts(prev => [saved, ...prev])
-    setLabel('')
+    if (!saved) {
+      setError("Save failed. Try again.")
+      return
+    }
+    setShouts((prev) => [saved, ...prev])
+    setLabel("")
     setShowSave(false)
   }
 
   async function handleDelete(id: string) {
     await deleteShout(id)
-    setShouts(prev => prev.filter(s => s.id !== id))
+    setShouts((prev) => prev.filter((s) => s.id !== id))
   }
 
   return (
@@ -63,13 +68,16 @@ export function SavedShouts({ currentFields, currentTemplate, currentSeparator, 
             <Bookmark size={18} className="text-[var(--xiv-blue)]" />
           </div>
           <div>
-            <h2 className="font-semibold text-[1.02rem] text-[var(--foreground)]" style={{ fontFamily: 'var(--font-heading)' }}>
+            <h2
+              className="font-semibold text-[1.02rem] text-[var(--foreground)]"
+              style={{ fontFamily: "var(--font-heading)" }}
+            >
               My shouts
             </h2>
             <p className="text-sm text-[var(--muted-foreground)]">Saved across your venues</p>
           </div>
         </div>
-        <button onClick={() => setShowSave(s => !s)} className={ghostBtn}>
+        <button onClick={() => setShowSave((s) => !s)} className={ghostBtn}>
           Save this
         </button>
       </div>
@@ -78,14 +86,14 @@ export function SavedShouts({ currentFields, currentTemplate, currentSeparator, 
         <div className="flex gap-2">
           <input
             value={label}
-            onChange={e => setLabel(e.target.value)}
-            onKeyDown={e => e.key === 'Enter' && handleSave()}
+            onChange={(e) => setLabel(e.target.value)}
+            onKeyDown={(e) => e.key === "Enter" && handleSave()}
             placeholder="Name this shout…"
             autoFocus
             className={inputClass}
           />
           <button onClick={handleSave} disabled={saving || !label.trim()} className={primaryBtn}>
-            {saving ? 'Saving…' : 'Save'}
+            {saving ? "Saving…" : "Save"}
           </button>
         </div>
       )}
@@ -96,11 +104,14 @@ export function SavedShouts({ currentFields, currentTemplate, currentSeparator, 
         <p className="text-xs text-[var(--fg-faint)]">Nothing saved yet.</p>
       ) : (
         <ul className="space-y-2">
-          {shouts.map(s => (
+          {shouts.map((s) => (
             <li key={s.id} className="flex items-start gap-2 bg-[var(--blue-004)] rounded-[0.5rem] p-3">
               <div className="flex-1 min-w-0">
                 <p className="text-sm font-medium text-[var(--foreground)] truncate">{s.label}</p>
-                <p className="text-xs text-[var(--fg-faint)] truncate mt-0.5" style={{ fontFamily: 'var(--font-mono)' }}>
+                <p
+                  className="text-xs text-[var(--fg-faint)] truncate mt-0.5"
+                  style={{ fontFamily: "var(--font-mono)" }}
+                >
                   {buildShout(s.fields, s.templateId, s.separatorId, s.decorId).slice(0, 80)}
                 </p>
               </div>

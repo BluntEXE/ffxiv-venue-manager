@@ -12,17 +12,18 @@
 
 ## Files
 
-| File | Action |
-|------|--------|
-| `apps/web/app/api/mobile/my/open-shifts/route.ts` | Create — GET list of open shifts |
-| `apps/web/app/api/mobile/my/open-shifts/[shiftId]/route.ts` | Create — POST claim a shift |
-| `apps/mobile/app/(app)/home.tsx` | Modify — open shifts section + collapse toggle |
+| File                                                        | Action                                         |
+| ----------------------------------------------------------- | ---------------------------------------------- |
+| `apps/web/app/api/mobile/my/open-shifts/route.ts`           | Create — GET list of open shifts               |
+| `apps/web/app/api/mobile/my/open-shifts/[shiftId]/route.ts` | Create — POST claim a shift                    |
+| `apps/mobile/app/(app)/home.tsx`                            | Modify — open shifts section + collapse toggle |
 
 ---
 
 ### Task 1: GET /api/mobile/my/open-shifts
 
 **Files:**
+
 - Create: `apps/web/app/api/mobile/my/open-shifts/route.ts`
 
 - [ ] **Step 1: Create the route file**
@@ -94,6 +95,7 @@ git commit -m "feat(api): add GET /api/mobile/my/open-shifts endpoint"
 ### Task 2: POST /api/mobile/my/open-shifts/[shiftId] (claim)
 
 **Files:**
+
 - Create: `apps/web/app/api/mobile/my/open-shifts/[shiftId]/route.ts`
 
 - [ ] **Step 1: Create the route file**
@@ -105,10 +107,7 @@ import { requireMobileAuth, isAuthFailure } from "@/lib/mobile-auth-guard"
 import { prisma } from "@/lib/prisma"
 import { logShiftAudit } from "@/lib/shift-audit"
 
-export async function POST(
-  req: Request,
-  { params }: { params: Promise<{ shiftId: string }> }
-) {
+export async function POST(req: Request, { params }: { params: Promise<{ shiftId: string }> }) {
   const result = await requireMobileAuth(req)
   if (isAuthFailure(result)) return result
   const userId = result
@@ -170,6 +169,7 @@ git commit -m "feat(api): add POST /api/mobile/my/open-shifts/[shiftId] claim en
 ### Task 3: Open Shifts section on Home tab
 
 **Files:**
+
 - Modify: `apps/mobile/app/(app)/home.tsx`
 
 - [ ] **Step 1: Add import for SecureStore**
@@ -177,7 +177,7 @@ git commit -m "feat(api): add POST /api/mobile/my/open-shifts/[shiftId] claim en
 Find the existing imports at the top of the file. `expo-secure-store` is already in package.json. Add it:
 
 ```typescript
-import * as SecureStore from 'expo-secure-store'
+import * as SecureStore from "expo-secure-store"
 ```
 
 - [ ] **Step 2: Add OpenShift type**
@@ -213,8 +213,8 @@ Add a `useEffect` after the state declarations:
 
 ```typescript
 useEffect(() => {
-  SecureStore.getItemAsync('@xivvm/openShiftsExpanded').then(val => {
-    if (val !== null) setOpenShiftsExpanded(val === 'true')
+  SecureStore.getItemAsync("@xivvm/openShiftsExpanded").then((val) => {
+    if (val !== null) setOpenShiftsExpanded(val === "true")
   })
 }, [])
 ```
@@ -227,7 +227,7 @@ Add alongside the existing `onRefresh` function:
 function toggleOpenShifts() {
   const next = !openShiftsExpanded
   setOpenShiftsExpanded(next)
-  SecureStore.setItemAsync('@xivvm/openShiftsExpanded', String(next))
+  SecureStore.setItemAsync("@xivvm/openShiftsExpanded", String(next))
 }
 ```
 
@@ -240,9 +240,9 @@ async function loadShifts(isRefresh = false) {
   if (!isRefresh) setShiftsLoading(true)
   try {
     const [shiftsRes, followsRes, openShiftsRes] = await Promise.all([
-      apiFetch('/api/mobile/my/shifts'),
-      apiFetch('/api/mobile/my/follows'),
-      apiFetch('/api/mobile/my/open-shifts'),
+      apiFetch("/api/mobile/my/shifts"),
+      apiFetch("/api/mobile/my/follows"),
+      apiFetch("/api/mobile/my/open-shifts"),
     ])
     if (shiftsRes.ok) setShifts(await shiftsRes.json())
     if (followsRes.ok) setFollows(await followsRes.json())
@@ -260,25 +260,29 @@ Add alongside `toggleOpenShifts`:
 ```typescript
 async function claimShift(shiftId: string, venueId: string) {
   setClaiming(shiftId)
-  setClaimErrors(e => { const n = { ...e }; delete n[shiftId]; return n })
+  setClaimErrors((e) => {
+    const n = { ...e }
+    delete n[shiftId]
+    return n
+  })
   try {
     const res = await apiFetch(`/api/mobile/my/open-shifts/${shiftId}`, {
-      method: 'POST',
+      method: "POST",
       body: JSON.stringify({ venueId }),
     })
     if (res.status === 409) {
       // Race condition — shift was claimed by someone else
-      setOpenShifts(s => s.filter(x => x.id !== shiftId))
+      setOpenShifts((s) => s.filter((x) => x.id !== shiftId))
       return
     }
     if (!res.ok) {
       const data = await res.json().catch(() => ({}))
-      setClaimErrors(e => ({ ...e, [shiftId]: data.error || 'Failed to claim' }))
+      setClaimErrors((e) => ({ ...e, [shiftId]: data.error || "Failed to claim" }))
       return
     }
-    setClaimedIds(s => new Set([...s, shiftId]))
+    setClaimedIds((s) => new Set([...s, shiftId]))
   } catch {
-    setClaimErrors(e => ({ ...e, [shiftId]: 'Network error' }))
+    setClaimErrors((e) => ({ ...e, [shiftId]: "Network error" }))
   } finally {
     setClaiming(null)
   }
@@ -290,62 +294,78 @@ async function claimShift(shiftId: string, venueId: string) {
 In the JSX, find the `follows.length > 0` block and add the Open Shifts section directly above it (inside the `<>` fragment, after the upcoming shifts block):
 
 ```tsx
-{openShifts.length > 0 && (
-  <YStack gap="$2" marginTop="$2">
-    <XStack alignItems="center" justifyContent="space-between">
-      <Text fontFamily="Outfit_600SemiBold" fontSize={16} color="$text">Open Shifts</Text>
-      <Button chromeless size="$2" onPress={toggleOpenShifts} paddingHorizontal="$1">
-        <Ionicons name={openShiftsExpanded ? 'chevron-up' : 'chevron-down'} size={16} color="#a6adc8" />
-      </Button>
-    </XStack>
-    {openShiftsExpanded && openShifts.map((s) => (
-      <XStack
-        key={s.id}
-        backgroundColor="$surface0"
-        borderRadius="$2"
-        padding="$3"
-        alignItems="center"
-        gap="$3"
-        borderWidth={1}
-        borderColor="rgba(0,180,255,0.15)"
-      >
-        <YStack flex={1} gap="$1">
-          <Text color="$text" fontSize={14} fontFamily="Outfit_600SemiBold" numberOfLines={1}>
-            {s.venueName}
-          </Text>
-          <Text color="$subtext0" fontSize={12}>
-            {formatST(s.scheduledStart)} – {formatST(s.scheduledEnd)} ST
-          </Text>
-          {s.roleName && (
-            <Text color="$subtext0" fontSize={11}>{s.roleName}</Text>
-          )}
-          {claimErrors[s.id] && (
-            <Text color="$danger" fontSize={11}>{claimErrors[s.id]}</Text>
-          )}
-        </YStack>
-        {claimedIds.has(s.id) ? (
-          <XStack backgroundColor="rgba(0,180,255,0.12)" borderRadius="$4" paddingHorizontal="$2" paddingVertical={2}>
-            <Text fontSize={11} color="$primary">Pending</Text>
-          </XStack>
-        ) : (
-          <Button
-            size="$2"
-            backgroundColor="$primary"
-            color="$base"
-            borderRadius="$2"
-            fontFamily="InterBold"
-            fontSize={12}
-            disabled={claiming === s.id}
-            onPress={() => claimShift(s.id, s.venueId)}
-            pressStyle={{ opacity: 0.85 }}
-          >
-            {claiming === s.id ? <Spinner size="small" color="$base" /> : 'Claim'}
-          </Button>
-        )}
+{
+  openShifts.length > 0 && (
+    <YStack gap="$2" marginTop="$2">
+      <XStack alignItems="center" justifyContent="space-between">
+        <Text fontFamily="Outfit_600SemiBold" fontSize={16} color="$text">
+          Open Shifts
+        </Text>
+        <Button chromeless size="$2" onPress={toggleOpenShifts} paddingHorizontal="$1">
+          <Ionicons name={openShiftsExpanded ? "chevron-up" : "chevron-down"} size={16} color="#a6adc8" />
+        </Button>
       </XStack>
-    ))}
-  </YStack>
-)}
+      {openShiftsExpanded &&
+        openShifts.map((s) => (
+          <XStack
+            key={s.id}
+            backgroundColor="$surface0"
+            borderRadius="$2"
+            padding="$3"
+            alignItems="center"
+            gap="$3"
+            borderWidth={1}
+            borderColor="rgba(0,180,255,0.15)"
+          >
+            <YStack flex={1} gap="$1">
+              <Text color="$text" fontSize={14} fontFamily="Outfit_600SemiBold" numberOfLines={1}>
+                {s.venueName}
+              </Text>
+              <Text color="$subtext0" fontSize={12}>
+                {formatST(s.scheduledStart)} – {formatST(s.scheduledEnd)} ST
+              </Text>
+              {s.roleName && (
+                <Text color="$subtext0" fontSize={11}>
+                  {s.roleName}
+                </Text>
+              )}
+              {claimErrors[s.id] && (
+                <Text color="$danger" fontSize={11}>
+                  {claimErrors[s.id]}
+                </Text>
+              )}
+            </YStack>
+            {claimedIds.has(s.id) ? (
+              <XStack
+                backgroundColor="rgba(0,180,255,0.12)"
+                borderRadius="$4"
+                paddingHorizontal="$2"
+                paddingVertical={2}
+              >
+                <Text fontSize={11} color="$primary">
+                  Pending
+                </Text>
+              </XStack>
+            ) : (
+              <Button
+                size="$2"
+                backgroundColor="$primary"
+                color="$base"
+                borderRadius="$2"
+                fontFamily="InterBold"
+                fontSize={12}
+                disabled={claiming === s.id}
+                onPress={() => claimShift(s.id, s.venueId)}
+                pressStyle={{ opacity: 0.85 }}
+              >
+                {claiming === s.id ? <Spinner size="small" color="$base" /> : "Claim"}
+              </Button>
+            )}
+          </XStack>
+        ))}
+    </YStack>
+  )
+}
 ```
 
 - [ ] **Step 9: Verify TypeScript compiles**
@@ -380,6 +400,7 @@ Expected: container restarts with the two new API routes live.
 - [ ] **Step 2: Trigger mobile build**
 
 Run in your terminal:
+
 ```
 ! cd ~/xiv-app/apps/mobile && eas build --platform android --profile preview
 ```

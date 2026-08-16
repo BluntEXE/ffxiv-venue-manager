@@ -4,10 +4,7 @@ import { authOptions } from "@/lib/auth"
 import { prisma } from "@/lib/prisma"
 import { syncVenuePartakeEvents } from "@/lib/partake"
 
-export async function POST(
-  request: Request,
-  { params }: { params: Promise<{ venueId: string }> }
-) {
+export async function POST(request: Request, { params }: { params: Promise<{ venueId: string }> }) {
   try {
     const session = await getServerSession(authOptions)
     if (!session?.user?.id) {
@@ -26,10 +23,7 @@ export async function POST(
     })
 
     if (!membership) {
-      return NextResponse.json(
-        { error: "Only owners and managers can trigger sync" },
-        { status: 403 }
-      )
+      return NextResponse.json({ error: "Only owners and managers can trigger sync" }, { status: 403 })
     }
 
     const venue = await prisma.venue.findUnique({
@@ -42,10 +36,7 @@ export async function POST(
     }
 
     if (!venue.partakeTeamId) {
-      return NextResponse.json(
-        { error: "No Partake Team ID configured. Save settings first." },
-        { status: 400 }
-      )
+      return NextResponse.json({ error: "No Partake Team ID configured. Save settings first." }, { status: 400 })
     }
 
     const results = await syncVenuePartakeEvents({
@@ -57,9 +48,6 @@ export async function POST(
     return NextResponse.json({ success: true, results })
   } catch (error) {
     console.error("[Partake Sync] Manual sync error:", error)
-    return NextResponse.json(
-      { error: "Sync failed. Check that your Partake Team ID is correct." },
-      { status: 500 }
-    )
+    return NextResponse.json({ error: "Sync failed. Check that your Partake Team ID is correct." }, { status: 500 })
   }
 }

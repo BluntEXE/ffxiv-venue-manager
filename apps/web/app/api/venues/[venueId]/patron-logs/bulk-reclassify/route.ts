@@ -40,15 +40,11 @@ export const PATCH = withRateLimit<{ params: Promise<{ venueId: string }> }>(
         where: { userId: session.user.id, venueId: venue.id, status: "active" },
       })
       if (!membership || !["OWNER", "MANAGER"].includes(membership.role)) {
-        return NextResponse.json(
-          { error: "Owner or Manager role required" },
-          { status: 403 }
-        )
+        return NextResponse.json({ error: "Owner or Manager role required" }, { status: 403 })
       }
 
       const body = await request.json()
-      const { logIds, wasWorking, workingUserId, reason } =
-        bulkReclassifySchema.parse(body)
+      const { logIds, wasWorking, workingUserId, reason } = bulkReclassifySchema.parse(body)
 
       // If assigning to a user, ensure that user is a member of this venue.
       if (wasWorking && workingUserId) {
@@ -56,10 +52,7 @@ export const PATCH = withRateLimit<{ params: Promise<{ venueId: string }> }>(
           where: { userId: workingUserId, venueId: venue.id, status: "active" },
         })
         if (!targetMembership) {
-          return NextResponse.json(
-            { error: "Target user is not an active member of this venue" },
-            { status: 400 }
-          )
+          return NextResponse.json({ error: "Target user is not an active member of this venue" }, { status: 400 })
         }
       }
 
@@ -93,10 +86,7 @@ export const PATCH = withRateLimit<{ params: Promise<{ venueId: string }> }>(
       return NextResponse.json({ updated: result.count })
     } catch (err) {
       if (err instanceof z.ZodError) {
-        return NextResponse.json(
-          { error: "Invalid request", details: err.flatten() },
-          { status: 400 }
-        )
+        return NextResponse.json({ error: "Invalid request", details: err.flatten() }, { status: 400 })
       }
       console.error("[bulk-reclassify] error:", err)
       return NextResponse.json({ error: "Internal server error" }, { status: 500 })

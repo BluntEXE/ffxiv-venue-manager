@@ -25,6 +25,7 @@
 ## Task 1: Bot-auth verification helper
 
 **Files:**
+
 - Create: `apps/web/lib/bot-auth.ts`
 
 - [ ] **Step 1: Write the helper**
@@ -44,10 +45,7 @@ export function verifyBotAuth(request: Request): NextResponse | null {
   const botSecret = process.env.EORZEA_BOT_API_SECRET
   if (!botSecret) {
     console.error("EORZEA_BOT_API_SECRET not configured")
-    return NextResponse.json(
-      { error: "Server misconfiguration" },
-      { status: 500 }
-    )
+    return NextResponse.json({ error: "Server misconfiguration" }, { status: 500 })
   }
 
   const provided = request.headers.get("x-bot-secret") ?? ""
@@ -68,6 +66,7 @@ export function verifyBotAuth(request: Request): NextResponse | null {
 ```bash
 cd apps/web && npx tsc --noEmit
 ```
+
 Expected: no new errors.
 
 - [ ] **Step 3: Commit**
@@ -82,6 +81,7 @@ git commit -m "feat(web): add verifyBotAuth for bot-to-web authenticated request
 ## Task 2: Clock-in endpoint
 
 **Files:**
+
 - Create: `apps/web/app/api/bot/shifts/clock-in/route.ts`
 
 - [ ] **Step 1: Write the route**
@@ -219,6 +219,7 @@ This duplicates the local `queueOpenedNowNotifications` helper the same way the 
 ```bash
 cd apps/web && npx tsc --noEmit
 ```
+
 Expected: no new errors.
 
 - [ ] **Step 3: Commit**
@@ -233,6 +234,7 @@ git commit -m "feat(web): add /api/bot/shifts/clock-in endpoint for Aetherlink"
 ## Task 3: Clock-out endpoint
 
 **Files:**
+
 - Create: `apps/web/app/api/bot/shifts/clock-out/route.ts`
 
 - [ ] **Step 1: Write the route**
@@ -312,6 +314,7 @@ export async function POST(request: Request) {
 ```bash
 cd apps/web && npx tsc --noEmit
 ```
+
 Expected: no new errors.
 
 - [ ] **Step 3: Commit**
@@ -326,6 +329,7 @@ git commit -m "feat(web): add /api/bot/shifts/clock-out endpoint for Aetherlink"
 ## Task 4: Wire env vars
 
 **Files:**
+
 - Modify: `docker-compose.yml`
 - Modify: `apps/eorzea-bot/.env.example`
 
@@ -334,8 +338,8 @@ git commit -m "feat(web): add /api/bot/shifts/clock-out endpoint for Aetherlink"
 Find the line `WEBHOOK_SECRET: ${EORZEA_BOT_WEBHOOK_SECRET}` and add immediately after it:
 
 ```yaml
-      API_SECRET: ${EORZEA_BOT_API_SECRET}
-      WEB_APP_URL: "http://venue-manager:3000"
+API_SECRET: ${EORZEA_BOT_API_SECRET}
+WEB_APP_URL: "http://venue-manager:3000"
 ```
 
 - [ ] **Step 2: Add to `apps/eorzea-bot/.env.example`**
@@ -359,86 +363,82 @@ Note: the real `EORZEA_BOT_API_SECRET` value on the production server's `.env` (
 ## Task 5: `/clockin` bot command
 
 **Files:**
+
 - Create: `apps/eorzea-bot/src/commands/venue/clockin.ts`
 
 - [ ] **Step 1: Write the command**
 
 ```typescript
-import {
-  ChatInputCommandInteraction,
-  EmbedBuilder,
-  MessageFlags,
-  SlashCommandBuilder,
-} from 'discord.js';
+import { ChatInputCommandInteraction, EmbedBuilder, MessageFlags, SlashCommandBuilder } from "discord.js"
 
-const WEB_APP_URL = process.env.WEB_APP_URL!;
-const API_SECRET = process.env.API_SECRET!;
+const WEB_APP_URL = process.env.WEB_APP_URL!
+const API_SECRET = process.env.API_SECRET!
 
 interface ClockInResponse {
-  ok: boolean;
-  code?: 'NOT_LINKED' | 'NO_SHIFT' | 'FORBIDDEN' | 'CONFLICT' | 'BAD_REQUEST';
-  alreadyActive?: boolean;
-  venueName?: string;
-  actualStart?: string | null;
+  ok: boolean
+  code?: "NOT_LINKED" | "NO_SHIFT" | "FORBIDDEN" | "CONFLICT" | "BAD_REQUEST"
+  alreadyActive?: boolean
+  venueName?: string
+  actualStart?: string | null
 }
 
 export default {
-  data: new SlashCommandBuilder()
-    .setName('clockin')
-    .setDescription('Clock in to your scheduled shift'),
+  data: new SlashCommandBuilder().setName("clockin").setDescription("Clock in to your scheduled shift"),
 
   async execute(interaction: ChatInputCommandInteraction) {
-    await interaction.deferReply({ flags: MessageFlags.Ephemeral });
+    await interaction.deferReply({ flags: MessageFlags.Ephemeral })
 
     const res = await fetch(`${WEB_APP_URL}/api/bot/shifts/clock-in`, {
-      method: 'POST',
+      method: "POST",
       headers: {
-        'Content-Type': 'application/json',
-        'x-bot-secret': API_SECRET,
+        "Content-Type": "application/json",
+        "x-bot-secret": API_SECRET,
       },
       body: JSON.stringify({ discordId: interaction.user.id }),
-    }).catch(() => null);
+    }).catch(() => null)
 
     if (!res) {
-      await interaction.editReply({ content: '⚠️ Could not reach the server. Try again in a moment.' });
-      return;
+      await interaction.editReply({ content: "⚠️ Could not reach the server. Try again in a moment." })
+      return
     }
 
-    const data = (await res.json().catch(() => ({ ok: false }))) as ClockInResponse;
+    const data = (await res.json().catch(() => ({ ok: false }))) as ClockInResponse
 
     if (!data.ok) {
       const message = {
-        NOT_LINKED: '🔗 Your Discord isn\'t linked to a venue manager account. Link it at **[xivvenuemanager.com/dashboard/account](https://xivvenuemanager.com/dashboard/account)**.',
-        NO_SHIFT: '📭 Nothing scheduled to start soon. Shifts can be clocked in 30 minutes before through 60 minutes after their scheduled start.',
-        FORBIDDEN: '🚫 You don\'t have permission to clock shifts at this venue.',
-        CONFLICT: '⚠️ That shift just changed status — try again.',
-        BAD_REQUEST: '⚠️ Something went wrong on our end.',
-      }[data.code ?? 'BAD_REQUEST'];
-      await interaction.editReply({ content: message });
-      return;
+        NOT_LINKED:
+          "🔗 Your Discord isn't linked to a venue manager account. Link it at **[xivvenuemanager.com/dashboard/account](https://xivvenuemanager.com/dashboard/account)**.",
+        NO_SHIFT:
+          "📭 Nothing scheduled to start soon. Shifts can be clocked in 30 minutes before through 60 minutes after their scheduled start.",
+        FORBIDDEN: "🚫 You don't have permission to clock shifts at this venue.",
+        CONFLICT: "⚠️ That shift just changed status — try again.",
+        BAD_REQUEST: "⚠️ Something went wrong on our end.",
+      }[data.code ?? "BAD_REQUEST"]
+      await interaction.editReply({ content: message })
+      return
     }
 
     const fmt = (iso: string | null | undefined) =>
-      iso ? new Date(iso).toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit', timeZone: 'UTC' }) : '';
+      iso ? new Date(iso).toLocaleTimeString("en-GB", { hour: "2-digit", minute: "2-digit", timeZone: "UTC" }) : ""
 
     if (data.alreadyActive) {
       await interaction.editReply({
         content: `✅ You're already clocked in at **${data.venueName}** since ${fmt(data.actualStart)} ST.`,
-      });
-      return;
+      })
+      return
     }
 
     const embed = new EmbedBuilder()
       .setColor(0x00b4ff)
-      .setTitle('🟢 Clocked In')
+      .setTitle("🟢 Clocked In")
       .setDescription(`You're now clocked in at **${data.venueName}**.`)
-      .addFields({ name: 'Started', value: `${fmt(data.actualStart)} ST`, inline: true })
-      .setFooter({ text: 'XIV Venue Manager' })
-      .setTimestamp();
+      .addFields({ name: "Started", value: `${fmt(data.actualStart)} ST`, inline: true })
+      .setFooter({ text: "XIV Venue Manager" })
+      .setTimestamp()
 
-    await interaction.editReply({ embeds: [embed] });
+    await interaction.editReply({ embeds: [embed] })
   },
-};
+}
 ```
 
 - [ ] **Step 2: Verify it compiles**
@@ -446,6 +446,7 @@ export default {
 ```bash
 cd apps/eorzea-bot && npx tsc --noEmit
 ```
+
 Expected: no errors.
 
 - [ ] **Step 3: Commit**
@@ -460,75 +461,74 @@ git commit -m "feat(bot): add /clockin slash command"
 ## Task 6: `/clockout` bot command
 
 **Files:**
+
 - Create: `apps/eorzea-bot/src/commands/venue/clockout.ts`
 
 - [ ] **Step 1: Write the command**
 
 ```typescript
-import {
-  ChatInputCommandInteraction,
-  EmbedBuilder,
-  MessageFlags,
-  SlashCommandBuilder,
-} from 'discord.js';
+import { ChatInputCommandInteraction, EmbedBuilder, MessageFlags, SlashCommandBuilder } from "discord.js"
 
-const WEB_APP_URL = process.env.WEB_APP_URL!;
-const API_SECRET = process.env.API_SECRET!;
+const WEB_APP_URL = process.env.WEB_APP_URL!
+const API_SECRET = process.env.API_SECRET!
 
 interface ClockOutResponse {
-  ok: boolean;
-  code?: 'NOT_LINKED' | 'NO_SHIFT' | 'FORBIDDEN' | 'CONFLICT' | 'BAD_REQUEST';
-  venueName?: string;
-  hoursWorked?: number | null;
+  ok: boolean
+  code?: "NOT_LINKED" | "NO_SHIFT" | "FORBIDDEN" | "CONFLICT" | "BAD_REQUEST"
+  venueName?: string
+  hoursWorked?: number | null
 }
 
 export default {
-  data: new SlashCommandBuilder()
-    .setName('clockout')
-    .setDescription('Clock out of your active shift'),
+  data: new SlashCommandBuilder().setName("clockout").setDescription("Clock out of your active shift"),
 
   async execute(interaction: ChatInputCommandInteraction) {
-    await interaction.deferReply({ flags: MessageFlags.Ephemeral });
+    await interaction.deferReply({ flags: MessageFlags.Ephemeral })
 
     const res = await fetch(`${WEB_APP_URL}/api/bot/shifts/clock-out`, {
-      method: 'POST',
+      method: "POST",
       headers: {
-        'Content-Type': 'application/json',
-        'x-bot-secret': API_SECRET,
+        "Content-Type": "application/json",
+        "x-bot-secret": API_SECRET,
       },
       body: JSON.stringify({ discordId: interaction.user.id }),
-    }).catch(() => null);
+    }).catch(() => null)
 
     if (!res) {
-      await interaction.editReply({ content: '⚠️ Could not reach the server. Try again in a moment.' });
-      return;
+      await interaction.editReply({ content: "⚠️ Could not reach the server. Try again in a moment." })
+      return
     }
 
-    const data = (await res.json().catch(() => ({ ok: false }))) as ClockOutResponse;
+    const data = (await res.json().catch(() => ({ ok: false }))) as ClockOutResponse
 
     if (!data.ok) {
       const message = {
-        NOT_LINKED: '🔗 Your Discord isn\'t linked to a venue manager account. Link it at **[xivvenuemanager.com/dashboard/account](https://xivvenuemanager.com/dashboard/account)**.',
-        NO_SHIFT: '📭 You\'re not currently clocked in anywhere.',
-        FORBIDDEN: '🚫 You don\'t have permission to clock shifts at this venue.',
-        CONFLICT: '⚠️ That shift just changed status — try again.',
-        BAD_REQUEST: '⚠️ Something went wrong on our end.',
-      }[data.code ?? 'BAD_REQUEST'];
-      await interaction.editReply({ content: message });
-      return;
+        NOT_LINKED:
+          "🔗 Your Discord isn't linked to a venue manager account. Link it at **[xivvenuemanager.com/dashboard/account](https://xivvenuemanager.com/dashboard/account)**.",
+        NO_SHIFT: "📭 You're not currently clocked in anywhere.",
+        FORBIDDEN: "🚫 You don't have permission to clock shifts at this venue.",
+        CONFLICT: "⚠️ That shift just changed status — try again.",
+        BAD_REQUEST: "⚠️ Something went wrong on our end.",
+      }[data.code ?? "BAD_REQUEST"]
+      await interaction.editReply({ content: message })
+      return
     }
 
     const embed = new EmbedBuilder()
       .setColor(0x00b4ff)
-      .setTitle('🔴 Clocked Out')
+      .setTitle("🔴 Clocked Out")
       .setDescription(`You're now clocked out of **${data.venueName}**.`)
-      .addFields({ name: 'Hours worked', value: data.hoursWorked != null ? `${data.hoursWorked}h` : 'n/a', inline: true })
-      .setFooter({ text: 'XIV Venue Manager' })
-      .setTimestamp();
+      .addFields({
+        name: "Hours worked",
+        value: data.hoursWorked != null ? `${data.hoursWorked}h` : "n/a",
+        inline: true,
+      })
+      .setFooter({ text: "XIV Venue Manager" })
+      .setTimestamp()
 
-    await interaction.editReply({ embeds: [embed] });
+    await interaction.editReply({ embeds: [embed] })
   },
-};
+}
 ```
 
 - [ ] **Step 2: Verify it compiles**
@@ -536,6 +536,7 @@ export default {
 ```bash
 cd apps/eorzea-bot && npx tsc --noEmit
 ```
+
 Expected: no errors.
 
 - [ ] **Step 3: Commit**
@@ -554,7 +555,9 @@ git commit -m "feat(bot): add /clockout slash command"
 ```bash
 ssh server@192.168.1.122 "openssl rand -hex 32"
 ```
+
 Copy the output, then append to the server's `~/xiv-app/.env` (not `.env.example`):
+
 ```bash
 ssh server@192.168.1.122 "echo 'EORZEA_BOT_API_SECRET=<generated-value>' >> ~/xiv-app/.env"
 ```
@@ -572,6 +575,7 @@ The bot auto-loads commands from disk on startup (confirmed via `[Commands] Load
 ```bash
 ssh server@192.168.1.122 "cd ~/xiv-app && docker compose exec eorzea-bot node dist/deploy-commands.js"
 ```
+
 Expected: `[Deploy] Registered N commands to guild <id> (instant)` — confirm the count includes the 2 new commands.
 
 - [ ] **Step 4: Verify a linked test account can clock in and out**
@@ -581,9 +585,11 @@ Using a Discord account whose `users.discordId` is set and who has a `SCHEDULED`
 Expected: ephemeral embed "🟢 Clocked In" with the correct venue and start time.
 
 Then confirm in the DB:
+
 ```bash
 ssh server@192.168.1.122 "docker exec postgres psql -U postgres -d venue_manager -c \"SELECT status, \\\"actualStart\\\" FROM shifts WHERE id = '<shift-id>';\""
 ```
+
 Expected: `status = ACTIVE`, `actualStart` set to the current time.
 
 - [ ] **Step 5: Verify the already-active no-op**
@@ -591,9 +597,11 @@ Expected: `status = ACTIVE`, `actualStart` set to the current time.
 Run `/clockin` again immediately.
 
 Expected: "✅ You're already clocked in at **{venue}** since {time} ST." — not an error, no duplicate audit log entry:
+
 ```bash
 ssh server@192.168.1.122 "docker exec postgres psql -U postgres -d venue_manager -c \"SELECT count(*) FROM shift_audit_logs WHERE \\\"shiftId\\\" = '<shift-id>' AND action = 'CLOCK_IN';\""
 ```
+
 Expected: `1`, not `2`.
 
 - [ ] **Step 6: Verify clock-out and the What's Happening board**

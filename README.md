@@ -35,6 +35,7 @@ The platform is two parts: a **web dashboard** (this repo) and a **Dalamud game-
 ## Features
 
 ### Events Management
+
 - Create and manage venue events with full scheduling
 - Recurring events (daily, weekly, custom intervals)
 - Automatic Discord announcements and reminders
@@ -42,12 +43,14 @@ The platform is two parts: a **web dashboard** (this repo) and a **Dalamud game-
 - Visibility controls (published vs. all events)
 
 ### Staff Management
+
 - Role-based access control (Owner, Manager, Staff)
 - Staff invitations with custom roles
 - Permission management and visibility settings
 - Activity tracking and Discord notifications
 
 ### Task Management
+
 - Create and assign tasks to staff members
 - Task status tracking (Pending, In Progress, Completed)
 - Priority levels and due dates
@@ -55,6 +58,7 @@ The platform is two parts: a **web dashboard** (this repo) and a **Dalamud game-
 - Discord notifications
 
 ### Services & Sales
+
 - Define venue services and offerings
 - Log sales transactions with customer info
 - Track revenue and commission
@@ -62,12 +66,14 @@ The platform is two parts: a **web dashboard** (this repo) and a **Dalamud game-
 - Daily sales summaries via Discord
 
 ### Payroll System
+
 - Track hours worked by staff
 - Calculate and log payroll payments
 - Payment history and analytics
 - Owner/manager-only access
 
 ### Discord Integration
+
 - Separate webhooks for different notification types
 - Selective notification toggles per webhook
 - Task, event, sales, and staff notifications
@@ -96,12 +102,14 @@ For the why-this-and-not-that on each choice, see [`CASE_STUDY.md`](./CASE_STUDY
 See [QUICK_START.md](./QUICK_START.md) for detailed setup instructions.
 
 ### Prerequisites
+
 - Node.js 20+
 - PostgreSQL 16
 - Redis 7
 - Discord application (for OAuth)
 
 ### Installation
+
 ```bash
 npm install
 cp .env.example .env  # fill in DATABASE_URL, REDIS_URL, NEXTAUTH_SECRET, DISCORD_CLIENT_ID/SECRET
@@ -117,16 +125,19 @@ For production, the entire stack runs as a Docker Compose project: `docker compo
 ## User Roles & Permissions
 
 ### Owner
+
 - Full access to everything
 - Can delete venue
 - Can manage all settings and view all financial data
 
 ### Manager
+
 - Full access except venue deletion and owner-level settings
 - Can manage staff and assign roles
 - Can configure visibility settings
 
 ### Staff
+
 - Access controlled by venue settings:
   - **Tasks**: See all, assigned only, or assigned + unassigned
   - **Sales**: See all, own only, or no access

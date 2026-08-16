@@ -10,24 +10,22 @@ import { formatVenueLocationShort } from "@/lib/venue-location"
 export const dynamic = "force-dynamic"
 
 export const DATA_CENTRES = [
-  { slug: "chaos",     name: "Chaos",     region: "Europe" },
-  { slug: "light",     name: "Light",     region: "Europe" },
-  { slug: "aether",    name: "Aether",    region: "North America" },
-  { slug: "crystal",   name: "Crystal",   region: "North America" },
-  { slug: "dynamis",   name: "Dynamis",   region: "North America" },
-  { slug: "primal",    name: "Primal",    region: "North America" },
+  { slug: "chaos", name: "Chaos", region: "Europe" },
+  { slug: "light", name: "Light", region: "Europe" },
+  { slug: "aether", name: "Aether", region: "North America" },
+  { slug: "crystal", name: "Crystal", region: "North America" },
+  { slug: "dynamis", name: "Dynamis", region: "North America" },
+  { slug: "primal", name: "Primal", region: "North America" },
   { slug: "elemental", name: "Elemental", region: "Japan" },
-  { slug: "gaia",      name: "Gaia",      region: "Japan" },
-  { slug: "mana",      name: "Mana",      region: "Japan" },
-  { slug: "meteor",    name: "Meteor",    region: "Japan" },
-  { slug: "materia",   name: "Materia",   region: "Oceania" },
+  { slug: "gaia", name: "Gaia", region: "Japan" },
+  { slug: "mana", name: "Mana", region: "Japan" },
+  { slug: "meteor", name: "Meteor", region: "Japan" },
+  { slug: "materia", name: "Materia", region: "Oceania" },
 ]
 
-export async function generateMetadata(
-  { params }: { params: Promise<{ dc: string }> }
-): Promise<Metadata> {
+export async function generateMetadata({ params }: { params: Promise<{ dc: string }> }): Promise<Metadata> {
   const { dc } = await params
-  const dataCentre = DATA_CENTRES.find(d => d.slug === dc)
+  const dataCentre = DATA_CENTRES.find((d) => d.slug === dc)
   if (!dataCentre) return {}
   return {
     title: `FFXIV ${dataCentre.name} Venues`,
@@ -41,11 +39,9 @@ export async function generateMetadata(
   }
 }
 
-export default async function DataCentrePage(
-  { params }: { params: Promise<{ dc: string }> }
-) {
+export default async function DataCentrePage({ params }: { params: Promise<{ dc: string }> }) {
   const { dc } = await params
-  const dataCentre = DATA_CENTRES.find(d => d.slug === dc)
+  const dataCentre = DATA_CENTRES.find((d) => d.slug === dc)
   if (!dataCentre) notFound()
 
   const now = new Date()
@@ -58,10 +54,7 @@ export default async function DataCentrePage(
       _count: { select: { follows: true } },
       events: {
         where: {
-          OR: [
-            { status: "ACTIVE" },
-            { startTime: { gte: tonightFrom, lte: tonightTo } },
-          ],
+          OR: [{ status: "ACTIVE" }, { startTime: { gte: tonightFrom, lte: tonightTo } }],
         },
         orderBy: { startTime: "asc" },
         select: { id: true, title: true, startTime: true, status: true },
@@ -73,8 +66,8 @@ export default async function DataCentrePage(
 
   // Sort: open now first, tonight second, rest alphabetical
   const sorted = [...venues].sort((a, b) => {
-    const aOpen = a.events.some(e => e.status === "ACTIVE")
-    const bOpen = b.events.some(e => e.status === "ACTIVE")
+    const aOpen = a.events.some((e) => e.status === "ACTIVE")
+    const bOpen = b.events.some((e) => e.status === "ACTIVE")
     if (aOpen !== bOpen) return aOpen ? -1 : 1
     if (a.events.length !== b.events.length) return b.events.length - a.events.length
     return a.name.localeCompare(b.name)
@@ -82,7 +75,6 @@ export default async function DataCentrePage(
 
   return (
     <div className="min-h-screen">
-
       {/* Hero */}
       <div className="xiv-hero-bg overflow-hidden border-b border-[var(--blue-008)]">
         <div className="container mx-auto px-4 py-14 max-w-4xl">
@@ -94,11 +86,11 @@ export default async function DataCentrePage(
           </Link>
           <div className="flex items-center gap-2 mb-3">
             <span className="w-[7px] h-[7px] bg-[rgba(0,180,255,0.7)] rotate-45 shadow-[0_0_10px_rgba(0,180,255,0.5)]" />
-            <span className="text-[0.72rem] font-semibold uppercase tracking-[0.14em] text-[var(--xiv-blue)]">{dataCentre.region}</span>
+            <span className="text-[0.72rem] font-semibold uppercase tracking-[0.14em] text-[var(--xiv-blue)]">
+              {dataCentre.region}
+            </span>
           </div>
-          <h1 className="font-cinzel text-4xl font-bold tracking-wide xiv-glow-text mb-3">
-            {dataCentre.name} Venues
-          </h1>
+          <h1 className="font-cinzel text-4xl font-bold tracking-wide xiv-glow-text mb-3">{dataCentre.name} Venues</h1>
           <p className="text-lg text-muted-foreground">
             FFXIV roleplay venues registered on {dataCentre.name}. Follow a venue to get notified when it opens.
           </p>
@@ -106,7 +98,6 @@ export default async function DataCentrePage(
       </div>
 
       <div className="container mx-auto px-4 py-12 max-w-4xl">
-
         {sorted.length === 0 ? (
           <div className="text-center py-20 space-y-4">
             <p className="text-muted-foreground">No venues registered on {dataCentre.name} yet.</p>
@@ -125,7 +116,7 @@ export default async function DataCentrePage(
 
             <div className="grid gap-[18px] sm:grid-cols-2">
               {sorted.map((venue) => {
-                const isOpen = venue.events.some(e => e.status === "ACTIVE")
+                const isOpen = venue.events.some((e) => e.status === "ACTIVE")
                 const hasTonight = venue.events.length > 0
 
                 return (
@@ -137,18 +128,26 @@ export default async function DataCentrePage(
                         </h2>
                         {isOpen ? (
                           <span className="status open shrink-0 inline-flex text-xs">
-                            <span className="dot" />Open now
+                            <span className="dot" />
+                            Open now
                           </span>
                         ) : hasTonight ? (
                           <span className="status soon shrink-0 inline-flex text-xs">
-                            <span className="dot" />Opening soon
+                            <span className="dot" />
+                            Opening soon
                           </span>
                         ) : null}
                       </div>
 
                       <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
                         <MapPin className="w-3 h-3 shrink-0" />
-                        <span>{venue.world}{(() => { const loc = formatVenueLocationShort(venue); return loc ? ` · ${loc}` : "" })()}</span>
+                        <span>
+                          {venue.world}
+                          {(() => {
+                            const loc = formatVenueLocationShort(venue)
+                            return loc ? ` · ${loc}` : ""
+                          })()}
+                        </span>
                       </div>
 
                       {venue.description && (
@@ -186,12 +185,15 @@ export default async function DataCentrePage(
                 <ArrowRight className="ml-1.5 h-4 w-4 transition-transform group-hover:translate-x-1" />
               </Link>
             </Button>
-            <Button asChild variant="outline" className="border-[var(--xiv-blue-border)] hover:bg-[var(--xiv-blue-dim)] hover:border-[var(--xiv-blue)]">
+            <Button
+              asChild
+              variant="outline"
+              className="border-[var(--xiv-blue-border)] hover:bg-[var(--xiv-blue-dim)] hover:border-[var(--xiv-blue)]"
+            >
               <Link href="/guide/getting-started">How it works</Link>
             </Button>
           </div>
         </div>
-
       </div>
 
       <SiteFooter />

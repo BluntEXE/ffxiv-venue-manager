@@ -17,6 +17,7 @@
 ## Task 1: Cap `notes` in `app/api/venues/[venueId]/shifts/route.ts`
 
 **Files:**
+
 - Modify: `apps/web/app/api/venues/[venueId]/shifts/route.ts`
 
 - [ ] **Step 1: Add the `.max()` bound**
@@ -37,7 +38,8 @@ const createShiftSchema = z
   })
   // Cross-field rule (spans membershipId and roleId), so the error is form-level: no single field is "wrong" on its own.
   .refine((data) => Boolean(data.membershipId) || Boolean(data.roleId), {
-    message: "Provide a staff member (assign now), a role (leave open), or both (assign now with a role tagged for pay)",
+    message:
+      "Provide a staff member (assign now), a role (leave open), or both (assign now with a role tagged for pay)",
   })
 ```
 
@@ -57,7 +59,8 @@ const createShiftSchema = z
   })
   // Cross-field rule (spans membershipId and roleId), so the error is form-level: no single field is "wrong" on its own.
   .refine((data) => Boolean(data.membershipId) || Boolean(data.roleId), {
-    message: "Provide a staff member (assign now), a role (leave open), or both (assign now with a role tagged for pay)",
+    message:
+      "Provide a staff member (assign now), a role (leave open), or both (assign now with a role tagged for pay)",
   })
 ```
 

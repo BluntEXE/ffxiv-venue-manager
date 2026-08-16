@@ -5,8 +5,8 @@ on:
     branches:
       - main
     paths:
-      - 'apps/web/app/guide/staff/**'
-      - 'apps/web/app/guide/owner/**'
+      - "apps/web/app/guide/staff/**"
+      - "apps/web/app/guide/owner/**"
 
 jobs:
   notify-staff-guide:

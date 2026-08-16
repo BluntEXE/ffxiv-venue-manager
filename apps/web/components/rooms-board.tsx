@@ -11,15 +11,7 @@ export type RoomItem = {
   updatedByName: string | null
 }
 
-export function RoomsBoard({
-  venueId,
-  canManage,
-  rooms,
-}: {
-  venueId: string
-  canManage: boolean
-  rooms: RoomItem[]
-}) {
+export function RoomsBoard({ venueId, canManage, rooms }: { venueId: string; canManage: boolean; rooms: RoomItem[] }) {
   const [localRooms, setLocalRooms] = useState(rooms)
   const [pendingIds, setPendingIds] = useState<Set<string>>(new Set())
   const [editingNoteId, setEditingNoteId] = useState<string | null>(null)
@@ -52,9 +44,7 @@ export function RoomsBoard({
     if (pendingIds.has(room.id)) return
     const nextOccupied = !room.isOccupied
     setPendingIds((prev) => new Set(prev).add(room.id))
-    setLocalRooms((prev) =>
-      prev.map((r) => (r.id === room.id ? { ...r, isOccupied: nextOccupied } : r))
-    )
+    setLocalRooms((prev) => prev.map((r) => (r.id === room.id ? { ...r, isOccupied: nextOccupied } : r)))
     try {
       const res = await fetch(`/api/venues/${venueId}/rooms/${room.id}/status`, {
         method: "PATCH",
@@ -67,9 +57,7 @@ export function RoomsBoard({
         prev.map((r) => (r.id === room.id ? { ...r, isOccupied: updated.isOccupied, note: updated.note } : r))
       )
     } catch {
-      setLocalRooms((prev) =>
-        prev.map((r) => (r.id === room.id ? { ...r, isOccupied: room.isOccupied } : r))
-      )
+      setLocalRooms((prev) => prev.map((r) => (r.id === room.id ? { ...r, isOccupied: room.isOccupied } : r)))
     } finally {
       setPendingIds((prev) => {
         const next = new Set(prev)
@@ -86,9 +74,7 @@ export function RoomsBoard({
     if (pendingIds.has(room.id)) return
     setPendingIds((prev) => new Set(prev).add(room.id))
     const prevNote = room.note
-    setLocalRooms((prev) =>
-      prev.map((r) => (r.id === room.id ? { ...r, note: trimmed || null } : r))
-    )
+    setLocalRooms((prev) => prev.map((r) => (r.id === room.id ? { ...r, note: trimmed || null } : r)))
     try {
       const res = await fetch(`/api/venues/${venueId}/rooms/${room.id}/status`, {
         method: "PATCH",
@@ -101,9 +87,7 @@ export function RoomsBoard({
         prev.map((r) => (r.id === room.id ? { ...r, isOccupied: updated.isOccupied, note: updated.note } : r))
       )
     } catch {
-      setLocalRooms((prev) =>
-        prev.map((r) => (r.id === room.id ? { ...r, note: prevNote } : r))
-      )
+      setLocalRooms((prev) => prev.map((r) => (r.id === room.id ? { ...r, note: prevNote } : r)))
     } finally {
       setPendingIds((prev) => {
         const next = new Set(prev)
@@ -129,7 +113,10 @@ export function RoomsBoard({
         return
       }
       const created = await res.json()
-      setLocalRooms((prev) => [...prev, { id: created.id, name: created.name, isOccupied: false, note: null, updatedByName: null }])
+      setLocalRooms((prev) => [
+        ...prev,
+        { id: created.id, name: created.name, isOccupied: false, note: null, updatedByName: null },
+      ])
       setNewRoomName("")
     } catch {
       alert("Network error adding room.")
@@ -193,69 +180,108 @@ export function RoomsBoard({
           emptyMessage="No rooms yet."
         >
           {localRooms.map((room) => (
-                <tr key={room.id}>
-                  <td className="t-name">
-                    {renamingId === room.id ? (
-                      <div style={{ display: "flex", gap: 4 }}>
-                        <input
-                          type="text"
-                          value={renameInput}
-                          onChange={(e) => setRenameInput(e.target.value)}
-                          style={{ fontSize: "0.85rem", padding: "2px 6px", width: 140 }}
-                          autoFocus
-                        />
-                        <button type="button" className="tag neutral" onClick={() => saveRename(room)}>Save</button>
-                        <button type="button" className="tag neutral" onClick={() => { setRenamingId(null); setRenameInput("") }}>Cancel</button>
-                      </div>
-                    ) : (
-                      room.name
-                    )}
-                  </td>
-                  <td>
+            <tr key={room.id}>
+              <td className="t-name">
+                {renamingId === room.id ? (
+                  <div style={{ display: "flex", gap: 4 }}>
+                    <input
+                      type="text"
+                      value={renameInput}
+                      onChange={(e) => setRenameInput(e.target.value)}
+                      style={{ fontSize: "0.85rem", padding: "2px 6px", width: 140 }}
+                      autoFocus
+                    />
+                    <button type="button" className="tag neutral" onClick={() => saveRename(room)}>
+                      Save
+                    </button>
                     <button
                       type="button"
-                      onClick={() => toggleStatus(room)}
-                      disabled={pendingIds.has(room.id)}
-                      className={`tag ${room.isOccupied ? "danger" : "vip"}`}
-                      style={{ cursor: pendingIds.has(room.id) ? "default" : "pointer", opacity: pendingIds.has(room.id) ? 0.6 : 1 }}
+                      className="tag neutral"
+                      onClick={() => {
+                        setRenamingId(null)
+                        setRenameInput("")
+                      }}
                     >
-                      {room.isOccupied ? "Occupied" : "Free"}
+                      Cancel
                     </button>
-                  </td>
-                  <td>
-                    {editingNoteId === room.id ? (
-                      <div style={{ display: "flex", gap: 4 }}>
-                        <input
-                          type="text"
-                          value={noteInput}
-                          onChange={(e) => setNoteInput(e.target.value)}
-                          placeholder="Note…"
-                          style={{ fontSize: "0.85rem", padding: "2px 6px", width: 160 }}
-                          autoFocus
-                        />
-                        <button type="button" className="tag neutral" onClick={() => saveNote(room)}>Save</button>
-                        <button type="button" className="tag neutral" onClick={() => { setEditingNoteId(null); setNoteInput("") }}>Cancel</button>
-                      </div>
-                    ) : (
-                      <span
-                        onClick={() => { setEditingNoteId(room.id); setNoteInput(room.note ?? "") }}
-                        style={{ cursor: "pointer" }}
-                        className={room.note ? "" : "t-muted"}
-                      >
-                        {room.note || "Add note…"}
-                      </span>
-                    )}
-                  </td>
-                  <td className="hide t-muted">{room.updatedByName ?? "—"}</td>
-                  <td>
-                    {canManage && (
-                      <div style={{ display: "flex", gap: 6 }}>
-                        <button type="button" className="tag neutral" onClick={() => { setRenamingId(room.id); setRenameInput(room.name) }}>Rename</button>
-                        <button type="button" className="tag danger" onClick={() => deleteRoom(room)}>Delete</button>
-                      </div>
-                    )}
-                  </td>
-                </tr>
+                  </div>
+                ) : (
+                  room.name
+                )}
+              </td>
+              <td>
+                <button
+                  type="button"
+                  onClick={() => toggleStatus(room)}
+                  disabled={pendingIds.has(room.id)}
+                  className={`tag ${room.isOccupied ? "danger" : "vip"}`}
+                  style={{
+                    cursor: pendingIds.has(room.id) ? "default" : "pointer",
+                    opacity: pendingIds.has(room.id) ? 0.6 : 1,
+                  }}
+                >
+                  {room.isOccupied ? "Occupied" : "Free"}
+                </button>
+              </td>
+              <td>
+                {editingNoteId === room.id ? (
+                  <div style={{ display: "flex", gap: 4 }}>
+                    <input
+                      type="text"
+                      value={noteInput}
+                      onChange={(e) => setNoteInput(e.target.value)}
+                      placeholder="Note…"
+                      style={{ fontSize: "0.85rem", padding: "2px 6px", width: 160 }}
+                      autoFocus
+                    />
+                    <button type="button" className="tag neutral" onClick={() => saveNote(room)}>
+                      Save
+                    </button>
+                    <button
+                      type="button"
+                      className="tag neutral"
+                      onClick={() => {
+                        setEditingNoteId(null)
+                        setNoteInput("")
+                      }}
+                    >
+                      Cancel
+                    </button>
+                  </div>
+                ) : (
+                  <span
+                    onClick={() => {
+                      setEditingNoteId(room.id)
+                      setNoteInput(room.note ?? "")
+                    }}
+                    style={{ cursor: "pointer" }}
+                    className={room.note ? "" : "t-muted"}
+                  >
+                    {room.note || "Add note…"}
+                  </span>
+                )}
+              </td>
+              <td className="hide t-muted">{room.updatedByName ?? "—"}</td>
+              <td>
+                {canManage && (
+                  <div style={{ display: "flex", gap: 6 }}>
+                    <button
+                      type="button"
+                      className="tag neutral"
+                      onClick={() => {
+                        setRenamingId(room.id)
+                        setRenameInput(room.name)
+                      }}
+                    >
+                      Rename
+                    </button>
+                    <button type="button" className="tag danger" onClick={() => deleteRoom(room)}>
+                      Delete
+                    </button>
+                  </div>
+                )}
+              </td>
+            </tr>
           ))}
         </DataTable>
       </div>

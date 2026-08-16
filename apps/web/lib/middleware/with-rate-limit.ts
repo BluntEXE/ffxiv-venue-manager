@@ -53,4 +53,3 @@ function parseWindow(window: string): number {
   }
   return value * multipliers[unit]
 }
-

@@ -72,7 +72,10 @@ describe("resolveMembershipAndShift (via handleShiftDecline/handleShiftMaybe)", 
 
     const result = await handleShiftDecline("embed-1", "discord-1")
 
-    expect((prisma as any).shift.update).toHaveBeenCalledWith({ where: { id: "shift-1" }, data: { status: "CANCELLED" } })
+    expect((prisma as any).shift.update).toHaveBeenCalledWith({
+      where: { id: "shift-1" },
+      data: { status: "CANCELLED" },
+    })
     expect(editBotMessage).toHaveBeenCalledOnce()
     expect(result.content).toBe("You have been removed from this shift.")
   })

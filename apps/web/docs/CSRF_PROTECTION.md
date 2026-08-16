@@ -7,7 +7,9 @@ XIV Venue Manager uses **NextAuth.js built-in CSRF protection** using the "doubl
 ## How It Works
 
 ### 1. CSRF Token Generation
+
 NextAuth automatically generates a cryptographically secure CSRF token for each session. This token is:
+
 - Stored in a signed, HttpOnly cookie
 - Validated on every authentication-related request
 - Rotated on each session update
@@ -15,6 +17,7 @@ NextAuth automatically generates a cryptographically secure CSRF token for each 
 ### 2. Cookie Configuration
 
 #### Production (Vercel)
+
 ```
 __Host-next-auth.csrf-token (CSRF token)
 __Secure-next-auth.session-token (Session)
@@ -22,16 +25,19 @@ __Secure-next-auth.callback-url (Callback URL)
 ```
 
 The `__Host-` prefix ensures:
+
 - Cookie is only sent to the exact host (no subdomains)
 - Must be set with `Secure` flag
 - Must be set with `Path=/`
 - Cannot be overridden by JavaScript
 
 The `__Secure-` prefix ensures:
+
 - Cookie is only sent over HTTPS
 - Prevents man-in-the-middle attacks
 
 #### Development (localhost)
+
 ```
 next-auth.csrf-token
 next-auth.session-token
@@ -43,6 +49,7 @@ No prefixes in development to allow HTTP connections.
 ### 3. Cookie Security Settings
 
 All cookies are configured with:
+
 - **httpOnly: true** - Cannot be accessed by JavaScript (XSS protection)
 - **sameSite: "lax"** - Sent on same-site requests and top-level navigation (CSRF protection)
 - **secure: true** (production only) - Only sent over HTTPS
@@ -78,11 +85,13 @@ All cookies are configured with:
 ## Protected Operations
 
 NextAuth CSRF protection automatically covers:
+
 - Sign in/sign out operations
 - Session token refresh
 - OAuth callback handling
 
 **Additional API route protection** is handled by:
+
 - NextAuth session validation (`getServerSession`)
 - Rate limiting middleware
 - Role-based access control (RBAC)
@@ -90,6 +99,7 @@ NextAuth CSRF protection automatically covers:
 ## Session Security
 
 Sessions are configured with:
+
 - **Max Age**: 7 days
 - **Update Age**: 24 hours (session token refreshed daily)
 - **Strategy**: JWT (stateless, scalable)
@@ -99,6 +109,7 @@ Expired sessions automatically redirect to sign-in page.
 ## Open Redirect Protection
 
 The `redirect` callback prevents open redirect attacks by:
+
 1. Allowing relative URLs (e.g., `/dashboard`)
 2. Allowing same-origin URLs only
 3. Defaulting to base URL for external redirects
@@ -116,6 +127,7 @@ async redirect({ url, baseUrl }) {
 ### Manual Testing
 
 1. **Valid CSRF Token** (should succeed):
+
    ```bash
    # Sign in normally through the UI
    # Perform any POST/DELETE operation
@@ -123,6 +135,7 @@ async redirect({ url, baseUrl }) {
    ```
 
 2. **Missing CSRF Token** (should fail):
+
    ```bash
    curl -X POST https://xivvenuemanager.com/api/auth/signin \
      -H "Content-Type: application/json" \
@@ -147,31 +160,31 @@ Add to your test suite:
 
 ```typescript
 // tests/csrf.test.ts
-import { expect, test } from '@jest/globals'
+import { expect, test } from "@jest/globals"
 
-test('POST without CSRF token should fail', async () => {
-  const response = await fetch('/api/auth/signin', {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ email: 'test@example.com' })
+test("POST without CSRF token should fail", async () => {
+  const response = await fetch("/api/auth/signin", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ email: "test@example.com" }),
   })
 
   expect(response.status).toBe(403)
 })
 
-test('POST with valid CSRF token should succeed', async () => {
+test("POST with valid CSRF token should succeed", async () => {
   // Get CSRF token from NextAuth
-  const csrfResponse = await fetch('/api/auth/csrf')
+  const csrfResponse = await fetch("/api/auth/csrf")
   const { csrfToken } = await csrfResponse.json()
 
   // Use CSRF token in request
-  const response = await fetch('/api/auth/signin', {
-    method: 'POST',
+  const response = await fetch("/api/auth/signin", {
+    method: "POST",
     headers: {
-      'Content-Type': 'application/json',
-      'X-CSRF-Token': csrfToken
+      "Content-Type": "application/json",
+      "X-CSRF-Token": csrfToken,
     },
-    body: JSON.stringify({ email: 'test@example.com' })
+    body: JSON.stringify({ email: "test@example.com" }),
   })
 
   expect(response.status).not.toBe(403)
@@ -217,6 +230,7 @@ Beyond NextAuth CSRF protection:
 ### CSRF Token Errors in Development
 
 If you see CSRF errors in development:
+
 1. Clear cookies in DevTools
 2. Restart development server
 3. Sign out and sign back in
@@ -224,6 +238,7 @@ If you see CSRF errors in development:
 ### CSRF Token Errors in Production
 
 If users report CSRF errors:
+
 1. Check that `NEXTAUTH_URL` environment variable is correctly set
 2. Verify HTTPS is enabled
 3. Check browser console for cookie warnings
@@ -274,6 +289,7 @@ export const authOptions: NextAuthOptions = {
 ## Deployment Notes
 
 When deploying to Vercel:
+
 1. NextAuth automatically detects Vercel environment
 2. `__Host-` prefixed cookies prevent subdomain attacks
 3. Secure cookies enforced via `useSecureCookies: true`

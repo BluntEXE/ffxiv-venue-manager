@@ -12,19 +12,23 @@ A comprehensive staff payroll management system that supports multiple payment t
 ### Key Features
 
 ✅ **Dual Payment Types**
+
 - Fixed Salary: Set amount per pay period
 - Hourly Rate: Pay based on hours worked
 
 ✅ **Bonus Support**
+
 - Add optional bonuses to any payroll entry
 - Automatically calculated in total amount
 
 ✅ **Payment Tracking**
+
 - Checkbox to mark entries as paid/unpaid
 - Tracks who marked it as paid and when
 - Complete audit trail
 
 ✅ **Security**
+
 - Role-based access (OWNER & MANAGER only)
 - Rate limiting on all endpoints
 - Complete validation and error handling
@@ -99,10 +103,12 @@ enum PaymentType {
 **Rate Limit**: 60 requests/minute
 
 **Query Parameters**:
+
 - `isPaid` (optional): "true" or "false" to filter by payment status
 - `membershipId` (optional): Filter by specific staff member
 
 **Response**:
+
 ```json
 [
   {
@@ -147,13 +153,14 @@ enum PaymentType {
 **Rate Limit**: 10 requests/minute
 
 **Request Body**:
+
 ```json
 {
   "membershipId": "clx456...",
   "paymentType": "HOURLY",
-  "baseRate": 25.00,
-  "hoursWorked": 40.00,
-  "bonusAmount": 100.00,
+  "baseRate": 25.0,
+  "hoursWorked": 40.0,
+  "bonusAmount": 100.0,
   "periodStart": "2025-11-01",
   "periodEnd": "2025-11-30",
   "notes": "Regular November pay"
@@ -161,6 +168,7 @@ enum PaymentType {
 ```
 
 **Required Fields**:
+
 - `membershipId` - Staff member ID
 - `paymentType` - "FIXED_SALARY" or "HOURLY"
 - `baseRate` - Base pay amount
@@ -168,9 +176,11 @@ enum PaymentType {
 - `periodEnd` - End of pay period
 
 **Conditional Requirements**:
+
 - If `paymentType` is "HOURLY", `hoursWorked` is required
 
 **Automatic Calculations**:
+
 - For FIXED_SALARY: `totalAmount = baseRate + bonusAmount`
 - For HOURLY: `totalAmount = (baseRate × hoursWorked) + bonusAmount`
 
@@ -187,12 +197,13 @@ enum PaymentType {
 **Rate Limit**: 20 requests/minute
 
 **Request Body** (all fields optional):
+
 ```json
 {
   "isPaid": true,
-  "baseRate": 30.00,
-  "hoursWorked": 42.00,
-  "bonusAmount": 150.00,
+  "baseRate": 30.0,
+  "hoursWorked": 42.0,
+  "bonusAmount": 150.0,
   "periodStart": "2025-11-01",
   "periodEnd": "2025-11-30",
   "notes": "Updated with overtime"
@@ -200,6 +211,7 @@ enum PaymentType {
 ```
 
 **Special Behaviors**:
+
 - When `isPaid` is set to `true`:
   - `paidAt` is automatically set to current timestamp
   - `paidBy` is automatically set to current user ID
@@ -220,6 +232,7 @@ enum PaymentType {
 **Rate Limit**: 5 requests/minute
 
 **Response**:
+
 ```json
 {
   "success": true,
@@ -232,21 +245,25 @@ enum PaymentType {
 ## UI Page
 
 ### Location
+
 `/dashboard/[slug]/payroll`
 
 ### Features
 
 **Summary Cards**:
+
 - Unpaid Total - Shows total unpaid amount and count
 - Paid Total - Shows total paid amount and count
 - Grand Total - Combined total of all entries
 
 **Filter Tabs**:
+
 - All - Show all payroll entries
 - Unpaid - Only unpaid entries
 - Paid - Only paid entries
 
 **Create Dialog**:
+
 - Staff member selection dropdown
 - Payment type selector (Fixed Salary / Hourly)
 - Base rate input
@@ -257,6 +274,7 @@ enum PaymentType {
 - Live total calculation preview
 
 **Payroll Entry Cards**:
+
 - Staff avatar and name
 - Payment status badge
 - Hourly indicator badge (if applicable)
@@ -274,21 +292,25 @@ enum PaymentType {
 ### Role-Based Access Control
 
 **View Payroll** (GET):
+
 - ✅ OWNER
 - ✅ MANAGER
 - ❌ STAFF
 
 **Create Payroll** (POST):
+
 - ✅ OWNER
 - ✅ MANAGER
 - ❌ STAFF
 
 **Update Payroll** (PATCH):
+
 - ✅ OWNER
 - ✅ MANAGER
 - ❌ STAFF
 
 **Delete Payroll** (DELETE):
+
 - ✅ OWNER only
 - ❌ MANAGER
 - ❌ STAFF
@@ -303,6 +325,7 @@ enum PaymentType {
 ### Validation
 
 ✅ **Input Validation**:
+
 - Required fields enforced
 - Payment type restricted to enum values
 - Conditional validation (hours for hourly)
@@ -310,12 +333,14 @@ enum PaymentType {
 - Decimal precision for amounts
 
 ✅ **Authorization Checks**:
+
 - User session validation
 - Venue membership verification
 - Role-based permission checks
 - Resource ownership verification
 
 ✅ **Data Integrity**:
+
 - Staff member must exist in venue
 - Automatic total calculation
 - Audit trail for paid status
@@ -447,6 +472,7 @@ Test these scenarios in a running application:
 ### Membership System
 
 Payroll is linked to the existing `Membership` model:
+
 - Each payroll entry belongs to a staff member
 - Uses existing venue membership for authorization
 - Displays staff custom roles in UI
@@ -454,6 +480,7 @@ Payroll is linked to the existing `Membership` model:
 ### User System
 
 Audit trail uses the existing `User` model:
+
 - `paidBy` field tracks who marked as paid
 - Uses `displayName` or `name` for UI display
 - Avatar support from user profile
@@ -461,6 +488,7 @@ Audit trail uses the existing `User` model:
 ### Rate Limiting
 
 Uses the existing rate limiting infrastructure:
+
 - Same `withRateLimit` middleware
 - Graceful degradation if Redis not configured
 - Standard rate limit headers
@@ -519,25 +547,30 @@ Uses the existing rate limiting infrastructure:
 ### Best Practices Implemented
 
 ✅ **Authentication**
+
 - Session validation on all endpoints
 - Proper 401 responses for unauthenticated requests
 
 ✅ **Authorization**
+
 - Role-based access control
 - Venue ownership verification
 - Different permissions for different operations
 
 ✅ **Input Validation**
+
 - Required field validation
 - Type checking (enums)
 - Conditional validation (hours for hourly)
 
 ✅ **Audit Trail**
+
 - Tracks who marked as paid
 - Records payment timestamp
 - Immutable creation timestamps
 
 ✅ **Rate Limiting**
+
 - Prevents API abuse
 - Different limits based on sensitivity
 - DELETE has strictest limits

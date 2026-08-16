@@ -1,0 +1,29 @@
+# Dependencies
+node_modules
+
+# Build output
+.next
+out
+dist
+build
+.turbo
+
+# Lockfiles
+pnpm-lock.yaml
+
+# Generated Prisma client
+**/generated/prisma
+**/generated/prisma-client
+
+# Test coverage
+coverage
+
+# Playwright artifacts
+test-results
+playwright-report
+
+# HTML template with structure Prettier's parser rejects
+docs/superpowers/templates/architecture-notes-template.html
+
+# Generated superpowers design-doc HTML (not web code)
+docs/superpowers/**/*.html

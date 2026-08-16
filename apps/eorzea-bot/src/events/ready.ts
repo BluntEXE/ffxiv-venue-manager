@@ -1,10 +1,10 @@
-import { Client, ActivityType } from 'discord.js';
+import { Client, ActivityType } from "discord.js"
 
 export default {
-  name: 'clientReady',
+  name: "clientReady",
   once: true,
   execute(client: Client) {
-    console.log(`[Bot] Logged in as ${client.user?.tag}`);
-    client.user?.setActivity('the Aetheryte', { type: ActivityType.Watching });
+    console.log(`[Bot] Logged in as ${client.user?.tag}`)
+    client.user?.setActivity("the Aetheryte", { type: ActivityType.Watching })
   },
-};
+}

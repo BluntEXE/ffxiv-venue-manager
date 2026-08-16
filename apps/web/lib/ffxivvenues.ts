@@ -14,7 +14,7 @@ export type FfxivTime = {
 
 export type FfxivUtcSchedule = {
   from: string | null
-  day: number        // 0=Sun … 6=Sat
+  day: number // 0=Sun … 6=Sat
   start: FfxivTime
   end: FfxivTime
   location: unknown
@@ -149,7 +149,7 @@ export async function syncAllFfxivVenues(): Promise<BulkSyncResults> {
     else results.errors++
 
     // Rate limit: stay under 3 calls / 10s
-    await new Promise(r => setTimeout(r, 400))
+    await new Promise((r) => setTimeout(r, 400))
   }
 
   return results

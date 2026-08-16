@@ -19,8 +19,7 @@ export function renderPartakeProse(text: string | null | undefined): ReactNode {
   ))
 }
 
-const TOKEN_RE =
-  /(`[^`]+`)|(\[[^\]]+\]\((?:https?:\/\/)[^)]+\))|(\*\*[^*]+\*\*)|(\*[^*]+\*|_[^_]+_)/
+const TOKEN_RE = /(`[^`]+`)|(\[[^\]]+\]\((?:https?:\/\/)[^)]+\))|(\*\*[^*]+\*\*)|(\*[^*]+\*|_[^_]+_)/
 
 function renderInline(text: string): ReactNode[] {
   const out: ReactNode[] = []
@@ -47,13 +46,7 @@ function renderInline(text: string): ReactNode[] {
       const label = link.slice(1, close)
       const url = link.slice(close + 2, -1)
       out.push(
-        <a
-          key={key++}
-          href={url}
-          target="_blank"
-          rel="noopener noreferrer"
-          className="text-indigo-400 hover:underline"
-        >
+        <a key={key++} href={url} target="_blank" rel="noopener noreferrer" className="text-indigo-400 hover:underline">
           {renderInline(label)}
         </a>
       )

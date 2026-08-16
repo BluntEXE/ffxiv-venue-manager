@@ -41,6 +41,7 @@
 ## Task 1: Backend — `POST /api/plugin/characters`
 
 **Files:**
+
 - Create: `/home/ehno/xiv-app/apps/web/app/api/plugin/characters/route.ts`
 
 This task is fully independent of every other task in this plan — do it first or last, doesn't matter, and it unblocks nothing else (Task 8's Settings screen calls it, but can be stubbed/tested against a deployed dev version).
@@ -89,10 +90,7 @@ export async function POST(request: NextRequest) {
     const characterName = (body.characterName ?? "").trim()
     const world = (body.world ?? "").trim()
     if (!characterName || !world) {
-      return NextResponse.json(
-        { error: "characterName and world are required" },
-        { status: 400 }
-      )
+      return NextResponse.json({ error: "characterName and world are required" }, { status: 400 })
     }
 
     const existing = await prisma.userCharacter.findUnique({
@@ -100,10 +98,7 @@ export async function POST(request: NextRequest) {
     })
 
     if (existing && existing.userId !== auth.userId) {
-      return NextResponse.json(
-        { error: "That character is already linked to a different account" },
-        { status: 409 }
-      )
+      return NextResponse.json({ error: "That character is already linked to a different account" }, { status: 409 })
     }
 
     if (existing) {
@@ -160,7 +155,7 @@ Expected: `201` with `{"character": {"id": "...", "characterName": "Test Charact
 
 Run the same command again — expected: `200` (not `201`) with the same character, confirming the idempotent-no-op path.
 
-Run it a third time with a *different* `x-api-key` belonging to a different user but the same `characterName`/`world` — expected: `409` with `{"error": "That character is already linked to a different account"}`.
+Run it a third time with a _different_ `x-api-key` belonging to a different user but the same `characterName`/`world` — expected: `409` with `{"error": "That character is already linked to a different account"}`.
 
 - [ ] **Step 4: Commit**
 
@@ -175,6 +170,7 @@ git commit -m "feat(plugin-api): add POST /api/plugin/characters for x-api-key-a
 ## Task 2: Core/VenueSync — DTOs and JSON context
 
 **Files:**
+
 - Create: `~/plugin-research/FFXIV-Aetherphone/src/Aetherphone/Core/VenueSync/VenueSyncApiModels.cs`
 - Create: `~/plugin-research/FFXIV-Aetherphone/src/Aetherphone/Core/VenueSync/VenueSyncJsonContext.cs`
 
@@ -346,6 +342,7 @@ git commit -m "feat(venue-sync): add DTOs and JSON source-gen context"
 **Discovered during implementation, not anticipated in the original design:** `HttpService`'s only auth mechanism is `bearer` → sent as `Authorization: Bearer <value>` (`Core/Net/HttpService.cs:295-306`, `ApplyHeaders`). The xivvenuemanager.com `/api/plugin/*` endpoints authenticate via a plain `x-api-key` header (confirmed against `app/api/plugin/venues/route.ts` and siblings), not Bearer. No existing Aetherphone app calls an x-api-key-authenticated API through `HttpService` — Venues/Aethernet only hit public unauthenticated third-party APIs. This is a small, additive change to shared infrastructure: a new optional `apiKey` parameter threaded through the two methods Venue Sync actually needs (`GetJsonAsync`, `PostJsonAsync`) down to `ApplyHeaders`, defaulting to `null` so every existing caller is unaffected.
 
 **Files:**
+
 - Modify: `src/Aetherphone/Core/Net/HttpService.cs`
 
 - [ ] **Step 1: Add the parameter to `ApplyHeaders`**
@@ -389,6 +386,7 @@ git commit -m "feat(http): add optional x-api-key header support to GetJsonAsync
 ## Task 3: Core/VenueSync — API client
 
 **Files:**
+
 - Create: `~/plugin-research/FFXIV-Aetherphone/src/Aetherphone/Core/VenueSync/VenueSyncApiClient.cs`
 
 **Context:** wraps `HttpService` (constructed with `services.Http`, same DI pattern `VenuesApp` uses at `VenuesApp.cs:53-65`). Base URL and API key come from `Configuration` (Task 6 adds the fields). Every call passes the API key as the `bearer` parameter of `HttpService`'s methods — check `Core/Venues/VenuesService.cs`'s actual call site for whether `bearer` expects a raw key or an `Authorization: Bearer` prefix already applied internally; match whatever that file does exactly, since `HttpService` is shared infrastructure and Venue Sync must not reimplement auth-header formatting.
@@ -470,7 +468,7 @@ cd ~/plugin-research/FFXIV-Aetherphone && dotnet build
 
 Expected: fails to build until Task 6 adds `Configuration.VenueSyncServerUrl`/`VenueSyncApiKey`, and until `Core.Http` namespace/`HttpService` import path is confirmed correct — if the build errors on the `using Aetherphone.Core.Http;` line, grep `Core/Venues/VenuesService.cs`'s own `using` statements for the real namespace and fix this file to match. Also confirm `appScope` is a real optional parameter on `HttpService` (it was reported present at `HttpService.cs:89,96` in research — if the build disagrees, drop the argument).
 
-Do not proceed past this step with a broken build — fix real compile errors before moving to Task 4. It's fine for this task's build to fail if it's *only* failing because `Configuration.VenueSyncServerUrl`/`VenueSyncApiKey` don't exist yet (Task 6 adds them) — note that as expected and move on; but any other error (namespace, missing method, wrong overload) must be fixed now.
+Do not proceed past this step with a broken build — fix real compile errors before moving to Task 4. It's fine for this task's build to fail if it's _only_ failing because `Configuration.VenueSyncServerUrl`/`VenueSyncApiKey` don't exist yet (Task 6 adds them) — note that as expected and move on; but any other error (namespace, missing method, wrong overload) must be fixed now.
 
 - [ ] **Step 3: Commit**
 
@@ -485,6 +483,7 @@ git commit -m "feat(venue-sync): add API client wrapping /api/plugin/* endpoints
 ## Task 4: Core/VenueSync — session state
 
 **Files:**
+
 - Create: `~/plugin-research/FFXIV-Aetherphone/src/Aetherphone/Core/VenueSync/VenueSyncState.cs`
 
 **Context:** Follows `VenuesService`'s `EnsureFresh(bool force)` + `Interlocked.CompareExchange` fire-and-forget-refresh pattern exactly (see Task 3 research: `VenuesService.cs` state machine). No local "am I clocked in" flag per the spec — every `EnsureFresh` re-fetches from the server.
@@ -580,7 +579,7 @@ internal sealed class VenueSyncState
 cd ~/plugin-research/FFXIV-Aetherphone && dotnet build
 ```
 
-Expected: still fails on the missing `Configuration` fields (Task 6) — confirm no *other* new errors introduced by this file specifically.
+Expected: still fails on the missing `Configuration` fields (Task 6) — confirm no _other_ new errors introduced by this file specifically.
 
 - [ ] **Step 3: Commit**
 
@@ -595,6 +594,7 @@ git commit -m "feat(venue-sync): add session state with fetch-on-stale shift cac
 ## Task 5: Apps/VenueSync — route enum and row components
 
 **Files:**
+
 - Create: `~/plugin-research/FFXIV-Aetherphone/src/Aetherphone/Apps/VenueSync/VenueSyncRoute.cs`
 - Create: `~/plugin-research/FFXIV-Aetherphone/src/Aetherphone/Apps/VenueSync/ShiftRow.cs`
 - Create: `~/plugin-research/FFXIV-Aetherphone/src/Aetherphone/Apps/VenueSync/SaleSummaryRow.cs`
@@ -689,7 +689,7 @@ internal static class SaleSummaryRow
 cd ~/plugin-research/FFXIV-Aetherphone && dotnet build
 ```
 
-Expected: compile errors on `PhoneTheme` field names and possibly `Rect`/`TextStyle` construction — this is expected at this stage since these files were written from research summaries, not a live compiler. Fix each error by reading the actual referenced type (`PhoneTheme.cs`, `Rect.cs`, `TextStyle.cs`) rather than guessing again. Do not proceed to Task 7 (which consumes these components) until this task's files build clean on their own (Task 6's `Configuration` fields may still be outstanding — that's fine, only fix errors that originate in *this task's* files).
+Expected: compile errors on `PhoneTheme` field names and possibly `Rect`/`TextStyle` construction — this is expected at this stage since these files were written from research summaries, not a live compiler. Fix each error by reading the actual referenced type (`PhoneTheme.cs`, `Rect.cs`, `TextStyle.cs`) rather than guessing again. Do not proceed to Task 7 (which consumes these components) until this task's files build clean on their own (Task 6's `Configuration` fields may still be outstanding — that's fine, only fix errors that originate in _this task's_ files).
 
 - [ ] **Step 5: Commit**
 
@@ -704,6 +704,7 @@ git commit -m "feat(venue-sync): add route enum and shift/sale row components"
 ## Task 6: Configuration fields
 
 **Files:**
+
 - Modify: `~/plugin-research/FFXIV-Aetherphone/src/Aetherphone/Configuration.cs`
 
 - [ ] **Step 1: Add the fields**
@@ -726,7 +727,7 @@ Plain string fields, same pattern as `AethernetToken` (Task-research item A.10) 
 cd ~/plugin-research/FFXIV-Aetherphone && dotnet build
 ```
 
-Expected: Tasks 3 and 4's previously-expected `Configuration.VenueSync*` errors are now gone. Any *remaining* build errors must be genuine issues from Tasks 3-5 — fix them now.
+Expected: Tasks 3 and 4's previously-expected `Configuration.VenueSync*` errors are now gone. Any _remaining_ build errors must be genuine issues from Tasks 3-5 — fix them now.
 
 - [ ] **Step 3: Commit**
 
@@ -741,6 +742,7 @@ git commit -m "feat(venue-sync): add persisted config fields for API key, server
 ## Task 7: VenueSyncApp shell — Dashboard screen
 
 **Files:**
+
 - Create: `~/plugin-research/FFXIV-Aetherphone/src/Aetherphone/Apps/VenueSync/VenueSyncApp.cs`
 - Create: `~/plugin-research/FFXIV-Aetherphone/src/Aetherphone/Apps/VenueSync/VenueSyncApp.Dashboard.cs`
 
@@ -951,6 +953,7 @@ git commit -m "feat(venue-sync): add app shell and dashboard screen"
 ## Task 8: Shifts screen
 
 **Files:**
+
 - Create: `~/plugin-research/FFXIV-Aetherphone/src/Aetherphone/Apps/VenueSync/VenueSyncApp.Shifts.cs`
 
 **Context:** Active shift card + "OPEN — CLAIM" section + "UPCOMING" section, per the approved mockup. Inline error + manual retry on clock-in/out/claim failures — the spec's explicit error-handling decision (no local queue, preserve nothing to preserve here since these are single-tap actions with no form state, but the error message must stay visible until the member taps to retry or navigates away, not auto-dismiss).
@@ -1095,6 +1098,7 @@ git commit -m "feat(venue-sync): add shifts screen with clock in/out, claim, inl
 ## Task 9: Sales screen
 
 **Files:**
+
 - Create: `~/plugin-research/FFXIV-Aetherphone/src/Aetherphone/Apps/VenueSync/VenueSyncApp.Sales.cs`
 
 **Context:** Service dropdown from `GetServicesAsync` (already role-scoped server-side, per the spec — no client-side role filtering needed). Customer field has a target-lock button reading `gameData`'s current target (mirrors `~/VenueManager`'s `SalesTab.cs` "use target" crosshair). Amount input. Inline error preserves form contents on failure (the spec's explicit requirement — this screen's fields are locals that persist across a failed submit attempt since nothing clears them except a successful log or leaving the screen).
@@ -1269,6 +1273,7 @@ git commit -m "feat(venue-sync): add sales screen with target-lock customer fiel
 ## Task 10: Settings screen
 
 **Files:**
+
 - Create: `~/plugin-research/FFXIV-Aetherphone/src/Aetherphone/Apps/VenueSync/VenueSyncApp.Settings.cs`
 
 **Context:** Masked API key input with eye-toggle (matches `~/VenueManager`'s `SettingsTab.cs` `DrawApiKeyInput` pattern), venue selector populated once a key is set, and the character-link card — pre-filled from `gameData.LocalPlayer`, single confirm tap, no typing.
@@ -1438,6 +1443,7 @@ git commit -m "feat(venue-sync): add settings screen with API key entry, venue s
 ## Task 11: AppRegistry registration
 
 **Files:**
+
 - Modify: `~/plugin-research/FFXIV-Aetherphone/src/Aetherphone/Core/Apps/AppRegistry.cs`
 - Modify: `~/plugin-research/FFXIV-Aetherphone/src/Aetherphone/Core/Apps/PhoneServices.cs` (or wherever `PhoneServices` is defined — add `VenueSyncApiClient`/`VenueSyncState` if `PhoneServices` is a DI container class rather than a simple bag; check the file before assuming its shape)
 
@@ -1503,6 +1509,7 @@ Follow this project's established Dalamud dev-plugin workflow (per `reference_ae
 - [ ] **Step 3: Exercise the forced-failure path**
 
 Temporarily set `configuration.VenueSyncServerUrl` to an unreachable URL (e.g. `https://localhost:1`) via the Settings screen's server URL field if one was exposed, or by editing the plugin's saved config JSON directly and reloading. Attempt a clock-in and a sale log. Confirm:
+
 - The inline error message appears on the same screen (not a crash, not a silent no-op).
 - Form contents on the Sales screen are NOT cleared after the failed attempt.
 - Tapping the action again (after restoring the correct URL) succeeds without needing to re-enter anything already typed.
@@ -1512,6 +1519,7 @@ Restore the correct server URL before continuing.
 - [ ] **Step 4: Verify at phone-size extremes**
 
 In Aetherphone's phone appearance settings, set the phone scale to "XS" (280×606) and repeat Step 2's happy-path walkthrough on all four screens, watching specifically for:
+
 - Header title text colliding with the gear/back button (space-reservation bug class) — the title should truncate/ellipsis before it touches the icon, never overlap it.
 - Any two-line row (Shift rows' title+time) where hovering one line's marquee scroll also scrolls the other line, or where only one line scrolls when both should independently respond to hover.
 - Any row where content below a `Typography`-drawn element appears to start from the wrong vertical position (would indicate uncorrected cursor corruption — this plan's rows use `Marquee` throughout specifically to avoid this, but verify).

@@ -112,7 +112,9 @@ export default function EditEventPage() {
       status: selectedStatus,
       startTime: startTime.toISOString(),
       endTime: endTime.toISOString(),
-      attendanceCount: formData.get("attendanceCount") ? parseInt(formData.get("attendanceCount") as string) : undefined,
+      attendanceCount: formData.get("attendanceCount")
+        ? parseInt(formData.get("attendanceCount") as string)
+        : undefined,
       revenue: formData.get("revenue") ? parseFloat(formData.get("revenue") as string) : undefined,
     }
 
@@ -146,7 +148,9 @@ export default function EditEventPage() {
   if (isLoading) {
     return (
       <VenueLayoutClient slug={slug}>
-        <div className="page-inner"><PageLoading text="Loading event..." /></div>
+        <div className="page-inner">
+          <PageLoading text="Loading event..." />
+        </div>
       </VenueLayoutClient>
     )
   }
@@ -154,146 +158,122 @@ export default function EditEventPage() {
   if (!event) {
     return (
       <VenueLayoutClient slug={slug}>
-        <div className="p-4 md:p-6 text-center"><p className="text-destructive">Event not found</p></div>
+        <div className="p-4 md:p-6 text-center">
+          <p className="text-destructive">Event not found</p>
+        </div>
       </VenueLayoutClient>
     )
   }
 
   return (
     <VenueLayoutClient slug={slug}>
-    <div className="page-inner max-w-3xl">
-      <Card>
-        <CardHeader>
-          <CardTitle>Edit Event</CardTitle>
-          <CardDescription>
-            Update event details and settings
-          </CardDescription>
-        </CardHeader>
-        <CardContent>
-          <form onSubmit={handleSubmit} className="space-y-6">
-            {/* Event Title */}
-            <div className="space-y-2">
-              <Label htmlFor="title">Event Title *</Label>
-              <Input
-                id="title"
-                name="title"
-                defaultValue={event.title}
-                required
-              />
-            </div>
-
-            {/* Event Type */}
-            <div className="space-y-2">
-              <Label htmlFor="eventType">Event Type *</Label>
-              <Select value={selectedEventType} onValueChange={setSelectedEventType} required>
-                <SelectTrigger>
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  {EVENT_TYPES.map((type) => (
-                    <SelectItem key={type.value} value={type.value}>
-                      {type.label}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-
-            {/* Description */}
-            <div className="space-y-2">
-              <Label htmlFor="description">Description</Label>
-              <Textarea
-                id="description"
-                name="description"
-                defaultValue={event.description || ""}
-                rows={4}
-              />
-            </div>
-
-            {/* Start Time */}
-            <div className="space-y-2">
-              <Label>Start Time *</Label>
-              <DateTimePicker
-                date={startTime}
-                onDateChange={setStartTime}
-              />
-            </div>
-
-            {/* End Time */}
-            <div className="space-y-2">
-              <Label>End Time *</Label>
-              <DateTimePicker
-                date={endTime}
-                onDateChange={setEndTime}
-              />
-            </div>
-
-            {/* Status */}
-            <div className="space-y-2">
-              <Label htmlFor="status">Status *</Label>
-              <Select value={selectedStatus} onValueChange={setSelectedStatus} required>
-                <SelectTrigger>
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  {EVENT_STATUSES.map((status) => (
-                    <SelectItem key={status.value} value={status.value}>
-                      {status.label}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-
-            {/* Metrics */}
-            <div className="grid grid-cols-2 gap-4">
+      <div className="page-inner max-w-3xl">
+        <Card>
+          <CardHeader>
+            <CardTitle>Edit Event</CardTitle>
+            <CardDescription>Update event details and settings</CardDescription>
+          </CardHeader>
+          <CardContent>
+            <form onSubmit={handleSubmit} className="space-y-6">
+              {/* Event Title */}
               <div className="space-y-2">
-                <Label htmlFor="attendanceCount">Attendance Count</Label>
-                <Input
-                  id="attendanceCount"
-                  name="attendanceCount"
-                  type="number"
-                  defaultValue={event.attendanceCount}
-                  min="0"
-                />
+                <Label htmlFor="title">Event Title *</Label>
+                <Input id="title" name="title" defaultValue={event.title} required />
               </div>
+
+              {/* Event Type */}
               <div className="space-y-2">
-                <Label htmlFor="revenue">Revenue (Gil)</Label>
-                <Input
-                  id="revenue"
-                  name="revenue"
-                  type="number"
-                  step="0.01"
-                  defaultValue={event.revenue?.toString()}
-                  min="0"
-                />
+                <Label htmlFor="eventType">Event Type *</Label>
+                <Select value={selectedEventType} onValueChange={setSelectedEventType} required>
+                  <SelectTrigger>
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {EVENT_TYPES.map((type) => (
+                      <SelectItem key={type.value} value={type.value}>
+                        {type.label}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
               </div>
-            </div>
 
-            {/* Error Message */}
-            {error && (
-              <div className="p-3 text-sm text-destructive bg-destructive/10 rounded-md">
-                {error}
+              {/* Description */}
+              <div className="space-y-2">
+                <Label htmlFor="description">Description</Label>
+                <Textarea id="description" name="description" defaultValue={event.description || ""} rows={4} />
               </div>
-            )}
 
-            {/* Submit Buttons */}
-            <div className="flex gap-4">
-              <Button type="submit" disabled={isSubmitting} className="flex-1">
-                {isSubmitting ? "Saving..." : "Save Changes"}
-              </Button>
-              <Button
-                type="button"
-                variant="outline"
-                onClick={() => router.back()}
-              >
-                Cancel
-              </Button>
-            </div>
-          </form>
-        </CardContent>
-      </Card>
-    </div>
+              {/* Start Time */}
+              <div className="space-y-2">
+                <Label>Start Time *</Label>
+                <DateTimePicker date={startTime} onDateChange={setStartTime} />
+              </div>
+
+              {/* End Time */}
+              <div className="space-y-2">
+                <Label>End Time *</Label>
+                <DateTimePicker date={endTime} onDateChange={setEndTime} />
+              </div>
+
+              {/* Status */}
+              <div className="space-y-2">
+                <Label htmlFor="status">Status *</Label>
+                <Select value={selectedStatus} onValueChange={setSelectedStatus} required>
+                  <SelectTrigger>
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {EVENT_STATUSES.map((status) => (
+                      <SelectItem key={status.value} value={status.value}>
+                        {status.label}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+
+              {/* Metrics */}
+              <div className="grid grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <Label htmlFor="attendanceCount">Attendance Count</Label>
+                  <Input
+                    id="attendanceCount"
+                    name="attendanceCount"
+                    type="number"
+                    defaultValue={event.attendanceCount}
+                    min="0"
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="revenue">Revenue (Gil)</Label>
+                  <Input
+                    id="revenue"
+                    name="revenue"
+                    type="number"
+                    step="0.01"
+                    defaultValue={event.revenue?.toString()}
+                    min="0"
+                  />
+                </div>
+              </div>
+
+              {/* Error Message */}
+              {error && <div className="p-3 text-sm text-destructive bg-destructive/10 rounded-md">{error}</div>}
+
+              {/* Submit Buttons */}
+              <div className="flex gap-4">
+                <Button type="submit" disabled={isSubmitting} className="flex-1">
+                  {isSubmitting ? "Saving..." : "Save Changes"}
+                </Button>
+                <Button type="button" variant="outline" onClick={() => router.back()}>
+                  Cancel
+                </Button>
+              </div>
+            </form>
+          </CardContent>
+        </Card>
+      </div>
     </VenueLayoutClient>
   )
 }

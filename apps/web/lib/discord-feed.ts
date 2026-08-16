@@ -1,4 +1,4 @@
-import { prisma } from '@/lib/prisma'
+import { prisma } from "@/lib/prisma"
 
 const BOT_URL = process.env.EORZEA_BOT_WEBHOOK_URL
 const BOT_SECRET = process.env.EORZEA_BOT_WEBHOOK_SECRET
@@ -6,10 +6,10 @@ const BOT_SECRET = process.env.EORZEA_BOT_WEBHOOK_SECRET
 function postToBot(path: string, body: unknown) {
   if (!BOT_URL) return Promise.resolve()
   return fetch(`${BOT_URL}${path}`, {
-    method: 'POST',
+    method: "POST",
     headers: {
-      'Content-Type': 'application/json',
-      'x-webhook-secret': BOT_SECRET ?? '',
+      "Content-Type": "application/json",
+      "x-webhook-secret": BOT_SECRET ?? "",
     },
     body: JSON.stringify(body),
   }).catch(() => {})
@@ -24,13 +24,14 @@ export function postNewVenue(venue: {
   ward?: number | null
   plot?: number | null
 }) {
-  postToBot('/webhook/new-venue', venue)
+  postToBot("/webhook/new-venue", venue)
 }
 
-export function postPartakeDigest(
-  events: { title: string; startTime: Date; venue: { name: string; slug: string } }[]
-) {
-  postToBot('/webhook/partake-digest', events.map(e => ({ ...e, startTime: e.startTime.toISOString() })))
+export function postPartakeDigest(events: { title: string; startTime: Date; venue: { name: string; slug: string } }[]) {
+  postToBot(
+    "/webhook/partake-digest",
+    events.map((e) => ({ ...e, startTime: e.startTime.toISOString() }))
+  )
 }
 
 export function postWeeklySummary(stats: {
@@ -40,11 +41,11 @@ export function postWeeklySummary(stats: {
   newStaff: number
   weekStart: Date
 }) {
-  postToBot('/webhook/weekly-summary', { ...stats, weekStart: stats.weekStart.toISOString() })
+  postToBot("/webhook/weekly-summary", { ...stats, weekStart: stats.weekStart.toISOString() })
 }
 
 export function postVenueGraduation(venue: { name: string; slug: string }, milestone: number) {
-  postToBot('/webhook/venue-graduation', { venue, milestone })
+  postToBot("/webhook/venue-graduation", { venue, milestone })
 }
 
 export function postTonightList(
@@ -60,11 +61,14 @@ export function postTonightList(
     scheduledEnd: Date
   }[]
 ) {
-  postToBot('/webhook/tonight', venues.map(v => ({
-    ...v,
-    scheduledStart: v.scheduledStart.toISOString(),
-    scheduledEnd: v.scheduledEnd.toISOString(),
-  })))
+  postToBot(
+    "/webhook/tonight",
+    venues.map((v) => ({
+      ...v,
+      scheduledStart: v.scheduledStart.toISOString(),
+      scheduledEnd: v.scheduledEnd.toISOString(),
+    }))
+  )
 }
 
 export async function postPatronVisitXp(venueId: string, characterName: string, world: string) {
@@ -79,7 +83,7 @@ export async function postPatronVisitXp(venueId: string, characterName: string, 
   `
   const row = rows[0]
   if (!row?.discordId) return
-  postToBot('/webhook/patron-visit-xp', { discordId: row.discordId, venueName: row.name })
+  postToBot("/webhook/patron-visit-xp", { discordId: row.discordId, venueName: row.name })
 }
 
 export async function postShiftXp(userId: string, venueId: string) {
@@ -92,7 +96,7 @@ export async function postShiftXp(userId: string, venueId: string) {
   `
   const row = rows[0]
   if (!row?.discordId) return
-  postToBot('/webhook/shift-xp', { discordId: row.discordId, venueName: row.name })
+  postToBot("/webhook/shift-xp", { discordId: row.discordId, venueName: row.name })
 }
 
 export function postEventsDigestDay(
@@ -101,16 +105,16 @@ export function postEventsDigestDay(
   events: { title: string; startTime: Date; venue: { name: string; slug: string } }[],
   truncatedCount: number
 ) {
-  return postToBot('/webhook/events-digest', {
+  return postToBot("/webhook/events-digest", {
     dayOffset,
     dayLabel,
     truncatedCount,
-    events: events.map(e => ({ ...e, startTime: e.startTime.toISOString() })),
+    events: events.map((e) => ({ ...e, startTime: e.startTime.toISOString() })),
   })
 }
 
 export function postVenueStatus(venue: { id: string; name: string; dataCenter: string }, isOpen: boolean) {
-  postToBot('/webhook/venue-status', {
+  postToBot("/webhook/venue-status", {
     venueId: venue.id,
     venueName: venue.name,
     dataCenter: venue.dataCenter,
@@ -122,9 +126,17 @@ export function postEventLive(event: {
   title: string
   startTime: Date
   endTime: Date
-  venue: { name: string; slug: string; dataCenter: string; world: string; district?: string | null; ward?: number | null; plot?: number | null }
+  venue: {
+    name: string
+    slug: string
+    dataCenter: string
+    world: string
+    district?: string | null
+    ward?: number | null
+    plot?: number | null
+  }
 }) {
-  postToBot('/webhook/event-live', {
+  postToBot("/webhook/event-live", {
     event: {
       ...event,
       startTime: event.startTime.toISOString(),

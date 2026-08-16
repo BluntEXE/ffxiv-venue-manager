@@ -17,11 +17,7 @@ import { VenueLayout } from "@/components/venue-layout"
 
 import { RoleBadge } from "@/components/role-badge"
 
-export default async function StaffPage({
-  params,
-}: {
-  params: Promise<{ slug: string }>
-}) {
+export default async function StaffPage({ params }: { params: Promise<{ slug: string }> }) {
   const session = await getServerSession(authOptions)
 
   if (!session?.user) {
@@ -59,7 +55,11 @@ export default async function StaffPage({
           displayName: true,
           image: true,
           discordId: true,
-          characters: { orderBy: [{ isPrimary: "desc" }, { createdAt: "asc" }], take: 1, select: { characterName: true } },
+          characters: {
+            orderBy: [{ isPrimary: "desc" }, { createdAt: "asc" }],
+            take: 1,
+            select: { characterName: true },
+          },
         },
       },
       customRole: true,
@@ -72,12 +72,12 @@ export default async function StaffPage({
   })
 
   // Separate by role and status
-  const activeStaff = staff.filter((s: typeof staff[number]) => s.status === "active" && s.user)
-  const pendingInvites = staff.filter((s: typeof staff[number]) => s.status === "pending")
+  const activeStaff = staff.filter((s: (typeof staff)[number]) => s.status === "active" && s.user)
+  const pendingInvites = staff.filter((s: (typeof staff)[number]) => s.status === "pending")
 
-  const owners = activeStaff.filter((s: typeof activeStaff[number]) => s.role === "OWNER")
-  const managers = activeStaff.filter((s: typeof activeStaff[number]) => s.role === "MANAGER")
-  const regularStaff = activeStaff.filter((s: typeof activeStaff[number]) => s.role === "STAFF")
+  const owners = activeStaff.filter((s: (typeof activeStaff)[number]) => s.role === "OWNER")
+  const managers = activeStaff.filter((s: (typeof activeStaff)[number]) => s.role === "MANAGER")
+  const regularStaff = activeStaff.filter((s: (typeof activeStaff)[number]) => s.role === "STAFF")
 
   const canManageStaff = ["OWNER", "MANAGER"].includes(userRole)
 
@@ -105,14 +105,10 @@ export default async function StaffPage({
   }, 0)
   const tipsThisWeek = Number(weeklyTips._sum.amount ?? 0)
 
-  const onShiftIds = new Set(activeShifts.map(s => s.membershipId))
+  const onShiftIds = new Set(activeShifts.map((s) => s.membershipId))
 
   return (
-    <VenueLayout
-      venueSlug={venue.slug}
-      venueName={venue.name}
-      userRole={userRole}
-    >
+    <VenueLayout venueSlug={venue.slug} venueName={venue.name} userRole={userRole}>
       <div className="page-inner">
         {/* Breadcrumb */}
         {/* Header */}
@@ -120,7 +116,9 @@ export default async function StaffPage({
           <div>
             <div className="flex items-center gap-2 mb-1.5">
               <span className="w-[7px] h-[7px] bg-[rgba(0,180,255,0.7)] rotate-45 shadow-[0_0_10px_rgba(0,180,255,0.5)] flex-shrink-0" />
-              <span className="text-[0.72rem] font-semibold uppercase tracking-[0.14em] text-[var(--xiv-blue)]">{venue.name} &middot; {venue.dataCenter} &middot; {venue.world}</span>
+              <span className="text-[0.72rem] font-semibold uppercase tracking-[0.14em] text-[var(--xiv-blue)]">
+                {venue.name} &middot; {venue.dataCenter} &middot; {venue.world}
+              </span>
             </div>
             <h1 className="page-h1">Staff</h1>
           </div>
@@ -144,31 +142,82 @@ export default async function StaffPage({
 
         {/* Stats */}
         <div className="kpis mb-6">
-          <div className="stat"><div className="top"><span className="sb"><Users size={16} /></span></div><div className="k">Active staff</div><div className="v">{activeStaff.length}</div><div className="delta flat">Members</div></div>
-          <div className="stat"><div className="top"><span className={activeShifts.length > 0 ? "sb em" : "sb"}><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg></span></div><div className="k">On shift now</div><div className="v">{activeShifts.length}</div><div className="delta flat">{activeShifts.length > 0 ? "clocked in" : "no active shifts"}</div></div>
-          <div className="stat"><div className="top"><span className="sb"><Shield size={16} /></span></div><div className="k">Hours this week</div><div className="v">{Math.round(hoursThisWeek)} <span className="unit">h</span></div><div className="delta flat">scheduled</div></div>
-          <div className="stat"><div className="top"><span className="sb am"><Users size={16} /></span></div><div className="k">Tips pool (wk)</div><div className="v">{tipsThisWeek > 0 ? formatGilCompact(tipsThisWeek) : "0"} <span className="unit">gil</span></div><div className="delta flat">split by hours</div></div>
+          <div className="stat">
+            <div className="top">
+              <span className="sb">
+                <Users size={16} />
+              </span>
+            </div>
+            <div className="k">Active staff</div>
+            <div className="v">{activeStaff.length}</div>
+            <div className="delta flat">Members</div>
+          </div>
+          <div className="stat">
+            <div className="top">
+              <span className={activeShifts.length > 0 ? "sb em" : "sb"}>
+                <svg
+                  xmlns="http://www.w3.org/2000/svg"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="2"
+                >
+                  <circle cx="12" cy="12" r="10" />
+                  <polyline points="12 6 12 12 16 14" />
+                </svg>
+              </span>
+            </div>
+            <div className="k">On shift now</div>
+            <div className="v">{activeShifts.length}</div>
+            <div className="delta flat">{activeShifts.length > 0 ? "clocked in" : "no active shifts"}</div>
+          </div>
+          <div className="stat">
+            <div className="top">
+              <span className="sb">
+                <Shield size={16} />
+              </span>
+            </div>
+            <div className="k">Hours this week</div>
+            <div className="v">
+              {Math.round(hoursThisWeek)} <span className="unit">h</span>
+            </div>
+            <div className="delta flat">scheduled</div>
+          </div>
+          <div className="stat">
+            <div className="top">
+              <span className="sb am">
+                <Users size={16} />
+              </span>
+            </div>
+            <div className="k">Tips pool (wk)</div>
+            <div className="v">
+              {tipsThisWeek > 0 ? formatGilCompact(tipsThisWeek) : "0"} <span className="unit">gil</span>
+            </div>
+            <div className="delta flat">split by hours</div>
+          </div>
         </div>
 
         {/* Staff table */}
         <StaffTable
-          members={activeStaff.map(m => ({
+          members={activeStaff.map((m) => ({
             id: m.id,
             role: m.role as "OWNER" | "MANAGER" | "STAFF",
             customRole: m.customRole ? { name: m.customRole.name, color: m.customRole.color ?? "#9399b2" } : null,
             additionalRoles: m.additionalRoles
-              .filter(ar => ar.roleId !== m.roleId)
-              .map(ar => ({ name: ar.role.name, color: ar.role.color ?? "#9399b2" })),
+              .filter((ar) => ar.roleId !== m.roleId)
+              .map((ar) => ({ name: ar.role.name, color: ar.role.color ?? "#9399b2" })),
             joinedAt: m.createdAt.toISOString(),
             isOnShift: onShiftIds.has(m.id),
             nickname: m.nickname ?? null,
-            user: m.user ? {
-              id: m.user.id,
-              name: m.user.name,
-              displayName: m.user.displayName,
-              image: m.user.image,
-              characterName: m.user.characters[0]?.characterName ?? null,
-            } : null,
+            user: m.user
+              ? {
+                  id: m.user.id,
+                  name: m.user.name,
+                  displayName: m.user.displayName,
+                  image: m.user.image,
+                  characterName: m.user.characters[0]?.characterName ?? null,
+                }
+              : null,
             venueId: venue.id,
           }))}
           slug={slug}
@@ -179,7 +228,7 @@ export default async function StaffPage({
         <div className="space-y-8 mt-6">
           {/* Pending Invites */}
           <PendingInvites
-            invites={pendingInvites.map((invite: typeof pendingInvites[number]) => ({
+            invites={pendingInvites.map((invite: (typeof pendingInvites)[number]) => ({
               id: invite.id,
               role: invite.role,
               invitedName: invite.invitedName,
@@ -191,7 +240,6 @@ export default async function StaffPage({
             slug={slug}
             canManageStaff={canManageStaff}
           />
-
         </div>
       </div>
     </VenueLayout>

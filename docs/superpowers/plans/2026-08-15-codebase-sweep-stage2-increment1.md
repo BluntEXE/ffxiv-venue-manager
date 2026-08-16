@@ -4,7 +4,7 @@
 
 **Goal:** Delete confirmed-dead files, exports, and dependencies identified by the Stage 1 findings report, verified against the local dev stack (not prod).
 
-**Architecture:** Straight deletions, grouped by workspace/file so each task is independently verifiable. A recurring pattern found during verification: several exports flagged "unused" by knip are actually still used *within their own file* (e.g. a type used by a sibling type in the same file) — knip only sees cross-file usage. For those, the fix is removing the `export` keyword, not deleting the declaration. Genuinely zero-usage (internal and external) items get fully deleted. Every deletion in this plan was independently re-verified via grep against the current source immediately before this plan was written — see the inline verification note in each step.
+**Architecture:** Straight deletions, grouped by workspace/file so each task is independently verifiable. A recurring pattern found during verification: several exports flagged "unused" by knip are actually still used _within their own file_ (e.g. a type used by a sibling type in the same file) — knip only sees cross-file usage. For those, the fix is removing the `export` keyword, not deleting the declaration. Genuinely zero-usage (internal and external) items get fully deleted. Every deletion in this plan was independently re-verified via grep against the current source immediately before this plan was written — see the inline verification note in each step.
 
 **Tech Stack:** TypeScript, Next.js (apps/web), Node/pg (apps/discord-bot), Vite/React (apps/shout-crafter), vitest, pnpm workspaces.
 
@@ -15,6 +15,7 @@
 ## Task 1: Delete fully-dead files (apps/web)
 
 **Files:**
+
 - Delete: `apps/web/components/dashboard-analytics.tsx`
 - Delete: `apps/web/components/manage-staff-role-dialog.tsx`
 - Delete: `apps/web/components/ui/scroll-area.tsx`
@@ -37,7 +38,7 @@ grep -rln "components/ui/sheet\b" apps/web --include="*.tsx" --include="*.ts" | 
 grep -rln "components/ui/tabs\b" apps/web --include="*.tsx" --include="*.ts" | grep -v generated
 ```
 
-Expected: each command's only output line (if any) is the file's own definition file (e.g. `scroll-area.tsx` grep matches only itself). If any command shows a *different* file, STOP — something now imports it that didn't before, do not delete that file, report this as a plan deviation.
+Expected: each command's only output line (if any) is the file's own definition file (e.g. `scroll-area.tsx` grep matches only itself). If any command shows a _different_ file, STOP — something now imports it that didn't before, do not delete that file, report this as a plan deviation.
 
 - [ ] **Step 2: Delete the 6 files**
 
@@ -70,6 +71,7 @@ git commit -m "chore: remove dead component/script files (codebase sweep stage 2
 ## Task 2: Delete dead export/type declarations that are also unused internally (apps/web)
 
 **Files:**
+
 - Modify: `apps/web/lib/api/plugin-auth.ts`
 - Modify: `apps/web/lib/discord-webhook.ts`
 - Modify: `apps/web/lib/discord-bot.ts`
@@ -92,14 +94,14 @@ export async function getVenueRoles(venueId: string, userId: string) {
     where: {
       userId,
       venueId,
-      status: 'active'
+      status: "active",
     },
   })
 
   if (!membership) {
     return null
   }
-  
+
   // Get all roles at this venue, with their linked services eagerly loaded
   // via the Role.services relation (Prisma implicit many-to-many).
   const rolesRaw = await prisma.role.findMany({
@@ -120,10 +122,10 @@ export async function getVenueRoles(venueId: string, userId: string) {
       category: svc.category,
     })),
   }))
-  
+
   return {
     userRole: membership.role,
-    roles: rolesWithServices
+    roles: rolesWithServices,
   }
 }
 ```
@@ -138,10 +140,7 @@ Delete this block (the whole function, ~line 190-206):
 /**
  * Delete an existing Discord webhook message.
  */
-export async function deleteDiscordMessage(
-  webhookUrl: string | null,
-  messageId: string
-): Promise<boolean> {
+export async function deleteDiscordMessage(webhookUrl: string | null, messageId: string): Promise<boolean> {
   if (!webhookUrl || !isValidDiscordWebhookUrl(webhookUrl)) return false
   try {
     const res = await fetch(`${webhookUrl}/messages/${encodeURIComponent(messageId)}`, {
@@ -156,10 +155,13 @@ export async function deleteDiscordMessage(
 ```
 
 Change (around line 75):
+
 ```ts
 export type WebhookGroup = "staff" | "events" | "revenue"
 ```
+
 to:
+
 ```ts
 type WebhookGroup = "staff" | "events" | "revenue"
 ```
@@ -177,13 +179,16 @@ export async function deleteBotMessage(channelId: string, messageId: string): Pr
 (Read the actual current body with `sed -n '54,60p' apps/web/lib/discord-bot.ts` before deleting — the snippet above is a best-effort reconstruction from context, confirm it matches before removing.)
 
 Change:
+
 ```ts
 export interface DiscordActionRow {
   type: 1
   components: DiscordButtonComponent[]
 }
 ```
+
 to:
+
 ```ts
 interface DiscordActionRow {
   type: 1
@@ -196,6 +201,7 @@ Do NOT touch `DiscordButtonComponent` in this same file — it's used via an inl
 - [ ] **Step 4: In `redis-cache.ts`, delete `invalidateCacheKeys` (genuinely dead) and the bare `export { redis }` re-export (genuinely dead — every consumer imports `redis` from `@/lib/redis` directly, never from this file)**
 
 Delete:
+
 ```ts
 export async function invalidateCacheKeys(keys: string[]): Promise<void> {
   if (!ready() || !redis || keys.length === 0) return
@@ -208,6 +214,7 @@ export async function invalidateCacheKeys(keys: string[]): Promise<void> {
 ```
 
 Delete the last line of the file:
+
 ```ts
 export { redis }
 ```
@@ -217,6 +224,7 @@ Do NOT touch `getCached`/`setCache` in this file — both are used internally by
 - [ ] **Step 5: In `storage.ts`, delete `publicUrl` (genuinely dead — the only other match for this name anywhere in `apps/web` is an unrelated local variable of the same name in `gallery-manager.tsx`, not a call to this function)**
 
 Delete:
+
 ```ts
 /** Convert a storage key to a public URL */
 export function publicUrl(key: string): string {
@@ -258,6 +266,7 @@ git commit -m "chore: remove dead exports, unexport internally-used types (codeb
 ## Task 3: Drop `export` from internally-used-only types (apps/web)
 
 **Files:**
+
 - Modify: `apps/web/lib/notify.ts`
 - Modify: `apps/web/lib/payroll-rates.ts`
 - Modify: `apps/web/components/breadcrumb.tsx`
@@ -267,10 +276,13 @@ git commit -m "chore: remove dead exports, unexport internally-used types (codeb
 - [ ] **Step 1: In `notify.ts`, unexport `NotificationType`**
 
 Change:
+
 ```ts
 export type NotificationType = "NEW_FOLLOWER" | "STAFF_JOINED" | "TASK_ASSIGNED" | "TASK_COMPLETED"
 ```
+
 to:
+
 ```ts
 type NotificationType = "NEW_FOLLOWER" | "STAFF_JOINED" | "TASK_ASSIGNED" | "TASK_COMPLETED"
 ```
@@ -282,10 +294,13 @@ Find the interface declaration (starts `export interface RateResolvedShift {`) a
 - [ ] **Step 3: In `breadcrumb.tsx`, unexport `BreadcrumbItem`**
 
 Change:
+
 ```ts
 export interface BreadcrumbItem {
 ```
+
 to:
+
 ```ts
 interface BreadcrumbItem {
 ```
@@ -310,6 +325,7 @@ git commit -m "chore: unexport internally-used-only types (codebase sweep stage 
 ## Task 4: apps/discord-bot — unexport `db`
 
 **Files:**
+
 - Modify: `apps/discord-bot/src/db.ts`
 
 **Context:** `db` (the `pg.Pool` instance) is used internally by `getHighestMembership`/`getAllDiscordIds` in the same file. No other file in `apps/discord-bot/src` imports `db` directly — only `getAllDiscordIds`, `getHighestMembership`, and the `MembershipRole` type are imported elsewhere (confirmed via grep against `index.ts` and `assign.ts`, the only two other files in this workspace).
@@ -317,10 +333,13 @@ git commit -m "chore: unexport internally-used-only types (codebase sweep stage 
 - [ ] **Step 1: Unexport `db`**
 
 Change:
+
 ```ts
 export const db = new Pool({ connectionString: process.env.DATABASE_URL })
 ```
+
 to:
+
 ```ts
 const db = new Pool({ connectionString: process.env.DATABASE_URL })
 ```
@@ -346,13 +365,14 @@ git commit -m "chore: unexport internally-used-only db pool (codebase sweep stag
 ## Task 5: apps/shout-crafter — delete `storage.ts` + its now-orphaned `SavedShout` type, delete `findDatacenter`, unexport `WORLDS`, unexport `XivVMUser`/`XivVMVenue`, delete `App.css`
 
 **Files:**
+
 - Delete: `apps/shout-crafter/src/App.css`
 - Delete: `apps/shout-crafter/src/lib/storage.ts`
 - Modify: `apps/shout-crafter/src/types.ts`
 - Modify: `apps/shout-crafter/src/lib/worlds.ts`
 - Modify: `apps/shout-crafter/src/lib/xivvm-auth.ts`
 
-**Context — important correction from the Stage 1 report:** `lib/storage.ts` (localStorage-based save/load) is genuinely orphaned — it was superseded by `lib/xivvm-shouts.ts` (a *different*, server-backed implementation with its own separate `SavedShout` interface that the actual UI component, `SavedShouts.tsx`, imports instead). Deleting `storage.ts` is safe (zero importers, confirmed via grep). Once it's gone, the `SavedShout` interface in `types.ts` (which only `storage.ts` imported) becomes fully dead too — not just "unexported," genuinely deletable, since nothing else in `types.ts` references it. Do NOT confuse this `SavedShout` with the other one in `xivvm-shouts.ts` — that one is live and must not be touched.
+**Context — important correction from the Stage 1 report:** `lib/storage.ts` (localStorage-based save/load) is genuinely orphaned — it was superseded by `lib/xivvm-shouts.ts` (a _different_, server-backed implementation with its own separate `SavedShout` interface that the actual UI component, `SavedShouts.tsx`, imports instead). Deleting `storage.ts` is safe (zero importers, confirmed via grep). Once it's gone, the `SavedShout` interface in `types.ts` (which only `storage.ts` imported) becomes fully dead too — not just "unexported," genuinely deletable, since nothing else in `types.ts` references it. Do NOT confuse this `SavedShout` with the other one in `xivvm-shouts.ts` — that one is live and must not be touched.
 
 - [ ] **Step 1: Delete `App.css` (0 bytes, unreferenced) and `lib/storage.ts`**
 
@@ -360,6 +380,7 @@ git commit -m "chore: unexport internally-used-only db pool (codebase sweep stag
 cd /home/ehno/xiv-app
 grep -rln "App\.css" apps/shout-crafter/src --include="*.tsx" --include="*.ts"
 ```
+
 Expected: no output (confirms nothing imports it before deleting).
 
 ```bash
@@ -372,9 +393,11 @@ git rm apps/shout-crafter/src/lib/storage.ts
 ```bash
 grep -rln "SavedShout" apps/shout-crafter/src --include="*.tsx" --include="*.ts" | grep -v "lib/xivvm-shouts.ts" | grep -v "components/SavedShouts.tsx"
 ```
-Expected: no output (the only remaining hits should be the unrelated `xivvm-shouts.ts`/`SavedShouts.tsx` pair, which import a *different* `SavedShout` interface — leave those alone).
+
+Expected: no output (the only remaining hits should be the unrelated `xivvm-shouts.ts`/`SavedShouts.tsx` pair, which import a _different_ `SavedShout` interface — leave those alone).
 
 In `apps/shout-crafter/src/types.ts`, delete:
+
 ```ts
 export interface SavedShout {
   id: string
@@ -388,18 +411,22 @@ export interface SavedShout {
 - [ ] **Step 3: In `worlds.ts`, delete `findDatacenter` (genuinely dead, zero usage even internally) and unexport `WORLDS` (used internally by `ALL_WORLDS`/`ALL_DATACENTERS` in the same file)**
 
 Delete:
+
 ```ts
 export function findDatacenter(text: string): string | undefined {
   const lower = text.toLowerCase()
-  return ALL_DATACENTERS.find(dc => lower.includes(dc.toLowerCase()))
+  return ALL_DATACENTERS.find((dc) => lower.includes(dc.toLowerCase()))
 }
 ```
 
 Change:
+
 ```ts
 export const WORLDS: Record<string, string[]> = {
 ```
+
 to:
+
 ```ts
 const WORLDS: Record<string, string[]> = {
 ```
@@ -409,19 +436,25 @@ Do NOT touch `ALL_WORLDS`, `ALL_DATACENTERS`, or `findWorld` — `ALL_WORLDS` is
 - [ ] **Step 4: In `xivvm-auth.ts`, unexport `XivVMUser` and `XivVMVenue` (both used internally by `XivVMSession` in the same file)**
 
 Change:
+
 ```ts
 export interface XivVMUser {
 ```
+
 to:
+
 ```ts
 interface XivVMUser {
 ```
 
 Change:
+
 ```ts
 export interface XivVMVenue {
 ```
+
 to:
+
 ```ts
 interface XivVMVenue {
 ```
@@ -449,6 +482,7 @@ git commit -m "chore: remove dead shout-crafter files/exports (codebase sweep st
 ## Task 6: docker/homepage — delete empty unused config file
 
 **Files:**
+
 - Delete: `docker/homepage/config/custom.js`
 
 **Context:** 0 bytes, and the homepage dashboard app's own log (`docker/homepage/config/logs/homepage.log`) shows it auto-copies this file into the config folder as a default on its own startup if missing — this is optional per-user JS customization scaffolding for that app, not something any other part of this repo reads or depends on. Not referenced in the prod `docker-compose.yml` or anywhere else in the repo.
@@ -459,6 +493,7 @@ git commit -m "chore: remove dead shout-crafter files/exports (codebase sweep st
 cd /home/ehno/xiv-app
 grep -rn "custom\.js" docker/ docker-compose.yml docker-compose.local.yml 2>/dev/null | grep -v "logs/homepage.log"
 ```
+
 Expected: no output.
 
 - [ ] **Step 2: Delete**
@@ -478,6 +513,7 @@ git commit -m "chore: remove empty unused homepage custom.js (codebase sweep sta
 ## Task 7: Remove confirmed-unused dependencies from apps/web/package.json
 
 **Files:**
+
 - Modify: `apps/web/package.json`
 - Modify: `apps/web/pnpm-lock.yaml` (regenerated, not hand-edited)
 
@@ -491,19 +527,25 @@ grep -rln "components/ui/scroll-area\|ScrollArea" apps/web --include="*.tsx" --i
 grep -rln "components/ui/tabs\b" apps/web --include="*.tsx" --include="*.ts" | grep -v generated
 grep -rln "from ['\"]jose['\"]\|require(['\"]jose['\"])" apps/web --include="*.ts" --include="*.tsx" | grep -v generated
 ```
+
 Expected: no output for all three (Task 1 already deleted the two `ui/*.tsx` files, so those greps should now be fully empty rather than matching just the definition file as in Task 1's Step 1).
 
 - [ ] **Step 2: Remove the three lines from `apps/web/package.json`**
 
 Remove:
+
 ```json
     "@radix-ui/react-scroll-area": "^1.2.10",
 ```
+
 Remove:
+
 ```json
     "@radix-ui/react-tabs": "^1.1.13",
 ```
+
 Remove:
+
 ```json
     "jose": "4.15.9",
 ```
@@ -546,6 +588,7 @@ git commit -m "chore: remove unused dependencies scroll-area/tabs/jose (codebase
 ## Self-review
 
 **Spec coverage:**
+
 - All 9 files-to-delete from the scope → Task 1 (6 apps/web files), Task 5 (App.css, storage.ts), Task 6 (custom.js). ✅
 - All 12 exports/types-to-delete from the scope → Task 2 (5 items across plugin-auth/discord-webhook/discord-bot/redis-cache/storage), Task 3 (3 unexports), Task 4 (db unexport), Task 5 (SavedShout delete, findDatacenter delete, WORLDS/XivVMUser/XivVMVenue unexport). ✅ — note several were reclassified from "delete" to "unexport" after verification found internal-file usage; this is a correction, not a scope gap, and is called out explicitly in each task's context.
 - 3 dependency removals → Task 7. ✅

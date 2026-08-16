@@ -7,24 +7,29 @@ XIV Venue Manager implements comprehensive HTTP security headers to protect agai
 ## Implemented Headers
 
 ### 1. X-Frame-Options: DENY
+
 **Protection**: Clickjacking attacks
 
 Prevents the site from being embedded in iframes on other domains, protecting users from clickjacking attacks where malicious sites trick users into clicking hidden buttons.
 
 ### 2. X-Content-Type-Options: nosniff
+
 **Protection**: MIME-sniffing attacks
 
 Forces browsers to respect the declared Content-Type, preventing browsers from trying to "guess" file types which could lead to XSS vulnerabilities.
 
 ### 3. Referrer-Policy: strict-origin-when-cross-origin
+
 **Protection**: Information leakage
 
 Controls how much referrer information is sent with requests:
+
 - Same-origin: Full URL
 - Cross-origin HTTPS→HTTPS: Origin only
 - HTTPS→HTTP: No referrer (downgrade protection)
 
 ### 4. Strict-Transport-Security
+
 **Protection**: Man-in-the-middle attacks
 
 ```
@@ -34,6 +39,7 @@ max-age=31536000; includeSubDomains; preload
 Forces browsers to only access the site via HTTPS for 1 year (31536000 seconds), including all subdomains.
 
 ### 5. Permissions-Policy
+
 **Protection**: Unauthorized API access
 
 ```
@@ -41,21 +47,25 @@ camera=(), microphone=(), geolocation=()
 ```
 
 Disables potentially dangerous browser APIs:
+
 - No camera access
 - No microphone access
 - No geolocation access
 
 ### 6. Cross-Origin-Opener-Policy: same-origin, Cross-Origin-Resource-Policy: same-site, Cross-Origin-Embedder-Policy: credentialless
+
 **Protection**: Cross-origin opener attacks, hotlinking/side-channel resource loading
 
 Isolates the browsing context from cross-origin openers and restricts who can load our resources cross-site. `credentialless` (not `require-corp`) on COEP so external CDN images (Discord avatars etc.) still load without needing CORP headers from those third parties.
 
 ### 7. X-DNS-Prefetch-Control: on
+
 **Protection**: N/A — performance, not security
 
 Allows the browser to prefetch DNS for links on the page.
 
 ### 8. Content-Security-Policy (CSP)
+
 **Protection**: XSS, injection attacks, unauthorized resource loading
 
 Nonce-based CSP generated per-request in `proxy.ts`:
@@ -76,15 +86,17 @@ upgrade-insecure-requests
 This is the production shape. In development, `script-src` also allows `'unsafe-eval'` (Next.js dev-mode tooling needs it) and `upgrade-insecure-requests` is dropped (local dev serves plain HTTP). See `buildCsp()` in `proxy.ts` for the exact per-environment logic — this doc shows the general shape, not a byte-for-byte copy; don't diff against it literally.
 
 **Nonce implementation (2026-05-07):**
+
 - `unsafe-inline` and `unsafe-eval` removed from `script-src` in production
 - Per-request nonce via `crypto.randomUUID()`, base64-encoded
 - Next.js automatically stamps the nonce on all generated `<script>` tags
-- CSP lives in `proxy.ts` (not `next.config.ts`) because nonces require per-request generation — `next.config.ts`'s `headers()` sets every *other* header in this doc (all static, same value on every request), CSP is the one exception
+- CSP lives in `proxy.ts` (not `next.config.ts`) because nonces require per-request generation — `next.config.ts`'s `headers()` sets every _other_ header in this doc (all static, same value on every request), CSP is the one exception
 - `style-src unsafe-inline` retained - required by Tailwind CSS
 
 **Auth gating lives in the same function.** `proxy.ts`'s `proxy()` does two things per request, not just CSP: it also checks `PUBLIC_PATHS`/`PUBLIC_PREFIXES` and redirects unauthenticated requests to `/auth/signin` (via NextAuth's `getToken()`) before the response with the CSP header is ever built. If you're debugging "why did this route redirect" as well as "why did this header not appear," they're the same file.
 
 **Allowed External Sources:**
+
 - Discord CDN: For user avatars via Discord OAuth
 - GitHub: For repository images and assets
 - QStash: For cron job webhook delivery
@@ -127,6 +139,7 @@ curl -I https://xivvenuemanager.com | grep -E "(X-Frame|X-Content|Strict-Transpo
 ```
 
 Expected output:
+
 ```
 x-frame-options: DENY
 x-content-type-options: nosniff
@@ -138,14 +151,14 @@ content-security-policy: default-src 'self'; script-src 'self' 'nonce-{base64}';
 
 ## Security Benefits
 
-| Header | Attack Prevented | Severity | Impact |
-|--------|------------------|----------|---------|
-| X-Frame-Options | Clickjacking | High | ✅ Complete protection |
-| X-Content-Type-Options | MIME confusion XSS | Medium | ✅ Complete protection |
-| Referrer-Policy | Information leakage | Low | ✅ Balanced privacy |
-| Strict-Transport-Security | MITM, SSL strip | High | ✅ Complete protection |
-| Permissions-Policy | Unauthorized API use | Medium | ✅ Complete protection |
-| Content-Security-Policy | XSS, injection | High | ✅ Nonce-based (no unsafe-inline/eval in script-src) |
+| Header                    | Attack Prevented     | Severity | Impact                                               |
+| ------------------------- | -------------------- | -------- | ---------------------------------------------------- |
+| X-Frame-Options           | Clickjacking         | High     | ✅ Complete protection                               |
+| X-Content-Type-Options    | MIME confusion XSS   | Medium   | ✅ Complete protection                               |
+| Referrer-Policy           | Information leakage  | Low      | ✅ Balanced privacy                                  |
+| Strict-Transport-Security | MITM, SSL strip      | High     | ✅ Complete protection                               |
+| Permissions-Policy        | Unauthorized API use | Medium   | ✅ Complete protection                               |
+| Content-Security-Policy   | XSS, injection       | High     | ✅ Nonce-based (no unsafe-inline/eval in script-src) |
 
 ## Known Limitations
 
@@ -165,6 +178,7 @@ These headers help meet compliance requirements for:
 ## Configuration Location
 
 Security headers are configured in two places:
+
 ```
 next.config.ts   # every static header (X-Frame-Options, HSTS, Permissions-Policy, etc.) - same value every request
 proxy.ts          # Content-Security-Policy only - needs a fresh nonce per request, can't be a static next.config.ts value
@@ -183,6 +197,7 @@ This app runs as a standalone Docker container on the project's own server (not 
 **Issue**: Security header missing in browser DevTools
 
 **Solutions**:
+
 1. Clear browser cache (Ctrl+Shift+R)
 2. Confirm the change actually deployed — check `docker compose logs venue-manager` on the server for the current build, or `git log` on the server checkout, rather than assuming a push alone shipped it (pushing to GitHub does not deploy, see the repo's root `CLAUDE.md`)
 3. If it's the CSP specifically and every other header is present: the bug is in `proxy.ts`, not `next.config.ts` — check its `config.matcher` didn't exclude the route in question
@@ -193,12 +208,14 @@ This app runs as a standalone Docker container on the project's own server (not 
 **Issue**: Console errors like "Refused to load..."
 
 **Solutions**:
+
 1. Add the resource domain to appropriate CSP directive
 2. For images: Add to `img-src`
 3. For APIs: Add to `connect-src`
 4. For scripts: Add to `script-src` (carefully!)
 
 ### Example: Adding a new image CDN
+
 ```javascript
 "img-src 'self' data: https://cdn.discordapp.com https://new-cdn.example.com"
 ```

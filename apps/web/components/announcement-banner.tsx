@@ -14,17 +14,17 @@ type Announcement = {
 export function AnnouncementBanner({ announcements }: { announcements: Announcement[] }) {
   const [dismissed, setDismissed] = useState<Set<string>>(new Set())
 
-  const visible = announcements.filter(a => !dismissed.has(a.id))
+  const visible = announcements.filter((a) => !dismissed.has(a.id))
   if (visible.length === 0) return null
 
   async function dismiss(id: string) {
-    setDismissed(prev => new Set([...prev, id]))
+    setDismissed((prev) => new Set([...prev, id]))
     await fetch(`/api/announcements/${id}/dismiss`, { method: "POST" })
   }
 
   return (
     <div className="space-y-3 mb-6">
-      {visible.map(a => (
+      {visible.map((a) => (
         <div
           key={a.id}
           className="relative rounded-xl overflow-hidden"
@@ -37,7 +37,10 @@ export function AnnouncementBanner({ announcements }: { announcements: Announcem
           {/* Top accent line */}
           <div
             className="absolute top-0 left-0 right-0 h-[2px]"
-            style={{ background: "linear-gradient(90deg, transparent, rgba(0,180,255,0.8) 40%, rgba(0,180,255,0.8) 60%, transparent)" }}
+            style={{
+              background:
+                "linear-gradient(90deg, transparent, rgba(0,180,255,0.8) 40%, rgba(0,180,255,0.8) 60%, transparent)",
+            }}
           />
 
           <div className="px-5 py-4 pr-10">
@@ -47,15 +50,15 @@ export function AnnouncementBanner({ announcements }: { announcements: Announcem
                 className="w-2 h-2 shrink-0 rotate-45"
                 style={{ background: "var(--xiv-blue)", boxShadow: "0 0 8px rgba(0,180,255,0.7)" }}
               />
-              <p className="font-cinzel text-sm font-semibold tracking-wide text-[var(--xiv-blue)]">
-                {a.title}
-              </p>
+              <p className="font-cinzel text-sm font-semibold tracking-wide text-[var(--xiv-blue)]">{a.title}</p>
             </div>
 
             {/* Message — respects newlines */}
             <div className="text-sm text-muted-foreground leading-relaxed space-y-2 pl-[18px]">
               {a.message.split("\n\n").map((para, i) => (
-                <p key={i} style={{ whiteSpace: "pre-wrap" }}>{para}</p>
+                <p key={i} style={{ whiteSpace: "pre-wrap" }}>
+                  {para}
+                </p>
               ))}
             </div>
 

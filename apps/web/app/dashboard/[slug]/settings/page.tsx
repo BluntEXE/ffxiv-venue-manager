@@ -12,20 +12,8 @@ import { GalleryManager } from "@/components/gallery-manager"
 import { BannerUpload } from "@/components/banner-upload"
 import { LogoUpload } from "@/components/logo-upload"
 import { Checkbox } from "@/components/ui/checkbox"
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card"
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select"
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Alert, AlertDescription } from "@/components/ui/alert"
 import {
   AlertDialog,
@@ -47,12 +35,7 @@ import { DAY_NAMES, formatEntryTime, formatIntervalLabel } from "@/lib/schedule-
 import { Plus, Trash2 } from "lucide-react"
 import { FFXIV_DISTRICTS } from "@/lib/venue-location"
 
-
-export default function SettingsPage({
-  params,
-}: {
-  params: Promise<{ slug: string }>
-}) {
+export default function SettingsPage({ params }: { params: Promise<{ slug: string }> }) {
   const router = useRouter()
   const [slug, setSlug] = useState<string>("")
   const [settings, setSettings] = useState<VenueSettings>({
@@ -122,9 +105,14 @@ export default function SettingsPage({
   const [potIncludeSalesInPot, setPotIncludeSalesInPot] = useState(false)
   const [potDefaultTipPooled, setPotDefaultTipPooled] = useState(false)
   const [inventoryEnabled, setInventoryEnabled] = useState(false)
-  const [shiftBotTemplates, setShiftBotTemplates] = useState<Array<{
-    name: string; startOffsetHours: number; durationHours: number; slots: number
-  }>>([])
+  const [shiftBotTemplates, setShiftBotTemplates] = useState<
+    Array<{
+      name: string
+      startOffsetHours: number
+      durationHours: number
+      slots: number
+    }>
+  >([])
   const [isDirty, setIsDirty] = useState(false)
   const settingsReadyRef = useRef(false)
 
@@ -205,7 +193,7 @@ export default function SettingsPage({
         }
 
         fetch(`/api/venues/${venue.id}/schedule`)
-          .then(r => r.json())
+          .then((r) => r.json())
           .then((data: ScheduleEntry[]) => {
             setScheduleEntries(data)
             setScheduleLoaded(true)
@@ -213,7 +201,7 @@ export default function SettingsPage({
           .catch(() => setScheduleLoaded(true))
 
         fetch(`/api/venues/${venue.id}/pot-settings`)
-          .then(r => r.ok ? r.json() : null)
+          .then((r) => (r.ok ? r.json() : null))
           .then((data) => {
             if (!data) return
             setPotEnabled(data.settings.enabled)
@@ -224,7 +212,7 @@ export default function SettingsPage({
           .catch(() => {})
 
         fetch(`/api/venues/${venue.id}/inventory-settings`)
-          .then(r => r.ok ? r.json() : null)
+          .then((r) => (r.ok ? r.json() : null))
           .then((data) => {
             if (!data) return
             setInventoryEnabled(data.settings.enabled)
@@ -245,9 +233,23 @@ export default function SettingsPage({
     if (!settingsReadyRef.current) return
     setIsDirty(true)
   }, [
-    settings, venueName, venueDescription, venueDistrict, venueWard, venuePlot, venueApartment, housingType,
-    shiftBotEnabled, shiftBotChannelId, shiftBotDaysBefore, shiftBotThumbnailUrl, shiftBotTemplates,
-    potEnabled, potTaxPercent, potIncludeSalesInPot, potDefaultTipPooled,
+    settings,
+    venueName,
+    venueDescription,
+    venueDistrict,
+    venueWard,
+    venuePlot,
+    venueApartment,
+    housingType,
+    shiftBotEnabled,
+    shiftBotChannelId,
+    shiftBotDaysBefore,
+    shiftBotThumbnailUrl,
+    shiftBotTemplates,
+    potEnabled,
+    potTaxPercent,
+    potIncludeSalesInPot,
+    potDefaultTipPooled,
     inventoryEnabled,
   ])
 
@@ -266,7 +268,7 @@ export default function SettingsPage({
         body: JSON.stringify({
           name: venueName.trim() || undefined,
           description: venueDescription || null,
-          district: (venueDistrict && venueDistrict !== "__none__") ? venueDistrict : null,
+          district: venueDistrict && venueDistrict !== "__none__" ? venueDistrict : null,
           ward: venueWard ? parseInt(venueWard, 10) : null,
           plot: housingType === "house" && venuePlot ? parseInt(venuePlot, 10) : null,
           apartment: housingType === "apartment" && venueApartment ? parseInt(venueApartment, 10) : null,
@@ -364,10 +366,16 @@ export default function SettingsPage({
   }
 
   async function handleAddEntry(data: {
-    day: number; startHour: number; startMin: number;
-    endHour: number | null; endMin: number | null;
-    crossesMidnight: boolean; interval: string;
-    weekOfMonth: number | null; commencing: string | null; label: string | null
+    day: number
+    startHour: number
+    startMin: number
+    endHour: number | null
+    endMin: number | null
+    crossesMidnight: boolean
+    interval: string
+    weekOfMonth: number | null
+    commencing: string | null
+    label: string | null
   }) {
     const res = await fetch(`/api/venues/${venueId}/schedule`, {
       method: "POST",
@@ -376,13 +384,13 @@ export default function SettingsPage({
     })
     if (!res.ok) throw new Error("Failed to save")
     const created: ScheduleEntry = await res.json()
-    setScheduleEntries(prev => [...prev, created])
+    setScheduleEntries((prev) => [...prev, created])
   }
 
   async function handleDeleteEntry(id: string) {
     const res = await fetch(`/api/venues/${venueId}/schedule/${id}`, { method: "DELETE" })
     if (!res.ok) throw new Error("Failed to delete")
-    setScheduleEntries(prev => prev.filter(e => e.id !== id))
+    setScheduleEntries((prev) => prev.filter((e) => e.id !== id))
   }
 
   async function handleFfxivPreview() {
@@ -391,7 +399,9 @@ export default function SettingsPage({
     setFfxivPreviewError(null)
     setFfxivPreview(null)
     try {
-      const res = await fetch(`/api/venues/${venueId}/sync-ffxivvenues?ffxivId=${encodeURIComponent(ffxivInput.trim())}`)
+      const res = await fetch(
+        `/api/venues/${venueId}/sync-ffxivvenues?ffxivId=${encodeURIComponent(ffxivInput.trim())}`
+      )
       if (!res.ok) {
         const err = await res.json()
         throw new Error(err.error ?? "Not found")
@@ -433,7 +443,10 @@ export default function SettingsPage({
       const res = await fetch(`/api/venues/${venueId}/sync-ffxivvenues`, { method: "POST" })
       if (!res.ok) {
         const err = await res.json()
-        if (err.unlinked) { setFfxivVenueId(null); setFfxivVenueSyncedAt(null) }
+        if (err.unlinked) {
+          setFfxivVenueId(null)
+          setFfxivVenueSyncedAt(null)
+        }
         return
       }
       setFfxivVenueSyncedAt(new Date().toISOString())
@@ -460,7 +473,11 @@ export default function SettingsPage({
   }
 
   if (!slug) {
-    return <div className="container mx-auto p-8"><PageLoading /></div>
+    return (
+      <div className="container mx-auto p-8">
+        <PageLoading />
+      </div>
+    )
   }
 
   return (
@@ -493,41 +510,82 @@ export default function SettingsPage({
           <PageLoading text="Loading settings…" />
         ) : (
           <div className="stack mt-2">
-
             {/* ── Venue profile ── */}
             <section className="panel">
-              <div className="ph"><span className="pt"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>Venue profile</span></div>
+              <div className="ph">
+                <span className="pt">
+                  <svg
+                    xmlns="http://www.w3.org/2000/svg"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    strokeWidth="2"
+                  >
+                    <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z" />
+                    <polyline points="9 22 9 12 15 12 15 22" />
+                  </svg>
+                  Venue profile
+                </span>
+              </div>
               <div className="pbody space-y-4">
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   <div className="space-y-1.5">
                     <Label htmlFor="venue-name">Venue name</Label>
-                    <Input id="venue-name" value={venueName} onChange={e => setVenueName(e.target.value)} disabled={isSaving}
-                      className="bg-background border-[var(--blue-015)] focus:border-[var(--blue-035)]" />
+                    <Input
+                      id="venue-name"
+                      value={venueName}
+                      onChange={(e) => setVenueName(e.target.value)}
+                      disabled={isSaving}
+                      className="bg-background border-[var(--blue-015)] focus:border-[var(--blue-035)]"
+                    />
                   </div>
                   <div className="space-y-1.5">
                     <Label htmlFor="tagline">Tagline</Label>
-                    <Input id="tagline" placeholder="e.g. A dockside tavern for wayward souls"
-                      value={settings.tagline ?? ""} onChange={e => setSettings({ ...settings, tagline: e.target.value })}
-                      disabled={isSaving} className="bg-background border-[var(--blue-015)] focus:border-[var(--blue-035)]" />
+                    <Input
+                      id="tagline"
+                      placeholder="e.g. A dockside tavern for wayward souls"
+                      value={settings.tagline ?? ""}
+                      onChange={(e) => setSettings({ ...settings, tagline: e.target.value })}
+                      disabled={isSaving}
+                      className="bg-background border-[var(--blue-015)] focus:border-[var(--blue-035)]"
+                    />
                   </div>
                 </div>
                 <div className="space-y-1.5">
                   <Label>Tags</Label>
                   <div className="flex flex-wrap gap-2 p-2 rounded-lg border border-[var(--blue-015)] bg-background min-h-[42px] items-center">
                     {(settings.tags ?? []).map((tag: string) => (
-                      <span key={tag} className="inline-flex items-center gap-1.5 text-[0.72rem] font-medium px-2.5 py-1 rounded-full bg-[var(--blue-010)] text-[var(--xiv-blue)] border border-[var(--blue-020)]">
+                      <span
+                        key={tag}
+                        className="inline-flex items-center gap-1.5 text-[0.72rem] font-medium px-2.5 py-1 rounded-full bg-[var(--blue-010)] text-[var(--xiv-blue)] border border-[var(--blue-020)]"
+                      >
                         {tag}
-                        <button type="button" onClick={() => setSettings({ ...settings, tags: (settings.tags ?? []).filter((t: string) => t !== tag) })}
-                          className="hover:text-destructive transition-colors text-[var(--fg-faint)]">
-                          <svg className="w-3 h-3" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+                        <button
+                          type="button"
+                          onClick={() =>
+                            setSettings({ ...settings, tags: (settings.tags ?? []).filter((t: string) => t !== tag) })
+                          }
+                          className="hover:text-destructive transition-colors text-[var(--fg-faint)]"
+                        >
+                          <svg
+                            className="w-3 h-3"
+                            xmlns="http://www.w3.org/2000/svg"
+                            viewBox="0 0 24 24"
+                            fill="none"
+                            stroke="currentColor"
+                            strokeWidth="2"
+                          >
+                            <line x1="18" y1="6" x2="6" y2="18" />
+                            <line x1="6" y1="6" x2="18" y2="18" />
+                          </svg>
                         </button>
                       </span>
                     ))}
                     <input
                       placeholder="Add tag…"
                       value={tagInput}
-                      onChange={e => setTagInput(e.target.value)}
-                      onKeyDown={e => {
+                      onChange={(e) => setTagInput(e.target.value)}
+                      onKeyDown={(e) => {
                         if ((e.key === "Enter" || e.key === ",") && tagInput.trim()) {
                           e.preventDefault()
                           const newTag = tagInput.trim().replace(/,$/, "")
@@ -544,11 +602,15 @@ export default function SettingsPage({
                       className="flex-1 min-w-[80px] bg-transparent outline-none text-sm placeholder:text-[var(--fg-faint)]"
                     />
                   </div>
-                  <p className="text-[0.68rem] text-[var(--fg-faint)]">Press Enter or comma to add. e.g. 18+, Bar, RP, Live Music</p>
+                  <p className="text-[0.68rem] text-[var(--fg-faint)]">
+                    Press Enter or comma to add. e.g. 18+, Bar, RP, Live Music
+                  </p>
                 </div>
                 <div className="space-y-1.5">
                   <Label>Venue logo</Label>
-                  <p className="text-xs text-muted-foreground">Square logo shown next to your venue in the mobile app. Upload or pick from your gallery photos.</p>
+                  <p className="text-xs text-muted-foreground">
+                    Square logo shown next to your venue in the mobile app. Upload or pick from your gallery photos.
+                  </p>
                   {venueId && (
                     <LogoUpload
                       venueId={venueId}
@@ -565,10 +627,12 @@ export default function SettingsPage({
                 </div>
                 <div className="space-y-1.5">
                   <Label htmlFor="venue-desc">Description</Label>
-                  <textarea id="venue-desc" rows={3}
+                  <textarea
+                    id="venue-desc"
+                    rows={3}
                     placeholder="Tell patrons what makes your venue special…"
                     value={venueDescription}
-                    onChange={e => setVenueDescription(e.target.value)}
+                    onChange={(e) => setVenueDescription(e.target.value)}
                     disabled={isSaving}
                     className="w-full text-sm bg-background border border-[var(--blue-015)] focus:border-[var(--blue-035)] rounded-lg px-3 py-2 outline-none resize-y text-foreground placeholder:text-[var(--fg-faint)] transition-colors"
                   />
@@ -578,9 +642,26 @@ export default function SettingsPage({
 
             {/* ── Gallery ── */}
             <section className="panel">
-              <div className="ph"><span className="pt"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>Gallery</span></div>
+              <div className="ph">
+                <span className="pt">
+                  <svg
+                    xmlns="http://www.w3.org/2000/svg"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    strokeWidth="2"
+                  >
+                    <rect x="3" y="3" width="18" height="18" rx="2" />
+                    <circle cx="8.5" cy="8.5" r="1.5" />
+                    <polyline points="21 15 16 10 5 21" />
+                  </svg>
+                  Gallery
+                </span>
+              </div>
               <div className="pbody">
-                <p className="text-xs text-[var(--fg-faint)] mb-4">Upload photos of your venue. They appear on your public profile. Max 9 images, 10 MB each.</p>
+                <p className="text-xs text-[var(--fg-faint)] mb-4">
+                  Upload photos of your venue. They appear on your public profile. Max 9 images, 10 MB each.
+                </p>
                 {venueId && <GalleryManager venueId={venueId} initialImages={galleryImages} />}
               </div>
             </section>
@@ -589,8 +670,16 @@ export default function SettingsPage({
             <section className="panel">
               <div className="ph">
                 <span className="pt">
-                  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="w-4 h-4">
-                    <circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/>
+                  <svg
+                    xmlns="http://www.w3.org/2000/svg"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    strokeWidth="2"
+                    className="w-4 h-4"
+                  >
+                    <circle cx="12" cy="12" r="10" />
+                    <polyline points="12 6 12 12 16 14" />
                   </svg>
                   Opening Schedule
                 </span>
@@ -603,13 +692,15 @@ export default function SettingsPage({
 
                 {scheduleLoaded && scheduleEntries.length > 0 && (
                   <div className="divide-y divide-[var(--blue-008)] rounded-[var(--radius-md)] border border-[var(--blue-015)] overflow-hidden">
-                    {scheduleEntries.map(entry => (
+                    {scheduleEntries.map((entry) => (
                       <div key={entry.id} className="flex items-center justify-between px-4 py-3 bg-[var(--blue-005)]">
                         <div>
                           <span className="font-medium text-sm">{DAY_NAMES[entry.day]}</span>
                           <span className="text-[var(--fg-faint)] text-sm ml-2">{formatEntryTime(entry)}</span>
                           {entry.interval !== "WEEKLY" && (
-                            <span className="ml-2 text-[0.72rem] text-[var(--xiv-blue)]">{formatIntervalLabel(entry)}</span>
+                            <span className="ml-2 text-[0.72rem] text-[var(--xiv-blue)]">
+                              {formatIntervalLabel(entry)}
+                            </span>
                           )}
                           {entry.label && (
                             <span className="ml-2 text-[0.72rem] text-[var(--fg-faint)]">{entry.label}</span>
@@ -637,16 +728,26 @@ export default function SettingsPage({
                 </button>
               </div>
 
-              <ScheduleEntryForm
-                open={showAddEntry}
-                onClose={() => setShowAddEntry(false)}
-                onSave={handleAddEntry}
-              />
+              <ScheduleEntryForm open={showAddEntry} onClose={() => setShowAddEntry(false)} onSave={handleAddEntry} />
             </section>
 
             {/* ── Location & hours ── */}
             <section className="panel">
-              <div className="ph"><span className="pt"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>Location &amp; hours</span></div>
+              <div className="ph">
+                <span className="pt">
+                  <svg
+                    xmlns="http://www.w3.org/2000/svg"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    strokeWidth="2"
+                  >
+                    <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z" />
+                    <circle cx="12" cy="10" r="3" />
+                  </svg>
+                  Location &amp; hours
+                </span>
+              </div>
               <div className="pbody space-y-4">
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   <div className="space-y-1.5">
@@ -655,7 +756,8 @@ export default function SettingsPage({
                       value={venueDataCenter && venueWorld ? `${venueDataCenter} · ${venueWorld}` : ""}
                       disabled
                       className="bg-background border-[var(--blue-015)] opacity-50 cursor-not-allowed text-[var(--fg-faint)] font-mono text-sm"
-                      placeholder="Set during venue creation" />
+                      placeholder="Set during venue creation"
+                    />
                   </div>
                 </div>
                 <div className="flex gap-2">
@@ -681,18 +783,19 @@ export default function SettingsPage({
                 <div className="grid grid-cols-3 gap-3">
                   <div className="space-y-1.5">
                     <Label htmlFor="venue-district">District</Label>
-                    <Select
-                      value={venueDistrict}
-                      onValueChange={setVenueDistrict}
-                      disabled={isSaving}
-                    >
-                      <SelectTrigger id="venue-district" className="bg-background border-[var(--blue-015)] focus:border-[var(--blue-035)]">
+                    <Select value={venueDistrict} onValueChange={setVenueDistrict} disabled={isSaving}>
+                      <SelectTrigger
+                        id="venue-district"
+                        className="bg-background border-[var(--blue-015)] focus:border-[var(--blue-035)]"
+                      >
                         <SelectValue placeholder="Select…" />
                       </SelectTrigger>
                       <SelectContent>
                         <SelectItem value="__none__">— None —</SelectItem>
-                        {FFXIV_DISTRICTS.map(d => (
-                          <SelectItem key={d} value={d}>{d}</SelectItem>
+                        {FFXIV_DISTRICTS.map((d) => (
+                          <SelectItem key={d} value={d}>
+                            {d}
+                          </SelectItem>
                         ))}
                       </SelectContent>
                     </Select>
@@ -706,7 +809,7 @@ export default function SettingsPage({
                       max={30}
                       placeholder="1–30"
                       value={venueWard}
-                      onChange={e => setVenueWard(e.target.value)}
+                      onChange={(e) => setVenueWard(e.target.value)}
                       disabled={isSaving}
                       className="bg-background border-[var(--blue-015)] focus:border-[var(--blue-035)]"
                     />
@@ -721,7 +824,7 @@ export default function SettingsPage({
                         max={60}
                         placeholder="1–60"
                         value={venuePlot}
-                        onChange={e => setVenuePlot(e.target.value)}
+                        onChange={(e) => setVenuePlot(e.target.value)}
                         disabled={isSaving}
                         className="bg-background border-[var(--blue-015)] focus:border-[var(--blue-035)]"
                       />
@@ -736,7 +839,7 @@ export default function SettingsPage({
                         max={99}
                         placeholder="1–99"
                         value={venueApartment}
-                        onChange={e => setVenueApartment(e.target.value)}
+                        onChange={(e) => setVenueApartment(e.target.value)}
                         disabled={isSaving}
                         className="bg-background border-[var(--blue-015)] focus:border-[var(--blue-035)]"
                       />
@@ -749,15 +852,25 @@ export default function SettingsPage({
                   </p>
                   <div className="space-y-1.5">
                     <Label htmlFor="default-hours">Default hours (ST)</Label>
-                    <Input id="default-hours" placeholder="e.g. 10PM–2AM"
-                      value={settings.defaultHours ?? ""} onChange={e => setSettings({ ...settings, defaultHours: e.target.value })}
-                      disabled={isSaving} className="bg-background border-[var(--blue-015)] focus:border-[var(--blue-035)]" />
+                    <Input
+                      id="default-hours"
+                      placeholder="e.g. 10PM–2AM"
+                      value={settings.defaultHours ?? ""}
+                      onChange={(e) => setSettings({ ...settings, defaultHours: e.target.value })}
+                      disabled={isSaving}
+                      className="bg-background border-[var(--blue-015)] focus:border-[var(--blue-035)]"
+                    />
                   </div>
                   <div className="space-y-1.5">
                     <Label htmlFor="open-nights">Open nights</Label>
-                    <Input id="open-nights" placeholder="e.g. Fri & Sat"
-                      value={settings.openNights ?? ""} onChange={e => setSettings({ ...settings, openNights: e.target.value })}
-                      disabled={isSaving} className="bg-background border-[var(--blue-015)] focus:border-[var(--blue-035)]" />
+                    <Input
+                      id="open-nights"
+                      placeholder="e.g. Fri & Sat"
+                      value={settings.openNights ?? ""}
+                      onChange={(e) => setSettings({ ...settings, openNights: e.target.value })}
+                      disabled={isSaving}
+                      className="bg-background border-[var(--blue-015)] focus:border-[var(--blue-035)]"
+                    />
                   </div>
                 </div>
                 <div className="space-y-1.5">
@@ -765,7 +878,7 @@ export default function SettingsPage({
                   <select
                     id="venue-type"
                     value={settings.venueType ?? ""}
-                    onChange={e => setSettings({ ...settings, venueType: e.target.value || null })}
+                    onChange={(e) => setSettings({ ...settings, venueType: e.target.value || null })}
                     disabled={isSaving}
                     className="w-full h-9 rounded-md border border-[var(--blue-015)] bg-background px-3 text-sm focus:border-[var(--blue-035)] focus:outline-none"
                   >
@@ -787,25 +900,57 @@ export default function SettingsPage({
                     <div className="stitle">Adult (18+) venue</div>
                     <div className="sdesc">Show the 18+ badge on your public listing.</div>
                   </div>
-                  <button type="button" onClick={() => setSettings({ ...settings, isAdult: !settings.isAdult })} disabled={isSaving} className={`toggle${settings.isAdult ? " on" : ""}`} />
+                  <button
+                    type="button"
+                    onClick={() => setSettings({ ...settings, isAdult: !settings.isAdult })}
+                    disabled={isSaving}
+                    className={`toggle${settings.isAdult ? " on" : ""}`}
+                  />
                 </div>
               </div>
             </section>
 
             {/* ── Integrations ── */}
             <section className="panel">
-              <div className="ph"><span className="pt"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg>Integrations</span></div>
+              <div className="ph">
+                <span className="pt">
+                  <svg
+                    xmlns="http://www.w3.org/2000/svg"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    strokeWidth="2"
+                  >
+                    <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6" />
+                    <polyline points="15 3 21 3 21 9" />
+                    <line x1="10" y1="14" x2="21" y2="3" />
+                  </svg>
+                  Integrations
+                </span>
+              </div>
 
               {/* Dalamud */}
               <div className="introw">
                 <span className="iconbadge ii em" style={{ width: 40, height: 40 }}>
-                  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><rect x="6" y="2" width="12" height="20" rx="2"/><line x1="12" y1="18" x2="12" y2="18"/></svg>
+                  <svg
+                    xmlns="http://www.w3.org/2000/svg"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    strokeWidth="2"
+                  >
+                    <rect x="6" y="2" width="12" height="20" rx="2" />
+                    <line x1="12" y1="18" x2="12" y2="18" />
+                  </svg>
                 </span>
                 <div className="iinfo">
                   <div className="iname">Dalamud Plugin</div>
                   <div className="idesc">In-game sales, clock-in and patron capture</div>
                 </div>
-                <Link href={`/dashboard/${slug}/settings/api-keys`} className="text-xs font-semibold text-[var(--xiv-blue)] hover:underline shrink-0">
+                <Link
+                  href={`/dashboard/${slug}/settings/api-keys`}
+                  className="text-xs font-semibold text-[var(--xiv-blue)] hover:underline shrink-0"
+                >
                   Manage API Keys →
                 </Link>
               </div>
@@ -813,39 +958,84 @@ export default function SettingsPage({
               {/* ffxivvenues.com */}
               <div className="introw" style={{ flexWrap: "wrap", gap: 14 }}>
                 <span className="iconbadge ii" style={{ width: 40, height: 40 }}>
-                  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                    <path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/>
-                    <path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/>
+                  <svg
+                    xmlns="http://www.w3.org/2000/svg"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    strokeWidth="2"
+                  >
+                    <path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71" />
+                    <path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71" />
                   </svg>
                 </span>
                 <div className="iinfo">
                   <div className="iname">ffxivvenues.com</div>
                   <div className="idesc">Sync your schedule from your ffxivvenues.com listing</div>
                 </div>
-                {ffxivVenueId && <span className="status open"><span className="dot" />Linked</span>}
+                {ffxivVenueId && (
+                  <span className="status open">
+                    <span className="dot" />
+                    Linked
+                  </span>
+                )}
                 <div className="w-full pl-[54px] space-y-3">
                   {ffxivVenueId ? (
                     <>
                       <p className="text-xs text-[var(--fg-faint)]">
-                        Schedule synced every 2 hours.{ffxivVenueSyncedAt && <> Last synced: <LocalTime date={ffxivVenueSyncedAt} /></>}
+                        Schedule synced every 2 hours.
+                        {ffxivVenueSyncedAt && (
+                          <>
+                            {" "}
+                            Last synced: <LocalTime date={ffxivVenueSyncedAt} />
+                          </>
+                        )}
                       </p>
                       <div className="flex gap-3">
-                        <Button type="button" variant="outline-blue" size="sm" onClick={handleFfxivSyncNow} disabled={ffxivSyncing}>
+                        <Button
+                          type="button"
+                          variant="outline-blue"
+                          size="sm"
+                          onClick={handleFfxivSyncNow}
+                          disabled={ffxivSyncing}
+                        >
                           {ffxivSyncing ? "Syncing…" : "Sync now"}
                         </Button>
-                        <Button type="button" variant="destructive" size="sm" onClick={handleFfxivUnlink} disabled={ffxivUnlinking}>
+                        <Button
+                          type="button"
+                          variant="destructive"
+                          size="sm"
+                          onClick={handleFfxivUnlink}
+                          disabled={ffxivUnlinking}
+                        >
                           {ffxivUnlinking ? "Unlinking…" : "Unlink"}
                         </Button>
                       </div>
                     </>
                   ) : ffxivPreview ? (
                     <>
-                      <p className="text-xs">Linking to: <span className="font-medium text-[var(--xiv-blue)]">{ffxivPreview.name}</span></p>
+                      <p className="text-xs">
+                        Linking to: <span className="font-medium text-[var(--xiv-blue)]">{ffxivPreview.name}</span>
+                      </p>
                       <div className="flex gap-3">
-                        <Button type="button" variant="outline-blue" size="sm" onClick={handleFfxivLink} disabled={ffxivPreviewLoading}>
+                        <Button
+                          type="button"
+                          variant="outline-blue"
+                          size="sm"
+                          onClick={handleFfxivLink}
+                          disabled={ffxivPreviewLoading}
+                        >
                           {ffxivPreviewLoading ? "Linking…" : "Confirm link"}
                         </Button>
-                        <Button type="button" variant="ghost" size="sm" onClick={() => { setFfxivPreview(null); setFfxivPreviewError(null) }}>
+                        <Button
+                          type="button"
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => {
+                            setFfxivPreview(null)
+                            setFfxivPreviewError(null)
+                          }}
+                        >
                           Cancel
                         </Button>
                       </div>
@@ -857,18 +1047,32 @@ export default function SettingsPage({
                           type="text"
                           placeholder="ffxivvenues.com venue ID"
                           value={ffxivInput}
-                          onChange={e => setFfxivInput(e.target.value)}
-                          onKeyDown={e => e.key === "Enter" && handleFfxivPreview()}
+                          onChange={(e) => setFfxivInput(e.target.value)}
+                          onKeyDown={(e) => e.key === "Enter" && handleFfxivPreview()}
                           className="flex-1 rounded-[var(--radius-sm)] border border-[var(--blue-015)] bg-background px-3 py-1.5 text-sm focus:border-[var(--blue-035)] focus:outline-none"
                         />
-                        <Button type="button" variant="outline-blue" size="sm" onClick={handleFfxivPreview}
-                          disabled={ffxivPreviewLoading || !ffxivInput.trim()}>
+                        <Button
+                          type="button"
+                          variant="outline-blue"
+                          size="sm"
+                          onClick={handleFfxivPreview}
+                          disabled={ffxivPreviewLoading || !ffxivInput.trim()}
+                        >
                           {ffxivPreviewLoading ? "Looking up…" : "Look up"}
                         </Button>
                       </div>
                       {ffxivPreviewError && <p className="text-xs text-red-400">{ffxivPreviewError}</p>}
                       <p className="text-xs text-[var(--fg-faint)]">
-                        Find your venue ID at <a href="https://ffxivvenues.com" target="_blank" rel="noopener noreferrer" className="text-[var(--xiv-blue)] hover:underline">ffxivvenues.com</a> — it appears in your listing URL.
+                        Find your venue ID at{" "}
+                        <a
+                          href="https://ffxivvenues.com"
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="text-[var(--xiv-blue)] hover:underline"
+                        >
+                          ffxivvenues.com
+                        </a>{" "}
+                        — it appears in your listing URL.
                       </p>
                     </>
                   )}
@@ -878,13 +1082,26 @@ export default function SettingsPage({
               {/* Partake */}
               <div className="introw" style={{ flexWrap: "wrap", gap: 14 }}>
                 <span className="iconbadge ii" style={{ width: 40, height: 40 }}>
-                  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+                  <svg
+                    xmlns="http://www.w3.org/2000/svg"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    strokeWidth="2"
+                  >
+                    <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" />
+                  </svg>
                 </span>
                 <div className="iinfo">
                   <div className="iname">Partake.gg</div>
                   <div className="idesc">Publish events to the community calendar</div>
                 </div>
-                {settings.partakeTeamId && <span className="status open"><span className="dot" />Connected</span>}
+                {settings.partakeTeamId && (
+                  <span className="status open">
+                    <span className="dot" />
+                    Connected
+                  </span>
+                )}
                 <div className="w-full flex flex-col gap-2 pl-[54px]">
                   <div className="flex gap-2 items-center">
                     <Input
@@ -900,44 +1117,78 @@ export default function SettingsPage({
                       className="flex-1 bg-background border-[var(--blue-015)] focus:border-[var(--blue-035)] text-sm h-9"
                     />
                     {settings.partakeTeamId && (
-                      <Button type="button" variant="outline-blue" size="sm" disabled={isSyncing} onClick={async () => {
-                        setIsSyncing(true); setSyncResult("")
-                        try {
-                          const res = await fetch(`/api/venues/${venueId}/sync-partake`, { method: "POST" })
-                          if (!res.ok) { const d = await res.json(); throw new Error(d.error || "Sync failed") }
-                          const d = await res.json()
-                          setSyncResult(`Synced: ${d.results.created} new, ${d.results.updated} updated`)
-                          setTimeout(() => setSyncResult(""), 5000)
-                        } catch (err: unknown) {
-                          setSyncResult(err instanceof Error ? err.message : "Sync failed")
-                        } finally { setIsSyncing(false) }
-                      }}>
+                      <Button
+                        type="button"
+                        variant="outline-blue"
+                        size="sm"
+                        disabled={isSyncing}
+                        onClick={async () => {
+                          setIsSyncing(true)
+                          setSyncResult("")
+                          try {
+                            const res = await fetch(`/api/venues/${venueId}/sync-partake`, { method: "POST" })
+                            if (!res.ok) {
+                              const d = await res.json()
+                              throw new Error(d.error || "Sync failed")
+                            }
+                            const d = await res.json()
+                            setSyncResult(`Synced: ${d.results.created} new, ${d.results.updated} updated`)
+                            setTimeout(() => setSyncResult(""), 5000)
+                          } catch (err: unknown) {
+                            setSyncResult(err instanceof Error ? err.message : "Sync failed")
+                          } finally {
+                            setIsSyncing(false)
+                          }
+                        }}
+                      >
                         {isSyncing ? "Syncing…" : "Sync now"}
                       </Button>
                     )}
                   </div>
                   {syncResult && <p className="text-xs text-emerald-400">{syncResult}</p>}
-                  {settings.partakeTeamId && <p className="text-xs text-[var(--fg-faint)]">Syncs automatically every hour.</p>}
+                  {settings.partakeTeamId && (
+                    <p className="text-xs text-[var(--fg-faint)]">Syncs automatically every hour.</p>
+                  )}
                 </div>
               </div>
 
               {/* Discord */}
               <div className="introw">
                 <span className="iconbadge ii" style={{ width: 40, height: 40 }}>
-                  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+                  <svg
+                    xmlns="http://www.w3.org/2000/svg"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    strokeWidth="2"
+                  >
+                    <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" />
+                  </svg>
                 </span>
                 <div className="iinfo">
                   <div className="iname">Discord</div>
                   <div className="idesc">OAuth sign-in and event webhooks</div>
                 </div>
-                <span className="status open"><span className="dot" />Connected</span>
+                <span className="status open">
+                  <span className="dot" />
+                  Connected
+                </span>
               </div>
 
               {/* Discord Shift Bot */}
               <div className="introw" style={{ flexWrap: "wrap", gap: 14 }}>
                 <span className="iconbadge ii" style={{ width: 40, height: 40 }}>
-                  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                    <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/>
+                  <svg
+                    xmlns="http://www.w3.org/2000/svg"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    strokeWidth="2"
+                  >
+                    <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2" />
+                    <circle cx="9" cy="7" r="4" />
+                    <path d="M23 21v-2a4 4 0 0 0-3-3.87" />
+                    <path d="M16 3.13a4 4 0 0 1 0 7.75" />
                   </svg>
                 </span>
                 <div className="iinfo">
@@ -978,7 +1229,9 @@ export default function SettingsPage({
                     </div>
 
                     <div>
-                      <label className="block text-sm font-medium mb-1">Embed Thumbnail URL <span className="text-[var(--fg-faint)] font-normal">(optional)</span></label>
+                      <label className="block text-sm font-medium mb-1">
+                        Embed Thumbnail URL <span className="text-[var(--fg-faint)] font-normal">(optional)</span>
+                      </label>
                       <input
                         type="url"
                         value={shiftBotThumbnailUrl}
@@ -1007,10 +1260,12 @@ export default function SettingsPage({
                           type="button"
                           variant="outline-blue"
                           size="sm"
-                          onClick={() => setShiftBotTemplates((t) => [
-                            ...t,
-                            { name: "", startOffsetHours: 0, durationHours: 4, slots: 5 },
-                          ])}
+                          onClick={() =>
+                            setShiftBotTemplates((t) => [
+                              ...t,
+                              { name: "", startOffsetHours: 0, durationHours: 4, slots: 5 },
+                            ])
+                          }
                         >
                           + Add Template
                         </Button>
@@ -1029,11 +1284,18 @@ export default function SettingsPage({
                       )}
                       <div className="space-y-3">
                         {shiftBotTemplates.map((t, i) => (
-                          <div key={i} className="flex gap-2 items-center p-3 rounded-lg border border-[var(--blue-018)] bg-[var(--card)]">
+                          <div
+                            key={i}
+                            className="flex gap-2 items-center p-3 rounded-lg border border-[var(--blue-018)] bg-[var(--card)]"
+                          >
                             <input
                               type="text"
                               value={t.name}
-                              onChange={(e) => setShiftBotTemplates((prev) => prev.map((x, j) => j === i ? { ...x, name: e.target.value } : x))}
+                              onChange={(e) =>
+                                setShiftBotTemplates((prev) =>
+                                  prev.map((x, j) => (j === i ? { ...x, name: e.target.value } : x))
+                                )
+                              }
                               placeholder="Shift name"
                               className="rounded-[var(--radius-sm)] border border-[var(--blue-015)] bg-background px-3 py-1.5 text-sm focus:border-[var(--blue-035)] focus:outline-none flex-1"
                             />
@@ -1041,21 +1303,33 @@ export default function SettingsPage({
                               type="number"
                               min={0}
                               value={t.startOffsetHours}
-                              onChange={(e) => setShiftBotTemplates((prev) => prev.map((x, j) => j === i ? { ...x, startOffsetHours: Number(e.target.value) } : x))}
+                              onChange={(e) =>
+                                setShiftBotTemplates((prev) =>
+                                  prev.map((x, j) => (j === i ? { ...x, startOffsetHours: Number(e.target.value) } : x))
+                                )
+                              }
                               className="rounded-[var(--radius-sm)] border border-[var(--blue-015)] bg-background px-2 py-1.5 text-sm focus:border-[var(--blue-035)] focus:outline-none w-[4.5rem] text-center"
                             />
                             <input
                               type="number"
                               min={1}
                               value={t.durationHours}
-                              onChange={(e) => setShiftBotTemplates((prev) => prev.map((x, j) => j === i ? { ...x, durationHours: Number(e.target.value) } : x))}
+                              onChange={(e) =>
+                                setShiftBotTemplates((prev) =>
+                                  prev.map((x, j) => (j === i ? { ...x, durationHours: Number(e.target.value) } : x))
+                                )
+                              }
                               className="rounded-[var(--radius-sm)] border border-[var(--blue-015)] bg-background px-2 py-1.5 text-sm focus:border-[var(--blue-035)] focus:outline-none w-[4.5rem] text-center"
                             />
                             <input
                               type="number"
                               min={1}
                               value={t.slots}
-                              onChange={(e) => setShiftBotTemplates((prev) => prev.map((x, j) => j === i ? { ...x, slots: Number(e.target.value) } : x))}
+                              onChange={(e) =>
+                                setShiftBotTemplates((prev) =>
+                                  prev.map((x, j) => (j === i ? { ...x, slots: Number(e.target.value) } : x))
+                                )
+                              }
                               className="rounded-[var(--radius-sm)] border border-[var(--blue-015)] bg-background px-2 py-1.5 text-sm focus:border-[var(--blue-035)] focus:outline-none w-[4.5rem] text-center"
                             />
                             <button
@@ -1076,10 +1350,35 @@ export default function SettingsPage({
 
             {/* ── Pot Payroll ── */}
             <section className="panel">
-              <div className="ph"><span className="pt"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><circle cx="12" cy="12" r="8"/><path d="M12 8v8"/><path d="M9 10.5a2.5 2.5 0 0 1 2.5-2.5h1a2.5 2.5 0 0 1 0 5h-1a2.5 2.5 0 0 0 0 5h1a2.5 2.5 0 0 0 2.5-2.5"/></svg>Pot Payroll</span></div>
+              <div className="ph">
+                <span className="pt">
+                  <svg
+                    xmlns="http://www.w3.org/2000/svg"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    strokeWidth="2"
+                  >
+                    <circle cx="12" cy="12" r="8" />
+                    <path d="M12 8v8" />
+                    <path d="M9 10.5a2.5 2.5 0 0 1 2.5-2.5h1a2.5 2.5 0 0 1 0 5h-1a2.5 2.5 0 0 0 0 5h1a2.5 2.5 0 0 0 2.5-2.5" />
+                  </svg>
+                  Pot Payroll
+                </span>
+              </div>
               <div className="introw" style={{ flexWrap: "wrap", gap: 14 }}>
                 <span className="iconbadge ii" style={{ width: 40, height: 40 }}>
-                  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><circle cx="12" cy="12" r="8"/><path d="M12 8v8"/><path d="M9 10.5a2.5 2.5 0 0 1 2.5-2.5h1a2.5 2.5 0 0 1 0 5h-1a2.5 2.5 0 0 0 0 5h1a2.5 2.5 0 0 0 2.5-2.5"/></svg>
+                  <svg
+                    xmlns="http://www.w3.org/2000/svg"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    strokeWidth="2"
+                  >
+                    <circle cx="12" cy="12" r="8" />
+                    <path d="M12 8v8" />
+                    <path d="M9 10.5a2.5 2.5 0 0 1 2.5-2.5h1a2.5 2.5 0 0 1 0 5h-1a2.5 2.5 0 0 0 0 5h1a2.5 2.5 0 0 0 2.5-2.5" />
+                  </svg>
                 </span>
                 <div className="iinfo">
                   <div className="iname">Pot Payroll</div>
@@ -1133,10 +1432,33 @@ export default function SettingsPage({
 
             {/* ── Bar Inventory Tracking ── */}
             <section className="panel">
-              <div className="ph"><span className="pt"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M8 2h8"/><path d="M9 2v6.5L4.5 18a2 2 0 0 0 1.8 3h11.4a2 2 0 0 0 1.8-3L15 8.5V2"/></svg>Bar Inventory Tracking</span></div>
+              <div className="ph">
+                <span className="pt">
+                  <svg
+                    xmlns="http://www.w3.org/2000/svg"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    strokeWidth="2"
+                  >
+                    <path d="M8 2h8" />
+                    <path d="M9 2v6.5L4.5 18a2 2 0 0 0 1.8 3h11.4a2 2 0 0 0 1.8-3L15 8.5V2" />
+                  </svg>
+                  Bar Inventory Tracking
+                </span>
+              </div>
               <div className="introw" style={{ flexWrap: "wrap", gap: 14 }}>
                 <span className="iconbadge ii" style={{ width: 40, height: 40 }}>
-                  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M8 2h8"/><path d="M9 2v6.5L4.5 18a2 2 0 0 0 1.8 3h11.4a2 2 0 0 0 1.8-3L15 8.5V2"/></svg>
+                  <svg
+                    xmlns="http://www.w3.org/2000/svg"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    strokeWidth="2"
+                  >
+                    <path d="M8 2h8" />
+                    <path d="M9 2v6.5L4.5 18a2 2 0 0 0 1.8 3h11.4a2 2 0 0 0 1.8-3L15 8.5V2" />
+                  </svg>
                 </span>
                 <div className="iinfo">
                   <div className="iname">Bar Inventory Tracking</div>
@@ -1156,42 +1478,110 @@ export default function SettingsPage({
 
             {/* ── Discord Webhooks ── */}
             <section className="panel">
-              <div className="ph"><span className="pt"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>Discord Webhooks</span></div>
+              <div className="ph">
+                <span className="pt">
+                  <svg
+                    xmlns="http://www.w3.org/2000/svg"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    strokeWidth="2"
+                  >
+                    <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9" />
+                    <path d="M13.73 21a2 2 0 0 1-3.46 0" />
+                  </svg>
+                  Discord Webhooks
+                </span>
+              </div>
               <div className="pbody space-y-5">
                 <p className="text-xs text-[var(--fg-faint)]">
                   Server Settings → Integrations → Webhooks → New Webhook. Paste the URL below.
                 </p>
                 {[
                   {
-                    id: "webhook-staff", label: "Staff operations", desc: "Task and staff notifications",
+                    id: "webhook-staff",
+                    label: "Staff operations",
+                    desc: "Task and staff notifications",
                     value: settings.discordWebhooks.staff,
-                    onChange: (v: string) => setSettings({ ...settings, discordWebhooks: { ...settings.discordWebhooks, staff: v } }),
+                    onChange: (v: string) =>
+                      setSettings({ ...settings, discordWebhooks: { ...settings.discordWebhooks, staff: v } }),
                     checks: [
-                      { id: "task-created",  label: "Task created",  val: settings.webhooks.taskCreated,  set: (v: boolean) => setSettings({ ...settings, webhooks: { ...settings.webhooks, taskCreated: v } }),  disabled: false },
-                      { id: "task-done",     label: "Task completed", val: settings.webhooks.taskCompleted, set: (v: boolean) => setSettings({ ...settings, webhooks: { ...settings.webhooks, taskCompleted: v } }), disabled: false },
-                      { id: "staff-joined", label: "Staff joined",   val: settings.webhooks.staffJoined,  set: (v: boolean) => setSettings({ ...settings, webhooks: { ...settings.webhooks, staffJoined: v } }),  disabled: false },
+                      {
+                        id: "task-created",
+                        label: "Task created",
+                        val: settings.webhooks.taskCreated,
+                        set: (v: boolean) =>
+                          setSettings({ ...settings, webhooks: { ...settings.webhooks, taskCreated: v } }),
+                        disabled: false,
+                      },
+                      {
+                        id: "task-done",
+                        label: "Task completed",
+                        val: settings.webhooks.taskCompleted,
+                        set: (v: boolean) =>
+                          setSettings({ ...settings, webhooks: { ...settings.webhooks, taskCompleted: v } }),
+                        disabled: false,
+                      },
+                      {
+                        id: "staff-joined",
+                        label: "Staff joined",
+                        val: settings.webhooks.staffJoined,
+                        set: (v: boolean) =>
+                          setSettings({ ...settings, webhooks: { ...settings.webhooks, staffJoined: v } }),
+                        disabled: false,
+                      },
                     ],
                   },
                   {
-                    id: "webhook-events", label: "Events channel", desc: "Event announcements and Partake mirrors",
+                    id: "webhook-events",
+                    label: "Events channel",
+                    desc: "Event announcements and Partake mirrors",
                     value: settings.discordWebhooks.events,
-                    onChange: (v: string) => setSettings({ ...settings, discordWebhooks: { ...settings.discordWebhooks, events: v } }),
+                    onChange: (v: string) =>
+                      setSettings({ ...settings, discordWebhooks: { ...settings.discordWebhooks, events: v } }),
                     checks: [
-                      { id: "partake-mirror", label: "Partake event mirror", val: settings.webhooks.partakeEvent, set: (v: boolean) => setSettings({ ...settings, webhooks: { ...settings.webhooks, partakeEvent: v } }), disabled: !settings.partakeTeamId },
+                      {
+                        id: "partake-mirror",
+                        label: "Partake event mirror",
+                        val: settings.webhooks.partakeEvent,
+                        set: (v: boolean) =>
+                          setSettings({ ...settings, webhooks: { ...settings.webhooks, partakeEvent: v } }),
+                        disabled: !settings.partakeTeamId,
+                      },
                     ],
                   },
                   {
-                    id: "webhook-revenue", label: "Revenue channel", desc: "Sales and daily summaries",
+                    id: "webhook-revenue",
+                    label: "Revenue channel",
+                    desc: "Sales and daily summaries",
                     value: settings.discordWebhooks.revenue,
-                    onChange: (v: string) => setSettings({ ...settings, discordWebhooks: { ...settings.discordWebhooks, revenue: v } }),
+                    onChange: (v: string) =>
+                      setSettings({ ...settings, discordWebhooks: { ...settings.discordWebhooks, revenue: v } }),
                     checks: [
-                      { id: "sale-logged",   label: "Sale logged",        val: settings.webhooks.saleLogged,       set: (v: boolean) => setSettings({ ...settings, webhooks: { ...settings.webhooks, saleLogged: v } }),       disabled: false },
-                      { id: "daily-summary", label: "Daily sales summary", val: settings.webhooks.dailySalesSummary, set: (v: boolean) => setSettings({ ...settings, webhooks: { ...settings.webhooks, dailySalesSummary: v } }), disabled: false },
+                      {
+                        id: "sale-logged",
+                        label: "Sale logged",
+                        val: settings.webhooks.saleLogged,
+                        set: (v: boolean) =>
+                          setSettings({ ...settings, webhooks: { ...settings.webhooks, saleLogged: v } }),
+                        disabled: false,
+                      },
+                      {
+                        id: "daily-summary",
+                        label: "Daily sales summary",
+                        val: settings.webhooks.dailySalesSummary,
+                        set: (v: boolean) =>
+                          setSettings({ ...settings, webhooks: { ...settings.webhooks, dailySalesSummary: v } }),
+                        disabled: false,
+                      },
                     ],
                   },
                 ].map((wh) => (
                   <div key={wh.id}>
-                    <Label htmlFor={wh.id} className="text-xs font-semibold text-muted-foreground uppercase tracking-wide mb-1.5 block">
+                    <Label
+                      htmlFor={wh.id}
+                      className="text-xs font-semibold text-muted-foreground uppercase tracking-wide mb-1.5 block"
+                    >
                       {wh.label}
                     </Label>
                     <Input
@@ -1207,7 +1597,10 @@ export default function SettingsPage({
                     {wh.value && (
                       <div className="flex flex-wrap gap-x-4 gap-y-1.5 pl-2 border-l-2 border-[var(--blue-015)]">
                         {wh.checks.map((c) => (
-                          <label key={c.id} className={`flex items-center gap-2 text-xs cursor-pointer ${c.disabled ? "opacity-40 cursor-not-allowed" : ""}`}>
+                          <label
+                            key={c.id}
+                            className={`flex items-center gap-2 text-xs cursor-pointer ${c.disabled ? "opacity-40 cursor-not-allowed" : ""}`}
+                          >
                             <Checkbox
                               checked={c.val}
                               onCheckedChange={(v) => c.set(v as boolean)}
@@ -1226,14 +1619,33 @@ export default function SettingsPage({
 
             {/* ── Staff permissions ── */}
             <section className="panel">
-              <div className="ph"><span className="pt"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>Staff permissions</span></div>
-              <p className="px-5 pt-3 text-xs text-[var(--fg-faint)]">Owners and managers always have full access. These settings apply to staff only.</p>
+              <div className="ph">
+                <span className="pt">
+                  <svg
+                    xmlns="http://www.w3.org/2000/svg"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    strokeWidth="2"
+                  >
+                    <rect x="3" y="11" width="18" height="11" rx="2" />
+                    <path d="M7 11V7a5 5 0 0 1 10 0v4" />
+                  </svg>
+                  Staff permissions
+                </span>
+              </div>
+              <p className="px-5 pt-3 text-xs text-[var(--fg-faint)]">
+                Owners and managers always have full access. These settings apply to staff only.
+              </p>
               <div className="mt-1">
                 {[
                   {
-                    id: "task-vis", label: "Tasks", desc: "Which tasks staff can see",
+                    id: "task-vis",
+                    label: "Tasks",
+                    desc: "Which tasks staff can see",
                     value: settings.taskVisibility,
-                    onChange: (v: string) => setSettings({ ...settings, taskVisibility: v as "all" | "assigned" | "assigned_unassigned" }),
+                    onChange: (v: string) =>
+                      setSettings({ ...settings, taskVisibility: v as "all" | "assigned" | "assigned_unassigned" }),
                     options: [
                       { value: "all", label: "All tasks" },
                       { value: "assigned", label: "Assigned only" },
@@ -1241,7 +1653,9 @@ export default function SettingsPage({
                     ],
                   },
                   {
-                    id: "sales-vis", label: "Sales", desc: "Which transactions staff can see",
+                    id: "sales-vis",
+                    label: "Sales",
+                    desc: "Which transactions staff can see",
                     value: settings.salesVisibility,
                     onChange: (v: string) => setSettings({ ...settings, salesVisibility: v as "all" | "own" | "none" }),
                     options: [
@@ -1251,9 +1665,12 @@ export default function SettingsPage({
                     ],
                   },
                   {
-                    id: "rev-vis", label: "Revenue", desc: "Revenue statistics visibility",
+                    id: "rev-vis",
+                    label: "Revenue",
+                    desc: "Revenue statistics visibility",
                     value: settings.revenueVisibility,
-                    onChange: (v: string) => setSettings({ ...settings, revenueVisibility: v as "all" | "hide" | "own" }),
+                    onChange: (v: string) =>
+                      setSettings({ ...settings, revenueVisibility: v as "all" | "hide" | "own" }),
                     options: [
                       { value: "all", label: "All statistics" },
                       { value: "own", label: "Personal only" },
@@ -1261,7 +1678,9 @@ export default function SettingsPage({
                     ],
                   },
                   {
-                    id: "event-vis", label: "Events", desc: "Which events staff can see",
+                    id: "event-vis",
+                    label: "Events",
+                    desc: "Which events staff can see",
                     value: settings.eventVisibility,
                     onChange: (v: string) => setSettings({ ...settings, eventVisibility: v as "all" | "published" }),
                     options: [
@@ -1281,7 +1700,9 @@ export default function SettingsPage({
                       </SelectTrigger>
                       <SelectContent>
                         {row.options.map((o) => (
-                          <SelectItem key={o.value} value={o.value} className="text-xs">{o.label}</SelectItem>
+                          <SelectItem key={o.value} value={o.value} className="text-xs">
+                            {o.label}
+                          </SelectItem>
                         ))}
                       </SelectContent>
                     </Select>
@@ -1292,12 +1713,30 @@ export default function SettingsPage({
 
             {/* ── Notifications ── */}
             <section className="panel">
-              <div className="ph"><span className="pt"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>Notifications</span></div>
+              <div className="ph">
+                <span className="pt">
+                  <svg
+                    xmlns="http://www.w3.org/2000/svg"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    strokeWidth="2"
+                  >
+                    <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9" />
+                    <path d="M13.73 21a2 2 0 0 1-3.46 0" />
+                  </svg>
+                  Notifications
+                </span>
+              </div>
               {[
-                { key: "newFollower",      title: "New follower",      desc: "When someone follows your venue." },
-                { key: "eventRsvp",        title: "Event RSVPs",       desc: "When a patron RSVPs to an event." },
-                { key: "lowStaffCoverage", title: "Low staff coverage", desc: "When an open shift is unfilled within 24h." },
-                { key: "dailySummary",     title: "Daily summary",     desc: "A nightly recap of sales and attendance." },
+                { key: "newFollower", title: "New follower", desc: "When someone follows your venue." },
+                { key: "eventRsvp", title: "Event RSVPs", desc: "When a patron RSVPs to an event." },
+                {
+                  key: "lowStaffCoverage",
+                  title: "Low staff coverage",
+                  desc: "When an open shift is unfilled within 24h.",
+                },
+                { key: "dailySummary", title: "Daily summary", desc: "A nightly recap of sales and attendance." },
               ].map(({ key, title, desc }) => {
                 const val = (settings.notifications as Record<string, boolean> | undefined)?.[key] ?? false
                 return (
@@ -1308,7 +1747,15 @@ export default function SettingsPage({
                     </div>
                     <button
                       type="button"
-                      onClick={() => setSettings({ ...settings, notifications: { ...(settings.notifications as Record<string, boolean> ?? {}), [key]: !val } })}
+                      onClick={() =>
+                        setSettings({
+                          ...settings,
+                          notifications: {
+                            ...((settings.notifications as Record<string, boolean>) ?? {}),
+                            [key]: !val,
+                          },
+                        })
+                      }
                       disabled={isSaving}
                       className={`toggle${val ? " on" : ""}`}
                     />
@@ -1322,7 +1769,16 @@ export default function SettingsPage({
               <section className="panel" style={{ borderColor: "rgba(243,139,168,0.3)" }}>
                 <div className="ph" style={{ borderBottomColor: "rgba(243,139,168,0.18)" }}>
                   <span className="pt" style={{ color: "var(--destructive)" }}>
-                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" style={{ color: "var(--destructive)" }}><path d="M10.29 3.86 1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0zM12 9v4m0 4h.01"/></svg>
+                    <svg
+                      xmlns="http://www.w3.org/2000/svg"
+                      viewBox="0 0 24 24"
+                      fill="none"
+                      stroke="currentColor"
+                      strokeWidth="2"
+                      style={{ color: "var(--destructive)" }}
+                    >
+                      <path d="M10.29 3.86 1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0zM12 9v4m0 4h.01" />
+                    </svg>
                     Danger zone
                   </span>
                 </div>
@@ -1330,29 +1786,35 @@ export default function SettingsPage({
                   <div className="setrow" style={{ paddingLeft: 0, paddingRight: 0, border: "none" }}>
                     <div className="sinfo">
                       <div className="stitle">Delete venue</div>
-                      <div className="sdesc">Permanently removes the venue and all associated data. Cannot be undone.</div>
+                      <div className="sdesc">
+                        Permanently removes the venue and all associated data. Cannot be undone.
+                      </div>
                     </div>
-                  <AlertDialog>
-                    <AlertDialogTrigger asChild>
-                      <Button variant="destructive" size="sm" disabled={isDeleting}>
-                        {isDeleting ? "Deleting…" : "Delete venue"}
-                      </Button>
-                    </AlertDialogTrigger>
-                    <AlertDialogContent>
-                      <AlertDialogHeader>
-                        <AlertDialogTitle>Delete this venue?</AlertDialogTitle>
-                        <AlertDialogDescription>
-                          All events, staff, tasks, sales and settings will be permanently removed. This cannot be undone.
-                        </AlertDialogDescription>
-                      </AlertDialogHeader>
-                      <AlertDialogFooter>
-                        <AlertDialogCancel>Cancel</AlertDialogCancel>
-                        <AlertDialogAction onClick={handleDeleteVenue} className="bg-destructive text-white hover:bg-destructive/90">
-                          Yes, delete permanently
-                        </AlertDialogAction>
-                      </AlertDialogFooter>
-                    </AlertDialogContent>
-                  </AlertDialog>
+                    <AlertDialog>
+                      <AlertDialogTrigger asChild>
+                        <Button variant="destructive" size="sm" disabled={isDeleting}>
+                          {isDeleting ? "Deleting…" : "Delete venue"}
+                        </Button>
+                      </AlertDialogTrigger>
+                      <AlertDialogContent>
+                        <AlertDialogHeader>
+                          <AlertDialogTitle>Delete this venue?</AlertDialogTitle>
+                          <AlertDialogDescription>
+                            All events, staff, tasks, sales and settings will be permanently removed. This cannot be
+                            undone.
+                          </AlertDialogDescription>
+                        </AlertDialogHeader>
+                        <AlertDialogFooter>
+                          <AlertDialogCancel>Cancel</AlertDialogCancel>
+                          <AlertDialogAction
+                            onClick={handleDeleteVenue}
+                            className="bg-destructive text-white hover:bg-destructive/90"
+                          >
+                            Yes, delete permanently
+                          </AlertDialogAction>
+                        </AlertDialogFooter>
+                      </AlertDialogContent>
+                    </AlertDialog>
                   </div>
                 </div>
               </section>
@@ -1364,13 +1826,7 @@ export default function SettingsPage({
         <div className="fixed bottom-0 left-0 [@media(min-width:1081px)]:left-[300px] right-0 z-50 border-t border-[var(--blue-015)] bg-[#070b14]/95 backdrop-blur-md">
           <div className="px-6 py-3 flex items-center justify-between gap-4">
             <p className="text-sm text-[var(--fg-faint)]">You have unsaved changes</p>
-            <Button
-              variant="cta"
-              size="sm"
-              onClick={handleSave}
-              disabled={isSaving}
-              className="xiv-btn-shimmer"
-            >
+            <Button variant="cta" size="sm" onClick={handleSave} disabled={isSaving} className="xiv-btn-shimmer">
               {isSaving ? "Saving…" : "Save changes"}
             </Button>
           </div>
@@ -1379,4 +1835,3 @@ export default function SettingsPage({
     </VenueLayoutClient>
   )
 }
-

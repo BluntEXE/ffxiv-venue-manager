@@ -23,7 +23,7 @@ export async function notifyVenueOwners(
   })
   if (members.length === 0) return
   await prisma.notification.createMany({
-    data: members.map(m => ({ ...input, userId: m.userId! })),
+    data: members.map((m) => ({ ...input, userId: m.userId! })),
     skipDuplicates: true,
   })
 }

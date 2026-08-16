@@ -1,4 +1,5 @@
 # VIP Patron Tracking — Design Spec
+
 **Date:** 2026-08-04
 **Status:** Approved
 
@@ -47,6 +48,7 @@ Setting `isVip` is gated to OWNER/MANAGER, matching the existing reclassificatio
 ## API
 
 `PATCH /api/venues/[venueId]/patrons/[patronId]/vip`
+
 - Auth: OWNER/MANAGER membership required
 - Body: `{ isVip: boolean }`
 - Sets `isVip`, `vipSetAt = now()`, `vipSetById = current user`
@@ -81,15 +83,15 @@ New endpoint: `GET /api/plugin/patrons/vip?venueId=` (API-key auth via `x-api-ke
 
 ## Files
 
-| File | Action |
-|------|--------|
-| `apps/web/prisma/schema.prisma` | Modify — add `Patron` model |
-| `apps/web/app/api/venues/[venueId]/patrons/[patronId]/vip/route.ts` | Create — dashboard toggle endpoint |
-| `apps/web/app/api/plugin/patrons/vip/route.ts` | Create — plugin read endpoint |
-| `apps/web/app/dashboard/[slug]/patron-logs/page.tsx` | Modify — upsert/fetch `Patron` rows for profiles tab |
-| `apps/web/components/patron-profiles-table.tsx` | Modify — `isVip`-driven tag/tab + toggle control |
-| `VenueManager/XIVAppVenueApi.cs` | Modify — add `GetVipPatronsAsync(venueId)` |
-| `VenueManager/XIVAppApiModels.cs` | Modify — add `VipPatron`/`VipPatronsResponse` models |
-| `VenueManager/Plugin.cs` | Modify — cache `xivAppVipPatrons`, fetch in `AutoLoadXivAppDataAsync`, VIP chat alert in `showGuestEnterChatAlert` |
-| `VenueManager/UI/Tabs/SettingsTab.cs` | Modify — fetch in `LoadVenueDataWithFeedbackAsync` |
-| `VenueManager/UI/Widgets/GuestListWidget.cs` | Modify — VIP badge on guest row |
+| File                                                                | Action                                                                                                             |
+| ------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------ |
+| `apps/web/prisma/schema.prisma`                                     | Modify — add `Patron` model                                                                                        |
+| `apps/web/app/api/venues/[venueId]/patrons/[patronId]/vip/route.ts` | Create — dashboard toggle endpoint                                                                                 |
+| `apps/web/app/api/plugin/patrons/vip/route.ts`                      | Create — plugin read endpoint                                                                                      |
+| `apps/web/app/dashboard/[slug]/patron-logs/page.tsx`                | Modify — upsert/fetch `Patron` rows for profiles tab                                                               |
+| `apps/web/components/patron-profiles-table.tsx`                     | Modify — `isVip`-driven tag/tab + toggle control                                                                   |
+| `VenueManager/XIVAppVenueApi.cs`                                    | Modify — add `GetVipPatronsAsync(venueId)`                                                                         |
+| `VenueManager/XIVAppApiModels.cs`                                   | Modify — add `VipPatron`/`VipPatronsResponse` models                                                               |
+| `VenueManager/Plugin.cs`                                            | Modify — cache `xivAppVipPatrons`, fetch in `AutoLoadXivAppDataAsync`, VIP chat alert in `showGuestEnterChatAlert` |
+| `VenueManager/UI/Tabs/SettingsTab.cs`                               | Modify — fetch in `LoadVenueDataWithFeedbackAsync`                                                                 |
+| `VenueManager/UI/Widgets/GuestListWidget.cs`                        | Modify — VIP badge on guest row                                                                                    |

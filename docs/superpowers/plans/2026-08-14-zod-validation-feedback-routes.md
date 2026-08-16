@@ -30,6 +30,7 @@
 ## Task 1: Migrate `app/api/feedback/route.ts`
 
 **Files:**
+
 - Modify: `apps/web/app/api/feedback/route.ts`
 
 - [ ] **Step 1: Replace the manual truthy/enum checks with a zod schema**
@@ -46,25 +47,22 @@ import { sendDiscordWebhook, formatFeedbackSubmittedEmbed } from "@/lib/discord-
 ```
 
 ```typescript
-      const body = await request.json()
-      const { category, subject, description, url } = body
+const body = await request.json()
+const { category, subject, description, url } = body
 
-      // Validate required fields
-      if (!category || !subject || !description) {
-        return NextResponse.json(
-          { error: "Missing required fields: category, subject, description" },
-          { status: 400 }
-        )
-      }
+// Validate required fields
+if (!category || !subject || !description) {
+  return NextResponse.json({ error: "Missing required fields: category, subject, description" }, { status: 400 })
+}
 
-      // Validate category
-      const validCategories = ["BUG_REPORT", "FEATURE_REQUEST", "IMPROVEMENT", "GENERAL"]
-      if (!validCategories.includes(category)) {
-        return NextResponse.json(
-          { error: "Invalid category. Must be one of: BUG_REPORT, FEATURE_REQUEST, IMPROVEMENT, GENERAL" },
-          { status: 400 }
-        )
-      }
+// Validate category
+const validCategories = ["BUG_REPORT", "FEATURE_REQUEST", "IMPROVEMENT", "GENERAL"]
+if (!validCategories.includes(category)) {
+  return NextResponse.json(
+    { error: "Invalid category. Must be one of: BUG_REPORT, FEATURE_REQUEST, IMPROVEMENT, GENERAL" },
+    { status: 400 }
+  )
+}
 ```
 
 New:
@@ -88,36 +86,39 @@ const feedbackSchema = z.object({
 ```
 
 ```typescript
-      const body = await request.json()
-      let category: (typeof feedbackSchema)["_output"]["category"], subject: string, description: string, url: string | undefined
-      try {
-        const parsed = feedbackSchema.parse(body)
-        category = parsed.category
-        subject = parsed.subject
-        description = parsed.description
-        url = parsed.url
-      } catch (error) {
-        if (error instanceof z.ZodError) {
-          return NextResponse.json({ error: "Validation error", details: error.issues }, { status: 400 })
-        }
-        throw error
-      }
+const body = await request.json()
+let category: (typeof feedbackSchema)["_output"]["category"],
+  subject: string,
+  description: string,
+  url: string | undefined
+try {
+  const parsed = feedbackSchema.parse(body)
+  category = parsed.category
+  subject = parsed.subject
+  description = parsed.description
+  url = parsed.url
+} catch (error) {
+  if (error instanceof z.ZodError) {
+    return NextResponse.json({ error: "Validation error", details: error.issues }, { status: 400 })
+  }
+  throw error
+}
 ```
 
 The type annotation for `category` above (`(typeof feedbackSchema)["_output"]["category"]`) is deliberately verbose to avoid hand-writing the enum union — if this feels awkward when actually implementing, an equally correct and more readable alternative is to just destructure directly from `parsed` without pre-declaring `let` types:
 
 ```typescript
-      const body = await request.json()
-      let parsed: z.infer<typeof feedbackSchema>
-      try {
-        parsed = feedbackSchema.parse(body)
-      } catch (error) {
-        if (error instanceof z.ZodError) {
-          return NextResponse.json({ error: "Validation error", details: error.issues }, { status: 400 })
-        }
-        throw error
-      }
-      const { category, subject, description, url } = parsed
+const body = await request.json()
+let parsed: z.infer<typeof feedbackSchema>
+try {
+  parsed = feedbackSchema.parse(body)
+} catch (error) {
+  if (error instanceof z.ZodError) {
+    return NextResponse.json({ error: "Validation error", details: error.issues }, { status: 400 })
+  }
+  throw error
+}
+const { category, subject, description, url } = parsed
 ```
 
 Use this second form — it's cleaner and matches how `z.infer` is idiomatically used elsewhere if you check other schemas in this codebase. Either is spec-compliant; prefer the `z.infer` version.
@@ -144,6 +145,7 @@ git commit -m "feat(web): validate feedback POST body with shared feedback valid
 ## Task 2: Migrate `app/api/mobile/feedback/route.ts`
 
 **Files:**
+
 - Modify: `apps/web/app/api/mobile/feedback/route.ts`
 
 - [ ] **Step 1: Replace the manual truthy/enum checks with a zod schema**
@@ -160,15 +162,15 @@ const VALID_CATEGORIES = ["BUG_REPORT", "FEATURE_REQUEST", "IMPROVEMENT", "GENER
 ```
 
 ```typescript
-  const body = await req.json().catch(() => ({}))
-  const { category, subject, description } = body
+const body = await req.json().catch(() => ({}))
+const { category, subject, description } = body
 
-  if (!category || !subject || !description) {
-    return NextResponse.json({ error: "Missing required fields: category, subject, description" }, { status: 400 })
-  }
-  if (!VALID_CATEGORIES.includes(category)) {
-    return NextResponse.json({ error: "Invalid category" }, { status: 400 })
-  }
+if (!category || !subject || !description) {
+  return NextResponse.json({ error: "Missing required fields: category, subject, description" }, { status: 400 })
+}
+if (!VALID_CATEGORIES.includes(category)) {
+  return NextResponse.json({ error: "Invalid category" }, { status: 400 })
+}
 ```
 
 New:
@@ -189,17 +191,17 @@ const feedbackSchema = z.object({
 ```
 
 ```typescript
-  const body = await req.json().catch(() => ({}))
-  let parsed: z.infer<typeof feedbackSchema>
-  try {
-    parsed = feedbackSchema.parse(body)
-  } catch (error) {
-    if (error instanceof z.ZodError) {
-      return NextResponse.json({ error: "Validation error", details: error.issues }, { status: 400 })
-    }
-    throw error
+const body = await req.json().catch(() => ({}))
+let parsed: z.infer<typeof feedbackSchema>
+try {
+  parsed = feedbackSchema.parse(body)
+} catch (error) {
+  if (error instanceof z.ZodError) {
+    return NextResponse.json({ error: "Validation error", details: error.issues }, { status: 400 })
   }
-  const { category, subject, description } = parsed
+  throw error
+}
+const { category, subject, description } = parsed
 ```
 
 **Note:** the old code did `subject: String(subject).trim()` / `description: String(description).trim()` when building the `prisma.feedback.create` call further down. `validators.feedbackSubject`/`feedbackDescription` (`apps/web/lib/validation.ts:28-29`) do **not** `.trim()` internally (unlike `characterName`/`world` from Increment 3) — so **keep the existing `.trim()` calls** on the now-validated `subject`/`description` at the `prisma.feedback.create` call site (i.e. write `subject: subject.trim()`, `description: description.trim()` there, same as the pre-existing code, just now operating on the zod-validated values instead of the raw destructured ones — don't drop the trim, and don't add `.trim()` to the schema itself, since that would silently change what counts as "under the minimum length" for whitespace-padded input in a way this task doesn't need to touch). This route has no outer try/catch at all in the original code (unlike the web route) — let the `z.ZodError` check happen inline as shown; a non-Zod error thrown from `.parse()` (not expected given the schema shape, but included for consistency with every other migrated route in this rollout) would propagate as an unhandled rejection, same as any other unexpected error already would in this route today — no regression, matches the existing risk profile.
@@ -232,6 +234,7 @@ cd apps/web && npx vitest run && npx tsc --noEmit && pnpm build
 - [ ] **Step 2: Manual verification — `app/api/feedback` (session-authenticated, browser)**
 
 Sign in to `https://xivvenuemanager.com` in a browser tab, open the feedback dialog (the UI component that calls this route — `components/feedback-dialog.tsx`, likely reachable from a help/feedback button in the dashboard nav), and:
+
 1. Submit a normal category + subject + description → should still succeed exactly as before (regression check) — the client-side UI already caps description at 2000 chars (below the 5000 registry max) so this won't naturally exercise the new server-side cap, that's expected.
 2. If feasible, use the browser devtools network tab to replay the POST with a `subject` over 200 characters or an empty `description` → should now get a 400 with a clear "too long"/"too short" validation message instead of silently succeeding.
 
@@ -242,6 +245,7 @@ This route is authenticated differently from every prior increment: `requireMobi
 To mint a real, valid test token: run a short script inside the live `venue-manager-next` (or `venue-manager`) container, which already has `MOBILE_JWT_SECRET` in its environment and `jose` as an installed dependency — e.g. `docker exec venue-manager-next node -e "..."` using `jose`'s `SignJWT` with the exact same header/claims/expiry/secret shape as `signMobileJwt` above, signing a payload with `sub` set to a disposable test venue owner's userId (Increments 2-3 used `TestingOut`/slug `t`, owner userId `cmq8ugi4d000101rurduj6yw1` — reuse if it still exists). This mirrors how Increments 2-3 generated disposable plugin API keys directly rather than going through a full OAuth/login flow.
 
 Once a valid token is minted, verify:
+
 1. A `subject` over 200 characters → 400.
 2. A `description` under 10 characters (or empty) → 400.
 3. An invalid `category` (e.g. `"NOT_A_CATEGORY"`) → 400.
@@ -253,4 +257,4 @@ Once a valid token is minted, verify:
 cd ~/xiv-app && git push origin main
 ```
 
-Hold on `~/bin/deploy-xiv-web.sh --green` until the user confirms — deploy is a separate explicit step, not bundled into this task. Manual verification (Step 2/3 above) requires the code to actually be deployed first, same lesson learned in Increment 3 — don't attempt Step 2/3 against production before Step 4's push *and* an actual deploy have happened; reorder in practice to: push → (ask user to confirm deploy) → deploy → then run Steps 2/3 against the now-live code → update the roadmap doc.
+Hold on `~/bin/deploy-xiv-web.sh --green` until the user confirms — deploy is a separate explicit step, not bundled into this task. Manual verification (Step 2/3 above) requires the code to actually be deployed first, same lesson learned in Increment 3 — don't attempt Step 2/3 against production before Step 4's push _and_ an actual deploy have happened; reorder in practice to: push → (ask user to confirm deploy) → deploy → then run Steps 2/3 against the now-live code → update the roadmap doc.

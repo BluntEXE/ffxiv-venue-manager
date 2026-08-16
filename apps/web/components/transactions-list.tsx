@@ -4,8 +4,24 @@ import { useEffect, useRef, useState } from "react"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import { RoleBadge } from "@/components/role-badge"
-import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog"
-import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog"
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog"
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Textarea } from "@/components/ui/textarea"
@@ -98,9 +114,7 @@ export function TransactionsList({
 
     setIsLoadingMore(true)
     try {
-      const response = await fetch(
-        `/api/venues/${venueId}/transactions?limit=50&cursor=${nextCursor}`
-      )
+      const response = await fetch(`/api/venues/${venueId}/transactions?limit=50&cursor=${nextCursor}`)
 
       if (response.ok) {
         const data = await response.json()
@@ -131,10 +145,7 @@ export function TransactionsList({
     })
 
     // Combine headers and rows
-    const csvContent = [
-      headers.join(","),
-      ...rows.map(row => row.map(cell => `"${cell}"`).join(","))
-    ].join("\n")
+    const csvContent = [headers.join(","), ...rows.map((row) => row.map((cell) => `"${cell}"`).join(","))].join("\n")
 
     // Create download
     const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" })
@@ -164,18 +175,15 @@ export function TransactionsList({
 
     setIsSubmitting(true)
     try {
-      const response = await fetch(
-        `/api/venues/${venueId}/transactions/${editingTransaction.id}`,
-        {
-          method: "PATCH",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            amount: parseFloat(editFormData.amount),
-            customerName: editFormData.customerName || null,
-            notes: editFormData.notes || null,
-          }),
-        }
-      )
+      const response = await fetch(`/api/venues/${venueId}/transactions/${editingTransaction.id}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          amount: parseFloat(editFormData.amount),
+          customerName: editFormData.customerName || null,
+          notes: editFormData.notes || null,
+        }),
+      })
 
       if (!response.ok) {
         throw new Error("Failed to update transaction")
@@ -184,11 +192,7 @@ export function TransactionsList({
       const updated = await response.json()
 
       // Update local state
-      setTransactions(
-        transactions.map((t) =>
-          t.id === editingTransaction.id ? updated : t
-        )
-      )
+      setTransactions(transactions.map((t) => (t.id === editingTransaction.id ? updated : t)))
 
       setEditingTransaction(null)
     } catch (error) {
@@ -203,21 +207,16 @@ export function TransactionsList({
     if (!deletingTransaction) return
 
     try {
-      const response = await fetch(
-        `/api/venues/${venueId}/transactions/${deletingTransaction.id}`,
-        {
-          method: "DELETE",
-        }
-      )
+      const response = await fetch(`/api/venues/${venueId}/transactions/${deletingTransaction.id}`, {
+        method: "DELETE",
+      })
 
       if (!response.ok) {
         throw new Error("Failed to delete transaction")
       }
 
       // Remove from local state
-      setTransactions(
-        transactions.filter((t) => t.id !== deletingTransaction.id)
-      )
+      setTransactions(transactions.filter((t) => t.id !== deletingTransaction.id))
 
       setDeletingTransaction(null)
     } catch (error) {
@@ -230,12 +229,7 @@ export function TransactionsList({
     <>
       {/* Export Button */}
       <div className="mb-4 flex justify-end">
-        <Button
-          variant="outline"
-          onClick={exportToCSV}
-          disabled={transactions.length === 0}
-          className="gap-2"
-        >
+        <Button variant="outline" onClick={exportToCSV} disabled={transactions.length === 0} className="gap-2">
           <svg
             xmlns="http://www.w3.org/2000/svg"
             width="16"
@@ -267,17 +261,15 @@ export function TransactionsList({
             >
               <div className="flex-1 min-w-0">
                 <div className="flex items-center gap-2 mb-0.5 flex-wrap">
-                  <p className="font-semibold">
-                    {transaction.service ? transaction.service.name : "Manual Sale"}
-                  </p>
+                  <p className="font-semibold">{transaction.service ? transaction.service.name : "Manual Sale"}</p>
                   {transaction.event && (
-                    <Badge variant="outline" className="text-xs">{transaction.event.title}</Badge>
+                    <Badge variant="outline" className="text-xs">
+                      {transaction.event.title}
+                    </Badge>
                   )}
                 </div>
                 <div className="flex items-center gap-2 flex-wrap text-xs text-muted-foreground">
-                  {transaction.customerName && (
-                    <span className="text-foreground/70">{transaction.customerName}</span>
-                  )}
+                  {transaction.customerName && <span className="text-foreground/70">{transaction.customerName}</span>}
                   {transaction.customerName && <span>·</span>}
                   <span>{formatLocalTime(transaction.createdAt, "datetimelong")}</span>
                   {transaction.staff && (
@@ -298,18 +290,34 @@ export function TransactionsList({
                 )}
               </div>
               <div className="flex items-center gap-2 shrink-0">
-                <p className={`font-bold tabular-nums ${
-                  isLarge ? "text-xl text-emerald-400" :
-                  isMedium ? "text-lg text-[var(--xiv-blue)]" :
-                  "text-base text-foreground/80"
-                }`}>
+                <p
+                  className={`font-bold tabular-nums ${
+                    isLarge
+                      ? "text-xl text-emerald-400"
+                      : isMedium
+                        ? "text-lg text-[var(--xiv-blue)]"
+                        : "text-base text-foreground/80"
+                  }`}
+                >
                   {amount.toLocaleString()} gil
                 </p>
                 <div className="flex gap-0.5">
-                  <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => openEditDialog(transaction)} aria-label="Edit transaction">
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    className="h-8 w-8"
+                    onClick={() => openEditDialog(transaction)}
+                    aria-label="Edit transaction"
+                  >
                     <Edit className="h-3.5 w-3.5" />
                   </Button>
-                  <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => setDeletingTransaction(transaction)} aria-label="Delete transaction">
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    className="h-8 w-8"
+                    onClick={() => setDeletingTransaction(transaction)}
+                    aria-label="Delete transaction"
+                  >
                     <Trash2 className="h-3.5 w-3.5 text-red-400" />
                   </Button>
                 </div>
@@ -330,9 +338,7 @@ export function TransactionsList({
           >
             {isLoadingMore ? "Loading..." : "Load More Transactions"}
           </Button>
-          <p className="text-xs text-muted-foreground mt-2">
-            Showing {transactions.length} of many transactions
-          </p>
+          <p className="text-xs text-muted-foreground mt-2">Showing {transactions.length} of many transactions</p>
         </div>
       )}
 
@@ -341,9 +347,7 @@ export function TransactionsList({
         <DialogContent>
           <DialogHeader>
             <DialogTitle>Edit Transaction</DialogTitle>
-            <DialogDescription>
-              Update the details of this transaction
-            </DialogDescription>
+            <DialogDescription>Update the details of this transaction</DialogDescription>
           </DialogHeader>
 
           <div className="space-y-4 py-4">
@@ -388,17 +392,10 @@ export function TransactionsList({
           </div>
 
           <DialogFooter>
-            <Button
-              variant="outline"
-              onClick={() => setEditingTransaction(null)}
-              disabled={isSubmitting}
-            >
+            <Button variant="outline" onClick={() => setEditingTransaction(null)} disabled={isSubmitting}>
               Cancel
             </Button>
-            <Button
-              onClick={handleEditSubmit}
-              disabled={isSubmitting || !editFormData.amount}
-            >
+            <Button onClick={handleEditSubmit} disabled={isSubmitting || !editFormData.amount}>
               {isSubmitting ? "Saving..." : "Save Changes"}
             </Button>
           </DialogFooter>
@@ -406,17 +403,13 @@ export function TransactionsList({
       </Dialog>
 
       {/* Delete Confirmation Dialog */}
-      <AlertDialog
-        open={deletingTransaction !== null}
-        onOpenChange={(open) => !open && setDeletingTransaction(null)}
-      >
+      <AlertDialog open={deletingTransaction !== null} onOpenChange={(open) => !open && setDeletingTransaction(null)}>
         <AlertDialogContent>
           <AlertDialogHeader>
             <AlertDialogTitle>Delete Transaction</AlertDialogTitle>
             <AlertDialogDescription>
               Are you sure you want to delete this transaction for{" "}
-              <strong>{deletingTransaction?.amount.toLocaleString()} gil</strong>?
-              This action cannot be undone.
+              <strong>{deletingTransaction?.amount.toLocaleString()} gil</strong>? This action cannot be undone.
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>

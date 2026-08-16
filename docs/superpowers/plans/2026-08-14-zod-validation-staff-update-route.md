@@ -2,7 +2,7 @@
 
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
 
-**Goal:** Close a real gap in `app/api/venues/[venueId]/staff/[membershipId]/route.ts`'s PATCH/PUT handler: `invitedEmail` has **zero format validation** and `invitedName` has **zero length cap** — the exact same fields, on a sibling route, that Increment 8 already fixed on `staff/invite/route.ts` (invite creation). This route (editing an *existing* membership) never got the same treatment.
+**Goal:** Close a real gap in `app/api/venues/[venueId]/staff/[membershipId]/route.ts`'s PATCH/PUT handler: `invitedEmail` has **zero format validation** and `invitedName` has **zero length cap** — the exact same fields, on a sibling route, that Increment 8 already fixed on `staff/invite/route.ts` (invite creation). This route (editing an _existing_ membership) never got the same treatment.
 
 **Architecture:** Minimal, surgical swap of 2 field definitions in the existing `updateStaffSchema` — reuse `validators.email` (now in its 2nd real use, after Increment 8) and a route-local 100-char cap on `invitedName` matching Increment 8's precedent exactly. Everything else in this schema (`role`, `roleId`, `status`, `nickname`, `temporaryRole`, `temporaryRoleExpiresAt`, `permanentRole`, `additionalRoleIds`, `tipPooled`) is untouched — not in scope, no demonstrated gap found there during planning.
 
@@ -15,6 +15,7 @@
 ## Task 1: Migrate `invitedEmail`/`invitedName` in `app/api/venues/[venueId]/staff/[membershipId]/route.ts`
 
 **Files:**
+
 - Modify: `apps/web/app/api/venues/[venueId]/staff/[membershipId]/route.ts`
 
 - [ ] **Step 1: Add the import, swap the 2 fields**

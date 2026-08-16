@@ -6,13 +6,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { AlertTriangle, ArrowLeft, RefreshCw } from "lucide-react"
 import Link from "next/link"
 
-export default function VenueError({
-  error,
-  reset,
-}: {
-  error: Error & { digest?: string }
-  reset: () => void
-}) {
+export default function VenueError({ error, reset }: { error: Error & { digest?: string }; reset: () => void }) {
   useEffect(() => {
     console.error("Venue dashboard error:", error)
   }, [error])
@@ -32,9 +26,7 @@ export default function VenueError({
         <CardContent className="flex flex-col gap-4">
           {process.env.NODE_ENV === "development" && (
             <div className="rounded-md bg-muted p-3 text-sm">
-              <p className="font-mono text-xs text-muted-foreground break-all">
-                {error.message}
-              </p>
+              <p className="font-mono text-xs text-muted-foreground break-all">{error.message}</p>
             </div>
           )}
           <div className="flex gap-2 justify-center">

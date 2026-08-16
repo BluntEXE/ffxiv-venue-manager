@@ -43,7 +43,7 @@ export async function POST(req: Request) {
 
 async function queueEventReminders(now: Date) {
   const windowStart = new Date(now.getTime() + 28 * 60 * 1000)
-  const windowEnd   = new Date(now.getTime() + 32 * 60 * 1000)
+  const windowEnd = new Date(now.getTime() + 32 * 60 * 1000)
 
   const events = await prisma.event.findMany({
     where: {

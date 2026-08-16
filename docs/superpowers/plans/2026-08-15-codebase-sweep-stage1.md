@@ -13,10 +13,12 @@
 ## Task 1: Run `knip` across the TS/JS workspaces
 
 **Files:**
+
 - Create: `knip.json` (repo root, `~/xiv-app/knip.json`)
 - Create (output, not committed): `/tmp/claude-1000/-home-ehno/ec9b6814-12d0-479d-810e-f04222fe7146/scratchpad/knip-output.txt` (or your own scratchpad path — this is a working artifact, not a repo file)
 
 **Context:** Confirmed entry points during planning:
+
 - `apps/web` — Next.js App Router (`app/**`), knip's Next.js plugin auto-detects routes/pages/middleware once it sees `next` in `apps/web/package.json`'s deps — no manual entry list needed for this workspace.
 - `apps/discord-bot` — `src/index.ts` (from `package.json`'s `dev`/`start` scripts).
 - `apps/eorzea-bot` — `src/index.ts` (from `package.json`'s `main`/`dev` scripts; also has `src/deploy-commands.ts` as a second real entry, referenced by the `deploy-commands` script).
@@ -64,6 +66,7 @@ Both formats are captured: JSON for later programmatic triage in Task 4, human-r
 - [ ] **Step 4: If knip errors out on missing/unresolvable plugin config**
 
 Knip's error messages are specific about what it can't resolve (e.g. an unrecognized workspace, a config file it can't find). If it errors rather than just producing findings:
+
 1. Read the exact error message.
 2. Add the minimal config knip's own error message points at (e.g. an explicit `entry` array for a workspace where auto-detection failed) — do not add unrelated config.
 3. Re-run and confirm it now produces output instead of erroring.
@@ -83,6 +86,7 @@ git commit -m "chore: add knip for dead-code/unused-export detection (codebase s
 ## Task 2: Run `jscpd` across the TS/JS workspaces
 
 **Files:**
+
 - Create: `.jscpd.json` (repo root)
 - Create (output, not committed): `/tmp/claude-1000/-home-ehno/ec9b6814-12d0-479d-810e-f04222fe7146/scratchpad/jscpd-report/` (jscpd's own output directory)
 
@@ -98,14 +102,7 @@ cd /home/ehno/xiv-app && pnpm add -D -w jscpd
 {
   "threshold": 0,
   "reporters": ["json", "consoleFull"],
-  "ignore": [
-    "**/node_modules/**",
-    "**/.next/**",
-    "**/dist/**",
-    "**/generated/**",
-    "**/*.d.ts",
-    "**/pnpm-lock.yaml"
-  ],
+  "ignore": ["**/node_modules/**", "**/.next/**", "**/dist/**", "**/generated/**", "**/*.d.ts", "**/pnpm-lock.yaml"],
   "absolute": true,
   "gitignore": true,
   "minLines": 5,
@@ -165,6 +162,7 @@ These counts are a starting signal, not a verdict — high counts of a common Im
 - [ ] **Step 3: Write findings to a scratchpad file**
 
 Write `/tmp/claude-1000/-home-ehno/ec9b6814-12d0-479d-810e-f04222fe7146/scratchpad/plugin-duplication-findings.md` listing:
+
 - Each near-duplicate block found: which files, approximate line ranges, what the shared pattern is, and a one-line judgment on whether it's worth extracting to a shared helper.
 - Any dead code noticed along the way (unreferenced private methods, unused fields) — this task's primary focus is duplication, but flag dead code too since you're reading the files anyway.
 - Any file that's grown large enough to be a splitting candidate (skim file line counts via `wc -l ~/VenueManager/VenueManager/**/*.cs` for a quick signal).
@@ -176,6 +174,7 @@ This file is a working document for Task 4, not committed to the plugin repo.
 ## Task 4: Compile the findings report
 
 **Files:**
+
 - Create: `docs/superpowers/plans/2026-08-15-codebase-sweep-findings-report.md`
 
 - [ ] **Step 1: Read all three raw outputs**

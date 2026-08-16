@@ -11,17 +11,11 @@ import {
 import { notifyVenueOwners } from "@/lib/notify"
 import { resolveDisplayName } from "@/lib/display-name"
 
-export async function POST(
-  request: Request,
-  { params }: { params: Promise<{ token: string }> }
-) {
+export async function POST(request: Request, { params }: { params: Promise<{ token: string }> }) {
   try {
     const session = await getServerSession(authOptions)
     if (!session?.user?.id) {
-      return NextResponse.json(
-        { error: "You must be signed in to accept an invite" },
-        { status: 401 }
-      )
+      return NextResponse.json({ error: "You must be signed in to accept an invite" }, { status: 401 })
     }
 
     const { token } = await params
@@ -43,26 +37,17 @@ export async function POST(
     })
 
     if (!membership) {
-      return NextResponse.json(
-        { error: "Invalid invite link" },
-        { status: 404 }
-      )
+      return NextResponse.json({ error: "Invalid invite link" }, { status: 404 })
     }
 
     // Check if invite has expired
     if (membership.inviteExpiresAt && membership.inviteExpiresAt < new Date()) {
-      return NextResponse.json(
-        { error: "This invite has expired" },
-        { status: 410 }
-      )
+      return NextResponse.json({ error: "This invite has expired" }, { status: 410 })
     }
 
     // Check if invite has already been accepted
     if (membership.status === "active" && membership.userId) {
-      return NextResponse.json(
-        { error: "This invite has already been accepted" },
-        { status: 410 }
-      )
+      return NextResponse.json({ error: "This invite has already been accepted" }, { status: 410 })
     }
 
     // Check if user is already a member of this venue
@@ -75,10 +60,7 @@ export async function POST(
     })
 
     if (existingMembership) {
-      return NextResponse.json(
-        { error: "You are already a member of this venue" },
-        { status: 409 }
-      )
+      return NextResponse.json({ error: "You are already a member of this venue" }, { status: 409 })
     }
 
     // Update membership: link user and activate
@@ -100,7 +82,11 @@ export async function POST(
           select: {
             name: true,
             displayName: true,
-            characters: { orderBy: [{ isPrimary: "desc" }, { createdAt: "asc" }], take: 1, select: { characterName: true } },
+            characters: {
+              orderBy: [{ isPrimary: "desc" }, { createdAt: "asc" }],
+              take: 1,
+              select: { characterName: true },
+            },
           },
         },
       },
@@ -134,8 +120,8 @@ export async function POST(
       })
 
       // Send webhook asynchronously (don't wait for response)
-      sendDiscordWebhook(webhookUrl, { embeds: [embed] }).catch(
-        (error) => console.error("Failed to send Discord webhook:", error)
+      sendDiscordWebhook(webhookUrl, { embeds: [embed] }).catch((error) =>
+        console.error("Failed to send Discord webhook:", error)
       )
     }
 
@@ -149,9 +135,6 @@ export async function POST(
     })
   } catch (error) {
     console.error("Error accepting invite:", error)
-    return NextResponse.json(
-      { error: "Failed to accept invite" },
-      { status: 500 }
-    )
+    return NextResponse.json({ error: "Failed to accept invite" }, { status: 500 })
   }
 }

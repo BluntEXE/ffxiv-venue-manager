@@ -19,7 +19,7 @@ function tonightWindow(): { from: Date; to: Date } {
   const now = new Date()
   return {
     from: new Date(now.getTime() - 30 * 60 * 1000),
-    to:   new Date(now.getTime() + 8 * 60 * 60 * 1000),
+    to: new Date(now.getTime() + 8 * 60 * 60 * 1000),
   }
 }
 
@@ -33,10 +33,7 @@ export default async function DiscoverPage() {
       _count: { select: { follows: true } },
       events: {
         where: {
-          OR: [
-            { status: "ACTIVE" },
-            { startTime: { gte: from, lte: to } },
-          ],
+          OR: [{ status: "ACTIVE" }, { startTime: { gte: from, lte: to } }],
         },
         orderBy: { startTime: "asc" },
         select: { id: true, title: true, startTime: true, status: true },
@@ -62,27 +59,29 @@ export default async function DiscoverPage() {
     const activeEvent = v.events.find((e) => e.status === "ACTIVE") ?? null
     const upcomingEvent = v.events.find((e) => e.status !== "ACTIVE") ?? null
     return {
-      id:            v.id,
-      name:          v.name,
-      slug:          v.slug,
-      dataCenter:    v.dataCenter,
-      world:         v.world,
-      district:      v.district,
-      ward:          v.ward,
-      plot:          v.plot,
-      apartment:     v.apartment,
-      location:      v.location,
-      description:   v.description,
-      followCount:   v._count.follows,
-      isFollowed:    followedIds.includes(v.id),
-      isOpenNow:     isVenueOpenNow({
+      id: v.id,
+      name: v.name,
+      slug: v.slug,
+      dataCenter: v.dataCenter,
+      world: v.world,
+      district: v.district,
+      ward: v.ward,
+      plot: v.plot,
+      apartment: v.apartment,
+      location: v.location,
+      description: v.description,
+      followCount: v._count.follows,
+      isFollowed: followedIds.includes(v.id),
+      isOpenNow: isVenueOpenNow({
         hasActiveEvent: activeEvent !== null,
         scheduleEntries: v.scheduleEntries,
         ffxivSchedule: v.venueSchedule?.data,
       }),
       isTonightOpen: v.events.length > 0,
-      activeEvent:   activeEvent ? { title: activeEvent.title } : null,
-      upcomingEvent: upcomingEvent ? { title: upcomingEvent.title, startTime: upcomingEvent.startTime.toISOString() } : null,
+      activeEvent: activeEvent ? { title: activeEvent.title } : null,
+      upcomingEvent: upcomingEvent
+        ? { title: upcomingEvent.title, startTime: upcomingEvent.startTime.toISOString() }
+        : null,
     }
   })
 
@@ -98,5 +97,4 @@ export default async function DiscoverPage() {
       <DiscoverClient venues={cards} isAuthed={!!session?.user} totalCount={venues.length} />
     </ExploreLayout>
   )
-
 }

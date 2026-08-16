@@ -40,10 +40,7 @@ export const PATCH = withRateLimit<{
         where: { userId: session.user.id, venueId: venue.id, status: "active" },
       })
       if (!membership || !["OWNER", "MANAGER"].includes(membership.role)) {
-        return NextResponse.json(
-          { error: "Owner or Manager role required" },
-          { status: 403 }
-        )
+        return NextResponse.json({ error: "Owner or Manager role required" }, { status: 403 })
       }
 
       const body = await request.json()
@@ -74,10 +71,7 @@ export const PATCH = withRateLimit<{
       return NextResponse.json({ id: updated.id, isBanned: updated.isBanned })
     } catch (err) {
       if (err instanceof z.ZodError) {
-        return NextResponse.json(
-          { error: "Invalid request", details: err.flatten() },
-          { status: 400 }
-        )
+        return NextResponse.json({ error: "Invalid request", details: err.flatten() }, { status: 400 })
       }
       console.error("[patrons/ban] error:", err)
       return NextResponse.json({ error: "Internal server error" }, { status: 500 })

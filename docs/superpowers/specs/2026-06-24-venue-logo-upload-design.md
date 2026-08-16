@@ -1,4 +1,5 @@
 # Venue Logo Upload — Design Spec
+
 **Date:** 2026-06-24
 **Status:** Approved
 
@@ -11,12 +12,14 @@ Add a logo upload control to the venue settings page. Venue managers can upload 
 Located in the venue settings page alongside the existing banner upload section.
 
 **Two-tab interface:**
+
 - **Upload new** — file input (JPEG/PNG/WebP, max 10 MB), same pattern as `BannerUpload`
 - **From gallery** — grid of the venue's existing `galleryImages`, click one to select
 
 Both tabs lead into the same crop UI.
 
 **Crop UI:**
+
 - Source image renders inside a fixed-width container
 - A fixed square overlay (the crop frame) sits on top with a dimmed surround
 - User drags the image underneath to reposition the crop
@@ -24,6 +27,7 @@ Both tabs lead into the same crop UI.
 - "Save" and "Cancel" buttons below
 
 **Saved state:**
+
 - 80×80px square thumbnail shown with a remove button
 - Matches the existing `BannerUpload` saved-state pattern
 
@@ -47,15 +51,16 @@ Output is always 256×256px regardless of source dimensions. No stretching — t
 Proxies a MinIO gallery image server-side and returns it with permissive CORS headers so it can be drawn to canvas without tainting it. Only allows URLs that match the configured MinIO public URL + bucket prefix (same validation as gallery route).
 
 ### Existing (unchanged):
+
 - `POST /api/upload` — returns presigned upload URL + stored URL
 - `PATCH /api/venues/[venueId]` — already accepts `logoUrl` field
 
 ## Files
 
-| File | Action |
-|------|--------|
-| `apps/web/components/logo-upload.tsx` | New component (~150 lines) |
-| `apps/web/app/api/proxy-image/route.ts` | New proxy route (~30 lines) |
+| File                                              | Action                                                   |
+| ------------------------------------------------- | -------------------------------------------------------- |
+| `apps/web/components/logo-upload.tsx`             | New component (~150 lines)                               |
+| `apps/web/app/api/proxy-image/route.ts`           | New proxy route (~30 lines)                              |
 | `apps/web/app/dashboard/[slug]/settings/page.tsx` | Add `<LogoUpload>` next to banner section, wire up state |
 
 ## Behaviour Details

@@ -17,15 +17,19 @@
 ## Task 1: Widen `taskDescription` to accept explicit `null`
 
 **Files:**
+
 - Modify: `apps/web/lib/validation.ts`
 
 - [ ] **Step 1: Add `.nullable()`**
 
 Find:
+
 ```typescript
   taskDescription: z.string().max(2000, "Description too long (max 2000 characters)").optional(),
 ```
+
 Change to:
+
 ```typescript
   taskDescription: z.string().max(2000, "Description too long (max 2000 characters)").optional().nullable(),
 ```
@@ -48,12 +52,14 @@ git commit -m "feat(web): widen taskDescription validator to accept explicit nul
 ## Task 2: Wire `roleName`/`roleDescription` into both role routes
 
 **Files:**
+
 - Modify: `apps/web/app/api/venues/[venueId]/roles/route.ts`
 - Modify: `apps/web/app/api/venues/[venueId]/roles/[roleId]/route.ts`
 
 - [ ] **Step 1: `roles/route.ts` — add the import, swap the schema fields**
 
 Current (`apps/web/app/api/venues/[venueId]/roles/route.ts:1-15`):
+
 ```typescript
 import { NextRequest, NextResponse } from "next/server"
 import { getServerSession } from "next-auth"
@@ -74,6 +80,7 @@ const createRoleSchema = z.object({
 ```
 
 New:
+
 ```typescript
 import { NextRequest, NextResponse } from "next/server"
 import { getServerSession } from "next-auth"
@@ -99,6 +106,7 @@ Nothing else in this file changes — `validatedData.name`/`validatedData.respon
 - [ ] **Step 2: `roles/[roleId]/route.ts` — same swap, `.optional()`-wrapped since this is an update route**
 
 Current (`apps/web/app/api/venues/[venueId]/roles/[roleId]/route.ts:1-15`):
+
 ```typescript
 import { NextRequest, NextResponse } from "next/server"
 import { getServerSession } from "next-auth"
@@ -119,6 +127,7 @@ const updateRoleSchema = z.object({
 ```
 
 New:
+
 ```typescript
 import { NextRequest, NextResponse } from "next/server"
 import { getServerSession } from "next-auth"
@@ -159,12 +168,14 @@ git commit -m "fix(web): validate role name/responsibilities via shared registry
 ## Task 3: Wire `serviceName`/`serviceDescription` into both service routes
 
 **Files:**
+
 - Modify: `apps/web/app/api/venues/[venueId]/services/route.ts`
 - Modify: `apps/web/app/api/venues/[venueId]/services/[serviceId]/route.ts`
 
 - [ ] **Step 1: `services/route.ts` — add the import, swap the schema fields**
 
 Current (`apps/web/app/api/venues/[venueId]/services/route.ts:1-19`):
+
 ```typescript
 import { NextRequest, NextResponse } from "next/server"
 import { getServerSession } from "next-auth"
@@ -189,6 +200,7 @@ const createServiceSchema = z.object({
 ```
 
 New:
+
 ```typescript
 import { NextRequest, NextResponse } from "next/server"
 import { getServerSession } from "next-auth"
@@ -216,6 +228,7 @@ const createServiceSchema = z.object({
 - [ ] **Step 2: `services/[serviceId]/route.ts` — same swap, `.optional()`-wrapped**
 
 Current (`apps/web/app/api/venues/[venueId]/services/[serviceId]/route.ts:1-17`):
+
 ```typescript
 import { NextRequest, NextResponse } from "next/server"
 import { getServerSession } from "next-auth"
@@ -239,6 +252,7 @@ const updateServiceSchema = z.object({
 ```
 
 New:
+
 ```typescript
 import { NextRequest, NextResponse } from "next/server"
 import { getServerSession } from "next-auth"
@@ -280,12 +294,14 @@ git commit -m "fix(web): validate service name/description via shared registry, 
 ## Task 4: Wire `taskTitle`/`taskDescription` into both task routes
 
 **Files:**
+
 - Modify: `apps/web/app/api/venues/[venueId]/tasks/route.ts`
 - Modify: `apps/web/app/api/venues/[venueId]/tasks/[taskId]/route.ts`
 
 - [ ] **Step 1: `tasks/route.ts` — add the import, swap the schema fields**
 
 Current (`apps/web/app/api/venues/[venueId]/tasks/route.ts:1-21`):
+
 ```typescript
 import { NextRequest, NextResponse } from "next/server"
 import { getServerSession } from "next-auth"
@@ -313,6 +329,7 @@ const createTaskSchema = z.object({
 ```
 
 New:
+
 ```typescript
 import { NextRequest, NextResponse } from "next/server"
 import { getServerSession } from "next-auth"
@@ -343,6 +360,7 @@ const createTaskSchema = z.object({
 - [ ] **Step 2: `tasks/[taskId]/route.ts` — same swap, using the now-nullable `taskDescription`**
 
 Current (`apps/web/app/api/venues/[venueId]/tasks/[taskId]/route.ts:1-20`):
+
 ```typescript
 import { NextRequest, NextResponse } from "next/server"
 import { getServerSession } from "next-auth"
@@ -369,6 +387,7 @@ const updateTaskSchema = z.object({
 ```
 
 New:
+
 ```typescript
 import { NextRequest, NextResponse } from "next/server"
 import { getServerSession } from "next-auth"

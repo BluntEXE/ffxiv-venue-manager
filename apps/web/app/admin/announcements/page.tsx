@@ -42,7 +42,7 @@ export default function AdminAnnouncementsPage() {
   useEffect(() => {
     if (status !== "authenticated") return
     fetch("/api/admin/announcements")
-      .then(r => r.ok ? r.json() : Promise.reject())
+      .then((r) => (r.ok ? r.json() : Promise.reject()))
       .then(setAnnouncements)
       .catch(() => router.push("/dashboard"))
       .finally(() => setLoading(false))
@@ -70,7 +70,10 @@ export default function AdminAnnouncementsPage() {
         return
       }
       const created = await res.json()
-      setAnnouncements(prev => [{ ...created, author: { name: session?.user?.name ?? null }, _count: { dismissals: 0 } }, ...prev])
+      setAnnouncements((prev) => [
+        { ...created, author: { name: session?.user?.name ?? null }, _count: { dismissals: 0 } },
+        ...prev,
+      ])
       setForm(empty)
       setShowForm(false)
     } finally {
@@ -81,7 +84,7 @@ export default function AdminAnnouncementsPage() {
   async function remove(id: string) {
     if (!confirm("Delete this announcement?")) return
     await fetch(`/api/admin/announcements/${id}`, { method: "DELETE" })
-    setAnnouncements(prev => prev.filter(a => a.id !== id))
+    setAnnouncements((prev) => prev.filter((a) => a.id !== id))
   }
 
   if (loading) return <PageLoading />
@@ -94,9 +97,11 @@ export default function AdminAnnouncementsPage() {
             <Megaphone className="h-6 w-6 text-[var(--xiv-blue)]" />
             Announcements
           </h1>
-          <p className="text-muted-foreground mt-1 text-sm">Broadcast feature updates and news to all logged-in users.</p>
+          <p className="text-muted-foreground mt-1 text-sm">
+            Broadcast feature updates and news to all logged-in users.
+          </p>
         </div>
-        <Button className="xiv-cta" onClick={() => setShowForm(v => !v)}>
+        <Button className="xiv-cta" onClick={() => setShowForm((v) => !v)}>
           {showForm ? <X className="h-4 w-4 mr-1.5" /> : <Plus className="h-4 w-4 mr-1.5" />}
           {showForm ? "Cancel" : "New"}
         </Button>
@@ -109,7 +114,7 @@ export default function AdminAnnouncementsPage() {
             <Input
               id="title"
               value={form.title}
-              onChange={e => setForm(f => ({ ...f, title: e.target.value }))}
+              onChange={(e) => setForm((f) => ({ ...f, title: e.target.value }))}
               placeholder="e.g. Staff nicknames are here!"
               maxLength={100}
               required
@@ -120,7 +125,7 @@ export default function AdminAnnouncementsPage() {
             <Textarea
               id="message"
               value={form.message}
-              onChange={e => setForm(f => ({ ...f, message: e.target.value }))}
+              onChange={(e) => setForm((f) => ({ ...f, message: e.target.value }))}
               placeholder="What's new? Mention the feature and that it came from user feedback."
               maxLength={500}
               rows={3}
@@ -130,32 +135,38 @@ export default function AdminAnnouncementsPage() {
           </div>
           <div className="grid grid-cols-2 gap-4">
             <div className="space-y-1.5">
-              <Label htmlFor="link">Link <span className="text-muted-foreground">(optional)</span></Label>
+              <Label htmlFor="link">
+                Link <span className="text-muted-foreground">(optional)</span>
+              </Label>
               <Input
                 id="link"
                 value={form.link}
-                onChange={e => setForm(f => ({ ...f, link: e.target.value }))}
+                onChange={(e) => setForm((f) => ({ ...f, link: e.target.value }))}
                 placeholder="https://…"
                 type="url"
               />
             </div>
             <div className="space-y-1.5">
-              <Label htmlFor="linkLabel">Link label <span className="text-muted-foreground">(optional)</span></Label>
+              <Label htmlFor="linkLabel">
+                Link label <span className="text-muted-foreground">(optional)</span>
+              </Label>
               <Input
                 id="linkLabel"
                 value={form.linkLabel}
-                onChange={e => setForm(f => ({ ...f, linkLabel: e.target.value }))}
+                onChange={(e) => setForm((f) => ({ ...f, linkLabel: e.target.value }))}
                 placeholder="Learn more"
                 maxLength={50}
               />
             </div>
           </div>
           <div className="space-y-1.5">
-            <Label htmlFor="expiresAt">Expires <span className="text-muted-foreground">(optional — leave blank to keep until deleted)</span></Label>
+            <Label htmlFor="expiresAt">
+              Expires <span className="text-muted-foreground">(optional — leave blank to keep until deleted)</span>
+            </Label>
             <Input
               id="expiresAt"
               value={form.expiresAt}
-              onChange={e => setForm(f => ({ ...f, expiresAt: e.target.value }))}
+              onChange={(e) => setForm((f) => ({ ...f, expiresAt: e.target.value }))}
               type="datetime-local"
             />
           </div>
@@ -167,23 +178,28 @@ export default function AdminAnnouncementsPage() {
       )}
 
       {announcements.length === 0 ? (
-        <div className="xiv-card rounded-xl p-12 text-center text-muted-foreground text-sm">
-          No announcements yet.
-        </div>
+        <div className="xiv-card rounded-xl p-12 text-center text-muted-foreground text-sm">No announcements yet.</div>
       ) : (
         <div className="space-y-3">
-          {announcements.map(a => (
+          {announcements.map((a) => (
             <div key={a.id} className="xiv-card rounded-xl p-4 flex items-start justify-between gap-4">
               <div className="min-w-0">
                 <div className="flex items-center gap-2 flex-wrap">
                   <p className="text-sm font-semibold">{a.title}</p>
                   {a.expiresAt && new Date(a.expiresAt) < new Date() && (
-                    <span className="text-[0.65rem] px-1.5 py-0.5 rounded-full bg-zinc-500/15 text-zinc-400 border border-zinc-500/25">Expired</span>
+                    <span className="text-[0.65rem] px-1.5 py-0.5 rounded-full bg-zinc-500/15 text-zinc-400 border border-zinc-500/25">
+                      Expired
+                    </span>
                   )}
                 </div>
                 <p className="text-sm text-muted-foreground mt-0.5">{a.message}</p>
                 {a.link && (
-                  <a href={a.link} target="_blank" rel="noopener noreferrer" className="text-xs text-[var(--xiv-blue)] hover:underline mt-1 inline-block">
+                  <a
+                    href={a.link}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="text-xs text-[var(--xiv-blue)] hover:underline mt-1 inline-block"
+                  >
                     {a.linkLabel ?? a.link}
                   </a>
                 )}

@@ -14,13 +14,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog"
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select"
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Alert, AlertDescription } from "@/components/ui/alert"
 
 interface Service {
@@ -173,9 +167,7 @@ export function SalesLogDialog({ venueId, services, events }: SalesLogDialogProp
               </Label>
               <Select
                 value={formData.eventId || "none"}
-                onValueChange={(value) =>
-                  setFormData({ ...formData, eventId: value === "none" ? "" : value })
-                }
+                onValueChange={(value) => setFormData({ ...formData, eventId: value === "none" ? "" : value })}
                 disabled={isSubmitting}
               >
                 <SelectTrigger>
@@ -231,9 +223,7 @@ export function SalesLogDialog({ venueId, services, events }: SalesLogDialogProp
                 id="customer"
                 placeholder="Customer name"
                 value={formData.customerName}
-                onChange={(e) =>
-                  setFormData({ ...formData, customerName: e.target.value })
-                }
+                onChange={(e) => setFormData({ ...formData, customerName: e.target.value })}
                 disabled={isSubmitting}
               />
             </div>
@@ -250,11 +240,7 @@ export function SalesLogDialog({ venueId, services, events }: SalesLogDialogProp
             </div>
           </div>
           <DialogFooter>
-            <Button
-              variant="outline"
-              onClick={() => setIsOpen(false)}
-              disabled={isSubmitting}
-            >
+            <Button variant="outline" onClick={() => setIsOpen(false)} disabled={isSubmitting}>
               Cancel
             </Button>
             <Button onClick={handleLogSale} disabled={isSubmitting}>

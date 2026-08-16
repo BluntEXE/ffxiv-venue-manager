@@ -46,19 +46,19 @@ interface EventOption {
 
 const statusBadge: Record<string, string> = {
   SCHEDULED: "bg-[rgba(0,180,255,0.12)] text-[var(--xiv-blue)] border-[rgba(0,180,255,0.35)]",
-  ACTIVE:    "bg-emerald-500/10 text-emerald-500 border-emerald-500/20",
+  ACTIVE: "bg-emerald-500/10 text-emerald-500 border-emerald-500/20",
   COMPLETED: "bg-zinc-500/10 text-zinc-400 border-zinc-500/20",
-  MISSED:    "bg-amber-500/10 text-amber-500 border-amber-500/20",
+  MISSED: "bg-amber-500/10 text-amber-500 border-amber-500/20",
   CANCELLED: "bg-red-500/10 text-red-400 border-red-500/20",
 }
 
 export interface ShiftsWeekViewProps {
-  weekShifts: ShiftRow[]        // padded-window rows from Task 2's query
-  activeCount: number           // venue-wide count of ACTIVE shifts (badge only, no row data needed)
-  weekStartISO: string          // ST Monday, from page.tsx's weekStart.toISOString()
-  todayKeyST: string            // server-computed "today" day-key (ST/UTC) — the only safe pre-mount "today" value
+  weekShifts: ShiftRow[] // padded-window rows from Task 2's query
+  activeCount: number // venue-wide count of ACTIVE shifts (badge only, no row data needed)
+  weekStartISO: string // ST Monday, from page.tsx's weekStart.toISOString()
+  todayKeyST: string // server-computed "today" day-key (ST/UTC) — the only safe pre-mount "today" value
   isCurrentWeek: boolean
-  fmtWeekLabelST: string        // pre-formatted "Mon 2 Jun" for the ST week label
+  fmtWeekLabelST: string // pre-formatted "Mon 2 Jun" for the ST week label
   slug: string
   venueId: string
   currentMembershipId: string
@@ -73,21 +73,22 @@ export function ShiftsWeekView(props: ShiftsWeekViewProps) {
   const [mounted, setMounted] = useState(false)
   useEffect(() => setMounted(true), [])
   const timeZone = mounted ? browserTimeZone() : ST_TZ
-  const dayKeyOf = (d: Date | string) =>
-    mounted ? localDayKey(d, timeZone) : utcDayKey(new Date(d))
+  const dayKeyOf = (d: Date | string) => (mounted ? localDayKey(d, timeZone) : utcDayKey(new Date(d)))
   const hourLabelOf = (d: Date | string) =>
-    mounted ? localHourLabel(d, timeZone) : (() => {
-      const date = new Date(d)
-      const h = date.getUTCHours()
-      const m = date.getUTCMinutes()
-      const ampm = h >= 12 ? "PM" : "AM"
-      const h12 = h % 12 || 12
-      return m === 0 ? `${h12}${ampm}` : `${h12}:${String(m).padStart(2, "0")}${ampm}`
-    })()
+    mounted
+      ? localHourLabel(d, timeZone)
+      : (() => {
+          const date = new Date(d)
+          const h = date.getUTCHours()
+          const m = date.getUTCMinutes()
+          const ampm = h >= 12 ? "PM" : "AM"
+          const h12 = h % 12 || 12
+          return m === 0 ? `${h12}${ampm}` : `${h12}:${String(m).padStart(2, "0")}${ampm}`
+        })()
 
   function duplicateShiftDialog(
     shift: ShiftRow,
-    modeField: { mode: "assign"; membershipId: string | undefined } | { mode: "open"; roleId: string | undefined },
+    modeField: { mode: "assign"; membershipId: string | undefined } | { mode: "open"; roleId: string | undefined }
   ) {
     return (
       <CreateShiftDialog
@@ -96,7 +97,11 @@ export function ShiftsWeekView(props: ShiftsWeekViewProps) {
         roles={props.venueRoles}
         potModeEnabled={props.potModeEnabled}
         events={props.eventsForDialog}
-        trigger={<Button variant="ghost" size="sm" aria-label="Duplicate shift" className="h-6 w-6 p-0"><Copy className="h-3.5 w-3.5" /></Button>}
+        trigger={
+          <Button variant="ghost" size="sm" aria-label="Duplicate shift" className="h-6 w-6 p-0">
+            <Copy className="h-3.5 w-3.5" />
+          </Button>
+        }
         prefill={{
           ...modeField,
           date: dayKeyOf(shift.scheduledStart),
@@ -127,11 +132,14 @@ export function ShiftsWeekView(props: ShiftsWeekViewProps) {
   // mounted is true (post-hydration, safe to diverge).
   const todayKey = mounted ? dayKeyOf(new Date()) : props.todayKeyST
 
-  const staffMap = new Map<string, {
-    membershipId: string
-    name: string
-    cells: Map<string, ShiftRow[]>
-  }>()
+  const staffMap = new Map<
+    string,
+    {
+      membershipId: string
+      name: string
+      cells: Map<string, ShiftRow[]>
+    }
+  >()
   for (const shift of props.weekShifts) {
     if (!shift.membershipId) continue
     const key = dayKeyOf(shift.scheduledStart)
@@ -164,19 +172,27 @@ export function ShiftsWeekView(props: ShiftsWeekViewProps) {
   const activeWeekShifts = shownWeekShifts.filter((s) => s.status !== "CANCELLED")
   const openSlots = shownWeekShifts.filter((s) => s.status === "OPEN" || s.status === "CLAIMED").length
   const missedCount = shownWeekShifts.filter((s) => s.status === "MISSED").length
-  const coverPct = activeWeekShifts.length === 0 ? 100 : Math.round(((activeWeekShifts.length - openSlots) / activeWeekShifts.length) * 100)
-  const reliabilityPct = activeWeekShifts.length === 0 ? 100 : Math.round(((activeWeekShifts.length - missedCount) / activeWeekShifts.length) * 100)
+  const coverPct =
+    activeWeekShifts.length === 0
+      ? 100
+      : Math.round(((activeWeekShifts.length - openSlots) / activeWeekShifts.length) * 100)
+  const reliabilityPct =
+    activeWeekShifts.length === 0
+      ? 100
+      : Math.round(((activeWeekShifts.length - missedCount) / activeWeekShifts.length) * 100)
 
   const actionShifts = shownWeekShifts.filter((s) => s.status === "SCHEDULED" || s.status === "ACTIVE")
   // Same pre/post-mount split as todayKey above: pre-mount, derive "tomorrow"
   // from the server-computed todayKeyST via pure date math (no wall-clock
   // read); only read a fresh `new Date()` once mounted is true.
   const tomorrowKey = mounted
-    ? dayKeyOf((() => {
-        const d = new Date()
-        d.setUTCDate(d.getUTCDate() + 1)
-        return d
-      })())
+    ? dayKeyOf(
+        (() => {
+          const d = new Date()
+          d.setUTCDate(d.getUTCDate() + 1)
+          return d
+        })()
+      )
     : addDayToKey(props.todayKeyST)
   function dayLabel(key: string): string {
     if (key === todayKey) return "Today"
@@ -198,14 +214,51 @@ export function ShiftsWeekView(props: ShiftsWeekViewProps) {
       {/* KPIs */}
       <div className="kpis mb-6">
         {[
-          { k: "Shifts this week", v: activeWeekShifts.length, sub: mounted ? "your local time" : props.fmtWeekLabelST, icon: "M12 2a10 10 0 1 1 0 20A10 10 0 0 1 12 2zm0 2v8l4 2" },
-          { k: "Open shifts", v: openSlots, sub: "needs cover", icon: "M10.29 3.86 1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0zM12 9v4m0 4h.01" },
-          { k: "Active now", v: props.activeCount, sub: "on shift", icon: "M12 2v4m0 12v4M4.93 4.93l2.83 2.83m8.48 8.48 2.83 2.83M2 12h4m12 0h4M4.93 19.07l2.83-2.83m8.48-8.48 2.83-2.83" },
-          { k: "Coverage", v: `${coverPct}%`, sub: "shifts filled", icon: "M9 12l2 2 4-4m6 2a9 9 0 1 1-18 0 9 9 0 0 1 18 0" },
-          { k: "Reliability", v: `${reliabilityPct}%`, sub: "no-shows excl.", icon: "M9 12l2 2 4-4m6 2a9 9 0 1 1-18 0 9 9 0 0 1 18 0" },
+          {
+            k: "Shifts this week",
+            v: activeWeekShifts.length,
+            sub: mounted ? "your local time" : props.fmtWeekLabelST,
+            icon: "M12 2a10 10 0 1 1 0 20A10 10 0 0 1 12 2zm0 2v8l4 2",
+          },
+          {
+            k: "Open shifts",
+            v: openSlots,
+            sub: "needs cover",
+            icon: "M10.29 3.86 1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0zM12 9v4m0 4h.01",
+          },
+          {
+            k: "Active now",
+            v: props.activeCount,
+            sub: "on shift",
+            icon: "M12 2v4m0 12v4M4.93 4.93l2.83 2.83m8.48 8.48 2.83 2.83M2 12h4m12 0h4M4.93 19.07l2.83-2.83m8.48-8.48 2.83-2.83",
+          },
+          {
+            k: "Coverage",
+            v: `${coverPct}%`,
+            sub: "shifts filled",
+            icon: "M9 12l2 2 4-4m6 2a9 9 0 1 1-18 0 9 9 0 0 1 18 0",
+          },
+          {
+            k: "Reliability",
+            v: `${reliabilityPct}%`,
+            sub: "no-shows excl.",
+            icon: "M9 12l2 2 4-4m6 2a9 9 0 1 1-18 0 9 9 0 0 1 18 0",
+          },
         ].map(({ k, v, sub, icon }) => (
           <div key={k} className="stat">
-            <div className="top"><span className="sb"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d={icon} /></svg></span></div>
+            <div className="top">
+              <span className="sb">
+                <svg
+                  xmlns="http://www.w3.org/2000/svg"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="2"
+                >
+                  <path d={icon} />
+                </svg>
+              </span>
+            </div>
             <div className="k">{k}</div>
             <div className="v">{v}</div>
             <div className="delta flat">{sub}</div>
@@ -231,7 +284,8 @@ export function ShiftsWeekView(props: ShiftsWeekViewProps) {
           <div className="sg-h staffcol">Staff</div>
           {weekDayKeys.map((key, i) => (
             <div key={i} className={`sg-h${key === todayKey ? " today-col" : ""}`}>
-              {new Date(key + "T00:00:00Z").toLocaleDateString("en-GB", { timeZone: "UTC", weekday: "short" })} <span className="dnum">{Number(key.slice(8, 10))}</span>
+              {new Date(key + "T00:00:00Z").toLocaleDateString("en-GB", { timeZone: "UTC", weekday: "short" })}{" "}
+              <span className="dnum">{Number(key.slice(8, 10))}</span>
             </div>
           ))}
 
@@ -239,14 +293,22 @@ export function ShiftsWeekView(props: ShiftsWeekViewProps) {
             <Fragment key={member.membershipId}>
               <div key={`${member.membershipId}-name`} className="sg-staff">
                 <span className="av-sm flex-shrink-0">
-                  {member.name.split(" ").map((n: string) => n[0]).join("").slice(0, 2).toUpperCase()}
+                  {member.name
+                    .split(" ")
+                    .map((n: string) => n[0])
+                    .join("")
+                    .slice(0, 2)
+                    .toUpperCase()}
                 </span>
                 <span className="truncate">{member.name}</span>
               </div>
               {weekDayKeys.map((key) => {
                 const dayShifts = member.cells.get(key) ?? []
                 return (
-                  <div key={`${member.membershipId}-${key}`} className={`sg-cell${key === todayKey ? " today-col" : ""}`}>
+                  <div
+                    key={`${member.membershipId}-${key}`}
+                    className={`sg-cell${key === todayKey ? " today-col" : ""}`}
+                  >
                     {dayShifts.map((shift) =>
                       shift.status === "CLAIMED" ? (
                         <ClaimedShiftChip
@@ -258,12 +320,17 @@ export function ShiftsWeekView(props: ShiftsWeekViewProps) {
                         />
                       ) : (
                         <div key={shift.id} className="flex items-center gap-1">
-                          <span className={`shift-chip${shift.status === "ACTIVE" ? " em" : shift.status === "MISSED" ? " am" : ""}`}>
+                          <span
+                            className={`shift-chip${shift.status === "ACTIVE" ? " em" : shift.status === "MISSED" ? " am" : ""}`}
+                          >
                             {hourLabelOf(shift.scheduledStart)}–{hourLabelOf(shift.scheduledEnd)}
                             {shift.role?.name ? ` · ${shift.role.name}` : ""}
                           </span>
                           {props.canManage &&
-                            duplicateShiftDialog(shift, { mode: "assign", membershipId: shift.membershipId ?? undefined })}
+                            duplicateShiftDialog(shift, {
+                              mode: "assign",
+                              membershipId: shift.membershipId ?? undefined,
+                            })}
                         </div>
                       )
                     )}
@@ -276,7 +343,9 @@ export function ShiftsWeekView(props: ShiftsWeekViewProps) {
           {hasOpenShifts && (
             <>
               <div key="open-shifts-name" className="sg-staff">
-                <span className="av-sm flex-shrink-0 border border-dashed border-amber-500/40 bg-amber-500/10 text-amber-400">!</span>
+                <span className="av-sm flex-shrink-0 border border-dashed border-amber-500/40 bg-amber-500/10 text-amber-400">
+                  !
+                </span>
                 <span className="truncate text-amber-400">Open shifts</span>
               </div>
               {weekDayKeys.map((key) => {
@@ -346,9 +415,7 @@ export function ShiftsWeekView(props: ShiftsWeekViewProps) {
                           </AvatarFallback>
                         </Avatar>
                         <div className="flex-1 min-w-0">
-                          <p className="text-sm font-medium truncate">
-                            {staffNameOf(shift.membership)}
-                          </p>
+                          <p className="text-sm font-medium truncate">{staffNameOf(shift.membership)}</p>
                           <p className="text-xs text-muted-foreground">
                             {hourLabelOf(shift.scheduledStart)} — {hourLabelOf(shift.scheduledEnd)}
                           </p>
@@ -358,19 +425,47 @@ export function ShiftsWeekView(props: ShiftsWeekViewProps) {
                             {shift.status}
                           </Badge>
                           {props.canManage && shift.status === "SCHEDULED" && (
-                            <ClockShiftButton venueSlug={props.slug} shiftId={shift.id} action="clock-in" staffName={staffNameOf(shift.membership)} />
+                            <ClockShiftButton
+                              venueSlug={props.slug}
+                              shiftId={shift.id}
+                              action="clock-in"
+                              staffName={staffNameOf(shift.membership)}
+                            />
                           )}
                           {props.canManage && shift.status === "ACTIVE" && (
-                            <ClockShiftButton venueSlug={props.slug} shiftId={shift.id} action="clock-out" staffName={staffNameOf(shift.membership)} />
+                            <ClockShiftButton
+                              venueSlug={props.slug}
+                              shiftId={shift.id}
+                              action="clock-out"
+                              staffName={staffNameOf(shift.membership)}
+                            />
                           )}
-                          {!props.canManage && shift.membershipId === props.currentMembershipId && shift.status === "SCHEDULED" && (
-                            <ClockShiftButton venueSlug={props.slug} shiftId={shift.id} action="clock-in" staffName="yourself" />
-                          )}
-                          {!props.canManage && shift.membershipId === props.currentMembershipId && shift.status === "ACTIVE" && (
-                            <ClockShiftButton venueSlug={props.slug} shiftId={shift.id} action="clock-out" staffName="yourself" />
-                          )}
+                          {!props.canManage &&
+                            shift.membershipId === props.currentMembershipId &&
+                            shift.status === "SCHEDULED" && (
+                              <ClockShiftButton
+                                venueSlug={props.slug}
+                                shiftId={shift.id}
+                                action="clock-in"
+                                staffName="yourself"
+                              />
+                            )}
+                          {!props.canManage &&
+                            shift.membershipId === props.currentMembershipId &&
+                            shift.status === "ACTIVE" && (
+                              <ClockShiftButton
+                                venueSlug={props.slug}
+                                shiftId={shift.id}
+                                action="clock-out"
+                                staffName="yourself"
+                              />
+                            )}
                           {props.canManage && (
-                            <DeleteShiftButton venueSlug={props.slug} shiftId={shift.id} hasPayroll={!!shift.payrollEntryId} />
+                            <DeleteShiftButton
+                              venueSlug={props.slug}
+                              shiftId={shift.id}
+                              hasPayroll={!!shift.payrollEntryId}
+                            />
                           )}
                         </div>
                       </div>

@@ -11,7 +11,7 @@ export interface ShoutFields {
   links: string
 }
 
-export type TemplateId = 'pre' | 'open'
+export type TemplateId = "pre" | "open"
 
 export interface ParsedEvent {
   venueName?: string

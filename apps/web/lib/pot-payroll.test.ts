@@ -49,9 +49,7 @@ describe("computePotDistribution", () => {
       staff({ membershipId: "m1", potPayoutMode: "POT" }),
       staff({ membershipId: "c1", potPayoutMode: "CONTRACTOR", contractorSharesPot: false }),
     ]
-    const transactions = [
-      tx({ type: "SALE", amount: new Decimal(500), membershipId: "c1" }),
-    ]
+    const transactions = [tx({ type: "SALE", amount: new Decimal(500), membershipId: "c1" })]
     const result = computePotDistribution(staffList, transactions, {
       taxPercent: new Decimal(20),
       includeSalesInPot: true,
@@ -84,9 +82,7 @@ describe("computePotDistribution", () => {
   })
 
   it("includes a contractor as a pot recipient only when contractorSharesPot is true", () => {
-    const staffList = [
-      staff({ membershipId: "c1", potPayoutMode: "CONTRACTOR", contractorSharesPot: true }),
-    ]
+    const staffList = [staff({ membershipId: "c1", potPayoutMode: "CONTRACTOR", contractorSharesPot: true })]
     const transactions = [tx({ type: "SALE", amount: new Decimal(100), membershipId: "c1" })]
     const result = computePotDistribution(staffList, transactions, {
       taxPercent: new Decimal(10),
@@ -133,11 +129,10 @@ describe("computePotDistribution", () => {
   })
 
   it("writes a zero-recipient distribution rather than dropping it", () => {
-    const result = computePotDistribution(
-      [],
-      [tx({ type: "SALE", amount: new Decimal(100), membershipId: null })],
-      { taxPercent: new Decimal(0), includeSalesInPot: true }
-    )
+    const result = computePotDistribution([], [tx({ type: "SALE", amount: new Decimal(100), membershipId: null })], {
+      taxPercent: new Decimal(0),
+      includeSalesInPot: true,
+    })
 
     expect(result.recipientCount).toBe(0)
     expect(result.potTotal.toNumber()).toBe(0) // no staff resolved for the sale, so it's dropped from regularSales

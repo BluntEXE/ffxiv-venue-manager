@@ -14,13 +14,7 @@ import { Badge } from "@/components/ui/badge"
 import { RoleBadge } from "@/components/role-badge"
 import { Switch } from "@/components/ui/switch"
 import { Checkbox } from "@/components/ui/checkbox"
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card"
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { StatReadout } from "@/components/ui/stat-readout"
 import {
   Dialog,
@@ -67,12 +61,7 @@ interface Service {
   stockCount?: number | null
 }
 
-
-export default function ServicesPage({
-  params,
-}: {
-  params: Promise<{ slug: string }>
-}) {
+export default function ServicesPage({ params }: { params: Promise<{ slug: string }> }) {
   const router = useRouter()
   const [slug, setSlug] = useState<string>("")
   const [venueId, setVenueId] = useState<string>("")
@@ -141,7 +130,6 @@ export default function ServicesPage({
         const rolesData = await rolesResponse.json()
         setServices(servicesData)
         setRoles(rolesData)
-
       } catch (error: unknown) {
         setError(error instanceof Error ? error.message : "Failed to load services")
       } finally {
@@ -186,7 +174,15 @@ export default function ServicesPage({
       const newService = await response.json()
       setServices([newService, ...services])
       setIsCreateDialogOpen(false)
-      setFormData({ name: "", description: "", price: "", selectedRoleIds: [] as string[], isActive: true, linkedItem: null, stockCount: "" })
+      setFormData({
+        name: "",
+        description: "",
+        price: "",
+        selectedRoleIds: [] as string[],
+        isActive: true,
+        linkedItem: null,
+        stockCount: "",
+      })
     } catch (error: unknown) {
       setFormError(error instanceof Error ? error.message : "Failed to create service")
     } finally {
@@ -204,24 +200,21 @@ export default function ServicesPage({
     setFormError("")
 
     try {
-      const response = await fetch(
-        `/api/venues/${venueId}/services/${editingService.id}`,
-        {
-          method: "PUT",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            name: formData.name,
-            description: formData.description || undefined,
-            price: parseFloat(formData.price),
-            roleIds: formData.selectedRoleIds,
-            isActive: formData.isActive,
-            linkedItemId: formData.linkedItem?.itemId ?? null,
-            linkedItemName: formData.linkedItem?.name ?? null,
-            linkedItemIcon: formData.linkedItem?.iconId ?? null,
-            stockCount: formData.stockCount.trim() === "" ? null : parseInt(formData.stockCount, 10),
-          }),
-        }
-      )
+      const response = await fetch(`/api/venues/${venueId}/services/${editingService.id}`, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          name: formData.name,
+          description: formData.description || undefined,
+          price: parseFloat(formData.price),
+          roleIds: formData.selectedRoleIds,
+          isActive: formData.isActive,
+          linkedItemId: formData.linkedItem?.itemId ?? null,
+          linkedItemName: formData.linkedItem?.name ?? null,
+          linkedItemIcon: formData.linkedItem?.iconId ?? null,
+          stockCount: formData.stockCount.trim() === "" ? null : parseInt(formData.stockCount, 10),
+        }),
+      })
 
       if (!response.ok) {
         const data = await response.json()
@@ -232,7 +225,15 @@ export default function ServicesPage({
       setServices(services.map((s) => (s.id === updatedService.id ? updatedService : s)))
       setIsEditDialogOpen(false)
       setEditingService(null)
-      setFormData({ name: "", description: "", price: "", selectedRoleIds: [] as string[], isActive: true, linkedItem: null, stockCount: "" })
+      setFormData({
+        name: "",
+        description: "",
+        price: "",
+        selectedRoleIds: [] as string[],
+        isActive: true,
+        linkedItem: null,
+        stockCount: "",
+      })
     } catch (error: unknown) {
       setFormError(error instanceof Error ? error.message : "Failed to update service")
     } finally {
@@ -278,7 +279,7 @@ export default function ServicesPage({
       name: service.name,
       description: service.description || "",
       price: service.price.toString(),
-      selectedRoleIds: service.roles?.map(r => r.id) || [],
+      selectedRoleIds: service.roles?.map((r) => r.id) || [],
       isActive: service.isActive,
       linkedItem: service.linkedItemId
         ? { itemId: service.linkedItemId, name: service.linkedItemName ?? "", iconId: service.linkedItemIcon ?? null }
@@ -290,22 +291,34 @@ export default function ServicesPage({
   }
 
   const openCreateDialog = () => {
-    setFormData({ name: "", description: "", price: "", selectedRoleIds: [] as string[], isActive: true, linkedItem: null, stockCount: "" })
+    setFormData({
+      name: "",
+      description: "",
+      price: "",
+      selectedRoleIds: [] as string[],
+      isActive: true,
+      linkedItem: null,
+      stockCount: "",
+    })
     setFormError("")
     setIsCreateDialogOpen(true)
   }
 
   const toggleRoleSelection = (roleId: string) => {
-    setFormData(prev => ({
+    setFormData((prev) => ({
       ...prev,
       selectedRoleIds: prev.selectedRoleIds.includes(roleId)
-        ? prev.selectedRoleIds.filter(id => id !== roleId)
-        : [...prev.selectedRoleIds, roleId]
+        ? prev.selectedRoleIds.filter((id) => id !== roleId)
+        : [...prev.selectedRoleIds, roleId],
     }))
   }
 
   if (!slug) {
-    return <div className="page-inner"><PageLoading /></div>
+    return (
+      <div className="page-inner">
+        <PageLoading />
+      </div>
+    )
   }
 
   const activeServices = services.filter((s) => s.isActive)
@@ -329,9 +342,64 @@ export default function ServicesPage({
 
         {/* Stats */}
         <div className="grid grid-cols-2 md:grid-cols-3 gap-4 mb-6">
-          <Card className="px-[18px] py-4"><StatReadout label="Total services" value={services.length} icon={<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M6 2L3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z"/><line x1="3" y1="6" x2="21" y2="6"/><path d="M16 10a4 4 0 0 1-8 0"/></svg>} iconVariant="blue" /></Card>
-          <Card className="px-[18px] py-4"><StatReadout label="Available" value={activeServices.length} deltaDirection="up" icon={<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><polyline points="20 6 9 17 4 12"/></svg>} iconVariant="success" /></Card>
-          <Card className="px-[18px] py-4"><StatReadout label="Unavailable" value={inactiveServices.length} icon={<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><circle cx="12" cy="12" r="10"/><line x1="4.93" y1="4.93" x2="19.07" y2="19.07"/></svg>} iconVariant="warning" /></Card>
+          <Card className="px-[18px] py-4">
+            <StatReadout
+              label="Total services"
+              value={services.length}
+              icon={
+                <svg
+                  xmlns="http://www.w3.org/2000/svg"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="2"
+                >
+                  <path d="M6 2L3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z" />
+                  <line x1="3" y1="6" x2="21" y2="6" />
+                  <path d="M16 10a4 4 0 0 1-8 0" />
+                </svg>
+              }
+              iconVariant="blue"
+            />
+          </Card>
+          <Card className="px-[18px] py-4">
+            <StatReadout
+              label="Available"
+              value={activeServices.length}
+              deltaDirection="up"
+              icon={
+                <svg
+                  xmlns="http://www.w3.org/2000/svg"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="2"
+                >
+                  <polyline points="20 6 9 17 4 12" />
+                </svg>
+              }
+              iconVariant="success"
+            />
+          </Card>
+          <Card className="px-[18px] py-4">
+            <StatReadout
+              label="Unavailable"
+              value={inactiveServices.length}
+              icon={
+                <svg
+                  xmlns="http://www.w3.org/2000/svg"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="2"
+                >
+                  <circle cx="12" cy="12" r="10" />
+                  <line x1="4.93" y1="4.93" x2="19.07" y2="19.07" />
+                </svg>
+              }
+              iconVariant="warning"
+            />
+          </Card>
         </div>
 
         {/* Error Message */}
@@ -347,9 +415,7 @@ export default function ServicesPage({
         ) : services.length === 0 ? (
           <Card className="text-center py-12">
             <CardContent>
-              <p className="text-muted-foreground mb-4">
-                No services configured yet.
-              </p>
+              <p className="text-muted-foreground mb-4">No services configured yet.</p>
               <Button onClick={openCreateDialog}>Add Your First Service</Button>
             </CardContent>
           </Card>
@@ -358,99 +424,164 @@ export default function ServicesPage({
             {/* Category filter tabs + search — matches prototype .filters pattern */}
             <div className="flex items-center gap-3 mb-5 flex-wrap">
               <div className="flex gap-1 bg-[var(--card)] border border-[var(--blue-015)] rounded-full p-1">
-                {["All", ...Array.from(new Set(services.map(s => s.category).filter(Boolean) as string[]))].map(cat => (
-                  <button key={cat} onClick={() => setCategoryFilter(cat)}
-                    className={`text-sm font-semibold px-4 py-1.5 rounded-full transition-colors ${categoryFilter === cat ? "bg-[var(--xiv-blue)] text-[var(--xiv-navy)]" : "text-muted-foreground hover:text-foreground hover:bg-[var(--blue-007)]"}`}>
-                    {cat}
-                  </button>
-                ))}
+                {["All", ...Array.from(new Set(services.map((s) => s.category).filter(Boolean) as string[]))].map(
+                  (cat) => (
+                    <button
+                      key={cat}
+                      onClick={() => setCategoryFilter(cat)}
+                      className={`text-sm font-semibold px-4 py-1.5 rounded-full transition-colors ${categoryFilter === cat ? "bg-[var(--xiv-blue)] text-[var(--xiv-navy)]" : "text-muted-foreground hover:text-foreground hover:bg-[var(--blue-007)]"}`}
+                    >
+                      {cat}
+                    </button>
+                  )
+                )}
               </div>
               <div className="search">
-                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
-                <input
-                  placeholder="Search services…"
-                  value={search}
-                  onChange={e => setSearch(e.target.value)}
-                />
+                <svg
+                  xmlns="http://www.w3.org/2000/svg"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="2"
+                >
+                  <circle cx="11" cy="11" r="8" />
+                  <path d="m21 21-4.35-4.35" />
+                </svg>
+                <input placeholder="Search services…" value={search} onChange={(e) => setSearch(e.target.value)} />
               </div>
             </div>
 
             {/* Service catalogue — auto-fill 3-col grid matching prototype svc-grid */}
             <div className="grid gap-4" style={{ gridTemplateColumns: "repeat(auto-fill, minmax(264px, 1fr))" }}>
-            {services
-              .filter(s => categoryFilter === "All" || s.category === categoryFilter)
-              .filter(s => !search || s.name.toLowerCase().includes(search.toLowerCase()) || (s.description ?? "").toLowerCase().includes(search.toLowerCase()))
-              .map((service) => (
-              <div
-                key={service.id}
-                className={`rounded-xl border border-[var(--blue-018)] bg-[var(--card)] overflow-hidden transition-all duration-[250ms] hover:border-[rgba(0,180,255,0.45)] hover:shadow-[0_0_20px_rgba(0,180,255,0.07),inset_0_1px_0_rgba(0,180,255,0.12)] hover:-translate-y-0.5 flex flex-col gap-3 p-5 ${!service.isActive ? "opacity-50" : ""}`}
-              >
-                {/* Top: icon badge + name + category */}
-                <div className="flex items-start gap-3">
-                  <div className="w-11 h-11 rounded-lg bg-[var(--blue-010)] border border-[var(--blue-018)] flex items-center justify-center flex-shrink-0 text-[var(--xiv-blue)]">
-                    <svg className="w-5 h-5" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                      <path d="M6 2L3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z"/><line x1="3" y1="6" x2="21" y2="6"/><path d="M16 10a4 4 0 0 1-8 0"/>
-                    </svg>
-                  </div>
-                  <div className="flex-1 min-w-0">
-                    <p className="font-[var(--font-outfit)] font-semibold text-base leading-tight">{service.name}</p>
-                    <p className="text-[0.72rem] text-[var(--fg-faint)] mt-0.5">{service.category ?? "Service"}</p>
-                  </div>
-                  {service.stockCount != null && service.stockCount <= 5 && (
-                    <Badge variant="destructive">
-                      {service.stockCount === 0 ? "Out of stock" : `Low stock: ${service.stockCount}`}
-                    </Badge>
-                  )}
-                </div>
-                {/* Description */}
-                {service.description
-                  ? <p className="text-[0.82rem] text-muted-foreground leading-relaxed flex-1">{service.description}</p>
-                  : <div className="flex-1" />
-                }
-                {/* Footer: price + toggle + icon actions */}
-                <div className="flex items-center justify-between border-t border-[var(--blue-008)] pt-3">
-                  <div>
-                    <span className="font-[var(--font-outfit)] font-bold text-[1.1rem] text-[var(--xiv-blue)]">
-                      {service.price > 0 ? service.price.toLocaleString() : "Free"}
-                      {service.price > 0 && <span className="text-[0.72rem] text-muted-foreground font-medium ml-1">gil</span>}
-                    </span>
-                    {service._count && service._count.transactions > 0 && (
-                      <p className="text-[0.68rem] text-emerald-400">{service._count.transactions} sales</p>
+              {services
+                .filter((s) => categoryFilter === "All" || s.category === categoryFilter)
+                .filter(
+                  (s) =>
+                    !search ||
+                    s.name.toLowerCase().includes(search.toLowerCase()) ||
+                    (s.description ?? "").toLowerCase().includes(search.toLowerCase())
+                )
+                .map((service) => (
+                  <div
+                    key={service.id}
+                    className={`rounded-xl border border-[var(--blue-018)] bg-[var(--card)] overflow-hidden transition-all duration-[250ms] hover:border-[rgba(0,180,255,0.45)] hover:shadow-[0_0_20px_rgba(0,180,255,0.07),inset_0_1px_0_rgba(0,180,255,0.12)] hover:-translate-y-0.5 flex flex-col gap-3 p-5 ${!service.isActive ? "opacity-50" : ""}`}
+                  >
+                    {/* Top: icon badge + name + category */}
+                    <div className="flex items-start gap-3">
+                      <div className="w-11 h-11 rounded-lg bg-[var(--blue-010)] border border-[var(--blue-018)] flex items-center justify-center flex-shrink-0 text-[var(--xiv-blue)]">
+                        <svg
+                          className="w-5 h-5"
+                          xmlns="http://www.w3.org/2000/svg"
+                          viewBox="0 0 24 24"
+                          fill="none"
+                          stroke="currentColor"
+                          strokeWidth="2"
+                        >
+                          <path d="M6 2L3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z" />
+                          <line x1="3" y1="6" x2="21" y2="6" />
+                          <path d="M16 10a4 4 0 0 1-8 0" />
+                        </svg>
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <p className="font-[var(--font-outfit)] font-semibold text-base leading-tight">
+                          {service.name}
+                        </p>
+                        <p className="text-[0.72rem] text-[var(--fg-faint)] mt-0.5">{service.category ?? "Service"}</p>
+                      </div>
+                      {service.stockCount != null && service.stockCount <= 5 && (
+                        <Badge variant="destructive">
+                          {service.stockCount === 0 ? "Out of stock" : `Low stock: ${service.stockCount}`}
+                        </Badge>
+                      )}
+                    </div>
+                    {/* Description */}
+                    {service.description ? (
+                      <p className="text-[0.82rem] text-muted-foreground leading-relaxed flex-1">
+                        {service.description}
+                      </p>
+                    ) : (
+                      <div className="flex-1" />
                     )}
-                  </div>
-                  <div className="flex items-center gap-1.5">
-                    {/* Toggle */}
-                    <button onClick={() => handleToggleService(service)} title={service.isActive ? "Available" : "Unavailable"}
-                      className={`relative w-[38px] h-[22px] rounded-full border transition-all duration-200 flex-shrink-0 ${service.isActive ? "bg-[var(--xiv-blue)] border-[var(--xiv-blue)]" : "bg-[var(--blue-010)] border-[var(--blue-020)]"}`}>
-                      <span className={`absolute top-[2px] left-[2px] w-4 h-4 rounded-full transition-all duration-200 ${service.isActive ? "translate-x-4 bg-[var(--xiv-navy)]" : "bg-[var(--fg-faint)]"}`} />
-                    </button>
-                    {/* Edit */}
-                    <button onClick={() => openEditDialog(service)} title="Edit" className="text-[var(--fg-faint)] hover:text-[var(--xiv-blue)] transition-colors p-1 rounded">
-                      <svg className="w-4 h-4" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
-                    </button>
-                    {/* Delete */}
-                    <AlertDialog>
-                      <AlertDialogTrigger asChild>
-                        <button title="Delete" className="text-[var(--fg-faint)] hover:text-destructive transition-colors p-1 rounded">
-                          <svg className="w-4 h-4" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14H6L5 6"/><path d="M10 11v6m4-6v6"/><path d="M9 6V4h6v2"/></svg>
+                    {/* Footer: price + toggle + icon actions */}
+                    <div className="flex items-center justify-between border-t border-[var(--blue-008)] pt-3">
+                      <div>
+                        <span className="font-[var(--font-outfit)] font-bold text-[1.1rem] text-[var(--xiv-blue)]">
+                          {service.price > 0 ? service.price.toLocaleString() : "Free"}
+                          {service.price > 0 && (
+                            <span className="text-[0.72rem] text-muted-foreground font-medium ml-1">gil</span>
+                          )}
+                        </span>
+                        {service._count && service._count.transactions > 0 && (
+                          <p className="text-[0.68rem] text-emerald-400">{service._count.transactions} sales</p>
+                        )}
+                      </div>
+                      <div className="flex items-center gap-1.5">
+                        {/* Toggle */}
+                        <button
+                          onClick={() => handleToggleService(service)}
+                          title={service.isActive ? "Available" : "Unavailable"}
+                          className={`relative w-[38px] h-[22px] rounded-full border transition-all duration-200 flex-shrink-0 ${service.isActive ? "bg-[var(--xiv-blue)] border-[var(--xiv-blue)]" : "bg-[var(--blue-010)] border-[var(--blue-020)]"}`}
+                        >
+                          <span
+                            className={`absolute top-[2px] left-[2px] w-4 h-4 rounded-full transition-all duration-200 ${service.isActive ? "translate-x-4 bg-[var(--xiv-navy)]" : "bg-[var(--fg-faint)]"}`}
+                          />
                         </button>
-                      </AlertDialogTrigger>
-                      <AlertDialogContent>
-                        <AlertDialogHeader>
-                          <AlertDialogTitle>Delete &quot;{service.name}&quot;?</AlertDialogTitle>
-                          <AlertDialogDescription>This cannot be undone.</AlertDialogDescription>
-                        </AlertDialogHeader>
-                        <AlertDialogFooter>
-                          <AlertDialogCancel>Cancel</AlertDialogCancel>
-                          <AlertDialogAction onClick={() => handleDeleteService(service)}>Delete</AlertDialogAction>
-                        </AlertDialogFooter>
-                      </AlertDialogContent>
-                    </AlertDialog>
+                        {/* Edit */}
+                        <button
+                          onClick={() => openEditDialog(service)}
+                          title="Edit"
+                          className="text-[var(--fg-faint)] hover:text-[var(--xiv-blue)] transition-colors p-1 rounded"
+                        >
+                          <svg
+                            className="w-4 h-4"
+                            xmlns="http://www.w3.org/2000/svg"
+                            viewBox="0 0 24 24"
+                            fill="none"
+                            stroke="currentColor"
+                            strokeWidth="2"
+                          >
+                            <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7" />
+                            <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z" />
+                          </svg>
+                        </button>
+                        {/* Delete */}
+                        <AlertDialog>
+                          <AlertDialogTrigger asChild>
+                            <button
+                              title="Delete"
+                              className="text-[var(--fg-faint)] hover:text-destructive transition-colors p-1 rounded"
+                            >
+                              <svg
+                                className="w-4 h-4"
+                                xmlns="http://www.w3.org/2000/svg"
+                                viewBox="0 0 24 24"
+                                fill="none"
+                                stroke="currentColor"
+                                strokeWidth="2"
+                              >
+                                <polyline points="3 6 5 6 21 6" />
+                                <path d="M19 6l-1 14H6L5 6" />
+                                <path d="M10 11v6m4-6v6" />
+                                <path d="M9 6V4h6v2" />
+                              </svg>
+                            </button>
+                          </AlertDialogTrigger>
+                          <AlertDialogContent>
+                            <AlertDialogHeader>
+                              <AlertDialogTitle>Delete &quot;{service.name}&quot;?</AlertDialogTitle>
+                              <AlertDialogDescription>This cannot be undone.</AlertDialogDescription>
+                            </AlertDialogHeader>
+                            <AlertDialogFooter>
+                              <AlertDialogCancel>Cancel</AlertDialogCancel>
+                              <AlertDialogAction onClick={() => handleDeleteService(service)}>Delete</AlertDialogAction>
+                            </AlertDialogFooter>
+                          </AlertDialogContent>
+                        </AlertDialog>
+                      </div>
+                    </div>
                   </div>
-                </div>
-              </div>
-            ))}
-          </div>
+                ))}
+            </div>
           </div>
         )}
 
@@ -493,9 +624,7 @@ export default function ServicesPage({
               <div className="space-y-2">
                 <Label>Roles (who can provide this service)</Label>
                 {roles.length === 0 ? (
-                  <p className="text-sm text-muted-foreground">
-                    No roles yet. Create roles first to assign services.
-                  </p>
+                  <p className="text-sm text-muted-foreground">No roles yet. Create roles first to assign services.</p>
                 ) : (
                   <div className="space-y-2 border rounded-lg p-3 max-h-48 overflow-y-auto">
                     {roles.map((role) => (
@@ -506,14 +635,8 @@ export default function ServicesPage({
                           onCheckedChange={() => toggleRoleSelection(role.id)}
                           disabled={isSubmitting}
                         />
-                        <Label
-                          htmlFor={`create-role-${role.id}`}
-                          className="flex items-center gap-2 cursor-pointer"
-                        >
-                          <RoleBadge
-                            role={role.name}
-                            color={role.color}
-                          />
+                        <Label htmlFor={`create-role-${role.id}`} className="flex items-center gap-2 cursor-pointer">
+                          <RoleBadge role={role.name} color={role.color} />
                         </Label>
                       </div>
                     ))}
@@ -607,9 +730,7 @@ export default function ServicesPage({
               <div className="space-y-2">
                 <Label>Roles (who can provide this service)</Label>
                 {roles.length === 0 ? (
-                  <p className="text-sm text-muted-foreground">
-                    No roles yet. Create roles first to assign services.
-                  </p>
+                  <p className="text-sm text-muted-foreground">No roles yet. Create roles first to assign services.</p>
                 ) : (
                   <div className="space-y-2 border rounded-lg p-3 max-h-48 overflow-y-auto">
                     {roles.map((role) => (
@@ -620,14 +741,8 @@ export default function ServicesPage({
                           onCheckedChange={() => toggleRoleSelection(role.id)}
                           disabled={isSubmitting}
                         />
-                        <Label
-                          htmlFor={`edit-role-${role.id}`}
-                          className="flex items-center gap-2 cursor-pointer"
-                        >
-                          <RoleBadge
-                            role={role.name}
-                            color={role.color}
-                          />
+                        <Label htmlFor={`edit-role-${role.id}`} className="flex items-center gap-2 cursor-pointer">
+                          <RoleBadge role={role.name} color={role.color} />
                         </Label>
                       </div>
                     ))}

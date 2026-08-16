@@ -6,7 +6,8 @@ import { ArrowRight, CalendarDays, Users, Megaphone, BarChart2 } from "lucide-re
 
 export const metadata: Metadata = {
   title: "Running Events at Your FFXIV Venue",
-  description: "How to plan, staff, and promote events at an FFXIV roleplay venue: from theme nights to anniversary runs, without the coordination falling apart.",
+  description:
+    "How to plan, staff, and promote events at an FFXIV roleplay venue: from theme nights to anniversary runs, without the coordination falling apart.",
   alternates: { canonical: "https://xivvenuemanager.com/guide/events" },
 }
 
@@ -36,42 +37,65 @@ const PAIN_POINTS = [
 export default function EventsGuidePage() {
   return (
     <div className="min-h-screen">
-      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify({ "@context": "https://schema.org", "@type": "Article", "headline": "Running Events at Your FFXIV Venue", "description": "How to plan, staff, and promote events at an FFXIV roleplay venue: from theme nights to anniversary runs, without the coordination falling apart.", "url": "https://xivvenuemanager.com/guide/events", "publisher": { "@type": "Organization", "name": "XIV Venue Manager", "url": "https://xivvenuemanager.com" } }) }} />
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{
+          __html: JSON.stringify({
+            "@context": "https://schema.org",
+            "@type": "Article",
+            headline: "Running Events at Your FFXIV Venue",
+            description:
+              "How to plan, staff, and promote events at an FFXIV roleplay venue: from theme nights to anniversary runs, without the coordination falling apart.",
+            url: "https://xivvenuemanager.com/guide/events",
+            publisher: { "@type": "Organization", name: "XIV Venue Manager", url: "https://xivvenuemanager.com" },
+          }),
+        }}
+      />
 
       {/* Hero */}
       <div className="xiv-hero-bg overflow-hidden border-b border-[var(--blue-008)]">
         <div className="container mx-auto px-4 py-14 max-w-3xl">
-          <Link href="/guide/getting-started" className="inline-flex items-center gap-1.5 text-sm text-muted-foreground hover:text-[var(--xiv-blue)] transition-colors mb-6">
+          <Link
+            href="/guide/getting-started"
+            className="inline-flex items-center gap-1.5 text-sm text-muted-foreground hover:text-[var(--xiv-blue)] transition-colors mb-6"
+          >
             &#8592; Getting started guide
           </Link>
           <div className="flex items-center gap-2 mb-3">
             <span className="w-[7px] h-[7px] bg-[rgba(0,180,255,0.7)] rotate-45 shadow-[0_0_10px_rgba(0,180,255,0.5)]" />
-            <span className="text-[0.72rem] font-semibold uppercase tracking-[0.14em] text-[var(--xiv-blue)]">Events</span>
+            <span className="text-[0.72rem] font-semibold uppercase tracking-[0.14em] text-[var(--xiv-blue)]">
+              Events
+            </span>
           </div>
           <h1 className="font-cinzel text-4xl font-bold tracking-wide xiv-glow-text mb-4">
             Running Events at Your FFXIV Venue
           </h1>
           <p className="text-lg text-muted-foreground">
-            Theme nights, anniversary runs, hosted competitions bring in patrons who skip regular opens. They also add a coordination layer most venue owners underestimate.
+            Theme nights, anniversary runs, hosted competitions bring in patrons who skip regular opens. They also add a
+            coordination layer most venue owners underestimate.
           </p>
         </div>
       </div>
 
       <article className="container mx-auto px-4 py-12 max-w-3xl space-y-14">
-
         {/* What venue events are */}
         <section id="what-are-events" className="space-y-4 scroll-mt-[84px]">
           <h2 className="font-cinzel text-2xl font-semibold border-b border-[rgba(0,180,255,0.2)] pb-3 tracking-wide">
             What makes a venue event different from a regular open?
           </h2>
           <p className="text-muted-foreground leading-relaxed">
-            A regular open night is your venue doing what it always does: doors up, staff on shift, patrons come and go. An event is anything built around a concept: a theme night, a DJ set, a costume competition, a venue anniversary, a seasonal celebration tied to a patch or real-world holiday.
+            A regular open night is your venue doing what it always does: doors up, staff on shift, patrons come and go.
+            An event is anything built around a concept: a theme night, a DJ set, a costume competition, a venue
+            anniversary, a seasonal celebration tied to a patch or real-world holiday.
           </p>
           <p className="text-muted-foreground leading-relaxed">
-            Events pull in patrons who skip regular opens. A patron who has never heard of your venue will show up for a themed event posted in the right Discord server. A regular Tuesday open gives them no reason to.
+            Events pull in patrons who skip regular opens. A patron who has never heard of your venue will show up for a
+            themed event posted in the right Discord server. A regular Tuesday open gives them no reason to.
           </p>
           <p className="text-muted-foreground leading-relaxed">
-            The trade-off is operational load. Events need more planning, more staff, and more promotion. The coordination manageable for a regular night gets harder when you add a guest performer, a raffle, or a competition with prizes.
+            The trade-off is operational load. Events need more planning, more staff, and more promotion. The
+            coordination manageable for a regular night gets harder when you add a guest performer, a raffle, or a
+            competition with prizes.
           </p>
         </section>
 
@@ -81,7 +105,9 @@ export default function EventsGuidePage() {
             Where event coordination breaks down
           </h2>
           <p className="text-muted-foreground leading-relaxed">
-            The announcement goes out on Partake but the Discord post has a different time. A staff member confirms then cancels the night before. The event runs, and three weeks later you have no record of attendance or whether it was worth repeating.
+            The announcement goes out on Partake but the Discord post has a different time. A staff member confirms then
+            cancels the night before. The event runs, and three weeks later you have no record of attendance or whether
+            it was worth repeating.
           </p>
           <div className="grid sm:grid-cols-2 gap-[18px]">
             {PAIN_POINTS.map(({ icon: Icon, heading, body }) => (
@@ -102,13 +128,18 @@ export default function EventsGuidePage() {
             Planning: timing and announcement
           </h2>
           <p className="text-muted-foreground leading-relaxed">
-            Announce five to seven days out. Earlier and patrons forget before the event arrives; later and they already have plans. Anniversaries and large competitions can justify two weeks, but you need follow-up posts or the first announcement gets buried.
+            Announce five to seven days out. Earlier and patrons forget before the event arrives; later and they already
+            have plans. Anniversaries and large competitions can justify two weeks, but you need follow-up posts or the
+            first announcement gets buried.
           </p>
           <p className="text-muted-foreground leading-relaxed">
-            Post in every channel your patrons use, with the same details in each. If your Partake listing says 9 PM ST and your Discord says 8 PM, someone shows up an hour early and leaves before doors open. Write the details once and copy them everywhere.
+            Post in every channel your patrons use, with the same details in each. If your Partake listing says 9 PM ST
+            and your Discord says 8 PM, someone shows up an hour early and leaves before doors open. Write the details
+            once and copy them everywhere.
           </p>
           <p className="text-muted-foreground leading-relaxed">
-            Post a reminder on the day of the event. Thirty minutes before doors, an in-game shout reaches anyone already logged in and looking for something to do.
+            Post a reminder on the day of the event. Thirty minutes before doors, an in-game shout reaches anyone
+            already logged in and looking for something to do.
           </p>
         </section>
 
@@ -118,13 +149,19 @@ export default function EventsGuidePage() {
             Staffing: what events need that regular shifts do not
           </h2>
           <p className="text-muted-foreground leading-relaxed">
-            Events need more staff than a regular open, and different roles. A normal shift runs on your usual host mix. A large event needs a dedicated competition host, extra staff at the door for queues, and someone coordinating the guest performer instead of serving patrons.
+            Events need more staff than a regular open, and different roles. A normal shift runs on your usual host mix.
+            A large event needs a dedicated competition host, extra staff at the door for queues, and someone
+            coordinating the guest performer instead of serving patrons.
           </p>
           <p className="text-muted-foreground leading-relaxed">
-            Get confirmations earlier than you expect to need them. Staff reliable on regular nights sometimes treat events as optional when they do not know what depends on them. Explicit shift assignments with a role description and a confirmation step cut last-minute gaps.
+            Get confirmations earlier than you expect to need them. Staff reliable on regular nights sometimes treat
+            events as optional when they do not know what depends on them. Explicit shift assignments with a role
+            description and a confirmation step cut last-minute gaps.
           </p>
           <p className="text-muted-foreground leading-relaxed">
-            Have one backup for each critical role. If your event host cancels the afternoon of the event and no one can step in, you either cancel or host while managing everything else. For a small gathering that is manageable. For a large anniversary run, it is a bad night.
+            Have one backup for each critical role. If your event host cancels the afternoon of the event and no one can
+            step in, you either cancel or host while managing everything else. For a small gathering that is manageable.
+            For a large anniversary run, it is a bad night.
           </p>
         </section>
 
@@ -134,13 +171,16 @@ export default function EventsGuidePage() {
             After the event: what to track and why
           </h2>
           <p className="text-muted-foreground leading-relaxed">
-            You cannot improve a theme night you have no data on: attendance headcount, revenue compared to a regular night, whether the guest performer brought anyone new.
+            You cannot improve a theme night you have no data on: attendance headcount, revenue compared to a regular
+            night, whether the guest performer brought anyone new.
           </p>
           <p className="text-muted-foreground leading-relaxed">
-            Note the date, the format, peak patron count, and the night's revenue. After three or four events you will see which formats pull well on your world and whether certain days perform better.
+            Note the date, the format, peak patron count, and the night's revenue. After three or four events you will
+            see which formats pull well on your world and whether certain days perform better.
           </p>
           <p className="text-muted-foreground leading-relaxed">
-            Track revenue for payouts too. Staff working an event shift expect a share of the night's tips. Without a record of what came in, that calculation is a guess or a dispute.
+            Track revenue for payouts too. Staff working an event shift expect a share of the night's tips. Without a
+            record of what came in, that calculation is a guess or a dispute.
           </p>
         </section>
 
@@ -150,7 +190,9 @@ export default function EventsGuidePage() {
             How XIV Venue Manager handles event coordination
           </h2>
           <p className="text-muted-foreground leading-relaxed">
-            XIV Venue Manager gives events their own scheduling layer in the same dashboard you use for regular shifts. Staff get assigned, see their role and start time, and confirm from the app. When the event starts, the plugin syncs your open status and notifies patrons in-game.
+            XIV Venue Manager gives events their own scheduling layer in the same dashboard you use for regular shifts.
+            Staff get assigned, see their role and start time, and confirm from the app. When the event starts, the
+            plugin syncs your open status and notifies patrons in-game.
           </p>
           <ul className="space-y-3 text-muted-foreground">
             {[
@@ -170,7 +212,9 @@ export default function EventsGuidePage() {
 
         {/* CTA */}
         <section className="rounded-xl border border-[rgba(0,180,255,0.2)] bg-[rgba(0,180,255,0.04)] p-8 space-y-4 text-center">
-          <h2 className="font-cinzel text-xl font-semibold tracking-wide">Plan your next event with XIV Venue Manager</h2>
+          <h2 className="font-cinzel text-xl font-semibold tracking-wide">
+            Plan your next event with XIV Venue Manager
+          </h2>
           <p className="text-[0.9rem] text-muted-foreground max-w-sm mx-auto leading-relaxed">
             Free to use. Register your venue and get the Dalamud plugin in about five minutes.
           </p>
@@ -181,15 +225,22 @@ export default function EventsGuidePage() {
                 <ArrowRight className="ml-1.5 h-4 w-4 transition-transform group-hover:translate-x-1" />
               </Link>
             </Button>
-            <Button asChild variant="outline" className="border-[var(--xiv-blue-border)] hover:bg-[var(--xiv-blue-dim)] hover:border-[var(--xiv-blue)]">
+            <Button
+              asChild
+              variant="outline"
+              className="border-[var(--xiv-blue-border)] hover:bg-[var(--xiv-blue-dim)] hover:border-[var(--xiv-blue)]"
+            >
               <Link href="/guide/staff-management">Managing staff guide</Link>
             </Button>
-            <Button asChild variant="outline" className="border-[var(--xiv-blue-border)] hover:bg-[var(--xiv-blue-dim)] hover:border-[var(--xiv-blue)]">
+            <Button
+              asChild
+              variant="outline"
+              className="border-[var(--xiv-blue-border)] hover:bg-[var(--xiv-blue-dim)] hover:border-[var(--xiv-blue)]"
+            >
               <Link href="/discover">Browse venues</Link>
             </Button>
           </div>
         </section>
-
       </article>
 
       <SiteFooter />

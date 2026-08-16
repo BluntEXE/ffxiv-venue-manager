@@ -13,7 +13,12 @@ interface VenueFollowButtonProps {
   compact?: boolean
 }
 
-export function VenueFollowButton({ venueId, isFollowing: initial, followCount: initialCount, compact }: VenueFollowButtonProps) {
+export function VenueFollowButton({
+  venueId,
+  isFollowing: initial,
+  followCount: initialCount,
+  compact,
+}: VenueFollowButtonProps) {
   const [following, setFollowing] = useState(initial)
   const [count, setCount] = useState(initialCount)
   const [loading, setLoading] = useState(false)
@@ -25,7 +30,7 @@ export function VenueFollowButton({ venueId, isFollowing: initial, followCount: 
         method: following ? "DELETE" : "POST",
       })
       setFollowing(!following)
-      setCount(c => following ? c - 1 : c + 1)
+      setCount((c) => (following ? c - 1 : c + 1))
     } catch (e) {
       toast.error(e instanceof ApiError ? e.message : "Failed to update follow status. Please try again.")
     } finally {
@@ -56,7 +61,11 @@ export function VenueFollowButton({ venueId, isFollowing: initial, followCount: 
       size="sm"
       onClick={toggle}
       disabled={loading}
-      className={following ? "bg-[var(--blue-012)] text-[var(--xiv-blue)] border border-[var(--blue-020)] hover:bg-[var(--destructive-soft)] hover:text-[var(--destructive)] hover:border-[rgba(243,139,168,0.3)]" : ""}
+      className={
+        following
+          ? "bg-[var(--blue-012)] text-[var(--xiv-blue)] border border-[var(--blue-020)] hover:bg-[var(--destructive-soft)] hover:text-[var(--destructive)] hover:border-[rgba(243,139,168,0.3)]"
+          : ""
+      }
     >
       <Heart className={`h-3.5 w-3.5 ${following ? "fill-current" : ""}`} />
       {following ? `Following · ${count}` : `Follow · ${count}`}

@@ -26,9 +26,7 @@ beforeEach(() => {
 
 describe("pluginAuthGate", () => {
   it("returns 429 without checking the API key when IP-limited", async () => {
-    vi.mocked(enforcePluginIpRateLimit).mockResolvedValueOnce(
-      new Response(null, { status: 429 }) as any
-    )
+    vi.mocked(enforcePluginIpRateLimit).mockResolvedValueOnce(new Response(null, { status: 429 }) as any)
     const result = await pluginAuthGate(makeRequest({ "x-api-key": "vm_x" }), "read")
     expect(result.ok).toBe(false)
     if (!result.ok) expect(result.response.status).toBe(429)
@@ -58,12 +56,13 @@ describe("pluginAuthGate", () => {
 
   it("returns the per-key rate-limit response when over budget", async () => {
     vi.mocked(prisma.apiKey.findFirst).mockResolvedValueOnce({
-      id: "k1", userId: "u1", venueId: null, user: { id: "u1" },
+      id: "k1",
+      userId: "u1",
+      venueId: null,
+      user: { id: "u1" },
     } as any)
     vi.mocked(prisma.membership.findMany).mockResolvedValueOnce([{ venueId: "v1" }] as any)
-    vi.mocked(enforcePluginRateLimit).mockResolvedValueOnce(
-      new Response(null, { status: 429 }) as any
-    )
+    vi.mocked(enforcePluginRateLimit).mockResolvedValueOnce(new Response(null, { status: 429 }) as any)
     const result = await pluginAuthGate(makeRequest({ "x-api-key": "vm_ok" }), "write")
     expect(result.ok).toBe(false)
     if (!result.ok) expect(result.response.status).toBe(429)
@@ -72,7 +71,10 @@ describe("pluginAuthGate", () => {
 
   it("returns ok:true with userId/venues when everything passes", async () => {
     vi.mocked(prisma.apiKey.findFirst).mockResolvedValueOnce({
-      id: "k1", userId: "u1", venueId: null, user: { id: "u1", name: "Test" },
+      id: "k1",
+      userId: "u1",
+      venueId: null,
+      user: { id: "u1", name: "Test" },
     } as any)
     vi.mocked(prisma.membership.findMany).mockResolvedValueOnce([{ venueId: "v1" }, { venueId: "v2" }] as any)
     const result = await pluginAuthGate(makeRequest({ "x-api-key": "vm_ok" }), "read")

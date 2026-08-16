@@ -12,16 +12,17 @@
 
 ## Files
 
-| File | Action |
-|------|--------|
-| `apps/web/app/api/mobile/discover/all/route.ts` | Create — new API endpoint |
-| `apps/mobile/app/(app)/discover.tsx` | Modify — add All tab, search, DC chips |
+| File                                            | Action                                 |
+| ----------------------------------------------- | -------------------------------------- |
+| `apps/web/app/api/mobile/discover/all/route.ts` | Create — new API endpoint              |
+| `apps/mobile/app/(app)/discover.tsx`            | Modify — add All tab, search, DC chips |
 
 ---
 
 ### Task 1: API route — all venues with shift status
 
 **Files:**
+
 - Create: `apps/web/app/api/mobile/discover/all/route.ts`
 
 - [ ] **Step 1: Create the route file**
@@ -97,11 +98,8 @@ export async function GET(req: NextRequest) {
       world: v.world,
       location: v.location,
       logoUrl: v.logoUrl,
-      openSince: activeShift
-        ? (activeShift.actualStart ?? activeShift.scheduledStart)
-        : null,
-      scheduledEnd:
-        activeShift?.scheduledEnd ?? tonightShift?.scheduledEnd ?? null,
+      openSince: activeShift ? (activeShift.actualStart ?? activeShift.scheduledStart) : null,
+      scheduledEnd: activeShift?.scheduledEnd ?? tonightShift?.scheduledEnd ?? null,
       staffOnShift: activeShift ? v._count.shifts : undefined,
       nextOpen: tonightShift?.scheduledStart ?? null,
     }
@@ -148,6 +146,7 @@ git commit -m "feat(api): add /api/mobile/discover/all endpoint with DC filter"
 ### Task 2: Update discover.tsx — All tab with search + DC chips
 
 **Files:**
+
 - Modify: `apps/mobile/app/(app)/discover.tsx`
 
 - [ ] **Step 1: Add `'all'` to Tab type and define DC constants**
@@ -155,25 +154,32 @@ git commit -m "feat(api): add /api/mobile/discover/all endpoint with DC filter"
 Replace the top of the file (imports + constants through the `Tab` type and `fetchVenues` function):
 
 ```typescript
-import { useState, useCallback, useEffect, useRef } from 'react'
-import { FlashList } from '@shopify/flash-list'
-import { RefreshControl, TextInput, ScrollView, StyleSheet } from 'react-native'
-import { YStack, XStack, Text, Button } from 'tamagui'
-import { useRouter } from 'expo-router'
-import { useFocusEffect } from 'expo-router'
-import { Ionicons } from '@expo/vector-icons'
-import { ScreenTop } from '@/components/ScreenContainer'
-import { VenueSkeleton } from '@/components/Skeleton'
-import { EmptyState } from '@/components/EmptyState'
-import { formatST, formatOpenSince, formatUntil } from '@/lib/server-time'
+import { useState, useCallback, useEffect, useRef } from "react"
+import { FlashList } from "@shopify/flash-list"
+import { RefreshControl, TextInput, ScrollView, StyleSheet } from "react-native"
+import { YStack, XStack, Text, Button } from "tamagui"
+import { useRouter } from "expo-router"
+import { useFocusEffect } from "expo-router"
+import { Ionicons } from "@expo/vector-icons"
+import { ScreenTop } from "@/components/ScreenContainer"
+import { VenueSkeleton } from "@/components/Skeleton"
+import { EmptyState } from "@/components/EmptyState"
+import { formatST, formatOpenSince, formatUntil } from "@/lib/server-time"
 
-const API = 'https://xivvenuemanager.com'
+const API = "https://xivvenuemanager.com"
 
 const DATA_CENTRES = [
-  'Aether', 'Crystal', 'Primal', 'Dynamis',
-  'Chaos', 'Light',
-  'Materia',
-  'Elemental', 'Gaia', 'Mana', 'Meteor',
+  "Aether",
+  "Crystal",
+  "Primal",
+  "Dynamis",
+  "Chaos",
+  "Light",
+  "Materia",
+  "Elemental",
+  "Gaia",
+  "Mana",
+  "Meteor",
 ]
 
 type Venue = {
@@ -190,25 +196,23 @@ type Venue = {
   scheduledEnd?: string | null
 }
 
-type Tab = 'open' | 'tonight' | 'all'
+type Tab = "open" | "tonight" | "all"
 
 async function fetchVenues(tab: Tab, dc?: string): Promise<Venue[]> {
-  if (tab === 'open') {
+  if (tab === "open") {
     const res = await fetch(`${API}/api/mobile/discover/open-now`)
-    if (!res.ok) throw new Error('Failed to fetch')
+    if (!res.ok) throw new Error("Failed to fetch")
     return res.json()
   }
-  if (tab === 'tonight') {
+  if (tab === "tonight") {
     const res = await fetch(`${API}/api/mobile/discover/tonight`)
-    if (!res.ok) throw new Error('Failed to fetch')
+    if (!res.ok) throw new Error("Failed to fetch")
     return res.json()
   }
   // tab === 'all'
-  const url = dc
-    ? `${API}/api/mobile/discover/all?dc=${encodeURIComponent(dc)}`
-    : `${API}/api/mobile/discover/all`
+  const url = dc ? `${API}/api/mobile/discover/all?dc=${encodeURIComponent(dc)}` : `${API}/api/mobile/discover/all`
   const res = await fetch(url)
-  if (!res.ok) throw new Error('Failed to fetch')
+  if (!res.ok) throw new Error("Failed to fetch")
   return res.json()
 }
 ```
@@ -534,6 +538,7 @@ git commit -m "feat(mobile): add All tab to Discover with name search and DC fil
 ### Task 3: Sync corpus and push
 
 **Files:**
+
 - Modify: `apps/mobile/app/(app)/discover.tsx` → copy to corpus
 
 - [ ] **Step 1: Sync updated file to corpus**

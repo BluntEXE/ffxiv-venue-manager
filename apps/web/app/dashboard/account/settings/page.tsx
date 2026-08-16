@@ -59,7 +59,10 @@ export default function AccountSettingsPage() {
         <div>
           <div className="flex items-center gap-2 mb-1.5">
             <span className="w-[7px] h-[7px] bg-[rgba(0,180,255,0.7)] rotate-45 shadow-[0_0_10px_rgba(0,180,255,0.5)] flex-shrink-0" />
-            <Link href="/dashboard/account" className="text-[0.72rem] font-semibold uppercase tracking-[0.14em] text-[var(--xiv-blue)] hover:underline flex items-center gap-1">
+            <Link
+              href="/dashboard/account"
+              className="text-[0.72rem] font-semibold uppercase tracking-[0.14em] text-[var(--xiv-blue)] hover:underline flex items-center gap-1"
+            >
               <ArrowLeft className="w-3 h-3" /> Account
             </Link>
           </div>
@@ -77,7 +80,7 @@ export default function AccountSettingsPage() {
             <label className="field-label">Display name</label>
             <input
               value={displayName}
-              onChange={e => setDisplayName(e.target.value)}
+              onChange={(e) => setDisplayName(e.target.value)}
               placeholder="Your name"
               className="w-full bg-background border border-[var(--blue-015)] rounded-[var(--radius-md)] px-[13px] py-[10px] text-[0.88rem] text-foreground outline-none focus:border-[var(--blue-035)] transition-colors"
             />

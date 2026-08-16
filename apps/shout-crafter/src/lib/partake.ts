@@ -1,6 +1,6 @@
-import type { ParsedEvent } from '../types'
+import type { ParsedEvent } from "../types"
 
-const PARTAKE_API = 'https://api.partake.gg/'
+const PARTAKE_API = "https://api.partake.gg/"
 
 const QUERY = `
   query getEvent($id: Int!) {
@@ -52,44 +52,48 @@ export function extractEventId(url: string): number | null {
 
 function parseWardPlot(location: string): string {
   // "Ward 7...Plot 5" - allows any non-alphanumeric between keyword and number
-  const match = location.match(/ward\s*[^a-zA-Z0-9]*(\d{1,2})[^a-zA-Z0-9]+plot\s*[^a-zA-Z0-9]*(\d{1,2})/i)
+  const match =
+    location.match(/ward\s*[^a-zA-Z0-9]*(\d{1,2})[^a-zA-Z0-9]+plot\s*[^a-zA-Z0-9]*(\d{1,2})/i) ??
     // "W12 / P33", "W06 P30", "W7 P58" etc.
-    ?? location.match(/\bw\s*(\d{1,2})\s*[,\s|/\-•·☆★♦]+\s*p\s*(\d{1,2})/i)
+    location.match(/\bw\s*(\d{1,2})\s*[,\s|/\-•·☆★♦]+\s*p\s*(\d{1,2})/i)
   if (match) return `W${match[1]} P${match[2]}`
   return location
 }
 
 function extractDJs(description: string | null): string {
-  if (!description) return ''
-  const text = description.replace(/!\[.*?\]\(.*?\)/g, '').trim()
-  if (!text) return ''
+  if (!description) return ""
+  const text = description.replace(/!\[.*?\]\(.*?\)/g, "").trim()
+  if (!text) return ""
 
   // Time-slot blocks: "5-7pm ST\nName\nurl" - catches names with or without DJ prefix
-  const slotNames = [...text.matchAll(/\d{1,2}(?::\d{2})?\s*(?:am|pm)?[-–]\d{1,2}(?::\d{2})?\s*(?:am|pm)?\s*(?:st)?\s*\n([^\n]+)/gi)]
-    .map(m => m[1].trim())
-    .filter(n => n && !n.startsWith('http') && n.length < 60)
+  const slotNames = [
+    ...text.matchAll(/\d{1,2}(?::\d{2})?\s*(?:am|pm)?[-–]\d{1,2}(?::\d{2})?\s*(?:am|pm)?\s*(?:st)?\s*\n([^\n]+)/gi),
+  ]
+    .map((m) => m[1].trim())
+    .filter((n) => n && !n.startsWith("http") && n.length < 60)
 
-  if (slotNames.length) return slotNames.join(', ')
+  if (slotNames.length) return slotNames.join(", ")
 
   // Fallback: lines explicitly starting with DJ
-  const djLines = text.split('\n').map(l => l.trim()).filter(l =>
-    /^[♪♫🎵]?\s*DJ\s+\w/i.test(l) && l.length < 60 && !l.startsWith('http')
-  )
-  return djLines.map(l => l.replace(/^[♪♫🎵]\s*/u, '').trim()).join(', ')
+  const djLines = text
+    .split("\n")
+    .map((l) => l.trim())
+    .filter((l) => /^[♪♫🎵]?\s*DJ\s+\w/i.test(l) && l.length < 60 && !l.startsWith("http"))
+  return djLines.map((l) => l.replace(/^[♪♫🎵]\s*/u, "").trim()).join(", ")
 }
 
 function formatTime(startsAt: string, endsAt: string): string {
   const toST = (iso: string) => {
     const d = new Date(iso)
-    return d.toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit', timeZone: 'UTC' })
+    return d.toLocaleTimeString("en-GB", { hour: "2-digit", minute: "2-digit", timeZone: "UTC" })
   }
   return `${toST(startsAt)}-${toST(endsAt)} ST`
 }
 
 export async function fetchPartakeEvent(eventId: number): Promise<ParsedEvent> {
   const res = await fetch(PARTAKE_API, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
     body: JSON.stringify({ query: QUERY, variables: { id: eventId } }),
   })
 
@@ -99,29 +103,32 @@ export async function fetchPartakeEvent(eventId: number): Promise<ParsedEvent> {
   if (json.errors?.length) throw new Error(json.errors[0].message)
 
   const ev = json.data?.event
-  if (!ev) throw new Error('Event not found')
+  if (!ev) throw new Error("Event not found")
 
   const djs = extractDJs(ev.description)
-  const teamName = ev.team?.name ?? ''
+  const teamName = ev.team?.name ?? ""
 
   // Build links: always include Partake URL, add Discord if found in description
   const partakeUrl = `partake.gg/events/${ev.id}`
   const discordMatch = ev.description?.match(/discord\.gg\/\S+/i)?.[0]
-  const links = [partakeUrl, discordMatch].filter(Boolean).join(' | ')
+  const links = [partakeUrl, discordMatch].filter(Boolean).join(" | ")
 
   // Strip venue name prefix from event title: "Ignite: Slasher Night" → "Slasher Night"
   let tagline = ev.title
   if (teamName && tagline.toLowerCase().startsWith(teamName.toLowerCase())) {
-    tagline = tagline.slice(teamName.length).replace(/^[\s:–\-|•]+/, '').trim()
+    tagline = tagline
+      .slice(teamName.length)
+      .replace(/^[\s:–\-|•]+/, "")
+      .trim()
   }
 
   return {
     venueName: teamName,
     tagline,
-    server: [ev.locationData?.dataCenter?.name, ev.locationData?.server?.name].filter(Boolean).join(' '),
-    location: parseWardPlot(ev.location ?? ''),
-    openTime: ev.startsAt ? formatTime(ev.startsAt, ev.endsAt) : '',
-    isAdult: ev.ageRating?.toLowerCase().includes('18') ?? false,
+    server: [ev.locationData?.dataCenter?.name, ev.locationData?.server?.name].filter(Boolean).join(" "),
+    location: parseWardPlot(ev.location ?? ""),
+    openTime: ev.startsAt ? formatTime(ev.startsAt, ev.endsAt) : "",
+    isAdult: ev.ageRating?.toLowerCase().includes("18") ?? false,
     ...(djs && { djs }),
     links,
   }

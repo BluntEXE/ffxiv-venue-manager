@@ -6,24 +6,24 @@
 
 Single self-hosted Linux server. Seven containers via Docker Compose:
 
-| Container | Image | Purpose |
-|---|---|---|
-| `venue-manager` | `node:20-alpine` (Next.js standalone build) | App tier |
-| `postgres` | `postgres:16` | Persistence |
-| `redis` | `redis:7-alpine` | Cache + rate limit |
-| `cron-jobs` | `alpine` + `crond` | Scheduled jobs |
-| `xiv-stats` | `node:20-alpine` | Homepage stats API |
-| `adminer` | `adminer` | DB admin UI (internal only) |
-| `static-ehno` | `nginx:alpine` | Static site at ehno.xivvenuemanager.com |
+| Container       | Image                                       | Purpose                                 |
+| --------------- | ------------------------------------------- | --------------------------------------- |
+| `venue-manager` | `node:20-alpine` (Next.js standalone build) | App tier                                |
+| `postgres`      | `postgres:16`                               | Persistence                             |
+| `redis`         | `redis:7-alpine`                            | Cache + rate limit                      |
+| `cron-jobs`     | `alpine` + `crond`                          | Scheduled jobs                          |
+| `xiv-stats`     | `node:20-alpine`                            | Homepage stats API                      |
+| `adminer`       | `adminer`                                   | DB admin UI (internal only)             |
+| `static-ehno`   | `nginx:alpine`                              | Static site at ehno.xivvenuemanager.com |
 
 Headroom snapshot (April 2026):
 
-| Resource | Used | Allocated | Headroom |
-|---|---|---|---|
-| Redis memory | 1.18 MB | 256 MB | 99.5% free |
-| Redis evicted keys (lifetime) | 0 | unbounded LRU | n/a |
-| Postgres connections | low single digits | default 100 | very high |
-| Container disk | 12 GB | 24 GB | 50% free |
+| Resource                      | Used              | Allocated     | Headroom   |
+| ----------------------------- | ----------------- | ------------- | ---------- |
+| Redis memory                  | 1.18 MB           | 256 MB        | 99.5% free |
+| Redis evicted keys (lifetime) | 0                 | unbounded LRU | n/a        |
+| Postgres connections          | low single digits | default 100   | very high  |
+| Container disk                | 12 GB             | 24 GB         | 50% free   |
 
 The scaling constraint is architectural, not infrastructure capacity.
 
@@ -38,6 +38,7 @@ The live page (`/dashboard/<venue>/live`) gets real-time patron events through `
 **Scaling boundary:** the moment the app needs a second `venue-manager` replica, the bus stops working - events emitted in replica A never reach SSE clients connected to replica B.
 
 **Migration path:** Redis pub/sub. Already provisioned. The change is roughly:
+
 - Replace `eventEmitter.emit(channel, payload)` with `redis.publish(channel, JSON.stringify(payload))`
 - Replace `eventEmitter.on(channel, fn)` with a Redis subscriber connection
 - ~50 lines, contained to `lib/sse/venue-events.ts`
@@ -50,19 +51,21 @@ Solo project, fast iteration: `prisma db push` updates the live database schema 
 
 **Why this was right early:** schema iterated multiple times per week. Authoring a migration for each iteration would have been pure tax.
 
-**Why this is wrong now:** the schema is at v19 tables. Recent changes are stable enough that an audit trail would be useful. Replaying schema state from the current `schema.prisma` works, but I can't reconstruct the *path* there from `git log`.
+**Why this is wrong now:** the schema is at v19 tables. Recent changes are stable enough that an audit trail would be useful. Replaying schema state from the current `schema.prisma` works, but I can't reconstruct the _path_ there from `git log`.
 
 **Migration path:** baseline the current production schema as a single migration, switch to `prisma migrate deploy` going forward. Documented in memory; not yet executed.
 
 ### 3. Single Redis with two namespaces
 
 `lib/redis.ts` exports one ioredis client. Both `lib/rate-limit.ts` and `lib/redis-cache.ts` import it. Keys are namespaced by manual prefix:
+
 - `rl:` for rate-limit counters (1-min TTL)
 - `cache:` for cache-aside entries (3-10 min TTL)
 
 `maxmemory 256mb` with `allkeys-lru` eviction. Persistence disabled (`--save "" --appendonly no`) because both layers are ephemeral by design.
 
 **Capacity at 1000 active users:**
+
 - Cache entries average ~5-10 KB. 1000 users × ~50 cached objects each = ~25 MB. 10% of allocation.
 - Rate-limit counters are ~50 bytes each, 1-min TTL. 1000 IPs + 1000 keys × 3 buckets each = ~150 KB. Trivial.
 
@@ -72,13 +75,13 @@ Solo project, fast iteration: `prisma db push` updates the live database schema 
 
 Per `lib/rate-limit.ts` and `lib/api/plugin-rate-limit.ts`:
 
-| Layer | Budget | Reasoning |
-|---|---|---|
-| Per-IP, plugin routes (pre-auth) | 60/min | Real plugin polls ~2/min. 60 covers shared-NAT venues with up to ~20 chars + brute-force protection. |
-| Per-key, plugin reads | 120/min | `pluginRead` budget. Real reads peak at ~10/min during active use. 120 is abuse-only territory. |
-| Per-key, plugin writes | 60/min | `pluginWrite`. Patron-visit logging during a packed event peaks at ~30/min. 60 leaves headroom. |
-| Per-IP, web routes | 200/min default | Dashboard auto-refresh + multi-panel pages. Generous. |
-| Per-IP, OAuth signin/callback | 10/min | Sign-in is sub-1/min per real user. 10 covers CSRF retries. |
+| Layer                            | Budget          | Reasoning                                                                                            |
+| -------------------------------- | --------------- | ---------------------------------------------------------------------------------------------------- |
+| Per-IP, plugin routes (pre-auth) | 60/min          | Real plugin polls ~2/min. 60 covers shared-NAT venues with up to ~20 chars + brute-force protection. |
+| Per-key, plugin reads            | 120/min         | `pluginRead` budget. Real reads peak at ~10/min during active use. 120 is abuse-only territory.      |
+| Per-key, plugin writes           | 60/min          | `pluginWrite`. Patron-visit logging during a packed event peaks at ~30/min. 60 leaves headroom.      |
+| Per-IP, web routes               | 200/min default | Dashboard auto-refresh + multi-panel pages. Generous.                                                |
+| Per-IP, OAuth signin/callback    | 10/min          | Sign-in is sub-1/min per real user. 10 covers CSRF retries.                                          |
 
 These are all configured via `budgets` in `lib/rate-limit.ts` and constants in `with-rate-limit.ts`. Adjustable per-route.
 
@@ -89,6 +92,7 @@ These are all configured via `budgets` in `lib/rate-limit.ts` and constants in `
 ### At 10x current usage (~hundreds of active venues)
 
 Probably nothing breaks. The bottleneck is likely Postgres query latency on the analytics dashboards, not infrastructure or app-tier capacity. Mitigations available:
+
 - Add indexes where `EXPLAIN ANALYZE` shows seq scans
 - Tune `cacheTTL` upward where data tolerates staleness (services, venue settings)
 - Add read replicas if read load saturates the primary
@@ -96,6 +100,7 @@ Probably nothing breaks. The bottleneck is likely Postgres query latency on the 
 ### At 100x current usage (~thousands of active venues)
 
 Architectural changes warranted:
+
 - **Replace in-process SSE bus with Redis pub/sub** (#1 above). Required to scale app tier horizontally.
 - **Switch to Prisma migrations** (#2 above). Required for any team larger than one or for change-management discipline.
 - **Promote Postgres to managed service** (e.g. RDS / managed Postgres). Backup + failover + monitoring become non-negotiable.

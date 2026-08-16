@@ -1,7 +1,7 @@
-import type { ShoutFields, TemplateId } from '../types'
-import type { SeparatorId, DecorId } from './shout-templates'
+import type { ShoutFields, TemplateId } from "../types"
+import type { SeparatorId, DecorId } from "./shout-templates"
 
-const API = 'https://xivvenuemanager.com/api/shout-crafter/shouts'
+const API = "https://xivvenuemanager.com/api/shout-crafter/shouts"
 
 export interface SavedShout {
   id: string
@@ -14,16 +14,16 @@ export interface SavedShout {
 }
 
 export async function fetchShouts(): Promise<SavedShout[]> {
-  const res = await fetch(API, { credentials: 'include' })
+  const res = await fetch(API, { credentials: "include" })
   if (!res.ok) return []
   return res.json()
 }
 
-export async function saveShout(data: Omit<SavedShout, 'id' | 'createdAt'>): Promise<SavedShout | null> {
+export async function saveShout(data: Omit<SavedShout, "id" | "createdAt">): Promise<SavedShout | null> {
   const res = await fetch(API, {
-    method: 'POST',
-    credentials: 'include',
-    headers: { 'Content-Type': 'application/json' },
+    method: "POST",
+    credentials: "include",
+    headers: { "Content-Type": "application/json" },
     body: JSON.stringify(data),
   })
   if (!res.ok) return null
@@ -31,6 +31,6 @@ export async function saveShout(data: Omit<SavedShout, 'id' | 'createdAt'>): Pro
 }
 
 export async function deleteShout(id: string): Promise<boolean> {
-  const res = await fetch(`${API}/${id}`, { method: 'DELETE', credentials: 'include' })
+  const res = await fetch(`${API}/${id}`, { method: "DELETE", credentials: "include" })
   return res.ok
 }

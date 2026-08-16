@@ -30,12 +30,14 @@ export async function GET() {
     orderBy: { name: "asc" },
   })
 
-  return cors(NextResponse.json({
-    user: {
-      id: session.user.id,
-      name: session.user.name,
-      image: session.user.image,
-    },
-    venues,
-  }))
+  return cors(
+    NextResponse.json({
+      user: {
+        id: session.user.id,
+        name: session.user.name,
+        image: session.user.image,
+      },
+      venues,
+    })
+  )
 }

@@ -34,6 +34,7 @@ The venue manager now uses a **Discord-only authentication** system with **uniqu
 ### Database Schema Changes
 
 Added to `Membership` model:
+
 - `userId`: Now nullable (until invite is accepted)
 - `status`: `"pending"` | `"active"` | `"inactive"`
 - `inviteToken`: Unique token for the invite link
@@ -45,16 +46,19 @@ Added to `Membership` model:
 ### API Endpoints
 
 **POST `/api/venues/[slug]/staff/invite`**
+
 - Creates pending membership with unique token
 - Returns invite URL
 - Requires OWNER or MANAGER permission
 
 **GET `/api/invites/[token]`**
+
 - Fetches invite details for display
 - Checks if valid and not expired
 - Public endpoint (no auth required)
 
 **POST `/api/invites/[token]/accept`**
+
 - Links Discord account to pending membership
 - Updates status to "active"
 - Sends Discord webhook notification (if configured)
@@ -63,12 +67,14 @@ Added to `Membership` model:
 ### Pages
 
 **`/dashboard/[slug]/staff`**
+
 - Shows active staff members
 - Shows pending invites
 - Generate new invite links
 - **No email displays**
 
 **`/invite/[token]`**
+
 - Public invite acceptance page
 - Shows invite details
 - Discord sign-in button
@@ -79,22 +85,26 @@ Added to `Membership` model:
 ## Security Features
 
 ### Token Security
+
 - Uses `nanoid(32)` for cryptographically strong tokens
 - URL-safe characters only
 - Unique constraint in database
 
 ### Expiration
+
 - Invites expire after 7 days
 - Cannot be accepted after expiration
 - Expired invites shown as error
 
 ### Validation
+
 - Token must be valid and not expired
 - User cannot already be a member
 - Invite can only be used once
 - Token cleared after acceptance
 
 ### Discord Webhook
+
 - Sends notification when staff joins
 - Includes staff name and role
 - Only if webhook is configured and enabled
@@ -104,12 +114,14 @@ Added to `Membership` model:
 ## Email Removal
 
 All email references removed from:
+
 - `components/user-menu.tsx` - User dropdown menu
 - `app/dashboard/page.tsx` - Welcome message
 - `app/dashboard/[slug]/staff/page.tsx` - Staff list
 - `app/dashboard/[slug]/staff/[membershipId]/page.tsx` - Staff details
 
 Email field in User model is now:
+
 - Optional (`email?`)
 - Not displayed anywhere in UI
 - Not used for authentication
@@ -122,6 +134,7 @@ Email field in User model is now:
 ### Scenario: Adding a New Bartender
 
 1. **Venue Owner** (Alice):
+
    ```
    - Goes to /dashboard/moonshadow-lounge/staff
    - Clicks "Invite Staff"
@@ -131,6 +144,7 @@ Email field in User model is now:
    ```
 
 2. **New Staff Member** (Bob):
+
    ```
    - Clicks invite link
    - Sees: "Alice has invited you to join Moonshadow Lounge as staff"
@@ -170,6 +184,7 @@ npx prisma db push --accept-data-loss
 ```
 
 This will:
+
 - Make `userId` nullable in memberships
 - Add invite token fields
 - Add unique constraint on inviteToken
@@ -180,6 +195,7 @@ This will:
 ### 2. Install Dependencies
 
 Already installed:
+
 - `nanoid` - For generating secure tokens
 
 ### 3. Test the Flow
@@ -199,6 +215,7 @@ Already installed:
 ### Discord OAuth
 
 Ensure Discord OAuth callback URLs include:
+
 ```
 http://localhost:3000/api/auth/callback/discord
 https://your-domain.com/api/auth/callback/discord
@@ -207,6 +224,7 @@ https://your-domain.com/api/auth/callback/discord
 ### Environment Variables
 
 Required:
+
 ```env
 DISCORD_CLIENT_ID=your_client_id
 DISCORD_CLIENT_SECRET=your_client_secret
@@ -220,6 +238,7 @@ DATABASE_URL=your_database_url
 ## Features
 
 ### ✅ Implemented
+
 - Discord-only authentication
 - Unique invite link generation
 - Invite expiration (7 days)
@@ -231,6 +250,7 @@ DATABASE_URL=your_database_url
 - One-time use invites
 
 ### 🚫 Not Implemented
+
 - Invite revocation (can add later)
 - Custom expiration times (fixed at 7 days)
 - Bulk invites
@@ -242,20 +262,24 @@ DATABASE_URL=your_database_url
 ## Troubleshooting
 
 ### "Invalid or expired invite"
+
 - Invite may have expired (>7 days old)
 - Token may have been used already
 - Double-check the full URL was copied
 
 ### "You are already a member"
+
 - User's Discord account already linked to venue
 - They need to leave first before accepting new invite
 
 ### "Database connection error"
+
 - Run `npx prisma db push --accept-data-loss` first
 - Check DATABASE_URL is correct
 - Verify Supabase project is not paused
 
 ### Invite not showing in pending list
+
 - Refresh the page
 - Check invite was created successfully
 - Look in database: `SELECT * FROM memberships WHERE status='pending'`
@@ -275,6 +299,7 @@ DATABASE_URL=your_database_url
 ## Future Enhancements
 
 Potential improvements:
+
 - Bulk invite generation
 - Invite revocation
 - Custom expiration times

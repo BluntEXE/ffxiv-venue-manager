@@ -77,10 +77,7 @@ export const PUT = withRateLimit<{ params: Promise<{ venueId: string }> }>(
       const resolved = await resolveVenueAndMembership(venueId, session.user.id)
       if ("error" in resolved) return resolved.error
       if (!["OWNER", "MANAGER"].includes(resolved.membership.role)) {
-        return NextResponse.json(
-          { error: "Only owners and managers can change pot payroll settings" },
-          { status: 403 }
-        )
+        return NextResponse.json({ error: "Only owners and managers can change pot payroll settings" }, { status: 403 })
       }
 
       const body = await request.json()
@@ -95,10 +92,7 @@ export const PUT = withRateLimit<{ params: Promise<{ venueId: string }> }>(
       return NextResponse.json({ settings: { ...settings, taxPercent: Number(settings.taxPercent) } })
     } catch (error) {
       if (error instanceof z.ZodError) {
-        return NextResponse.json(
-          { error: "Validation error", details: error.issues },
-          { status: 400 }
-        )
+        return NextResponse.json({ error: "Validation error", details: error.issues }, { status: 400 })
       }
       console.error("Error updating pot settings:", error)
       return NextResponse.json({ error: "Internal server error" }, { status: 500 })

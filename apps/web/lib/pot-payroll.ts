@@ -109,9 +109,7 @@ export function computePotDistribution(
 
   const recipientCount = recipientMembershipIds.length
   const perPersonShare =
-    recipientCount > 0
-      ? potTotal.dividedBy(recipientCount).toDecimalPlaces(0, Decimal.ROUND_DOWN)
-      : new Decimal(0)
+    recipientCount > 0 ? potTotal.dividedBy(recipientCount).toDecimalPlaces(0, Decimal.ROUND_DOWN) : new Decimal(0)
 
   return {
     regularSales,

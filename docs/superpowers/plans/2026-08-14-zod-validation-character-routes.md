@@ -21,13 +21,14 @@
 1. `apps/web/app/api/user-characters/route.ts:54-63` — `characterName`/`world` are trimmed then only truthy-checked (`if (!characterName || !world)`). No length cap on either — a malicious or buggy client could send a multi-kilobyte `characterName` straight into the `UserCharacter` table, which is used downstream by `logPatronVisit`'s dedupe query and the staff/patron classification join.
 2. `apps/web/app/api/plugin/characters/route.ts:39-46` — identical pattern to #1 (this route's own doc comment describes itself as the plugin-API-key counterpart to `user-characters`), same unbounded-string gap.
 3. `apps/web/app/api/plugin/patron-visits/route.ts:49` — **real logic bug**: the required-fields check is `if (!venueId || !characterName || !action || !timestamp)` — `world` is silently excluded from the check despite `PatronVisitPayload` typing it as a required `string`. An omitted `world` flows through as `undefined` into `logPatronVisit`'s dedupe query (`prisma.patronLog.findFirst({ where: { venueId, characterName, world: data.world, ... } })`) — Prisma treats a `where` field set to `undefined` as "don't filter on this", so the dedupe lookup silently stops scoping by world, and a character name that exists on two different worlds at the same venue could dedupe against the wrong world's last-known state. Also unbounded `characterName` (same class as #1/#2), an unvalidated `action` field (typed as `'enter' | 'leave' | 'present'` in the interface but never checked against that enum at runtime — any string passes through to `logPatronVisit`, which only special-cases exact `"ENTER"`/`"PRESENT"` after `.toUpperCase()` and treats everything else, including typos, as a LEAVE), and an unvalidated `timestamp` (passed straight into `new Date(timestamp)` with no format check — an unparseable string produces `Invalid Date`, which Prisma will reject at insert with an opaque error caught by the generic 500 handler instead of a clear 400).
-4. `apps/web/app/api/plugin/patron-visits/route.ts:11-17,46,65-71` — `countChange` is optional in the payload and, if the caller supplies it, is forwarded verbatim to `logPatronVisit` (`countChange,` at line 70), which uses it as-is (`data.countChange ?? (isEnter ? 1 : -1)`) instead of always deriving it from `action`. The function's own doc comment states *"The Dalamud plugin's request model has no `countChange` field, so `data.countChange` is always undefined for plugin-sourced logs. Derive it from action instead of trusting the caller"* — but the route code doesn't actually enforce that; a caller that does supply `countChange` (e.g. `999999`) has it written straight into the `PatronLog.countChange` column, which venue analytics (peak patrons, attendance-by-hour, totals) sums directly. Confirmed the real plugin client (`~/VenueManager/VenueManager/XIVAppPatronApi.cs:16-29`) never sends this field — it's purely an unvalidated attacker-facing surface today.
+4. `apps/web/app/api/plugin/patron-visits/route.ts:11-17,46,65-71` — `countChange` is optional in the payload and, if the caller supplies it, is forwarded verbatim to `logPatronVisit` (`countChange,` at line 70), which uses it as-is (`data.countChange ?? (isEnter ? 1 : -1)`) instead of always deriving it from `action`. The function's own doc comment states _"The Dalamud plugin's request model has no `countChange` field, so `data.countChange` is always undefined for plugin-sourced logs. Derive it from action instead of trusting the caller"_ — but the route code doesn't actually enforce that; a caller that does supply `countChange` (e.g. `999999`) has it written straight into the `PatronLog.countChange` column, which venue analytics (peak patrons, attendance-by-hour, totals) sums directly. Confirmed the real plugin client (`~/VenueManager/VenueManager/XIVAppPatronApi.cs:16-29`) never sends this field — it's purely an unvalidated attacker-facing surface today.
 
 **Confirmed plugin request shapes** (read from `~/VenueManager/VenueManager/XIVAppPatronApi.cs` and `Plugin.cs` during planning, 2026-08-14):
+
 - `timestamp` is always sent as `DateTime.UtcNow.ToString("yyyy-MM-ddTHH:mm:ssZ")` — e.g. `"2026-08-14T06:31:12Z"`. Zod's `z.string().datetime()` (already in the registry as `validators.datetime`) accepts this: default precision is "any number of fractional-second digits, including zero", and it requires the literal `Z` suffix which the plugin always sends.
 - `action` is always sent as lowercase `"enter"` or `"leave"` (`Plugin.cs:1407,1418,1461`) in current usage; `"present"` appears in the TS interface's documented union and is kept in the enum for forward-compatibility (matches existing interface, not a new value being introduced).
 
-**No route-handler-level test precedent exists in this codebase** (same finding as Increments 1-2 — `app/api/**/*.test.ts` is empty). This plan's tests (Task 1) cover schema *reuse* at the route level isn't separately unit-tested since `characterName`/`world` already have dedicated tests from Increment 2 — Task 1 just confirms no new registry fields are needed. Task 4 covers manual verification: `user-characters` is session-authenticated (browser tab), `plugin/characters` and `plugin/patron-visits` are `x-api-key`-authenticated (same curl-with-a-real-key approach Increment 2 used, against the same disposable `TestingOut`/slug `t` test venue).
+**No route-handler-level test precedent exists in this codebase** (same finding as Increments 1-2 — `app/api/**/*.test.ts` is empty). This plan's tests (Task 1) cover schema _reuse_ at the route level isn't separately unit-tested since `characterName`/`world` already have dedicated tests from Increment 2 — Task 1 just confirms no new registry fields are needed. Task 4 covers manual verification: `user-characters` is session-authenticated (browser tab), `plugin/characters` and `plugin/patron-visits` are `x-api-key`-authenticated (same curl-with-a-real-key approach Increment 2 used, against the same disposable `TestingOut`/slug `t` test venue).
 
 - [ ] **Step 1: No action needed** — confirmed above.
 
@@ -52,6 +53,7 @@ Expected: PASS (all existing tests, including the Increment-2-added `characterNa
 ## Task 2: Migrate `app/api/user-characters/route.ts`
 
 **Files:**
+
 - Modify: `apps/web/app/api/user-characters/route.ts`
 
 - [ ] **Step 1: Replace the manual truthy checks with a zod schema**
@@ -156,6 +158,7 @@ git commit -m "feat(web): validate user-characters POST body with shared charact
 ## Task 3: Migrate `app/api/plugin/characters/route.ts`
 
 **Files:**
+
 - Modify: `apps/web/app/api/plugin/characters/route.ts`
 
 - [ ] **Step 1: Replace the manual truthy checks with a zod schema**
@@ -170,19 +173,16 @@ import { enforcePluginRateLimit, enforcePluginIpRateLimit } from "@/lib/api/plug
 ```
 
 ```typescript
-    const body = await request.json().catch(() => null)
-    if (!body) {
-      return NextResponse.json({ error: "Invalid JSON body" }, { status: 400 })
-    }
+const body = await request.json().catch(() => null)
+if (!body) {
+  return NextResponse.json({ error: "Invalid JSON body" }, { status: 400 })
+}
 
-    const characterName = (body.characterName ?? "").trim()
-    const world = (body.world ?? "").trim()
-    if (!characterName || !world) {
-      return NextResponse.json(
-        { error: "characterName and world are required" },
-        { status: 400 }
-      )
-    }
+const characterName = (body.characterName ?? "").trim()
+const world = (body.world ?? "").trim()
+if (!characterName || !world) {
+  return NextResponse.json({ error: "characterName and world are required" }, { status: 400 })
+}
 ```
 
 New:
@@ -202,23 +202,23 @@ const linkCharacterSchema = z.object({
 ```
 
 ```typescript
-    const body = await request.json().catch(() => null)
-    if (!body) {
-      return NextResponse.json({ error: "Invalid JSON body" }, { status: 400 })
-    }
+const body = await request.json().catch(() => null)
+if (!body) {
+  return NextResponse.json({ error: "Invalid JSON body" }, { status: 400 })
+}
 
-    let characterName: string
-    let world: string
-    try {
-      const parsed = linkCharacterSchema.parse(body)
-      characterName = parsed.characterName.trim()
-      world = parsed.world.trim()
-    } catch (error) {
-      if (error instanceof z.ZodError) {
-        return NextResponse.json({ error: "Validation error", details: error.issues }, { status: 400 })
-      }
-      throw error
-    }
+let characterName: string
+let world: string
+try {
+  const parsed = linkCharacterSchema.parse(body)
+  characterName = parsed.characterName.trim()
+  world = parsed.world.trim()
+} catch (error) {
+  if (error instanceof z.ZodError) {
+    return NextResponse.json({ error: "Validation error", details: error.issues }, { status: 400 })
+  }
+  throw error
+}
 ```
 
 The existing outer `try { ... } catch (error) { console.error(...); return 500 }` around the whole handler body is unchanged — the new inner try/catch for the zod parse sits inside it, and its `throw error` re-throw (for the non-ZodError case, which shouldn't happen here but keeps the pattern uniform with Task 2) is caught by that outer catch same as before.
@@ -241,6 +241,7 @@ git commit -m "feat(web): validate plugin/characters POST body with shared chara
 ## Task 4: Migrate `app/api/plugin/patron-visits/route.ts`
 
 **Files:**
+
 - Modify: `apps/web/app/api/plugin/patron-visits/route.ts`
 
 - [ ] **Step 1: Add a local schema covering all 5 body fields, replace the manual check, and stop trusting client-supplied `countChange`**
@@ -248,13 +249,13 @@ git commit -m "feat(web): validate plugin/characters POST body with shared chara
 Current (`apps/web/app/api/plugin/patron-visits/route.ts:1-18, 45-54`):
 
 ```typescript
-import { NextRequest, NextResponse } from 'next/server'
-import { validateApiKey, checkPermission, logPatronVisit, getPatronVisits } from '@/lib/api/plugin-auth'
-import { enforcePluginRateLimit, enforcePluginIpRateLimit } from '@/lib/api/plugin-rate-limit'
-import { venueEventBus } from '@/lib/sse/venue-events'
-import { nanoid } from 'nanoid'
-import { prisma } from '@/lib/prisma'
-import { postVenueGraduation, postPatronVisitXp } from '@/lib/discord-feed'
+import { NextRequest, NextResponse } from "next/server"
+import { validateApiKey, checkPermission, logPatronVisit, getPatronVisits } from "@/lib/api/plugin-auth"
+import { enforcePluginRateLimit, enforcePluginIpRateLimit } from "@/lib/api/plugin-rate-limit"
+import { venueEventBus } from "@/lib/sse/venue-events"
+import { nanoid } from "nanoid"
+import { prisma } from "@/lib/prisma"
+import { postVenueGraduation, postPatronVisitXp } from "@/lib/discord-feed"
 
 const GRADUATION_MILESTONES = [100, 500, 1000]
 
@@ -262,45 +263,45 @@ interface PatronVisitPayload {
   venueId: string
   characterName: string
   world: string
-  action: 'enter' | 'leave' | 'present'
+  action: "enter" | "leave" | "present"
   timestamp: string
   countChange?: number
 }
 ```
 
 ```typescript
-    const body: PatronVisitPayload = await request.json()
-    const { venueId, characterName, world, action, timestamp, countChange } = body
-    
-    // Validate required fields
-    if (!venueId || !characterName || !action || !timestamp) {
-      return NextResponse.json(
-        { error: 'Missing required fields: venueId, characterName, action, timestamp' },
-        { status: 400 }
-      )
-    }
+const body: PatronVisitPayload = await request.json()
+const { venueId, characterName, world, action, timestamp, countChange } = body
+
+// Validate required fields
+if (!venueId || !characterName || !action || !timestamp) {
+  return NextResponse.json(
+    { error: "Missing required fields: venueId, characterName, action, timestamp" },
+    { status: 400 }
+  )
+}
 ```
 
 New:
 
 ```typescript
-import { NextRequest, NextResponse } from 'next/server'
-import { z } from 'zod'
-import { validateApiKey, checkPermission, logPatronVisit, getPatronVisits } from '@/lib/api/plugin-auth'
-import { enforcePluginRateLimit, enforcePluginIpRateLimit } from '@/lib/api/plugin-rate-limit'
-import { venueEventBus } from '@/lib/sse/venue-events'
-import { nanoid } from 'nanoid'
-import { prisma } from '@/lib/prisma'
-import { postVenueGraduation, postPatronVisitXp } from '@/lib/discord-feed'
-import { validators } from '@/lib/validation'
+import { NextRequest, NextResponse } from "next/server"
+import { z } from "zod"
+import { validateApiKey, checkPermission, logPatronVisit, getPatronVisits } from "@/lib/api/plugin-auth"
+import { enforcePluginRateLimit, enforcePluginIpRateLimit } from "@/lib/api/plugin-rate-limit"
+import { venueEventBus } from "@/lib/sse/venue-events"
+import { nanoid } from "nanoid"
+import { prisma } from "@/lib/prisma"
+import { postVenueGraduation, postPatronVisitXp } from "@/lib/discord-feed"
+import { validators } from "@/lib/validation"
 
 const GRADUATION_MILESTONES = [100, 500, 1000]
 
 const patronVisitSchema = z.object({
-  venueId: z.string().min(1, 'venueId is required'),
+  venueId: z.string().min(1, "venueId is required"),
   characterName: validators.characterName,
   world: validators.world,
-  action: z.enum(['enter', 'leave', 'present'], { message: "action must be one of: 'enter', 'leave', 'present'" }),
+  action: z.enum(["enter", "leave", "present"], { message: "action must be one of: 'enter', 'leave', 'present'" }),
   timestamp: validators.datetime,
 })
 ```
@@ -308,21 +309,21 @@ const patronVisitSchema = z.object({
 Note `countChange` is deliberately dropped from the schema entirely, not just bounded — the function's own doc comment (`lib/api/plugin-auth.ts`, `logPatronVisit`) already states the real plugin client never sends it and that it should always be derived from `action`. Task Step 3 below stops forwarding it so the code actually matches that documented intent instead of silently accepting a client-supplied override.
 
 ```typescript
-    const body = await request.json()
-    let venueId: string, characterName: string, world: string, action: 'enter' | 'leave' | 'present', timestamp: string
-    try {
-      const parsed = patronVisitSchema.parse(body)
-      venueId = parsed.venueId
-      characterName = parsed.characterName
-      world = parsed.world
-      action = parsed.action
-      timestamp = parsed.timestamp
-    } catch (error) {
-      if (error instanceof z.ZodError) {
-        return NextResponse.json({ error: 'Validation error', details: error.issues }, { status: 400 })
-      }
-      throw error
-    }
+const body = await request.json()
+let venueId: string, characterName: string, world: string, action: "enter" | "leave" | "present", timestamp: string
+try {
+  const parsed = patronVisitSchema.parse(body)
+  venueId = parsed.venueId
+  characterName = parsed.characterName
+  world = parsed.world
+  action = parsed.action
+  timestamp = parsed.timestamp
+} catch (error) {
+  if (error instanceof z.ZodError) {
+    return NextResponse.json({ error: "Validation error", details: error.issues }, { status: 400 })
+  }
+  throw error
+}
 ```
 
 - [ ] **Step 2: Remove the now-dead `PatronVisitPayload` interface**
@@ -334,28 +335,28 @@ It's fully superseded by `patronVisitSchema` — delete the `interface PatronVis
 Current (`apps/web/app/api/plugin/patron-visits/route.ts:65-73`, after the required-fields check and permission check):
 
 ```typescript
-    const result = await logPatronVisit({
-      venueId,
-      characterName,
-      world,
-      action,
-      countChange,
-      timestamp: new Date(timestamp),
-      loggedBy: auth.userId
-    })
+const result = await logPatronVisit({
+  venueId,
+  characterName,
+  world,
+  action,
+  countChange,
+  timestamp: new Date(timestamp),
+  loggedBy: auth.userId,
+})
 ```
 
 New (drop the `countChange` line — `logPatronVisit` already derives it correctly from `action` when its own `countChange` param is `undefined`, per that function's existing `data.countChange ?? (isEnter ? 1 : -1)` line, unchanged in this plan):
 
 ```typescript
-    const result = await logPatronVisit({
-      venueId,
-      characterName,
-      world,
-      action,
-      timestamp: new Date(timestamp),
-      loggedBy: auth.userId
-    })
+const result = await logPatronVisit({
+  venueId,
+  characterName,
+  world,
+  action,
+  timestamp: new Date(timestamp),
+  loggedBy: auth.userId,
+})
 ```
 
 - [ ] **Step 4: Typecheck**
@@ -388,6 +389,7 @@ cd apps/web && npx vitest run && npx tsc --noEmit && pnpm build
 - [ ] **Step 2: Manual verification — `user-characters` (session-authenticated, browser)**
 
 Sign in to `https://xivvenuemanager.com` in a browser tab with any real account, go to account/character settings (wherever the "link a character" form lives), and:
+
 1. Submit a normal character name + world → should still succeed exactly as before (regression check).
 2. If the form allows typing 41+ characters into the name field (may be capped client-side already), submitting should now 400 with the "Character name too long" message instead of silently truncating server-side or failing deeper in the stack.
 

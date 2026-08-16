@@ -44,7 +44,7 @@ for events).
 New client component, `apps/web/components/shifts-calendar.tsx`, structurally mirroring
 `EventsCalendar` (month grid, prev/next/today nav) with two differences:
 
-**Cell content** — each day shows only the *viewing user's own* shift chip(s) (time + role,
+**Cell content** — each day shows only the _viewing user's own_ shift chip(s) (time + role,
 color-coded to the existing Scheduled/Active/Missed legend from the week grid). For
 managers/owners, a day that has venue shifts they don't personally work still gets a small
 dot/count indicator in the corner — without it, a manager's day off shows an empty cell with
@@ -65,6 +65,7 @@ available everywhere else in the app.
 
 **Manager/Owner:** the full venue-wide shift list for that date, one row per shift, matching
 the existing weekly-grid row shape:
+
 - Staff avatar + name, time chip, status badge
 - `ClockShiftButton` (clock in/out on behalf of staff, as today's Actions section already
   allows)

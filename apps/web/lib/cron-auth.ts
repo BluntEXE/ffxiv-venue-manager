@@ -9,10 +9,7 @@ export function verifyCronAuth(request: Request): NextResponse | null {
   const cronSecret = process.env.CRON_SECRET
   if (!cronSecret) {
     console.error("CRON_SECRET not configured")
-    return NextResponse.json(
-      { error: "Server misconfiguration" },
-      { status: 500 }
-    )
+    return NextResponse.json({ error: "Server misconfiguration" }, { status: 500 })
   }
 
   const authHeader = request.headers.get("authorization") ?? ""

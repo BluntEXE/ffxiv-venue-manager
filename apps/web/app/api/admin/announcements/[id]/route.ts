@@ -17,7 +17,7 @@ export const DELETE = withRateLimit<{ params: Promise<{ id: string }> }>(
   async (request, context) => {
     try {
       const session = await getServerSession(authOptions)
-      if (!await requireAdmin(session)) {
+      if (!(await requireAdmin(session))) {
         return NextResponse.json({ error: "Forbidden" }, { status: 403 })
       }
 

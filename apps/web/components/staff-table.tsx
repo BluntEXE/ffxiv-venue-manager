@@ -7,7 +7,13 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
-import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuTrigger } from "@/components/ui/dropdown-menu"
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu"
 import { ChevronDown, Check, Pencil, X } from "lucide-react"
 import { resolveDisplayName } from "@/lib/display-name"
 import { DataTable } from "@/components/ui/data-table"
@@ -20,7 +26,13 @@ export type StaffMember = {
   joinedAt: string
   isOnShift: boolean
   nickname: string | null
-  user: { id: string; name: string | null; displayName: string | null; image: string | null; characterName: string | null } | null
+  user: {
+    id: string
+    name: string | null
+    displayName: string | null
+    image: string | null
+    characterName: string | null
+  } | null
   venueId: string
 }
 
@@ -36,9 +48,9 @@ function memberDisplayName(member: Pick<StaffMember, "nickname" | "user">): stri
 const ROLE_ORDER: Record<string, number> = { OWNER: 0, MANAGER: 1, STAFF: 2 }
 
 const rolePill: Record<string, string> = {
-  OWNER:   "bg-[rgba(249,226,175,0.10)] text-[var(--warning)] border border-[rgba(249,226,175,0.28)]",
+  OWNER: "bg-[rgba(249,226,175,0.10)] text-[var(--warning)] border border-[rgba(249,226,175,0.28)]",
   MANAGER: "bg-[rgba(0,180,255,0.10)] text-[var(--xiv-blue)] border border-[rgba(0,180,255,0.28)]",
-  STAFF:   "bg-[rgba(108,112,134,0.12)] text-muted-foreground border border-[var(--border)]",
+  STAFF: "bg-[rgba(108,112,134,0.12)] text-muted-foreground border border-[var(--border)]",
 }
 
 type Filter = "all" | "owner" | "manager" | "staff"
@@ -69,7 +81,7 @@ export function StaffTable({
         body: JSON.stringify({ nickname: trimmed }),
       })
       if (res.ok) {
-        setMembers(prev => prev.map(m => m.id === member.id ? { ...m, nickname: trimmed } : m))
+        setMembers((prev) => prev.map((m) => (m.id === member.id ? { ...m, nickname: trimmed } : m)))
       }
     } finally {
       setSaving(false)
@@ -83,23 +95,23 @@ export function StaffTable({
   }
 
   // Extract unique custom role names for additional filter tabs
-  const customRoleNames = Array.from(
-    new Set(members.map(m => m.customRole?.name).filter(Boolean) as string[])
-  ).sort()
+  const customRoleNames = Array.from(new Set(members.map((m) => m.customRole?.name).filter(Boolean) as string[])).sort()
 
   const counts = {
-    all:     members.length,
-    owner:   members.filter(m => m.role === "OWNER").length,
-    manager: members.filter(m => m.role === "MANAGER").length,
-    staff:   members.filter(m => m.role === "STAFF").length,
-    ...Object.fromEntries(customRoleNames.map(name => [name, members.filter(m => m.customRole?.name === name).length])),
+    all: members.length,
+    owner: members.filter((m) => m.role === "OWNER").length,
+    manager: members.filter((m) => m.role === "MANAGER").length,
+    staff: members.filter((m) => m.role === "STAFF").length,
+    ...Object.fromEntries(
+      customRoleNames.map((name) => [name, members.filter((m) => m.customRole?.name === name).length])
+    ),
   }
 
   const visible = members
-    .filter(m => {
-      if (filter === "owner"   && m.role !== "OWNER")   return false
+    .filter((m) => {
+      if (filter === "owner" && m.role !== "OWNER") return false
       if (filter === "manager" && m.role !== "MANAGER") return false
-      if (filter === "staff"   && m.role !== "STAFF")   return false
+      if (filter === "staff" && m.role !== "STAFF") return false
       // Custom role filter
       if (customRoleNames.includes(filter) && m.customRole?.name !== filter) return false
       if (search) {
@@ -107,23 +119,26 @@ export function StaffTable({
         // Match on every name this member could be known by, not just the
         // one that currently wins resolveDisplayName's priority order -
         // a character name shouldn't shadow a nickname/displayName search.
-        if (!(m.user?.characterName ?? "").toLowerCase().includes(q) &&
-            !(m.nickname ?? "").toLowerCase().includes(q) &&
-            !(m.user?.displayName ?? "").toLowerCase().includes(q) &&
-            !(m.user?.name ?? "").toLowerCase().includes(q) &&
-            !(m.customRole?.name ?? "").toLowerCase().includes(q)) return false
+        if (
+          !(m.user?.characterName ?? "").toLowerCase().includes(q) &&
+          !(m.nickname ?? "").toLowerCase().includes(q) &&
+          !(m.user?.displayName ?? "").toLowerCase().includes(q) &&
+          !(m.user?.name ?? "").toLowerCase().includes(q) &&
+          !(m.customRole?.name ?? "").toLowerCase().includes(q)
+        )
+          return false
       }
       return true
     })
     .sort((a, b) => ROLE_ORDER[a.role] - ROLE_ORDER[b.role])
 
   const tabs: { key: Filter; label: string }[] = [
-    { key: "all",     label: "All" },
-    { key: "owner",   label: "Owners" },
+    { key: "all", label: "All" },
+    { key: "owner", label: "Owners" },
     { key: "manager", label: "Managers" },
-    { key: "staff",   label: "Staff" },
+    { key: "staff", label: "Staff" },
     // Add custom role tabs matching prototype (Hosts, Bar, DJ, etc.)
-    ...customRoleNames.map(name => ({ key: name as Filter, label: name })),
+    ...customRoleNames.map((name) => ({ key: name as Filter, label: name })),
   ]
 
   return (
@@ -133,55 +148,53 @@ export function StaffTable({
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
             <button className="flex items-center gap-2 h-9 px-3 rounded-[var(--radius-md)] border border-[var(--blue-015)] bg-[var(--card)] text-sm font-medium text-foreground hover:border-[var(--blue-035)] hover:bg-[var(--blue-007)] transition-colors flex-shrink-0">
-              <span className="max-w-[120px] truncate">
-                {tabs.find(t => t.key === filter)?.label ?? "All"}
-              </span>
+              <span className="max-w-[120px] truncate">{tabs.find((t) => t.key === filter)?.label ?? "All"}</span>
               <span className="text-[0.68rem] text-[var(--fg-faint)]">{counts[filter] ?? 0}</span>
               <ChevronDown className="w-3.5 h-3.5 text-[var(--fg-faint)] flex-shrink-0" />
             </button>
           </DropdownMenuTrigger>
-          <DropdownMenuContent
-            align="start"
-            className="w-[200px]"
-          >
+          <DropdownMenuContent align="start" className="w-[200px]">
             {/* System roles */}
-            {tabs.filter(t => ["all","owner","manager","staff"].includes(t.key)).map(({ key, label }) => (
-              <DropdownMenuItem
-                key={key}
-                onClick={() => setFilter(key)}
-                className={`flex items-center justify-between gap-2 cursor-pointer ${filter === key ? "text-[var(--xiv-blue)]" : ""}`}
-              >
-                <span>{label}</span>
-                <span className="text-[0.68rem] text-[var(--fg-faint)]">{counts[key] ?? 0}</span>
-                {filter === key && <Check className="w-3.5 h-3.5 flex-shrink-0" />}
-              </DropdownMenuItem>
-            ))}
+            {tabs
+              .filter((t) => ["all", "owner", "manager", "staff"].includes(t.key))
+              .map(({ key, label }) => (
+                <DropdownMenuItem
+                  key={key}
+                  onClick={() => setFilter(key)}
+                  className={`flex items-center justify-between gap-2 cursor-pointer ${filter === key ? "text-[var(--xiv-blue)]" : ""}`}
+                >
+                  <span>{label}</span>
+                  <span className="text-[0.68rem] text-[var(--fg-faint)]">{counts[key] ?? 0}</span>
+                  {filter === key && <Check className="w-3.5 h-3.5 flex-shrink-0" />}
+                </DropdownMenuItem>
+              ))}
             {/* Custom roles — only shown if any exist */}
-            {tabs.some(t => !["all","owner","manager","staff"].includes(t.key)) && (
+            {tabs.some((t) => !["all", "owner", "manager", "staff"].includes(t.key)) && (
               <>
                 <DropdownMenuSeparator className="bg-[var(--blue-008)]" />
-                {tabs.filter(t => !["all","owner","manager","staff"].includes(t.key)).map(({ key, label }) => (
-                  <DropdownMenuItem
-                    key={key}
-                    onClick={() => setFilter(key)}
-                    className={`flex items-center justify-between gap-2 cursor-pointer ${filter === key ? "text-[var(--xiv-blue)]" : ""}`}
-                  >
-                    <span>{label}</span>
-                    <span className="text-[0.68rem] text-[var(--fg-faint)]">{counts[key] ?? 0}</span>
-                    {filter === key && <Check className="w-3.5 h-3.5 flex-shrink-0" />}
-                  </DropdownMenuItem>
-                ))}
+                {tabs
+                  .filter((t) => !["all", "owner", "manager", "staff"].includes(t.key))
+                  .map(({ key, label }) => (
+                    <DropdownMenuItem
+                      key={key}
+                      onClick={() => setFilter(key)}
+                      className={`flex items-center justify-between gap-2 cursor-pointer ${filter === key ? "text-[var(--xiv-blue)]" : ""}`}
+                    >
+                      <span>{label}</span>
+                      <span className="text-[0.68rem] text-[var(--fg-faint)]">{counts[key] ?? 0}</span>
+                      {filter === key && <Check className="w-3.5 h-3.5 flex-shrink-0" />}
+                    </DropdownMenuItem>
+                  ))}
               </>
             )}
           </DropdownMenuContent>
         </DropdownMenu>
         <div className="search">
-          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
-          <input
-            placeholder="Search staff…"
-            value={search}
-            onChange={e => setSearch(e.target.value)}
-          />
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+            <circle cx="11" cy="11" r="8" />
+            <path d="m21 21-4.35-4.35" />
+          </svg>
+          <input placeholder="Search staff…" value={search} onChange={(e) => setSearch(e.target.value)} />
         </div>
       </div>
 
@@ -198,7 +211,7 @@ export function StaffTable({
           isEmpty={visible.length === 0}
           emptyMessage="No staff found."
         >
-          {visible.map(member => (
+          {visible.map((member) => (
             <tr key={member.id}>
               {/* Name */}
               <td>
@@ -214,8 +227,8 @@ export function StaffTable({
                       <Input
                         autoFocus
                         value={editValue}
-                        onChange={e => setEditValue(e.target.value)}
-                        onKeyDown={e => {
+                        onChange={(e) => setEditValue(e.target.value)}
+                        onKeyDown={(e) => {
                           if (e.key === "Enter") saveNickname(member)
                           if (e.key === "Escape") setEditingId(null)
                         }}
@@ -244,13 +257,9 @@ export function StaffTable({
                   ) : (
                     <div className="flex items-center gap-1.5 group">
                       <div>
-                        <span className="text-sm font-medium">
-                          {memberDisplayName(member)}
-                        </span>
+                        <span className="text-sm font-medium">{memberDisplayName(member)}</span>
                         {member.nickname && (
-                          <p className="text-[0.65rem] text-[var(--fg-faint)] leading-tight">
-                            {member.user?.name}
-                          </p>
+                          <p className="text-[0.65rem] text-[var(--fg-faint)] leading-tight">{member.user?.name}</p>
                         )}
                       </div>
                       {canManage && (

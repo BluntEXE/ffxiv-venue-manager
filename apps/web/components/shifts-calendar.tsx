@@ -61,7 +61,10 @@ export function ShiftsCalendar({
 
   const cells: (Date | null)[] = [
     ...Array(leadingBlanks).fill(null),
-    ...Array.from({ length: totalDays }, (_, i) => new Date(Date.UTC(monthCursor.getUTCFullYear(), monthCursor.getUTCMonth(), i + 1))),
+    ...Array.from(
+      { length: totalDays },
+      (_, i) => new Date(Date.UTC(monthCursor.getUTCFullYear(), monthCursor.getUTCMonth(), i + 1))
+    ),
   ]
 
   // Own shifts (shown in the cell), grouped by day key.
@@ -163,7 +166,9 @@ export function ShiftsCalendar({
 
       <ShiftDayDialog
         date={selectedDate}
-        onOpenChange={(open) => { if (!open) setSelectedDate(null) }}
+        onOpenChange={(open) => {
+          if (!open) setSelectedDate(null)
+        }}
         shifts={shifts}
         canManage={canManage}
         currentMembershipId={currentMembershipId}

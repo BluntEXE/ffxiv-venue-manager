@@ -7,6 +7,7 @@
 **Worktree:** `/home/ehno/xiv-app/.claude/worktrees/open-shifts-phase-0-1`
 
 **Architecture decisions:**
+
 - `CLAIMED` is a new status. When claimed: `membershipId` = claimer, `status` = CLAIMED. Shift moves from the "Open shifts" row into the claimant's staff row.
 - Approval: manager sets `status = SCHEDULED` (no other field change needed).
 - Rejection: `status = OPEN`, `membershipId = null` — slot goes back to the open row.
@@ -22,12 +23,15 @@
 - [ ] **Step 1: Add CLAIMED**
 
 Change:
+
 ```prisma
 enum ShiftStatus {
   OPEN
   SCHEDULED
 ```
+
 to:
+
 ```prisma
 enum ShiftStatus {
   OPEN
@@ -62,12 +66,15 @@ git commit -m "schema: add CLAIMED to ShiftStatus for pending claim flow"
 - [ ] **Step 1: Extend the patchSchema action enum**
 
 Change line 8:
+
 ```typescript
 const patchSchema = z.object({
   action: z.enum(["clock-in", "clock-out"]),
 })
 ```
+
 to:
+
 ```typescript
 const patchSchema = z.object({
   action: z.enum(["clock-in", "clock-out", "claim", "approve", "reject"]),
@@ -79,89 +86,79 @@ const patchSchema = z.object({
 After the concurrency-safe `const shift = await prisma.shift.findFirst(...)` (line ~51) and the existing ownership check, add three new branches. Insert before `const now = new Date()`:
 
 ```typescript
-    // --- CLAIM ---
-    if (parsed.data.action === "claim") {
-      if (shift.status !== "OPEN") {
-        return NextResponse.json(
-          { error: `Shift is already ${shift.status.toLowerCase()}` },
-          { status: 400 }
-        )
-      }
-      // Optimistic lock: only succeeds if shift is still OPEN (race with another claimer)
-      const result = await prisma.shift.updateMany({
-        where: { id: shift.id, status: "OPEN" },
-        data: { membershipId: membership.id, status: "CLAIMED" },
-      })
-      if (result.count === 0) {
-        return NextResponse.json(
-          { error: "This shift was just claimed by someone else" },
-          { status: 409 }
-        )
-      }
-      return NextResponse.json({ success: true, shift: { id: shift.id, status: "CLAIMED" } })
-    }
+// --- CLAIM ---
+if (parsed.data.action === "claim") {
+  if (shift.status !== "OPEN") {
+    return NextResponse.json({ error: `Shift is already ${shift.status.toLowerCase()}` }, { status: 400 })
+  }
+  // Optimistic lock: only succeeds if shift is still OPEN (race with another claimer)
+  const result = await prisma.shift.updateMany({
+    where: { id: shift.id, status: "OPEN" },
+    data: { membershipId: membership.id, status: "CLAIMED" },
+  })
+  if (result.count === 0) {
+    return NextResponse.json({ error: "This shift was just claimed by someone else" }, { status: 409 })
+  }
+  return NextResponse.json({ success: true, shift: { id: shift.id, status: "CLAIMED" } })
+}
 
-    // --- APPROVE ---
-    if (parsed.data.action === "approve") {
-      if (!isManager) {
-        return NextResponse.json({ error: "Only managers can approve claims" }, { status: 403 })
-      }
-      if (shift.status !== "CLAIMED") {
-        return NextResponse.json(
-          { error: `Shift is ${shift.status.toLowerCase()}, not claimed` },
-          { status: 400 }
-        )
-      }
-      const result = await prisma.shift.updateMany({
-        where: { id: shift.id, status: "CLAIMED" },
-        data: { status: "SCHEDULED" },
-      })
-      if (result.count === 0) {
-        return NextResponse.json({ error: "Shift status changed concurrently" }, { status: 409 })
-      }
-      // Queue reminder for the approved staff member
-      const claimant = await prisma.membership.findUnique({
-        where: { id: shift.membershipId! },
-        select: { userId: true },
-      })
-      if (claimant?.userId) {
-        const reminderAt = new Date(shift.scheduledStart.getTime() - 60 * 60 * 1000)
-        if (reminderAt > new Date()) {
-          prisma.pendingNotification.create({
-            data: {
-              userId: claimant.userId,
-              type: "SHIFT_REMINDER",
-              title: "Shift starting soon",
-              body: `Your shift at ${venue.name} starts in 1 hour.`,
-              data: { venueId: venue.id, shiftId: shift.id },
-              scheduledFor: reminderAt,
-            },
-          }).catch(() => {})
-        }
-      }
-      return NextResponse.json({ success: true, shift: { id: shift.id, status: "SCHEDULED" } })
+// --- APPROVE ---
+if (parsed.data.action === "approve") {
+  if (!isManager) {
+    return NextResponse.json({ error: "Only managers can approve claims" }, { status: 403 })
+  }
+  if (shift.status !== "CLAIMED") {
+    return NextResponse.json({ error: `Shift is ${shift.status.toLowerCase()}, not claimed` }, { status: 400 })
+  }
+  const result = await prisma.shift.updateMany({
+    where: { id: shift.id, status: "CLAIMED" },
+    data: { status: "SCHEDULED" },
+  })
+  if (result.count === 0) {
+    return NextResponse.json({ error: "Shift status changed concurrently" }, { status: 409 })
+  }
+  // Queue reminder for the approved staff member
+  const claimant = await prisma.membership.findUnique({
+    where: { id: shift.membershipId! },
+    select: { userId: true },
+  })
+  if (claimant?.userId) {
+    const reminderAt = new Date(shift.scheduledStart.getTime() - 60 * 60 * 1000)
+    if (reminderAt > new Date()) {
+      prisma.pendingNotification
+        .create({
+          data: {
+            userId: claimant.userId,
+            type: "SHIFT_REMINDER",
+            title: "Shift starting soon",
+            body: `Your shift at ${venue.name} starts in 1 hour.`,
+            data: { venueId: venue.id, shiftId: shift.id },
+            scheduledFor: reminderAt,
+          },
+        })
+        .catch(() => {})
     }
+  }
+  return NextResponse.json({ success: true, shift: { id: shift.id, status: "SCHEDULED" } })
+}
 
-    // --- REJECT ---
-    if (parsed.data.action === "reject") {
-      if (!isManager) {
-        return NextResponse.json({ error: "Only managers can reject claims" }, { status: 403 })
-      }
-      if (shift.status !== "CLAIMED") {
-        return NextResponse.json(
-          { error: `Shift is ${shift.status.toLowerCase()}, not claimed` },
-          { status: 400 }
-        )
-      }
-      const result = await prisma.shift.updateMany({
-        where: { id: shift.id, status: "CLAIMED" },
-        data: { membershipId: null, status: "OPEN" },
-      })
-      if (result.count === 0) {
-        return NextResponse.json({ error: "Shift status changed concurrently" }, { status: 409 })
-      }
-      return NextResponse.json({ success: true, shift: { id: shift.id, status: "OPEN" } })
-    }
+// --- REJECT ---
+if (parsed.data.action === "reject") {
+  if (!isManager) {
+    return NextResponse.json({ error: "Only managers can reject claims" }, { status: 403 })
+  }
+  if (shift.status !== "CLAIMED") {
+    return NextResponse.json({ error: `Shift is ${shift.status.toLowerCase()}, not claimed` }, { status: 400 })
+  }
+  const result = await prisma.shift.updateMany({
+    where: { id: shift.id, status: "CLAIMED" },
+    data: { membershipId: null, status: "OPEN" },
+  })
+  if (result.count === 0) {
+    return NextResponse.json({ error: "Shift status changed concurrently" }, { status: 409 })
+  }
+  return NextResponse.json({ success: true, shift: { id: shift.id, status: "OPEN" } })
+}
 ```
 
 - [ ] **Step 3: Commit**
@@ -191,8 +188,8 @@ import { useRouter } from "next/navigation"
 interface OpenShiftChipProps {
   shiftId: string
   venueId: string
-  timeLabel: string   // e.g. "19:00–23:00 · Bartender"
-  canClaim: boolean   // false for managers — they see the chip but can't claim
+  timeLabel: string // e.g. "19:00–23:00 · Bartender"
+  canClaim: boolean // false for managers — they see the chip but can't claim
 }
 
 export function OpenShiftChip({ shiftId, venueId, timeLabel, canClaim }: OpenShiftChipProps) {
@@ -238,30 +235,38 @@ export function OpenShiftChip({ shiftId, venueId, timeLabel, canClaim }: OpenShi
 - [ ] **Step 2: Update the open shifts row in shifts/page.tsx**
 
 First, import the component (add to existing imports at top of file):
+
 ```typescript
 import { OpenShiftChip } from "@/components/open-shift-chip"
 ```
 
 Change the open shifts chip render (around line 341) from:
+
 ```tsx
-                      {dayShifts.map((shift) => (
-                        <span key={shift.id} className="shift-chip op">
-                          {fmtHour(shift.scheduledStart)}–{fmtHour(shift.scheduledEnd)}
-                          {shift.role?.name ? ` · ${shift.role.name}` : ""}
-                        </span>
-                      ))}
+{
+  dayShifts.map((shift) => (
+    <span key={shift.id} className="shift-chip op">
+      {fmtHour(shift.scheduledStart)}–{fmtHour(shift.scheduledEnd)}
+      {shift.role?.name ? ` · ${shift.role.name}` : ""}
+    </span>
+  ))
+}
 ```
+
 to:
+
 ```tsx
-                      {dayShifts.map((shift) => (
-                        <OpenShiftChip
-                          key={shift.id}
-                          shiftId={shift.id}
-                          venueId={venue.id}
-                          timeLabel={`${fmtHour(shift.scheduledStart)}–${fmtHour(shift.scheduledEnd)}${shift.role?.name ? ` · ${shift.role.name}` : ""}`}
-                          canClaim={!canManage}
-                        />
-                      ))}
+{
+  dayShifts.map((shift) => (
+    <OpenShiftChip
+      key={shift.id}
+      shiftId={shift.id}
+      venueId={venue.id}
+      timeLabel={`${fmtHour(shift.scheduledStart)}–${fmtHour(shift.scheduledEnd)}${shift.role?.name ? ` · ${shift.role.name}` : ""}`}
+      canClaim={!canManage}
+    />
+  ))
+}
 ```
 
 Note: `canManage` is already computed at line 88. Managers see the chip but no claim button. Staff see the Claim button.
@@ -290,6 +295,7 @@ git commit -m "feat: staff can claim open shifts from the weekly grid"
 ### Task 3: CLAIMED chip style + manager approve/reject
 
 **Files:**
+
 - `apps/web/app/dashboard/[slug]/shifts/page.tsx` — import new component, use for CLAIMED chips
 - New: `apps/web/components/claimed-shift-chip.tsx`
 
@@ -307,7 +313,7 @@ interface ClaimedShiftChipProps {
   shiftId: string
   venueId: string
   timeLabel: string
-  canManage: boolean  // shows approve/reject if true
+  canManage: boolean // shows approve/reject if true
 }
 
 export function ClaimedShiftChip({ shiftId, venueId, timeLabel, canManage }: ClaimedShiftChipProps) {
@@ -334,9 +340,7 @@ export function ClaimedShiftChip({ shiftId, venueId, timeLabel, canManage }: Cla
 
   return (
     <div className="flex flex-col gap-0.5">
-      <span className="shift-chip bg-violet-500/10 text-violet-400 border-violet-500/20">
-        {timeLabel}
-      </span>
+      <span className="shift-chip bg-violet-500/10 text-violet-400 border-violet-500/20">{timeLabel}</span>
       {canManage && (
         <div className="flex gap-1">
           <button
@@ -364,37 +368,41 @@ export function ClaimedShiftChip({ shiftId, venueId, timeLabel, canManage }: Cla
 - [ ] **Step 2: Import and use in staff rows**
 
 Add import:
+
 ```typescript
 import { ClaimedShiftChip } from "@/components/claimed-shift-chip"
 ```
 
 In the staff row chip render (around line 312-319), change:
+
 ```tsx
-                        <span
-                          key={shift.id}
-                          className={`shift-chip${shift.status === "ACTIVE" ? " em" : shift.status === "MISSED" ? " am" : ""}`}
-                        >
-                          {fmtHour(shift.scheduledStart)}–{fmtHour(shift.scheduledEnd)}
-                        </span>
+<span
+  key={shift.id}
+  className={`shift-chip${shift.status === "ACTIVE" ? " em" : shift.status === "MISSED" ? " am" : ""}`}
+>
+  {fmtHour(shift.scheduledStart)}–{fmtHour(shift.scheduledEnd)}
+</span>
 ```
+
 to:
+
 ```tsx
-                        shift.status === "CLAIMED" ? (
-                          <ClaimedShiftChip
-                            key={shift.id}
-                            shiftId={shift.id}
-                            venueId={venue.id}
-                            timeLabel={`${fmtHour(shift.scheduledStart)}–${fmtHour(shift.scheduledEnd)}`}
-                            canManage={canManage}
-                          />
-                        ) : (
-                          <span
-                            key={shift.id}
-                            className={`shift-chip${shift.status === "ACTIVE" ? " em" : shift.status === "MISSED" ? " am" : ""}`}
-                          >
-                            {fmtHour(shift.scheduledStart)}–{fmtHour(shift.scheduledEnd)}
-                          </span>
-                        )
+shift.status === "CLAIMED" ? (
+  <ClaimedShiftChip
+    key={shift.id}
+    shiftId={shift.id}
+    venueId={venue.id}
+    timeLabel={`${fmtHour(shift.scheduledStart)}–${fmtHour(shift.scheduledEnd)}`}
+    canManage={canManage}
+  />
+) : (
+  <span
+    key={shift.id}
+    className={`shift-chip${shift.status === "ACTIVE" ? " em" : shift.status === "MISSED" ? " am" : ""}`}
+  >
+    {fmtHour(shift.scheduledStart)}–{fmtHour(shift.scheduledEnd)}
+  </span>
+)
 ```
 
 Note: `key` must be on the outermost element — move it to the `<ClaimedShiftChip>` and remove from inner `<span>` when using the ternary, or wrap in a fragment with key. Simpler: wrap both branches in `<React.Fragment key={shift.id}>` and remove individual keys.
@@ -404,7 +412,7 @@ Note: `key` must be on the outermost element — move it to the `<ClaimedShiftCh
 Currently `openSlots` counts only `OPEN`. Update to include `CLAIMED` since both represent unfilled or unapproved slots:
 
 ```typescript
-  const openSlots = weekShifts.filter((s) => s.status === "OPEN" || s.status === "CLAIMED").length
+const openSlots = weekShifts.filter((s) => s.status === "OPEN" || s.status === "CLAIMED").length
 ```
 
 This makes the KPI reflect "shifts that still need manager action" — either nobody claimed them (OPEN) or someone claimed and awaits approval (CLAIMED).
@@ -430,6 +438,7 @@ cd ~/xiv-app/.claude/worktrees/open-shifts-phase-0-1/apps/web && npm run dev
 - [ ] **Step 2: Test staff claim flow**
 
 Log in as a STAFF member (not OWNER/MANAGER). Navigate to a venue's Shifts page.
+
 - Open shifts row shows amber dashed chips.
 - Each chip has a "Claim" button below it.
 - Click Claim on an open shift.
@@ -438,6 +447,7 @@ Log in as a STAFF member (not OWNER/MANAGER). Navigate to a venue's Shifts page.
 - [ ] **Step 3: Test manager approve flow**
 
 Log in as OWNER/MANAGER. Navigate to same Shifts page.
+
 - CLAIMED chip in the staff row shows violet style + "Approve" and "Reject" buttons.
 - Click Approve.
 - Expected: chip changes to blue SCHEDULED, buttons disappear.
@@ -445,16 +455,19 @@ Log in as OWNER/MANAGER. Navigate to same Shifts page.
 - [ ] **Step 4: Test manager reject flow**
 
 Create another open shift. Have staff claim it. As manager, click Reject.
+
 - Expected: chip returns to open shifts row as amber dashed OPEN chip with Claim button.
 
 - [ ] **Step 5: Test race condition (manual)**
 
 Two browser tabs logged in as two different staff members on the same venue. Both see the same open shift. Click Claim in both tabs rapidly.
+
 - Expected: one succeeds, one gets "This shift was just claimed by someone else" error below the chip.
 
 - [ ] **Step 6: Test mobile (375px)**
 
 Open DevTools, set to 375x667. Confirm:
+
 - Open shifts row chips + claim buttons don't overflow or break grid.
 - CLAIMED chips + approve/reject buttons fit within the cell or wrap gracefully.
 - No horizontal scroll introduced beyond the existing `overflow-x-auto` on the grid.
@@ -490,6 +503,7 @@ docker compose build venue-manager && docker compose up -d venue-manager
 ---
 
 ## Out of scope (later phases)
+
 - Staff notification when a claim is approved/rejected
 - Reopen an already-SCHEDULED shift back to OPEN
 - Minimum-headcount rules per venue/role

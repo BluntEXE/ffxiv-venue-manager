@@ -33,9 +33,9 @@ function fmtWeekLabel(d: Date): string {
 
 const statusChip: Record<string, string> = {
   SCHEDULED: "bg-[rgba(0,180,255,0.10)] text-[var(--xiv-blue)] border-[rgba(0,180,255,0.28)]",
-  ACTIVE:    "bg-emerald-500/10 text-emerald-400 border-emerald-500/20",
+  ACTIVE: "bg-emerald-500/10 text-emerald-400 border-emerald-500/20",
   COMPLETED: "bg-zinc-500/10 text-zinc-400 border-zinc-500/20",
-  MISSED:    "bg-amber-500/10 text-amber-400 border-amber-500/20",
+  MISSED: "bg-amber-500/10 text-amber-400 border-amber-500/20",
   CANCELLED: "bg-zinc-500/10 text-zinc-400 border-zinc-500/15 line-through",
 }
 
@@ -103,51 +103,56 @@ export default async function ShiftsPage({
   // Calendar view only: 6-month rolling window (3 back, 3 forward), independent
   // of the week grid's ?w= offset. Only fetched when actually viewing the
   // calendar tab, to avoid pulling months of shift history on every page load.
-  const calendarShifts = view === "calendar"
-    ? await prisma.shift.findMany({
-        where: {
-          venueId: venue.id,
-          scheduledStart: {
-            gte: new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth() - 3, 1)),
-            lt: new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth() + 4, 1)),
+  const calendarShifts =
+    view === "calendar"
+      ? await prisma.shift.findMany({
+          where: {
+            venueId: venue.id,
+            scheduledStart: {
+              gte: new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth() - 3, 1)),
+              lt: new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth() + 4, 1)),
+            },
           },
-        },
-        // Explicit select (not include) — this array is passed whole into a
-        // client component (ShiftsCalendar). Prisma's Decimal fields (e.g.
-        // hoursWorked) can't cross the server/client boundary, so only the
-        // fields CalendarShift (lib/shift-format.ts) actually declares are
-        // selected here.
-        select: {
-          id: true,
-          membershipId: true,
-          roleId: true,
-          payrollEntryId: true,
-          scheduledStart: true,
-          scheduledEnd: true,
-          status: true,
-          notes: true,
-          recurrenceRule: true,
-          parentShiftId: true,
-          slotGroupId: true,
-          membership: {
-            select: {
-              nickname: true,
-              user: {
-                select: {
-                  id: true,
-                  name: true,
-                  displayName: true,
-                  image: true,
-                  characters: { orderBy: [{ isPrimary: "desc" }, { createdAt: "asc" }], take: 1, select: { characterName: true } },
+          // Explicit select (not include) — this array is passed whole into a
+          // client component (ShiftsCalendar). Prisma's Decimal fields (e.g.
+          // hoursWorked) can't cross the server/client boundary, so only the
+          // fields CalendarShift (lib/shift-format.ts) actually declares are
+          // selected here.
+          select: {
+            id: true,
+            membershipId: true,
+            roleId: true,
+            payrollEntryId: true,
+            scheduledStart: true,
+            scheduledEnd: true,
+            status: true,
+            notes: true,
+            recurrenceRule: true,
+            parentShiftId: true,
+            slotGroupId: true,
+            membership: {
+              select: {
+                nickname: true,
+                user: {
+                  select: {
+                    id: true,
+                    name: true,
+                    displayName: true,
+                    image: true,
+                    characters: {
+                      orderBy: [{ isPrimary: "desc" }, { createdAt: "asc" }],
+                      take: 1,
+                      select: { characterName: true },
+                    },
+                  },
                 },
               },
             },
+            role: { select: { name: true } },
           },
-          role: { select: { name: true } },
-        },
-        orderBy: { scheduledStart: "asc" },
-      })
-    : []
+          orderBy: { scheduledStart: "asc" },
+        })
+      : []
 
   // Staff list for create dialog
   const activeStaff = await prisma.membership.findMany({
@@ -159,7 +164,11 @@ export default async function ShiftsPage({
           name: true,
           displayName: true,
           image: true,
-          characters: { orderBy: [{ isPrimary: "desc" }, { createdAt: "asc" }], take: 1, select: { characterName: true } },
+          characters: {
+            orderBy: [{ isPrimary: "desc" }, { createdAt: "asc" }],
+            take: 1,
+            select: { characterName: true },
+          },
         },
       },
     },
@@ -204,7 +213,9 @@ export default async function ShiftsPage({
           <div>
             <div className="flex items-center gap-2 mb-1.5">
               <span className="w-[7px] h-[7px] bg-[rgba(0,180,255,0.7)] rotate-45 shadow-[0_0_10px_rgba(0,180,255,0.5)] flex-shrink-0" />
-              <span className="text-[0.72rem] font-semibold uppercase tracking-[0.14em] text-[var(--xiv-blue)]">{venue.name} &middot; {venue.dataCenter} &middot; {venue.world}</span>
+              <span className="text-[0.72rem] font-semibold uppercase tracking-[0.14em] text-[var(--xiv-blue)]">
+                {venue.name} &middot; {venue.dataCenter} &middot; {venue.world}
+              </span>
             </div>
             <h1 className="page-h1">Shifts</h1>
           </div>
@@ -222,10 +233,12 @@ export default async function ShiftsPage({
         {/* View Tabs */}
         <div className="flex items-center gap-3 mb-4">
           <div className="flex gap-1 bg-[var(--card)] border border-[var(--blue-015)] rounded-full p-1">
-            {([
-              { key: "week", label: "Week" },
-              { key: "calendar", label: "Calendar" },
-            ] as const).map(({ key, label }) => (
+            {(
+              [
+                { key: "week", label: "Week" },
+                { key: "calendar", label: "Calendar" },
+              ] as const
+            ).map(({ key, label }) => (
               <Link
                 key={key}
                 href={`/dashboard/${slug}/shifts?view=${key}`}
@@ -253,53 +266,75 @@ export default async function ShiftsPage({
             todayKeyST={todayKeyST}
           />
         ) : (
-        <>
-        {/* Week nav toolbar */}
-        <div className="flex items-center gap-3 mb-4 flex-wrap">
-          <div className="flex items-center gap-1 bg-[var(--card)] border border-[var(--blue-015)] rounded-full px-1 py-1">
-            <Link
-              href={`/dashboard/${slug}/shifts?w=${prevWeekParam}`}
-              className="w-8 h-7 flex items-center justify-center rounded-full text-muted-foreground hover:text-foreground hover:bg-[var(--blue-007)] transition-colors"
-            >
-              <svg className="w-4 h-4" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><polyline points="15 18 9 12 15 6"/></svg>
-            </Link>
-            <Link
-              href={`/dashboard/${slug}/shifts?w=${nextWeekParam}`}
-              className="w-8 h-7 flex items-center justify-center rounded-full text-muted-foreground hover:text-foreground hover:bg-[var(--blue-007)] transition-colors"
-            >
-              <svg className="w-4 h-4" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><polyline points="9 18 15 12 9 6"/></svg>
-            </Link>
-          </div>
-          <div className="flex-1" />
-          <div className="flex items-center gap-3 text-[0.7rem] text-muted-foreground">
-            <span className="flex items-center gap-1.5">
-              <span className="text-[0.68rem] font-semibold px-2 py-0.5 rounded bg-[rgba(0,180,255,0.10)] text-[var(--xiv-blue)] border border-[rgba(0,180,255,0.28)]">10PM</span>
-              Scheduled
-            </span>
-            <span className="flex items-center gap-1.5">
-              <span className="text-[0.68rem] font-semibold px-2 py-0.5 rounded bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">Active</span>
-              On shift
-            </span>
-          </div>
-        </div>
+          <>
+            {/* Week nav toolbar */}
+            <div className="flex items-center gap-3 mb-4 flex-wrap">
+              <div className="flex items-center gap-1 bg-[var(--card)] border border-[var(--blue-015)] rounded-full px-1 py-1">
+                <Link
+                  href={`/dashboard/${slug}/shifts?w=${prevWeekParam}`}
+                  className="w-8 h-7 flex items-center justify-center rounded-full text-muted-foreground hover:text-foreground hover:bg-[var(--blue-007)] transition-colors"
+                >
+                  <svg
+                    className="w-4 h-4"
+                    xmlns="http://www.w3.org/2000/svg"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    strokeWidth="2"
+                  >
+                    <polyline points="15 18 9 12 15 6" />
+                  </svg>
+                </Link>
+                <Link
+                  href={`/dashboard/${slug}/shifts?w=${nextWeekParam}`}
+                  className="w-8 h-7 flex items-center justify-center rounded-full text-muted-foreground hover:text-foreground hover:bg-[var(--blue-007)] transition-colors"
+                >
+                  <svg
+                    className="w-4 h-4"
+                    xmlns="http://www.w3.org/2000/svg"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    strokeWidth="2"
+                  >
+                    <polyline points="9 18 15 12 9 6" />
+                  </svg>
+                </Link>
+              </div>
+              <div className="flex-1" />
+              <div className="flex items-center gap-3 text-[0.7rem] text-muted-foreground">
+                <span className="flex items-center gap-1.5">
+                  <span className="text-[0.68rem] font-semibold px-2 py-0.5 rounded bg-[rgba(0,180,255,0.10)] text-[var(--xiv-blue)] border border-[rgba(0,180,255,0.28)]">
+                    10PM
+                  </span>
+                  Scheduled
+                </span>
+                <span className="flex items-center gap-1.5">
+                  <span className="text-[0.68rem] font-semibold px-2 py-0.5 rounded bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">
+                    Active
+                  </span>
+                  On shift
+                </span>
+              </div>
+            </div>
 
-        <ShiftsWeekView
-          weekShifts={weekShifts}
-          activeCount={activeCount}
-          weekStartISO={weekStart.toISOString()}
-          todayKeyST={todayKeyST}
-          isCurrentWeek={isCurrentWeek}
-          fmtWeekLabelST={fmtWeekLabel(weekStart)}
-          slug={slug}
-          venueId={venue.id}
-          currentMembershipId={currentMembershipId}
-          canManage={canManage}
-          staffForDialog={staffForDialog}
-          venueRoles={venueRoles}
-          potModeEnabled={potModeEnabled}
-          eventsForDialog={eventsForDialog}
-        />
-        </>
+            <ShiftsWeekView
+              weekShifts={weekShifts}
+              activeCount={activeCount}
+              weekStartISO={weekStart.toISOString()}
+              todayKeyST={todayKeyST}
+              isCurrentWeek={isCurrentWeek}
+              fmtWeekLabelST={fmtWeekLabel(weekStart)}
+              slug={slug}
+              venueId={venue.id}
+              currentMembershipId={currentMembershipId}
+              canManage={canManage}
+              staffForDialog={staffForDialog}
+              venueRoles={venueRoles}
+              potModeEnabled={potModeEnabled}
+              eventsForDialog={eventsForDialog}
+            />
+          </>
         )}
       </div>
     </VenueLayout>

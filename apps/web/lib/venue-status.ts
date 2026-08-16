@@ -1,5 +1,5 @@
-import { prisma } from '@/lib/prisma'
-import { postVenueStatus } from '@/lib/discord-feed'
+import { prisma } from "@/lib/prisma"
+import { postVenueStatus } from "@/lib/discord-feed"
 
 // How far ahead of a not-yet-started event a shift still gets suppressed as
 // "prep", not a real open. Matches the system-wide earliest-clock-in bound

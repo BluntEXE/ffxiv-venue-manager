@@ -1,4 +1,4 @@
-import prisma from './prisma.js';
+import prisma from "./prisma.js"
 
 /**
  * Award Gil to a member, creating their discord_members row if it doesn't
@@ -13,7 +13,7 @@ export async function awardGil(discordId: string, guildId: string, amount: numbe
     ON CONFLICT ("discordId") DO UPDATE
       SET gil = discord_members.gil + ${amount},
           "updatedAt" = NOW()
-  `;
+  `
 }
 
 /**
@@ -24,8 +24,8 @@ export async function hasActiveXpBoost(discordId: string): Promise<boolean> {
   const rows = await prisma.$queryRaw<{ active: boolean }[]>`
     SELECT ("xpBoostExpiresAt" IS NOT NULL AND "xpBoostExpiresAt" > NOW()) AS active
     FROM discord_members WHERE "discordId" = ${discordId}
-  `;
-  return rows[0]?.active ?? false;
+  `
+  return rows[0]?.active ?? false
 }
 
 /**
@@ -40,12 +40,12 @@ export async function consumeCooldownSkip(discordId: string): Promise<boolean> {
     SET "cooldownSkips" = "cooldownSkips" - 1
     WHERE "discordId" = ${discordId} AND "cooldownSkips" > 0
     RETURNING "cooldownSkips"
-  `;
-  return rows.length > 0;
+  `
+  return rows.length > 0
 }
 
-const XP_BOOST_COST = 500;
-const COOLDOWN_SKIP_COST = 100;
+const XP_BOOST_COST = 500
+const COOLDOWN_SKIP_COST = 100
 
 /**
  * Spend 500 Gil on an XP boost. Extends the timer if one is already
@@ -61,8 +61,8 @@ export async function buyXpBoost(discordId: string): Promise<boolean> {
         "updatedAt" = NOW()
     WHERE "discordId" = ${discordId} AND gil >= ${XP_BOOST_COST}
     RETURNING id
-  `;
-  return rows.length > 0;
+  `
+  return rows.length > 0
 }
 
 /**
@@ -77,8 +77,8 @@ export async function buyCooldownSkip(discordId: string): Promise<boolean> {
         "updatedAt" = NOW()
     WHERE "discordId" = ${discordId} AND gil >= ${COOLDOWN_SKIP_COST}
     RETURNING id
-  `;
-  return rows.length > 0;
+  `
+  return rows.length > 0
 }
 
-export { XP_BOOST_COST, COOLDOWN_SKIP_COST };
+export { XP_BOOST_COST, COOLDOWN_SKIP_COST }

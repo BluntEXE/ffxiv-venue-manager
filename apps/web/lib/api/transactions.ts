@@ -47,11 +47,7 @@ export class InsufficientStockError extends Error {
  * for auth, venue access verification, and permission checks - this
  * helper only owns the domain write + side effects.
  */
-export async function createTransaction(
-  venueId: string,
-  staffUserId: string,
-  input: CreateTransactionInput
-) {
+export async function createTransaction(venueId: string, staffUserId: string, input: CreateTransactionInput) {
   // If the caller didn't specify an event, attribute the sale to whatever
   // event is currently running at this venue (startTime <= now <= endTime,
   // status PUBLISHED or ACTIVE). Mirrors the lookup in
@@ -147,7 +143,11 @@ export async function createTransaction(
             id: true,
             name: true,
             displayName: true,
-            characters: { orderBy: [{ isPrimary: "desc" }, { createdAt: "asc" }], take: 1, select: { characterName: true } },
+            characters: {
+              orderBy: [{ isPrimary: "desc" }, { createdAt: "asc" }],
+              take: 1,
+              select: { characterName: true },
+            },
           },
         },
       },

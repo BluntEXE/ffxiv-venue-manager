@@ -7,10 +7,7 @@ import { venueEventBus, type VenueEvent } from "@/lib/sse/venue-events"
 export const dynamic = "force-dynamic"
 export const runtime = "nodejs"
 
-export async function GET(
-  request: NextRequest,
-  { params }: { params: Promise<{ venueId: string }> }
-) {
+export async function GET(request: NextRequest, { params }: { params: Promise<{ venueId: string }> }) {
   const session = await getServerSession(authOptions)
   if (!session?.user?.id) {
     return new Response("Unauthorized", { status: 401 })
@@ -57,7 +54,9 @@ export async function GET(
       request.signal.addEventListener("abort", () => {
         unsubscribe()
         clearInterval(heartbeat)
-        try { controller.close() } catch {}
+        try {
+          controller.close()
+        } catch {}
       })
     },
   })

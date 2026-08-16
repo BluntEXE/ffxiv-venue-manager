@@ -17,18 +17,14 @@ export default function SignInPage() {
               <span className="text-foreground/80 ml-2">Venue Manager</span>
             </span>
           </div>
-          <p className="text-muted-foreground text-sm">
-            Event management for FFXIV venues
-          </p>
+          <p className="text-muted-foreground text-sm">Event management for FFXIV venues</p>
         </div>
 
         {/* Card */}
         <div className="xiv-card rounded-2xl w-full p-8 space-y-6">
           <div className="text-center space-y-1">
             <h1 className="font-cinzel text-2xl font-bold tracking-wide">Welcome Back</h1>
-            <p className="text-muted-foreground text-sm">
-              Sign in to access your venue dashboard
-            </p>
+            <p className="text-muted-foreground text-sm">Sign in to access your venue dashboard</p>
           </div>
 
           <Button
@@ -48,9 +44,7 @@ export default function SignInPage() {
             Sign in with Discord
           </Button>
 
-          <p className="text-center text-xs text-muted-foreground">
-            No account? One will be created automatically.
-          </p>
+          <p className="text-center text-xs text-muted-foreground">No account? One will be created automatically.</p>
         </div>
       </div>
     </div>

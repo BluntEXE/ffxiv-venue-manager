@@ -3,6 +3,7 @@
 **DONE, deployed 2026-08-13** — commit `463d906`, merged to `main` via `zod-plugin-routes` branch (isolated worktree, subagent-driven-development, 5 tasks including 2 real fix-cycles + final whole-branch review). 51/51 tests, typecheck, build all green.
 
 **Two of this plan's own premises were wrong and got corrected during review, not before shipping:**
+
 1. **Task 2 (ban route):** the `reason` schema below (`z.string().min(1,...).max(500,...)`) was missing `.trim()`, which let whitespace-only ban reasons silently pass validation and write an empty `banReason` to the database. Fixed in review by adding `.trim()`: `z.string().trim().min(1,...).max(500,...)`.
 2. **Task 4 (link-item route):** this plan's stated goal (line 5, "a logic bug where `link-item`'s `!itemId` check incorrectly rejects `itemId: 0` as 'missing'") was itself wrong. `linkedItemId` is documented in `apps/web/prisma/schema.prisma:576` as the real FFXIV item ID, and two sibling routes (`apps/web/app/api/venues/[venueId]/services/route.ts:16`, `.../[serviceId]/route.ts:15`) already establish `.positive()` as the correct convention — item ID `0` is FFXIV's "no item" sentinel, not a real linkable item, and the dashboard's own `service.linkedItemId ? {...} : null` truthy check (`apps/web/app/dashboard/[slug]/services/page.tsx:283`) would have desynced against a stored `0`. The shipped code uses `itemId: z.number().int().positive('itemId must be a positive integer')`, NOT the `.min(0)` shown in Task 4 below — the old `!itemId` check was accidentally correct all along. Commit reframed from `fix:` to `refactor:` accordingly.
 
@@ -30,10 +31,10 @@ Read the task bodies below for the original planning rationale — they're left 
 
 1. `apps/web/app/api/plugin/patrons/ban/route.ts:38-45` — `characterName`, `world`, `reason` are destructured from the raw body with only a truthy check (`!venueId || !characterName || !world || !reason || !reason.trim()`). No length cap on any of them — a malicious or buggy plugin client could send a multi-megabyte `reason` string straight into the `Patron.banReason` column.
 2. `apps/web/app/api/plugin/rooms/status/route.ts:38-46` — `note` has no length cap at all (only `venueId`/`roomId`/`isOccupied` are checked).
-3. `apps/web/app/api/plugin/inventory/link-item/route.ts:39-46` — **real logic bug**: `if (!venueId || !serviceId || !itemId || !itemName)` — `!itemId` is `true` when `itemId === 0`, so linking to a hypothetical FFXIV item with numeric ID `0` would be incorrectly rejected as "missing required field". (Whether item ID `0` is realistically ever assigned by FFXIV's item table is beside the point — the check's *intent* is "was this field provided", and it silently conflates "provided as zero" with "not provided", which is a bug regardless.) Also no length cap on `itemName`.
+3. `apps/web/app/api/plugin/inventory/link-item/route.ts:39-46` — **real logic bug**: `if (!venueId || !serviceId || !itemId || !itemName)` — `!itemId` is `true` when `itemId === 0`, so linking to a hypothetical FFXIV item with numeric ID `0` would be incorrectly rejected as "missing required field". (Whether item ID `0` is realistically ever assigned by FFXIV's item table is beside the point — the check's _intent_ is "was this field provided", and it silently conflates "provided as zero" with "not provided", which is a bug regardless.) Also no length cap on `itemName`.
 4. `apps/web/app/api/plugin/inventory/restock/route.ts:38-45` — `stockCount` is checked for `typeof stockCount !== 'number' || stockCount < 0`, so a lower bound exists but there's no upper bound and no `Number.isInteger` check — `stockCount: 3.7` currently passes silently and gets written straight to the `Service.stockCount` column.
 
-**No route-handler-level test precedent exists in this codebase** (confirmed again, same finding as Increment 1 — `app/api/**/*.test.ts` is empty). This plan's tests (Task 1) cover the *schemas* directly. Task 6 covers the routes themselves — but unlike Increment 1 (which could use a real browser admin session for manual verification), **these 4 routes are Dalamud-plugin-authenticated** (`x-api-key` header, not a browser session/cookie). Manual verification needs either a real plugin client hitting the live API, or a `curl` request carrying a real, valid API key for a test venue. Task 6 documents both options — there is no way to exercise these routes from a browser tab.
+**No route-handler-level test precedent exists in this codebase** (confirmed again, same finding as Increment 1 — `app/api/**/*.test.ts` is empty). This plan's tests (Task 1) cover the _schemas_ directly. Task 6 covers the routes themselves — but unlike Increment 1 (which could use a real browser admin session for manual verification), **these 4 routes are Dalamud-plugin-authenticated** (`x-api-key` header, not a browser session/cookie). Manual verification needs either a real plugin client hitting the live API, or a `curl` request carrying a real, valid API key for a test venue. Task 6 documents both options — there is no way to exercise these routes from a browser tab.
 
 - [ ] **Step 1: No action needed** — confirmed above.
 
@@ -42,6 +43,7 @@ Read the task bodies below for the original planning rationale — they're left 
 ## Task 1: Add shared field schemas to the registry, with tests
 
 **Files:**
+
 - Modify: `apps/web/lib/validation.ts`
 - Modify: `apps/web/lib/validation.test.ts` (already exists, created in Increment 1 — add to it, don't recreate)
 
@@ -124,6 +126,7 @@ git commit -m "feat(web): add characterName/world to shared validators"
 ## Task 2: Migrate `app/api/plugin/patrons/ban/route.ts`
 
 **Files:**
+
 - Modify: `apps/web/app/api/plugin/patrons/ban/route.ts`
 
 - [ ] **Step 1: Replace the manual truthy checks with a zod schema**
@@ -131,10 +134,10 @@ git commit -m "feat(web): add characterName/world to shared validators"
 Current (`apps/web/app/api/plugin/patrons/ban/route.ts:1-11, 37-45`):
 
 ```typescript
-import { NextRequest, NextResponse } from 'next/server'
-import { validateApiKey } from '@/lib/api/plugin-auth'
-import { enforcePluginRateLimit, enforcePluginIpRateLimit } from '@/lib/api/plugin-rate-limit'
-import { prisma } from '@/lib/prisma'
+import { NextRequest, NextResponse } from "next/server"
+import { validateApiKey } from "@/lib/api/plugin-auth"
+import { enforcePluginRateLimit, enforcePluginIpRateLimit } from "@/lib/api/plugin-rate-limit"
+import { prisma } from "@/lib/prisma"
 
 interface BanPatronPayload {
   venueId: string
@@ -145,38 +148,35 @@ interface BanPatronPayload {
 ```
 
 ```typescript
-    const body: BanPatronPayload = await request.json()
-    const { venueId, characterName, world, reason } = body
+const body: BanPatronPayload = await request.json()
+const { venueId, characterName, world, reason } = body
 
-    if (!venueId || !characterName || !world || !reason || !reason.trim()) {
-      return NextResponse.json(
-        { error: 'Missing required fields: venueId, characterName, world, reason' },
-        { status: 400 }
-      )
-    }
+if (!venueId || !characterName || !world || !reason || !reason.trim()) {
+  return NextResponse.json({ error: "Missing required fields: venueId, characterName, world, reason" }, { status: 400 })
+}
 ```
 
 Replace with:
 
 ```typescript
-import { NextRequest, NextResponse } from 'next/server'
-import { z } from 'zod'
-import { validateApiKey } from '@/lib/api/plugin-auth'
-import { enforcePluginRateLimit, enforcePluginIpRateLimit } from '@/lib/api/plugin-rate-limit'
-import { prisma } from '@/lib/prisma'
-import { validators } from '@/lib/validation'
+import { NextRequest, NextResponse } from "next/server"
+import { z } from "zod"
+import { validateApiKey } from "@/lib/api/plugin-auth"
+import { enforcePluginRateLimit, enforcePluginIpRateLimit } from "@/lib/api/plugin-rate-limit"
+import { prisma } from "@/lib/prisma"
+import { validators } from "@/lib/validation"
 
 const banSchema = z.object({
-  venueId: z.string().min(1, 'venueId is required'),
+  venueId: z.string().min(1, "venueId is required"),
   characterName: validators.characterName,
   world: validators.world,
-  reason: z.string().min(1, 'Reason is required').max(500, 'Reason too long (max 500 characters)'),
+  reason: z.string().min(1, "Reason is required").max(500, "Reason too long (max 500 characters)"),
 })
 ```
 
 ```typescript
-    const body = await request.json()
-    const { venueId, characterName, world, reason } = banSchema.parse(body)
+const body = await request.json()
+const { venueId, characterName, world, reason } = banSchema.parse(body)
 ```
 
 (`reason` stays local, not promoted to the shared registry — this is the only route in this increment that takes a free-text ban reason. 500-char cap matches this file's existing `transactionNotes`/`payrollNotes` scale.)
@@ -226,6 +226,7 @@ git commit -m "refactor(web): validate plugin ban-patron body with shared zod sc
 ## Task 3: Migrate `app/api/plugin/rooms/status/route.ts`
 
 **Files:**
+
 - Modify: `apps/web/app/api/plugin/rooms/status/route.ts`
 
 - [ ] **Step 1: Replace the manual checks with a zod schema**
@@ -233,11 +234,11 @@ git commit -m "refactor(web): validate plugin ban-patron body with shared zod sc
 Current (`apps/web/app/api/plugin/rooms/status/route.ts:1-12, 38-46`):
 
 ```typescript
-import { NextRequest, NextResponse } from 'next/server'
-import { validateApiKey, checkPermission } from '@/lib/api/plugin-auth'
-import { enforcePluginRateLimit, enforcePluginIpRateLimit } from '@/lib/api/plugin-rate-limit'
-import { prisma } from '@/lib/prisma'
-import { venueEventBus } from '@/lib/sse/venue-events'
+import { NextRequest, NextResponse } from "next/server"
+import { validateApiKey, checkPermission } from "@/lib/api/plugin-auth"
+import { enforcePluginRateLimit, enforcePluginIpRateLimit } from "@/lib/api/plugin-rate-limit"
+import { prisma } from "@/lib/prisma"
+import { venueEventBus } from "@/lib/sse/venue-events"
 
 interface SetRoomStatusPayload {
   venueId: string
@@ -248,38 +249,35 @@ interface SetRoomStatusPayload {
 ```
 
 ```typescript
-    const body: SetRoomStatusPayload = await request.json()
-    const { venueId, roomId, isOccupied, note } = body
+const body: SetRoomStatusPayload = await request.json()
+const { venueId, roomId, isOccupied, note } = body
 
-    if (!venueId || !roomId || typeof isOccupied !== 'boolean') {
-      return NextResponse.json(
-        { error: 'Missing required fields: venueId, roomId, isOccupied' },
-        { status: 400 }
-      )
-    }
+if (!venueId || !roomId || typeof isOccupied !== "boolean") {
+  return NextResponse.json({ error: "Missing required fields: venueId, roomId, isOccupied" }, { status: 400 })
+}
 ```
 
 Replace with:
 
 ```typescript
-import { NextRequest, NextResponse } from 'next/server'
-import { z } from 'zod'
-import { validateApiKey, checkPermission } from '@/lib/api/plugin-auth'
-import { enforcePluginRateLimit, enforcePluginIpRateLimit } from '@/lib/api/plugin-rate-limit'
-import { prisma } from '@/lib/prisma'
-import { venueEventBus } from '@/lib/sse/venue-events'
+import { NextRequest, NextResponse } from "next/server"
+import { z } from "zod"
+import { validateApiKey, checkPermission } from "@/lib/api/plugin-auth"
+import { enforcePluginRateLimit, enforcePluginIpRateLimit } from "@/lib/api/plugin-rate-limit"
+import { prisma } from "@/lib/prisma"
+import { venueEventBus } from "@/lib/sse/venue-events"
 
 const roomStatusSchema = z.object({
-  venueId: z.string().min(1, 'venueId is required'),
-  roomId: z.string().min(1, 'roomId is required'),
+  venueId: z.string().min(1, "venueId is required"),
+  roomId: z.string().min(1, "roomId is required"),
   isOccupied: z.boolean(),
-  note: z.string().max(500, 'Note too long (max 500 characters)').optional(),
+  note: z.string().max(500, "Note too long (max 500 characters)").optional(),
 })
 ```
 
 ```typescript
-    const body = await request.json()
-    const { venueId, roomId, isOccupied, note } = roomStatusSchema.parse(body)
+const body = await request.json()
+const { venueId, roomId, isOccupied, note } = roomStatusSchema.parse(body)
 ```
 
 The `SetRoomStatusPayload` interface is removed — same reasoning as Task 2.
@@ -333,6 +331,7 @@ git commit -m "refactor(web): validate plugin room-status body with shared zod s
 ## Task 4: Migrate `app/api/plugin/inventory/link-item/route.ts` (also fixes the `itemId: 0` bug)
 
 **Files:**
+
 - Modify: `apps/web/app/api/plugin/inventory/link-item/route.ts`
 
 - [ ] **Step 1: Replace the manual checks with a zod schema**
@@ -340,11 +339,11 @@ git commit -m "refactor(web): validate plugin room-status body with shared zod s
 Current (`apps/web/app/api/plugin/inventory/link-item/route.ts:1-13, 38-46`):
 
 ```typescript
-import { NextRequest, NextResponse } from 'next/server'
-import { validateApiKey } from '@/lib/api/plugin-auth'
-import { enforcePluginRateLimit, enforcePluginIpRateLimit } from '@/lib/api/plugin-rate-limit'
-import { prisma } from '@/lib/prisma'
-import { invalidateCache, cacheKeys } from '@/lib/redis-cache'
+import { NextRequest, NextResponse } from "next/server"
+import { validateApiKey } from "@/lib/api/plugin-auth"
+import { enforcePluginRateLimit, enforcePluginIpRateLimit } from "@/lib/api/plugin-rate-limit"
+import { prisma } from "@/lib/prisma"
+import { invalidateCache, cacheKeys } from "@/lib/redis-cache"
 
 interface LinkItemPayload {
   venueId: string
@@ -356,39 +355,36 @@ interface LinkItemPayload {
 ```
 
 ```typescript
-    const body: LinkItemPayload = await request.json()
-    const { venueId, serviceId, itemId, itemName, iconId } = body
+const body: LinkItemPayload = await request.json()
+const { venueId, serviceId, itemId, itemName, iconId } = body
 
-    if (!venueId || !serviceId || !itemId || !itemName) {
-      return NextResponse.json(
-        { error: 'Missing required fields: venueId, serviceId, itemId, itemName' },
-        { status: 400 }
-      )
-    }
+if (!venueId || !serviceId || !itemId || !itemName) {
+  return NextResponse.json({ error: "Missing required fields: venueId, serviceId, itemId, itemName" }, { status: 400 })
+}
 ```
 
 Replace with:
 
 ```typescript
-import { NextRequest, NextResponse } from 'next/server'
-import { z } from 'zod'
-import { validateApiKey } from '@/lib/api/plugin-auth'
-import { enforcePluginRateLimit, enforcePluginIpRateLimit } from '@/lib/api/plugin-rate-limit'
-import { prisma } from '@/lib/prisma'
-import { invalidateCache, cacheKeys } from '@/lib/redis-cache'
+import { NextRequest, NextResponse } from "next/server"
+import { z } from "zod"
+import { validateApiKey } from "@/lib/api/plugin-auth"
+import { enforcePluginRateLimit, enforcePluginIpRateLimit } from "@/lib/api/plugin-rate-limit"
+import { prisma } from "@/lib/prisma"
+import { invalidateCache, cacheKeys } from "@/lib/redis-cache"
 
 const linkItemSchema = z.object({
-  venueId: z.string().min(1, 'venueId is required'),
-  serviceId: z.string().min(1, 'serviceId is required'),
-  itemId: z.number().int().min(0, 'itemId must be a non-negative integer'),
-  itemName: z.string().min(1, 'itemName is required').max(200, 'Item name too long (max 200 characters)'),
+  venueId: z.string().min(1, "venueId is required"),
+  serviceId: z.string().min(1, "serviceId is required"),
+  itemId: z.number().int().min(0, "itemId must be a non-negative integer"),
+  itemName: z.string().min(1, "itemName is required").max(200, "Item name too long (max 200 characters)"),
   iconId: z.number().int().min(0).optional().nullable(),
 })
 ```
 
 ```typescript
-    const body = await request.json()
-    const { venueId, serviceId, itemId, itemName, iconId } = linkItemSchema.parse(body)
+const body = await request.json()
+const { venueId, serviceId, itemId, itemName, iconId } = linkItemSchema.parse(body)
 ```
 
 **This fixes the `itemId: 0` bug named in this task's title.** The old code's `!itemId` check treated `0` as "missing"; `z.number().int().min(0, ...)` treats `0` as a valid non-negative integer and only rejects genuinely missing/negative/non-integer values. `itemName` gets a 200-char cap (FFXIV item names, including glamour/dye modifiers in display strings, are longer than typical `venueName`-style fields but still clearly bounded — no real item name approaches 200 characters).
@@ -438,6 +434,7 @@ git commit -m "fix(web): allow itemId 0 and validate plugin link-item body with 
 ## Task 5: Migrate `app/api/plugin/inventory/restock/route.ts`
 
 **Files:**
+
 - Modify: `apps/web/app/api/plugin/inventory/restock/route.ts`
 
 - [ ] **Step 1: Replace the manual checks with a zod schema**
@@ -445,11 +442,11 @@ git commit -m "fix(web): allow itemId 0 and validate plugin link-item body with 
 Current (`apps/web/app/api/plugin/inventory/restock/route.ts:1-11, 37-45`):
 
 ```typescript
-import { NextRequest, NextResponse } from 'next/server'
-import { validateApiKey } from '@/lib/api/plugin-auth'
-import { enforcePluginRateLimit, enforcePluginIpRateLimit } from '@/lib/api/plugin-rate-limit'
-import { prisma } from '@/lib/prisma'
-import { invalidateCache, cacheKeys } from '@/lib/redis-cache'
+import { NextRequest, NextResponse } from "next/server"
+import { validateApiKey } from "@/lib/api/plugin-auth"
+import { enforcePluginRateLimit, enforcePluginIpRateLimit } from "@/lib/api/plugin-rate-limit"
+import { prisma } from "@/lib/prisma"
+import { invalidateCache, cacheKeys } from "@/lib/redis-cache"
 
 interface RestockPayload {
   venueId: string
@@ -459,37 +456,41 @@ interface RestockPayload {
 ```
 
 ```typescript
-    const body: RestockPayload = await request.json()
-    const { venueId, serviceId, stockCount } = body
+const body: RestockPayload = await request.json()
+const { venueId, serviceId, stockCount } = body
 
-    if (!venueId || !serviceId || typeof stockCount !== 'number' || stockCount < 0) {
-      return NextResponse.json(
-        { error: 'Missing or invalid fields: venueId, serviceId, stockCount (>= 0)' },
-        { status: 400 }
-      )
-    }
+if (!venueId || !serviceId || typeof stockCount !== "number" || stockCount < 0) {
+  return NextResponse.json(
+    { error: "Missing or invalid fields: venueId, serviceId, stockCount (>= 0)" },
+    { status: 400 }
+  )
+}
 ```
 
 Replace with:
 
 ```typescript
-import { NextRequest, NextResponse } from 'next/server'
-import { z } from 'zod'
-import { validateApiKey } from '@/lib/api/plugin-auth'
-import { enforcePluginRateLimit, enforcePluginIpRateLimit } from '@/lib/api/plugin-rate-limit'
-import { prisma } from '@/lib/prisma'
-import { invalidateCache, cacheKeys } from '@/lib/redis-cache'
+import { NextRequest, NextResponse } from "next/server"
+import { z } from "zod"
+import { validateApiKey } from "@/lib/api/plugin-auth"
+import { enforcePluginRateLimit, enforcePluginIpRateLimit } from "@/lib/api/plugin-rate-limit"
+import { prisma } from "@/lib/prisma"
+import { invalidateCache, cacheKeys } from "@/lib/redis-cache"
 
 const restockSchema = z.object({
-  venueId: z.string().min(1, 'venueId is required'),
-  serviceId: z.string().min(1, 'serviceId is required'),
-  stockCount: z.number().int('stockCount must be a whole number').min(0, 'stockCount must be non-negative').max(1000000, 'stockCount too large'),
+  venueId: z.string().min(1, "venueId is required"),
+  serviceId: z.string().min(1, "serviceId is required"),
+  stockCount: z
+    .number()
+    .int("stockCount must be a whole number")
+    .min(0, "stockCount must be non-negative")
+    .max(1000000, "stockCount too large"),
 })
 ```
 
 ```typescript
-    const body = await request.json()
-    const { venueId, serviceId, stockCount } = restockSchema.parse(body)
+const body = await request.json()
+const { venueId, serviceId, stockCount } = restockSchema.parse(body)
 ```
 
 **This closes the two named gaps for this route:** `Number.isInteger` enforcement (`z.number().int(...)` rejects `3.7`, where the old `typeof stockCount !== 'number'` check let any finite number through, fractional or not) and an upper bound (1,000,000 — a venue restocking a drink to over a million units is certainly a typo, not a real inventory count; chosen generously above any plausible real value rather than guessing a tight number).
@@ -551,6 +552,7 @@ cd apps/web && npx vitest run && npx tsc --noEmit && pnpm build
 These 4 routes are Dalamud-plugin-authenticated (`x-api-key` header), not browser-session routes — Increment 1's "log in as admin in a browser tab" verification method doesn't apply here. Two options, pick whichever is available:
 
 **Option A — real plugin client (preferred, exercises the true integration):**
+
 1. Build and load the current `-testing` plugin build against a real venue.
 2. From the plugin's Rooms tab, toggle a room's occupied status with a note over 500 characters (if the plugin UI allows typing that much — otherwise skip to Option B for this specific case) → should fail cleanly, not corrupt the room record.
 3. From the plugin's Inventory tab, link an item and restock it with a normal value → should still work exactly as before (regression check).

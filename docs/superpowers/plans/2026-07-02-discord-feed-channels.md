@@ -17,6 +17,7 @@
 ### Task A1: Loosen the tonight-post query and fix the cron time
 
 **Files:**
+
 - Modify: `apps/web/app/api/cron/tonight-post/route.ts`
 - Modify: `docker-compose.yml:72` (cron schedule line)
 
@@ -75,9 +76,11 @@ This drops the old `scheduledEnd: { gte: now }` constraint (which excluded venue
 - [ ] **Step 3: Move the cron schedule earlier**
 
 In `docker-compose.yml`, find the line:
+
 ```
 echo '0 18 * * * curl -s -H \"Authorization: Bearer '$$CRON_SECRET'\" http://venue-manager:3000/api/cron/tonight-post >> /var/log/cron.log 2>&1' >> /etc/crontabs/root &&
 ```
+
 Change `0 18 * * *` to `0 12 * * *`.
 
 - [ ] **Step 4: Verify manually against real data**
@@ -85,9 +88,11 @@ Change `0 18 * * *` to `0 12 * * *`.
 This can't be tested locally against prod data pre-deploy, but confirm the query logic is sound by running it directly against the DB (read-only, safe):
 
 Run:
+
 ```bash
 ssh server@192.168.1.122 "docker exec postgres psql -U postgres -d venue_manager -c \"SELECT v.name, s.\\\"scheduledStart\\\", s.status FROM venues v JOIN shifts s ON s.\\\"venueId\\\" = v.id WHERE v.\\\"isActive\\\" AND s.\\\"scheduledStart\\\" >= date_trunc('day', now()) AND s.\\\"scheduledStart\\\" < date_trunc('day', now()) + interval '1 day' AND s.status IN ('SCHEDULED','ACTIVE') ORDER BY s.\\\"scheduledStart\\\";\""
 ```
+
 Expected: returns every venue with a shift starting today, including ones already completed by wall-clock time — confirming the new query's shape matches what the route will produce.
 
 - [ ] **Step 5: Commit**
@@ -109,6 +114,7 @@ venues whose shift had already ended by post time."
 ### Task B1: Add the bot's message-tracking table
 
 **Files:**
+
 - Modify: `apps/eorzea-bot/prisma/schema.prisma`
 
 - [ ] **Step 1: Add the model**
@@ -145,6 +151,7 @@ CREATE TABLE IF NOT EXISTS discord_tracked_messages (
 ```bash
 ssh server@192.168.1.122 "docker exec postgres psql -U postgres -d venue_manager -c '\\d discord_tracked_messages'"
 ```
+
 Expected: shows the 4 columns with `key` as primary key.
 
 - [ ] **Step 4: Regenerate the Prisma client locally so TypeScript picks up the new model**
@@ -152,6 +159,7 @@ Expected: shows the 4 columns with `key` as primary key.
 ```bash
 cd ~/xiv-app/apps/eorzea-bot && npx prisma generate
 ```
+
 Expected: `Generated Prisma Client` with no errors.
 
 - [ ] **Step 5: Commit**
@@ -165,22 +173,23 @@ git commit -m "feat(bot): add TrackedMessage table for edited-in-place Discord b
 ### Task B2: Add a post-or-edit helper that uses tracked messages
 
 **Files:**
+
 - Modify: `apps/eorzea-bot/src/utils/channels.ts`
 
 - [ ] **Step 1: Add `postOrEditEmbed` alongside the existing `postEmbed`**
 
 ```typescript
-import { Client, EmbedBuilder, TextChannel } from 'discord.js';
-import prisma from './prisma.js';
+import { Client, EmbedBuilder, TextChannel } from "discord.js"
+import prisma from "./prisma.js"
 
 export async function postEmbed(client: Client, channelId: string, embed: EmbedBuilder): Promise<void> {
-  const channel = client.channels.cache.get(channelId) ?? await client.channels.fetch(channelId).catch(() => null);
+  const channel = client.channels.cache.get(channelId) ?? (await client.channels.fetch(channelId).catch(() => null))
   if (!channel || !(channel instanceof TextChannel)) {
-    console.warn(`[post] Channel ${channelId} not found or not a text channel`);
-    return;
+    console.warn(`[post] Channel ${channelId} not found or not a text channel`)
+    return
   }
-  await channel.send({ embeds: [embed] });
-  console.log(`[post] Sent embed to #${channel.name}`);
+  await channel.send({ embeds: [embed] })
+  console.log(`[post] Sent embed to #${channel.name}`)
 }
 
 export async function postOrEditEmbed(
@@ -189,31 +198,31 @@ export async function postOrEditEmbed(
   channelId: string,
   embed: EmbedBuilder
 ): Promise<void> {
-  const channel = client.channels.cache.get(channelId) ?? await client.channels.fetch(channelId).catch(() => null);
+  const channel = client.channels.cache.get(channelId) ?? (await client.channels.fetch(channelId).catch(() => null))
   if (!channel || !(channel instanceof TextChannel)) {
-    console.warn(`[postOrEdit] Channel ${channelId} not found or not a text channel`);
-    return;
+    console.warn(`[postOrEdit] Channel ${channelId} not found or not a text channel`)
+    return
   }
 
-  const tracked = await prisma.trackedMessage.findUnique({ where: { key } });
+  const tracked = await prisma.trackedMessage.findUnique({ where: { key } })
 
   if (tracked) {
-    const existing = await channel.messages.fetch(tracked.messageId).catch(() => null);
+    const existing = await channel.messages.fetch(tracked.messageId).catch(() => null)
     if (existing) {
-      await existing.edit({ embeds: [embed] });
-      console.log(`[postOrEdit] Edited ${key} in #${channel.name}`);
-      return;
+      await existing.edit({ embeds: [embed] })
+      console.log(`[postOrEdit] Edited ${key} in #${channel.name}`)
+      return
     }
-    console.warn(`[postOrEdit] Tracked message for ${key} missing (deleted?) — reposting`);
+    console.warn(`[postOrEdit] Tracked message for ${key} missing (deleted?) — reposting`)
   }
 
-  const sent = await channel.send({ embeds: [embed] });
+  const sent = await channel.send({ embeds: [embed] })
   await prisma.trackedMessage.upsert({
     where: { key },
     create: { key, channelId, messageId: sent.id },
     update: { channelId, messageId: sent.id },
-  });
-  console.log(`[postOrEdit] Posted fresh ${key} to #${channel.name}`);
+  })
+  console.log(`[postOrEdit] Posted fresh ${key} to #${channel.name}`)
 }
 ```
 
@@ -224,6 +233,7 @@ This is the "message not found → repost and store new ID" fallback the spec ca
 ```bash
 cd ~/xiv-app/apps/eorzea-bot && npx tsc --noEmit
 ```
+
 Expected: no errors.
 
 - [ ] **Step 3: Commit**
@@ -237,6 +247,7 @@ git commit -m "feat(bot): add postOrEditEmbed for tracked, edited-in-place board
 ### Task B3: Add the events-digest embed builder
 
 **Files:**
+
 - Modify: `apps/eorzea-bot/src/utils/embeds.ts`
 
 - [ ] **Step 1: Add `eventsDigestDayEmbed`**
@@ -253,29 +264,29 @@ export function eventsDigestDayEmbed(
     return new EmbedBuilder()
       .setColor(XIV_BLUE)
       .setTitle(`📅 Events — ${dayLabel}`)
-      .setDescription('Nothing scheduled.')
-      .setFooter({ text: 'XIV Venue Manager · All times Server Time (UTC)' })
-      .setTimestamp();
+      .setDescription("Nothing scheduled.")
+      .setFooter({ text: "XIV Venue Manager · All times Server Time (UTC)" })
+      .setTimestamp()
   }
 
-  const fields = events.map(e => ({
+  const fields = events.map((e) => ({
     name: e.venue.name,
     value: `[${e.title}](${SITE}/venues/${e.venue.slug}) · ${fmtTime(e.startTime)} ST`,
     inline: false,
-  }));
+  }))
 
   const embed = new EmbedBuilder()
     .setColor(XIV_BLUE)
     .setTitle(`📅 Events — ${dayLabel}`)
     .addFields(fields)
-    .setFooter({ text: 'XIV Venue Manager · All times Server Time (UTC)' })
-    .setTimestamp();
+    .setFooter({ text: "XIV Venue Manager · All times Server Time (UTC)" })
+    .setTimestamp()
 
   if (truncatedCount > 0) {
-    embed.setDescription(`+${truncatedCount} more event${truncatedCount !== 1 ? 's' : ''} today not shown.`);
+    embed.setDescription(`+${truncatedCount} more event${truncatedCount !== 1 ? "s" : ""} today not shown.`)
   }
 
-  return embed;
+  return embed
 }
 ```
 
@@ -284,6 +295,7 @@ export function eventsDigestDayEmbed(
 ```bash
 cd ~/xiv-app/apps/eorzea-bot && npx tsc --noEmit
 ```
+
 Expected: no errors.
 
 - [ ] **Step 3: Commit**
@@ -297,6 +309,7 @@ git commit -m "feat(bot): add eventsDigestDayEmbed builder"
 ### Task B4: Add the bot's events-digest webhook endpoint
 
 **Files:**
+
 - Modify: `apps/eorzea-bot/src/webhook/server.ts`
 
 - [ ] **Step 1: Add the import and the new route**
@@ -304,24 +317,24 @@ git commit -m "feat(bot): add eventsDigestDayEmbed builder"
 Add `eventsDigestDayEmbed` to the existing import from `../utils/embeds.js`, add `postOrEditEmbed` to the import from `../utils/channels.js`, then add:
 
 ```typescript
-const EVENTS_CHANNEL_DIGEST = process.env.EVENTS_FEED_CHANNEL_ID!;
+const EVENTS_CHANNEL_DIGEST = process.env.EVENTS_FEED_CHANNEL_ID!
 
-app.post('/webhook/events-digest', async (req, res) => {
+app.post("/webhook/events-digest", async (req, res) => {
   const { dayOffset, dayLabel, events, truncatedCount } = req.body as {
     dayOffset: number
     dayLabel: string
     events: { title: string; startTime: string; venue: { name: string; slug: string } }[]
     truncatedCount: number
-  };
-  const parsed = events.map(e => ({ ...e, startTime: new Date(e.startTime) }));
+  }
+  const parsed = events.map((e) => ({ ...e, startTime: new Date(e.startTime) }))
   await postOrEditEmbed(
     client,
     `events:day-${dayOffset}`,
     EVENTS_CHANNEL_DIGEST,
     eventsDigestDayEmbed(dayLabel, parsed, truncatedCount)
-  );
-  res.json({ ok: true });
-});
+  )
+  res.json({ ok: true })
+})
 ```
 
 Place this near the existing `/webhook/event-live` route for locality.
@@ -331,6 +344,7 @@ Place this near the existing `/webhook/event-live` route for locality.
 ```bash
 cd ~/xiv-app/apps/eorzea-bot && npx tsc --noEmit
 ```
+
 Expected: no errors.
 
 - [ ] **Step 3: Commit**
@@ -344,6 +358,7 @@ git commit -m "feat(bot): add /webhook/events-digest endpoint"
 ### Task B5: Add the web-side trigger function
 
 **Files:**
+
 - Modify: `apps/web/lib/discord-feed.ts`
 
 - [ ] **Step 1: Add `postEventsDigestDay`**
@@ -357,11 +372,11 @@ export function postEventsDigestDay(
   events: { title: string; startTime: Date; venue: { name: string; slug: string } }[],
   truncatedCount: number
 ) {
-  postToBot('/webhook/events-digest', {
+  postToBot("/webhook/events-digest", {
     dayOffset,
     dayLabel,
     truncatedCount,
-    events: events.map(e => ({ ...e, startTime: e.startTime.toISOString() })),
+    events: events.map((e) => ({ ...e, startTime: e.startTime.toISOString() })),
   })
 }
 ```
@@ -371,6 +386,7 @@ export function postEventsDigestDay(
 ```bash
 cd ~/xiv-app/apps/web && npx tsc --noEmit
 ```
+
 Expected: no new errors introduced by this change (pre-existing unrelated errors, if any, are not this task's concern).
 
 - [ ] **Step 3: Commit**
@@ -384,6 +400,7 @@ git commit -m "feat(web): add postEventsDigestDay trigger"
 ### Task B6: Add the events-digest cron route
 
 **Files:**
+
 - Create: `apps/web/app/api/cron/events-digest-post/route.ts`
 
 - [ ] **Step 1: Write the route**
@@ -451,6 +468,7 @@ export async function GET(request: Request) {
 ```bash
 cd ~/xiv-app/apps/web && npx tsc --noEmit
 ```
+
 Expected: no new errors.
 
 - [ ] **Step 3: Commit**
@@ -464,6 +482,7 @@ git commit -m "feat(web): add events-digest-post cron route"
 ### Task B7: Wire the new cron into docker-compose and bot env
 
 **Files:**
+
 - Modify: `docker-compose.yml`
 
 - [ ] **Step 1: Add the crontab line**
@@ -503,6 +522,7 @@ ssh server@192.168.1.122 "cd ~/xiv-app && git pull && docker compose build venue
 ```bash
 ssh server@192.168.1.122 "curl -s -H \"Authorization: Bearer \$CRON_SECRET\" http://localhost:3000/api/cron/events-digest-post"
 ```
+
 Expected: `{"success":true,"timestamp":"..."}`. Then check the Events Discord channel — 7 messages should appear (or be edited if already present), one per day, each titled `📅 Events — <Weekday>, <Day> <Month>`.
 
 - [ ] **Step 4: Confirm editing works, not reposting**
@@ -517,6 +537,7 @@ Expected: the 7 messages in Discord update in place (same message IDs, new `edit
 ### Task C1: Add the bot's open-venue tracking table
 
 **Files:**
+
 - Modify: `apps/eorzea-bot/prisma/schema.prisma`
 
 - [ ] **Step 1: Add the model**
@@ -550,6 +571,7 @@ CREATE TABLE IF NOT EXISTS discord_open_venues (
 ssh server@192.168.1.122 "docker exec postgres psql -U postgres -d venue_manager -c '\\d discord_open_venues'"
 cd ~/xiv-app/apps/eorzea-bot && npx prisma generate
 ```
+
 Expected: table shows 4 columns; `Generated Prisma Client` with no errors.
 
 - [ ] **Step 4: Commit**
@@ -563,36 +585,43 @@ git commit -m "feat(bot): add OpenVenue table for live open/closed tracking"
 ### Task C2: Add the data-center-to-region mapping
 
 **Files:**
+
 - Create: `apps/eorzea-bot/src/utils/regions.ts`
 
 - [ ] **Step 1: Write the mapping**
 
 ```typescript
-export type Region = 'na' | 'eu' | 'jp' | 'oce';
+export type Region = "na" | "eu" | "jp" | "oce"
 
 const DATA_CENTER_TO_REGION: Record<string, Region> = {
-  Aether: 'na', Crystal: 'na', Dynamis: 'na', Primal: 'na',
-  Chaos: 'eu', Light: 'eu',
-  Elemental: 'jp', Gaia: 'jp', Mana: 'jp',
-  Materia: 'oce',
-};
+  Aether: "na",
+  Crystal: "na",
+  Dynamis: "na",
+  Primal: "na",
+  Chaos: "eu",
+  Light: "eu",
+  Elemental: "jp",
+  Gaia: "jp",
+  Mana: "jp",
+  Materia: "oce",
+}
 
 export function regionForDataCenter(dataCenter: string): Region | null {
-  return DATA_CENTER_TO_REGION[dataCenter] ?? null;
+  return DATA_CENTER_TO_REGION[dataCenter] ?? null
 }
 
 export const REGION_LABELS: Record<Region, string> = {
-  na: 'North America',
-  eu: 'Europe',
-  jp: 'Japan',
-  oce: 'Oceania',
-};
+  na: "North America",
+  eu: "Europe",
+  jp: "Japan",
+  oce: "Oceania",
+}
 
 export function regionChannelId(region: Region): string {
-  const envKey = `WHATS_HAPPENING_${region.toUpperCase()}_CHANNEL_ID`;
-  const id = process.env[envKey];
-  if (!id) throw new Error(`Missing env var ${envKey}`);
-  return id;
+  const envKey = `WHATS_HAPPENING_${region.toUpperCase()}_CHANNEL_ID`
+  const id = process.env[envKey]
+  if (!id) throw new Error(`Missing env var ${envKey}`)
+  return id
 }
 ```
 
@@ -601,6 +630,7 @@ export function regionChannelId(region: Region): string {
 ```bash
 cd ~/xiv-app/apps/eorzea-bot && npx tsc --noEmit
 ```
+
 Expected: no errors.
 
 - [ ] **Step 3: Commit**
@@ -614,6 +644,7 @@ git commit -m "feat(bot): add data-center-to-region mapping for status boards"
 ### Task C3: Add the region-board embed builder
 
 **Files:**
+
 - Modify: `apps/eorzea-bot/src/utils/embeds.ts`
 
 - [ ] **Step 1: Add `regionBoardEmbed`**
@@ -627,21 +658,21 @@ export function regionBoardEmbed(
     return new EmbedBuilder()
       .setColor(XIV_BLUE)
       .setTitle(`🟢 What's Happening — ${regionLabel}`)
-      .setDescription('No venues currently open in this region.')
-      .setFooter({ text: 'XIV Venue Manager · Live status' })
-      .setTimestamp();
+      .setDescription("No venues currently open in this region.")
+      .setFooter({ text: "XIV Venue Manager · Live status" })
+      .setTimestamp()
   }
 
   const lines = openVenues
     .sort((a, b) => a.venueName.localeCompare(b.venueName))
-    .map(v => `🟢 **${v.venueName}** (${v.dataCenter}) — open since ${fmtTime(v.openedAt)} ST`);
+    .map((v) => `🟢 **${v.venueName}** (${v.dataCenter}) — open since ${fmtTime(v.openedAt)} ST`)
 
   return new EmbedBuilder()
     .setColor(XIV_BLUE)
     .setTitle(`🟢 What's Happening — ${regionLabel}`)
-    .setDescription(lines.join('\n'))
-    .setFooter({ text: 'XIV Venue Manager · Live status' })
-    .setTimestamp();
+    .setDescription(lines.join("\n"))
+    .setFooter({ text: "XIV Venue Manager · Live status" })
+    .setTimestamp()
 }
 ```
 
@@ -650,6 +681,7 @@ export function regionBoardEmbed(
 ```bash
 cd ~/xiv-app/apps/eorzea-bot && npx tsc --noEmit
 ```
+
 Expected: no errors.
 
 - [ ] **Step 3: Commit**
@@ -663,6 +695,7 @@ git commit -m "feat(bot): add regionBoardEmbed builder"
 ### Task C4: Add the bot's venue-status webhook endpoint
 
 **Files:**
+
 - Modify: `apps/eorzea-bot/src/webhook/server.ts`
 
 - [ ] **Step 1: Add imports**
@@ -672,51 +705,51 @@ Add `regionBoardEmbed` to the embeds import, `regionForDataCenter`, `REGION_LABE
 - [ ] **Step 2: Add the route**
 
 ```typescript
-app.post('/webhook/venue-status', async (req, res) => {
+app.post("/webhook/venue-status", async (req, res) => {
   const { venueId, venueName, dataCenter, isOpen } = req.body as {
     venueId: string
     venueName: string
     dataCenter: string
     isOpen: boolean
-  };
-
-  const region = regionForDataCenter(dataCenter);
-  if (!region) {
-    console.warn(`[venue-status] Unknown data center "${dataCenter}" for venue ${venueName}, skipping`);
-    res.json({ ok: true, skipped: true });
-    return;
   }
 
-  const existing = await prisma.openVenue.findUnique({ where: { venueId } });
-  const wasOpen = existing !== null;
+  const region = regionForDataCenter(dataCenter)
+  if (!region) {
+    console.warn(`[venue-status] Unknown data center "${dataCenter}" for venue ${venueName}, skipping`)
+    res.json({ ok: true, skipped: true })
+    return
+  }
+
+  const existing = await prisma.openVenue.findUnique({ where: { venueId } })
+  const wasOpen = existing !== null
 
   if (isOpen === wasOpen) {
     // No transition — a second staff member clocking into an already-open
     // venue, or a clock-out that isn't the last active shift, shouldn't
     // trigger a re-render.
-    res.json({ ok: true, changed: false });
-    return;
+    res.json({ ok: true, changed: false })
+    return
   }
 
   if (isOpen) {
-    await prisma.openVenue.create({ data: { venueId, venueName, dataCenter } });
+    await prisma.openVenue.create({ data: { venueId, venueName, dataCenter } })
   } else {
-    await prisma.openVenue.delete({ where: { venueId } }).catch(() => null);
+    await prisma.openVenue.delete({ where: { venueId } }).catch(() => null)
   }
 
   const openInRegion = await prisma.openVenue.findMany({
     where: { dataCenter: { in: dataCentersForRegion(region) } },
-  });
+  })
 
   await postOrEditEmbed(
     client,
     `region:${region}`,
     regionChannelId(region),
     regionBoardEmbed(REGION_LABELS[region], openInRegion)
-  );
+  )
 
-  res.json({ ok: true, changed: true });
-});
+  res.json({ ok: true, changed: true })
+})
 ```
 
 This calls a `dataCentersForRegion` helper — add it to `regions.ts` in the same task (Step 3 below), since `openInRegion` needs to query by the list of data centers belonging to a region, not the region string itself (the DB only knows `dataCenter`, not `region`).
@@ -727,7 +760,7 @@ This calls a `dataCentersForRegion` helper — add it to `regions.ts` in the sam
 export function dataCentersForRegion(region: Region): string[] {
   return Object.entries(DATA_CENTER_TO_REGION)
     .filter(([, r]) => r === region)
-    .map(([dc]) => dc);
+    .map(([dc]) => dc)
 }
 ```
 
@@ -736,6 +769,7 @@ export function dataCentersForRegion(region: Region): string[] {
 ```bash
 cd ~/xiv-app/apps/eorzea-bot && npx tsc --noEmit
 ```
+
 Expected: no errors.
 
 - [ ] **Step 5: Commit**
@@ -749,6 +783,7 @@ git commit -m "feat(bot): add /webhook/venue-status endpoint with transition det
 ### Task C5: Add the web-side shared sync helper
 
 **Files:**
+
 - Create: `apps/web/lib/venue-status.ts`
 - Modify: `apps/web/lib/discord-feed.ts`
 
@@ -756,7 +791,7 @@ git commit -m "feat(bot): add /webhook/venue-status endpoint with transition det
 
 ```typescript
 export function postVenueStatus(venue: { id: string; name: string; dataCenter: string }, isOpen: boolean) {
-  postToBot('/webhook/venue-status', {
+  postToBot("/webhook/venue-status", {
     venueId: venue.id,
     venueName: venue.name,
     dataCenter: venue.dataCenter,
@@ -768,8 +803,8 @@ export function postVenueStatus(venue: { id: string; name: string; dataCenter: s
 - [ ] **Step 2: Write `venue-status.ts`**
 
 ```typescript
-import { prisma } from '@/lib/prisma'
-import { postVenueStatus } from '@/lib/discord-feed'
+import { prisma } from "@/lib/prisma"
+import { postVenueStatus } from "@/lib/discord-feed"
 
 /**
  * Call after any shift clock-in/clock-out. Recomputes whether the venue
@@ -797,6 +832,7 @@ export async function syncVenueOpenStatus(venueId: string) {
 ```bash
 cd ~/xiv-app/apps/web && npx tsc --noEmit
 ```
+
 Expected: no new errors.
 
 - [ ] **Step 4: Commit**
@@ -810,6 +846,7 @@ git commit -m "feat(web): add syncVenueOpenStatus shared helper"
 ### Task C6: Wire the sync call into all 5 clock-in/out call sites
 
 **Files:**
+
 - Modify: `apps/web/app/api/plugin/shifts/clock-in/route.ts`
 - Modify: `apps/web/app/api/plugin/shifts/clock-out/route.ts`
 - Modify: `apps/web/app/api/mobile/my/shifts/[shiftId]/route.ts`
@@ -821,40 +858,50 @@ git commit -m "feat(web): add syncVenueOpenStatus shared helper"
 Add the import at the top: `import { syncVenueOpenStatus } from "@/lib/venue-status"`.
 
 Find:
+
 ```typescript
-    // Queue VENUE_OPENED_NOW notifications for all followers (best-effort)
-    queueOpenedNowNotifications(shift.venueId, now).catch(() => {})
+// Queue VENUE_OPENED_NOW notifications for all followers (best-effort)
+queueOpenedNowNotifications(shift.venueId, now).catch(() => {})
 ```
+
 Add immediately after:
+
 ```typescript
-    syncVenueOpenStatus(shift.venueId).catch(() => {})
+syncVenueOpenStatus(shift.venueId).catch(() => {})
 ```
 
 - [ ] **Step 2: `plugin/shifts/clock-out/route.ts`**
 
 Add the import. Find:
+
 ```typescript
-    await logShiftAudit(shift.id, "CLOCK_OUT", auth.userId, "plugin")
-    postShiftXp(auth.userId, shift.venueId)
+await logShiftAudit(shift.id, "CLOCK_OUT", auth.userId, "plugin")
+postShiftXp(auth.userId, shift.venueId)
 ```
+
 Add immediately after:
+
 ```typescript
-    syncVenueOpenStatus(shift.venueId).catch(() => {})
+syncVenueOpenStatus(shift.venueId).catch(() => {})
 ```
 
 - [ ] **Step 3: `mobile/my/shifts/[shiftId]/route.ts`**
 
 Add the import. Find the clock-in block:
+
 ```typescript
-    queueOpenedNowNotifications(shift.venue.id, shift.venue.name, now).catch(() => {})
-    await logShiftAudit(shift.id, "CLOCK_IN", userId, "mobile_self")
+queueOpenedNowNotifications(shift.venue.id, shift.venue.name, now).catch(() => {})
+await logShiftAudit(shift.id, "CLOCK_IN", userId, "mobile_self")
 ```
+
 Add immediately after:
+
 ```typescript
-    syncVenueOpenStatus(shift.venue.id).catch(() => {})
+syncVenueOpenStatus(shift.venue.id).catch(() => {})
 ```
 
 Find the clock-out block:
+
 ```typescript
   await logShiftAudit(shift.id, "CLOCK_OUT", userId, "mobile_self")
 
@@ -864,7 +911,9 @@ Find the clock-out block:
   })
 }
 ```
+
 Change to:
+
 ```typescript
   await logShiftAudit(shift.id, "CLOCK_OUT", userId, "mobile_self")
   syncVenueOpenStatus(shift.venue.id).catch(() => {})
@@ -879,6 +928,7 @@ Change to:
 - [ ] **Step 4: `mobile/operator/venues/[venueId]/shifts/[shiftId]/route.ts`**
 
 Add the import. Find the clock-in block:
+
 ```typescript
     await logShiftAudit(shift.id, "CLOCK_IN", ctx.userId, "mobile_operator")
 
@@ -888,7 +938,9 @@ Add the import. Find the clock-in block:
     })
   }
 ```
+
 Change to:
+
 ```typescript
     await logShiftAudit(shift.id, "CLOCK_IN", ctx.userId, "mobile_operator")
     syncVenueOpenStatus(venueId).catch(() => {})
@@ -905,33 +957,39 @@ Find the equivalent `CLOCK_OUT` line further down in the same file (same `logShi
 - [ ] **Step 5: `venues/[venueId]/shifts/[shiftId]/route.ts`**
 
 Add the import. Find the clock-in block:
+
 ```typescript
-      queueOpenedNowNotifications(venue.id, venue.name, now).catch(() => {})
-      await logShiftAudit(shift.id, "CLOCK_IN", session.user.id, "web")
+queueOpenedNowNotifications(venue.id, venue.name, now).catch(() => {})
+await logShiftAudit(shift.id, "CLOCK_IN", session.user.id, "web")
 ```
+
 Add immediately after:
+
 ```typescript
-      syncVenueOpenStatus(venue.id).catch(() => {})
+syncVenueOpenStatus(venue.id).catch(() => {})
 ```
 
 Find the clock-out block:
-```typescript
-    await logShiftAudit(shift.id, "CLOCK_OUT", session.user.id, "web")
 
-    return NextResponse.json({
-      success: true,
-      shift: { id: shift.id, status: "COMPLETED", actualEnd: now.toISOString(), hoursWorked: calculatedHours },
-    })
+```typescript
+await logShiftAudit(shift.id, "CLOCK_OUT", session.user.id, "web")
+
+return NextResponse.json({
+  success: true,
+  shift: { id: shift.id, status: "COMPLETED", actualEnd: now.toISOString(), hoursWorked: calculatedHours },
+})
 ```
-Change to:
-```typescript
-    await logShiftAudit(shift.id, "CLOCK_OUT", session.user.id, "web")
-    syncVenueOpenStatus(venue.id).catch(() => {})
 
-    return NextResponse.json({
-      success: true,
-      shift: { id: shift.id, status: "COMPLETED", actualEnd: now.toISOString(), hoursWorked: calculatedHours },
-    })
+Change to:
+
+```typescript
+await logShiftAudit(shift.id, "CLOCK_OUT", session.user.id, "web")
+syncVenueOpenStatus(venue.id).catch(() => {})
+
+return NextResponse.json({
+  success: true,
+  shift: { id: shift.id, status: "COMPLETED", actualEnd: now.toISOString(), hoursWorked: calculatedHours },
+})
 ```
 
 - [ ] **Step 6: Verify all 5 files compile**
@@ -939,6 +997,7 @@ Change to:
 ```bash
 cd ~/xiv-app/apps/web && npx tsc --noEmit
 ```
+
 Expected: no new errors.
 
 - [ ] **Step 7: Commit**
@@ -956,16 +1015,17 @@ git commit -m "feat(web): notify Discord bot of venue open/close on every clock-
 ### Task C7: Add region channel env vars
 
 **Files:**
+
 - Modify: `docker-compose.yml` (eorzea-bot service environment block)
 - Modify: `apps/eorzea-bot/.env.example`
 
 - [ ] **Step 1: Add to `docker-compose.yml`'s `eorzea-bot` service environment**
 
 ```yaml
-      WHATS_HAPPENING_NA_CHANNEL_ID: ${WHATS_HAPPENING_NA_CHANNEL_ID}
-      WHATS_HAPPENING_EU_CHANNEL_ID: ${WHATS_HAPPENING_EU_CHANNEL_ID}
-      WHATS_HAPPENING_JP_CHANNEL_ID: ${WHATS_HAPPENING_JP_CHANNEL_ID}
-      WHATS_HAPPENING_OCE_CHANNEL_ID: ${WHATS_HAPPENING_OCE_CHANNEL_ID}
+WHATS_HAPPENING_NA_CHANNEL_ID: ${WHATS_HAPPENING_NA_CHANNEL_ID}
+WHATS_HAPPENING_EU_CHANNEL_ID: ${WHATS_HAPPENING_EU_CHANNEL_ID}
+WHATS_HAPPENING_JP_CHANNEL_ID: ${WHATS_HAPPENING_JP_CHANNEL_ID}
+WHATS_HAPPENING_OCE_CHANNEL_ID: ${WHATS_HAPPENING_OCE_CHANNEL_ID}
 ```
 
 - [ ] **Step 2: Add to `.env.example`**
@@ -996,6 +1056,7 @@ git commit -m "chore: add per-region What's Happening channel env vars"
 ```bash
 ssh server@192.168.1.122 "cd ~/xiv-app && git pull && docker compose build venue-manager eorzea-bot && docker compose up -d venue-manager eorzea-bot"
 ```
+
 (Confirm the 4 `WHATS_HAPPENING_*_CHANNEL_ID` values were added to `~/xiv-app/.env` on the server before this step — Task C7 Step 3.)
 
 - [ ] **Step 2: Pick a real test venue and shift, clock in via the plugin or `/venue` command**

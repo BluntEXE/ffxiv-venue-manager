@@ -18,13 +18,10 @@ type LatestRelease = {
 
 async function fetchLatest(): Promise<{ tag: string; title: string }> {
   try {
-    const res = await fetch(
-      "https://api.github.com/repos/BluntEXE/XIVVenueManagerSync/releases/latest",
-      {
-        next: { revalidate: 3600 },
-        headers: { Accept: "application/vnd.github+json" },
-      }
-    )
+    const res = await fetch("https://api.github.com/repos/BluntEXE/XIVVenueManagerSync/releases/latest", {
+      next: { revalidate: 3600 },
+      headers: { Accept: "application/vnd.github+json" },
+    })
     if (!res.ok) throw new Error(`GitHub API ${res.status}`)
     const data: LatestRelease = await res.json()
     const tag = data.tag_name?.trim() || FALLBACK_TAG

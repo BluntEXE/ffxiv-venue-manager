@@ -68,14 +68,10 @@ export function OpenShiftChip({ shiftId, venueId, timeLabel, canClaim }: OpenShi
         </div>
       )}
 
-      {step === "loading" && (
-        <span className="text-[0.62rem] text-[var(--fg-faint)]">Claiming…</span>
-      )}
+      {step === "loading" && <span className="text-[0.62rem] text-[var(--fg-faint)]">Claiming…</span>}
 
       {step === "pending" && (
-        <span className="text-[0.62rem] font-semibold text-emerald-400">
-          Claimed — awaiting approval
-        </span>
+        <span className="text-[0.62rem] font-semibold text-emerald-400">Claimed — awaiting approval</span>
       )}
 
       {error && <p className="text-[0.6rem] text-red-400">{error}</p>}

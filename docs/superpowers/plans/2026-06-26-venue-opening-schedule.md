@@ -12,22 +12,23 @@
 
 ## File Map
 
-| File | Action | Purpose |
-|---|---|---|
-| `apps/web/prisma/schema.prisma` | Modify | Add `VenueScheduleEntry` model + relation on `Venue` |
-| `apps/web/lib/schedule-utils.ts` | Create | Format helpers, interval label, `isOpenNow` logic |
-| `apps/web/app/api/venues/[venueId]/schedule/route.ts` | Create | GET list + POST create |
-| `apps/web/app/api/venues/[venueId]/schedule/[entryId]/route.ts` | Create | PUT update + DELETE |
-| `apps/web/components/schedule-entry-form.tsx` | Create | Add/edit entry dialog |
-| `apps/web/components/venue-schedule-display.tsx` | Create | Read-only schedule table for profile + dashboard |
-| `apps/web/app/dashboard/[slug]/settings/page.tsx` | Modify | Add schedule management section, demote old text fields |
-| `apps/web/app/venues/[slug]/page.tsx` | Modify | Replace Hours card with structured display + wire Open Now badge |
+| File                                                            | Action | Purpose                                                          |
+| --------------------------------------------------------------- | ------ | ---------------------------------------------------------------- |
+| `apps/web/prisma/schema.prisma`                                 | Modify | Add `VenueScheduleEntry` model + relation on `Venue`             |
+| `apps/web/lib/schedule-utils.ts`                                | Create | Format helpers, interval label, `isOpenNow` logic                |
+| `apps/web/app/api/venues/[venueId]/schedule/route.ts`           | Create | GET list + POST create                                           |
+| `apps/web/app/api/venues/[venueId]/schedule/[entryId]/route.ts` | Create | PUT update + DELETE                                              |
+| `apps/web/components/schedule-entry-form.tsx`                   | Create | Add/edit entry dialog                                            |
+| `apps/web/components/venue-schedule-display.tsx`                | Create | Read-only schedule table for profile + dashboard                 |
+| `apps/web/app/dashboard/[slug]/settings/page.tsx`               | Modify | Add schedule management section, demote old text fields          |
+| `apps/web/app/venues/[slug]/page.tsx`                           | Modify | Replace Hours card with structured display + wire Open Now badge |
 
 ---
 
 ## Task 1: Prisma Schema
 
 **Files:**
+
 - Modify: `apps/web/prisma/schema.prisma`
 
 - [ ] **Add `VenueScheduleEntry` model after the `Venue` model (around line 201):**
@@ -89,6 +90,7 @@ git commit -m "feat: add VenueScheduleEntry model for structured opening hours"
 ## Task 2: Schedule Utility Functions
 
 **Files:**
+
 - Create: `apps/web/lib/schedule-utils.ts`
 
 - [ ] **Create the file:**
@@ -113,10 +115,10 @@ export type ScheduleEntry = {
 }
 
 export const DAY_NAMES = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"]
-export const DAY_SHORT  = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"]
+export const DAY_SHORT = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"]
 
 function formatHHMM(h: number, m: number): string {
-  const period   = h >= 12 ? "PM" : "AM"
+  const period = h >= 12 ? "PM" : "AM"
   const displayH = h === 0 ? 12 : h > 12 ? h - 12 : h
   const displayM = m === 0 ? "" : `:${String(m).padStart(2, "0")}`
   return `${displayH}${displayM} ${period}`
@@ -130,7 +132,7 @@ export function formatEntryTime(entry: ScheduleEntry): string {
 }
 
 export function formatIntervalLabel(entry: ScheduleEntry): string {
-  if (entry.interval === "weekly")   return "Weekly"
+  if (entry.interval === "weekly") return "Weekly"
   if (entry.interval === "biweekly") return "Every 2 weeks"
   if (entry.interval === "monthly") {
     const ordinals = ["", "1st", "2nd", "3rd", "4th", "Last"]
@@ -144,19 +146,19 @@ export function isOpenNow(entries: ScheduleEntry[]): boolean {
 }
 
 function isEntryActiveNow(entry: ScheduleEntry): boolean {
-  const now        = new Date()
-  const todayDay   = now.getUTCDay()
+  const now = new Date()
+  const todayDay = now.getUTCDay()
   const currentMin = now.getUTCHours() * 60 + now.getUTCMinutes()
-  const startMin   = entry.startHour * 60 + entry.startMin
-  const endMin     = entry.endHour != null ? entry.endHour * 60 + (entry.endMin ?? 0) : null
+  const startMin = entry.startHour * 60 + entry.startMin
+  const endMin = entry.endHour != null ? entry.endHour * 60 + (entry.endMin ?? 0) : null
 
   if (!matchesInterval(entry, now)) return false
 
   // Direct day match
   if (entry.day === todayDay) {
-    if (endMin == null)              return currentMin >= startMin
-    if (!entry.crossesMidnight)      return currentMin >= startMin && currentMin < endMin
-    return currentMin >= startMin    // crosses midnight: today's portion is start → midnight
+    if (endMin == null) return currentMin >= startMin
+    if (!entry.crossesMidnight) return currentMin >= startMin && currentMin < endMin
+    return currentMin >= startMin // crosses midnight: today's portion is start → midnight
   }
 
   // Crosses-midnight: are we in the "after midnight" window (next calendar day)?
@@ -173,8 +175,8 @@ function matchesInterval(entry: ScheduleEntry, now: Date): boolean {
 
   if (entry.interval === "biweekly") {
     if (!entry.commencing) return true
-    const anchor   = new Date(entry.commencing)
-    const diffMs   = now.getTime() - anchor.getTime()
+    const anchor = new Date(entry.commencing)
+    const diffMs = now.getTime() - anchor.getTime()
     const diffWeeks = Math.floor(diffMs / (7 * 24 * 60 * 60 * 1000))
     return diffWeeks >= 0 && diffWeeks % 2 === 0
   }
@@ -188,7 +190,7 @@ function matchesInterval(entry: ScheduleEntry, now: Date): boolean {
 }
 
 function getWeekdayOccurrence(date: Date, weekday: number): number {
-  const year  = date.getUTCFullYear()
+  const year = date.getUTCFullYear()
   const month = date.getUTCMonth()
   const target = date.getUTCDate()
   let count = 0
@@ -200,9 +202,9 @@ function getWeekdayOccurrence(date: Date, weekday: number): number {
 
 function isLastWeekdayOfMonth(date: Date, weekday: number): boolean {
   if (date.getUTCDay() !== weekday) return false
-  const year  = date.getUTCFullYear()
+  const year = date.getUTCFullYear()
   const month = date.getUTCMonth()
-  const days  = new Date(Date.UTC(year, month + 1, 0)).getUTCDate()
+  const days = new Date(Date.UTC(year, month + 1, 0)).getUTCDate()
   const target = date.getUTCDate()
   for (let d = target + 1; d <= days; d++) {
     if (new Date(Date.UTC(year, month, d)).getUTCDay() === weekday) return false
@@ -223,6 +225,7 @@ git commit -m "feat: add schedule utility functions (format, isOpenNow)"
 ## Task 3: API — List & Create
 
 **Files:**
+
 - Create: `apps/web/app/api/venues/[venueId]/schedule/route.ts`
 
 - [ ] **Create the file:**
@@ -235,16 +238,16 @@ import { prisma } from "@/lib/prisma"
 import { z } from "zod"
 
 const entrySchema = z.object({
-  day:            z.number().int().min(0).max(6),
-  startHour:      z.number().int().min(0).max(23),
-  startMin:       z.number().int().min(0).max(59),
-  endHour:        z.number().int().min(0).max(23).nullable().optional(),
-  endMin:         z.number().int().min(0).max(59).nullable().optional(),
-  crossesMidnight:z.boolean().default(false),
-  interval:       z.enum(["weekly", "biweekly", "monthly"]).default("weekly"),
-  weekOfMonth:    z.number().int().min(1).max(5).nullable().optional(),
-  commencing:     z.string().datetime().nullable().optional(),
-  label:          z.string().max(50).nullable().optional(),
+  day: z.number().int().min(0).max(6),
+  startHour: z.number().int().min(0).max(23),
+  startMin: z.number().int().min(0).max(59),
+  endHour: z.number().int().min(0).max(23).nullable().optional(),
+  endMin: z.number().int().min(0).max(59).nullable().optional(),
+  crossesMidnight: z.boolean().default(false),
+  interval: z.enum(["weekly", "biweekly", "monthly"]).default("weekly"),
+  weekOfMonth: z.number().int().min(1).max(5).nullable().optional(),
+  commencing: z.string().datetime().nullable().optional(),
+  label: z.string().max(50).nullable().optional(),
 })
 
 async function requireManager(venueId: string, userId: string) {
@@ -254,10 +257,7 @@ async function requireManager(venueId: string, userId: string) {
   return !!membership
 }
 
-export async function GET(
-  _req: NextRequest,
-  { params }: { params: Promise<{ venueId: string }> }
-) {
+export async function GET(_req: NextRequest, { params }: { params: Promise<{ venueId: string }> }) {
   const { venueId } = await params
   const entries = await prisma.venueScheduleEntry.findMany({
     where: { venueId },
@@ -266,10 +266,7 @@ export async function GET(
   return NextResponse.json(entries)
 }
 
-export async function POST(
-  req: NextRequest,
-  { params }: { params: Promise<{ venueId: string }> }
-) {
+export async function POST(req: NextRequest, { params }: { params: Promise<{ venueId: string }> }) {
   const session = await getServerSession(authOptions)
   if (!session?.user?.id) return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
 
@@ -303,6 +300,7 @@ git commit -m "feat: add GET/POST schedule entries API"
 ## Task 4: API — Update & Delete
 
 **Files:**
+
 - Create: `apps/web/app/api/venues/[venueId]/schedule/[entryId]/route.ts`
 
 - [ ] **Create the file:**
@@ -315,16 +313,16 @@ import { prisma } from "@/lib/prisma"
 import { z } from "zod"
 
 const updateSchema = z.object({
-  day:            z.number().int().min(0).max(6).optional(),
-  startHour:      z.number().int().min(0).max(23).optional(),
-  startMin:       z.number().int().min(0).max(59).optional(),
-  endHour:        z.number().int().min(0).max(23).nullable().optional(),
-  endMin:         z.number().int().min(0).max(59).nullable().optional(),
-  crossesMidnight:z.boolean().optional(),
-  interval:       z.enum(["weekly", "biweekly", "monthly"]).optional(),
-  weekOfMonth:    z.number().int().min(1).max(5).nullable().optional(),
-  commencing:     z.string().datetime().nullable().optional(),
-  label:          z.string().max(50).nullable().optional(),
+  day: z.number().int().min(0).max(6).optional(),
+  startHour: z.number().int().min(0).max(23).optional(),
+  startMin: z.number().int().min(0).max(59).optional(),
+  endHour: z.number().int().min(0).max(23).nullable().optional(),
+  endMin: z.number().int().min(0).max(59).nullable().optional(),
+  crossesMidnight: z.boolean().optional(),
+  interval: z.enum(["weekly", "biweekly", "monthly"]).optional(),
+  weekOfMonth: z.number().int().min(1).max(5).nullable().optional(),
+  commencing: z.string().datetime().nullable().optional(),
+  label: z.string().max(50).nullable().optional(),
 })
 
 async function requireManager(venueId: string, userId: string) {
@@ -334,10 +332,7 @@ async function requireManager(venueId: string, userId: string) {
   return !!membership
 }
 
-export async function PUT(
-  req: NextRequest,
-  { params }: { params: Promise<{ venueId: string; entryId: string }> }
-) {
+export async function PUT(req: NextRequest, { params }: { params: Promise<{ venueId: string; entryId: string }> }) {
   const session = await getServerSession(authOptions)
   if (!session?.user?.id) return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
 
@@ -355,18 +350,14 @@ export async function PUT(
     where: { id: entryId },
     data: {
       ...body.data,
-      commencing: body.data.commencing !== undefined
-        ? (body.data.commencing ? new Date(body.data.commencing) : null)
-        : undefined,
+      commencing:
+        body.data.commencing !== undefined ? (body.data.commencing ? new Date(body.data.commencing) : null) : undefined,
     },
   })
   return NextResponse.json(updated)
 }
 
-export async function DELETE(
-  _req: NextRequest,
-  { params }: { params: Promise<{ venueId: string; entryId: string }> }
-) {
+export async function DELETE(_req: NextRequest, { params }: { params: Promise<{ venueId: string; entryId: string }> }) {
   const session = await getServerSession(authOptions)
   if (!session?.user?.id) return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
 
@@ -394,6 +385,7 @@ git commit -m "feat: add PUT/DELETE schedule entry API"
 ## Task 5: Schedule Entry Form Component
 
 **Files:**
+
 - Create: `apps/web/components/schedule-entry-form.tsx`
 
 This is a client component dialog for adding or editing a single schedule entry. Time inputs use `type="time"` which gives HH:MM in 24h and maps directly to UTC hour/minute integers.
@@ -404,15 +396,11 @@ This is a client component dialog for adding or editing a single schedule entry.
 "use client"
 
 import { useState } from "react"
-import {
-  Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter
-} from "@/components/ui/dialog"
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
-import {
-  Select, SelectContent, SelectItem, SelectTrigger, SelectValue
-} from "@/components/ui/select"
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { DAY_NAMES } from "@/lib/schedule-utils"
 
 type EntryFormData = {
@@ -469,17 +457,17 @@ export function ScheduleEntryForm({ open, onClose, onSave, initial, title = "Add
     const [h, m] = parseTime(val)
     const endH = form.endHour
     const crosses = endH != null && (h > endH || (h === endH && form.startMin > (form.endMin ?? 0)))
-    setForm(f => ({ ...f, startHour: h, startMin: m, crossesMidnight: crosses }))
+    setForm((f) => ({ ...f, startHour: h, startMin: m, crossesMidnight: crosses }))
   }
 
   function setEnd(val: string) {
     if (!val) {
-      setForm(f => ({ ...f, endHour: null, endMin: null, crossesMidnight: false }))
+      setForm((f) => ({ ...f, endHour: null, endMin: null, crossesMidnight: false }))
       return
     }
     const [h, m] = parseTime(val)
     const crosses = form.startHour > h || (form.startHour === h && form.startMin > m)
-    setForm(f => ({ ...f, endHour: h, endMin: m, crossesMidnight: crosses }))
+    setForm((f) => ({ ...f, endHour: h, endMin: m, crossesMidnight: crosses }))
   }
 
   async function handleSave() {
@@ -496,7 +484,12 @@ export function ScheduleEntryForm({ open, onClose, onSave, initial, title = "Add
   }
 
   return (
-    <Dialog open={open} onOpenChange={v => { if (!v) onClose() }}>
+    <Dialog
+      open={open}
+      onOpenChange={(v) => {
+        if (!v) onClose()
+      }}
+    >
       <DialogContent className="bg-[var(--card)] border-[var(--blue-015)] max-w-md">
         <DialogHeader>
           <DialogTitle className="font-cinzel">{title}</DialogTitle>
@@ -506,13 +499,15 @@ export function ScheduleEntryForm({ open, onClose, onSave, initial, title = "Add
           {/* Day */}
           <div className="space-y-1.5">
             <Label>Day</Label>
-            <Select value={String(form.day)} onValueChange={v => setForm(f => ({ ...f, day: Number(v) }))}>
+            <Select value={String(form.day)} onValueChange={(v) => setForm((f) => ({ ...f, day: Number(v) }))}>
               <SelectTrigger className="bg-background border-[var(--blue-015)]">
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
                 {DAY_NAMES.map((d, i) => (
-                  <SelectItem key={i} value={String(i)}>{d}</SelectItem>
+                  <SelectItem key={i} value={String(i)}>
+                    {d}
+                  </SelectItem>
                 ))}
               </SelectContent>
             </Select>
@@ -522,15 +517,23 @@ export function ScheduleEntryForm({ open, onClose, onSave, initial, title = "Add
           <div className="grid grid-cols-2 gap-3">
             <div className="space-y-1.5">
               <Label>Opens (ST)</Label>
-              <input type="time" value={toTimeString(form.startHour, form.startMin)}
-                onChange={e => setStart(e.target.value)}
-                className="w-full rounded-md border border-[var(--blue-015)] bg-background px-3 py-2 text-sm text-foreground focus:border-[var(--blue-035)] focus:outline-none" />
+              <input
+                type="time"
+                value={toTimeString(form.startHour, form.startMin)}
+                onChange={(e) => setStart(e.target.value)}
+                className="w-full rounded-md border border-[var(--blue-015)] bg-background px-3 py-2 text-sm text-foreground focus:border-[var(--blue-035)] focus:outline-none"
+              />
             </div>
             <div className="space-y-1.5">
-              <Label>Closes (ST) <span className="text-[var(--fg-faint)] font-normal">optional</span></Label>
-              <input type="time" value={hasEnd ? toTimeString(form.endHour!, form.endMin ?? 0) : ""}
-                onChange={e => setEnd(e.target.value)}
-                className="w-full rounded-md border border-[var(--blue-015)] bg-background px-3 py-2 text-sm text-foreground focus:border-[var(--blue-035)] focus:outline-none" />
+              <Label>
+                Closes (ST) <span className="text-[var(--fg-faint)] font-normal">optional</span>
+              </Label>
+              <input
+                type="time"
+                value={hasEnd ? toTimeString(form.endHour!, form.endMin ?? 0) : ""}
+                onChange={(e) => setEnd(e.target.value)}
+                className="w-full rounded-md border border-[var(--blue-015)] bg-background px-3 py-2 text-sm text-foreground focus:border-[var(--blue-035)] focus:outline-none"
+              />
             </div>
           </div>
 
@@ -541,7 +544,7 @@ export function ScheduleEntryForm({ open, onClose, onSave, initial, title = "Add
           {/* Interval */}
           <div className="space-y-1.5">
             <Label>Frequency</Label>
-            <Select value={form.interval} onValueChange={v => setForm(f => ({ ...f, interval: v }))}>
+            <Select value={form.interval} onValueChange={(v) => setForm((f) => ({ ...f, interval: v }))}>
               <SelectTrigger className="bg-background border-[var(--blue-015)]">
                 <SelectValue />
               </SelectTrigger>
@@ -556,13 +559,18 @@ export function ScheduleEntryForm({ open, onClose, onSave, initial, title = "Add
           {form.interval === "monthly" && (
             <div className="space-y-1.5">
               <Label>Which {DAY_NAMES[form.day]}?</Label>
-              <Select value={String(form.weekOfMonth ?? 1)} onValueChange={v => setForm(f => ({ ...f, weekOfMonth: Number(v) }))}>
+              <Select
+                value={String(form.weekOfMonth ?? 1)}
+                onValueChange={(v) => setForm((f) => ({ ...f, weekOfMonth: Number(v) }))}
+              >
                 <SelectTrigger className="bg-background border-[var(--blue-015)]">
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
-                  {["First","Second","Third","Fourth","Last"].map((o, i) => (
-                    <SelectItem key={i} value={String(i + 1)}>{o} {DAY_NAMES[form.day]}</SelectItem>
+                  {["First", "Second", "Third", "Fourth", "Last"].map((o, i) => (
+                    <SelectItem key={i} value={String(i + 1)}>
+                      {o} {DAY_NAMES[form.day]}
+                    </SelectItem>
                   ))}
                 </SelectContent>
               </Select>
@@ -572,29 +580,42 @@ export function ScheduleEntryForm({ open, onClose, onSave, initial, title = "Add
           {form.interval === "biweekly" && (
             <div className="space-y-1.5">
               <Label>Starting from</Label>
-              <Input type="date" value={form.commencing?.slice(0, 10) ?? ""}
-                onChange={e => setForm(f => ({ ...f, commencing: e.target.value ? new Date(e.target.value).toISOString() : null }))}
-                className="bg-background border-[var(--blue-015)] focus:border-[var(--blue-035)]" />
-              <p className="text-[0.75rem] text-[var(--fg-faint)]">Pick any date this entry is active so we know which weeks to count.</p>
+              <Input
+                type="date"
+                value={form.commencing?.slice(0, 10) ?? ""}
+                onChange={(e) =>
+                  setForm((f) => ({ ...f, commencing: e.target.value ? new Date(e.target.value).toISOString() : null }))
+                }
+                className="bg-background border-[var(--blue-015)] focus:border-[var(--blue-035)]"
+              />
+              <p className="text-[0.75rem] text-[var(--fg-faint)]">
+                Pick any date this entry is active so we know which weeks to count.
+              </p>
             </div>
           )}
 
           {/* Label */}
           <div className="space-y-1.5">
-            <Label>Label <span className="text-[var(--fg-faint)] font-normal">optional</span></Label>
-            <Input placeholder="e.g. DJ Night" maxLength={50}
+            <Label>
+              Label <span className="text-[var(--fg-faint)] font-normal">optional</span>
+            </Label>
+            <Input
+              placeholder="e.g. DJ Night"
+              maxLength={50}
               value={form.label ?? ""}
-              onChange={e => setForm(f => ({ ...f, label: e.target.value || null }))}
-              className="bg-background border-[var(--blue-015)] focus:border-[var(--blue-035)]" />
+              onChange={(e) => setForm((f) => ({ ...f, label: e.target.value || null }))}
+              className="bg-background border-[var(--blue-015)] focus:border-[var(--blue-035)]"
+            />
           </div>
 
           {error && <p className="text-sm text-red-400">{error}</p>}
         </div>
 
         <DialogFooter>
-          <Button variant="ghost" onClick={onClose} disabled={saving}>Cancel</Button>
-          <Button onClick={handleSave} disabled={saving}
-            className="bg-[var(--xiv-blue)] text-black hover:opacity-90">
+          <Button variant="ghost" onClick={onClose} disabled={saving}>
+            Cancel
+          </Button>
+          <Button onClick={handleSave} disabled={saving} className="bg-[var(--xiv-blue)] text-black hover:opacity-90">
             {saving ? "Saving…" : "Save"}
           </Button>
         </DialogFooter>
@@ -616,6 +637,7 @@ git commit -m "feat: add ScheduleEntryForm dialog component"
 ## Task 6: Schedule Display Component
 
 **Files:**
+
 - Create: `apps/web/components/venue-schedule-display.tsx`
 
 Read-only component used on the public venue profile and the operator dashboard.
@@ -627,14 +649,14 @@ import { DAY_NAMES, DAY_SHORT, formatEntryTime, formatIntervalLabel, type Schedu
 
 type Props = {
   entries: ScheduleEntry[]
-  compact?: boolean  // true = short day names, no interval label
+  compact?: boolean // true = short day names, no interval label
 }
 
 export function VenueScheduleDisplay({ entries, compact = false }: Props) {
   if (entries.length === 0) {
     return (
       <>
-        {[0,1,2,3,4,5,6].map(i => (
+        {[0, 1, 2, 3, 4, 5, 6].map((i) => (
           <div key={i} className="hours-row closed">
             <span className="day">{compact ? DAY_SHORT[i] : DAY_NAMES[i]}</span>
             <span className="hrs">—</span>
@@ -655,7 +677,7 @@ export function VenueScheduleDisplay({ entries, compact = false }: Props) {
 
   return (
     <>
-      {[0,1,2,3,4,5,6].map(i => {
+      {[0, 1, 2, 3, 4, 5, 6].map((i) => {
         const dayEntries = byDay.get(i)
         const isToday = i === todayDay
         if (!dayEntries || dayEntries.length === 0) {
@@ -696,6 +718,7 @@ git commit -m "feat: add VenueScheduleDisplay read-only component"
 ## Task 7: Settings Page — Schedule Management Section
 
 **Files:**
+
 - Modify: `apps/web/app/dashboard/[slug]/settings/page.tsx`
 
 The settings page is a large client component. Add a schedule management section before the existing "Default hours" inputs, and demote those inputs to a "Legacy" note.
@@ -722,7 +745,7 @@ const [showAddEntry, setShowAddEntry] = useState(false)
 ```tsx
 // inside the existing useEffect, after settings are loaded:
 fetch(`/api/venues/${venue.id}/schedule`)
-  .then(r => r.json())
+  .then((r) => r.json())
   .then((data: ScheduleEntry[]) => {
     setScheduleEntries(data)
     setScheduleLoaded(true)
@@ -733,7 +756,9 @@ fetch(`/api/venues/${venue.id}/schedule`)
 - [ ] **Add helper functions inside the component** (before the return):
 
 ```tsx
-async function handleAddEntry(data: Parameters<typeof ScheduleEntryForm>[0]["onSave"] extends (d: infer D) => unknown ? D : never) {
+async function handleAddEntry(
+  data: Parameters<typeof ScheduleEntryForm>[0]["onSave"] extends (d: infer D) => unknown ? D : never
+) {
   const res = await fetch(`/api/venues/${venue.id}/schedule`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
@@ -741,25 +766,28 @@ async function handleAddEntry(data: Parameters<typeof ScheduleEntryForm>[0]["onS
   })
   if (!res.ok) throw new Error("Failed to save")
   const created: ScheduleEntry = await res.json()
-  setScheduleEntries(prev => [...prev, created])
+  setScheduleEntries((prev) => [...prev, created])
 }
 
 async function handleDeleteEntry(id: string) {
   const res = await fetch(`/api/venues/${venue.id}/schedule/${id}`, { method: "DELETE" })
   if (!res.ok) throw new Error("Failed to delete")
-  setScheduleEntries(prev => prev.filter(e => e.id !== id))
+  setScheduleEntries((prev) => prev.filter((e) => e.id !== id))
 }
 ```
 
 - [ ] **Add the schedule section in JSX** -- insert this new `<section>` immediately before the existing section that contains `defaultHours` / `openNights` inputs. Find the section by looking for the `defaultHours` label around line 386:
 
 ```tsx
-{/* ── Opening Schedule ── */}
-<section className="panel">
+{
+  /* ── Opening Schedule ── */
+}
+;<section className="panel">
   <div className="ph">
     <span className="pt">
       <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-        <circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/>
+        <circle cx="12" cy="12" r="10" />
+        <polyline points="12 6 12 12 16 14" />
       </svg>
       Opening Schedule
     </span>
@@ -772,7 +800,7 @@ async function handleDeleteEntry(id: string) {
 
     {scheduleLoaded && scheduleEntries.length > 0 && (
       <div className="divide-y divide-[var(--blue-008)] rounded-[var(--radius-md)] border border-[var(--blue-015)] overflow-hidden">
-        {scheduleEntries.map(entry => (
+        {scheduleEntries.map((entry) => (
           <div key={entry.id} className="flex items-center justify-between px-4 py-3 bg-[var(--blue-005)]">
             <div>
               <span className="font-medium text-sm">{DAY_NAMES[entry.day]}</span>
@@ -780,9 +808,7 @@ async function handleDeleteEntry(id: string) {
               {entry.interval !== "weekly" && (
                 <span className="ml-2 text-[0.72rem] text-[var(--xiv-blue)]">{formatIntervalLabel(entry)}</span>
               )}
-              {entry.label && (
-                <span className="ml-2 text-[0.72rem] text-[var(--fg-faint)]">{entry.label}</span>
-              )}
+              {entry.label && <span className="ml-2 text-[0.72rem] text-[var(--fg-faint)]">{entry.label}</span>}
             </div>
             <button
               type="button"
@@ -806,19 +832,17 @@ async function handleDeleteEntry(id: string) {
     </button>
   </div>
 
-  <ScheduleEntryForm
-    open={showAddEntry}
-    onClose={() => setShowAddEntry(false)}
-    onSave={handleAddEntry}
-  />
+  <ScheduleEntryForm open={showAddEntry} onClose={() => setShowAddEntry(false)} onSave={handleAddEntry} />
 </section>
 ```
 
 - [ ] **Demote the old text inputs** -- find the `Label htmlFor="default-hours"` block (around line 386) and add a deprecation note above the grid:
 
 ```tsx
-{/* Legacy hours fields — superseded by Opening Schedule above */}
-<p className="text-[0.72rem] text-[var(--fg-faint)] mb-2">
+{
+  /* Legacy hours fields — superseded by Opening Schedule above */
+}
+;<p className="text-[0.72rem] text-[var(--fg-faint)] mb-2">
   Legacy free-text hours — use the schedule section above instead.
 </p>
 ```
@@ -843,6 +867,7 @@ git commit -m "feat: add opening schedule management to venue settings"
 ## Task 8: Venue Profile — Replace Hours Card
 
 **Files:**
+
 - Modify: `apps/web/app/venues/[slug]/page.tsx`
 
 - [ ] **Add the import** at the top:
@@ -858,7 +883,8 @@ import { isOpenNow } from "@/lib/schedule-utils"
 const venue = await prisma.venue.findUnique({
   where: { slug, isActive: true },
   include: {
-    scheduleEntries: {         // add this
+    scheduleEntries: {
+      // add this
       orderBy: [{ day: "asc" }, { startHour: "asc" }],
     },
     _count: { select: { follows: true, events: true, memberships: true } },
@@ -879,55 +905,81 @@ const venue = await prisma.venue.findUnique({
 
 ```tsx
 // Replace:
-const liveEvent      = venue.events.find(e => e.status === "ACTIVE")
-const upcomingEvents = venue.events.filter(e => e.status === "PUBLISHED")
+const liveEvent = venue.events.find((e) => e.status === "ACTIVE")
+const upcomingEvents = venue.events.filter((e) => e.status === "PUBLISHED")
 
 // With:
-const liveEvent         = venue.events.find(e => e.status === "ACTIVE")
-const upcomingEvents    = venue.events.filter(e => e.status === "PUBLISHED")
-const openFromSchedule  = isOpenNow(venue.scheduleEntries)
-const isOpen            = !!liveEvent || openFromSchedule
+const liveEvent = venue.events.find((e) => e.status === "ACTIVE")
+const upcomingEvents = venue.events.filter((e) => e.status === "PUBLISHED")
+const openFromSchedule = isOpenNow(venue.scheduleEntries)
+const isOpen = !!liveEvent || openFromSchedule
 ```
 
 - [ ] **Update the hero badge** -- find the three-way status badge in the JSX and update:
 
 ```tsx
 // Replace the three-way conditional:
-{liveEvent ? (
-  <span className="status open mb-[14px] inline-flex"><span className="dot" />Open now</span>
-) : upcomingEvents.length > 0 ? (
-  <span className="status soon mb-[14px] inline-flex"><span className="dot" />Opening soon</span>
-) : (
-  <span className="status closed mb-[14px] inline-flex"><span className="dot" />Closed</span>
-)}
+{
+  liveEvent ? (
+    <span className="status open mb-[14px] inline-flex">
+      <span className="dot" />
+      Open now
+    </span>
+  ) : upcomingEvents.length > 0 ? (
+    <span className="status soon mb-[14px] inline-flex">
+      <span className="dot" />
+      Opening soon
+    </span>
+  ) : (
+    <span className="status closed mb-[14px] inline-flex">
+      <span className="dot" />
+      Closed
+    </span>
+  )
+}
 
 // With:
-{isOpen ? (
-  <span className="status open mb-[14px] inline-flex"><span className="dot" />Open now</span>
-) : upcomingEvents.length > 0 ? (
-  <span className="status soon mb-[14px] inline-flex"><span className="dot" />Opening soon</span>
-) : (
-  <span className="status closed mb-[14px] inline-flex"><span className="dot" />Closed</span>
-)}
+{
+  isOpen ? (
+    <span className="status open mb-[14px] inline-flex">
+      <span className="dot" />
+      Open now
+    </span>
+  ) : upcomingEvents.length > 0 ? (
+    <span className="status soon mb-[14px] inline-flex">
+      <span className="dot" />
+      Opening soon
+    </span>
+  ) : (
+    <span className="status closed mb-[14px] inline-flex">
+      <span className="dot" />
+      Closed
+    </span>
+  )
+}
 ```
 
 - [ ] **Replace the Hours card** -- find the `{/* Hours */}` comment block (around line 312) and replace the entire dcard div:
 
 ```tsx
-{/* Hours */}
-<div className="dcard">
-  <div className="dh"><Clock /> Hours</div>
+{
+  /* Hours */
+}
+;<div className="dcard">
+  <div className="dh">
+    <Clock /> Hours
+  </div>
   {venue.scheduleEntries.length > 0 ? (
     <VenueScheduleDisplay entries={venue.scheduleEntries} />
   ) : openDays ? (
     // Legacy: parsed from settings.openNights free text
     DAY_NAMES.map((day, i) => {
-      const isOpen  = openDays.has(i)
+      const isOpen = openDays.has(i)
       const isToday = i === todayUTCDay
       return (
         <div key={day} className={`hours-row${isToday ? " today" : isOpen ? "" : " closed"}`}>
           <span className="day">{day}</span>
-          <span className="hrs">{isOpen ? (defaultHours || "Open") : "Closed"}</span>
+          <span className="hrs">{isOpen ? defaultHours || "Open" : "Closed"}</span>
         </div>
       )
     })
@@ -935,7 +987,9 @@ const isOpen            = !!liveEvent || openFromSchedule
     <>
       <div className="px-5 py-3 text-[0.86rem]">
         <span className="text-muted-foreground">Hours</span>
-        <span className="float-right font-medium">{defaultHours} {tzLabel}</span>
+        <span className="float-right font-medium">
+          {defaultHours} {tzLabel}
+        </span>
       </div>
       {openNights && (
         <div className="px-5 pb-3 text-[0.86rem]">

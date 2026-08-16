@@ -9,17 +9,17 @@ const buttonVariants = cva(
   {
     variants: {
       variant: {
-        default: "bg-primary text-primary-foreground hover:bg-primary/90 shadow-md shadow-primary/10 hover:shadow-primary/20",
+        default:
+          "bg-primary text-primary-foreground hover:bg-primary/90 shadow-md shadow-primary/10 hover:shadow-primary/20",
         cta: "bg-[var(--xiv-blue)] text-[#070b14] font-semibold hover:brightness-110 shadow-[var(--glow-cta-soft)] hover:shadow-[var(--glow-cta)] xiv-btn-shimmer transition-all",
-        "outline-blue": "border border-[var(--blue-020)] bg-transparent text-[var(--xiv-blue)] hover:bg-[var(--blue-007)] hover:border-[var(--blue-035)] transition-all",
+        "outline-blue":
+          "border border-[var(--blue-020)] bg-transparent text-[var(--xiv-blue)] hover:bg-[var(--blue-007)] hover:border-[var(--blue-035)] transition-all",
         destructive:
           "bg-destructive text-white hover:bg-destructive/90 focus-visible:ring-destructive/20 dark:focus-visible:ring-destructive/40 dark:bg-destructive/60",
         outline:
           "border border-[var(--blue-020)] bg-[var(--card)] text-foreground hover:border-[var(--blue-035)] hover:bg-[var(--blue-007)] transition-all",
-        secondary:
-          "bg-secondary text-secondary-foreground hover:bg-secondary/80",
-        ghost:
-          "hover:bg-accent/50 hover:text-accent-foreground dark:hover:bg-accent/50 hover:backdrop-blur-sm",
+        secondary: "bg-secondary text-secondary-foreground hover:bg-secondary/80",
+        ghost: "hover:bg-accent/50 hover:text-accent-foreground dark:hover:bg-accent/50 hover:backdrop-blur-sm",
         link: "text-primary underline-offset-4 hover:underline",
       },
       size: {
@@ -50,13 +50,7 @@ function Button({
   }) {
   const Comp = asChild ? Slot : "button"
 
-  return (
-    <Comp
-      data-slot="button"
-      className={cn(buttonVariants({ variant, size, className }))}
-      {...props}
-    />
-  )
+  return <Comp data-slot="button" className={cn(buttonVariants({ variant, size, className }))} {...props} />
 }
 
 export { Button, buttonVariants }

@@ -10,11 +10,19 @@ const HERMES_URL = "http://192.168.1.253:4000"
 const MODEL = "deepseek/deepseek-chat"
 
 const VALID_TYPES = [
-  "BAR_TAVERN", "NIGHTCLUB", "LOUNGE", "HOST_CLUB",
-  "CABARET", "BATHHOUSE", "CASINO", "STUDIO", "OTHER", "TEST_VENUE",
+  "BAR_TAVERN",
+  "NIGHTCLUB",
+  "LOUNGE",
+  "HOST_CLUB",
+  "CABARET",
+  "BATHHOUSE",
+  "CASINO",
+  "STUDIO",
+  "OTHER",
+  "TEST_VENUE",
 ] as const
 
-type VenueType = typeof VALID_TYPES[number]
+type VenueType = (typeof VALID_TYPES)[number]
 
 async function classify(name: string, description: string | null): Promise<VenueType> {
   const prompt = `Classify this FFXIV RP venue into exactly one of these categories:
@@ -49,7 +57,10 @@ Reply with ONLY the category name, nothing else.`
 
   if (!res.ok) throw new Error(`LLM error: ${res.status}`)
   const json = await res.json()
-  const raw = (json.choices?.[0]?.message?.content ?? "").trim().toUpperCase().replace(/[^A-Z_]/g, "")
+  const raw = (json.choices?.[0]?.message?.content ?? "")
+    .trim()
+    .toUpperCase()
+    .replace(/[^A-Z_]/g, "")
   return VALID_TYPES.includes(raw as VenueType) ? (raw as VenueType) : "OTHER"
 }
 
@@ -72,4 +83,7 @@ async function main() {
   await prisma.$disconnect()
 }
 
-main().catch(e => { console.error(e); process.exit(1) })
+main().catch((e) => {
+  console.error(e)
+  process.exit(1)
+})

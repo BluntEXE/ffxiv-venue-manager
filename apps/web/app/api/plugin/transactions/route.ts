@@ -1,11 +1,7 @@
 import { NextRequest, NextResponse } from "next/server"
 import { z } from "zod"
 import { pluginAuthGate, checkPermission } from "@/lib/api/plugin-auth"
-import {
-  createTransaction,
-  createTransactionSchema,
-  InsufficientStockError,
-} from "@/lib/api/transactions"
+import { createTransaction, createTransactionSchema, InsufficientStockError } from "@/lib/api/transactions"
 
 /**
  * POST /api/plugin/transactions
@@ -35,10 +31,7 @@ export async function POST(request: NextRequest) {
     const body = await request.json()
     const parsed = pluginTransactionSchema.safeParse(body)
     if (!parsed.success) {
-      return NextResponse.json(
-        { error: "Validation error", details: parsed.error.issues },
-        { status: 400 }
-      )
+      return NextResponse.json({ error: "Validation error", details: parsed.error.issues }, { status: 400 })
     }
 
     const { venueId, ...input } = parsed.data
@@ -47,16 +40,9 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: "Invalid venue" }, { status: 400 })
     }
 
-    const canLog = await checkPermission(
-      auth.userId,
-      venueId,
-      "log_transaction"
-    )
+    const canLog = await checkPermission(auth.userId, venueId, "log_transaction")
     if (!canLog) {
-      return NextResponse.json(
-        { error: "You do not have permission to log sales at this venue" },
-        { status: 403 }
-      )
+      return NextResponse.json({ error: "You do not have permission to log sales at this venue" }, { status: 403 })
     }
 
     const transaction = await createTransaction(venueId, auth.userId, input)
@@ -83,9 +69,6 @@ export async function POST(request: NextRequest) {
     }
 
     console.error("[Plugin API] Error logging transaction:", error)
-    return NextResponse.json(
-      { error: "Internal server error" },
-      { status: 500 }
-    )
+    return NextResponse.json({ error: "Internal server error" }, { status: 500 })
   }
 }

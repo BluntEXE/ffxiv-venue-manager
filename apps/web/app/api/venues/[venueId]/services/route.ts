@@ -35,59 +35,53 @@ export const GET = withRateLimit<{ params: Promise<{ venueId: string }> }>(
       const { params } = context
       const { venueId } = await params
 
-    // Check if user has access to this venue
-    const membership = await prisma.membership.findFirst({
-      where: {
-        userId: session.user.id,
-        venueId,
-        status: "active",
-      },
-    })
+      // Check if user has access to this venue
+      const membership = await prisma.membership.findFirst({
+        where: {
+          userId: session.user.id,
+          venueId,
+          status: "active",
+        },
+      })
 
-    if (!membership) {
-      return NextResponse.json(
-        { error: "You don't have access to this venue" },
-        { status: 403 }
+      if (!membership) {
+        return NextResponse.json({ error: "You don't have access to this venue" }, { status: 403 })
+      }
+
+      // Cache services list (10 minute TTL)
+      const cacheKey = cacheKeys.venueServices(venueId)
+      const services = await getOrSet(
+        cacheKey,
+        async () => {
+          // Get all services for this venue
+          return await prisma.service.findMany({
+            where: { venueId },
+            include: {
+              roles: {
+                select: {
+                  id: true,
+                  name: true,
+                  color: true,
+                },
+              },
+              _count: {
+                select: {
+                  transactions: true,
+                },
+              },
+            },
+            orderBy: {
+              createdAt: "desc",
+            },
+          })
+        },
+        cacheTTL.services
       )
-    }
-
-    // Cache services list (10 minute TTL)
-    const cacheKey = cacheKeys.venueServices(venueId)
-    const services = await getOrSet(
-      cacheKey,
-      async () => {
-        // Get all services for this venue
-        return await prisma.service.findMany({
-          where: { venueId },
-          include: {
-            roles: {
-              select: {
-                id: true,
-                name: true,
-                color: true,
-              },
-            },
-            _count: {
-              select: {
-                transactions: true,
-              },
-            },
-          },
-          orderBy: {
-            createdAt: "desc",
-          },
-        })
-      },
-      cacheTTL.services
-    )
 
       return NextResponse.json(services)
     } catch (error) {
       console.error("Error fetching services:", error)
-      return NextResponse.json(
-        { error: "Internal server error" },
-        { status: 500 }
-      )
+      return NextResponse.json({ error: "Internal server error" }, { status: 500 })
     }
   },
   { requests: 60, window: "1 m" }
@@ -108,78 +102,69 @@ export const POST = withRateLimit<{ params: Promise<{ venueId: string }> }>(
       const { params } = context
       const { venueId } = await params
 
-    // Check if user has permission to manage services
-    const membership = await prisma.membership.findFirst({
-      where: {
-        userId: session.user.id,
-        venueId,
-        status: "active",
-      },
-    })
-
-    if (!membership || !["OWNER", "MANAGER"].includes(membership.role)) {
-      return NextResponse.json(
-        { error: "You don't have permission to create services" },
-        { status: 403 }
-      )
-    }
-
-    const body = await request.json()
-    const validatedData = createServiceSchema.parse(body)
-
-    // Auto-link the venue's Manager role to every new service. This is
-    // the "sees everything" invariant: Manager role must always contain
-    // every service so OWNER/MANAGER tier members (who default to the
-    // Manager custom role) can log anything. Extra user-picked roles in
-    // validatedData.roleIds are preserved and merged.
-    const managerRole = await ensureManagerRole(venueId)
-    const roleIdSet = new Set<string>(validatedData.roleIds)
-    roleIdSet.add(managerRole.id)
-    const finalRoleIds = Array.from(roleIdSet)
-
-    const newService = await prisma.service.create({
-      data: {
-        venueId,
-        name: validatedData.name,
-        description: validatedData.description,
-        price: validatedData.price,
-        isActive: validatedData.isActive,
-        linkedItemId: validatedData.linkedItemId,
-        linkedItemName: validatedData.linkedItemName,
-        linkedItemIcon: validatedData.linkedItemIcon,
-        stockCount: validatedData.stockCount,
-        roles: {
-          connect: finalRoleIds.map(id => ({ id })),
+      // Check if user has permission to manage services
+      const membership = await prisma.membership.findFirst({
+        where: {
+          userId: session.user.id,
+          venueId,
+          status: "active",
         },
-      },
-      include: {
-        roles: {
-          select: {
-            id: true,
-            name: true,
-            color: true,
+      })
+
+      if (!membership || !["OWNER", "MANAGER"].includes(membership.role)) {
+        return NextResponse.json({ error: "You don't have permission to create services" }, { status: 403 })
+      }
+
+      const body = await request.json()
+      const validatedData = createServiceSchema.parse(body)
+
+      // Auto-link the venue's Manager role to every new service. This is
+      // the "sees everything" invariant: Manager role must always contain
+      // every service so OWNER/MANAGER tier members (who default to the
+      // Manager custom role) can log anything. Extra user-picked roles in
+      // validatedData.roleIds are preserved and merged.
+      const managerRole = await ensureManagerRole(venueId)
+      const roleIdSet = new Set<string>(validatedData.roleIds)
+      roleIdSet.add(managerRole.id)
+      const finalRoleIds = Array.from(roleIdSet)
+
+      const newService = await prisma.service.create({
+        data: {
+          venueId,
+          name: validatedData.name,
+          description: validatedData.description,
+          price: validatedData.price,
+          isActive: validatedData.isActive,
+          linkedItemId: validatedData.linkedItemId,
+          linkedItemName: validatedData.linkedItemName,
+          linkedItemIcon: validatedData.linkedItemIcon,
+          stockCount: validatedData.stockCount,
+          roles: {
+            connect: finalRoleIds.map((id) => ({ id })),
           },
         },
-      },
-    })
+        include: {
+          roles: {
+            select: {
+              id: true,
+              name: true,
+              color: true,
+            },
+          },
+        },
+      })
 
-    // Invalidate services cache
-    await invalidateCache(cacheKeys.venueServices(venueId))
+      // Invalidate services cache
+      await invalidateCache(cacheKeys.venueServices(venueId))
 
       return NextResponse.json(newService, { status: 201 })
     } catch (error) {
       if (error instanceof z.ZodError) {
-        return NextResponse.json(
-          { error: "Validation error", details: error.issues },
-          { status: 400 }
-        )
+        return NextResponse.json({ error: "Validation error", details: error.issues }, { status: 400 })
       }
 
       console.error("Error creating service:", error)
-      return NextResponse.json(
-        { error: "Internal server error" },
-        { status: 500 }
-      )
+      return NextResponse.json({ error: "Internal server error" }, { status: 500 })
     }
   },
   { requests: 10, window: "1 m" }

@@ -24,6 +24,7 @@
 ### Task 1: Prisma schema changes
 
 **Files:**
+
 - Modify: `prisma/schema.prisma`
 
 - [ ] **Step 1: Add `PotPayoutMode` enum**
@@ -136,12 +137,14 @@ Note the `User` relation name `"PotDistributionGeneratedBy"` — `User` already 
 - [ ] **Step 7: Add back-relations to `Venue` and `Event`**
 
 `Venue` (`prisma/schema.prisma:200-215` relations block):
+
 ```prisma
   venuePotSettings VenuePotSettings?
   potDistributions PotDistribution[]
 ```
 
 `Event` (`prisma/schema.prisma:383-434` relations):
+
 ```prisma
   shifts          Shift[]
   potDistribution PotDistribution?
@@ -177,6 +180,7 @@ Expected: `Generated Prisma Client` success message, no errors. This validates t
 ### Task 2: Hand-authored SQL migration
 
 **Files:**
+
 - Create: `prisma/migrations/20260803000000_add_pot_payroll/migration.sql`
 
 - [ ] **Step 1: Write the migration SQL**, following the exact style of `prisma/migrations/20260614000000_add_shift_audit_log/migration.sql` (raw DDL, quoted identifiers, explicit constraint names):
@@ -285,6 +289,7 @@ git commit -m "feat(schema): add pot payroll data model"
 ### Task 3: `lib/pot-payroll.ts` — pure calculation function (TDD)
 
 **Files:**
+
 - Create: `lib/pot-payroll.ts`
 - Test: `lib/pot-payroll.test.ts`
 
@@ -343,9 +348,7 @@ describe("computePotDistribution", () => {
       staff({ membershipId: "m1", potPayoutMode: "POT" }),
       staff({ membershipId: "c1", potPayoutMode: "CONTRACTOR", contractorSharesPot: false }),
     ]
-    const transactions = [
-      tx({ type: "SALE", amount: new Decimal(500), membershipId: "c1" }),
-    ]
+    const transactions = [tx({ type: "SALE", amount: new Decimal(500), membershipId: "c1" })]
     const result = computePotDistribution(staffList, transactions, {
       taxPercent: new Decimal(20),
       includeSalesInPot: true,
@@ -362,9 +365,7 @@ describe("computePotDistribution", () => {
   })
 
   it("includes a contractor as a pot recipient only when contractorSharesPot is true", () => {
-    const staffList = [
-      staff({ membershipId: "c1", potPayoutMode: "CONTRACTOR", contractorSharesPot: true }),
-    ]
+    const staffList = [staff({ membershipId: "c1", potPayoutMode: "CONTRACTOR", contractorSharesPot: true })]
     const transactions = [tx({ type: "SALE", amount: new Decimal(100), membershipId: "c1" })]
     const result = computePotDistribution(staffList, transactions, {
       taxPercent: new Decimal(10),
@@ -411,11 +412,10 @@ describe("computePotDistribution", () => {
   })
 
   it("writes a zero-recipient distribution rather than dropping it", () => {
-    const result = computePotDistribution(
-      [],
-      [tx({ type: "SALE", amount: new Decimal(100), membershipId: null })],
-      { taxPercent: new Decimal(0), includeSalesInPot: true }
-    )
+    const result = computePotDistribution([], [tx({ type: "SALE", amount: new Decimal(100), membershipId: null })], {
+      taxPercent: new Decimal(0),
+      includeSalesInPot: true,
+    })
 
     expect(result.recipientCount).toBe(0)
     expect(result.potTotal.toNumber()).toBe(0) // no staff resolved for the sale, so it's dropped from regularSales
@@ -557,9 +557,7 @@ export function computePotDistribution(
 
   const recipientCount = recipientMembershipIds.length
   const perPersonShare =
-    recipientCount > 0
-      ? potTotal.dividedBy(recipientCount).toDecimalPlaces(0, Decimal.ROUND_DOWN)
-      : new Decimal(0)
+    recipientCount > 0 ? potTotal.dividedBy(recipientCount).toDecimalPlaces(0, Decimal.ROUND_DOWN) : new Decimal(0)
 
   return {
     regularSales,
@@ -592,6 +590,7 @@ git commit -m "feat(payroll): add pure pot-distribution calculation function"
 ### Task 4: Add Vitest to `apps/web`
 
 **Files:**
+
 - Modify: `package.json`
 - Create: `vitest.config.ts`
 
@@ -600,6 +599,7 @@ git commit -m "feat(payroll): add pure pot-distribution calculation function"
 Run: `cd ~/xiv-app/apps/web && pnpm add -D vitest`
 
 Add to `package.json` `"scripts"`:
+
 ```json
 "test": "vitest run"
 ```
@@ -635,6 +635,7 @@ Note: this task must land before or alongside Task 3's Step 2 (running the faili
 ### Task 5: `pot-settings` API route
 
 **Files:**
+
 - Create: `app/api/venues/[venueId]/pot-settings/route.ts`
 
 - [ ] **Step 1: Implement GET and PUT**, following the auth/venue-resolution pattern from `app/api/venues/[venueId]/payroll/generate-all/route.ts` and the zod-schema-at-top convention from `app/api/venues/[venueId]/roles/route.ts`:
@@ -713,10 +714,7 @@ export const PUT = withRateLimit<{ params: Promise<{ venueId: string }> }>(
       const resolved = await resolveVenueAndMembership(venueId, session.user.id)
       if ("error" in resolved) return resolved.error
       if (!["OWNER", "MANAGER"].includes(resolved.membership.role)) {
-        return NextResponse.json(
-          { error: "Only owners and managers can change pot payroll settings" },
-          { status: 403 }
-        )
+        return NextResponse.json({ error: "Only owners and managers can change pot payroll settings" }, { status: 403 })
       }
 
       const body = await request.json()
@@ -731,10 +729,7 @@ export const PUT = withRateLimit<{ params: Promise<{ venueId: string }> }>(
       return NextResponse.json({ settings })
     } catch (error) {
       if (error instanceof z.ZodError) {
-        return NextResponse.json(
-          { error: "Validation error", details: error.issues },
-          { status: 400 }
-        )
+        return NextResponse.json({ error: "Validation error", details: error.issues }, { status: 400 })
       }
       console.error("Error updating pot settings:", error)
       return NextResponse.json({ error: "Internal server error" }, { status: 500 })
@@ -747,11 +742,13 @@ export const PUT = withRateLimit<{ params: Promise<{ venueId: string }> }>(
 - [ ] **Step 2: Manual verification**
 
 Run the dev server (`pnpm dev`) and hit the route with `curl` (or Postman) using a real session cookie:
+
 ```bash
 curl -X PUT http://localhost:3000/api/venues/<venueId>/pot-settings \
   -H "Content-Type: application/json" -H "Cookie: <session-cookie>" \
   -d '{"enabled": true, "taxPercent": 10, "includeSalesInPot": true}'
 ```
+
 Expected: `200` with the created/updated `settings` row; a second `GET` returns the same values.
 
 - [ ] **Step 3: Commit**
@@ -766,6 +763,7 @@ git commit -m "feat(api): add venue pot-settings get/put route"
 ### Task 6: Roles API — payout mode fields
 
 **Files:**
+
 - Modify: `app/api/venues/[venueId]/roles/route.ts`
 - Modify: `app/api/venues/[venueId]/roles/[roleId]/route.ts`
 
@@ -789,6 +787,7 @@ curl -X POST http://localhost:3000/api/venues/<venueId>/roles \
   -H "Content-Type: application/json" -H "Cookie: <session-cookie>" \
   -d '{"name": "Photographer", "potPayoutMode": "CONTRACTOR", "contractorSharesPot": true}'
 ```
+
 Expected: `201`/`200` with the new role including `potPayoutMode: "CONTRACTOR"`.
 
 - [ ] **Step 4: Commit**
@@ -803,6 +802,7 @@ git commit -m "feat(api): add pot payout mode fields to role create/update"
 ### Task 7: Membership `tipPooled` self-service field
 
 **Files:**
+
 - Modify: `app/api/venues/[venueId]/staff/[membershipId]/route.ts`
 
 - [ ] **Step 1: Extend `updateStaffSchema`** (lines 8-18) with:
@@ -813,21 +813,17 @@ git commit -m "feat(api): add pot payout mode fields to role create/update"
 
 - [ ] **Step 2: Add a self-service permission branch**
 
-The existing `PUT` handler checks `userMembership` (caller) against `targetMembership` and requires `OWNER`/`MANAGER` for any update. Add a branch above that check: if the caller *is* the target member (`targetMembership.userId === session.user.id`) and the parsed body's only key is `tipPooled`, allow it without the owner/manager gate. Concretely, right after `targetMembership` is fetched and before the "Managers cannot modify owners" check, insert:
+The existing `PUT` handler checks `userMembership` (caller) against `targetMembership` and requires `OWNER`/`MANAGER` for any update. Add a branch above that check: if the caller _is_ the target member (`targetMembership.userId === session.user.id`) and the parsed body's only key is `tipPooled`, allow it without the owner/manager gate. Concretely, right after `targetMembership` is fetched and before the "Managers cannot modify owners" check, insert:
 
 ```typescript
-    const isSelfTipPreferenceOnly =
-      targetMembership.userId === session.user.id &&
-      Object.keys(body).every((k) => k === "tipPooled")
+const isSelfTipPreferenceOnly =
+  targetMembership.userId === session.user.id && Object.keys(body).every((k) => k === "tipPooled")
 
-    if (!isSelfTipPreferenceOnly) {
-      if (!userMembership || !["OWNER", "MANAGER"].includes(userMembership.role)) {
-        return NextResponse.json(
-          { error: "You don't have permission to update staff" },
-          { status: 403 }
-        )
-      }
-    }
+if (!isSelfTipPreferenceOnly) {
+  if (!userMembership || !["OWNER", "MANAGER"].includes(userMembership.role)) {
+    return NextResponse.json({ error: "You don't have permission to update staff" }, { status: 403 })
+  }
+}
 ```
 
 (This replaces the existing unconditional owner/manager check earlier in the handler — move that check here rather than duplicating it. Read the full handler first to place this correctly relative to the existing `userMembership` lookup, which must still run to resolve `targetMembership.userId` comparison context.)
@@ -852,6 +848,7 @@ git commit -m "feat(api): allow staff to set their own tip-pooling preference"
 ### Task 8: Pot payroll generation route
 
 **Files:**
+
 - Create: `app/api/venues/[venueId]/events/[eventId]/pot-payroll/route.ts`
 
 This is the route that calls `computePotDistribution` from Task 3. `GET` = preview (compute, don't write). `POST` = generate (compute + write inside a transaction), blocked if a `PotDistribution` already exists for the event (unique constraint) or the event isn't `COMPLETED`.
@@ -912,7 +909,7 @@ async function resolvePotInputs(venueId: string, eventId: string) {
     .map((t) => ({
       type: t.type as "SALE" | "TIP",
       amount: t.amount,
-      membershipId: t.staffId ? membershipByUserId.get(t.staffId) ?? null : null,
+      membershipId: t.staffId ? (membershipByUserId.get(t.staffId) ?? null) : null,
     }))
 
   const staff = Array.from(staffByMembership.values())
@@ -959,27 +956,18 @@ export const POST = withRateLimit<{ params: Promise<{ venueId: string; eventId: 
         where: { userId: session.user.id, venueId: venue.id, status: "active" },
       })
       if (!callerMembership || !["OWNER", "MANAGER"].includes(callerMembership.role)) {
-        return NextResponse.json(
-          { error: "Only owners and managers can generate pot payroll" },
-          { status: 403 }
-        )
+        return NextResponse.json({ error: "Only owners and managers can generate pot payroll" }, { status: 403 })
       }
 
       const event = await prisma.event.findFirst({ where: { id: eventId, venueId: venue.id } })
       if (!event) return NextResponse.json({ error: "Event not found" }, { status: 404 })
       if (event.status !== "COMPLETED") {
-        return NextResponse.json(
-          { error: "Pot payroll can only be generated for completed events" },
-          { status: 400 }
-        )
+        return NextResponse.json({ error: "Pot payroll can only be generated for completed events" }, { status: 400 })
       }
 
       const existing = await prisma.potDistribution.findUnique({ where: { eventId } })
       if (existing) {
-        return NextResponse.json(
-          { error: "Pot payroll has already been generated for this event" },
-          { status: 409 }
-        )
+        return NextResponse.json({ error: "Pot payroll has already been generated for this event" }, { status: 409 })
       }
 
       const resolved = await resolvePotInputs(venueId, eventId)
@@ -1040,7 +1028,10 @@ export const POST = withRateLimit<{ params: Promise<{ venueId: string; eventId: 
 
         // Kept tips for STANDARD-role staff (not a recipient, not a contractor) still need
         // their own entry so the money isn't lost; create a zero-base bonus-only entry.
-        const handled = new Set([...result.recipientMembershipIds, ...result.contractorPayouts.map((c) => c.membershipId)])
+        const handled = new Set([
+          ...result.recipientMembershipIds,
+          ...result.contractorPayouts.map((c) => c.membershipId),
+        ])
         for (const [membershipId, bonus] of result.keptTipsByMembership) {
           if (handled.has(membershipId)) continue
           await tx.payrollEntry.create({
@@ -1081,11 +1072,13 @@ A note for the implementer: the dynamic `await import("@prisma/client/runtime/li
 - [ ] **Step 2: Manual verification**
 
 Set up a test venue with pot mode enabled, a COMPLETED event with a couple of completed shifts (POT and CONTRACTOR roles) and a few Sale/Tip transactions, then:
+
 ```bash
 curl http://localhost:3000/api/venues/<venueId>/events/<eventId>/pot-payroll -H "Cookie: <session-cookie>"
 curl -X POST http://localhost:3000/api/venues/<venueId>/events/<eventId>/pot-payroll -H "Cookie: <session-cookie>"
 curl -X POST http://localhost:3000/api/venues/<venueId>/events/<eventId>/pot-payroll -H "Cookie: <session-cookie>"
 ```
+
 Expected: `GET` returns a preview matching hand-calculated numbers; first `POST` returns `201` with the distribution and creates `PayrollEntry` rows (verify via `psql` or the payroll page); second `POST` returns `409`.
 
 - [ ] **Step 3: Commit**
@@ -1100,6 +1093,7 @@ git commit -m "feat(api): add pot payroll generation and preview route"
 ### Task 9: `CreateShiftDialog` — optional event picker
 
 **Files:**
+
 - Modify: `components/create-shift-dialog.tsx`
 
 - [ ] **Step 1: Add a `potModeEnabled` and `events` prop**
@@ -1118,24 +1112,26 @@ Add `eventId` to the local form state alongside the existing role selection.
 Next to the existing role `Select` block (`create-shift-dialog.tsx:199-224`), add, gated the same way the `roles.length === 0` conditional is (`create-shift-dialog.tsx:241-245`):
 
 ```tsx
-{potModeEnabled && events && events.length > 0 && (
-  <div className="space-y-2">
-    <Label htmlFor="event">Event (optional, for pot payroll)</Label>
-    <Select value={eventId ?? "none"} onValueChange={(v) => setEventId(v === "none" ? null : v)}>
-      <SelectTrigger id="event">
-        <SelectValue placeholder="No event" />
-      </SelectTrigger>
-      <SelectContent>
-        <SelectItem value="none">No event</SelectItem>
-        {events.map((e) => (
-          <SelectItem key={e.id} value={e.id}>
-            {e.name}
-          </SelectItem>
-        ))}
-      </SelectContent>
-    </Select>
-  </div>
-)}
+{
+  potModeEnabled && events && events.length > 0 && (
+    <div className="space-y-2">
+      <Label htmlFor="event">Event (optional, for pot payroll)</Label>
+      <Select value={eventId ?? "none"} onValueChange={(v) => setEventId(v === "none" ? null : v)}>
+        <SelectTrigger id="event">
+          <SelectValue placeholder="No event" />
+        </SelectTrigger>
+        <SelectContent>
+          <SelectItem value="none">No event</SelectItem>
+          {events.map((e) => (
+            <SelectItem key={e.id} value={e.id}>
+              {e.name}
+            </SelectItem>
+          ))}
+        </SelectContent>
+      </Select>
+    </div>
+  )
+}
 ```
 
 - [ ] **Step 3: Include `eventId` in the shift creation POST body**
@@ -1154,6 +1150,7 @@ git commit -m "feat(shifts): add optional event link when pot payroll mode is on
 ### Task 10: Shifts route — accept `eventId`
 
 **Files:**
+
 - Modify: `app/api/venues/[venueId]/shifts/route.ts`
 
 - [ ] **Step 1: Add `eventId` to the POST body schema and `prisma.shift.create` call**
@@ -1172,6 +1169,7 @@ git commit -m "feat(api): accept optional eventId on shift creation"
 ### Task 11: Shifts page — wire `potModeEnabled` and events into `CreateShiftDialog`
 
 **Files:**
+
 - Modify: `app/dashboard/[slug]/shifts/page.tsx`
 
 - [ ] **Step 1: Fetch venue pot settings and upcoming events**
@@ -1200,6 +1198,7 @@ git commit -m "feat(shifts): surface event picker on shift creation when pot mod
 ### Task 12: Venue Settings — "Pot Payroll" card
 
 **Files:**
+
 - Modify: `app/dashboard/[slug]/settings/page.tsx`
 
 - [ ] **Step 1: Add state and load/save wiring**
@@ -1212,17 +1211,11 @@ Add `useState` fields (`potEnabled`, `potTaxPercent`, `potIncludeSalesInPot`, `p
 <section className="panel">
   <div className="ph">
     <h3>Pot Payroll</h3>
-    <p className="text-sm text-muted-foreground">
-      Nightly revenue/tip pooling instead of (or alongside) hourly pay.
-    </p>
+    <p className="text-sm text-muted-foreground">Nightly revenue/tip pooling instead of (or alongside) hourly pay.</p>
   </div>
   <div className="pbody space-y-4">
     <label className="flex items-center gap-2">
-      <input
-        type="checkbox"
-        checked={potEnabled}
-        onChange={(e) => setPotEnabled(e.target.checked)}
-      />
+      <input type="checkbox" checked={potEnabled} onChange={(e) => setPotEnabled(e.target.checked)} />
       Enable pot payroll for this venue
     </label>
     {potEnabled && (
@@ -1278,6 +1271,7 @@ git commit -m "feat(settings): add pot payroll settings card"
 ### Task 13: Roles management UI — payout mode select
 
 **Files:**
+
 - Modify: `app/dashboard/[slug]/staff/roles/page.tsx`
 
 - [ ] **Step 1: Extend `formData` state** (lines 83-88) with `potPayoutMode: "STANDARD" as "STANDARD" | "POT" | "CONTRACTOR"` and `contractorSharesPot: false`.
@@ -1285,7 +1279,7 @@ git commit -m "feat(settings): add pot payroll settings card"
 - [ ] **Step 2: Add the select + conditional checkbox**, next to the existing hourly-rate `Input` (`staff/roles/page.tsx:413-427`):
 
 ```tsx
-<div className="space-y-2">
+;<div className="space-y-2">
   <Label htmlFor="create-payout-mode">Pot Payroll Mode</Label>
   <Select
     value={formData.potPayoutMode}
@@ -1301,16 +1295,18 @@ git commit -m "feat(settings): add pot payroll settings card"
     </SelectContent>
   </Select>
 </div>
-{formData.potPayoutMode === "CONTRACTOR" && (
-  <label className="flex items-center gap-2">
-    <input
-      type="checkbox"
-      checked={formData.contractorSharesPot}
-      onChange={(e) => setFormData({ ...formData, contractorSharesPot: e.target.checked })}
-    />
-    Also shares in the pot split
-  </label>
-)}
+{
+  formData.potPayoutMode === "CONTRACTOR" && (
+    <label className="flex items-center gap-2">
+      <input
+        type="checkbox"
+        checked={formData.contractorSharesPot}
+        onChange={(e) => setFormData({ ...formData, contractorSharesPot: e.target.checked })}
+      />
+      Also shares in the pot split
+    </label>
+  )
+}
 ```
 
 Add the equivalent block to the edit-role dialog's form (mirroring however the create/edit dialogs already share `formData`).
@@ -1329,6 +1325,7 @@ git commit -m "feat(roles): add pot payout mode selection to role form"
 ### Task 14: Staff member detail page — "pool my tips" toggle
 
 **Files:**
+
 - Modify: `app/dashboard/[slug]/staff/[membershipId]/page.tsx`
 
 - [ ] **Step 1: Add `tipPooled` to the `StaffMember` interface and load it** from the existing membership fetch.
@@ -1336,24 +1333,22 @@ git commit -m "feat(roles): add pot payout mode selection to role form"
 - [ ] **Step 2: Render a toggle inside a `Card`**, following the existing `Card`/`CardHeader`/`CardContent` shape already used on this page, gated on the venue having pot mode enabled (fetch `/api/venues/${venueId}/pot-settings` alongside the existing data load):
 
 ```tsx
-{potModeEnabled && (
-  <Card>
-    <CardHeader>
-      <CardTitle>Tip Pooling</CardTitle>
-      <CardDescription>Pool tips into the venue's pot, or keep them individually.</CardDescription>
-    </CardHeader>
-    <CardContent>
-      <label className="flex items-center gap-2">
-        <input
-          type="checkbox"
-          checked={tipPooled ?? false}
-          onChange={(e) => saveTipPooled(e.target.checked)}
-        />
-        Pool my tips
-      </label>
-    </CardContent>
-  </Card>
-)}
+{
+  potModeEnabled && (
+    <Card>
+      <CardHeader>
+        <CardTitle>Tip Pooling</CardTitle>
+        <CardDescription>Pool tips into the venue's pot, or keep them individually.</CardDescription>
+      </CardHeader>
+      <CardContent>
+        <label className="flex items-center gap-2">
+          <input type="checkbox" checked={tipPooled ?? false} onChange={(e) => saveTipPooled(e.target.checked)} />
+          Pool my tips
+        </label>
+      </CardContent>
+    </Card>
+  )
+}
 ```
 
 `saveTipPooled` calls `PUT /api/venues/${venueId}/staff/${membershipId}` with `{ tipPooled }` — the self-service path added in Task 7.
@@ -1370,6 +1365,7 @@ git commit -m "feat(staff): add tip-pooling preference toggle"
 ### Task 15: Event detail page — "Generate Pot Payroll" action
 
 **Files:**
+
 - Modify: `app/dashboard/[slug]/events/[eventId]/page.tsx`
 
 - [ ] **Step 1: Fetch venue pot settings** alongside the page's existing event data load; store `potModeEnabled`.
@@ -1377,26 +1373,29 @@ git commit -m "feat(staff): add tip-pooling preference toggle"
 - [ ] **Step 2: Add a card in the `event.status === "COMPLETED"` block** (`page.tsx:241-243`), using the same `Card` components already imported on this page:
 
 ```tsx
-{event.status === "COMPLETED" && potModeEnabled && (
-  <Card>
-    <CardHeader>
-      <CardTitle>Pot Payroll</CardTitle>
-      <CardDescription>Generate the nightly pot split for this event.</CardDescription>
-    </CardHeader>
-    <CardContent>
-      {potDistribution ? (
-        <p className="text-sm text-muted-foreground">
-          Generated <ServerTime date={potDistribution.generatedAt} formatStr="datelong" />
-          {" — "}{potDistribution.recipientCount} recipients, {potDistribution.perPersonShare} gil each.
-        </p>
-      ) : (
-        <Button onClick={handleGeneratePotPayroll} disabled={isGeneratingPot}>
-          Generate Pot Payroll
-        </Button>
-      )}
-    </CardContent>
-  </Card>
-)}
+{
+  event.status === "COMPLETED" && potModeEnabled && (
+    <Card>
+      <CardHeader>
+        <CardTitle>Pot Payroll</CardTitle>
+        <CardDescription>Generate the nightly pot split for this event.</CardDescription>
+      </CardHeader>
+      <CardContent>
+        {potDistribution ? (
+          <p className="text-sm text-muted-foreground">
+            Generated <ServerTime date={potDistribution.generatedAt} formatStr="datelong" />
+            {" — "}
+            {potDistribution.recipientCount} recipients, {potDistribution.perPersonShare} gil each.
+          </p>
+        ) : (
+          <Button onClick={handleGeneratePotPayroll} disabled={isGeneratingPot}>
+            Generate Pot Payroll
+          </Button>
+        )}
+      </CardContent>
+    </Card>
+  )
+}
 ```
 
 `handleGeneratePotPayroll` POSTs to `/api/venues/${venue.id}/events/${eventId}/pot-payroll` (Task 8) and stores the response in `potDistribution` state; fetch existing `potDistribution` on page load via a `GET` to the same endpoint's preview... actually the preview endpoint doesn't return an existing record — add a check via `prisma.potDistribution.findUnique` server-side or a lightweight existence check; simplest: attempt to include `potDistribution` in the initial event fetch response (extend the event `GET` route to include the relation) rather than a second client round-trip. Decide which when implementing; either is fine architecturally, the existing-event-GET-include approach is less code.
@@ -1413,6 +1412,7 @@ git commit -m "feat(events): add generate pot payroll action to completed events
 ### Task 16: Payroll page — render pot/contractor entries
 
 **Files:**
+
 - Modify: `app/dashboard/[slug]/payroll/page.tsx`
 
 - [ ] **Step 1: Extend the `PayrollEntry` client interface** (lines 44-80) with `paymentType` already present — confirm it now includes `"POT_SHARE" | "CONTRACTOR_PAYOUT"` in its type union, and add `potDistribution?: { eventId: string; regularSales: string; contractorSales: string; pooledTips: string; potTotal: string; recipientCount: number; perPersonShare: string } | null`.
@@ -1422,26 +1422,27 @@ git commit -m "feat(events): add generate pot payroll action to completed events
 In the row-render logic (starting `payroll/page.tsx:1082`), add local `useState<Set<string>>` for expanded row ids, and gate an extra `<tr>` under any row where `entry.paymentType === "POT_SHARE" || entry.paymentType === "CONTRACTOR_PAYOUT"`:
 
 ```tsx
-{(entry.paymentType === "POT_SHARE" || entry.paymentType === "CONTRACTOR_PAYOUT") && entry.potDistribution && (
-  <button
-    className="text-xs text-muted-foreground underline"
-    onClick={() => toggleExpanded(entry.id)}
-  >
-    {expandedIds.has(entry.id) ? "Hide" : "Show"} breakdown
-  </button>
-)}
+{
+  ;(entry.paymentType === "POT_SHARE" || entry.paymentType === "CONTRACTOR_PAYOUT") && entry.potDistribution && (
+    <button className="text-xs text-muted-foreground underline" onClick={() => toggleExpanded(entry.id)}>
+      {expandedIds.has(entry.id) ? "Hide" : "Show"} breakdown
+    </button>
+  )
+}
 ```
+
 ```tsx
-{expandedIds.has(entry.id) && entry.potDistribution && (
-  <tr>
-    <td colSpan={6} className="bg-muted/30 text-sm p-3">
-      Regular sales: {entry.potDistribution.regularSales} · Contractor sales:{" "}
-      {entry.potDistribution.contractorSales} · Pooled tips: {entry.potDistribution.pooledTips} · Pot
-      total: {entry.potDistribution.potTotal} · Recipients: {entry.potDistribution.recipientCount} ·
-      Per person: {entry.potDistribution.perPersonShare}
-    </td>
-  </tr>
-)}
+{
+  expandedIds.has(entry.id) && entry.potDistribution && (
+    <tr>
+      <td colSpan={6} className="bg-muted/30 text-sm p-3">
+        Regular sales: {entry.potDistribution.regularSales} · Contractor sales: {entry.potDistribution.contractorSales}{" "}
+        · Pooled tips: {entry.potDistribution.pooledTips} · Pot total: {entry.potDistribution.potTotal} · Recipients:{" "}
+        {entry.potDistribution.recipientCount} · Per person: {entry.potDistribution.perPersonShare}
+      </td>
+    </tr>
+  )
+}
 ```
 
 - [ ] **Step 3: Include `potDistribution` in the page's payroll-entries fetch** — add `include: { potDistribution: true }` (or the equivalent already-used include pattern) to whichever API route backs this page's data load.
@@ -1458,6 +1459,7 @@ git commit -m "feat(payroll): render pot-share and contractor payout breakdowns"
 ## Self-review
 
 **Spec coverage:**
+
 - `VenuePotSettings` table — Task 1 Step 8, Task 2, Task 5, Task 12. ✓
 - `Role.potPayoutMode`/`contractorSharesPot` — Task 1 Step 3, Task 2, Task 6, Task 13. ✓
 - `Shift.eventId` — Task 1 Step 5, Task 2, Task 9, Task 10, Task 11. ✓

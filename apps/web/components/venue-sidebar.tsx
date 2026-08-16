@@ -132,12 +132,9 @@ export function VenueSidebar({
   ]
 
   const isActive = (href: string) =>
-    href === `/dashboard/${venueSlug}`
-      ? pathname === href
-      : pathname.startsWith(href)
+    href === `/dashboard/${venueSlug}` ? pathname === href : pathname.startsWith(href)
 
-  const filterItems = (items: NavItem[]) =>
-    items.filter((item) => !item.roles || item.roles.includes(userRole))
+  const filterItems = (items: NavItem[]) => items.filter((item) => !item.roles || item.roles.includes(userRole))
 
   const close = () => setOpen(false)
 
@@ -173,15 +170,22 @@ export function VenueSidebar({
                             : "text-foreground hover:bg-[var(--blue-007)] border-transparent"
                         )}
                       >
-                        <item.icon className={cn("h-[18px] w-[18px] shrink-0 transition-colors", active ? "text-[var(--xiv-navy)]" : "text-muted-foreground")} />
+                        <item.icon
+                          className={cn(
+                            "h-[18px] w-[18px] shrink-0 transition-colors",
+                            active ? "text-[var(--xiv-navy)]" : "text-muted-foreground"
+                          )}
+                        />
                         <span className="flex-1">{item.label}</span>
                         {item.badge !== undefined && item.badge !== null && (
-                          <span className={cn(
-                            "text-[0.7rem] font-semibold px-2 py-px rounded-full min-w-[1.25rem] text-center",
-                            active
-                              ? "bg-[rgba(7,11,20,0.25)] text-[var(--xiv-navy)]"
-                              : "bg-[var(--blue-012)] text-[var(--xiv-blue)]"
-                          )}>
+                          <span
+                            className={cn(
+                              "text-[0.7rem] font-semibold px-2 py-px rounded-full min-w-[1.25rem] text-center",
+                              active
+                                ? "bg-[rgba(7,11,20,0.25)] text-[var(--xiv-navy)]"
+                                : "bg-[var(--blue-012)] text-[var(--xiv-blue)]"
+                            )}
+                          >
                             {item.badge}
                           </span>
                         )}
@@ -207,7 +211,12 @@ export function VenueSidebar({
               : "text-foreground hover:bg-[var(--blue-007)] border-transparent"
           )}
         >
-          <Settings className={cn("h-[18px] w-[18px] shrink-0", isActive(`/dashboard/${venueSlug}/settings`) ? "text-[var(--xiv-navy)]" : "text-muted-foreground")} />
+          <Settings
+            className={cn(
+              "h-[18px] w-[18px] shrink-0",
+              isActive(`/dashboard/${venueSlug}/settings`) ? "text-[var(--xiv-navy)]" : "text-muted-foreground"
+            )}
+          />
           <span>Venue settings</span>
         </Link>
       </div>
@@ -229,8 +238,15 @@ export function VenueSidebar({
           {mounted && userEmail && <p className="text-xs text-muted-foreground">{userEmail}</p>}
         </div>
       )}
-      <div onClick={onNavigate}><FeedbackDialog /></div>
-      <Button asChild variant="ghost" size="sm" className="w-full justify-start text-[var(--support-pink)] hover:text-pink-300 hover:bg-[rgba(243,139,168,0.08)]">
+      <div onClick={onNavigate}>
+        <FeedbackDialog />
+      </div>
+      <Button
+        asChild
+        variant="ghost"
+        size="sm"
+        className="w-full justify-start text-[var(--support-pink)] hover:text-pink-300 hover:bg-[rgba(243,139,168,0.08)]"
+      >
         <Link href="https://ko-fi.com/ehnocure" target="_blank" rel="noopener noreferrer">
           <Heart className="h-4 w-4 mr-2" />
           Support the Project

@@ -25,7 +25,15 @@ export async function GET() {
   const shouts = await prisma.shoutTemplate.findMany({
     where: { userId: session.user.id },
     orderBy: { createdAt: "desc" },
-    select: { id: true, label: true, fields: true, templateId: true, separatorId: true, decorId: true, createdAt: true },
+    select: {
+      id: true,
+      label: true,
+      fields: true,
+      templateId: true,
+      separatorId: true,
+      decorId: true,
+      createdAt: true,
+    },
   })
 
   return cors(NextResponse.json(shouts))
@@ -45,8 +53,23 @@ export async function POST(req: NextRequest) {
   }
 
   const shout = await prisma.shoutTemplate.create({
-    data: { userId: session.user.id, label: label.trim(), fields, templateId, separatorId: separatorId ?? "dot", decorId: decorId ?? "diamond" },
-    select: { id: true, label: true, fields: true, templateId: true, separatorId: true, decorId: true, createdAt: true },
+    data: {
+      userId: session.user.id,
+      label: label.trim(),
+      fields,
+      templateId,
+      separatorId: separatorId ?? "dot",
+      decorId: decorId ?? "diamond",
+    },
+    select: {
+      id: true,
+      label: true,
+      fields: true,
+      templateId: true,
+      separatorId: true,
+      decorId: true,
+      createdAt: true,
+    },
   })
 
   return cors(NextResponse.json(shout, { status: 201 }))

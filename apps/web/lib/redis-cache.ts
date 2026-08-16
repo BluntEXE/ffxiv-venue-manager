@@ -54,11 +54,7 @@ export async function getCached<T>(key: string): Promise<T | null> {
   }
 }
 
-export async function setCache<T>(
-  key: string,
-  data: T,
-  ttlSeconds: number
-): Promise<void> {
+export async function setCache<T>(key: string, data: T, ttlSeconds: number): Promise<void> {
   if (!ready() || !redis) return
   try {
     await redis.setex(k(key), ttlSeconds, JSON.stringify(data))
@@ -93,11 +89,7 @@ export async function invalidateCache(keyOrPattern: string): Promise<void> {
   }
 }
 
-export async function getOrSet<T>(
-  key: string,
-  fetchFn: () => Promise<T>,
-  ttlSeconds: number
-): Promise<T> {
+export async function getOrSet<T>(key: string, fetchFn: () => Promise<T>, ttlSeconds: number): Promise<T> {
   const cached = await getCached<T>(key)
   if (cached !== null) return cached
   const data = await fetchFn()

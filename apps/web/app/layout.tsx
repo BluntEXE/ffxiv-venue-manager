@@ -33,7 +33,8 @@ const jetbrainsMono = JetBrains_Mono({
 export const dynamic = "force-dynamic"
 
 const SITE_URL = "https://xivvenuemanager.com"
-const SITE_DESC = "Free venue management for FFXIV roleplay venues. Track events, manage staff, log sales and go live from the web or inside the game."
+const SITE_DESC =
+  "Free venue management for FFXIV roleplay venues. Track events, manage staff, log sales and go live from the web or inside the game."
 
 export const metadata: Metadata = {
   title: { default: "XIV Venue Manager - Free FFXIV Venue Management", template: "%s | XIV Venue Manager" },
@@ -62,9 +63,7 @@ export const metadata: Metadata = {
       { url: "/icon-512x512.png", sizes: "512x512", type: "image/png" },
       { url: "/icon-2048x2048.png", sizes: "2048x2048", type: "image/png" },
     ],
-    apple: [
-      { url: "/apple-touch-icon.png", sizes: "180x180", type: "image/png" },
-    ],
+    apple: [{ url: "/apple-touch-icon.png", sizes: "180x180", type: "image/png" }],
   },
 }
 
@@ -78,19 +77,17 @@ export default function RootLayout({
       <body className="antialiased font-sans">
         <SessionProvider>
           <SidebarProvider>
-          <VenueProvider>
-            {/* Skip Navigation Link for Accessibility */}
-            <a
-              href="#main-content"
-              className="sr-only focus:not-sr-only focus:absolute focus:top-4 focus:left-4 focus:z-50 focus:px-4 focus:py-2 focus:bg-primary focus:text-primary-foreground focus:rounded-md focus:ring-2 focus:ring-ring focus:outline-none"
-            >
-              Skip to main content
-            </a>
-            <Navbar />
-            <main id="main-content">
-              {children}
-            </main>
-          </VenueProvider>
+            <VenueProvider>
+              {/* Skip Navigation Link for Accessibility */}
+              <a
+                href="#main-content"
+                className="sr-only focus:not-sr-only focus:absolute focus:top-4 focus:left-4 focus:z-50 focus:px-4 focus:py-2 focus:bg-primary focus:text-primary-foreground focus:rounded-md focus:ring-2 focus:ring-ring focus:outline-none"
+              >
+                Skip to main content
+              </a>
+              <Navbar />
+              <main id="main-content">{children}</main>
+            </VenueProvider>
           </SidebarProvider>
           <Toaster
             theme="dark"

@@ -13,6 +13,7 @@
 ## Task 1: Schema — `VenueInventorySettings` + `Service` inventory fields
 
 **Files:**
+
 - Modify: `apps/web/prisma/schema.prisma`
 
 - [ ] **Step 1: Add the `VenueInventorySettings` model**
@@ -133,6 +134,7 @@ git commit -m "feat: add VenueInventorySettings model and Service inventory fiel
 ## Task 2: Inventory settings API route (dashboard, session-authed)
 
 **Files:**
+
 - Create: `apps/web/app/api/venues/[venueId]/inventory-settings/route.ts`
 
 Mirrors `apps/web/app/api/venues/[venueId]/pot-settings/route.ts` exactly (same auth/membership resolution shape), with one field (`enabled`) instead of four.
@@ -214,10 +216,7 @@ export const PUT = withRateLimit<{ params: Promise<{ venueId: string }> }>(
       const resolved = await resolveVenueAndMembership(venueId, session.user.id)
       if ("error" in resolved) return resolved.error
       if (!["OWNER", "MANAGER"].includes(resolved.membership.role)) {
-        return NextResponse.json(
-          { error: "Only owners and managers can change inventory settings" },
-          { status: 403 }
-        )
+        return NextResponse.json({ error: "Only owners and managers can change inventory settings" }, { status: 403 })
       }
 
       const body = await request.json()
@@ -259,6 +258,7 @@ git commit -m "feat: add venue inventory settings API route"
 ## Task 3: Plugin-facing inventory settings read (api-key-authed)
 
 **Files:**
+
 - Create: `apps/web/app/api/plugin/inventory-settings/route.ts`
 
 The plugin needs to know whether inventory is enabled to decide whether to show its Inventory nav icon at all — it authenticates via `x-api-key`, not a session, so this is a separate route from Task 2's session-authed one (same split as every other plugin-facing GET in this codebase).
@@ -266,10 +266,10 @@ The plugin needs to know whether inventory is enabled to decide whether to show 
 - [ ] **Step 1: Write the route**
 
 ```ts
-import { NextRequest, NextResponse } from 'next/server'
-import { validateApiKey } from '@/lib/api/plugin-auth'
-import { enforcePluginRateLimit, enforcePluginIpRateLimit } from '@/lib/api/plugin-rate-limit'
-import { prisma } from '@/lib/prisma'
+import { NextRequest, NextResponse } from "next/server"
+import { validateApiKey } from "@/lib/api/plugin-auth"
+import { enforcePluginRateLimit, enforcePluginIpRateLimit } from "@/lib/api/plugin-rate-limit"
+import { prisma } from "@/lib/prisma"
 
 /**
  * GET /api/plugin/inventory-settings?venueId=…
@@ -283,21 +283,21 @@ export async function GET(request: NextRequest) {
     const __ipLimited = await enforcePluginIpRateLimit(request)
     if (__ipLimited) return __ipLimited
 
-    const apiKey = request.headers.get('x-api-key')
-    if (!apiKey) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+    const apiKey = request.headers.get("x-api-key")
+    if (!apiKey) return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
 
     const auth = await validateApiKey(apiKey)
     if (!auth || !auth.userId) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
     }
 
-    const limited = await enforcePluginRateLimit(apiKey, 'read')
+    const limited = await enforcePluginRateLimit(apiKey, "read")
     if (limited) return limited
 
     const { searchParams } = new URL(request.url)
-    const venueId = searchParams.get('venueId')
+    const venueId = searchParams.get("venueId")
     if (!venueId || !auth.venues.includes(venueId)) {
-      return NextResponse.json({ error: 'Invalid venue' }, { status: 400 })
+      return NextResponse.json({ error: "Invalid venue" }, { status: 400 })
     }
 
     const settings = await prisma.venueInventorySettings.findUnique({
@@ -307,8 +307,8 @@ export async function GET(request: NextRequest) {
 
     return NextResponse.json({ enabled: settings?.enabled ?? false })
   } catch (error) {
-    console.error('[Plugin API] Error fetching inventory settings:', error)
-    return NextResponse.json({ error: 'Internal server error' }, { status: 500 })
+    console.error("[Plugin API] Error fetching inventory settings:", error)
+    return NextResponse.json({ error: "Internal server error" }, { status: 500 })
   }
 }
 ```
@@ -330,6 +330,7 @@ git commit -m "feat: add plugin-facing inventory settings read endpoint"
 ## Task 4: Stock enforcement in the shared `createTransaction` helper
 
 **Files:**
+
 - Modify: `apps/web/lib/api/transactions.ts`
 - Modify: `apps/web/app/api/venues/[venueId]/transactions/route.ts:172-215`
 - Modify: `apps/web/app/api/plugin/transactions/route.ts`
@@ -467,100 +468,104 @@ export class InsufficientStockError extends Error {
 Then replace the body of `createTransaction` (the section from the `eventId` resolution through the `prisma.transaction.create` call, currently lines 49-99) with:
 
 ```ts
-  // If the caller didn't specify an event, attribute the sale to whatever
-  // event is currently running at this venue (startTime <= now <= endTime,
-  // status PUBLISHED or ACTIVE). Mirrors the lookup in
-  // /api/plugin/events/active so sales logged during an event always count
-  // toward its revenue, even if the client (plugin or web) doesn't pass
-  // eventId explicitly.
-  let eventId = input.eventId
-  if (!eventId) {
-    const now = new Date()
-    const activeEvent = await prisma.event.findFirst({
-      where: {
-        venueId,
-        startTime: { lte: now },
-        endTime: { gte: now },
-        status: { in: ["PUBLISHED", "ACTIVE"] },
-      },
-      orderBy: { startTime: "desc" },
-      select: { id: true },
-    })
-    eventId = activeEvent?.id
-  }
+// If the caller didn't specify an event, attribute the sale to whatever
+// event is currently running at this venue (startTime <= now <= endTime,
+// status PUBLISHED or ACTIVE). Mirrors the lookup in
+// /api/plugin/events/active so sales logged during an event always count
+// toward its revenue, even if the client (plugin or web) doesn't pass
+// eventId explicitly.
+let eventId = input.eventId
+if (!eventId) {
+  const now = new Date()
+  const activeEvent = await prisma.event.findFirst({
+    where: {
+      venueId,
+      startTime: { lte: now },
+      endTime: { gte: now },
+      status: { in: ["PUBLISHED", "ACTIVE"] },
+    },
+    orderBy: { startTime: "desc" },
+    select: { id: true },
+  })
+  eventId = activeEvent?.id
+}
 
-  // Stock check + create + decrement happen in one DB transaction so a
-  // concurrent sale can't oversell the last unit. updateMany's gt:0 filter
-  // is the atomic guard: if two requests race, only one's updateMany
-  // affects a row, and the loser gets a hard 409 rather than a negative
-  // stockCount.
+// Stock check + create + decrement happen in one DB transaction so a
+// concurrent sale can't oversell the last unit. updateMany's gt:0 filter
+// is the atomic guard: if two requests race, only one's updateMany
+// affects a row, and the loser gets a hard 409 rather than a negative
+// stockCount.
+if (input.serviceId) {
+  const service = await prisma.service.findUnique({
+    where: { id: input.serviceId },
+    select: { stockCount: true },
+  })
+  if (service && service.stockCount !== null && service.stockCount <= 0) {
+    throw new InsufficientStockError(input.serviceId)
+  }
+}
+
+const newTransaction = await prisma.$transaction(async (tx) => {
   if (input.serviceId) {
-    const service = await prisma.service.findUnique({
-      where: { id: input.serviceId },
-      select: { stockCount: true },
+    const decremented = await tx.service.updateMany({
+      where: { id: input.serviceId, stockCount: { gt: 0 } },
+      data: { stockCount: { decrement: 1 } },
     })
-    if (service && service.stockCount !== null && service.stockCount <= 0) {
-      throw new InsufficientStockError(input.serviceId)
-    }
-  }
-
-  const newTransaction = await prisma.$transaction(async (tx) => {
-    if (input.serviceId) {
-      const decremented = await tx.service.updateMany({
-        where: { id: input.serviceId, stockCount: { gt: 0 } },
-        data: { stockCount: { decrement: 1 } },
+    // decremented.count === 0 means either the service isn't
+    // stock-tracked (stockCount is null, filtered out by gt:0 — fine,
+    // not an error) or it hit zero between our findUnique check and
+    // here (a real race — re-check to distinguish the two).
+    if (decremented.count === 0) {
+      const current = await tx.service.findUnique({
+        where: { id: input.serviceId },
+        select: { stockCount: true },
       })
-      // decremented.count === 0 means either the service isn't
-      // stock-tracked (stockCount is null, filtered out by gt:0 — fine,
-      // not an error) or it hit zero between our findUnique check and
-      // here (a real race — re-check to distinguish the two).
-      if (decremented.count === 0) {
-        const current = await tx.service.findUnique({
-          where: { id: input.serviceId },
-          select: { stockCount: true },
-        })
-        if (current && current.stockCount !== null && current.stockCount <= 0) {
-          throw new InsufficientStockError(input.serviceId)
-        }
+      if (current && current.stockCount !== null && current.stockCount <= 0) {
+        throw new InsufficientStockError(input.serviceId)
       }
     }
+  }
 
-    return tx.transaction.create({
-      data: {
-        venueId,
-        serviceId: input.serviceId,
-        eventId,
-        staffId: staffUserId,
-        type: input.type ?? "SALE",
-        amount: input.amount,
-        customerName: input.customerName,
-        notes: input.notes,
-      },
-      include: {
-        service: {
-          select: {
-            id: true,
-            name: true,
-            price: true,
-          },
-        },
-        event: {
-          select: {
-            id: true,
-            title: true,
-          },
-        },
-        staff: {
-          select: {
-            id: true,
-            name: true,
-            displayName: true,
-            characters: { orderBy: [{ isPrimary: "desc" }, { createdAt: "asc" }], take: 1, select: { characterName: true } },
-          },
+  return tx.transaction.create({
+    data: {
+      venueId,
+      serviceId: input.serviceId,
+      eventId,
+      staffId: staffUserId,
+      type: input.type ?? "SALE",
+      amount: input.amount,
+      customerName: input.customerName,
+      notes: input.notes,
+    },
+    include: {
+      service: {
+        select: {
+          id: true,
+          name: true,
+          price: true,
         },
       },
-    })
+      event: {
+        select: {
+          id: true,
+          title: true,
+        },
+      },
+      staff: {
+        select: {
+          id: true,
+          name: true,
+          displayName: true,
+          characters: {
+            orderBy: [{ isPrimary: "desc" }, { createdAt: "asc" }],
+            take: 1,
+            select: { characterName: true },
+          },
+        },
+      },
+    },
   })
+})
 ```
 
 The rest of the function (staff nickname lookup, Discord webhook, cache invalidation, event emit, return) is unchanged — it already reads from `newTransaction`.
@@ -605,9 +610,11 @@ git commit -m "feat: enforce stock hard-block and decrement in shared createTran
 ## Task 5: XIVAPI v2 item-search proxy route (dashboard)
 
 **Files:**
+
 - Create: `apps/web/app/api/venues/[venueId]/inventory/item-search/route.ts`
 
 **Files:**
+
 - Verify: real XIVAPI v2 response shape before writing the mapping code.
 
 - [ ] **Step 1: Verify the real XIVAPI v2 search response shape**
@@ -702,6 +709,7 @@ git commit -m "feat: add XIVAPI v2 item-search proxy route"
 ## Task 6: Extend Service CRUD + plugin services read with inventory fields
 
 **Files:**
+
 - Modify: `apps/web/app/api/venues/[venueId]/services/[serviceId]/route.ts:9-15,110-135`
 - Modify: `apps/web/app/api/venues/[venueId]/services/route.ts` (POST create schema — find via `grep -n "createServiceSchema\|export const POST" apps/web/app/api/venues/\[venueId\]/services/route.ts`)
 - Modify: `apps/web/app/api/plugin/services/route.ts:75-80`
@@ -735,26 +743,26 @@ Read `apps/web/app/api/venues/[venueId]/services/route.ts` first to find its `cr
 In `apps/web/app/api/plugin/services/route.ts`, the response mapping (lines 75-80):
 
 ```ts
-    const services = Array.from(serviceMap.values()).map((svc) => ({
-      id: svc.id,
-      name: svc.name,
-      description: svc.description,
-      price: svc.price.toString(),
-      category: svc.category,
-    }))
+const services = Array.from(serviceMap.values()).map((svc) => ({
+  id: svc.id,
+  name: svc.name,
+  description: svc.description,
+  price: svc.price.toString(),
+  category: svc.category,
+}))
 ```
 
 Add `stockCount`:
 
 ```ts
-    const services = Array.from(serviceMap.values()).map((svc) => ({
-      id: svc.id,
-      name: svc.name,
-      description: svc.description,
-      price: svc.price.toString(),
-      category: svc.category,
-      stockCount: svc.stockCount,
-    }))
+const services = Array.from(serviceMap.values()).map((svc) => ({
+  id: svc.id,
+  name: svc.name,
+  description: svc.description,
+  price: svc.price.toString(),
+  category: svc.category,
+  stockCount: svc.stockCount,
+}))
 ```
 
 This requires the role's `include: { services: true }` up the chain (already present at the query above) to select all `Service` columns by default, which Prisma does — no explicit `select` list exists there today, so `stockCount` is already available on `svc`.
@@ -776,6 +784,7 @@ git commit -m "feat: expose inventory fields on service CRUD and plugin services
 ## Task 7: Dashboard Settings page — inventory toggle
 
 **Files:**
+
 - Modify: `apps/web/app/dashboard/[slug]/settings/page.tsx`
 
 Mirrors the existing pot-settings toggle exactly (fetch on mount at `page.tsx:213-221`, checkbox + conditional block at `page.tsx:1063-1103`).
@@ -785,18 +794,18 @@ Mirrors the existing pot-settings toggle exactly (fetch on mount at `page.tsx:21
 Near the existing `potEnabled` state declaration, add:
 
 ```ts
-  const [inventoryEnabled, setInventoryEnabled] = useState(false)
+const [inventoryEnabled, setInventoryEnabled] = useState(false)
 ```
 
 Near the existing pot-settings fetch (`page.tsx:213-221`), add a sibling fetch:
 
 ```ts
-    fetch(`/api/venues/${venue.id}/inventory-settings`)
-      .then((r) => (r.ok ? r.json() : null))
-      .then((data) => {
-        if (!data) return
-        setInventoryEnabled(data.settings.enabled)
-      })
+fetch(`/api/venues/${venue.id}/inventory-settings`)
+  .then((r) => (r.ok ? r.json() : null))
+  .then((data) => {
+    if (!data) return
+    setInventoryEnabled(data.settings.enabled)
+  })
 ```
 
 - [ ] **Step 2: Add the toggle UI**
@@ -820,11 +829,11 @@ Near the existing pot-settings toggle block (`page.tsx:1063-1103`), add a parall
 Find the existing pot-settings save handler (search for the `PUT` call to `/api/venues/${venue.id}/pot-settings` in this file) and add a sibling call in the same save flow:
 
 ```ts
-    await fetch(`/api/venues/${venue.id}/inventory-settings`, {
-      method: "PUT",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ enabled: inventoryEnabled }),
-    })
+await fetch(`/api/venues/${venue.id}/inventory-settings`, {
+  method: "PUT",
+  headers: { "Content-Type": "application/json" },
+  body: JSON.stringify({ enabled: inventoryEnabled }),
+})
 ```
 
 - [ ] **Step 4: Typecheck**
@@ -844,6 +853,7 @@ git commit -m "feat: add inventory tracking toggle to venue settings"
 ## Task 8: Dashboard Services page — item picker, stock field, low-stock badge
 
 **Files:**
+
 - Create: `apps/web/components/item-search-combobox.tsx`
 - Modify: `apps/web/app/dashboard/[slug]/services/page.tsx`
 
@@ -880,9 +890,7 @@ export function ItemSearchCombobox({ venueId, value, onChange }: ItemSearchCombo
       return
     }
     debounceRef.current = setTimeout(async () => {
-      const res = await fetch(
-        `/api/venues/${venueId}/inventory/item-search?query=${encodeURIComponent(query)}`
-      )
+      const res = await fetch(`/api/venues/${venueId}/inventory/item-search?query=${encodeURIComponent(query)}`)
       if (res.ok) {
         const data = await res.json()
         setResults(data.items)
@@ -971,7 +979,7 @@ In `openEditDialog` specifically, populate from the service being edited:
 Add state near `isLoading`:
 
 ```ts
-  const [inventoryEnabled, setInventoryEnabled] = useState(false)
+const [inventoryEnabled, setInventoryEnabled] = useState(false)
 ```
 
 In the existing data-loading effect (the one that fetches `/api/venues/${venue.id}/services` and `/api/venues/${venue.id}/roles` around line 118-119), add a sibling fetch:
@@ -989,29 +997,31 @@ In the existing data-loading effect (the one that fetches `/api/venues/${venue.i
 In both the create dialog (around line 445-539) and edit dialog (around line 544-631), immediately after the existing `isActive` `Switch` control, add:
 
 ```tsx
-{inventoryEnabled && (
-  <div className="space-y-2 border-t pt-4">
-    <Label>Linked FFXIV Item (optional)</Label>
-    <ItemSearchCombobox
-      venueId={venueId}
-      value={formData.linkedItem}
-      onChange={(item) => setFormData({ ...formData, linkedItem: item })}
-    />
-    <Label>Stock Count (leave blank if not tracked)</Label>
-    <Input
-      type="number"
-      min="0"
-      value={formData.stockCount}
-      onChange={(e) => setFormData({ ...formData, stockCount: e.target.value })}
-    />
-  </div>
-)}
+{
+  inventoryEnabled && (
+    <div className="space-y-2 border-t pt-4">
+      <Label>Linked FFXIV Item (optional)</Label>
+      <ItemSearchCombobox
+        venueId={venueId}
+        value={formData.linkedItem}
+        onChange={(item) => setFormData({ ...formData, linkedItem: item })}
+      />
+      <Label>Stock Count (leave blank if not tracked)</Label>
+      <Input
+        type="number"
+        min="0"
+        value={formData.stockCount}
+        onChange={(e) => setFormData({ ...formData, stockCount: e.target.value })}
+      />
+    </div>
+  )
+}
 ```
 
 This requires `venueId` in scope — the component currently resolves venue id inline inside each handler via a fresh `fetch("/api/venues")` call rather than storing it in state. Add a `venueId` state variable set once in the initial load effect (alongside the existing venue lookup at line ~109) and reuse it here and in the three handlers below instead of re-fetching `/api/venues` each time:
 
 ```ts
-  const [venueId, setVenueId] = useState<string>("")
+const [venueId, setVenueId] = useState<string>("")
 ```
 
 Set it where the venue is first resolved (the effect around line 109), and replace the repeated `const venueResponse = await fetch(...); const venue = venues.find(...)` blocks in `handleCreateService`, `handleEditService`, and `handleDeleteService`/`handleToggleService` with direct use of the `venueId` state — this is a pre-existing pattern of redundant fetches this task's new UI would otherwise have to duplicate a fifth time.
@@ -1032,11 +1042,13 @@ In `handleCreateService`'s `body: JSON.stringify({...})` (around line 158-164) a
 In the row-rendering section (list of services, search for where `service.name` and `service.isActive` are rendered as a `Badge`), add a badge when the service is stock-tracked and at or below the fixed default threshold:
 
 ```tsx
-{service.stockCount != null && service.stockCount <= 5 && (
-  <Badge variant="destructive">
-    {service.stockCount === 0 ? "Out of stock" : `Low stock: ${service.stockCount}`}
-  </Badge>
-)}
+{
+  service.stockCount != null && service.stockCount <= 5 && (
+    <Badge variant="destructive">
+      {service.stockCount === 0 ? "Out of stock" : `Low stock: ${service.stockCount}`}
+    </Badge>
+  )
+}
 ```
 
 - [ ] **Step 7: Typecheck**
@@ -1056,6 +1068,7 @@ git commit -m "feat: add item linking and stock tracking to Services page"
 ## Task 9: Plugin — models and API client methods
 
 **Files:**
+
 - Modify: `VenueManager/VenueManager/XIVAppApiModels.cs:25-41`
 - Modify: `VenueManager/VenueManager/XIVAppVenueApi.cs`
 
@@ -1223,6 +1236,7 @@ git commit -m "feat: add inventory API client methods and models"
 ## Task 10: Web — inventory write routes (link-item, restock, OWNER/MANAGER only)
 
 **Files:**
+
 - Create: `apps/web/app/api/plugin/inventory/link-item/route.ts`
 - Create: `apps/web/app/api/plugin/inventory/restock/route.ts`
 
@@ -1231,10 +1245,10 @@ Both mirror `apps/web/app/api/plugin/rooms/status/route.ts`'s structure but use 
 - [ ] **Step 1: Write the link-item route**
 
 ```ts
-import { NextRequest, NextResponse } from 'next/server'
-import { validateApiKey } from '@/lib/api/plugin-auth'
-import { enforcePluginRateLimit, enforcePluginIpRateLimit } from '@/lib/api/plugin-rate-limit'
-import { prisma } from '@/lib/prisma'
+import { NextRequest, NextResponse } from "next/server"
+import { validateApiKey } from "@/lib/api/plugin-auth"
+import { enforcePluginRateLimit, enforcePluginIpRateLimit } from "@/lib/api/plugin-rate-limit"
+import { prisma } from "@/lib/prisma"
 
 interface LinkItemPayload {
   venueId: string
@@ -1256,15 +1270,15 @@ export async function POST(request: NextRequest) {
     const __ipLimited = await enforcePluginIpRateLimit(request)
     if (__ipLimited) return __ipLimited
 
-    const apiKey = request.headers.get('x-api-key')
-    if (!apiKey) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+    const apiKey = request.headers.get("x-api-key")
+    if (!apiKey) return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
 
     const auth = await validateApiKey(apiKey)
     if (!auth || !auth.userId) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
     }
 
-    const limited = await enforcePluginRateLimit(apiKey, 'write')
+    const limited = await enforcePluginRateLimit(apiKey, "write")
     if (limited) return limited
 
     const body: LinkItemPayload = await request.json()
@@ -1272,25 +1286,25 @@ export async function POST(request: NextRequest) {
 
     if (!venueId || !serviceId || !itemId || !itemName) {
       return NextResponse.json(
-        { error: 'Missing required fields: venueId, serviceId, itemId, itemName' },
+        { error: "Missing required fields: venueId, serviceId, itemId, itemName" },
         { status: 400 }
       )
     }
 
     if (!auth.venues.includes(venueId)) {
-      return NextResponse.json({ error: 'Invalid venue' }, { status: 400 })
+      return NextResponse.json({ error: "Invalid venue" }, { status: 400 })
     }
 
     const membership = await prisma.membership.findFirst({
-      where: { userId: auth.userId, venueId, status: 'active' },
+      where: { userId: auth.userId, venueId, status: "active" },
     })
-    if (!membership || !['OWNER', 'MANAGER'].includes(membership.role)) {
-      return NextResponse.json({ error: 'Owner or Manager role required' }, { status: 403 })
+    if (!membership || !["OWNER", "MANAGER"].includes(membership.role)) {
+      return NextResponse.json({ error: "Owner or Manager role required" }, { status: 403 })
     }
 
     const service = await prisma.service.findFirst({ where: { id: serviceId, venueId } })
     if (!service) {
-      return NextResponse.json({ error: 'Service not found in this venue' }, { status: 404 })
+      return NextResponse.json({ error: "Service not found in this venue" }, { status: 404 })
     }
 
     await prisma.service.update({
@@ -1300,8 +1314,8 @@ export async function POST(request: NextRequest) {
 
     return NextResponse.json({ success: true })
   } catch (error) {
-    console.error('[Plugin API] Error linking item:', error)
-    return NextResponse.json({ error: 'Internal server error' }, { status: 500 })
+    console.error("[Plugin API] Error linking item:", error)
+    return NextResponse.json({ error: "Internal server error" }, { status: 500 })
   }
 }
 ```
@@ -1309,10 +1323,10 @@ export async function POST(request: NextRequest) {
 - [ ] **Step 2: Write the restock route**
 
 ```ts
-import { NextRequest, NextResponse } from 'next/server'
-import { validateApiKey } from '@/lib/api/plugin-auth'
-import { enforcePluginRateLimit, enforcePluginIpRateLimit } from '@/lib/api/plugin-rate-limit'
-import { prisma } from '@/lib/prisma'
+import { NextRequest, NextResponse } from "next/server"
+import { validateApiKey } from "@/lib/api/plugin-auth"
+import { enforcePluginRateLimit, enforcePluginIpRateLimit } from "@/lib/api/plugin-rate-limit"
+import { prisma } from "@/lib/prisma"
 
 interface RestockPayload {
   venueId: string
@@ -1333,41 +1347,41 @@ export async function POST(request: NextRequest) {
     const __ipLimited = await enforcePluginIpRateLimit(request)
     if (__ipLimited) return __ipLimited
 
-    const apiKey = request.headers.get('x-api-key')
-    if (!apiKey) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+    const apiKey = request.headers.get("x-api-key")
+    if (!apiKey) return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
 
     const auth = await validateApiKey(apiKey)
     if (!auth || !auth.userId) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
     }
 
-    const limited = await enforcePluginRateLimit(apiKey, 'write')
+    const limited = await enforcePluginRateLimit(apiKey, "write")
     if (limited) return limited
 
     const body: RestockPayload = await request.json()
     const { venueId, serviceId, stockCount } = body
 
-    if (!venueId || !serviceId || typeof stockCount !== 'number' || stockCount < 0) {
+    if (!venueId || !serviceId || typeof stockCount !== "number" || stockCount < 0) {
       return NextResponse.json(
-        { error: 'Missing or invalid fields: venueId, serviceId, stockCount (>= 0)' },
+        { error: "Missing or invalid fields: venueId, serviceId, stockCount (>= 0)" },
         { status: 400 }
       )
     }
 
     if (!auth.venues.includes(venueId)) {
-      return NextResponse.json({ error: 'Invalid venue' }, { status: 400 })
+      return NextResponse.json({ error: "Invalid venue" }, { status: 400 })
     }
 
     const membership = await prisma.membership.findFirst({
-      where: { userId: auth.userId, venueId, status: 'active' },
+      where: { userId: auth.userId, venueId, status: "active" },
     })
-    if (!membership || !['OWNER', 'MANAGER'].includes(membership.role)) {
-      return NextResponse.json({ error: 'Owner or Manager role required' }, { status: 403 })
+    if (!membership || !["OWNER", "MANAGER"].includes(membership.role)) {
+      return NextResponse.json({ error: "Owner or Manager role required" }, { status: 403 })
     }
 
     const service = await prisma.service.findFirst({ where: { id: serviceId, venueId } })
     if (!service) {
-      return NextResponse.json({ error: 'Service not found in this venue' }, { status: 404 })
+      return NextResponse.json({ error: "Service not found in this venue" }, { status: 404 })
     }
 
     await prisma.service.update({
@@ -1377,8 +1391,8 @@ export async function POST(request: NextRequest) {
 
     return NextResponse.json({ success: true })
   } catch (error) {
-    console.error('[Plugin API] Error restocking:', error)
-    return NextResponse.json({ error: 'Internal server error' }, { status: 500 })
+    console.error("[Plugin API] Error restocking:", error)
+    return NextResponse.json({ error: "Internal server error" }, { status: 500 })
   }
 }
 ```
@@ -1400,6 +1414,7 @@ git commit -m "feat: add plugin-facing link-item and restock routes"
 ## Task 11: Plugin — local Lumina item search helper
 
 **Files:**
+
 - Create: `VenueManager/VenueManager/ItemSearch.cs`
 
 Same technique as the community `ItemSearchPlugin` (`/xlitem`): direct `GetExcelSheet<Item>()` lookup, no network call. Follows the existing `TerritoryUtils.cs:158` / `Venue.cs:17-18` call pattern (`Plugin.DataManager.GetExcelSheet<...>()`).
@@ -1466,6 +1481,7 @@ git commit -m "feat: add local Lumina item search helper"
 ## Task 12: Plugin — Inventory tab
 
 **Files:**
+
 - Create: `VenueManager/VenueManager/UI/Tabs/InventoryTab.cs`
 
 Follows the cache-once-per-venue-select lifecycle (reads `plugin.availableServices`, no polling in `draw()`) rather than the Rooms tab's live-polling exception, since stock/link data changes only on explicit management actions, not ambient state like room occupancy.
@@ -1642,6 +1658,7 @@ git commit -m "feat: add plugin Inventory tab"
 ## Task 13: Wire Inventory tab into MainWindow + conditional nav icon
 
 **Files:**
+
 - Modify: `VenueManager/VenueManager/Windows/MainWindow.cs`
 - Modify: `VenueManager/VenueManager/Plugin.cs:90,127-160`
 - Modify: `VenueManager/VenueManager/UI/Tabs/SettingsTab.cs:687-696`
@@ -1745,6 +1762,7 @@ git commit -m "feat: wire Inventory tab into MainWindow with server-gated nav ic
 ## Task 14: Plugin — Sales tab stock label
 
 **Files:**
+
 - Modify: `VenueManager/VenueManager/UI/Tabs/SalesTab.cs:91`
 
 The existing service dropdown (already lists `plugin.availableServices`) gets a small "(N left)" label appended to stock-tracked drinks. Purely informational — enforcement happens server-side in `createTransaction` (Task 4); this just avoids surprising staff with a rejected sale.

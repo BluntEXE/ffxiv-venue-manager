@@ -3,7 +3,7 @@ const BOT_TOKEN = process.env.DISCORD_BOT_TOKEN!
 
 export interface DiscordButtonComponent {
   type: 2
-  style: 1 | 2 | 3 | 4  // 1=Primary(blue) 2=Secondary 3=Success(green) 4=Danger(red)
+  style: 1 | 2 | 3 | 4 // 1=Primary(blue) 2=Secondary 3=Success(green) 4=Danger(red)
   label: string
   custom_id: string
   disabled?: boolean

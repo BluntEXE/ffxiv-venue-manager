@@ -7,13 +7,7 @@ import { Card, CardContent } from "@/components/ui/card"
 import { Checkbox } from "@/components/ui/checkbox"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select"
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import {
   Dialog,
   DialogContent,
@@ -163,19 +157,16 @@ export function PatronLogsManager({
     }
     setIsSubmitting(true)
     try {
-      const res = await fetch(
-        `/api/venues/${venueId}/patron-logs/bulk-reclassify`,
-        {
-          method: "PATCH",
-          headers: { "content-type": "application/json" },
-          body: JSON.stringify({
-            logIds: Array.from(selected),
-            wasWorking: target === "staff",
-            workingUserId: target === "staff" ? assignUserId : null,
-            reason: reason.trim() || undefined,
-          }),
-        }
-      )
+      const res = await fetch(`/api/venues/${venueId}/patron-logs/bulk-reclassify`, {
+        method: "PATCH",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify({
+          logIds: Array.from(selected),
+          wasWorking: target === "staff",
+          workingUserId: target === "staff" ? assignUserId : null,
+          reason: reason.trim() || undefined,
+        }),
+      })
       const data = await res.json()
       if (!res.ok) {
         setError(data?.error ?? "Failed to reclassify")
@@ -206,9 +197,7 @@ export function PatronLogsManager({
               <Label htmlFor="event">Event</Label>
               <Select
                 value={filters.eventId || "none"}
-                onValueChange={(v) =>
-                  setFilters((f) => ({ ...f, eventId: v === "none" ? "" : v }))
-                }
+                onValueChange={(v) => setFilters((f) => ({ ...f, eventId: v === "none" ? "" : v }))}
               >
                 <SelectTrigger id="event">
                   <SelectValue placeholder="All events / date range" />
@@ -272,9 +261,7 @@ export function PatronLogsManager({
               <Label htmlFor="character">Character</Label>
               <Select
                 value={filters.character || "none"}
-                onValueChange={(v) =>
-                  setFilters((f) => ({ ...f, character: v === "none" ? "" : v }))
-                }
+                onValueChange={(v) => setFilters((f) => ({ ...f, character: v === "none" ? "" : v }))}
               >
                 <SelectTrigger id="character">
                   <SelectValue placeholder="All characters" />
@@ -352,10 +339,7 @@ export function PatronLogsManager({
                 </tr>
               )}
               {logs.map((l) => (
-                <tr
-                  key={l.id}
-                  className="border-b last:border-0 hover:bg-muted/30 transition"
-                >
+                <tr key={l.id} className="border-b last:border-0 hover:bg-muted/30 transition">
                   <td className="p-3">
                     <Checkbox
                       checked={selected.has(l.id)}
@@ -363,29 +347,19 @@ export function PatronLogsManager({
                       aria-label={`Select log ${l.id}`}
                     />
                   </td>
-                  <td className="p-3 whitespace-nowrap">
-                    {formatLocalTime(l.timestamp, "datetimelong")}
-                  </td>
+                  <td className="p-3 whitespace-nowrap">{formatLocalTime(l.timestamp, "datetimelong")}</td>
                   <td className="p-3">
                     {l.characterName ?? "-"}
-                    {l.world && (
-                      <span className="text-muted-foreground"> ({l.world})</span>
-                    )}
+                    {l.world && <span className="text-muted-foreground"> ({l.world})</span>}
                   </td>
                   <td className="p-3 hidden sm:table-cell">
                     <Badge variant="outline">{l.action}</Badge>
                   </td>
                   <td className="p-3">
                     <div className="flex items-center gap-2">
-                      {l.wasWorking ? (
-                        <Badge>Staff</Badge>
-                      ) : (
-                        <Badge variant="secondary">Patron</Badge>
-                      )}
+                      {l.wasWorking ? <Badge>Staff</Badge> : <Badge variant="secondary">Patron</Badge>}
                       {l.workingUser && (
-                        <span className="text-xs text-muted-foreground">
-                          {l.workingUser.name ?? "-"}
-                        </span>
+                        <span className="text-xs text-muted-foreground">{l.workingUser.name ?? "-"}</span>
                       )}
                       {l.reclassifiedAt && (
                         <span
@@ -397,9 +371,7 @@ export function PatronLogsManager({
                       )}
                     </div>
                   </td>
-                  <td className="p-3 text-muted-foreground hidden sm:table-cell">
-                    {l.event?.title ?? "-"}
-                  </td>
+                  <td className="p-3 text-muted-foreground hidden sm:table-cell">{l.event?.title ?? "-"}</td>
                 </tr>
               ))}
             </tbody>
@@ -408,9 +380,7 @@ export function PatronLogsManager({
       </Card>
 
       {limitHit && (
-        <p className="text-xs text-muted-foreground">
-          Showing the first 200 rows. Narrow your filters to see more.
-        </p>
+        <p className="text-xs text-muted-foreground">Showing the first 200 rows. Narrow your filters to see more.</p>
       )}
 
       {/* Reclassify dialog */}
@@ -456,9 +426,7 @@ export function PatronLogsManager({
                 maxLength={500}
               />
             </div>
-            {error && (
-              <p className="text-sm text-destructive">{error}</p>
-            )}
+            {error && <p className="text-sm text-destructive">{error}</p>}
           </div>
 
           <DialogFooter>

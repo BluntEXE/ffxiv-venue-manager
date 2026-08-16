@@ -5,7 +5,7 @@ import type { FfxivVenueData } from "@/lib/ffxivvenues"
 import { LocalTime } from "@/components/server-time"
 import { utcWeeklyToLocal, formatHHMM } from "@/lib/schedule-utils"
 
-const DAY_NAMES = ["Sunday","Monday","Tuesday","Wednesday","Thursday","Friday","Saturday"]
+const DAY_NAMES = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"]
 
 type Props = {
   data: FfxivVenueData
@@ -30,8 +30,16 @@ export function FfxivvenuesScheduleDisplay({ data, syncedAt }: Props) {
   return (
     <div className="dcard">
       <div className="dh">
-        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="w-4 h-4">
-          <circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/>
+        <svg
+          xmlns="http://www.w3.org/2000/svg"
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          strokeWidth="2"
+          className="w-4 h-4"
+        >
+          <circle cx="12" cy="12" r="10" />
+          <polyline points="12 6 12 12 16 14" />
         </svg>
         Schedule
         <span className="ml-auto text-[0.7rem] text-[var(--fg-faint)] font-normal">via ffxivvenues.com</span>
@@ -41,7 +49,7 @@ export function FfxivvenuesScheduleDisplay({ data, syncedAt }: Props) {
         <p className="px-5 py-3 text-[0.82rem] text-[var(--fg-faint)]">No schedule published on ffxivvenues.com.</p>
       ) : (
         <>
-          {[0,1,2,3,4,5,6].map(i => {
+          {[0, 1, 2, 3, 4, 5, 6].map((i) => {
             const entries = byDay.get(i)
             const isToday = i === todayDay
             if (!entries || entries.length === 0) {
@@ -89,7 +97,9 @@ export function FfxivvenuesScheduleDisplay({ data, syncedAt }: Props) {
         >
           Schedule via ffxivvenues.com →
         </a>
-        <span className="text-[0.7rem] text-[var(--fg-faint)]">Synced <LocalTime date={syncedAt} formatStr="datetime" /></span>
+        <span className="text-[0.7rem] text-[var(--fg-faint)]">
+          Synced <LocalTime date={syncedAt} formatStr="datetime" />
+        </span>
       </div>
     </div>
   )

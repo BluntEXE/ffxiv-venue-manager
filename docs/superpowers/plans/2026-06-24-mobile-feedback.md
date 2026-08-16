@@ -12,17 +12,18 @@
 
 ## Files
 
-| File | Action |
-|------|--------|
-| `apps/web/app/api/mobile/feedback/route.ts` | Create |
-| `apps/mobile/app/feedback.tsx` | Create |
-| `apps/mobile/app/(app)/settings.tsx` | Modify — add feedback link in About section |
+| File                                        | Action                                      |
+| ------------------------------------------- | ------------------------------------------- |
+| `apps/web/app/api/mobile/feedback/route.ts` | Create                                      |
+| `apps/mobile/app/feedback.tsx`              | Create                                      |
+| `apps/mobile/app/(app)/settings.tsx`        | Modify — add feedback link in About section |
 
 ---
 
 ### Task 1: POST /api/mobile/feedback
 
 **Files:**
+
 - Create: `apps/web/app/api/mobile/feedback/route.ts`
 
 - [ ] **Step 1: Create the route file**
@@ -103,6 +104,7 @@ git commit -m "feat(api): add POST /api/mobile/feedback endpoint"
 ### Task 2: Feedback screen
 
 **Files:**
+
 - Create: `apps/mobile/app/feedback.tsx`
 
 - [ ] **Step 1: Create the screen file**
@@ -297,6 +299,7 @@ git commit -m "feat(mobile): add feedback screen"
 ### Task 3: Add feedback link to Settings
 
 **Files:**
+
 - Modify: `apps/mobile/app/(app)/settings.tsx`
 
 The About section currently ends with a Website row. Add a Divider and feedback link after it.

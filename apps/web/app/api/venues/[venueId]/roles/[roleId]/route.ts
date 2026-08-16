@@ -31,36 +31,33 @@ export const GET = withRateLimit<{ params: Promise<{ venueId: string; roleId: st
       const { params } = context
       const { venueId, roleId } = await params
 
-    // Check permissions
-    const membership = await prisma.membership.findFirst({
-      where: {
-        userId: session.user.id,
-        venueId,
-        status: "active",
-      },
-    })
+      // Check permissions
+      const membership = await prisma.membership.findFirst({
+        where: {
+          userId: session.user.id,
+          venueId,
+          status: "active",
+        },
+      })
 
-    if (!membership) {
-      return NextResponse.json(
-        { error: "You don't have access to this venue" },
-        { status: 403 }
-      )
-    }
+      if (!membership) {
+        return NextResponse.json({ error: "You don't have access to this venue" }, { status: 403 })
+      }
 
-    const role = await prisma.role.findUnique({
-      where: { id: roleId, venueId },
-      include: {
-        _count: {
-          select: {
-            memberships: true,
+      const role = await prisma.role.findUnique({
+        where: { id: roleId, venueId },
+        include: {
+          _count: {
+            select: {
+              memberships: true,
+            },
           },
         },
-      },
-    })
+      })
 
-    if (!role) {
-      return NextResponse.json({ error: "Role not found" }, { status: 404 })
-    }
+      if (!role) {
+        return NextResponse.json({ error: "Role not found" }, { status: 404 })
+      }
 
       return NextResponse.json(role)
     } catch (error) {
@@ -86,71 +83,62 @@ export const PUT = withRateLimit<{ params: Promise<{ venueId: string; roleId: st
       const { params } = context
       const { venueId, roleId } = await params
 
-    // Check permissions
-    const membership = await prisma.membership.findFirst({
-      where: {
-        userId: session.user.id,
-        venueId,
-        status: "active",
-      },
-    })
-
-    if (!membership || !["OWNER", "MANAGER"].includes(membership.role)) {
-      return NextResponse.json(
-        { error: "You don't have permission to update roles" },
-        { status: 403 }
-      )
-    }
-
-    // Check if role exists
-    const existingRole = await prisma.role.findUnique({
-      where: { id: roleId, venueId },
-    })
-
-    if (!existingRole) {
-      return NextResponse.json({ error: "Role not found" }, { status: 404 })
-    }
-
-    const body = await request.json()
-    const validatedData = updateRoleSchema.parse(body)
-
-    // If updating name, check for duplicates
-    if (validatedData.name && validatedData.name !== existingRole.name) {
-      const duplicateRole = await prisma.role.findFirst({
+      // Check permissions
+      const membership = await prisma.membership.findFirst({
         where: {
+          userId: session.user.id,
           venueId,
-          name: validatedData.name,
-          id: { not: roleId },
+          status: "active",
         },
       })
 
-      if (duplicateRole) {
-        return NextResponse.json(
-          { error: "A role with this name already exists" },
-          { status: 400 }
-        )
+      if (!membership || !["OWNER", "MANAGER"].includes(membership.role)) {
+        return NextResponse.json({ error: "You don't have permission to update roles" }, { status: 403 })
       }
-    }
 
-    const updatedRole = await prisma.role.update({
-      where: { id: roleId, venueId },
-      data: validatedData,
-      include: {
-        _count: {
-          select: {
-            memberships: true,
+      // Check if role exists
+      const existingRole = await prisma.role.findUnique({
+        where: { id: roleId, venueId },
+      })
+
+      if (!existingRole) {
+        return NextResponse.json({ error: "Role not found" }, { status: 404 })
+      }
+
+      const body = await request.json()
+      const validatedData = updateRoleSchema.parse(body)
+
+      // If updating name, check for duplicates
+      if (validatedData.name && validatedData.name !== existingRole.name) {
+        const duplicateRole = await prisma.role.findFirst({
+          where: {
+            venueId,
+            name: validatedData.name,
+            id: { not: roleId },
+          },
+        })
+
+        if (duplicateRole) {
+          return NextResponse.json({ error: "A role with this name already exists" }, { status: 400 })
+        }
+      }
+
+      const updatedRole = await prisma.role.update({
+        where: { id: roleId, venueId },
+        data: validatedData,
+        include: {
+          _count: {
+            select: {
+              memberships: true,
+            },
           },
         },
-      },
-    })
+      })
 
       return NextResponse.json(updatedRole)
     } catch (error) {
       if (error instanceof z.ZodError) {
-        return NextResponse.json(
-          { error: "Validation error", details: error.issues },
-          { status: 400 }
-        )
+        return NextResponse.json({ error: "Validation error", details: error.issues }, { status: 400 })
       }
 
       console.error("Error updating role:", error)
@@ -175,51 +163,48 @@ export const DELETE = withRateLimit<{ params: Promise<{ venueId: string; roleId:
       const { params } = context
       const { venueId, roleId } = await params
 
-    // Check permissions
-    const membership = await prisma.membership.findFirst({
-      where: {
-        userId: session.user.id,
-        venueId,
-        status: "active",
-      },
-    })
+      // Check permissions
+      const membership = await prisma.membership.findFirst({
+        where: {
+          userId: session.user.id,
+          venueId,
+          status: "active",
+        },
+      })
 
-    if (!membership || membership.role !== "OWNER") {
-      return NextResponse.json(
-        { error: "Only owners can delete roles" },
-        { status: 403 }
-      )
-    }
+      if (!membership || membership.role !== "OWNER") {
+        return NextResponse.json({ error: "Only owners can delete roles" }, { status: 403 })
+      }
 
-    // Check if role exists
-    const role = await prisma.role.findUnique({
-      where: { id: roleId, venueId },
-      include: {
-        _count: {
-          select: {
-            memberships: true,
+      // Check if role exists
+      const role = await prisma.role.findUnique({
+        where: { id: roleId, venueId },
+        include: {
+          _count: {
+            select: {
+              memberships: true,
+            },
           },
         },
-      },
-    })
+      })
 
-    if (!role) {
-      return NextResponse.json({ error: "Role not found" }, { status: 404 })
-    }
+      if (!role) {
+        return NextResponse.json({ error: "Role not found" }, { status: 404 })
+      }
 
-    // Check if role is assigned to any staff members
-    if (role._count.memberships > 0) {
-      return NextResponse.json(
-        {
-          error: `Cannot delete role. It is assigned to ${role._count.memberships} staff member(s)`,
-        },
-        { status: 400 }
-      )
-    }
+      // Check if role is assigned to any staff members
+      if (role._count.memberships > 0) {
+        return NextResponse.json(
+          {
+            error: `Cannot delete role. It is assigned to ${role._count.memberships} staff member(s)`,
+          },
+          { status: 400 }
+        )
+      }
 
-    await prisma.role.delete({
-      where: { id: roleId, venueId },
-    })
+      await prisma.role.delete({
+        where: { id: roleId, venueId },
+      })
 
       return NextResponse.json({ success: true })
     } catch (error) {

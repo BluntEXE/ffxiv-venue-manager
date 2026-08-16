@@ -59,7 +59,11 @@ export async function DELETE(req: Request, { params }: { params: Promise<{ venue
   await invalidateCache(cacheKeys.userVenues(session.user.id))
 
   // Delete from MinIO
-  try { await deleteObject(keyFromUrl(url)) } catch { /* best effort */ }
+  try {
+    await deleteObject(keyFromUrl(url))
+  } catch {
+    /* best effort */
+  }
 
   return NextResponse.json({ galleryImages: updated })
 }

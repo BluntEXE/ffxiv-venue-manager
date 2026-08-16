@@ -19,7 +19,12 @@ beforeEach(() => {
 
 describe("withRateLimit", () => {
   it("calls the handler and stamps rate-limit headers on success", async () => {
-    vi.mocked(checkLimit).mockResolvedValueOnce({ success: true, limit: 200, remaining: 199, reset: Date.now() + 60000 })
+    vi.mocked(checkLimit).mockResolvedValueOnce({
+      success: true,
+      limit: 200,
+      remaining: 199,
+      reset: Date.now() + 60000,
+    })
     const handler = vi.fn().mockResolvedValue(NextResponse.json({ ok: true }))
 
     const wrapped = withRateLimit(handler)

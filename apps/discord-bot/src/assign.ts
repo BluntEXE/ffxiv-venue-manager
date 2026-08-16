@@ -23,7 +23,10 @@ function findRole(member: GuildMember, name: string): Role | undefined {
 }
 
 function abbreviateVenue(name: string): string {
-  return name.split(/\s+/).map((w) => w[0].toUpperCase()).join("")
+  return name
+    .split(/\s+/)
+    .map((w) => w[0].toUpperCase())
+    .join("")
 }
 
 function buildNickname(displayName: string, venueName: string, role: MembershipRole): string {
@@ -63,7 +66,10 @@ export async function assignMember(member: GuildMember): Promise<string> {
 
   const isAdmin = member.permissions.has("Administrator") || member.guild.ownerId === member.id
   if (!isAdmin) {
-    const nickError = await member.setNickname(nickname).then(() => null).catch((e: Error) => e.message)
+    const nickError = await member
+      .setNickname(nickname)
+      .then(() => null)
+      .catch((e: Error) => e.message)
     if (nickError) console.warn(`[nick-fail] ${member.user.username} (${member.user.id}): ${nickError}`)
   }
 

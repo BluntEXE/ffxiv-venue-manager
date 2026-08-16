@@ -67,9 +67,7 @@ export function VenueSwitcher({ venues, activeSlug }: VenueSwitcherProps) {
         )}
       </span>
       {/* Chevrons — only shown when there are multiple venues */}
-      {venues.length > 1 && (
-        <ChevronsUpDown className="w-4 h-4 text-[var(--fg-faint)] flex-shrink-0" />
-      )}
+      {venues.length > 1 && <ChevronsUpDown className="w-4 h-4 text-[var(--fg-faint)] flex-shrink-0" />}
     </button>
   )
 

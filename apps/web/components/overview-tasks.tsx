@@ -15,13 +15,13 @@ export function OverviewTasks({ tasks, venueSlug }: { tasks: Task[]; venueSlug: 
   const [done, setDone] = useState<Set<string>>(new Set())
 
   const toggle = (id: string) =>
-    setDone(prev => {
+    setDone((prev) => {
       const next = new Set(prev)
       next.has(id) ? next.delete(id) : next.add(id)
       return next
     })
 
-  const open = tasks.filter(t => !done.has(t.id))
+  const open = tasks.filter((t) => !done.has(t.id))
 
   return (
     <div className="space-y-1">
@@ -30,7 +30,7 @@ export function OverviewTasks({ tasks, venueSlug }: { tasks: Task[]; venueSlug: 
         Open tasks
         <span className="ml-auto text-xs text-[var(--fg-faint)] font-normal">{open.length} open</span>
       </div>
-      {tasks.map(t => {
+      {tasks.map((t) => {
         const checked = done.has(t.id)
         return (
           <button
@@ -42,15 +42,14 @@ export function OverviewTasks({ tasks, venueSlug }: { tasks: Task[]; venueSlug: 
               checked && "opacity-50"
             )}
           >
-            {checked
-              ? <CheckCircle2 className="h-4 w-4 shrink-0 mt-0.5 text-[var(--success-text)]" />
-              : <Circle className="h-4 w-4 shrink-0 mt-0.5 text-muted-foreground" />
-            }
+            {checked ? (
+              <CheckCircle2 className="h-4 w-4 shrink-0 mt-0.5 text-[var(--success-text)]" />
+            ) : (
+              <Circle className="h-4 w-4 shrink-0 mt-0.5 text-muted-foreground" />
+            )}
             <div className="flex-1 min-w-0">
               <p className={cn("text-sm", checked && "line-through text-muted-foreground")}>{t.title}</p>
-              {t.dueDate && !checked && (
-                <p className="text-xs text-muted-foreground mt-0.5">Due {t.dueDate}</p>
-              )}
+              {t.dueDate && !checked && <p className="text-xs text-muted-foreground mt-0.5">Due {t.dueDate}</p>}
             </div>
           </button>
         )

@@ -43,8 +43,7 @@ async function listUsers() {
     })
 
     console.log(`Total users: ${users.length}`)
-    console.log(`Admins: ${users.filter(u => u.isAdmin).length}`)
-
+    console.log(`Admins: ${users.filter((u) => u.isAdmin).length}`)
   } catch (error) {
     console.error("\n❌ Error listing users:", error)
     process.exit(1)

@@ -20,10 +20,7 @@ const venueUpdateSchema = z.object({
 })
 
 export const PATCH = withRateLimit(
-  async (
-    request: NextRequest,
-    context?: { params: Promise<{ venueId: string }> }
-  ) => {
+  async (request: NextRequest, context?: { params: Promise<{ venueId: string }> }) => {
     try {
       const session = await getServerSession(authOptions)
       if (!session?.user?.id) {
@@ -58,15 +55,15 @@ export const PATCH = withRateLimit(
       const updated = await prisma.venue.update({
         where: { id: venueId },
         data: {
-          ...(name        !== undefined && { name: name.trim() }),
+          ...(name !== undefined && { name: name.trim() }),
           ...(description !== undefined && { description: description ? description.trim() : null }),
-          ...(district    !== undefined && { district: district ? district.trim() : null }),
-          ...(ward        !== undefined && { ward }),
-          ...(plot        !== undefined && { plot }),
-          ...(apartment   !== undefined && { apartment }),
-          ...(location    !== undefined && { location: location ? location.trim() : null }),
-          ...(bannerUrl   !== undefined && { bannerUrl: bannerUrl ?? null }),
-          ...(logoUrl     !== undefined && { logoUrl: logoUrl ?? null }),
+          ...(district !== undefined && { district: district ? district.trim() : null }),
+          ...(ward !== undefined && { ward }),
+          ...(plot !== undefined && { plot }),
+          ...(apartment !== undefined && { apartment }),
+          ...(location !== undefined && { location: location ? location.trim() : null }),
+          ...(bannerUrl !== undefined && { bannerUrl: bannerUrl ?? null }),
+          ...(logoUrl !== undefined && { logoUrl: logoUrl ?? null }),
         },
       })
 
@@ -86,10 +83,7 @@ export const PATCH = withRateLimit(
 )
 
 export const DELETE = withRateLimit(
-  async (
-    request: NextRequest,
-    context?: { params: Promise<{ venueId: string }> }
-  ) => {
+  async (request: NextRequest, context?: { params: Promise<{ venueId: string }> }) => {
     try {
       // Check authentication
       const session = await getServerSession(authOptions)
@@ -121,10 +115,7 @@ export const DELETE = withRateLimit(
 
       // Only owners can delete venues
       if (venue.memberships.length === 0 || venue.memberships[0].role !== "OWNER") {
-        return NextResponse.json(
-          { error: "Only venue owners can delete venues" },
-          { status: 403 }
-        )
+        return NextResponse.json({ error: "Only venue owners can delete venues" }, { status: 403 })
       }
 
       // Delete venue (cascade will handle related records)
@@ -140,16 +131,10 @@ export const DELETE = withRateLimit(
         invalidateCache(`venue:${venueId}:*`), // All venue-related caches
       ])
 
-      return NextResponse.json(
-        { message: "Venue deleted successfully" },
-        { status: 200 }
-      )
+      return NextResponse.json({ message: "Venue deleted successfully" }, { status: 200 })
     } catch (error) {
       console.error("Error deleting venue:", error)
-      return NextResponse.json(
-        { error: "Internal server error" },
-        { status: 500 }
-      )
+      return NextResponse.json({ error: "Internal server error" }, { status: 500 })
     }
   },
   {

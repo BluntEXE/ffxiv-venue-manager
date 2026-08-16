@@ -12,18 +12,19 @@
 
 ## Files
 
-| File | Action |
-|------|--------|
-| `apps/web/app/api/mobile/my/events-feed/route.ts` | Create — GET events feed |
+| File                                                | Action                                              |
+| --------------------------------------------------- | --------------------------------------------------- |
+| `apps/web/app/api/mobile/my/events-feed/route.ts`   | Create — GET events feed                            |
 | `apps/web/app/api/mobile/venues/[venueId]/route.ts` | Modify — add attendee count fields to events select |
-| `apps/mobile/app/(app)/home.tsx` | Modify — add events feed section |
-| `apps/mobile/app/venue/[id].tsx` | Modify — richer event cards |
+| `apps/mobile/app/(app)/home.tsx`                    | Modify — add events feed section                    |
+| `apps/mobile/app/venue/[id].tsx`                    | Modify — richer event cards                         |
 
 ---
 
 ### Task 1: GET /api/mobile/my/events-feed
 
 **Files:**
+
 - Create: `apps/web/app/api/mobile/my/events-feed/route.ts`
 
 - [ ] **Step 1: Create the route file**
@@ -118,6 +119,7 @@ git commit -m "feat(api): add GET /api/mobile/my/events-feed endpoint"
 ### Task 2: Add attendee counts to venue detail events
 
 **Files:**
+
 - Modify: `apps/web/app/api/mobile/venues/[venueId]/route.ts`
 
 The events `select` block currently includes `id, title, description, eventType, status, startTime, endTime`. Add `partakeAttendeeCount` and `attendanceCount`.
@@ -174,6 +176,7 @@ git commit -m "feat(api): add attendee counts to venue detail events"
 ### Task 3: Events feed section on Home tab
 
 **Files:**
+
 - Modify: `apps/mobile/app/(app)/home.tsx`
 
 - [ ] **Step 1: Add FeedEvent type**
@@ -200,12 +203,12 @@ Add above the `HomeScreen` export (alongside the existing `canClockIn` function)
 
 ```typescript
 const EVENT_TYPE_STYLES: Record<string, { bg: string; color: string }> = {
-  PERFORMANCE: { bg: 'rgba(203,166,247,0.15)', color: '#cba6f7' },
-  GAME_NIGHT:  { bg: 'rgba(137,180,250,0.15)', color: '#89b4fa' },
-  SPECIAL:     { bg: 'rgba(249,226,175,0.15)', color: '#f9e2af' },
-  SOCIAL:      { bg: 'rgba(166,227,161,0.15)', color: '#a6e3a1' },
-  PRIVATE:     { bg: 'rgba(108,112,134,0.15)', color: '#6c7086' },
-  OTHER:       { bg: 'rgba(166,173,200,0.15)', color: '#a6adc8' },
+  PERFORMANCE: { bg: "rgba(203,166,247,0.15)", color: "#cba6f7" },
+  GAME_NIGHT: { bg: "rgba(137,180,250,0.15)", color: "#89b4fa" },
+  SPECIAL: { bg: "rgba(249,226,175,0.15)", color: "#f9e2af" },
+  SOCIAL: { bg: "rgba(166,227,161,0.15)", color: "#a6e3a1" },
+  PRIVATE: { bg: "rgba(108,112,134,0.15)", color: "#6c7086" },
+  OTHER: { bg: "rgba(166,173,200,0.15)", color: "#a6adc8" },
 }
 
 function eventTypeBadge(type: string) {
@@ -232,8 +235,8 @@ Add a second `useEffect` after the existing SecureStore one:
 
 ```typescript
 useEffect(() => {
-  SecureStore.getItemAsync('@xivvm/eventsFeedExpanded').then(val => {
-    if (val !== null) setEventsExpanded(val === 'true')
+  SecureStore.getItemAsync("@xivvm/eventsFeedExpanded").then((val) => {
+    if (val !== null) setEventsExpanded(val === "true")
   })
 }, [])
 ```
@@ -246,7 +249,7 @@ Add alongside `toggleOpenShifts`:
 function toggleEvents() {
   const next = !eventsExpanded
   setEventsExpanded(next)
-  SecureStore.setItemAsync('@xivvm/eventsFeedExpanded', String(next))
+  SecureStore.setItemAsync("@xivvm/eventsFeedExpanded", String(next))
 }
 ```
 
@@ -260,10 +263,10 @@ async function loadShifts(isRefresh = false) {
   setClaimErrors({})
   try {
     const [shiftsRes, followsRes, openShiftsRes, eventsRes] = await Promise.all([
-      apiFetch('/api/mobile/my/shifts'),
-      apiFetch('/api/mobile/my/follows'),
-      apiFetch('/api/mobile/my/open-shifts'),
-      apiFetch('/api/mobile/my/events-feed'),
+      apiFetch("/api/mobile/my/shifts"),
+      apiFetch("/api/mobile/my/follows"),
+      apiFetch("/api/mobile/my/open-shifts"),
+      apiFetch("/api/mobile/my/events-feed"),
     ])
     if (shiftsRes.ok) setShifts(await shiftsRes.json())
     if (followsRes.ok) setFollows(await followsRes.json())
@@ -280,60 +283,64 @@ async function loadShifts(isRefresh = false) {
 In the JSX, find the `openShifts.length > 0` block and add the events section DIRECTLY ABOVE it:
 
 ```tsx
-{eventsFeed.length > 0 && (
-  <YStack gap="$2" marginTop="$2">
-    <XStack alignItems="center" justifyContent="space-between">
-      <Text fontFamily="Outfit_600SemiBold" fontSize={16} color="$text">Upcoming Events</Text>
-      <Button chromeless size="$2" onPress={toggleEvents} paddingHorizontal="$1">
-        <Ionicons name={eventsExpanded ? 'chevron-up' : 'chevron-down'} size={16} color="#a6adc8" />
-      </Button>
-    </XStack>
-    {eventsExpanded && eventsFeed.map((e) => {
-      const badge = eventTypeBadge(e.eventType)
-      const count = attendeeCount(e)
-      return (
-        <XStack
-          key={e.id}
-          backgroundColor="$surface0"
-          borderRadius="$2"
-          padding="$3"
-          alignItems="center"
-          gap="$3"
-          borderWidth={1}
-          borderColor="rgba(0,180,255,0.15)"
-          pressStyle={{ opacity: 0.85 }}
-          onPress={() => router.push(`/venue/${e.venueId}` as any)}
-        >
-          <YStack flex={1} gap="$1">
-            <Text color="$subtext0" fontSize={11}>{e.venueName}</Text>
-            <Text color="$text" fontSize={14} fontFamily="Outfit_600SemiBold" numberOfLines={1}>
-              {e.title}
-            </Text>
-            <XStack gap="$2" alignItems="center" marginTop="$1">
-              <Text color="$subtext0" fontSize={12}>
-                {formatST(e.startTime, 'datetime')} ST
-              </Text>
-              <XStack
-                backgroundColor={badge.bg}
-                borderRadius="$4"
-                paddingHorizontal="$2"
-                paddingVertical={2}
-              >
-                <Text fontSize={10} style={{ color: badge.color }}>
-                  {e.eventType.replace('_', ' ')}
+{
+  eventsFeed.length > 0 && (
+    <YStack gap="$2" marginTop="$2">
+      <XStack alignItems="center" justifyContent="space-between">
+        <Text fontFamily="Outfit_600SemiBold" fontSize={16} color="$text">
+          Upcoming Events
+        </Text>
+        <Button chromeless size="$2" onPress={toggleEvents} paddingHorizontal="$1">
+          <Ionicons name={eventsExpanded ? "chevron-up" : "chevron-down"} size={16} color="#a6adc8" />
+        </Button>
+      </XStack>
+      {eventsExpanded &&
+        eventsFeed.map((e) => {
+          const badge = eventTypeBadge(e.eventType)
+          const count = attendeeCount(e)
+          return (
+            <XStack
+              key={e.id}
+              backgroundColor="$surface0"
+              borderRadius="$2"
+              padding="$3"
+              alignItems="center"
+              gap="$3"
+              borderWidth={1}
+              borderColor="rgba(0,180,255,0.15)"
+              pressStyle={{ opacity: 0.85 }}
+              onPress={() => router.push(`/venue/${e.venueId}` as any)}
+            >
+              <YStack flex={1} gap="$1">
+                <Text color="$subtext0" fontSize={11}>
+                  {e.venueName}
                 </Text>
-              </XStack>
-              {count != null && (
-                <Text fontSize={11} color="$subtext0">{count} attending</Text>
-              )}
+                <Text color="$text" fontSize={14} fontFamily="Outfit_600SemiBold" numberOfLines={1}>
+                  {e.title}
+                </Text>
+                <XStack gap="$2" alignItems="center" marginTop="$1">
+                  <Text color="$subtext0" fontSize={12}>
+                    {formatST(e.startTime, "datetime")} ST
+                  </Text>
+                  <XStack backgroundColor={badge.bg} borderRadius="$4" paddingHorizontal="$2" paddingVertical={2}>
+                    <Text fontSize={10} style={{ color: badge.color }}>
+                      {e.eventType.replace("_", " ")}
+                    </Text>
+                  </XStack>
+                  {count != null && (
+                    <Text fontSize={11} color="$subtext0">
+                      {count} attending
+                    </Text>
+                  )}
+                </XStack>
+              </YStack>
+              <Ionicons name="chevron-forward" size={14} color="#6c7086" />
             </XStack>
-          </YStack>
-          <Ionicons name="chevron-forward" size={14} color="#6c7086" />
-        </XStack>
-      )
-    })}
-  </YStack>
-)}
+          )
+        })}
+    </YStack>
+  )
+}
 ```
 
 - [ ] **Step 8: Verify TypeScript compiles**
@@ -358,6 +365,7 @@ git commit -m "feat(mobile): add collapsible Upcoming Events feed to Home tab"
 ### Task 4: Richer event cards on venue detail
 
 **Files:**
+
 - Modify: `apps/mobile/app/venue/[id].tsx`
 
 - [ ] **Step 1: Add attendee fields to Event type and add helpers**
@@ -392,12 +400,12 @@ type Event = {
 }
 
 const EVENT_TYPE_STYLES: Record<string, { bg: string; color: string }> = {
-  PERFORMANCE: { bg: 'rgba(203,166,247,0.15)', color: '#cba6f7' },
-  GAME_NIGHT:  { bg: 'rgba(137,180,250,0.15)', color: '#89b4fa' },
-  SPECIAL:     { bg: 'rgba(249,226,175,0.15)', color: '#f9e2af' },
-  SOCIAL:      { bg: 'rgba(166,227,161,0.15)', color: '#a6e3a1' },
-  PRIVATE:     { bg: 'rgba(108,112,134,0.15)', color: '#6c7086' },
-  OTHER:       { bg: 'rgba(166,173,200,0.15)', color: '#a6adc8' },
+  PERFORMANCE: { bg: "rgba(203,166,247,0.15)", color: "#cba6f7" },
+  GAME_NIGHT: { bg: "rgba(137,180,250,0.15)", color: "#89b4fa" },
+  SPECIAL: { bg: "rgba(249,226,175,0.15)", color: "#f9e2af" },
+  SOCIAL: { bg: "rgba(166,227,161,0.15)", color: "#a6e3a1" },
+  PRIVATE: { bg: "rgba(108,112,134,0.15)", color: "#6c7086" },
+  OTHER: { bg: "rgba(166,173,200,0.15)", color: "#a6adc8" },
 }
 
 function getCountdown(startTime: string): string | null {
@@ -414,71 +422,105 @@ function getCountdown(startTime: string): string | null {
 Find the existing events block:
 
 ```tsx
-{venue.events.length > 0 && (
-  <YStack gap="$2">
-    <Text fontFamily="Outfit_600SemiBold" fontSize={16} color="$text">Events</Text>
-    {venue.events.map((e) => (
-      <YStack key={e.id} backgroundColor="$surface0" borderRadius="$2" padding="$3" gap="$1" borderWidth={1} borderColor="rgba(0,180,255,0.15)">
-        <Text color="$text" fontSize={14} fontWeight="bold">{e.title}</Text>
-        <Text color="$subtext0" fontSize={12}>
-          {formatST(e.startTime, 'datetime')} ST
-        </Text>
-        {e.description && (
-          <Text color="$subtext0" fontSize={13} numberOfLines={3}>{e.description}</Text>
-        )}
-      </YStack>
-    ))}
-  </YStack>
-)}
+{
+  venue.events.length > 0 && (
+    <YStack gap="$2">
+      <Text fontFamily="Outfit_600SemiBold" fontSize={16} color="$text">
+        Events
+      </Text>
+      {venue.events.map((e) => (
+        <YStack
+          key={e.id}
+          backgroundColor="$surface0"
+          borderRadius="$2"
+          padding="$3"
+          gap="$1"
+          borderWidth={1}
+          borderColor="rgba(0,180,255,0.15)"
+        >
+          <Text color="$text" fontSize={14} fontWeight="bold">
+            {e.title}
+          </Text>
+          <Text color="$subtext0" fontSize={12}>
+            {formatST(e.startTime, "datetime")} ST
+          </Text>
+          {e.description && (
+            <Text color="$subtext0" fontSize={13} numberOfLines={3}>
+              {e.description}
+            </Text>
+          )}
+        </YStack>
+      ))}
+    </YStack>
+  )
+}
 ```
 
 Replace with:
 
 ```tsx
-{venue.events.length > 0 && (
-  <YStack gap="$2">
-    <Text fontFamily="Outfit_600SemiBold" fontSize={16} color="$text">Events</Text>
-    {venue.events.map((e) => {
-      const badge = EVENT_TYPE_STYLES[e.eventType] ?? EVENT_TYPE_STYLES.OTHER
-      const count = e.partakeAttendeeCount ?? e.attendanceCount ?? null
-      const countdown = getCountdown(e.startTime)
-      return (
-        <YStack key={e.id} backgroundColor="$surface0" borderRadius="$2" padding="$3" gap="$1" borderWidth={1} borderColor="rgba(0,180,255,0.15)">
-          <XStack alignItems="center" justifyContent="space-between">
-            <Text color="$text" fontSize={14} fontFamily="Outfit_600SemiBold" flex={1} numberOfLines={1}>
-              {e.title}
-            </Text>
-            <XStack
-              backgroundColor={badge.bg}
-              borderRadius="$4"
-              paddingHorizontal="$2"
-              paddingVertical={2}
-              marginLeft="$2"
-            >
-              <Text fontSize={10} style={{ color: badge.color }}>
-                {e.eventType.replace('_', ' ')}
+{
+  venue.events.length > 0 && (
+    <YStack gap="$2">
+      <Text fontFamily="Outfit_600SemiBold" fontSize={16} color="$text">
+        Events
+      </Text>
+      {venue.events.map((e) => {
+        const badge = EVENT_TYPE_STYLES[e.eventType] ?? EVENT_TYPE_STYLES.OTHER
+        const count = e.partakeAttendeeCount ?? e.attendanceCount ?? null
+        const countdown = getCountdown(e.startTime)
+        return (
+          <YStack
+            key={e.id}
+            backgroundColor="$surface0"
+            borderRadius="$2"
+            padding="$3"
+            gap="$1"
+            borderWidth={1}
+            borderColor="rgba(0,180,255,0.15)"
+          >
+            <XStack alignItems="center" justifyContent="space-between">
+              <Text color="$text" fontSize={14} fontFamily="Outfit_600SemiBold" flex={1} numberOfLines={1}>
+                {e.title}
               </Text>
+              <XStack
+                backgroundColor={badge.bg}
+                borderRadius="$4"
+                paddingHorizontal="$2"
+                paddingVertical={2}
+                marginLeft="$2"
+              >
+                <Text fontSize={10} style={{ color: badge.color }}>
+                  {e.eventType.replace("_", " ")}
+                </Text>
+              </XStack>
             </XStack>
-          </XStack>
-          <XStack gap="$3" alignItems="center">
-            <Text color="$subtext0" fontSize={12}>
-              {formatST(e.startTime, 'datetime')} ST
-            </Text>
-            {countdown && (
-              <Text color="$primary" fontSize={11}>{countdown}</Text>
+            <XStack gap="$3" alignItems="center">
+              <Text color="$subtext0" fontSize={12}>
+                {formatST(e.startTime, "datetime")} ST
+              </Text>
+              {countdown && (
+                <Text color="$primary" fontSize={11}>
+                  {countdown}
+                </Text>
+              )}
+              {count != null && (
+                <Text color="$subtext0" fontSize={11}>
+                  {count} attending
+                </Text>
+              )}
+            </XStack>
+            {e.description && (
+              <Text color="$subtext0" fontSize={13} numberOfLines={3}>
+                {e.description}
+              </Text>
             )}
-            {count != null && (
-              <Text color="$subtext0" fontSize={11}>{count} attending</Text>
-            )}
-          </XStack>
-          {e.description && (
-            <Text color="$subtext0" fontSize={13} numberOfLines={3}>{e.description}</Text>
-          )}
-        </YStack>
-      )
-    })}
-  </YStack>
-)}
+          </YStack>
+        )
+      })}
+    </YStack>
+  )
+}
 ```
 
 - [ ] **Step 3: Verify TypeScript compiles**
@@ -511,6 +553,7 @@ git push && ssh server@192.168.1.122 "cd ~/xiv-app && git pull && docker compose
 - [ ] **Step 2: Trigger mobile build**
 
 Run in your terminal:
+
 ```
 ! cd ~/xiv-app/apps/mobile && eas build --platform android --profile preview
 ```

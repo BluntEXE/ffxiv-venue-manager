@@ -15,7 +15,7 @@ every Tuesday 8pm-2am").
 - `apps/web/lib/recurrence.ts` — `generateOccurrences(startTime, endTime, rule, count)`, built on
   `date-fns` (`addWeeks` / `addMonths`). `MONTHLY` = same date-of-month via `addMonths` (not
   weekday-position — e.g. "3rd Tuesday" — that semantic exists separately in the unmerged
-  `feat/venue-opening-schedule` branch's `weekOfMonth` field and is *not* what this reuses)
+  `feat/venue-opening-schedule` branch's `weekOfMonth` field and is _not_ what this reuses)
 - On event creation: if `recurrenceRule` is set, `generateOccurrences` produces 8 future
   instances as child `Event` rows
 - `cron/update-event-statuses` rolls the window forward each run, keeping 8 weeks of future
@@ -47,6 +47,7 @@ matching `Event`'s approach (not a Prisma enum).
 Reuse `lib/recurrence.ts`'s `generateOccurrences()` unmodified — no shift-specific fork.
 
 On `POST /api/venues/[venueId]/shifts`:
+
 - If `recurrenceRule` is present in the body, after creating the parent shift, call
   `generateOccurrences(scheduledStart, scheduledEnd, recurrenceRule, n)` where `n` is enough
   occurrences to fill a **6-week window** from `scheduledStart` (computed by the rule's

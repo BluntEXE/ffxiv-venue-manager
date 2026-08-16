@@ -28,10 +28,7 @@ async function makeAdmin() {
     // Try to find user by email or Discord ID
     const user = await prisma.user.findFirst({
       where: {
-        OR: [
-          { email: identifier },
-          { discordId: identifier },
-        ],
+        OR: [{ email: identifier }, { discordId: identifier }],
       },
     })
 
@@ -60,7 +57,6 @@ async function makeAdmin() {
     console.log(`   Email: ${updatedUser.email}`)
     console.log(`   Discord ID: ${updatedUser.discordId}`)
     console.log(`\n🎉 You can now access the admin panel at: /admin/feedback`)
-
   } catch (error) {
     console.error("\n❌ Error making user admin:", error)
     process.exit(1)

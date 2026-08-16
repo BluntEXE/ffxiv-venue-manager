@@ -10,15 +10,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
-import {
-  ChevronDown,
-  User,
-  Settings,
-  Heart,
-  ArrowLeftRight,
-  HelpCircle,
-  LogOut,
-} from "lucide-react"
+import { ChevronDown, User, Settings, Heart, ArrowLeftRight, HelpCircle, LogOut } from "lucide-react"
 
 interface UserMenuProps {
   user: {
@@ -32,12 +24,15 @@ interface UserMenuProps {
 
 export function UserMenu({ user, currentVenueName, currentVenueRole }: UserMenuProps) {
   const initials = user.name
-    ? user.name.split(" ").map((n) => n[0]).join("").toUpperCase().slice(0, 2)
+    ? user.name
+        .split(" ")
+        .map((n) => n[0])
+        .join("")
+        .toUpperCase()
+        .slice(0, 2)
     : "U"
 
-  const roleLabel = currentVenueRole
-    ? currentVenueRole.charAt(0) + currentVenueRole.slice(1).toLowerCase()
-    : null
+  const roleLabel = currentVenueRole ? currentVenueRole.charAt(0) + currentVenueRole.slice(1).toLowerCase() : null
 
   return (
     <DropdownMenu>
@@ -45,9 +40,7 @@ export function UserMenu({ user, currentVenueName, currentVenueRole }: UserMenuP
         <button className="user-chip" aria-label="Open user menu">
           <Avatar className="h-7 w-7 flex-shrink-0">
             <AvatarImage src={user.image || undefined} alt={user.name || "User"} />
-            <AvatarFallback className="text-[0.7rem] font-bold text-white user-chip-av">
-              {initials}
-            </AvatarFallback>
+            <AvatarFallback className="text-[0.7rem] font-bold text-white user-chip-av">{initials}</AvatarFallback>
           </Avatar>
           <span className="user-chip-name hidden sm:block">{user.name || "User"}</span>
           <ChevronDown className="h-[15px] w-[15px] text-[var(--fg-faint)] flex-shrink-0 hidden sm:block" />
@@ -62,7 +55,7 @@ export function UserMenu({ user, currentVenueName, currentVenueRole }: UserMenuP
         {/* Header */}
         <div className="px-4 py-3.5 border-b border-[var(--blue-008)]">
           <p className="text-[0.875rem] font-semibold leading-tight">{user.name || "User"}</p>
-          {(roleLabel || currentVenueName) ? (
+          {roleLabel || currentVenueName ? (
             <p className="text-[0.74rem] text-muted-foreground mt-0.5">
               {[roleLabel, currentVenueName].filter(Boolean).join(" · ")}
             </p>

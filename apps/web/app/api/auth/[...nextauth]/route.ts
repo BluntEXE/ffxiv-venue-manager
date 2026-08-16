@@ -19,10 +19,7 @@ const nextAuthHandler = NextAuth(authOptions)
  */
 const AUTH_THROTTLE_RE = /\/api\/auth\/(signin|callback)\//
 
-async function withAuthThrottle(
-  req: NextRequest,
-  ctx: { params: Promise<{ nextauth: string[] }> }
-): Promise<Response> {
+async function withAuthThrottle(req: NextRequest, ctx: { params: Promise<{ nextauth: string[] }> }): Promise<Response> {
   if (AUTH_THROTTLE_RE.test(req.nextUrl.pathname)) {
     const ip = getIp(req)
     const rl = await checkLimit(`auth-ip:${ip}`, 10, 60)

@@ -10,7 +10,7 @@ export async function ExploreLayout({ children }: { children: ReactNode }) {
 
   let venueSlug = ""
   let venueName = ""
-  let userRole  = "STAFF"
+  let userRole = "STAFF"
   let venues: Array<{ id: string; name: string; slug: string; dataCenter: string; world: string }> = []
 
   if (session?.user?.id) {
@@ -26,18 +26,16 @@ export async function ExploreLayout({ children }: { children: ReactNode }) {
         venue: { select: { id: true, name: true, slug: true, dataCenter: true, world: true } },
       },
     })
-    venues = allMemberships.map(m => m.venue)
+    venues = allMemberships.map((m) => m.venue)
 
     // Prefer cookie (last visited dashboard venue), fall back to oldest
-    const preferred = activeSlug
-      ? allMemberships.find(m => m.venue.slug === activeSlug)
-      : null
+    const preferred = activeSlug ? allMemberships.find((m) => m.venue.slug === activeSlug) : null
     const membership = preferred ?? allMemberships[0]
 
     if (membership) {
       venueSlug = membership.venue.slug
       venueName = membership.venue.name
-      userRole  = membership.role
+      userRole = membership.role
     }
   }
 
@@ -53,9 +51,7 @@ export async function ExploreLayout({ children }: { children: ReactNode }) {
           venues={venues}
         />
       )}
-      <main className={`${venueSlug ? "[@media(min-width:1081px)]:ml-[300px]" : ""} relative z-[1]`}>
-        {children}
-      </main>
+      <main className={`${venueSlug ? "[@media(min-width:1081px)]:ml-[300px]" : ""} relative z-[1]`}>{children}</main>
     </div>
   )
 }

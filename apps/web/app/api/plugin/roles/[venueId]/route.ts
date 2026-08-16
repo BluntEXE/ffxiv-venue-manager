@@ -1,6 +1,6 @@
-import { NextRequest, NextResponse } from 'next/server'
-import { pluginAuthGate } from '@/lib/api/plugin-auth'
-import { prisma } from '@/lib/prisma'
+import { NextRequest, NextResponse } from "next/server"
+import { pluginAuthGate } from "@/lib/api/plugin-auth"
+import { prisma } from "@/lib/prisma"
 
 /**
  * GET /api/plugin/roles/[venueId]
@@ -10,32 +10,27 @@ import { prisma } from '@/lib/prisma'
  * list. See ../route.ts for the rationale on why checkPermission('view')
  * was removed.
  */
-export async function GET(
-  request: NextRequest,
-  { params }: { params: Promise<{ venueId: string }> }
-) {
+export async function GET(request: NextRequest, { params }: { params: Promise<{ venueId: string }> }) {
   try {
-    const gate = await pluginAuthGate(request, 'read')
+    const gate = await pluginAuthGate(request, "read")
     if (!gate.ok) return gate.response
     const { auth } = gate
 
     const { venueId } = await params
     if (!venueId || !auth.venues.includes(venueId)) {
-      return NextResponse.json({ error: 'Invalid venue' }, { status: 400 })
+      return NextResponse.json({ error: "Invalid venue" }, { status: 400 })
     }
 
     const membership = await prisma.membership.findFirst({
-      where: { userId: auth.userId, venueId, status: 'active' },
+      where: { userId: auth.userId, venueId, status: "active" },
       include: { customRole: true },
     })
 
     const role = membership?.customRole
-    const roles = role
-      ? [{ id: role.id, name: role.name, color: role.color ?? null }]
-      : []
+    const roles = role ? [{ id: role.id, name: role.name, color: role.color ?? null }] : []
     return NextResponse.json({ roles })
   } catch (error) {
-    console.error('[Plugin API] Error fetching roles:', error)
-    return NextResponse.json({ error: 'Internal server error' }, { status: 500 })
+    console.error("[Plugin API] Error fetching roles:", error)
+    return NextResponse.json({ error: "Internal server error" }, { status: 500 })
   }
 }

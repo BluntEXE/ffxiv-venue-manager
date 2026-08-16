@@ -24,10 +24,7 @@ export async function GET(request: NextRequest) {
     const params = Object.fromEntries(request.nextUrl.searchParams)
     const parsed = querySchema.safeParse(params)
     if (!parsed.success) {
-      return NextResponse.json(
-        { error: "venueId query param is required" },
-        { status: 400 }
-      )
+      return NextResponse.json({ error: "venueId query param is required" }, { status: 400 })
     }
 
     const { venueId } = parsed.data
@@ -38,10 +35,7 @@ export async function GET(request: NextRequest) {
 
     const canView = await checkPermission(auth.userId, venueId, "view_shifts")
     if (!canView) {
-      return NextResponse.json(
-        { error: "You do not have permission to view shifts" },
-        { status: 403 }
-      )
+      return NextResponse.json({ error: "You do not have permission to view shifts" }, { status: 403 })
     }
 
     // Find the user's membership at this venue to filter shifts
@@ -97,9 +91,6 @@ export async function GET(request: NextRequest) {
     })
   } catch (error) {
     console.error("[Plugin API] Error fetching shifts:", error)
-    return NextResponse.json(
-      { error: "Internal server error" },
-      { status: 500 }
-    )
+    return NextResponse.json({ error: "Internal server error" }, { status: 500 })
   }
 }

@@ -24,6 +24,7 @@
 ## Task 1: Add local-timezone ISO formatting + `LocalTimeRange` primitives
 
 **Files:**
+
 - Modify: `apps/web/lib/server-time.ts`
 - Modify: `apps/web/components/server-time.tsx`
 
@@ -32,6 +33,7 @@
 - [ ] **Step 1: Fix `formatLocalTime`'s ISO kinds in `components/server-time.tsx`**
 
 Current code:
+
 ```ts
 export function formatLocalTime(date: string | Date, kind: ServerTimeKind = "time"): string {
   const d = new Date(date)
@@ -42,6 +44,7 @@ export function formatLocalTime(date: string | Date, kind: ServerTimeKind = "tim
 ```
 
 Change to:
+
 ```ts
 export function formatLocalTime(date: string | Date, kind: ServerTimeKind = "time"): string {
   const d = new Date(date)
@@ -56,7 +59,7 @@ export function formatLocalTime(date: string | Date, kind: ServerTimeKind = "tim
 }
 ```
 
-`Date`'s non-`UTC`-prefixed getters (`getFullYear`, `getMonth`, `getDate`, `getHours`, `getMinutes`, `getSeconds`) already reflect the *local* system timezone wherever this code runs — no explicit timezone argument needed, same as every other branch in this function already relies on implicitly via `toLocaleString` with no `timeZone` option.
+`Date`'s non-`UTC`-prefixed getters (`getFullYear`, `getMonth`, `getDate`, `getHours`, `getMinutes`, `getSeconds`) already reflect the _local_ system timezone wherever this code runs — no explicit timezone argument needed, same as every other branch in this function already relies on implicitly via `toLocaleString` with no `timeZone` option.
 
 - [ ] **Step 2: Add `formatLocalTimeRange` to `lib/server-time.ts`**
 
@@ -100,6 +103,7 @@ export function LocalTimeRange({
 ```
 
 Also update the file's existing import line to pull in `formatLocalTimeRange` alongside `formatServerTimeRange` — find:
+
 ```ts
 import {
   formatServerTime,
@@ -109,6 +113,7 @@ import {
   type ServerTimeKind,
 } from "@/lib/server-time"
 ```
+
 and add `formatLocalTimeRange` to that list.
 
 - [ ] **Step 4: Typecheck**
@@ -116,6 +121,7 @@ and add `formatLocalTimeRange` to that list.
 ```bash
 cd apps/web && npx tsc --noEmit
 ```
+
 Expected: 0 errors.
 
 - [ ] **Step 5: Add a unit test for the ISO fix, since it's the one behavior change in this task that isn't a pure UI swap**
@@ -141,6 +147,7 @@ This test locks down that `formatServerTime`'s ISO output is unaffected by this 
 ```bash
 npx vitest run
 ```
+
 Expected: previous 54 tests + 1 new test, all passing.
 
 - [ ] **Step 7: Commit**
@@ -166,6 +173,7 @@ Task 4's dashboard page conversion."
 ## Task 2: `components/transactions-list.tsx`
 
 **Files:**
+
 - Modify: `apps/web/components/transactions-list.tsx`
 
 **Context:** Client Component. 3 call sites: CSV export row date, CSV export filename date, transaction row display. All 3 convert to local — the CSV export decision was confirmed explicitly (convert, don't leave deterministic/UTC).
@@ -173,10 +181,13 @@ Task 4's dashboard page conversion."
 - [ ] **Step 1: Swap the import**
 
 Change:
+
 ```tsx
 import { formatServerTime, SERVER_TIME_LABEL } from "@/components/server-time"
 ```
+
 to:
+
 ```tsx
 import { formatLocalTime } from "@/components/server-time"
 ```
@@ -184,28 +195,39 @@ import { formatLocalTime } from "@/components/server-time"
 - [ ] **Step 2: Swap the 3 call sites**
 
 Change:
+
 ```tsx
 const date = formatServerTime(transaction.createdAt, "isoDateTime")
 ```
+
 to:
+
 ```tsx
 const date = formatLocalTime(transaction.createdAt, "isoDateTime")
 ```
 
 Change:
+
 ```tsx
 link.setAttribute("download", `transactions-${formatServerTime(new Date(), "isoDate")}.csv`)
 ```
+
 to:
+
 ```tsx
 link.setAttribute("download", `transactions-${formatLocalTime(new Date(), "isoDate")}.csv`)
 ```
 
 Change:
+
 ```tsx
-<span>{formatServerTime(transaction.createdAt, "datetimelong")} {SERVER_TIME_LABEL}</span>
+<span>
+  {formatServerTime(transaction.createdAt, "datetimelong")} {SERVER_TIME_LABEL}
+</span>
 ```
+
 to:
+
 ```tsx
 <span>{formatLocalTime(transaction.createdAt, "datetimelong")}</span>
 ```
@@ -215,6 +237,7 @@ to:
 ```bash
 cd apps/web && npx tsc --noEmit
 ```
+
 Expected: 0 errors.
 
 - [ ] **Step 4: Commit**
@@ -229,6 +252,7 @@ git commit -m "chore: show transaction times and CSV export in viewer-local time
 ## Task 3: `components/event-attendance-chart.tsx`
 
 **Files:**
+
 - Modify: `apps/web/components/event-attendance-chart.tsx`
 
 **Context:** Client Component, 100% client-rendered (no SSR data), so no hydration-guard needed here at all — this file never renders server-provided timestamps before mount. The existing code comment documents a deliberate "shared chart, same axis for every viewer" design choice; the user explicitly confirmed converting anyway.
@@ -236,6 +260,7 @@ git commit -m "chore: show transaction times and CSV export in viewer-local time
 - [ ] **Step 1: Swap the import and helper function**
 
 Change:
+
 ```tsx
 import { formatServerTime, SERVER_TIME_LABEL } from "@/components/server-time"
 
@@ -243,7 +268,9 @@ import { formatServerTime, SERVER_TIME_LABEL } from "@/components/server-time"
 // same axis label regardless of browser timezone.
 const fmtST = (iso: string) => formatServerTime(iso, "time")
 ```
+
 to:
+
 ```tsx
 import { formatLocalTime } from "@/components/server-time"
 
@@ -254,10 +281,13 @@ const fmtLocal = (iso: string) => formatLocalTime(iso, "time")
 - [ ] **Step 2: Update the `CardDescription` text**
 
 Change:
+
 ```tsx
 <CardDescription>Live count tracking over time (Server Time)</CardDescription>
 ```
+
 to:
+
 ```tsx
 <CardDescription>Live count tracking over time</CardDescription>
 ```
@@ -265,12 +295,15 @@ to:
 - [ ] **Step 3: Swap the 3 remaining `fmtST` references**
 
 Change the `XAxis` tick formatter:
+
 ```tsx
 <XAxis
     dataKey="time"
     tickFormatter={fmtST}
 ```
+
 to:
+
 ```tsx
 <XAxis
     dataKey="time"
@@ -278,12 +311,22 @@ to:
 ```
 
 Change the tooltip:
+
 ```tsx
-{typeof label === "string" ? fmtST(label) : label} {SERVER_TIME_LABEL}
+{
+  typeof label === "string" ? fmtST(label) : label
+}
+{
+  SERVER_TIME_LABEL
+}
 ```
+
 to:
+
 ```tsx
-{typeof label === "string" ? fmtLocal(label) : label}
+{
+  typeof label === "string" ? fmtLocal(label) : label
+}
 ```
 
 - [ ] **Step 4: Typecheck**
@@ -291,6 +334,7 @@ to:
 ```bash
 cd apps/web && npx tsc --noEmit
 ```
+
 Expected: 0 errors.
 
 - [ ] **Step 5: Commit**
@@ -310,6 +354,7 @@ exception."
 ## Task 4: `app/dashboard/[slug]/page.tsx`
 
 **Files:**
+
 - Create: `apps/web/components/today-date-label.tsx`
 - Modify: `apps/web/app/dashboard/[slug]/page.tsx`
 
@@ -342,17 +387,21 @@ export function TodayDateLabel() {
 - [ ] **Step 2: Wire it into the dashboard page**
 
 Add the import near the top of `app/dashboard/[slug]/page.tsx`, alongside the other component imports:
+
 ```tsx
 import { TodayDateLabel } from "@/components/today-date-label"
 ```
 
 Change:
+
 ```tsx
 <p className="text-sm text-muted-foreground mt-0.5">
   {format(now, "EEEE, d MMM")} &middot; {tzLabel}
 </p>
 ```
+
 to:
+
 ```tsx
 <p className="text-sm text-muted-foreground mt-0.5">
   <TodayDateLabel />
@@ -362,28 +411,37 @@ to:
 - [ ] **Step 3: Swap the `ServerTimeRange` import and the 2 call sites**
 
 Change:
+
 ```tsx
 import { ServerTimeRange } from "@/components/server-time"
 ```
+
 to:
+
 ```tsx
 import { LocalTimeRange } from "@/components/server-time"
 ```
 
 Change:
+
 ```tsx
 <ServerTimeRange start={nextEvent.startTime} end={nextEvent.endTime ?? nextEvent.startTime} />
 ```
+
 to:
+
 ```tsx
 <LocalTimeRange start={nextEvent.startTime} end={nextEvent.endTime ?? nextEvent.startTime} />
 ```
 
 Change:
+
 ```tsx
 <ServerTimeRange start={shift.scheduledStart} end={shift.scheduledEnd} />
 ```
+
 to:
+
 ```tsx
 <LocalTimeRange start={shift.scheduledStart} end={shift.scheduledEnd} />
 ```
@@ -391,9 +449,11 @@ to:
 - [ ] **Step 4: Remove the now-dead `tzLabel`/`getServerTimeLabel`**
 
 After Step 2, `tzLabel` has zero remaining usages in this file (confirm with `grep -n "tzLabel" "apps/web/app/dashboard/[slug]/page.tsx"` — expected only its own declaration line before this step, zero after). Remove:
+
 ```ts
 const tzLabel = getServerTimeLabel(venue.dataCenter)
 ```
+
 and remove `getServerTimeLabel` from wherever it's imported (`import { getServerTimeLabel } from "@/lib/server-time"` — check if `SERVER_TIME_LABEL` or anything else from that same import line is still needed elsewhere in the file before deleting the whole line versus just trimming one name from it).
 
 - [ ] **Step 5: Typecheck**
@@ -401,6 +461,7 @@ and remove `getServerTimeLabel` from wherever it's imported (`import { getServer
 ```bash
 cd apps/web && npx tsc --noEmit
 ```
+
 Expected: 0 errors.
 
 - [ ] **Step 6: Commit**
@@ -421,6 +482,7 @@ git commit -m "chore: show dashboard header date and event/shift ranges in viewe
 ```bash
 cd apps/web && npx tsc --noEmit && npx vitest run
 ```
+
 Expected: 0 errors, 55 tests passing (54 from before this phase + Task 1's new ISO regression test).
 
 - [ ] **Step 2: Live check against the local dev server**
@@ -429,7 +491,7 @@ With the local dev server running (`docs/LOCAL_DEV.md`):
 
 - `/dashboard/<venue>/sales` — transaction row timestamps show local time, no "ST" text. Click "Export to CSV", open the downloaded file, confirm the `Date` column and the filename's date stamp are both in local time, not UTC (compare against the transaction's on-screen local timestamp — they should match, whereas before this phase the CSV date would have been several hours off from the on-screen ST-labelled time whenever the viewer isn't in UTC).
 - An event detail page with attendance data (log a few patron visits against a test event first if none exist) — the "Patron Attendance" chart's X-axis and tooltip show local time, card description no longer says "(Server Time)".
-- `/dashboard/<venue>` (main overview) — header shows "{Weekday}, {day} {month}" with no "ST"/timezone suffix; if there's a next upcoming event or an active shift, confirm the time range shown is local, not ST. Specifically watch for a hydration-mismatch console warning on this page, since `TodayDateLabel` is the first *fully self-computed* client-side "now" component added across both phases (everything else formatted an already-known timestamp) — confirm the mount-guard actually prevents a server/client text mismatch rather than assuming it does.
+- `/dashboard/<venue>` (main overview) — header shows "{Weekday}, {day} {month}" with no "ST"/timezone suffix; if there's a next upcoming event or an active shift, confirm the time range shown is local, not ST. Specifically watch for a hydration-mismatch console warning on this page, since `TodayDateLabel` is the first _fully self-computed_ client-side "now" component added across both phases (everything else formatted an already-known timestamp) — confirm the mount-guard actually prevents a server/client text mismatch rather than assuming it does.
 
 - [ ] **Step 3: Report completion**
 

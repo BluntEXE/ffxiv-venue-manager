@@ -6,7 +6,8 @@ import { ArrowRight, Users, Calendar, BarChart2, Zap } from "lucide-react"
 
 export const metadata: Metadata = {
   title: "How to Run a Venue in FFXIV",
-  description: "What running an FFXIV roleplay venue involves, where it gets complicated, and how XIV Venue Manager keeps you organised.",
+  description:
+    "What running an FFXIV roleplay venue involves, where it gets complicated, and how XIV Venue Manager keeps you organised.",
   alternates: { canonical: "https://xivvenuemanager.com/guide/getting-started" },
 }
 
@@ -36,42 +37,66 @@ const PAIN_POINTS = [
 export default function GettingStartedPage() {
   return (
     <div className="min-h-screen">
-      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify({ "@context": "https://schema.org", "@type": "Article", "headline": "How to Run a Venue in FFXIV", "description": "What running an FFXIV roleplay venue involves, where it gets complicated, and how XIV Venue Manager keeps you organised.", "url": "https://xivvenuemanager.com/guide/getting-started", "publisher": { "@type": "Organization", "name": "XIV Venue Manager", "url": "https://xivvenuemanager.com" } }) }} />
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{
+          __html: JSON.stringify({
+            "@context": "https://schema.org",
+            "@type": "Article",
+            headline: "How to Run a Venue in FFXIV",
+            description:
+              "What running an FFXIV roleplay venue involves, where it gets complicated, and how XIV Venue Manager keeps you organised.",
+            url: "https://xivvenuemanager.com/guide/getting-started",
+            publisher: { "@type": "Organization", name: "XIV Venue Manager", url: "https://xivvenuemanager.com" },
+          }),
+        }}
+      />
 
       {/* Hero */}
       <div className="xiv-hero-bg overflow-hidden border-b border-[var(--blue-008)]">
         <div className="container mx-auto px-4 py-14 max-w-3xl">
-          <Link href="/" className="inline-flex items-center gap-1.5 text-sm text-muted-foreground hover:text-[var(--xiv-blue)] transition-colors mb-6">
+          <Link
+            href="/"
+            className="inline-flex items-center gap-1.5 text-sm text-muted-foreground hover:text-[var(--xiv-blue)] transition-colors mb-6"
+          >
             &#8592; Back to Home
           </Link>
           <div className="flex items-center gap-2 mb-3">
             <span className="w-[7px] h-[7px] bg-[rgba(0,180,255,0.7)] rotate-45 shadow-[0_0_10px_rgba(0,180,255,0.5)]" />
-            <span className="text-[0.72rem] font-semibold uppercase tracking-[0.14em] text-[var(--xiv-blue)]">Getting Started</span>
+            <span className="text-[0.72rem] font-semibold uppercase tracking-[0.14em] text-[var(--xiv-blue)]">
+              Getting Started
+            </span>
           </div>
           <h1 className="font-cinzel text-4xl font-bold tracking-wide xiv-glow-text mb-4">
             How to Run a Venue in FFXIV
           </h1>
           <p className="text-lg text-muted-foreground">
-            What venue management involves, where it gets complicated, and how to stay organised when you have staff depending on you.
+            What venue management involves, where it gets complicated, and how to stay organised when you have staff
+            depending on you.
           </p>
         </div>
       </div>
 
       <article className="container mx-auto px-4 py-12 max-w-3xl space-y-14">
-
         {/* What is a venue */}
         <section id="what-is-a-venue" className="space-y-4 scroll-mt-[84px]">
           <h2 className="font-cinzel text-2xl font-semibold border-b border-[rgba(0,180,255,0.2)] pb-3 tracking-wide">
             What is an FFXIV roleplay venue?
           </h2>
           <p className="text-muted-foreground leading-relaxed">
-            A venue in Final Fantasy XIV is a player-run establishment hosted inside a private estate, Free Company house, or apartment. Bars, clubs, lounges, inns, shops: any roleplay space with regular open hours and a staff team counts. Venues open on a schedule, hire staff, run events, and serve as social hubs for the RP community on their world.
+            A venue in Final Fantasy XIV is a player-run establishment hosted inside a private estate, Free Company
+            house, or apartment. Bars, clubs, lounges, inns, shops: any roleplay space with regular open hours and a
+            staff team counts. Venues open on a schedule, hire staff, run events, and serve as social hubs for the RP
+            community on their world.
           </p>
           <p className="text-muted-foreground leading-relaxed">
-            Each venue is tied to a specific world and data centre. Your patron reach is shaped by which data centre you sit on (Chaos, Light, Crystal, Aether), because players can only visit venues on worlds within their own data centre without transferring.
+            Each venue is tied to a specific world and data centre. Your patron reach is shaped by which data centre you
+            sit on (Chaos, Light, Crystal, Aether), because players can only visit venues on worlds within their own
+            data centre without transferring.
           </p>
           <p className="text-muted-foreground leading-relaxed">
-            Venues are player-organised. There is no in-game tool for scheduling shifts, tracking sales, or telling patrons you are open. Most owners start with Discord and a spreadsheet. That works until it does not.
+            Venues are player-organised. There is no in-game tool for scheduling shifts, tracking sales, or telling
+            patrons you are open. Most owners start with Discord and a spreadsheet. That works until it does not.
           </p>
         </section>
 
@@ -81,7 +106,9 @@ export default function GettingStartedPage() {
             What running a venue involves
           </h2>
           <p className="text-muted-foreground leading-relaxed">
-            You will spend more time on the operational side than you expect. Decorating and hosting are straightforward. Coordinating staff, scheduling events, and tracking revenue across multiple open nights is where new owners lose hours.
+            You will spend more time on the operational side than you expect. Decorating and hosting are
+            straightforward. Coordinating staff, scheduling events, and tracking revenue across multiple open nights is
+            where new owners lose hours.
           </p>
           <div className="grid sm:grid-cols-2 gap-[18px]">
             {PAIN_POINTS.map(({ icon: Icon, heading, body }) => (
@@ -95,10 +122,12 @@ export default function GettingStartedPage() {
             ))}
           </div>
           <p className="text-muted-foreground leading-relaxed">
-            Small venues manage with a spreadsheet and a couple of Discord channels. Add five or more staff, a regular event schedule, and patrons who expect consistency, and the spreadsheet stops working.
+            Small venues manage with a spreadsheet and a couple of Discord channels. Add five or more staff, a regular
+            event schedule, and patrons who expect consistency, and the spreadsheet stops working.
           </p>
           <p className="text-muted-foreground leading-relaxed">
-            The coordination layer is what grows fastest: who is rostered when, what happened to last week's tips, whether the Partake listing matches the actual schedule.
+            The coordination layer is what grows fastest: who is rostered when, what happened to last week's tips,
+            whether the Partake listing matches the actual schedule.
           </p>
         </section>
 
@@ -108,7 +137,8 @@ export default function GettingStartedPage() {
             How XIV Venue Manager helps
           </h2>
           <p className="text-muted-foreground leading-relaxed">
-            XIV Venue Manager is a free tool for FFXIV venue owners and their staff. A web dashboard connects to a Dalamud plugin so you can manage your venue from the browser or from inside the game.
+            XIV Venue Manager is a free tool for FFXIV venue owners and their staff. A web dashboard connects to a
+            Dalamud plugin so you can manage your venue from the browser or from inside the game.
           </p>
           <ul className="space-y-3 text-muted-foreground">
             {[
@@ -132,16 +162,22 @@ export default function GettingStartedPage() {
             Who is it for?
           </h2>
           <p className="text-muted-foreground leading-relaxed">
-            XIV Venue Manager fits where you are. Opening your first venue, you can start organised without building your own system. Running for a year on spreadsheets, you can migrate your data and give your staff a proper schedule.
+            XIV Venue Manager fits where you are. Opening your first venue, you can start organised without building
+            your own system. Running for a year on spreadsheets, you can migrate your data and give your staff a proper
+            schedule.
           </p>
           <div className="grid sm:grid-cols-2 gap-[18px]">
             <div className="xiv-card rounded-xl p-6">
               <p className="font-semibold text-[0.95rem] mb-2">New venue owners</p>
-              <p className="text-[0.88rem] text-muted-foreground leading-[1.55]">Set up your venue, add your first staff members, and start tracking from opening night.</p>
+              <p className="text-[0.88rem] text-muted-foreground leading-[1.55]">
+                Set up your venue, add your first staff members, and start tracking from opening night.
+              </p>
             </div>
             <div className="xiv-card rounded-xl p-6">
               <p className="font-semibold text-[0.95rem] mb-2">Established venues</p>
-              <p className="text-[0.88rem] text-muted-foreground leading-[1.55]">Move off spreadsheets, get visibility into your revenue, and give your staff a proper schedule.</p>
+              <p className="text-[0.88rem] text-muted-foreground leading-[1.55]">
+                Move off spreadsheets, get visibility into your revenue, and give your staff a proper schedule.
+              </p>
             </div>
           </div>
         </section>
@@ -159,15 +195,22 @@ export default function GettingStartedPage() {
                 <ArrowRight className="ml-1.5 h-4 w-4 transition-transform group-hover:translate-x-1" />
               </Link>
             </Button>
-            <Button asChild variant="outline" className="border-[var(--xiv-blue-border)] hover:bg-[var(--xiv-blue-dim)] hover:border-[var(--xiv-blue)]">
+            <Button
+              asChild
+              variant="outline"
+              className="border-[var(--xiv-blue-border)] hover:bg-[var(--xiv-blue-dim)] hover:border-[var(--xiv-blue)]"
+            >
               <Link href="/guide/events">Running events guide</Link>
             </Button>
-            <Button asChild variant="outline" className="border-[var(--xiv-blue-border)] hover:bg-[var(--xiv-blue-dim)] hover:border-[var(--xiv-blue)]">
+            <Button
+              asChild
+              variant="outline"
+              className="border-[var(--xiv-blue-border)] hover:bg-[var(--xiv-blue-dim)] hover:border-[var(--xiv-blue)]"
+            >
               <Link href="/discover">Browse venues</Link>
             </Button>
           </div>
         </section>
-
       </article>
 
       <SiteFooter />

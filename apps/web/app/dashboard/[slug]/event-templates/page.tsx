@@ -29,13 +29,7 @@ import {
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Textarea } from "@/components/ui/textarea"
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select"
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Alert, AlertDescription } from "@/components/ui/alert"
 import { Clock, Trash2, Edit, Plus, ClipboardList } from "lucide-react"
 
@@ -274,18 +268,10 @@ export default function EventTemplatesPage() {
                       <CardDescription className="mt-1">{template.title}</CardDescription>
                     </div>
                     <div className="flex gap-2">
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        onClick={() => openEditDialog(template)}
-                      >
+                      <Button variant="ghost" size="sm" onClick={() => openEditDialog(template)}>
                         <Edit className="h-4 w-4" />
                       </Button>
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        onClick={() => setDeletingTemplate(template)}
-                      >
+                      <Button variant="ghost" size="sm" onClick={() => setDeletingTemplate(template)}>
                         <Trash2 className="h-4 w-4 text-red-500" />
                       </Button>
                     </div>
@@ -301,9 +287,7 @@ export default function EventTemplatesPage() {
                       </div>
                     </div>
                     {template.description && (
-                      <p className="text-sm text-muted-foreground line-clamp-2">
-                        {template.description}
-                      </p>
+                      <p className="text-sm text-muted-foreground line-clamp-2">{template.description}</p>
                     )}
                     <p className="text-xs text-muted-foreground mt-2">
                       Created by {template.createdBy.displayName || template.createdBy.name}
@@ -329,9 +313,7 @@ export default function EventTemplatesPage() {
           <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
             <DialogHeader>
               <DialogTitle>{editingTemplate ? "Edit Template" : "Create Template"}</DialogTitle>
-              <DialogDescription>
-                Save time by creating reusable templates for recurring events
-              </DialogDescription>
+              <DialogDescription>Save time by creating reusable templates for recurring events</DialogDescription>
             </DialogHeader>
 
             <div className="space-y-4 py-4">
@@ -350,9 +332,7 @@ export default function EventTemplatesPage() {
                   onChange={(e) => setFormData({ ...formData, name: e.target.value })}
                   disabled={isSubmitting}
                 />
-                <p className="text-xs text-muted-foreground">
-                  Internal name to identify this template
-                </p>
+                <p className="text-xs text-muted-foreground">Internal name to identify this template</p>
               </div>
 
               <div className="space-y-2">
@@ -409,14 +389,10 @@ export default function EventTemplatesPage() {
                     id="startTime"
                     type="time"
                     value={formData.defaultStartTime}
-                    onChange={(e) =>
-                      setFormData({ ...formData, defaultStartTime: e.target.value })
-                    }
+                    onChange={(e) => setFormData({ ...formData, defaultStartTime: e.target.value })}
                     disabled={isSubmitting}
                   />
-                  <p className="text-xs text-muted-foreground">
-                    Time in 24-hour format (e.g., 19:00)
-                  </p>
+                  <p className="text-xs text-muted-foreground">Time in 24-hour format (e.g., 19:00)</p>
                 </div>
 
                 <div className="space-y-2">
@@ -425,14 +401,10 @@ export default function EventTemplatesPage() {
                     id="endTime"
                     type="time"
                     value={formData.defaultEndTime}
-                    onChange={(e) =>
-                      setFormData({ ...formData, defaultEndTime: e.target.value })
-                    }
+                    onChange={(e) => setFormData({ ...formData, defaultEndTime: e.target.value })}
                     disabled={isSubmitting}
                   />
-                  <p className="text-xs text-muted-foreground">
-                    Time in 24-hour format (e.g., 22:00)
-                  </p>
+                  <p className="text-xs text-muted-foreground">Time in 24-hour format (e.g., 22:00)</p>
                 </div>
               </div>
             </div>
@@ -452,7 +424,11 @@ export default function EventTemplatesPage() {
               <Button
                 onClick={editingTemplate ? handleUpdate : handleCreate}
                 disabled={
-                  isSubmitting || !formData.name || !formData.title || !formData.defaultStartTime || !formData.defaultEndTime
+                  isSubmitting ||
+                  !formData.name ||
+                  !formData.title ||
+                  !formData.defaultStartTime ||
+                  !formData.defaultEndTime
                 }
               >
                 {isSubmitting
@@ -460,24 +436,20 @@ export default function EventTemplatesPage() {
                     ? "Updating..."
                     : "Creating..."
                   : editingTemplate
-                  ? "Update Template"
-                  : "Create Template"}
+                    ? "Update Template"
+                    : "Create Template"}
               </Button>
             </DialogFooter>
           </DialogContent>
         </Dialog>
 
         {/* Delete Confirmation Dialog */}
-        <AlertDialog
-          open={deletingTemplate !== null}
-          onOpenChange={(open) => !open && setDeletingTemplate(null)}
-        >
+        <AlertDialog open={deletingTemplate !== null} onOpenChange={(open) => !open && setDeletingTemplate(null)}>
           <AlertDialogContent>
             <AlertDialogHeader>
               <AlertDialogTitle>Delete Template</AlertDialogTitle>
               <AlertDialogDescription>
-                Are you sure you want to delete "{deletingTemplate?.name}"? This action cannot be
-                undone.
+                Are you sure you want to delete "{deletingTemplate?.name}"? This action cannot be undone.
               </AlertDialogDescription>
             </AlertDialogHeader>
             <AlertDialogFooter>

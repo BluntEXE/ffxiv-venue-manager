@@ -1,13 +1,13 @@
-import { NextRequest, NextResponse } from 'next/server'
-import { z } from 'zod'
-import { pluginAuthGate } from '@/lib/api/plugin-auth'
-import { prisma } from '@/lib/prisma'
-import { invalidateCache, cacheKeys } from '@/lib/redis-cache'
+import { NextRequest, NextResponse } from "next/server"
+import { z } from "zod"
+import { pluginAuthGate } from "@/lib/api/plugin-auth"
+import { prisma } from "@/lib/prisma"
+import { invalidateCache, cacheKeys } from "@/lib/redis-cache"
 
 const restockSchema = z.object({
-  venueId: z.string().min(1, 'venueId is required'),
-  serviceId: z.string().min(1, 'serviceId is required'),
-  stockCount: z.number().int('stockCount must be a whole number').min(0, 'stockCount must be non-negative'),
+  venueId: z.string().min(1, "venueId is required"),
+  serviceId: z.string().min(1, "serviceId is required"),
+  stockCount: z.number().int("stockCount must be a whole number").min(0, "stockCount must be non-negative"),
 })
 
 /**
@@ -28,19 +28,19 @@ export async function POST(request: NextRequest) {
     const { venueId, serviceId, stockCount } = restockSchema.parse(body)
 
     if (!auth.venues.includes(venueId)) {
-      return NextResponse.json({ error: 'Invalid venue' }, { status: 400 })
+      return NextResponse.json({ error: "Invalid venue" }, { status: 400 })
     }
 
     const membership = await prisma.membership.findFirst({
-      where: { userId: auth.userId, venueId, status: 'active' },
+      where: { userId: auth.userId, venueId, status: "active" },
     })
-    if (!membership || !['OWNER', 'MANAGER'].includes(membership.role)) {
-      return NextResponse.json({ error: 'Owner or Manager role required' }, { status: 403 })
+    if (!membership || !["OWNER", "MANAGER"].includes(membership.role)) {
+      return NextResponse.json({ error: "Owner or Manager role required" }, { status: 403 })
     }
 
     const service = await prisma.service.findFirst({ where: { id: serviceId, venueId } })
     if (!service) {
-      return NextResponse.json({ error: 'Service not found in this venue' }, { status: 404 })
+      return NextResponse.json({ error: "Service not found in this venue" }, { status: 404 })
     }
 
     await prisma.service.update({
@@ -53,9 +53,9 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ success: true })
   } catch (error) {
     if (error instanceof z.ZodError) {
-      return NextResponse.json({ error: 'Validation error', details: error.issues }, { status: 400 })
+      return NextResponse.json({ error: "Validation error", details: error.issues }, { status: 400 })
     }
-    console.error('[Plugin API] Error restocking:', error)
-    return NextResponse.json({ error: 'Internal server error' }, { status: 500 })
+    console.error("[Plugin API] Error restocking:", error)
+    return NextResponse.json({ error: "Internal server error" }, { status: 500 })
   }
 }

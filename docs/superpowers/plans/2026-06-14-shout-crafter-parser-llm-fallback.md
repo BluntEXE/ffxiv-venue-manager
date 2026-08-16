@@ -28,6 +28,7 @@
 ### Task 1: Add vitest to shout-crafter
 
 **Files:**
+
 - Modify: `apps/shout-crafter/package.json`
 - Modify: `apps/shout-crafter/vite.config.ts`
 
@@ -52,9 +53,9 @@ In `apps/shout-crafter/package.json`, add to `"scripts"`:
 `apps/shout-crafter/vite.config.ts` currently:
 
 ```typescript
-import { defineConfig } from 'vite'
-import react from '@vitejs/plugin-react'
-import tailwindcss from '@tailwindcss/vite'
+import { defineConfig } from "vite"
+import react from "@vitejs/plugin-react"
+import tailwindcss from "@tailwindcss/vite"
 
 export default defineConfig({
   plugins: [react(), tailwindcss()],
@@ -64,14 +65,14 @@ export default defineConfig({
 Change to:
 
 ```typescript
-import { defineConfig } from 'vite'
-import react from '@vitejs/plugin-react'
-import tailwindcss from '@tailwindcss/vite'
+import { defineConfig } from "vite"
+import react from "@vitejs/plugin-react"
+import tailwindcss from "@tailwindcss/vite"
 
 export default defineConfig({
   plugins: [react(), tailwindcss()],
   test: {
-    environment: 'node',
+    environment: "node",
   },
 })
 ```
@@ -95,6 +96,7 @@ git commit -m "test(shout-crafter): add vitest runner"
 ### Task 2: Discord parser regression fixtures
 
 **Files:**
+
 - Create: `apps/shout-crafter/src/lib/discord-parser.test.ts`
 
 This task locks in **current** behavior of `parseDiscordPost`, including two known quirks (documented inline, not fixed).
@@ -104,11 +106,11 @@ This task locks in **current** behavior of `parseDiscordPost`, including two kno
 Create `apps/shout-crafter/src/lib/discord-parser.test.ts`:
 
 ```typescript
-import { describe, it, expect } from 'vitest'
-import { parseDiscordPost } from './discord-parser'
-import type { ParsedEvent } from '../types'
+import { describe, it, expect } from "vitest"
+import { parseDiscordPost } from "./discord-parser"
+import type { ParsedEvent } from "../types"
 
-describe('parseDiscordPost', () => {
+describe("parseDiscordPost", () => {
   it('parses "Music by:" lists with a starred venue, presents:, comma ward/plot, ST range, and both links', () => {
     const input = `★ Moonlit Lounge ★
 presents: Velvet Nights
@@ -176,7 +178,7 @@ W10, P2`
     expect(parseDiscordPost(input)).toEqual(expected)
   })
 
-  it('KNOWN QUIRK: a starred name is captured as the tagline, so the identical venueName match is suppressed (eventName === venueName)', () => {
+  it("KNOWN QUIRK: a starred name is captured as the tagline, so the identical venueName match is suppressed (eventName === venueName)", () => {
     const input = `★ Starlight Pavilion ★
 GRAND OPENING NIGHT
 Ward 14 - Plot 30
@@ -230,6 +232,7 @@ git commit -m "test(shout-crafter): add regression fixtures for parseDiscordPost
 ### Task 3: `mergeParsedEvents` helper
 
 **Files:**
+
 - Modify: `apps/shout-crafter/src/lib/discord-parser.ts`
 - Create: `apps/shout-crafter/src/lib/merge-parsed-events.test.ts`
 
@@ -238,46 +241,46 @@ git commit -m "test(shout-crafter): add regression fixtures for parseDiscordPost
 Create `apps/shout-crafter/src/lib/merge-parsed-events.test.ts`:
 
 ```typescript
-import { describe, it, expect } from 'vitest'
-import { mergeParsedEvents } from './discord-parser'
-import type { ParsedEvent } from '../types'
+import { describe, it, expect } from "vitest"
+import { mergeParsedEvents } from "./discord-parser"
+import type { ParsedEvent } from "../types"
 
-describe('mergeParsedEvents', () => {
-  it('keeps regex-derived values when present', () => {
-    const regex: ParsedEvent = { venueName: 'Velvet Room', openTime: '18:00-20:00 ST' }
-    const llm: ParsedEvent = { venueName: 'Wrong Name', openTime: '19:00-21:00 ST', djs: 'DJ Echo' }
+describe("mergeParsedEvents", () => {
+  it("keeps regex-derived values when present", () => {
+    const regex: ParsedEvent = { venueName: "Velvet Room", openTime: "18:00-20:00 ST" }
+    const llm: ParsedEvent = { venueName: "Wrong Name", openTime: "19:00-21:00 ST", djs: "DJ Echo" }
     expect(mergeParsedEvents(regex, llm)).toEqual({
-      venueName: 'Velvet Room',
-      openTime: '18:00-20:00 ST',
-      djs: 'DJ Echo',
+      venueName: "Velvet Room",
+      openTime: "18:00-20:00 ST",
+      djs: "DJ Echo",
     })
   })
 
-  it('fills in fields the regex left empty or undefined', () => {
-    const regex: ParsedEvent = { venueName: '', tagline: undefined, location: 'W6 P9' }
-    const llm: ParsedEvent = { venueName: 'Aurora Club', tagline: 'Glow Night', location: 'W1 P1' }
+  it("fills in fields the regex left empty or undefined", () => {
+    const regex: ParsedEvent = { venueName: "", tagline: undefined, location: "W6 P9" }
+    const llm: ParsedEvent = { venueName: "Aurora Club", tagline: "Glow Night", location: "W1 P1" }
     expect(mergeParsedEvents(regex, llm)).toEqual({
-      venueName: 'Aurora Club',
-      tagline: 'Glow Night',
-      location: 'W6 P9',
+      venueName: "Aurora Club",
+      tagline: "Glow Night",
+      location: "W6 P9",
     })
   })
 
-  it('does not overwrite a present field with an empty LLM value', () => {
-    const regex: ParsedEvent = { djs: 'DJ Echo' }
-    const llm: ParsedEvent = { djs: '' }
-    expect(mergeParsedEvents(regex, llm)).toEqual({ djs: 'DJ Echo' })
+  it("does not overwrite a present field with an empty LLM value", () => {
+    const regex: ParsedEvent = { djs: "DJ Echo" }
+    const llm: ParsedEvent = { djs: "" }
+    expect(mergeParsedEvents(regex, llm)).toEqual({ djs: "DJ Echo" })
   })
 
-  it('returns the regex result unchanged when the LLM result is empty', () => {
-    const regex: ParsedEvent = { venueName: 'Aurora Club', openTime: '19:00-20:00 ST' }
+  it("returns the regex result unchanged when the LLM result is empty", () => {
+    const regex: ParsedEvent = { venueName: "Aurora Club", openTime: "19:00-20:00 ST" }
     expect(mergeParsedEvents(regex, {})).toEqual(regex)
   })
 
-  it('merges isAdult only when the regex result did not set it', () => {
-    const regex: ParsedEvent = { venueName: 'Aurora Club' }
+  it("merges isAdult only when the regex result did not set it", () => {
+    const regex: ParsedEvent = { venueName: "Aurora Club" }
     const llm: ParsedEvent = { isAdult: true }
-    expect(mergeParsedEvents(regex, llm)).toEqual({ venueName: 'Aurora Club', isAdult: true })
+    expect(mergeParsedEvents(regex, llm)).toEqual({ venueName: "Aurora Club", isAdult: true })
   })
 })
 ```
@@ -297,8 +300,8 @@ export function mergeParsedEvents(regex: ParsedEvent, llm: ParsedEvent): ParsedE
   for (const key of Object.keys(llm) as (keyof ParsedEvent)[]) {
     const regexValue = regex[key]
     const llmValue = llm[key]
-    const regexIsEmpty = regexValue === undefined || regexValue === ''
-    const llmHasValue = llmValue !== undefined && llmValue !== ''
+    const regexIsEmpty = regexValue === undefined || regexValue === ""
+    const llmHasValue = llmValue !== undefined && llmValue !== ""
     if (regexIsEmpty && llmHasValue) {
       merged[key] = llmValue
     }
@@ -324,6 +327,7 @@ git commit -m "feat(shout-crafter): add mergeParsedEvents for regex/LLM result m
 ### Task 4: Hermes LiteLLM config
 
 **Files:**
+
 - Modify: `apps/web/.env.example`
 - Modify: `apps/web/.env`
 
@@ -366,6 +370,7 @@ git commit -m "chore(web): document HERMES_LITELLM_* env vars for shout-crafter 
 ### Task 5: LLM fallback API route
 
 **Files:**
+
 - Create: `apps/web/app/api/shout-crafter/parse/route.ts`
 
 - [ ] **Step 1: Write the route**
@@ -510,6 +515,7 @@ git commit -m "feat(web): add LLM fallback route for shout-crafter Discord parsi
 ### Task 6: Client fetch helper
 
 **Files:**
+
 - Create: `apps/shout-crafter/src/lib/ai-parse.ts`
 
 - [ ] **Step 1: Write the helper**
@@ -517,16 +523,16 @@ git commit -m "feat(web): add LLM fallback route for shout-crafter Discord parsi
 Create `apps/shout-crafter/src/lib/ai-parse.ts`:
 
 ```typescript
-import type { ParsedEvent } from '../types'
+import type { ParsedEvent } from "../types"
 
-const API = 'https://xivvenuemanager.com/api/shout-crafter/parse'
+const API = "https://xivvenuemanager.com/api/shout-crafter/parse"
 
 export async function fetchAiParse(text: string): Promise<ParsedEvent> {
   try {
     const res = await fetch(API, {
-      method: 'POST',
-      credentials: 'include',
-      headers: { 'Content-Type': 'application/json' },
+      method: "POST",
+      credentials: "include",
+      headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ text }),
     })
     if (!res.ok) return {}
@@ -554,6 +560,7 @@ git commit -m "feat(shout-crafter): add client helper for LLM parse fallback"
 ### Task 7: Wire fallback into ImportPanel
 
 **Files:**
+
 - Modify: `apps/shout-crafter/src/components/ImportPanel.tsx`
 
 - [ ] **Step 1: Add imports and `aiChecking` state**
@@ -561,14 +568,14 @@ git commit -m "feat(shout-crafter): add client helper for LLM parse fallback"
 In `apps/shout-crafter/src/components/ImportPanel.tsx`, change:
 
 ```typescript
-import { parseDiscordPost } from '../lib/discord-parser'
+import { parseDiscordPost } from "../lib/discord-parser"
 ```
 
 to:
 
 ```typescript
-import { parseDiscordPost, mergeParsedEvents } from '../lib/discord-parser'
-import { fetchAiParse } from '../lib/ai-parse'
+import { parseDiscordPost, mergeParsedEvents } from "../lib/discord-parser"
+import { fetchAiParse } from "../lib/ai-parse"
 ```
 
 Add a new state declaration alongside the existing ones (after `const [loading, setLoading] = useState(false)`):
@@ -582,37 +589,43 @@ const [aiChecking, setAiChecking] = useState(false)
 Replace:
 
 ```typescript
-  function handleDiscordParse() {
-    setError(null)
-    setPending(null)
-    if (!discordText.trim()) { setError('Paste some text first'); return }
-    showReview(parseDiscordPost(discordText))
+function handleDiscordParse() {
+  setError(null)
+  setPending(null)
+  if (!discordText.trim()) {
+    setError("Paste some text first")
+    return
   }
+  showReview(parseDiscordPost(discordText))
+}
 ```
 
 with:
 
 ```typescript
-  async function handleDiscordParse() {
-    setError(null)
-    setPending(null)
-    if (!discordText.trim()) { setError('Paste some text first'); return }
-
-    const regexResult = parseDiscordPost(discordText)
-    const isThin = !regexResult.venueName && !regexResult.openTime && !regexResult.djs
-    if (!isThin) {
-      showReview(regexResult)
-      return
-    }
-
-    setAiChecking(true)
-    try {
-      const aiResult = await fetchAiParse(discordText)
-      showReview(mergeParsedEvents(regexResult, aiResult))
-    } finally {
-      setAiChecking(false)
-    }
+async function handleDiscordParse() {
+  setError(null)
+  setPending(null)
+  if (!discordText.trim()) {
+    setError("Paste some text first")
+    return
   }
+
+  const regexResult = parseDiscordPost(discordText)
+  const isThin = !regexResult.venueName && !regexResult.openTime && !regexResult.djs
+  if (!isThin) {
+    showReview(regexResult)
+    return
+  }
+
+  setAiChecking(true)
+  try {
+    const aiResult = await fetchAiParse(discordText)
+    showReview(mergeParsedEvents(regexResult, aiResult))
+  } finally {
+    setAiChecking(false)
+  }
+}
 ```
 
 - [ ] **Step 3: Update the Parse button**
@@ -641,6 +654,7 @@ Expected: succeeds.
 - [ ] **Step 5: Manual browser test**
 
 Run `pnpm --filter shout-crafter dev`, open the app, go to the Discord Paste tab:
+
 1. Paste a post that the regex handles fully (e.g. one of the Task 2 fixtures with venueName + openTime + djs all present) → Parse should resolve immediately, no "Checking with Local Model…" flash.
 2. Paste a post with none of venueName/openTime/djs derivable by regex (e.g. a single line of unrelated prose) → button should show "Checking with Local Model…", then resolve to the review step (with whatever fields, if any, the LLM found — or none, falling back to an empty review).
 

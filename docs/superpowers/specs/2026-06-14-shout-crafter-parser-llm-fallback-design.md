@@ -3,6 +3,7 @@
 ## Goal
 
 Improve the reliability of the Discord-paste import on Shout Crafter:
+
 1. Lock in current regex-parser behavior with a golden-file test suite, so future changes can't silently regress known formats.
 2. Add an LLM-based fallback (via Hermes' LiteLLM proxy, `gemma-3-12b-it:free` on OpenRouter) that fills in fields the regex parser misses, improving compatibility with venue post layouts the regex doesn't recognize.
 
@@ -19,6 +20,7 @@ Discord posts vary widely in layout across venues, so the regex approach has a h
 **Test file:** `apps/shout-crafter/src/lib/discord-parser.test.ts`
 
 **Fixtures:** 8-10 realistic Discord post strings, each as a `{ input: string, expected: Partial<ParsedEvent> }` case, covering the format variants already named in the parser's comments:
+
 - "Music by:" / "Soundscape curated by:" DJ lists
 - `★ Venue Name ★` / `✦ Name ✦` decorated venue names
 - `presents:` event name extraction
@@ -29,7 +31,7 @@ Discord posts vary widely in layout across venues, so the regex approach has a h
 - `HH:MM - Name` and `HH:MM  Name` (double-space, no dash) slot lineups
 - Discord + Partake link extraction
 
-Each fixture asserts the exact `ParsedEvent` fields the current code produces. This is a snapshot of *current* behavior, not new behavior — if a fixture's expectation looks wrong (e.g., a known bug), it's documented as a comment but not fixed as part of this work, to keep this phase purely regression-locking.
+Each fixture asserts the exact `ParsedEvent` fields the current code produces. This is a snapshot of _current_ behavior, not new behavior — if a fixture's expectation looks wrong (e.g., a known bug), it's documented as a comment but not fixed as part of this work, to keep this phase purely regression-locking.
 
 **Verification:** `pnpm --filter shout-crafter test` passes with all fixtures green.
 
@@ -38,6 +40,7 @@ Each fixture asserts the exact `ParsedEvent` fields the current code produces. T
 ### New API route
 
 `apps/web/app/api/shout-crafter/parse/route.ts` — `POST`, following the same pattern as `apps/web/app/api/shout-crafter/me/route.ts`:
+
 - CORS scoped to `https://shout.xivvenuemanager.com` (same `cors()` helper pattern, `Access-Control-Allow-Methods: POST, OPTIONS`)
 - No auth required (covered by existing `/api/shout-crafter/` entry in `PUBLIC_PREFIXES` in `apps/web/proxy.ts`)
 - Request body: `{ text: string }`
@@ -50,12 +53,14 @@ Each fixture asserts the exact `ParsedEvent` fields the current code produces. T
 ### Config
 
 `apps/web/.env` (and `.env.example`):
+
 - `HERMES_LITELLM_URL=http://192.168.1.253:4000`
 - `HERMES_LITELLM_API_KEY=<from /etc/litellm/config.yaml on Hermes>`
 
 ### Client-side integration
 
 `apps/shout-crafter/src/components/ImportPanel.tsx`:
+
 - `handleDiscordParse` becomes `async`
 - Flow:
   1. Run `parseDiscordPost(text)` (regex) — unchanged, synchronous
@@ -69,4 +74,4 @@ Each fixture asserts the exact `ParsedEvent` fields the current code produces. T
 
 - No changes to the Partake import path
 - No changes to `discord-parser.ts` regex logic itself (Part 1 only adds tests)
-- No UI indication of *which* fields came from the LLM vs regex — the existing review/checkbox step covers user correction either way
+- No UI indication of _which_ fields came from the LLM vs regex — the existing review/checkbox step covers user correction either way

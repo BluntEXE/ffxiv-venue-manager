@@ -72,10 +72,7 @@ export const PUT = withRateLimit<{ params: Promise<{ venueId: string }> }>(
       const resolved = await resolveVenueAndMembership(venueId, session.user.id)
       if ("error" in resolved) return resolved.error
       if (!["OWNER", "MANAGER"].includes(resolved.membership.role)) {
-        return NextResponse.json(
-          { error: "Only owners and managers can change inventory settings" },
-          { status: 403 }
-        )
+        return NextResponse.json({ error: "Only owners and managers can change inventory settings" }, { status: 403 })
       }
 
       const body = await request.json()

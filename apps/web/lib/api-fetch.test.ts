@@ -2,11 +2,14 @@ import { describe, it, expect, vi, afterEach } from "vitest"
 import { apiFetch, ApiError } from "./api-fetch"
 
 function mockFetchOnce(response: { ok: boolean; status: number; body?: unknown; text?: string }) {
-  vi.stubGlobal("fetch", vi.fn().mockResolvedValue({
-    ok: response.ok,
-    status: response.status,
-    text: async () => response.text ?? (response.body === undefined ? "" : JSON.stringify(response.body)),
-  }))
+  vi.stubGlobal(
+    "fetch",
+    vi.fn().mockResolvedValue({
+      ok: response.ok,
+      status: response.status,
+      text: async () => response.text ?? (response.body === undefined ? "" : JSON.stringify(response.body)),
+    })
+  )
 }
 
 afterEach(() => {

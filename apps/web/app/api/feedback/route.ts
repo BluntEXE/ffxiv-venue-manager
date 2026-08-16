@@ -93,10 +93,7 @@ export const POST = withRateLimit(
       return addCors(NextResponse.json(feedback, { status: 201 }))
     } catch (error) {
       console.error("Error creating feedback:", error)
-      return addCors(NextResponse.json(
-        { error: "Internal server error" },
-        { status: 500 }
-      ))
+      return addCors(NextResponse.json({ error: "Internal server error" }, { status: 500 }))
     }
   },
   { requests: 5, window: "1 m" }
@@ -141,10 +138,7 @@ export const GET = withRateLimit(
       return NextResponse.json(feedback)
     } catch (error) {
       console.error("Error fetching feedback:", error)
-      return NextResponse.json(
-        { error: "Internal server error" },
-        { status: 500 }
-      )
+      return NextResponse.json({ error: "Internal server error" }, { status: 500 })
     }
   },
   { requests: 30, window: "1 m" }

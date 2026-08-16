@@ -178,11 +178,14 @@ export function PendingInvites({ invites, slug, canManageStaff }: PendingInvites
                   </Avatar>
                   <div className="flex-1 min-w-0">
                     <p className="font-semibold">{invite.invitedName || "Unnamed Invite"}</p>
-                    {invite.invitedEmail && (
-                      <p className="text-xs text-muted-foreground">{invite.invitedEmail}</p>
-                    )}
+                    {invite.invitedEmail && <p className="text-xs text-muted-foreground">{invite.invitedEmail}</p>}
                     <p className="text-xs text-muted-foreground mt-1">
-                      Expires: {invite.inviteExpiresAt ? <LocalTime date={invite.inviteExpiresAt} formatStr="datelong" /> : "Never"}
+                      Expires:{" "}
+                      {invite.inviteExpiresAt ? (
+                        <LocalTime date={invite.inviteExpiresAt} formatStr="datelong" />
+                      ) : (
+                        "Never"
+                      )}
                     </p>
 
                     {/* Invite Link */}
@@ -251,8 +254,8 @@ export function PendingInvites({ invites, slug, canManageStaff }: PendingInvites
                             <AlertDialogTitle>Delete Invite?</AlertDialogTitle>
                             <AlertDialogDescription>
                               Are you sure you want to delete this invite for{" "}
-                              <strong>{invite.invitedName || "this person"}</strong>? The invite link
-                              will no longer work.
+                              <strong>{invite.invitedName || "this person"}</strong>? The invite link will no longer
+                              work.
                             </AlertDialogDescription>
                           </AlertDialogHeader>
                           <AlertDialogFooter>
@@ -281,8 +284,7 @@ export function PendingInvites({ invites, slug, canManageStaff }: PendingInvites
           <DialogHeader>
             <DialogTitle>Edit Invite Details</DialogTitle>
             <DialogDescription>
-              Update the name and email for this pending invitation. This helps you track who the
-              invite is for.
+              Update the name and email for this pending invitation. This helps you track who the invite is for.
             </DialogDescription>
           </DialogHeader>
           <div className="space-y-4 py-4">
@@ -300,9 +302,7 @@ export function PendingInvites({ invites, slug, canManageStaff }: PendingInvites
                 onChange={(e) => setEditForm({ ...editForm, name: e.target.value })}
                 disabled={isUpdating}
               />
-              <p className="text-xs text-muted-foreground">
-                Optional: Add a name to help identify this invite
-              </p>
+              <p className="text-xs text-muted-foreground">Optional: Add a name to help identify this invite</p>
             </div>
             <div className="space-y-2">
               <Label htmlFor="edit-email">Email</Label>
@@ -320,11 +320,7 @@ export function PendingInvites({ invites, slug, canManageStaff }: PendingInvites
             </div>
           </div>
           <DialogFooter>
-            <Button
-              variant="outline"
-              onClick={() => setIsEditDialogOpen(false)}
-              disabled={isUpdating}
-            >
+            <Button variant="outline" onClick={() => setIsEditDialogOpen(false)} disabled={isUpdating}>
               Cancel
             </Button>
             <Button onClick={updateInvite} disabled={isUpdating}>

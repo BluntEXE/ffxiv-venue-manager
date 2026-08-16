@@ -25,8 +25,8 @@ export interface PublicStats {
 }
 
 async function computeStats(): Promise<PublicStats> {
-  const since30d   = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000)
-  const since7d    = new Date(Date.now() -  7 * 24 * 60 * 60 * 1000)
+  const since30d = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000)
+  const since7d = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000)
 
   const [
     venuesTotal,
@@ -95,7 +95,7 @@ async function computeStats(): Promise<PublicStats> {
   ])
 
   // Busiest nights: count events per UTC day-of-week
-  const dayNames = ["Sun","Mon","Tue","Wed","Thu","Fri","Sat"]
+  const dayNames = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"]
   const dayCounts = new Array(7).fill(0)
   for (const { startTime } of recentEvents) dayCounts[startTime.getUTCDay()]++
   const maxDay = Math.max(...dayCounts, 1)
@@ -107,26 +107,27 @@ async function computeStats(): Promise<PublicStats> {
 
   const venueTypeLabels: Record<string, string> = {
     BAR_TAVERN: "Bar / Tavern",
-    NIGHTCLUB:  "Nightclub",
-    LOUNGE:     "Lounge",
-    HOST_CLUB:  "Host Club",
-    CABARET:    "Cabaret",
-    BATHHOUSE:  "Bathhouse",
-    CASINO:     "Casino",
-    STUDIO:     "Creative Studio",
-    OTHER:      "Other",
+    NIGHTCLUB: "Nightclub",
+    LOUNGE: "Lounge",
+    HOST_CLUB: "Host Club",
+    CABARET: "Cabaret",
+    BATHHOUSE: "Bathhouse",
+    CASINO: "Casino",
+    STUDIO: "Creative Studio",
+    OTHER: "Other",
   }
   const totalTyped = venueTypeCounts.reduce((s, r) => s + r._count._all, 0) || 1
-  const venueTypeBreakdown = venueTypeCounts.map(r => ({
-    type:  r.venueType as string,
-    label: venueTypeLabels[r.venueType as string] ?? r.venueType as string,
+  const venueTypeBreakdown = venueTypeCounts.map((r) => ({
+    type: r.venueType as string,
+    label: venueTypeLabels[r.venueType as string] ?? (r.venueType as string),
     count: r._count._all,
-    pct:   Math.round((r._count._all / totalTyped) * 100),
+    pct: Math.round((r._count._all / totalTyped) * 100),
   }))
 
-  const lastActivity = [lastSale?.createdAt, lastPatron?.loggedAt]
-    .filter((d): d is Date => !!d)
-    .sort((a, b) => b.getTime() - a.getTime())[0] ?? null
+  const lastActivity =
+    [lastSale?.createdAt, lastPatron?.loggedAt]
+      .filter((d): d is Date => !!d)
+      .sort((a, b) => b.getTime() - a.getTime())[0] ?? null
 
   return {
     venuesTotal,
@@ -143,7 +144,7 @@ async function computeStats(): Promise<PublicStats> {
     partakeEventsSynced,
     gilTracked: Number(salesAgg._sum.amount ?? 0),
     dataCenters: dcRows.length,
-    dcBreakdown: dcCounts.map(r => ({ dataCenter: r.dataCenter, count: r._count._all })),
+    dcBreakdown: dcCounts.map((r) => ({ dataCenter: r.dataCenter, count: r._count._all })),
     venueTypeBreakdown,
     busiestNights,
     firstVenueAt: firstVenue?.createdAt.toISOString() ?? null,

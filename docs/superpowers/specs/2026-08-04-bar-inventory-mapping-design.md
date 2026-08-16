@@ -1,4 +1,5 @@
 # Bar Inventory Mapping — Design Spec
+
 **Date:** 2026-08-04
 **Status:** Approved
 
@@ -66,7 +67,7 @@ The codebase already has a single shared `createTransaction` function (`apps/web
 
 Because both the dashboard PATCH-based sale logging and the plugin's `/xvm sale!`/Sales-tab-based logging already funnel through this one function, both surfaces get identical enforcement automatically — no duplicated logic, no risk of the two surfaces drifting out of sync on this rule.
 
-**Who can restock (set/adjust `stockCount`)**: OWNER/MANAGER only, same tier as linking items — matches the earlier confirmed split ("OWNER/MANAGER manage stock, but whoever sells and logs in plugin can affect stock" — i.e., any staff triggers the automatic *decrement* via normal sale-logging, but *setting/increasing* the count is a management action).
+**Who can restock (set/adjust `stockCount`)**: OWNER/MANAGER only, same tier as linking items — matches the earlier confirmed split ("OWNER/MANAGER manage stock, but whoever sells and logs in plugin can affect stock" — i.e., any staff triggers the automatic _decrement_ via normal sale-logging, but _setting/increasing_ the count is a management action).
 
 ## Surfaces
 

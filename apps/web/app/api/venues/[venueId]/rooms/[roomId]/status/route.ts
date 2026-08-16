@@ -79,10 +79,7 @@ export const PATCH = withRateLimit<{
       return NextResponse.json({ id: updated.id, isOccupied: updated.isOccupied, note: updated.note })
     } catch (err) {
       if (err instanceof z.ZodError) {
-        return NextResponse.json(
-          { error: "Invalid request", details: err.flatten() },
-          { status: 400 }
-        )
+        return NextResponse.json({ error: "Invalid request", details: err.flatten() }, { status: 400 })
       }
       console.error("[rooms/:id/status] error:", err)
       return NextResponse.json({ error: "Internal server error" }, { status: 500 })

@@ -13,6 +13,7 @@
 ## Task 1: Add `Patron` model to the schema
 
 **Files:**
+
 - Modify: `apps/web/prisma/schema.prisma`
 
 - [ ] **Step 1: Add the model**
@@ -84,6 +85,7 @@ git commit -m "feat(web): add Patron model with isVip flag"
 ## Task 2: Dashboard API route — toggle VIP status
 
 **Files:**
+
 - Create: `apps/web/app/api/venues/[venueId]/patrons/[patronId]/vip/route.ts`
 
 Follows the exact pattern of `apps/web/app/api/venues/[venueId]/patron-logs/bulk-reclassify/route.ts` (session auth → venue lookup → OWNER/MANAGER membership check → zod body → prisma write → rate limit wrapper).
@@ -127,10 +129,7 @@ export const PATCH = withRateLimit<{
         where: { userId: session.user.id, venueId: venue.id, status: "active" },
       })
       if (!membership || !["OWNER", "MANAGER"].includes(membership.role)) {
-        return NextResponse.json(
-          { error: "Owner or Manager role required" },
-          { status: 403 }
-        )
+        return NextResponse.json({ error: "Owner or Manager role required" }, { status: 403 })
       }
 
       const body = await request.json()
@@ -156,10 +155,7 @@ export const PATCH = withRateLimit<{
       return NextResponse.json({ id: updated.id, isVip: updated.isVip })
     } catch (err) {
       if (err instanceof z.ZodError) {
-        return NextResponse.json(
-          { error: "Invalid request", details: err.flatten() },
-          { status: 400 }
-        )
+        return NextResponse.json({ error: "Invalid request", details: err.flatten() }, { status: 400 })
       }
       console.error("[patrons/vip] error:", err)
       return NextResponse.json({ error: "Internal server error" }, { status: 500 })
@@ -187,6 +183,7 @@ git commit -m "feat(web): add PATCH endpoint to toggle patron VIP status"
 ## Task 3: Backfill/upsert `Patron` rows on the patron-logs page, wire `isVip` into `PatronProfile`
 
 **Files:**
+
 - Modify: `apps/web/app/dashboard/[slug]/patron-logs/page.tsx`
 
 The "profiles" tab currently builds `PatronProfile[]` purely from `PatronLog.groupBy`. It needs to also ensure a `Patron` row exists for each distinct `(characterName, world)` pair and pull in `id`/`isVip`.
@@ -196,33 +193,31 @@ The "profiles" tab currently builds `PatronProfile[]` purely from `PatronLog.gro
 In the `if (activeTab === "profiles")` block (currently lines 51–87), after the `grouped` query resolves and before building `spendGroups`, insert:
 
 ```typescript
-    // Ensure a canonical Patron row exists for every distinct character
-    // seen in this venue's logs, then pull isVip/id for the profile list.
-    const distinctPairs = grouped
-      .filter((r) => r.characterName)
-      .map((r) => ({ characterName: r.characterName!, world: r.world ?? "" }))
+// Ensure a canonical Patron row exists for every distinct character
+// seen in this venue's logs, then pull isVip/id for the profile list.
+const distinctPairs = grouped
+  .filter((r) => r.characterName)
+  .map((r) => ({ characterName: r.characterName!, world: r.world ?? "" }))
 
-    if (distinctPairs.length > 0) {
-      await prisma.patron.createMany({
-        data: distinctPairs.map((p) => ({
-          venueId: venue.id,
-          characterName: p.characterName,
-          world: p.world,
-        })),
-        skipDuplicates: true,
-      })
-    }
+if (distinctPairs.length > 0) {
+  await prisma.patron.createMany({
+    data: distinctPairs.map((p) => ({
+      venueId: venue.id,
+      characterName: p.characterName,
+      world: p.world,
+    })),
+    skipDuplicates: true,
+  })
+}
 
-    const patronRecords = await prisma.patron.findMany({
-      where: {
-        venueId: venue.id,
-        OR: distinctPairs.map((p) => ({ characterName: p.characterName, world: p.world })),
-      },
-      select: { id: true, characterName: true, world: true, isVip: true },
-    })
-    const patronMap = new Map(
-      patronRecords.map((p) => [`${p.characterName}|${p.world}`, p])
-    )
+const patronRecords = await prisma.patron.findMany({
+  where: {
+    venueId: venue.id,
+    OR: distinctPairs.map((p) => ({ characterName: p.characterName, world: p.world })),
+  },
+  select: { id: true, characterName: true, world: true, isVip: true },
+})
+const patronMap = new Map(patronRecords.map((p) => [`${p.characterName}|${p.world}`, p]))
 ```
 
 - [ ] **Step 2: Include `id`/`isVip` in the mapped `patronProfiles`**
@@ -230,22 +225,22 @@ In the `if (activeTab === "profiles")` block (currently lines 51–87), after th
 Replace the existing `patronProfiles = grouped...map(...)` block (lines 77–86):
 
 ```typescript
-    patronProfiles = grouped
-      .filter((r) => r.characterName)
-      .sort((a, b) => b._count._all - a._count._all)
-      .map((r) => {
-        const key = `${r.characterName}|${r.world ?? ""}`
-        const patron = patronMap.get(key)
-        return {
-          id: patron?.id ?? "",
-          characterName: r.characterName!,
-          world: r.world ?? "",
-          visits: r._count._all,
-          lastSeen: (r._max.timestamp ?? new Date()).toISOString(),
-          totalSpent: spendMap.get(r.characterName!.toLowerCase().trim()) ?? 0,
-          isVip: patron?.isVip ?? false,
-        }
-      })
+patronProfiles = grouped
+  .filter((r) => r.characterName)
+  .sort((a, b) => b._count._all - a._count._all)
+  .map((r) => {
+    const key = `${r.characterName}|${r.world ?? ""}`
+    const patron = patronMap.get(key)
+    return {
+      id: patron?.id ?? "",
+      characterName: r.characterName!,
+      world: r.world ?? "",
+      visits: r._count._all,
+      lastSeen: (r._max.timestamp ?? new Date()).toISOString(),
+      totalSpent: spendMap.get(r.characterName!.toLowerCase().trim()) ?? 0,
+      isVip: patron?.isVip ?? false,
+    }
+  })
 ```
 
 - [ ] **Step 3: Pass `venueId` to the table component**
@@ -253,7 +248,7 @@ Replace the existing `patronProfiles = grouped...map(...)` block (lines 77–86)
 Find the render call `<PatronProfilesTable profiles={patronProfiles} />` (line 193) and change to:
 
 ```tsx
-          <PatronProfilesTable profiles={patronProfiles} venueId={venue.id} canSetVip={["OWNER", "MANAGER"].includes(userRole)} />
+<PatronProfilesTable profiles={patronProfiles} venueId={venue.id} canSetVip={["OWNER", "MANAGER"].includes(userRole)} />
 ```
 
 (`userRole` is already computed at line 43. Page-level access is already gated to OWNER/MANAGER at line 44, so `canSetVip` is always `true` in practice today — passed explicitly so the prop isn't silently assumed if that page-level gate ever loosens.)
@@ -261,7 +256,7 @@ Find the render call `<PatronProfilesTable profiles={patronProfiles} />` (line 1
 - [ ] **Step 4: Typecheck (will fail until Task 4 updates the component's prop types — expected)**
 
 Run: `cd ~/xiv-app/apps/web && pnpm typecheck`
-Expected: FAIL — `Property 'id'/'isVip' is missing in type... PatronProfile`, `venueId`/`canSetVip` not assignable. This confirms the page-side wiring compiles against the *new* shape; Task 4 makes it match.
+Expected: FAIL — `Property 'id'/'isVip' is missing in type... PatronProfile`, `venueId`/`canSetVip` not assignable. This confirms the page-side wiring compiles against the _new_ shape; Task 4 makes it match.
 
 - [ ] **Step 5: Commit**
 
@@ -276,6 +271,7 @@ git commit -m "feat(web): upsert Patron rows and wire isVip into patron profiles
 ## Task 4: Replace the auto-computed VIP tag with the manual `isVip` flag, add toggle
 
 **Files:**
+
 - Modify: `apps/web/components/patron-profiles-table.tsx`
 - Test: `apps/web/components/patron-profiles-table.test.ts`
 
@@ -337,19 +333,23 @@ export function patronTag(visits: number, isVip: boolean): "vip" | "regular" | "
 Three call sites: the `counts` object, the `visible` filter, and inside the row map.
 
 ```typescript
-  const counts = {
-    all:     profiles.length,
-    vip:     profiles.filter((p) => patronTag(p.visits, p.isVip) === "vip").length,
-    regular: profiles.filter((p) => patronTag(p.visits, p.isVip) === "regular").length,
-    new:     profiles.filter((p) => patronTag(p.visits, p.isVip) === "new").length,
-  }
+const counts = {
+  all: profiles.length,
+  vip: profiles.filter((p) => patronTag(p.visits, p.isVip) === "vip").length,
+  regular: profiles.filter((p) => patronTag(p.visits, p.isVip) === "regular").length,
+  new: profiles.filter((p) => patronTag(p.visits, p.isVip) === "new").length,
+}
 
-  const visible = profiles.filter((p) => {
-    if (activeTab !== "all" && patronTag(p.visits, p.isVip) !== activeTab) return false
-    if (search && !p.characterName.toLowerCase().includes(search.toLowerCase()) &&
-        !p.world.toLowerCase().includes(search.toLowerCase())) return false
-    return true
-  })
+const visible = profiles.filter((p) => {
+  if (activeTab !== "all" && patronTag(p.visits, p.isVip) !== activeTab) return false
+  if (
+    search &&
+    !p.characterName.toLowerCase().includes(search.toLowerCase()) &&
+    !p.world.toLowerCase().includes(search.toLowerCase())
+  )
+    return false
+  return true
+})
 ```
 
 And inside the row map, `const t = patronTag(p.visits)` becomes `const t = patronTag(p.visits, p.isVip)`.
@@ -406,23 +406,24 @@ Replace remaining references to `profiles` in the body (the `counts`/`visible` c
 Replace:
 
 ```tsx
-                        {t === "vip" && <span className="tag vip">VIP</span>}
+{
+  t === "vip" && <span className="tag vip">VIP</span>
+}
 ```
 
 with:
 
 ```tsx
-                        {t === "vip" && <span className="tag vip">VIP</span>}
-                        {canSetVip && (
-                          <button
-                            type="button"
-                            onClick={() => toggleVip(p)}
-                            className="tag neutral"
-                            style={{ cursor: "pointer" }}
-                          >
-                            {t === "vip" ? "Unmark VIP" : "Mark VIP"}
-                          </button>
-                        )}
+{
+  t === "vip" && <span className="tag vip">VIP</span>
+}
+{
+  canSetVip && (
+    <button type="button" onClick={() => toggleVip(p)} className="tag neutral" style={{ cursor: "pointer" }}>
+      {t === "vip" ? "Unmark VIP" : "Mark VIP"}
+    </button>
+  )
+}
 ```
 
 - [ ] **Step 8: Update the row map to iterate `localProfiles`-derived `visible` (already handled by Step 6's rename) — verify no stray `profiles` references remain**
@@ -453,6 +454,7 @@ git commit -m "feat(web): drive VIP tag from staff-set flag, add toggle control"
 ## Task 5: Plugin-facing GET endpoint for VIP list
 
 **Files:**
+
 - Create: `apps/web/app/api/plugin/patrons/vip/route.ts`
 
 Follows the exact pattern of `apps/web/app/api/plugin/roles/route.ts` (API-key auth, IP + key rate limits, `auth.venues.includes(venueId)` scoping).
@@ -460,10 +462,10 @@ Follows the exact pattern of `apps/web/app/api/plugin/roles/route.ts` (API-key a
 - [ ] **Step 1: Write the route**
 
 ```typescript
-import { NextRequest, NextResponse } from 'next/server'
-import { validateApiKey } from '@/lib/api/plugin-auth'
-import { enforcePluginRateLimit, enforcePluginIpRateLimit } from '@/lib/api/plugin-rate-limit'
-import { prisma } from '@/lib/prisma'
+import { NextRequest, NextResponse } from "next/server"
+import { validateApiKey } from "@/lib/api/plugin-auth"
+import { enforcePluginRateLimit, enforcePluginIpRateLimit } from "@/lib/api/plugin-rate-limit"
+import { prisma } from "@/lib/prisma"
 
 /**
  * GET /api/plugin/patrons/vip?venueId=…
@@ -478,21 +480,21 @@ export async function GET(request: NextRequest) {
     const __ipLimited = await enforcePluginIpRateLimit(request)
     if (__ipLimited) return __ipLimited
 
-    const apiKey = request.headers.get('x-api-key')
-    if (!apiKey) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+    const apiKey = request.headers.get("x-api-key")
+    if (!apiKey) return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
 
     const auth = await validateApiKey(apiKey)
     if (!auth || !auth.userId) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
     }
 
-    const limited = await enforcePluginRateLimit(apiKey, 'read')
+    const limited = await enforcePluginRateLimit(apiKey, "read")
     if (limited) return limited
 
     const { searchParams } = new URL(request.url)
-    const venueId = searchParams.get('venueId')
+    const venueId = searchParams.get("venueId")
     if (!venueId || !auth.venues.includes(venueId)) {
-      return NextResponse.json({ error: 'Invalid venue' }, { status: 400 })
+      return NextResponse.json({ error: "Invalid venue" }, { status: 400 })
     }
 
     const vipPatrons = await prisma.patron.findMany({
@@ -502,8 +504,8 @@ export async function GET(request: NextRequest) {
 
     return NextResponse.json({ vipPatrons })
   } catch (error) {
-    console.error('[Plugin API] Error fetching VIP patrons:', error)
-    return NextResponse.json({ error: 'Internal server error' }, { status: 500 })
+    console.error("[Plugin API] Error fetching VIP patrons:", error)
+    return NextResponse.json({ error: "Internal server error" }, { status: 500 })
   }
 }
 ```
@@ -526,6 +528,7 @@ git commit -m "feat(web): add GET /api/plugin/patrons/vip for plugin VIP badge f
 ## Task 6: Plugin — VIP models and API client method
 
 **Files:**
+
 - Modify: `VenueManager/XIVAppApiModels.cs`
 - Modify: `VenueManager/XIVAppVenueApi.cs`
 
@@ -595,6 +598,7 @@ git commit -m "feat: add VipPatron model and GetVipPatronsAsync client method"
 ## Task 7: Plugin — cache VIP list, fetch on startup and venue reselect
 
 **Files:**
+
 - Modify: `VenueManager/Plugin.cs`
 - Modify: `VenueManager/UI/Tabs/SettingsTab.cs`
 
@@ -665,6 +669,7 @@ git commit -m "feat: fetch and cache VIP patron list on startup and venue resele
 ## Task 8: Plugin — VIP badge on the live guest list
 
 **Files:**
+
 - Modify: `VenueManager/UI/Widgets/GuestListWidget.cs`
 
 - [ ] **Step 1: Add a lookup helper and use it in the name cell**
@@ -724,6 +729,7 @@ git commit -m "feat: show VIP star badge in live guest list"
 ## Task 9: Plugin — VIP entry chat alert
 
 **Files:**
+
 - Modify: `VenueManager/Plugin.cs`
 
 - [ ] **Step 1: Add a VIP check helper**

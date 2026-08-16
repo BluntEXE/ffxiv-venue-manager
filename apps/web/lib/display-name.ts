@@ -13,11 +13,5 @@ export function resolveDisplayName(input: {
   displayName?: string | null
   discordName?: string | null
 }): string {
-  return (
-    input.characterName ||
-    input.nickname ||
-    input.displayName ||
-    input.discordName ||
-    "Unknown"
-  )
+  return input.characterName || input.nickname || input.displayName || input.discordName || "Unknown"
 }

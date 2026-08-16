@@ -1,4 +1,5 @@
 # Ban List — Design Spec
+
 **Date:** 2026-08-04
 **Status:** Approved
 
@@ -106,18 +107,18 @@ Modeled on the existing `/xvm target!`/`/xvm sale!` bang-command family (`Plugin
 
 ## Files (indicative — full task breakdown belongs in the implementation plan)
 
-| File | Action |
-|------|--------|
-| `apps/web/prisma/schema.prisma` | Modify — add ban fields + named relation to `Patron`/`User` |
-| `apps/web/app/api/venues/[venueId]/patrons/[patronId]/ban/route.ts` | Create |
-| `apps/web/app/api/plugin/patrons/banned/route.ts` | Create |
-| `apps/web/app/api/plugin/patrons/ban/route.ts` | Create — plugin write endpoint |
-| `apps/web/components/patron-profiles-table.tsx` | Modify — Ban button + inline reason input |
-| `apps/web/app/dashboard/[slug]/ban-list/page.tsx` | Create |
-| `apps/web/components/venue-sidebar.tsx` | Modify — new nav entry |
-| `VenueManager/XIVAppApiModels.cs` | Modify — `BannedPatron`/`BannedPatronsResponse` |
-| `VenueManager/XIVAppVenueApi.cs` | Modify — `GetBannedPatronsAsync` |
-| `VenueManager/XIVAppPatronApi.cs` | Modify — `BanPatronAsync` |
-| `VenueManager/Plugin.cs` | Modify — cache field, fetch calls, `ban!` command handler, chat alert |
-| `VenueManager/UI/Tabs/SettingsTab.cs` | Modify — fetch in `LoadVenueDataWithFeedbackAsync` |
-| `VenueManager/UI/Widgets/GuestListWidget.cs` | Modify — badge + tooltip |
+| File                                                                | Action                                                                |
+| ------------------------------------------------------------------- | --------------------------------------------------------------------- |
+| `apps/web/prisma/schema.prisma`                                     | Modify — add ban fields + named relation to `Patron`/`User`           |
+| `apps/web/app/api/venues/[venueId]/patrons/[patronId]/ban/route.ts` | Create                                                                |
+| `apps/web/app/api/plugin/patrons/banned/route.ts`                   | Create                                                                |
+| `apps/web/app/api/plugin/patrons/ban/route.ts`                      | Create — plugin write endpoint                                        |
+| `apps/web/components/patron-profiles-table.tsx`                     | Modify — Ban button + inline reason input                             |
+| `apps/web/app/dashboard/[slug]/ban-list/page.tsx`                   | Create                                                                |
+| `apps/web/components/venue-sidebar.tsx`                             | Modify — new nav entry                                                |
+| `VenueManager/XIVAppApiModels.cs`                                   | Modify — `BannedPatron`/`BannedPatronsResponse`                       |
+| `VenueManager/XIVAppVenueApi.cs`                                    | Modify — `GetBannedPatronsAsync`                                      |
+| `VenueManager/XIVAppPatronApi.cs`                                   | Modify — `BanPatronAsync`                                             |
+| `VenueManager/Plugin.cs`                                            | Modify — cache field, fetch calls, `ban!` command handler, chat alert |
+| `VenueManager/UI/Tabs/SettingsTab.cs`                               | Modify — fetch in `LoadVenueDataWithFeedbackAsync`                    |
+| `VenueManager/UI/Widgets/GuestListWidget.cs`                        | Modify — badge + tooltip                                              |

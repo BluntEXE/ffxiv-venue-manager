@@ -116,6 +116,7 @@ model VenueSchedule {
 ### Cron Job (one)
 
 **`sync-ffxivvenues-schedule`**
+
 - Runs every 2 hours
 - Fetches `GET /v1.0/venue/{id}?recordView=false` for each venue where `ffxivVenueId` is set
 - Throttled: max 3 requests / 10s (respect shared IP rate limit)
@@ -127,6 +128,7 @@ model VenueSchedule {
 ### Manual Sync
 
 `POST /api/venues/[venueId]/sync-ffxivvenues`
+
 - Triggers sync for a single venue immediately
 - Called from the settings page Sync Now button
 - Also fires automatically on initial link (gives instant feedback to the operator)
@@ -134,6 +136,7 @@ model VenueSchedule {
 ### Link / Unlink
 
 Handled via the existing `PATCH /api/venues/[venueId]/settings` endpoint:
+
 - **Link:** save `ffxivVenueId`, store `ffxivVenueLinkedBy` + `ffxivVenueLinkedAt`, trigger initial sync
 - **Unlink:** clear `ffxivVenueId`, delete `VenueSchedule` record
 
@@ -194,31 +197,31 @@ No automated name/location matching -- multi-plot venues and name variations mak
 
 ## Terms Compliance
 
-| Requirement | How we meet it |
-|---|---|
-| Rate limit 3/10s | Throttled cron + single venue fetches |
-| User-Agent required | `XIV-Venue-Manager/1.0` on every request |
-| `recordView=false` on sync fetches | Always added |
+| Requirement                        | How we meet it                                          |
+| ---------------------------------- | ------------------------------------------------------- |
+| Rate limit 3/10s                   | Throttled cron + single venue fetches                   |
+| User-Agent required                | `XIV-Venue-Manager/1.0` on every request                |
+| `recordView=false` on sync fetches | Always added                                            |
 | Attribution mandatory near feature | "Schedule via ffxivvenues.com" link in schedule section |
-| Non-commercial only | XIV VM is cost-recovery/nonprofit, compliant |
-| Handle failures gracefully | Stale data retained on error, no crash |
+| Non-commercial only                | XIV VM is cost-recovery/nonprofit, compliant            |
+| Handle failures gracefully         | Stale data retained on error, no crash                  |
 
 ---
 
 ## What's New vs Partake
 
-| | Partake | ffxivvenues.com |
-|---|---|---|
-| Venue schedule/days | No | Yes -- `VenueSchedule` table |
-| Events in event list | Yes | No (no events API) |
-| Open Now status | No | Yes -- `resolution.isNow` |
-| Attendee counts | Yes | No |
-| Source link in mobile | Yes (Partake) | Yes (ffxivvenues.com) |
-| Cron sync | Yes (2 jobs) | Yes (1 job) |
-| Manual sync button | Yes | Yes |
-| Settings ID field | Yes (team ID) | Yes (venue ID) |
-| Verification | None | Operator confirms venue name before linking |
-| Attribution required | No | Yes (ToS §7) |
+|                       | Partake       | ffxivvenues.com                             |
+| --------------------- | ------------- | ------------------------------------------- |
+| Venue schedule/days   | No            | Yes -- `VenueSchedule` table                |
+| Events in event list  | Yes           | No (no events API)                          |
+| Open Now status       | No            | Yes -- `resolution.isNow`                   |
+| Attendee counts       | Yes           | No                                          |
+| Source link in mobile | Yes (Partake) | Yes (ffxivvenues.com)                       |
+| Cron sync             | Yes (2 jobs)  | Yes (1 job)                                 |
+| Manual sync button    | Yes           | Yes                                         |
+| Settings ID field     | Yes (team ID) | Yes (venue ID)                              |
+| Verification          | None          | Operator confirms venue name before linking |
+| Attribution required  | No            | Yes (ToS §7)                                |
 
 ---
 

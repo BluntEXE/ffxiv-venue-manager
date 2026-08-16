@@ -45,7 +45,11 @@ async function getEligibleShiftsPerMember(venueId: string, startDate: Date, endD
           name: true,
           displayName: true,
           image: true,
-          characters: { orderBy: [{ isPrimary: "desc" }, { createdAt: "asc" }], take: 1, select: { characterName: true } },
+          characters: {
+            orderBy: [{ isPrimary: "desc" }, { createdAt: "asc" }],
+            take: 1,
+            select: { characterName: true },
+          },
         },
       },
     },
@@ -69,10 +73,7 @@ async function getEligibleShiftsPerMember(venueId: string, startDate: Date, endD
 
   // Gather every role ID this venue's members/shifts might need in one pass, so
   // role rates are fetched once for the whole venue instead of once per member.
-  const allRoleIds = perMember.flatMap(({ member, shifts }) => [
-    member.roleId,
-    ...shifts.map((s) => s.roleId),
-  ])
+  const allRoleIds = perMember.flatMap(({ member, shifts }) => [member.roleId, ...shifts.map((s) => s.roleId)])
   const roleRates = await fetchRoleRates(allRoleIds)
 
   return perMember.map(({ member, shifts }) => {
@@ -86,12 +87,7 @@ async function getEligibleShiftsPerMember(venueId: string, startDate: Date, endD
       totalHours,
       estimatedTotal: resolution.includedShiftIds.length > 0 ? Math.round(Number(resolution.totalAmount)) : null,
       skipped: shifts.length === 0 || resolution.includedShiftIds.length === 0,
-      skipReason:
-        shifts.length === 0
-          ? "no_shifts"
-          : resolution.includedShiftIds.length === 0
-            ? "no_rate"
-            : null,
+      skipReason: shifts.length === 0 ? "no_shifts" : resolution.includedShiftIds.length === 0 ? "no_rate" : null,
     }
   })
 }
@@ -219,11 +215,14 @@ export const POST = withRateLimit<{ params: Promise<{ venueId: string }> }>(
         return entries
       })
 
-      return NextResponse.json({
-        generated: created.length,
-        skipped: results.filter((r) => r.skipped).length,
-        entries: created,
-      }, { status: 201 })
+      return NextResponse.json(
+        {
+          generated: created.length,
+          skipped: results.filter((r) => r.skipped).length,
+          entries: created,
+        },
+        { status: 201 }
+      )
     } catch (e) {
       console.error("Error in generate-all:", e)
       return NextResponse.json({ error: "Internal server error" }, { status: 500 })

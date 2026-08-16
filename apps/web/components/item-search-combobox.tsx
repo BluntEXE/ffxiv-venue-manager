@@ -28,9 +28,7 @@ export function ItemSearchCombobox({ venueId, value, onChange }: ItemSearchCombo
       return
     }
     debounceRef.current = setTimeout(async () => {
-      const res = await fetch(
-        `/api/venues/${venueId}/inventory/item-search?query=${encodeURIComponent(query)}`
-      )
+      const res = await fetch(`/api/venues/${venueId}/inventory/item-search?query=${encodeURIComponent(query)}`)
       if (res.ok) {
         const data = await res.json()
         setResults(data.items)

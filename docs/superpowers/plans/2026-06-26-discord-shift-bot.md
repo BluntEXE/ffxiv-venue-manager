@@ -25,12 +25,14 @@ The interactions endpoint URL (`https://xivvenuemanager.com/api/discord/interact
 ## File Map
 
 **New files:**
+
 - `apps/web/lib/discord-bot.ts` — bot token REST helpers (post/edit/delete channel messages)
 - `apps/web/lib/shift-bot.ts` — business logic: build embed payload, create shift from accept, waitlist, slot counting
 - `apps/web/app/api/discord/interactions/route.ts` — interactions endpoint (signature verify + dispatch)
 - `apps/web/app/api/cron/sync-shift-embeds/route.ts` — pre-event cron: post embeds for upcoming events
 
 **Modified files:**
+
 - `apps/web/prisma/schema.prisma` — add `ShiftSignupEmbed` model, `shiftSignupEmbedId` on `Shift`
 - `packages/types/src/venue-settings.ts` — add `ShiftTemplate` + `ShiftBotSettings` to `VenueSettings`
 - `apps/web/app/dashboard/[slug]/settings/page.tsx` — add Shift Bot section
@@ -43,6 +45,7 @@ The interactions endpoint URL (`https://xivvenuemanager.com/api/discord/interact
 ## Task 1: Database Schema
 
 **Files:**
+
 - Modify: `apps/web/prisma/schema.prisma`
 
 - [ ] **Step 1: Add `ShiftSignupEmbed` model and `shiftSignupEmbedId` field on `Shift`**
@@ -76,22 +79,26 @@ model ShiftSignupEmbed {
 ```
 
 In the `Shift` model, add after `notes String? @db.Text`:
+
 ```prisma
   shiftSignupEmbedId String?
   shiftSignupEmbed   ShiftSignupEmbed? @relation(fields: [shiftSignupEmbedId], references: [id], onDelete: SetNull)
 ```
 
 Add index to `Shift`:
+
 ```prisma
   @@index([shiftSignupEmbedId])
 ```
 
 Add relation to `Venue` model (inside relations block):
+
 ```prisma
   shiftSignupEmbeds ShiftSignupEmbed[]
 ```
 
 Add relation to `Event` model (inside relations block):
+
 ```prisma
   shiftSignupEmbeds ShiftSignupEmbed[]
 ```
@@ -144,6 +151,7 @@ git commit -m "feat: add ShiftSignupEmbed model for Discord shift bot"
 ## Task 2: VenueSettings Types
 
 **Files:**
+
 - Modify: `packages/types/src/venue-settings.ts`
 
 - [ ] **Step 1: Add `ShiftTemplate` and `ShiftBotSettings` interfaces**
@@ -156,10 +164,10 @@ In `packages/types/src/venue-settings.ts`, add after the `WebhookSettings` inter
  * startOffsetHours is relative to the Partake event start time.
  */
 export interface ShiftTemplate {
-  name: string              // e.g. "Early Shift"
-  startOffsetHours: number  // 0 = same as event start
-  durationHours: number     // e.g. 4
-  slots: number             // max staff for this shift
+  name: string // e.g. "Early Shift"
+  startOffsetHours: number // 0 = same as event start
+  durationHours: number // e.g. 4
+  slots: number // max staff for this shift
 }
 
 /**
@@ -167,8 +175,8 @@ export interface ShiftTemplate {
  */
 export interface ShiftBotSettings {
   enabled: boolean
-  channelId: string         // Discord channel ID to post embeds in
-  daysBeforeEvent: number   // how many days before to post (default 3)
+  channelId: string // Discord channel ID to post embeds in
+  daysBeforeEvent: number // how many days before to post (default 3)
   templates: ShiftTemplate[] // empty = one shift matching full event duration
 }
 ```
@@ -194,6 +202,7 @@ git commit -m "feat: add ShiftBotSettings to VenueSettings type"
 ## Task 3: Discord Bot Lib + Interactions Endpoint
 
 **Files:**
+
 - Create: `apps/web/lib/discord-bot.ts`
 - Create: `apps/web/app/api/discord/interactions/route.ts`
 
@@ -211,7 +220,7 @@ const BOT_TOKEN = process.env.DISCORD_BOT_TOKEN!
 
 export interface DiscordButtonComponent {
   type: 2
-  style: 1 | 2 | 3 | 4  // 1=Primary(blue) 2=Secondary 3=Success(green) 4=Danger(red)
+  style: 1 | 2 | 3 | 4 // 1=Primary(blue) 2=Secondary 3=Success(green) 4=Danger(red)
   label: string
   custom_id: string
   disabled?: boolean
@@ -348,6 +357,7 @@ git commit -m "feat: Discord bot lib + interactions endpoint with signature veri
 ## Task 4: Shift Bot Business Logic
 
 **Files:**
+
 - Create: `apps/web/lib/shift-bot.ts`
 
 This is the core logic: building the embed payload, and handling accept/decline/maybe interactions.
@@ -387,13 +397,10 @@ export function buildShiftEmbed(
   const startTs = Math.floor(embed.scheduledStart.getTime() / 1000)
   const endTs = Math.floor(embed.scheduledEnd.getTime() / 1000)
 
-  const acceptedField = acceptedCount > 0
-    ? acceptedNames.map((n, i) => `${i + 1}. ${n}`).join("\n")
-    : "_No one yet_"
+  const acceptedField = acceptedCount > 0 ? acceptedNames.map((n, i) => `${i + 1}. ${n}`).join("\n") : "_No one yet_"
 
-  const waitlistField = embed.waitlist.length > 0
-    ? embed.waitlist.map((w, i) => `${i + 1}. ${w.discordUsername}`).join("\n")
-    : null
+  const waitlistField =
+    embed.waitlist.length > 0 ? embed.waitlist.map((w, i) => `${i + 1}. ${w.discordUsername}`).join("\n") : null
 
   const fields = [
     { name: "Time", value: `<t:${startTs}:t> – <t:${endTs}:t> (<t:${startTs}:R>)`, inline: false },
@@ -405,17 +412,24 @@ export function buildShiftEmbed(
   }
 
   const buttons = [
-    { type: 2, style: 3, label: `✓ Accept${slotsRemaining <= 0 ? " (Full)" : ""}`, custom_id: `shift_accept:${embed.id}` },
+    {
+      type: 2,
+      style: 3,
+      label: `✓ Accept${slotsRemaining <= 0 ? " (Full)" : ""}`,
+      custom_id: `shift_accept:${embed.id}`,
+    },
     { type: 2, style: 2, label: "? Maybe", custom_id: `shift_maybe:${embed.id}` },
     { type: 2, style: 4, label: "✗ Decline", custom_id: `shift_decline:${embed.id}` },
   ] as const
 
   return {
-    embeds: [{
-      title: embed.templateName,
-      color: XIV_BLUE,
-      fields,
-    }],
+    embeds: [
+      {
+        title: embed.templateName,
+        color: XIV_BLUE,
+        fields,
+      },
+    ],
     components: [{ type: 1, components: buttons }],
   }
 }
@@ -438,9 +452,7 @@ async function refreshEmbed(embedRecord: {
     include: { membership: { include: { user: true } } },
   })
 
-  const acceptedNames = acceptedShifts.map(
-    (s) => s.membership?.user?.name ?? "Unknown"
-  )
+  const acceptedNames = acceptedShifts.map((s) => s.membership?.user?.name ?? "Unknown")
 
   const payload = buildShiftEmbed(
     {
@@ -521,10 +533,7 @@ export async function handleShiftAccept(
   return { content: `You are signed up for **${embed.templateName}**. See you there!` }
 }
 
-export async function handleShiftDecline(
-  embedId: string,
-  discordUserId: string
-): Promise<{ content: string }> {
+export async function handleShiftDecline(embedId: string, discordUserId: string): Promise<{ content: string }> {
   const embed = await prisma.shiftSignupEmbed.findUnique({ where: { id: embedId } })
   if (!embed) return { content: "Shift not found." }
 
@@ -679,6 +688,7 @@ git commit -m "feat: shift bot business logic (accept/decline/maybe/post embed)"
 ## Task 5: Pre-Event Cron
 
 **Files:**
+
 - Create: `apps/web/app/api/cron/sync-shift-embeds/route.ts`
 - Modify: `docker-compose.yml`
 
@@ -700,13 +710,18 @@ export async function GET(request: Request) {
 
   const venues = await prisma.venue.findMany({
     where: { isActive: true },
-    select: { id: true, name: true, settings: true, events: {
-      where: {
-        status: "PUBLISHED",
-        startTime: { gt: now },
+    select: {
+      id: true,
+      name: true,
+      settings: true,
+      events: {
+        where: {
+          status: "PUBLISHED",
+          startTime: { gt: now },
+        },
+        select: { id: true, title: true, startTime: true, endTime: true },
       },
-      select: { id: true, title: true, startTime: true, endTime: true },
-    }},
+    },
   })
 
   for (const venue of venues) {
@@ -720,14 +735,17 @@ export async function GET(request: Request) {
       if (event.startTime > cutoff) continue
 
       // Build effective templates — default to one full-event shift if empty
-      const templates = shiftBot.templates.length > 0
-        ? shiftBot.templates
-        : [{
-            name: "Event Shift",
-            startOffsetHours: 0,
-            durationHours: Math.round((event.endTime.getTime() - event.startTime.getTime()) / 3_600_000),
-            slots: 10,
-          }]
+      const templates =
+        shiftBot.templates.length > 0
+          ? shiftBot.templates
+          : [
+              {
+                name: "Event Shift",
+                startOffsetHours: 0,
+                durationHours: Math.round((event.endTime.getTime() - event.startTime.getTime()) / 3_600_000),
+                slots: 10,
+              },
+            ]
 
       try {
         await postShiftEmbedsForEvent(
@@ -756,7 +774,7 @@ export async function GET(request: Request) {
 In the `cron-jobs` command block, add after the `sync-ffxivvenues-schedule` line:
 
 ```yaml
-             echo '0 8 * * * curl -s -H \"Authorization: Bearer '$$CRON_SECRET'\" http://venue-manager:3000/api/cron/sync-shift-embeds >> /var/log/cron.log 2>&1' >> /etc/crontabs/root &&
+echo '0 8 * * * curl -s -H \"Authorization: Bearer '$$CRON_SECRET'\" http://venue-manager:3000/api/cron/sync-shift-embeds >> /var/log/cron.log 2>&1' >> /etc/crontabs/root &&
 ```
 
 This runs at 08:00 UTC daily. Venues with `daysBeforeEvent: 3` will have their embeds posted 3 days out.
@@ -773,6 +791,7 @@ git commit -m "feat: sync-shift-embeds cron posts pre-event Discord shift signup
 ## Task 6: Settings UI — Shift Bot Section
 
 **Files:**
+
 - Modify: `apps/web/app/dashboard/[slug]/settings/page.tsx`
 
 - [ ] **Step 1: Add state variables**
@@ -783,9 +802,14 @@ In `apps/web/app/dashboard/[slug]/settings/page.tsx`, find the existing state de
 const [shiftBotEnabled, setShiftBotEnabled] = useState(false)
 const [shiftBotChannelId, setShiftBotChannelId] = useState("")
 const [shiftBotDaysBefore, setShiftBotDaysBefore] = useState(3)
-const [shiftBotTemplates, setShiftBotTemplates] = useState<Array<{
-  name: string; startOffsetHours: number; durationHours: number; slots: number
-}>>([])
+const [shiftBotTemplates, setShiftBotTemplates] = useState<
+  Array<{
+    name: string
+    startOffsetHours: number
+    durationHours: number
+    slots: number
+  }>
+>([])
 ```
 
 - [ ] **Step 2: Load shift bot settings from API response**
@@ -822,8 +846,10 @@ body: JSON.stringify({
 Find the end of the ffxivvenues section in the JSX (look for the closing `</div>` of that panel, around the ffxivvenues block). Add a new section after it:
 
 ```tsx
-{/* Shift Bot */}
-<div className="panel">
+{
+  /* Shift Bot */
+}
+;<div className="panel">
   <div className="flex items-center justify-between mb-4">
     <div>
       <h3 className="font-cinzel font-semibold text-lg">Discord Shift Bot</h3>
@@ -884,10 +910,9 @@ Find the end of the ffxivvenues section in the JSX (look for the closing `</div>
           <button
             type="button"
             className="xiv-btn-shimmer text-xs px-3 py-1"
-            onClick={() => setShiftBotTemplates((t) => [
-              ...t,
-              { name: "", startOffsetHours: 0, durationHours: 4, slots: 5 },
-            ])}
+            onClick={() =>
+              setShiftBotTemplates((t) => [...t, { name: "", startOffsetHours: 0, durationHours: 4, slots: 5 }])
+            }
           >
             + Add Template
           </button>
@@ -897,11 +922,16 @@ Find the end of the ffxivvenues section in the JSX (look for the closing `</div>
         </p>
         <div className="space-y-3">
           {shiftBotTemplates.map((t, i) => (
-            <div key={i} className="flex gap-2 items-center p-3 rounded-lg border border-[var(--blue-018)] bg-[var(--card)]">
+            <div
+              key={i}
+              className="flex gap-2 items-center p-3 rounded-lg border border-[var(--blue-018)] bg-[var(--card)]"
+            >
               <input
                 type="text"
                 value={t.name}
-                onChange={(e) => setShiftBotTemplates((prev) => prev.map((x, j) => j === i ? { ...x, name: e.target.value } : x))}
+                onChange={(e) =>
+                  setShiftBotTemplates((prev) => prev.map((x, j) => (j === i ? { ...x, name: e.target.value } : x)))
+                }
                 placeholder="Shift name"
                 className="input flex-1"
               />
@@ -911,7 +941,11 @@ Find the end of the ffxivvenues section in the JSX (look for the closing `</div>
                   type="number"
                   min={0}
                   value={t.startOffsetHours}
-                  onChange={(e) => setShiftBotTemplates((prev) => prev.map((x, j) => j === i ? { ...x, startOffsetHours: Number(e.target.value) } : x))}
+                  onChange={(e) =>
+                    setShiftBotTemplates((prev) =>
+                      prev.map((x, j) => (j === i ? { ...x, startOffsetHours: Number(e.target.value) } : x))
+                    )
+                  }
                   className="input w-14 text-center"
                   title="Start offset hours from event start"
                 />
@@ -922,7 +956,11 @@ Find the end of the ffxivvenues section in the JSX (look for the closing `</div>
                   type="number"
                   min={1}
                   value={t.durationHours}
-                  onChange={(e) => setShiftBotTemplates((prev) => prev.map((x, j) => j === i ? { ...x, durationHours: Number(e.target.value) } : x))}
+                  onChange={(e) =>
+                    setShiftBotTemplates((prev) =>
+                      prev.map((x, j) => (j === i ? { ...x, durationHours: Number(e.target.value) } : x))
+                    )
+                  }
                   className="input w-14 text-center"
                   title="Duration in hours"
                 />
@@ -933,7 +971,11 @@ Find the end of the ffxivvenues section in the JSX (look for the closing `</div>
                   type="number"
                   min={1}
                   value={t.slots}
-                  onChange={(e) => setShiftBotTemplates((prev) => prev.map((x, j) => j === i ? { ...x, slots: Number(e.target.value) } : x))}
+                  onChange={(e) =>
+                    setShiftBotTemplates((prev) =>
+                      prev.map((x, j) => (j === i ? { ...x, slots: Number(e.target.value) } : x))
+                    )
+                  }
                   className="input w-14 text-center"
                   title="Max slots"
                 />
@@ -975,6 +1017,7 @@ git commit -m "feat: Shift Bot settings UI with template builder"
 ## Task 7: Partake Cascade — Edit Embeds on Event Change/Cancel
 
 **Files:**
+
 - Modify: `apps/web/app/api/cron/post-partake-events/route.ts`
 - Modify: `apps/web/lib/shift-bot.ts`
 
@@ -997,11 +1040,13 @@ export async function cancelShiftEmbedsForEvent(eventId: string): Promise<void> 
   for (const embed of embeds) {
     try {
       await editBotMessage(embed.channelId, embed.discordMessageId, {
-        embeds: [{
-          title: `~~${embed.templateName}~~ — CANCELLED`,
-          color: 0xff4444,
-          description: "This shift has been cancelled.",
-        }],
+        embeds: [
+          {
+            title: `~~${embed.templateName}~~ — CANCELLED`,
+            color: 0xff4444,
+            description: "This shift has been cancelled.",
+          },
+        ],
         components: [],
       })
     } catch (err) {
@@ -1082,6 +1127,7 @@ Expected: `{ "success": true, "stats": { "posted": N, ... } }`
 - [ ] **Step 5: Test a button interaction**
 
 In Discord, find a posted embed and click Accept. Expected:
+
 - Ephemeral reply: "You are signed up for [shift name]"
 - Embed updates with your name in the Accepted list
 - Check DB: `SELECT * FROM shifts WHERE "shiftSignupEmbedId" IS NOT NULL LIMIT 5;`
@@ -1091,6 +1137,7 @@ In Discord, find a posted embed and click Accept. Expected:
 ## Self-Review
 
 **Spec coverage check:**
+
 - ✅ Pull event from Partake → covered (uses existing synced events)
 - ✅ X days before → `daysBeforeEvent` in settings, cron at 08:00 daily
 - ✅ Post Discord embed with Accept/Maybe/Decline → Task 3 + 4
@@ -1105,6 +1152,7 @@ In Discord, find a posted embed and click Accept. Expected:
 - ✅ Signature verification → `tweetnacl` in Task 3 (CRITICAL security)
 
 **Type consistency check:**
+
 - `ShiftTemplate` defined in Task 2, used in Task 4 (`postShiftEmbedsForEvent`) and Task 6 (UI) ✅
 - `ShiftSignupEmbed` Prisma model defined in Task 1, used in Tasks 4, 5, 7 ✅
 - `buildShiftEmbed` defined in Task 4, called in Task 4 (refreshEmbed + postShiftEmbedsForEvent) ✅

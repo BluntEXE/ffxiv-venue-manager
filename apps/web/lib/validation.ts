@@ -26,10 +26,14 @@ export const validators = {
   taskNotes: z.string().max(1000, "Notes too long (max 1000 characters)").optional(),
   payrollNotes: z.string().max(500, "Notes too long (max 500 characters)").optional(),
   feedbackSubject: z.string().min(1, "Subject is required").max(200, "Subject too long (max 200 characters)"),
-  feedbackDescription: z.string().min(10, "Description too short").max(5000, "Description too long (max 5000 characters)"),
+  feedbackDescription: z
+    .string()
+    .min(10, "Description too short")
+    .max(5000, "Description too long (max 5000 characters)"),
   webhookUrl: z.string().url("Invalid webhook URL").max(500, "URL too long").optional(),
   url: z.string().url("Invalid URL").max(500, "URL too long").optional().nullable(),
-  slug: z.string()
+  slug: z
+    .string()
     .min(1, "Slug is required")
     .max(100, "Slug too long")
     .regex(/^[a-z0-9-]+$/, "Slug must contain only lowercase letters, numbers, and hyphens"),
@@ -43,7 +47,11 @@ export const validators = {
   feedbackStatus: z.enum(["NEW", "UNDER_REVIEW", "PLANNED", "IN_PROGRESS", "COMPLETED", "WONT_FIX"]),
   feedbackCategory: z.enum(["BUG_REPORT", "FEATURE_REQUEST", "IMPROVEMENT", "GENERAL"]),
   adminNotes: z.string().max(2000, "Notes too long (max 2000 characters)").optional(),
-  characterName: z.string().trim().min(1, "Character name is required").max(40, "Character name too long (max 40 characters)"),
+  characterName: z
+    .string()
+    .trim()
+    .min(1, "Character name is required")
+    .max(40, "Character name too long (max 40 characters)"),
   world: z.string().trim().min(1, "World is required").max(32, "World name too long (max 32 characters)"),
 }
 
@@ -54,9 +62,7 @@ export const validators = {
 export function sanitizeDiscordContent(text: string | null | undefined): string {
   if (!text) return ""
 
-  const sanitized = text
-    .replace(/@(everyone|here)/gi, "@​$1")
-    .replace(/https?:\/\/[^\s]+/gi, "[link removed]")
+  const sanitized = text.replace(/@(everyone|here)/gi, "@​$1").replace(/https?:\/\/[^\s]+/gi, "[link removed]")
 
   return sanitized.slice(0, 100)
 }

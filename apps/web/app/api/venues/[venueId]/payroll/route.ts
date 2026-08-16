@@ -9,10 +9,7 @@ type Decimal = InstanceType<typeof Prisma.Decimal>
 
 // GET /api/venues/[venueId]/payroll - List payroll entries
 export const GET = withRateLimit<{ params: Promise<{ venueId: string }> }>(
-  async (
-    request: NextRequest,
-    context
-  ) => {
+  async (request: NextRequest, context) => {
     if (!context?.params) {
       return NextResponse.json({ error: "Invalid request" }, { status: 400 })
     }
@@ -28,10 +25,7 @@ export const GET = withRateLimit<{ params: Promise<{ venueId: string }> }>(
       // Look up venue by slug or ID
       const venue = await prisma.venue.findFirst({
         where: {
-          OR: [
-            { id: venueId },
-            { slug: venueId }
-          ]
+          OR: [{ id: venueId }, { slug: venueId }],
         },
       })
 
@@ -44,15 +38,12 @@ export const GET = withRateLimit<{ params: Promise<{ venueId: string }> }>(
         where: {
           userId: session.user.id,
           venueId: venue.id,
-        status: "active",
+          status: "active",
         },
       })
 
       if (!membership) {
-        return NextResponse.json(
-          { error: "You don't have access to this venue" },
-          { status: 403 }
-        )
+        return NextResponse.json({ error: "You don't have access to this venue" }, { status: 403 })
       }
 
       // Only OWNER and MANAGER can view payroll
@@ -91,7 +82,11 @@ export const GET = withRateLimit<{ params: Promise<{ venueId: string }> }>(
                   name: true,
                   image: true,
                   displayName: true,
-                  characters: { orderBy: [{ isPrimary: "desc" }, { createdAt: "asc" }], take: 1, select: { characterName: true } },
+                  characters: {
+                    orderBy: [{ isPrimary: "desc" }, { createdAt: "asc" }],
+                    take: 1,
+                    select: { characterName: true },
+                  },
                 },
               },
               customRole: true,
@@ -114,10 +109,7 @@ export const GET = withRateLimit<{ params: Promise<{ venueId: string }> }>(
       return NextResponse.json(payrollEntries)
     } catch (error) {
       console.error("Error fetching payroll entries:", error)
-      return NextResponse.json(
-        { error: "Internal server error" },
-        { status: 500 }
-      )
+      return NextResponse.json({ error: "Internal server error" }, { status: 500 })
     }
   },
   { requests: 60, window: "1 m" }
@@ -125,10 +117,7 @@ export const GET = withRateLimit<{ params: Promise<{ venueId: string }> }>(
 
 // POST /api/venues/[venueId]/payroll - Create payroll entry
 export const POST = withRateLimit<{ params: Promise<{ venueId: string }> }>(
-  async (
-    request: NextRequest,
-    context
-  ) => {
+  async (request: NextRequest, context) => {
     if (!context?.params) {
       return NextResponse.json({ error: "Invalid request" }, { status: 400 })
     }
@@ -144,10 +133,7 @@ export const POST = withRateLimit<{ params: Promise<{ venueId: string }> }>(
       // Look up venue by slug or ID
       const venue = await prisma.venue.findFirst({
         where: {
-          OR: [
-            { id: venueId },
-            { slug: venueId }
-          ]
+          OR: [{ id: venueId }, { slug: venueId }],
         },
       })
 
@@ -160,15 +146,12 @@ export const POST = withRateLimit<{ params: Promise<{ venueId: string }> }>(
         where: {
           userId: session.user.id,
           venueId: venue.id,
-        status: "active",
+          status: "active",
         },
       })
 
       if (!membership) {
-        return NextResponse.json(
-          { error: "You don't have access to this venue" },
-          { status: 403 }
-        )
+        return NextResponse.json({ error: "You don't have access to this venue" }, { status: 403 })
       }
 
       // Only OWNER and MANAGER can create payroll entries
@@ -195,68 +178,44 @@ export const POST = withRateLimit<{ params: Promise<{ venueId: string }> }>(
 
       // Validate required fields
       if (!paymentType || !baseRate || !periodStart || !periodEnd) {
-        return NextResponse.json(
-          { error: "Missing required fields" },
-          { status: 400 }
-        )
+        return NextResponse.json({ error: "Missing required fields" }, { status: 400 })
       }
 
       // Validate manual entry fields
       if (isManualEntry) {
         if (!manualEntryName || manualEntryName.trim() === "") {
-          return NextResponse.json(
-            { error: "Name is required for manual entries" },
-            { status: 400 }
-          )
+          return NextResponse.json({ error: "Name is required for manual entries" }, { status: 400 })
         }
         // Validate length
         if (manualEntryName.trim().length > 255) {
-          return NextResponse.json(
-            { error: "Name must be 255 characters or less" },
-            { status: 400 }
-          )
+          return NextResponse.json({ error: "Name must be 255 characters or less" }, { status: 400 })
         }
       } else {
         // Regular entry - membershipId is required
         if (!membershipId) {
-          return NextResponse.json(
-            { error: "Staff member is required for non-manual entries" },
-            { status: 400 }
-          )
+          return NextResponse.json({ error: "Staff member is required for non-manual entries" }, { status: 400 })
         }
       }
 
       // Validate payment type
       if (paymentType !== "FIXED_SALARY" && paymentType !== "HOURLY") {
-        return NextResponse.json(
-          { error: "Invalid payment type. Must be FIXED_SALARY or HOURLY" },
-          { status: 400 }
-        )
+        return NextResponse.json({ error: "Invalid payment type. Must be FIXED_SALARY or HOURLY" }, { status: 400 })
       }
 
       // Validate numeric fields
       const baseRateNum = parseFloat(baseRate)
       if (isNaN(baseRateNum) || baseRateNum < 0 || baseRateNum > 999999999) {
-        return NextResponse.json(
-          { error: "Invalid base rate. Must be a positive number" },
-          { status: 400 }
-        )
+        return NextResponse.json({ error: "Invalid base rate. Must be a positive number" }, { status: 400 })
       }
 
       // Validate hoursWorked for hourly payments
       if (paymentType === "HOURLY") {
         if (!hoursWorked) {
-          return NextResponse.json(
-            { error: "Hours worked is required for hourly payments" },
-            { status: 400 }
-          )
+          return NextResponse.json({ error: "Hours worked is required for hourly payments" }, { status: 400 })
         }
         const hoursNum = parseFloat(hoursWorked)
         if (isNaN(hoursNum) || hoursNum < 0 || hoursNum > 9999) {
-          return NextResponse.json(
-            { error: "Invalid hours worked. Must be a positive number" },
-            { status: 400 }
-          )
+          return NextResponse.json({ error: "Invalid hours worked. Must be a positive number" }, { status: 400 })
         }
       }
 
@@ -264,10 +223,7 @@ export const POST = withRateLimit<{ params: Promise<{ venueId: string }> }>(
       if (bonusAmount) {
         const bonusNum = parseFloat(bonusAmount)
         if (isNaN(bonusNum) || bonusNum < 0 || bonusNum > 999999999) {
-          return NextResponse.json(
-            { error: "Invalid bonus amount. Must be a positive number" },
-            { status: 400 }
-          )
+          return NextResponse.json({ error: "Invalid bonus amount. Must be a positive number" }, { status: 400 })
         }
       }
 
@@ -275,24 +231,15 @@ export const POST = withRateLimit<{ params: Promise<{ venueId: string }> }>(
       const startDate = new Date(periodStart)
       const endDate = new Date(periodEnd)
       if (isNaN(startDate.getTime()) || isNaN(endDate.getTime())) {
-        return NextResponse.json(
-          { error: "Invalid date format" },
-          { status: 400 }
-        )
+        return NextResponse.json({ error: "Invalid date format" }, { status: 400 })
       }
       if (endDate < startDate) {
-        return NextResponse.json(
-          { error: "Period end must be after period start" },
-          { status: 400 }
-        )
+        return NextResponse.json({ error: "Period end must be after period start" }, { status: 400 })
       }
 
       // Validate notes length if provided
       if (notes && notes.length > 10000) {
-        return NextResponse.json(
-          { error: "Notes must be 10,000 characters or less" },
-          { status: 400 }
-        )
+        return NextResponse.json({ error: "Notes must be 10,000 characters or less" }, { status: 400 })
       }
 
       // Verify the staff member exists in this venue (skip for manual entries)
@@ -305,10 +252,7 @@ export const POST = withRateLimit<{ params: Promise<{ venueId: string }> }>(
         })
 
         if (!staffMembership) {
-          return NextResponse.json(
-            { error: "Staff member not found in this venue" },
-            { status: 404 }
-          )
+          return NextResponse.json({ error: "Staff member not found in this venue" }, { status: 404 })
         }
       }
 
@@ -348,7 +292,11 @@ export const POST = withRateLimit<{ params: Promise<{ venueId: string }> }>(
                   name: true,
                   image: true,
                   displayName: true,
-                  characters: { orderBy: [{ isPrimary: "desc" }, { createdAt: "asc" }], take: 1, select: { characterName: true } },
+                  characters: {
+                    orderBy: [{ isPrimary: "desc" }, { createdAt: "asc" }],
+                    take: 1,
+                    select: { characterName: true },
+                  },
                 },
               },
               customRole: true,
@@ -360,10 +308,7 @@ export const POST = withRateLimit<{ params: Promise<{ venueId: string }> }>(
       return NextResponse.json(payrollEntry, { status: 201 })
     } catch (error) {
       console.error("Error creating payroll entry:", error)
-      return NextResponse.json(
-        { error: "Internal server error" },
-        { status: 500 }
-      )
+      return NextResponse.json({ error: "Internal server error" }, { status: 500 })
     }
   },
   { requests: 10, window: "1 m" }

@@ -4,9 +4,12 @@ export type RecurrenceRule = "WEEKLY" | "BIWEEKLY" | "MONTHLY"
 
 function nextOccurrence(date: Date, rule: RecurrenceRule): Date {
   switch (rule) {
-    case "WEEKLY":   return addWeeks(date, 1)
-    case "BIWEEKLY": return addWeeks(date, 2)
-    case "MONTHLY":  return addMonths(date, 1)
+    case "WEEKLY":
+      return addWeeks(date, 1)
+    case "BIWEEKLY":
+      return addWeeks(date, 2)
+    case "MONTHLY":
+      return addMonths(date, 1)
   }
 }
 

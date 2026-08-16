@@ -4,20 +4,8 @@ import { useEffect, useState } from "react"
 import { useSession } from "next-auth/react"
 import { useRouter } from "next/navigation"
 import { Button } from "@/components/ui/button"
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card"
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select"
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Badge } from "@/components/ui/badge"
 import { Textarea } from "@/components/ui/textarea"
 import { Label } from "@/components/ui/label"
@@ -171,9 +159,7 @@ export default function AdminFeedbackPage() {
     <div className="container mx-auto p-8">
       <div className="mb-8">
         <h1 className="text-4xl font-bold mb-2">Admin: Feedback Management</h1>
-        <p className="text-muted-foreground">
-          Review and manage user feedback submissions
-        </p>
+        <p className="text-muted-foreground">Review and manage user feedback submissions</p>
       </div>
 
       {/* Filters */}
@@ -228,9 +214,7 @@ export default function AdminFeedbackPage() {
             <CardTitle className="text-sm font-medium">New</CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="text-3xl font-bold">
-              {feedback.filter((f) => f.status === "NEW").length}
-            </div>
+            <div className="text-3xl font-bold">{feedback.filter((f) => f.status === "NEW").length}</div>
           </CardContent>
         </Card>
         <Card>
@@ -248,9 +232,7 @@ export default function AdminFeedbackPage() {
             <CardTitle className="text-sm font-medium">Completed</CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="text-3xl font-bold">
-              {feedback.filter((f) => f.status === "COMPLETED").length}
-            </div>
+            <div className="text-3xl font-bold">{feedback.filter((f) => f.status === "COMPLETED").length}</div>
           </CardContent>
         </Card>
       </div>
@@ -270,12 +252,8 @@ export default function AdminFeedbackPage() {
                 <div className="flex items-start justify-between">
                   <div className="flex-1">
                     <div className="flex items-center gap-2 mb-2">
-                      <Badge variant={categoryColors[item.category] as any}>
-                        {categoryLabels[item.category]}
-                      </Badge>
-                      <Badge variant={statusColors[item.status] as any}>
-                        {item.status.replace("_", " ")}
-                      </Badge>
+                      <Badge variant={categoryColors[item.category] as any}>{categoryLabels[item.category]}</Badge>
+                      <Badge variant={statusColors[item.status] as any}>{item.status.replace("_", " ")}</Badge>
                     </div>
                     <CardTitle className="text-xl mb-1">{item.subject}</CardTitle>
                     <CardDescription>
@@ -366,9 +344,7 @@ export default function AdminFeedbackPage() {
                         {item.adminNotes && (
                           <div className="mb-4">
                             <h4 className="font-semibold mb-1">Admin Notes:</h4>
-                            <p className="text-sm whitespace-pre-wrap bg-muted p-3 rounded">
-                              {item.adminNotes}
-                            </p>
+                            <p className="text-sm whitespace-pre-wrap bg-muted p-3 rounded">{item.adminNotes}</p>
                           </div>
                         )}
 

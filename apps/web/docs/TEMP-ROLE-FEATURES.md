@@ -1,7 +1,9 @@
 # Multi-Owner & Temporary Role Features
 
 ## Overview
+
 Added support for:
+
 1. **Multiple Owners** - Promote staff to OWNER role
 2. **Temporary Roles (Deputizing)** - Grant elevated permissions temporarily that auto-expire
 
@@ -15,6 +17,7 @@ npx prisma migrate dev --name add_temporary_roles
 ```
 
 This adds three new fields to the `Membership` model:
+
 - `temporaryRole` - The elevated role (OWNER, MANAGER, STAFF) while deputized
 - `temporaryRoleExpiresAt` - When the temporary role expires
 - `permanentRole` - Their original role to revert back to
@@ -22,11 +25,13 @@ This adds three new fields to the `Membership` model:
 ## Features
 
 ### 1. Multiple Owners
+
 - Owners can now promote Managers or Staff to OWNER role
 - Venue can have multiple people with OWNER permissions
 - All owners have equal access and control
 
 ### 2. Temporary Roles (Deputizing)
+
 - **Use Case**: Owner going on vacation? Deputize a Manager as temporary OWNER
 - Set an expiration date/time for the temporary role
 - When expired, they automatically revert to their permanent role
@@ -35,12 +40,14 @@ This adds three new fields to the `Membership` model:
 ## How to Use
 
 ### Promote Someone to Owner:
+
 1. Go to Staff page (`/dashboard/{slug}/staff`)
 2. Click "Manage" on any Manager or Staff member
 3. Change "Permanent Role" to "Owner"
 4. Click "Update Role"
 
 ### Deputize Someone Temporarily:
+
 1. Go to Staff page
 2. Click "Manage" on the person
 3. Set "Permanent Role" (their normal role)
@@ -63,6 +70,7 @@ This adds three new fields to the `Membership` model:
 ## API Updates
 
 Updated `PUT /api/venues/[venueId]/staff/[membershipId]`:
+
 - Accepts `temporaryRole`, `temporaryRoleExpiresAt`, `permanentRole`
 - Converts ISO date strings to Date objects
 - Returns updated membership with all role fields
@@ -70,6 +78,7 @@ Updated `PUT /api/venues/[venueId]/staff/[membershipId]`:
 ## Example Scenarios
 
 ### Scenario 1: Weekend Backup
+
 ```
 User: Alice (Permanent: MANAGER)
 Deputize As: OWNER
@@ -81,6 +90,7 @@ Result:
 ```
 
 ### Scenario 2: Event Coverage
+
 ```
 User: Bob (Permanent: STAFF)
 Deputize As: MANAGER
@@ -94,6 +104,7 @@ Result:
 ## Visual Indicators
 
 **Regular Staff:**
+
 ```
 ┌────────────────────────────┐
 │ John Doe          STAFF    │
@@ -102,6 +113,7 @@ Result:
 ```
 
 **Deputized Staff:**
+
 ```
 ┌────────────────────────────────────────┐
 │ Alice Smith              OWNER         │

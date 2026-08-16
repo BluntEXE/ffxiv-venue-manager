@@ -22,7 +22,9 @@ export async function GET(request: Request) {
 
     const results = await syncAllFfxivVenues()
 
-    console.log(`[ffxivvenues Sync] Complete: ${results.synced} synced, ${results.unlinked} unlinked, ${results.errors} errors`)
+    console.log(
+      `[ffxivvenues Sync] Complete: ${results.synced} synced, ${results.unlinked} unlinked, ${results.errors} errors`
+    )
 
     return NextResponse.json({
       success: true,

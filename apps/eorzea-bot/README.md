@@ -7,62 +7,70 @@
 Aetherlink is the Discord half of the XIV Venue Manager platform. It lives in the same Postgres database as the web app (reading the platform's `users`/`venues`/`shifts` tables directly) and talks to the web app's bot API for the operations that belong to it.
 
 ### Platform sync
+
 - **`/sync`** / **`/syncall`** — assigns `Venue Owner` / `Manager` / `Staff` / `Community Member` roles and a formatted nickname (`DisplayName|Venue|Role`) from the member's linked account. Runs automatically on new joins.
 - **Welcome flow** — greets new members, detects their Grand Company, and points them at account linking.
 
 ### Venue operations
+
 - **`/clockin`** / **`/clockout`** — start and end scheduled shifts through the web app's bot API (`/api/bot/shifts/clock-in|out`). Clocking in pays out 100 Gil.
 - **Shift reminders** — a background job polls every 60s and DMs staff ~30 minutes before a scheduled shift starts.
 - **`/roll`** — returns a random venue that's open right now, optionally filtered by data center.
 - **Region boards** — on venue open/close transitions, live-updates a "What's Happening" embed per region (NA/EU/JP/OCE).
 
 ### Progression
+
 - **Chat XP** — 10 XP per message (60s cooldown), doubling while an XP boost is active. Rank-ups are DMed to the member.
 - **Grand Companies** — one-time `/gc join` choice (Maelstrom, Twin Adder, Immortal Flames) with rank titles, `/rank` progress bars, `/gc info` standing, and a server `/leaderboard`.
 - **`/myprofile`** — full community profile: level, XP, Gil, company rank, venue visits, shifts worked, and loyalty tier.
 
 ### Gil economy
+
 Earn Gil by reacting to bot-posted embeds (25), submitting `/suggest`s (50), and clocking in (100). Spend it in the `/gil shop`:
+
 - **XP Boost** (500 Gil) — 2x XP for 1 hour.
 - **Cooldown Skip** (100 Gil) — bypass one chat-XP cooldown.
 
 ### Moderation
+
 `/warn`, `/warnings`, `/kick`, `/mute`, `/unban` — all mod actions post an embed to the mod-log channel and warnings persist in Postgres.
 
 ### Webhook server
+
 An Express server (`WEBHOOK_PORT`) that the web app calls to publish embeds: new venues, weekly summaries, venue graduations, event digests (kept in sync via tracked, editable messages), "live now" posts, patron-visit/shift XP awards, loyalty role assignments, and announcements. Protected by a shared-secret header.
 
 ### Utility
+
 - **`/ping`** — roundtrip + websocket latency check.
 
 ## Tech stack
 
-| Layer | Choice |
-| --- | --- |
-| Language | TypeScript (`strict: true`), ES modules |
-| Discord | [discord.js](https://discord.js.org) v14 |
-| Database | PostgreSQL via [Prisma](https://www.prisma.io) v6 |
-| HTTP | Express 4 (webhook server) |
-| Runtime | Node.js (built with `tsc`, run with `tsx` in dev) |
-| Package manager | pnpm (pnpm workspace) |
+| Layer           | Choice                                            |
+| --------------- | ------------------------------------------------- |
+| Language        | TypeScript (`strict: true`), ES modules           |
+| Discord         | [discord.js](https://discord.js.org) v14          |
+| Database        | PostgreSQL via [Prisma](https://www.prisma.io) v6 |
+| HTTP            | Express 4 (webhook server)                        |
+| Runtime         | Node.js (built with `tsc`, run with `tsx` in dev) |
+| Package manager | pnpm (pnpm workspace)                             |
 
 ## Environment variables
 
 Copy `.env.example` to `.env` and fill in the values.
 
-| Variable | Purpose |
-| --- | --- |
-| `DISCORD_TOKEN` | Bot token from the Discord Developer Portal |
-| `CLIENT_ID` | Discord application (bot) ID |
-| `GUILD_ID` | Test guild ID for instant guild-scoped commands; empty for global commands |
-| `DATABASE_URL` | PostgreSQL connection string — the same database as the web app |
-| `WEBHOOK_PORT` | Port the Express webhook server listens on (default `4567`) |
-| `API_SECRET` | Shared secret sent as `x-bot-secret` when calling the web app's bot API (clock-in/out) |
-| `WEB_APP_URL` | Base URL of the web app (e.g. `http://localhost:3000`) |
-| `WHATS_HAPPENING_NA_CHANNEL_ID` | Channel for the NA "What's Happening" region board |
-| `WHATS_HAPPENING_EU_CHANNEL_ID` | Channel for the EU "What's Happening" region board |
-| `WHATS_HAPPENING_JP_CHANNEL_ID` | Channel for the JP "What's Happening" region board |
-| `WHATS_HAPPENING_OCE_CHANNEL_ID` | Channel for the OCE "What's Happening" region board |
+| Variable                         | Purpose                                                                                |
+| -------------------------------- | -------------------------------------------------------------------------------------- |
+| `DISCORD_TOKEN`                  | Bot token from the Discord Developer Portal                                            |
+| `CLIENT_ID`                      | Discord application (bot) ID                                                           |
+| `GUILD_ID`                       | Test guild ID for instant guild-scoped commands; empty for global commands             |
+| `DATABASE_URL`                   | PostgreSQL connection string — the same database as the web app                        |
+| `WEBHOOK_PORT`                   | Port the Express webhook server listens on (default `4567`)                            |
+| `API_SECRET`                     | Shared secret sent as `x-bot-secret` when calling the web app's bot API (clock-in/out) |
+| `WEB_APP_URL`                    | Base URL of the web app (e.g. `http://localhost:3000`)                                 |
+| `WHATS_HAPPENING_NA_CHANNEL_ID`  | Channel for the NA "What's Happening" region board                                     |
+| `WHATS_HAPPENING_EU_CHANNEL_ID`  | Channel for the EU "What's Happening" region board                                     |
+| `WHATS_HAPPENING_JP_CHANNEL_ID`  | Channel for the JP "What's Happening" region board                                     |
+| `WHATS_HAPPENING_OCE_CHANNEL_ID` | Channel for the OCE "What's Happening" region board                                    |
 
 > The code also reads additional optional vars not listed in `.env.example` (welcome/event/activity/mod-log/suggestions channel IDs, Grand Company and loyalty role IDs, `WEBHOOK_SECRET`, `WEBHOOK_HOST`). They're read directly from `process.env` at runtime; see `src/` for the exact names.
 

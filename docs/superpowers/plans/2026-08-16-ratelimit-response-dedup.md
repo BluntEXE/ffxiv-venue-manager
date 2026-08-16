@@ -22,6 +22,7 @@
 ### Task 1: Add `getIp` and `buildRateLimitResponse` to `lib/rate-limit.ts`
 
 **Files:**
+
 - Modify: `apps/web/lib/rate-limit.ts`
 - Test: `apps/web/lib/rate-limit.test.ts`
 
@@ -144,6 +145,7 @@ git commit -m "Add getIp/buildRateLimitResponse shared helpers to lib/rate-limit
 ### Task 2: Migrate `lib/api/plugin-rate-limit.ts` onto the shared helpers
 
 **Files:**
+
 - Modify: `apps/web/lib/api/plugin-rate-limit.ts` (full rewrite, 79 lines)
 
 - [ ] **Step 1: Rewrite the file**
@@ -167,9 +169,7 @@ import { checkLimit, budgets, getIp, buildRateLimitResponse } from "@/lib/rate-l
  */
 const ipBudget = { limit: 60, windowSec: 60 }
 
-export async function enforcePluginIpRateLimit(
-  request: NextRequest
-): Promise<NextResponse | null> {
+export async function enforcePluginIpRateLimit(request: NextRequest): Promise<NextResponse | null> {
   const ip = getIp(request)
   const rl = await checkLimit(`plugin-ip:${ip}`, ipBudget.limit, ipBudget.windowSec)
   if (rl.success) return null
@@ -186,10 +186,7 @@ export async function enforcePluginIpRateLimit(
  * Redis. Per-key (not per-IP) because multiple venue staff can share a
  * NAT, and a compromised/runaway key is the actual abuse vector.
  */
-export async function enforcePluginRateLimit(
-  apiKey: string,
-  kind: "read" | "write"
-): Promise<NextResponse | null> {
+export async function enforcePluginRateLimit(apiKey: string, kind: "read" | "write"): Promise<NextResponse | null> {
   const budget = kind === "read" ? budgets.pluginRead : budgets.pluginWrite
   const id = createHash("sha256").update(apiKey).digest("hex").slice(0, 16)
   const rl = await checkLimit(`plugin:${id}`, budget.limit, budget.windowSec)
@@ -222,6 +219,7 @@ git commit -m "Migrate plugin-rate-limit.ts onto shared getIp/buildRateLimitResp
 ### Task 3: Migrate the NextAuth route's throttle onto the shared helpers
 
 **Files:**
+
 - Modify: `apps/web/app/api/auth/[...nextauth]/route.ts`
 
 - [ ] **Step 1: Update the imports**
@@ -251,10 +249,7 @@ import { checkLimit, getIp, buildRateLimitResponse } from "@/lib/rate-limit"
 Replace:
 
 ```ts
-async function withAuthThrottle(
-  req: NextRequest,
-  ctx: { params: Promise<{ nextauth: string[] }> }
-): Promise<Response> {
+async function withAuthThrottle(req: NextRequest, ctx: { params: Promise<{ nextauth: string[] }> }): Promise<Response> {
   if (AUTH_THROTTLE_RE.test(req.nextUrl.pathname)) {
     const ip = getIp(req)
     const rl = await checkLimit(`auth-ip:${ip}`, 10, 60)
@@ -280,10 +275,7 @@ async function withAuthThrottle(
 with:
 
 ```ts
-async function withAuthThrottle(
-  req: NextRequest,
-  ctx: { params: Promise<{ nextauth: string[] }> }
-): Promise<Response> {
+async function withAuthThrottle(req: NextRequest, ctx: { params: Promise<{ nextauth: string[] }> }): Promise<Response> {
   if (AUTH_THROTTLE_RE.test(req.nextUrl.pathname)) {
     const ip = getIp(req)
     const rl = await checkLimit(`auth-ip:${ip}`, 10, 60)
@@ -335,7 +327,7 @@ git commit -m "Migrate NextAuth route's rate-limit throttle onto shared helpers"
 - [ ] **Step 1: Full type-check**
 
 Run: `cd apps/web && pnpm tsc --noEmit`
-Expected: clean (aside from the two pre-existing, unrelated `attendance-overview.tsx`/`event-attendance-chart.tsx` TS7031 errors already tracked as out-of-scope noise from an unrelated recharts-types issue — confirm they're the *only* remaining output, if any).
+Expected: clean (aside from the two pre-existing, unrelated `attendance-overview.tsx`/`event-attendance-chart.tsx` TS7031 errors already tracked as out-of-scope noise from an unrelated recharts-types issue — confirm they're the _only_ remaining output, if any).
 
 - [ ] **Step 2: Full test suite**
 

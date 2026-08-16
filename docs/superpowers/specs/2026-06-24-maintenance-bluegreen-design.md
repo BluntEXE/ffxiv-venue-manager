@@ -1,4 +1,5 @@
 # Maintenance & Blue-Green Deployment Design
+
 **Date:** 2026-06-24  
 **Status:** Pending implementation
 
@@ -32,10 +33,10 @@ Traefik config files exist on disk but no Traefik container runs. They are inert
 
 ### Port assignment
 
-| Port | Container | State |
-|---|---|---|
-| 3000 | `venue-manager` (blue) | Always running |
-| 3007 | Staging slot | Green build OR maintenance page, never both |
+| Port | Container              | State                                       |
+| ---- | ---------------------- | ------------------------------------------- |
+| 3000 | `venue-manager` (blue) | Always running                              |
+| 3007 | Staging slot           | Green build OR maintenance page, never both |
 
 All ports 3001-3006 are occupied. 3007 is confirmed free.
 
@@ -104,17 +105,17 @@ The database has 24 registered venues, all marked `isActive = true`. Only 3 have
 
 Cross-referencing venue-declared opening hours from `venue.settings` (openNights + defaultHours fields) confirms Tuesday 09:00 UTC is safe:
 
-| Venue | Declared hours | UTC window |
-|---|---|---|
-| Catsune Cabaret | Sun 8pm-12am EST | Mon 01:00-05:00 UTC |
-| MERO MERO | Sat 2am | ~Sat 07:00 UTC |
-| MYRRHA | Wed 6-8pm | ~Wed 23:00-01:00 UTC |
-| Midara's Mirage | Sun 2am | ~Sun 07:00 UTC |
-| Moonlight Fae | Sat 6-10pm PDT | Sun 01:00-05:00 UTC |
-| **Paradoxx** | **Mon 9pm-2am EST** | **Tue 02:00-07:00 UTC** |
-| The Final Act | Sat 5-11pm | Sat 22:00-04:00 UTC |
-| The Pantheon | 24/7 (without staff) | No active shifts |
-| Velvet Rift | Sat 6pm-12am | ~Sat 23:00-05:00 UTC |
+| Venue           | Declared hours       | UTC window              |
+| --------------- | -------------------- | ----------------------- |
+| Catsune Cabaret | Sun 8pm-12am EST     | Mon 01:00-05:00 UTC     |
+| MERO MERO       | Sat 2am              | ~Sat 07:00 UTC          |
+| MYRRHA          | Wed 6-8pm            | ~Wed 23:00-01:00 UTC    |
+| Midara's Mirage | Sun 2am              | ~Sun 07:00 UTC          |
+| Moonlight Fae   | Sat 6-10pm PDT       | Sun 01:00-05:00 UTC     |
+| **Paradoxx**    | **Mon 9pm-2am EST**  | **Tue 02:00-07:00 UTC** |
+| The Final Act   | Sat 5-11pm           | Sat 22:00-04:00 UTC     |
+| The Pantheon    | 24/7 (without staff) | No active shifts        |
+| Velvet Rift     | Sat 6pm-12am         | ~Sat 23:00-05:00 UTC    |
 
 Paradoxx is the only venue with any Tuesday overlap. They close by 07:00 UTC at the latest. The 09:00 UTC start gives a 2-hour buffer after close. No venue lists Tuesday daytime as an operating window.
 
@@ -175,6 +176,7 @@ maintenance.sh status        - show current state
 ```
 
 Logic for `on`:
+
 - Read `ACTIVE_PORT` file (default 3000)
 - curl /api/plugin/events/active on the active port - exit 1 if any running
 - Start maintenance-page container on 3007
@@ -184,6 +186,7 @@ Logic for `on`:
 - POST Discord webhook
 
 Logic for `off`:
+
 - Read `ACTIVE_PORT` file
 - Health check ACTIVE_PORT
 - sed cloudflared config: 3007 → ACTIVE_PORT
@@ -196,6 +199,7 @@ Logic for `off`:
 Add `--green` flag. Without it, current behavior (direct rebuild on :3000) stays intact for fast deploys when downtime is acceptable.
 
 With `--green`:
+
 1. Build new image
 2. Start venue-manager-next on 3007
 3. Poll /api/health on 3007 (30s timeout)
@@ -209,7 +213,7 @@ With `--green`:
 ## 8. Maintenance Page
 
 **File:** `~/xiv-app/docker/maintenance/index.html`  
-**Served by:** nginx:alpine container on :3007  
+**Served by:** nginx:alpine container on :3007
 
 ### Copy (stop-slop applied)
 
@@ -219,13 +223,13 @@ With `--green`:
 
 **Status rows:**
 
-| Feature | Badge | Description |
-|---|---|---|
-| Clock-in / Clock-out | Offline | Fails with an in-game error. Don't start or end shifts now. |
-| Patron Visit Logging | Offline | Visits during this window won't be recorded and can't be recovered. |
-| Sale! Logging | Offline | Sales logged now won't be recorded. |
-| DTR Bar / Shift Info | Stale | Shows last-known shift status. Updates when the site returns. |
-| Plugin connection | Auto-restores | No restart needed. The plugin reconnects when the site comes back. |
+| Feature              | Badge         | Description                                                         |
+| -------------------- | ------------- | ------------------------------------------------------------------- |
+| Clock-in / Clock-out | Offline       | Fails with an in-game error. Don't start or end shifts now.         |
+| Patron Visit Logging | Offline       | Visits during this window won't be recorded and can't be recovered. |
+| Sale! Logging        | Offline       | Sales logged now won't be recorded.                                 |
+| DTR Bar / Shift Info | Stale         | Shows last-known shift status. Updates when the site returns.       |
+| Plugin connection    | Auto-restores | No restart needed. The plugin reconnects when the site comes back.  |
 
 **Footer:** Maintenance runs Tuesdays 09:00-11:00 UTC. Check Discord for live updates.
 
@@ -242,6 +246,7 @@ Two new panels added to the xiv-admin TUI (`~/xiv-admin`). Both follow the `Depl
 **File:** `~/xiv-admin/xiv_admin/panels/maintenance.py`
 
 Components:
+
 - Status label: `LIVE :3000` or `MAINTENANCE :3007` (polled every 10s via SSH)
 - Active events indicator: count from `/api/plugin/events/active` (warns before enabling)
 - Buttons: `Enable Maintenance`, `Disable Maintenance`, `Check Active Events`, `Green Deploy`
@@ -256,6 +261,7 @@ Components:
 Reads the `feedback` table directly via the DB connection (`xiv_admin/db.py` pattern). Mirrors what `/admin/feedback` shows in the web app.
 
 Components:
+
 - `DataTable` listing submissions: category, status, message preview, submitted_at
 - Row selection → detail pane showing full message
 - Status toggle buttons: `Mark Reviewed`, `Mark Resolved`, `Mark Dismissed`

@@ -2,13 +2,7 @@
 "use client"
 
 import { useEffect, useState } from "react"
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogHeader,
-  DialogTitle,
-} from "@/components/ui/dialog"
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
@@ -18,7 +12,15 @@ import { DeleteShiftButton } from "@/components/delete-shift-button"
 import { OpenShiftChip } from "@/components/open-shift-chip"
 import { ClaimedShiftChip } from "@/components/claimed-shift-chip"
 import { Copy } from "lucide-react"
-import { dayKeyFor, hourLabelFor, statusBadgeClass, staffNameOf, type CalendarShift, type StaffMember, type RoleOption } from "@/lib/shift-format"
+import {
+  dayKeyFor,
+  hourLabelFor,
+  statusBadgeClass,
+  staffNameOf,
+  type CalendarShift,
+  type StaffMember,
+  type RoleOption,
+} from "@/lib/shift-format"
 import { browserTimeZone, localTimeInput } from "@/lib/local-day"
 
 interface ShiftDayDialogProps {
@@ -49,10 +51,10 @@ export function ShiftDayDialog({
   const timeZone = mounted ? browserTimeZone() : null
 
   const open = date !== null
-  const dayShifts = date ? shifts.filter((s) => dayKeyFor(new Date(s.scheduledStart), timeZone) === dayKeyFor(date, timeZone)) : []
-  const visibleShifts = canManage
-    ? dayShifts
-    : dayShifts.filter((s) => s.membershipId === currentMembershipId)
+  const dayShifts = date
+    ? shifts.filter((s) => dayKeyFor(new Date(s.scheduledStart), timeZone) === dayKeyFor(date, timeZone))
+    : []
+  const visibleShifts = canManage ? dayShifts : dayShifts.filter((s) => s.membershipId === currentMembershipId)
 
   const dateLabel = date
     ? date.toLocaleString("en-GB", { timeZone: "UTC", weekday: "long", day: "numeric", month: "long" })
@@ -63,9 +65,7 @@ export function ShiftDayDialog({
       <DialogContent className="max-w-lg">
         <DialogHeader>
           <DialogTitle>{dateLabel}</DialogTitle>
-          <DialogDescription>
-            {canManage ? "All shifts scheduled this day" : "Your shifts this day"}
-          </DialogDescription>
+          <DialogDescription>{canManage ? "All shifts scheduled this day" : "Your shifts this day"}</DialogDescription>
         </DialogHeader>
 
         <div className="flex flex-col gap-2 max-h-[60vh] overflow-y-auto">
@@ -78,12 +78,21 @@ export function ShiftDayDialog({
           {visibleShifts.map((shift) => {
             if (shift.status === "OPEN" && date) {
               return (
-                <div key={shift.id} className="flex items-center justify-between gap-2 rounded-lg border border-[var(--blue-008)] px-3 py-2.5">
+                <div
+                  key={shift.id}
+                  className="flex items-center justify-between gap-2 rounded-lg border border-[var(--blue-008)] px-3 py-2.5"
+                >
                   <div className="flex items-center gap-2">
-                    <span className="av-sm flex-shrink-0 border border-dashed border-amber-500/40 bg-amber-500/10 text-amber-400">!</span>
+                    <span className="av-sm flex-shrink-0 border border-dashed border-amber-500/40 bg-amber-500/10 text-amber-400">
+                      !
+                    </span>
                     <div className="text-sm">
-                      <div className="font-medium text-amber-400">Open{shift.role?.name ? ` · ${shift.role.name}` : ""}</div>
-                      <div className="text-xs text-muted-foreground">{hourLabelFor(shift.scheduledStart, timeZone)}–{hourLabelFor(shift.scheduledEnd, timeZone)}</div>
+                      <div className="font-medium text-amber-400">
+                        Open{shift.role?.name ? ` · ${shift.role.name}` : ""}
+                      </div>
+                      <div className="text-xs text-muted-foreground">
+                        {hourLabelFor(shift.scheduledStart, timeZone)}–{hourLabelFor(shift.scheduledEnd, timeZone)}
+                      </div>
                     </div>
                   </div>
                   <div className="flex items-center gap-1 flex-shrink-0">
@@ -132,7 +141,10 @@ export function ShiftDayDialog({
             }
 
             return (
-              <div key={shift.id} className="flex items-center justify-between gap-2 rounded-lg border border-[var(--blue-008)] px-3 py-2.5">
+              <div
+                key={shift.id}
+                className="flex items-center justify-between gap-2 rounded-lg border border-[var(--blue-008)] px-3 py-2.5"
+              >
                 <div className="flex items-center gap-2 min-w-0">
                   {canManage && (
                     <Avatar className="h-7 w-7 flex-shrink-0">

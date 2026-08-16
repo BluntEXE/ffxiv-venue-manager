@@ -92,11 +92,8 @@ export async function GET(req: NextRequest) {
       bannerUrl: v.bannerUrl,
       isAdult: settings.isAdult ?? false,
       ffxivVenuesId: v.ffxivVenueId,
-      openSince: activeShift
-        ? (activeShift.actualStart ?? activeShift.scheduledStart)
-        : null,
-      scheduledEnd:
-        activeShift?.scheduledEnd ?? tonightShift?.scheduledEnd ?? null,
+      openSince: activeShift ? (activeShift.actualStart ?? activeShift.scheduledStart) : null,
+      scheduledEnd: activeShift?.scheduledEnd ?? tonightShift?.scheduledEnd ?? null,
       nextOpen: tonightShift?.scheduledStart ?? null,
       // Recurring opening-hours pattern, all times UTC / FFXIV Server Time.
       schedule: scheduleEntries.map((e) => ({

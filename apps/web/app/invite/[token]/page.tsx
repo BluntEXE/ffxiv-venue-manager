@@ -23,11 +23,7 @@ interface InviteDetails {
   }
 }
 
-export default function InvitePage({
-  params,
-}: {
-  params: Promise<{ token: string }>
-}) {
+export default function InvitePage({ params }: { params: Promise<{ token: string }> }) {
   const unwrappedParams = use(params)
   const { data: session, status } = useSession()
   const router = useRouter()
@@ -140,11 +136,7 @@ export default function InvitePage({
               <AlertDescription>{error}</AlertDescription>
             </Alert>
             <div className="mt-6">
-              <Button
-                onClick={() => router.push("/")}
-                variant="outline"
-                className="w-full"
-              >
+              <Button onClick={() => router.push("/")} variant="outline" className="w-full">
                 Go to Home
               </Button>
             </div>
@@ -193,9 +185,8 @@ export default function InvitePage({
             )}
             <CardTitle>You've been invited!</CardTitle>
             <CardDescription>
-              <strong>{inviteDetails.invitedBy.name || "A venue manager"}</strong> has invited you
-              to join <strong>{inviteDetails.venue.name}</strong> as{" "}
-              <strong>{inviteDetails.role.toLowerCase()}</strong>.
+              <strong>{inviteDetails.invitedBy.name || "A venue manager"}</strong> has invited you to join{" "}
+              <strong>{inviteDetails.venue.name}</strong> as <strong>{inviteDetails.role.toLowerCase()}</strong>.
             </CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
@@ -210,11 +201,7 @@ export default function InvitePage({
               <div className="text-sm text-muted-foreground text-center">
                 Sign in with Discord to accept this invitation
               </div>
-              <Button
-                onClick={handleDiscordSignIn}
-                className="w-full"
-                size="lg"
-              >
+              <Button onClick={handleDiscordSignIn} className="w-full" size="lg">
                 <Users className="mr-2 h-5 w-5" />
                 Sign in with Discord
               </Button>

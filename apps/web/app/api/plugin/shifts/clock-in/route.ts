@@ -55,10 +55,7 @@ export async function POST(request: NextRequest) {
     const body = await request.json()
     const parsed = bodySchema.safeParse(body)
     if (!parsed.success) {
-      return NextResponse.json(
-        { error: "shiftId is required" },
-        { status: 400 }
-      )
+      return NextResponse.json({ error: "shiftId is required" }, { status: 400 })
     }
 
     const shift = await prisma.shift.findUnique({
@@ -76,22 +73,12 @@ export async function POST(request: NextRequest) {
 
     // Verify the authenticated user owns this shift
     if (shift.membership?.userId !== auth.userId) {
-      return NextResponse.json(
-        { error: "This shift is not assigned to you" },
-        { status: 403 }
-      )
+      return NextResponse.json({ error: "This shift is not assigned to you" }, { status: 403 })
     }
 
-    const canClock = await checkPermission(
-      auth.userId,
-      shift.venueId,
-      "clock_shift"
-    )
+    const canClock = await checkPermission(auth.userId, shift.venueId, "clock_shift")
     if (!canClock) {
-      return NextResponse.json(
-        { error: "You do not have permission to clock shifts" },
-        { status: 403 }
-      )
+      return NextResponse.json({ error: "You do not have permission to clock shifts" }, { status: 403 })
     }
 
     if (shift.status !== "SCHEDULED") {
@@ -103,24 +90,14 @@ export async function POST(request: NextRequest) {
 
     // Window check: 30 min before to 60 min after scheduled start
     const now = new Date()
-    const earliestClockIn = new Date(
-      shift.scheduledStart.getTime() - 30 * 60 * 1000
-    )
-    const latestClockIn = new Date(
-      shift.scheduledStart.getTime() + 60 * 60 * 1000
-    )
+    const earliestClockIn = new Date(shift.scheduledStart.getTime() - 30 * 60 * 1000)
+    const latestClockIn = new Date(shift.scheduledStart.getTime() + 60 * 60 * 1000)
 
     if (now < earliestClockIn) {
-      return NextResponse.json(
-        { error: "Too early to clock in (earliest 30 min before start)" },
-        { status: 400 }
-      )
+      return NextResponse.json({ error: "Too early to clock in (earliest 30 min before start)" }, { status: 400 })
     }
     if (now > latestClockIn) {
-      return NextResponse.json(
-        { error: "Clock-in window has passed (60 min after start)" },
-        { status: 400 }
-      )
+      return NextResponse.json({ error: "Clock-in window has passed (60 min after start)" }, { status: 400 })
     }
 
     const writeResult = await prisma.shift.updateMany({
@@ -150,9 +127,6 @@ export async function POST(request: NextRequest) {
     })
   } catch (error) {
     console.error("[Plugin API] Error clocking in:", error)
-    return NextResponse.json(
-      { error: "Internal server error" },
-      { status: 500 }
-    )
+    return NextResponse.json({ error: "Internal server error" }, { status: 500 })
   }
 }

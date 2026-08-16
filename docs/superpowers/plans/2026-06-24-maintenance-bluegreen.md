@@ -13,15 +13,18 @@
 ## File Map
 
 **xiv-app repo (`~/xiv-app`):**
+
 - Modify: `docker-compose.yml` - add `venue-manager-next` + `maintenance-page` services
 - Create: `docker/maintenance/index.html` - static maintenance page
 - Create: `docker/maintenance/nginx.conf` - nginx config (no index fallback needed, just serve root)
 
 **Server scripts (`~/bin/` on local, synced to `~/bin/` on server manually):**
+
 - Create: `~/bin/maintenance.sh` - on/off/status toggle
 - Modify: `~/bin/deploy-xiv-web.sh` - add `--green` flag
 
 **xiv-admin repo (`~/xiv-admin`):**
+
 - Modify: `xiv_admin/config.py` - add `maintenance_script` field
 - Create: `xiv_admin/panels/maintenance.py` - MaintenancePanel
 - Create: `xiv_admin/panels/feedback.py` - FeedbackPanel
@@ -32,6 +35,7 @@
 ## Task 1: docker-compose.yml - Add Green and Maintenance Services
 
 **Files:**
+
 - Modify: `~/xiv-app/docker-compose.yml`
 
 - [ ] **Step 1: Add venue-manager-next and maintenance-page services**
@@ -39,35 +43,35 @@
 Add these two services before the `networks:` block in `docker-compose.yml`:
 
 ```yaml
-  venue-manager-next:
-    build:
-      context: .
-      dockerfile: apps/web/Dockerfile
-    container_name: venue-manager-next
-    ports:
-      - "3007:3000"
-    env_file: .env
-    depends_on:
-      postgres:
-        condition: service_healthy
-      redis:
-        condition: service_healthy
-    restart: "no"
-    networks:
-      - app-network
-    profiles:
-      - green
+venue-manager-next:
+  build:
+    context: .
+    dockerfile: apps/web/Dockerfile
+  container_name: venue-manager-next
+  ports:
+    - "3007:3000"
+  env_file: .env
+  depends_on:
+    postgres:
+      condition: service_healthy
+    redis:
+      condition: service_healthy
+  restart: "no"
+  networks:
+    - app-network
+  profiles:
+    - green
 
-  maintenance-page:
-    image: nginx:alpine
-    container_name: maintenance-page
-    ports:
-      - "3007:80"
-    volumes:
-      - ./docker/maintenance:/usr/share/nginx/html:ro
-    restart: "no"
-    profiles:
-      - maintenance
+maintenance-page:
+  image: nginx:alpine
+  container_name: maintenance-page
+  ports:
+    - "3007:80"
+  volumes:
+    - ./docker/maintenance:/usr/share/nginx/html:ro
+  restart: "no"
+  profiles:
+    - maintenance
 ```
 
 - [ ] **Step 2: Verify compose file is valid**
@@ -99,6 +103,7 @@ git commit -m "infra: add green and maintenance docker compose profiles on :3007
 ## Task 2: Maintenance Page HTML
 
 **Files:**
+
 - Create: `~/xiv-app/docker/maintenance/index.html`
 
 - [ ] **Step 1: Create the maintenance directory**
@@ -114,242 +119,293 @@ Create `~/xiv-app/docker/maintenance/index.html` with this content:
 ```html
 <!DOCTYPE html>
 <html lang="en">
-<head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Maintenance — XIV Venue Manager</title>
-<style>
-  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Maintenance — XIV Venue Manager</title>
+    <style>
+      *,
+      *::before,
+      *::after {
+        box-sizing: border-box;
+        margin: 0;
+        padding: 0;
+      }
 
-  body {
-    background: #030508;
-    color: #cdd6f4;
-    font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
-    min-height: 100vh;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    padding: 24px;
-  }
+      body {
+        background: #030508;
+        color: #cdd6f4;
+        font-family:
+          "Segoe UI",
+          system-ui,
+          -apple-system,
+          sans-serif;
+        min-height: 100vh;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        padding: 24px;
+      }
 
-  .container { width: 100%; max-width: 560px; }
+      .container {
+        width: 100%;
+        max-width: 560px;
+      }
 
-  .wordmark {
-    text-align: center;
-    margin-bottom: 28px;
-  }
-  .wordmark-text {
-    font-size: 12px;
-    letter-spacing: 5px;
-    text-transform: uppercase;
-    color: #00b4ff;
-    opacity: 0.85;
-  }
-  .wordmark-rule {
-    width: 48px;
-    height: 1px;
-    background: linear-gradient(90deg, transparent, rgba(0,180,255,0.5), transparent);
-    margin: 10px auto 0;
-  }
+      .wordmark {
+        text-align: center;
+        margin-bottom: 28px;
+      }
+      .wordmark-text {
+        font-size: 12px;
+        letter-spacing: 5px;
+        text-transform: uppercase;
+        color: #00b4ff;
+        opacity: 0.85;
+      }
+      .wordmark-rule {
+        width: 48px;
+        height: 1px;
+        background: linear-gradient(90deg, transparent, rgba(0, 180, 255, 0.5), transparent);
+        margin: 10px auto 0;
+      }
 
-  .card {
-    background: #0a0f1e;
-    border: 1px solid rgba(0,180,255,0.18);
-    border-radius: 12px;
-    padding: 32px;
-    box-shadow: 0 0 40px rgba(0,180,255,0.05);
-  }
+      .card {
+        background: #0a0f1e;
+        border: 1px solid rgba(0, 180, 255, 0.18);
+        border-radius: 12px;
+        padding: 32px;
+        box-shadow: 0 0 40px rgba(0, 180, 255, 0.05);
+      }
 
-  .card-head { text-align: center; margin-bottom: 24px; }
+      .card-head {
+        text-align: center;
+        margin-bottom: 24px;
+      }
 
-  .icon {
-    width: 46px;
-    height: 46px;
-    border-radius: 50%;
-    background: rgba(0,180,255,0.08);
-    border: 1px solid rgba(0,180,255,0.2);
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-size: 20px;
-    margin: 0 auto 14px;
-  }
+      .icon {
+        width: 46px;
+        height: 46px;
+        border-radius: 50%;
+        background: rgba(0, 180, 255, 0.08);
+        border: 1px solid rgba(0, 180, 255, 0.2);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 20px;
+        margin: 0 auto 14px;
+      }
 
-  h1 {
-    font-size: 20px;
-    font-weight: 600;
-    color: #e2e8f0;
-    letter-spacing: 0.5px;
-    margin-bottom: 6px;
-  }
+      h1 {
+        font-size: 20px;
+        font-weight: 600;
+        color: #e2e8f0;
+        letter-spacing: 0.5px;
+        margin-bottom: 6px;
+      }
 
-  .subtitle {
-    color: #64748b;
-    font-size: 13px;
-    line-height: 1.5;
-  }
+      .subtitle {
+        color: #64748b;
+        font-size: 13px;
+        line-height: 1.5;
+      }
 
-  .eta {
-    display: inline-block;
-    margin-top: 10px;
-    padding: 4px 14px;
-    background: rgba(0,180,255,0.07);
-    border: 1px solid rgba(0,180,255,0.18);
-    border-radius: 20px;
-    color: #00b4ff;
-    font-size: 12px;
-  }
+      .eta {
+        display: inline-block;
+        margin-top: 10px;
+        padding: 4px 14px;
+        background: rgba(0, 180, 255, 0.07);
+        border: 1px solid rgba(0, 180, 255, 0.18);
+        border-radius: 20px;
+        color: #00b4ff;
+        font-size: 12px;
+      }
 
-  .rule { height: 1px; background: rgba(0,180,255,0.08); margin: 22px 0; }
+      .rule {
+        height: 1px;
+        background: rgba(0, 180, 255, 0.08);
+        margin: 22px 0;
+      }
 
-  .section-label {
-    font-size: 10px;
-    letter-spacing: 2px;
-    text-transform: uppercase;
-    color: rgba(0,180,255,0.6);
-    margin-bottom: 12px;
-  }
+      .section-label {
+        font-size: 10px;
+        letter-spacing: 2px;
+        text-transform: uppercase;
+        color: rgba(0, 180, 255, 0.6);
+        margin-bottom: 12px;
+      }
 
-  .status-list { display: flex; flex-direction: column; gap: 8px; }
+      .status-list {
+        display: flex;
+        flex-direction: column;
+        gap: 8px;
+      }
 
-  .row {
-    display: flex;
-    align-items: center;
-    gap: 12px;
-    padding: 10px 14px;
-    background: rgba(0,180,255,0.02);
-    border: 1px solid rgba(0,180,255,0.07);
-    border-radius: 8px;
-  }
+      .row {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        padding: 10px 14px;
+        background: rgba(0, 180, 255, 0.02);
+        border: 1px solid rgba(0, 180, 255, 0.07);
+        border-radius: 8px;
+      }
 
-  .row-icon { font-size: 13px; width: 18px; text-align: center; flex-shrink: 0; }
+      .row-icon {
+        font-size: 13px;
+        width: 18px;
+        text-align: center;
+        flex-shrink: 0;
+      }
 
-  .row-body { flex: 1; }
-  .row-name { font-size: 13px; color: #e2e8f0; font-weight: 500; margin-bottom: 2px; }
-  .row-desc { font-size: 11px; color: #475569; line-height: 1.4; }
+      .row-body {
+        flex: 1;
+      }
+      .row-name {
+        font-size: 13px;
+        color: #e2e8f0;
+        font-weight: 500;
+        margin-bottom: 2px;
+      }
+      .row-desc {
+        font-size: 11px;
+        color: #475569;
+        line-height: 1.4;
+      }
 
-  .badge {
-    font-size: 10px;
-    padding: 2px 8px;
-    border-radius: 10px;
-    font-weight: 500;
-    flex-shrink: 0;
-  }
-  .offline  { background: rgba(239,68,68,0.1);  color: #f87171; border: 1px solid rgba(239,68,68,0.18); }
-  .stale    { background: rgba(245,158,11,0.1); color: #fbbf24; border: 1px solid rgba(245,158,11,0.18); }
-  .restores { background: rgba(34,197,94,0.1);  color: #4ade80; border: 1px solid rgba(34,197,94,0.18); }
+      .badge {
+        font-size: 10px;
+        padding: 2px 8px;
+        border-radius: 10px;
+        font-weight: 500;
+        flex-shrink: 0;
+      }
+      .offline {
+        background: rgba(239, 68, 68, 0.1);
+        color: #f87171;
+        border: 1px solid rgba(239, 68, 68, 0.18);
+      }
+      .stale {
+        background: rgba(245, 158, 11, 0.1);
+        color: #fbbf24;
+        border: 1px solid rgba(245, 158, 11, 0.18);
+      }
+      .restores {
+        background: rgba(34, 197, 94, 0.1);
+        color: #4ade80;
+        border: 1px solid rgba(34, 197, 94, 0.18);
+      }
 
-  .foot {
-    margin-top: 22px;
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    gap: 14px;
-  }
+      .foot {
+        margin-top: 22px;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 14px;
+      }
 
-  .foot-note { font-size: 11px; color: #334155; line-height: 1.55; }
-  .foot-note strong { color: #475569; }
+      .foot-note {
+        font-size: 11px;
+        color: #334155;
+        line-height: 1.55;
+      }
+      .foot-note strong {
+        color: #475569;
+      }
 
-  .discord-btn {
-    display: inline-flex;
-    align-items: center;
-    gap: 6px;
-    padding: 7px 14px;
-    background: rgba(88,101,242,0.1);
-    border: 1px solid rgba(88,101,242,0.22);
-    border-radius: 8px;
-    color: #818cf8;
-    font-size: 12px;
-    text-decoration: none;
-    white-space: nowrap;
-    flex-shrink: 0;
-  }
-</style>
-</head>
-<body>
-<div class="container">
+      .discord-btn {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        padding: 7px 14px;
+        background: rgba(88, 101, 242, 0.1);
+        border: 1px solid rgba(88, 101, 242, 0.22);
+        border-radius: 8px;
+        color: #818cf8;
+        font-size: 12px;
+        text-decoration: none;
+        white-space: nowrap;
+        flex-shrink: 0;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="container">
+      <div class="wordmark">
+        <div class="wordmark-text">XIV Venue Manager</div>
+        <div class="wordmark-rule"></div>
+      </div>
 
-  <div class="wordmark">
-    <div class="wordmark-text">XIV Venue Manager</div>
-    <div class="wordmark-rule"></div>
-  </div>
+      <div class="card">
+        <div class="card-head">
+          <div class="icon">⚙</div>
+          <h1>Scheduled Maintenance</h1>
+          <p class="subtitle">The site is offline. Back shortly.</p>
+          <span class="eta">Est. return: 11:00 UTC</span>
+        </div>
 
-  <div class="card">
+        <div class="rule"></div>
 
-    <div class="card-head">
-      <div class="icon">⚙</div>
-      <h1>Scheduled Maintenance</h1>
-      <p class="subtitle">The site is offline. Back shortly.</p>
-      <span class="eta">Est. return: 11:00 UTC</span>
+        <div class="section-label">Plugin status during maintenance</div>
+        <div class="status-list">
+          <div class="row">
+            <div class="row-icon">🔴</div>
+            <div class="row-body">
+              <div class="row-name">Clock-in / Clock-out</div>
+              <div class="row-desc">Fails with an in-game error. Don't start or end shifts now.</div>
+            </div>
+            <span class="badge offline">Offline</span>
+          </div>
+
+          <div class="row">
+            <div class="row-icon">🔴</div>
+            <div class="row-body">
+              <div class="row-name">Patron Visit Logging</div>
+              <div class="row-desc">Visits during this window won't be recorded and can't be recovered.</div>
+            </div>
+            <span class="badge offline">Offline</span>
+          </div>
+
+          <div class="row">
+            <div class="row-icon">🔴</div>
+            <div class="row-body">
+              <div class="row-name">Sale! Logging</div>
+              <div class="row-desc">Sales logged now won't be recorded.</div>
+            </div>
+            <span class="badge offline">Offline</span>
+          </div>
+
+          <div class="row">
+            <div class="row-icon">🟡</div>
+            <div class="row-body">
+              <div class="row-name">DTR Bar / Shift Info</div>
+              <div class="row-desc">Shows last-known shift status. Updates when the site returns.</div>
+            </div>
+            <span class="badge stale">Stale</span>
+          </div>
+
+          <div class="row">
+            <div class="row-icon">🟢</div>
+            <div class="row-body">
+              <div class="row-name">Plugin Connection</div>
+              <div class="row-desc">No restart needed. The plugin reconnects when the site comes back.</div>
+            </div>
+            <span class="badge restores">Auto-restores</span>
+          </div>
+        </div>
+
+        <div class="rule"></div>
+
+        <div class="foot">
+          <p class="foot-note">
+            Maintenance runs <strong>Tuesdays 09:00–11:00 UTC</strong>.<br />
+            Check Discord for live updates.
+          </p>
+          <a class="discord-btn" href="https://discord.gg/YOUR_INVITE" target="_blank" rel="noopener"> 💬 Discord </a>
+        </div>
+      </div>
     </div>
-
-    <div class="rule"></div>
-
-    <div class="section-label">Plugin status during maintenance</div>
-    <div class="status-list">
-
-      <div class="row">
-        <div class="row-icon">🔴</div>
-        <div class="row-body">
-          <div class="row-name">Clock-in / Clock-out</div>
-          <div class="row-desc">Fails with an in-game error. Don't start or end shifts now.</div>
-        </div>
-        <span class="badge offline">Offline</span>
-      </div>
-
-      <div class="row">
-        <div class="row-icon">🔴</div>
-        <div class="row-body">
-          <div class="row-name">Patron Visit Logging</div>
-          <div class="row-desc">Visits during this window won't be recorded and can't be recovered.</div>
-        </div>
-        <span class="badge offline">Offline</span>
-      </div>
-
-      <div class="row">
-        <div class="row-icon">🔴</div>
-        <div class="row-body">
-          <div class="row-name">Sale! Logging</div>
-          <div class="row-desc">Sales logged now won't be recorded.</div>
-        </div>
-        <span class="badge offline">Offline</span>
-      </div>
-
-      <div class="row">
-        <div class="row-icon">🟡</div>
-        <div class="row-body">
-          <div class="row-name">DTR Bar / Shift Info</div>
-          <div class="row-desc">Shows last-known shift status. Updates when the site returns.</div>
-        </div>
-        <span class="badge stale">Stale</span>
-      </div>
-
-      <div class="row">
-        <div class="row-icon">🟢</div>
-        <div class="row-body">
-          <div class="row-name">Plugin Connection</div>
-          <div class="row-desc">No restart needed. The plugin reconnects when the site comes back.</div>
-        </div>
-        <span class="badge restores">Auto-restores</span>
-      </div>
-
-    </div>
-
-    <div class="rule"></div>
-
-    <div class="foot">
-      <p class="foot-note">
-        Maintenance runs <strong>Tuesdays 09:00–11:00 UTC</strong>.<br>
-        Check Discord for live updates.
-      </p>
-      <a class="discord-btn" href="https://discord.gg/YOUR_INVITE" target="_blank" rel="noopener">
-        💬 Discord
-      </a>
-    </div>
-
-  </div>
-</div>
-</body>
+  </body>
 </html>
 ```
 
@@ -381,6 +437,7 @@ git commit -m "feat: add static maintenance page with XIV blue design and plugin
 ## Task 3: maintenance.sh - Core Flip Script
 
 **Files:**
+
 - Create: `~/bin/maintenance.sh`
 
 - [ ] **Step 1: Write the script**
@@ -518,6 +575,7 @@ Expected: no output (exit 0). Any output is a syntax error.
 ```
 
 Expected output (approximate):
+
 ```
 Active port : :3000
 State       : LIVE
@@ -557,6 +615,7 @@ git commit --allow-empty -m "infra: maintenance.sh deployed to server ~/bin (fli
 ## Task 4: deploy-xiv-web.sh - Add --green Flag
 
 **Files:**
+
 - Modify: `~/bin/deploy-xiv-web.sh`
 
 - [ ] **Step 1: Replace the deploy script with green-deploy support**
@@ -689,6 +748,7 @@ git commit --allow-empty -m "infra: deploy-xiv-web.sh --green flag for blue-gree
 ## Task 5: xiv-admin Config - Add maintenance_script Field
 
 **Files:**
+
 - Modify: `~/xiv-admin/xiv_admin/config.py`
 
 - [ ] **Step 1: Add maintenance_script to Config dataclass**
@@ -722,6 +782,7 @@ git commit -m "feat: add maintenance_script config field"
 ## Task 6: XIV-Admin MaintenancePanel
 
 **Files:**
+
 - Create: `~/xiv-admin/xiv_admin/panels/maintenance.py`
 
 - [ ] **Step 1: Write the panel**
@@ -896,6 +957,7 @@ git commit -m "feat: add MaintenancePanel with enable/disable/green-deploy contr
 ## Task 7: XIV-Admin FeedbackPanel
 
 **Files:**
+
 - Create: `~/xiv-admin/xiv_admin/panels/feedback.py`
 
 - [ ] **Step 1: Write the panel**
@@ -1087,6 +1149,7 @@ git commit -m "feat: add FeedbackPanel with status triage and category filter"
 ## Task 8: main.py - Register Both Panels
 
 **Files:**
+
 - Modify: `~/xiv-admin/xiv_admin/main.py`
 
 - [ ] **Step 1: Add imports**
@@ -1143,20 +1206,21 @@ git commit -m "feat: register MaintenancePanel and FeedbackPanel in TUI"
 
 **Spec coverage check:**
 
-| Spec requirement | Task |
-|---|---|
-| docker-compose green + maintenance profiles | Task 1 |
-| Maintenance page HTML, XIV blue, layout C | Task 2 |
-| maintenance.sh on/off/status + active events guard | Task 3 |
-| Discord webhook on flip | Task 3 |
-| deploy-xiv-web.sh --green flag | Task 4 |
-| cloudflared config flip + health check | Task 4 |
-| ACTIVE_PORT file tracking | Tasks 3, 4 |
-| XIV-admin MaintenancePanel | Tasks 5, 6 |
-| XIV-admin FeedbackPanel | Task 7 |
-| Both panels registered in main.py | Task 8 |
+| Spec requirement                                   | Task       |
+| -------------------------------------------------- | ---------- |
+| docker-compose green + maintenance profiles        | Task 1     |
+| Maintenance page HTML, XIV blue, layout C          | Task 2     |
+| maintenance.sh on/off/status + active events guard | Task 3     |
+| Discord webhook on flip                            | Task 3     |
+| deploy-xiv-web.sh --green flag                     | Task 4     |
+| cloudflared config flip + health check             | Task 4     |
+| ACTIVE_PORT file tracking                          | Tasks 3, 4 |
+| XIV-admin MaintenancePanel                         | Tasks 5, 6 |
+| XIV-admin FeedbackPanel                            | Task 7     |
+| Both panels registered in main.py                  | Task 8     |
 
 **Known manual steps not in plan (do once):**
+
 - Replace `YOUR_INVITE` Discord link in `index.html` (Task 2)
 - Set `DISCORD_MAINTENANCE_WEBHOOK` env var on server (in `/etc/environment` or `~/.bashrc` on server)
 - Initialize `/home/server/.xiv-active-port` with `echo 3000 > /home/server/.xiv-active-port` on first run

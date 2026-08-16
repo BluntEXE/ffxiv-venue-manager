@@ -25,10 +25,7 @@ export async function POST(request: NextRequest) {
     const body = await request.json()
     const parsed = bodySchema.safeParse(body)
     if (!parsed.success) {
-      return NextResponse.json(
-        { error: "shiftId is required" },
-        { status: 400 }
-      )
+      return NextResponse.json({ error: "shiftId is required" }, { status: 400 })
     }
 
     const shift = await prisma.shift.findUnique({
@@ -45,22 +42,12 @@ export async function POST(request: NextRequest) {
     }
 
     if (shift.membership?.userId !== auth.userId) {
-      return NextResponse.json(
-        { error: "This shift is not assigned to you" },
-        { status: 403 }
-      )
+      return NextResponse.json({ error: "This shift is not assigned to you" }, { status: 403 })
     }
 
-    const canClock = await checkPermission(
-      auth.userId,
-      shift.venueId,
-      "clock_shift"
-    )
+    const canClock = await checkPermission(auth.userId, shift.venueId, "clock_shift")
     if (!canClock) {
-      return NextResponse.json(
-        { error: "You do not have permission to clock shifts" },
-        { status: 403 }
-      )
+      return NextResponse.json({ error: "You do not have permission to clock shifts" }, { status: 403 })
     }
 
     if (shift.status !== "ACTIVE") {
@@ -73,12 +60,8 @@ export async function POST(request: NextRequest) {
     const now = new Date()
 
     // Calculate hours worked from actual timestamps
-    const calculatedHours = shift.actualStart
-      ? (now.getTime() - shift.actualStart.getTime()) / (1000 * 60 * 60)
-      : null
-    const roundedHours = calculatedHours !== null
-      ? Math.round(calculatedHours * 100) / 100
-      : null
+    const calculatedHours = shift.actualStart ? (now.getTime() - shift.actualStart.getTime()) / (1000 * 60 * 60) : null
+    const roundedHours = calculatedHours !== null ? Math.round(calculatedHours * 100) / 100 : null
 
     const writeResult = await prisma.shift.updateMany({
       where: { id: shift.id, status: "ACTIVE" },
@@ -109,9 +92,6 @@ export async function POST(request: NextRequest) {
     })
   } catch (error) {
     console.error("[Plugin API] Error clocking out:", error)
-    return NextResponse.json(
-      { error: "Internal server error" },
-      { status: 500 }
-    )
+    return NextResponse.json({ error: "Internal server error" }, { status: 500 })
   }
 }

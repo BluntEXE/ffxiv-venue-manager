@@ -64,7 +64,7 @@ Key fixes:
 - **API keys hashed at rest** — migration handled without logging out active plugin users (backfill + soak window + column drop)
 - **Secrets out of docker-compose.yml and Dockerfile** — moved to `env_file: .env`, never baked into image layers
 - **Rate limiting on all routes** — ioredis-backed, replaced dead Upstash REST integration that had been silently failing
-- **Plugin RL ordering bug discovered post-audit** — rate limit was running *after* key validation, leaving keyspace open to brute-force. Fixed: IP throttle now runs first, before any DB work
+- **Plugin RL ordering bug discovered post-audit** — rate limit was running _after_ key validation, leaving keyspace open to brute-force. Fixed: IP throttle now runs first, before any DB work
 - **IDOR on feedback endpoint fixed**, **40 membership queries gained active status filter**, **cron auth made timing-safe**
 - **SSH password auth disabled**, ed25519 keys only
 
@@ -97,13 +97,13 @@ Added a React Native / Expo mobile app targeting Android (iOS deferred — cost)
 
 ## Where it stands (May 2026)
 
-| Metric | Value |
-|---|---|
-| Total LOC | ~24,400 (19,419 TS/TSX + 4,981 C#) |
-| API routes | 55 |
-| Database tables | 19 |
-| Containers | 7 (web, postgres, redis, cron, xiv-stats, adminer, static-ehno) |
-| Security findings | 18/18 closed |
-| Development span | December 2025 – present |
+| Metric            | Value                                                           |
+| ----------------- | --------------------------------------------------------------- |
+| Total LOC         | ~24,400 (19,419 TS/TSX + 4,981 C#)                              |
+| API routes        | 55                                                              |
+| Database tables   | 19                                                              |
+| Containers        | 7 (web, postgres, redis, cron, xiv-stats, adminer, static-ehno) |
+| Security findings | 18/18 closed                                                    |
+| Development span  | December 2025 – present                                         |
 
 All 18 security findings closed as of 2026-05-07.

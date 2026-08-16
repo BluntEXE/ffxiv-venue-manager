@@ -11,14 +11,24 @@ const Decimal = Prisma.Decimal
 type Decimal = InstanceType<typeof Prisma.Decimal>
 
 const payrollGenerateOptionalsSchema = z.object({
-  baseRate: z.union([
-    z.null(),
-    z.coerce.number().min(0, "Invalid base rate. Must be a positive number").max(999999999, "Invalid base rate. Must be a positive number"),
-  ]).optional(),
-  bonusAmount: z.union([
-    z.null(),
-    z.coerce.number().min(0, "Invalid bonus amount. Must be a positive number").max(999999999, "Invalid bonus amount. Must be a positive number"),
-  ]).optional(),
+  baseRate: z
+    .union([
+      z.null(),
+      z.coerce
+        .number()
+        .min(0, "Invalid base rate. Must be a positive number")
+        .max(999999999, "Invalid base rate. Must be a positive number"),
+    ])
+    .optional(),
+  bonusAmount: z
+    .union([
+      z.null(),
+      z.coerce
+        .number()
+        .min(0, "Invalid bonus amount. Must be a positive number")
+        .max(999999999, "Invalid bonus amount. Must be a positive number"),
+    ])
+    .optional(),
   notes: z.string().max(10000, "Notes must be 10,000 characters or less").optional().nullable(),
 })
 
@@ -33,10 +43,7 @@ const payrollGenerateOptionalsSchema = z.object({
  * - baseRate defaults to the membership's hourlyRate if not provided
  */
 export const POST = withRateLimit<{ params: Promise<{ venueId: string }> }>(
-  async (
-    request: NextRequest,
-    context
-  ) => {
+  async (request: NextRequest, context) => {
     if (!context?.params) {
       return NextResponse.json({ error: "Invalid request" }, { status: 400 })
     }
@@ -52,10 +59,7 @@ export const POST = withRateLimit<{ params: Promise<{ venueId: string }> }>(
       // Look up venue by slug or ID
       const venue = await prisma.venue.findFirst({
         where: {
-          OR: [
-            { id: venueId },
-            { slug: venueId }
-          ]
+          OR: [{ id: venueId }, { slug: venueId }],
         },
       })
 
@@ -72,17 +76,11 @@ export const POST = withRateLimit<{ params: Promise<{ venueId: string }> }>(
       })
 
       if (!callerMembership) {
-        return NextResponse.json(
-          { error: "You don't have access to this venue" },
-          { status: 403 }
-        )
+        return NextResponse.json({ error: "You don't have access to this venue" }, { status: 403 })
       }
 
       if (callerMembership.role !== "OWNER" && callerMembership.role !== "MANAGER") {
-        return NextResponse.json(
-          { error: "Only owners and managers can generate payroll" },
-          { status: 403 }
-        )
+        return NextResponse.json({ error: "Only owners and managers can generate payroll" }, { status: 403 })
       }
 
       const body = await request.json()
@@ -103,10 +101,7 @@ export const POST = withRateLimit<{ params: Promise<{ venueId: string }> }>(
 
       // Validate required fields
       if (!membershipId || !periodStart || !periodEnd) {
-        return NextResponse.json(
-          { error: "membershipId, periodStart, and periodEnd are required" },
-          { status: 400 }
-        )
+        return NextResponse.json({ error: "membershipId, periodStart, and periodEnd are required" }, { status: 400 })
       }
 
       const startDate = new Date(periodStart)
@@ -117,10 +112,7 @@ export const POST = withRateLimit<{ params: Promise<{ venueId: string }> }>(
         return NextResponse.json({ error: "Invalid date format" }, { status: 400 })
       }
       if (endDate < startDate) {
-        return NextResponse.json(
-          { error: "Period end must be after period start" },
-          { status: 400 }
-        )
+        return NextResponse.json({ error: "Period end must be after period start" }, { status: 400 })
       }
 
       // Fetch the staff member's membership (includes hourlyRate)
@@ -132,10 +124,7 @@ export const POST = withRateLimit<{ params: Promise<{ venueId: string }> }>(
       })
 
       if (!staffMembership) {
-        return NextResponse.json(
-          { error: "Staff member not found in this venue" },
-          { status: 404 }
-        )
+        return NextResponse.json({ error: "Staff member not found in this venue" }, { status: 404 })
       }
 
       // Find completed shifts with no payroll entry in the date range
@@ -154,10 +143,7 @@ export const POST = withRateLimit<{ params: Promise<{ venueId: string }> }>(
       })
 
       if (eligibleShifts.length === 0) {
-        return NextResponse.json(
-          { error: "No unpaid completed shifts found in this period" },
-          { status: 400 }
-        )
+        return NextResponse.json({ error: "No unpaid completed shifts found in this period" }, { status: 400 })
       }
 
       let totalHours: Decimal
@@ -178,16 +164,16 @@ export const POST = withRateLimit<{ params: Promise<{ venueId: string }> }>(
         totalAmount = overrideRate.mul(totalHours)
         linkedShiftIds = eligibleShifts.map((s) => s.id)
       } else {
-        const roleIds = [
-          ...eligibleShifts.map((s) => s.roleId),
-          staffMembership.roleId,
-        ]
+        const roleIds = [...eligibleShifts.map((s) => s.roleId), staffMembership.roleId]
         const roleRates = await fetchRoleRates(roleIds)
         const resolution = resolveShiftRates(eligibleShifts, staffMembership, roleRates)
 
         if (resolution.includedShiftIds.length === 0) {
           return NextResponse.json(
-            { error: "No hourly rate could be resolved for any shift in this period (no personal rate, no role rate on the shifts, and no primary role rate set)" },
+            {
+              error:
+                "No hourly rate could be resolved for any shift in this period (no personal rate, no role rate on the shifts, and no primary role rate set)",
+            },
             { status: 400 }
           )
         }
@@ -231,7 +217,11 @@ export const POST = withRateLimit<{ params: Promise<{ venueId: string }> }>(
                     name: true,
                     image: true,
                     displayName: true,
-                    characters: { orderBy: [{ isPrimary: "desc" }, { createdAt: "asc" }], take: 1, select: { characterName: true } },
+                    characters: {
+                      orderBy: [{ isPrimary: "desc" }, { createdAt: "asc" }],
+                      take: 1,
+                      select: { characterName: true },
+                    },
                   },
                 },
                 customRole: true,
@@ -264,10 +254,7 @@ export const POST = withRateLimit<{ params: Promise<{ venueId: string }> }>(
       )
     } catch (error) {
       console.error("Error generating payroll from shifts:", error)
-      return NextResponse.json(
-        { error: "Internal server error" },
-        { status: 500 }
-      )
+      return NextResponse.json({ error: "Internal server error" }, { status: 500 })
     }
   },
   { requests: 10, window: "1 m" }
@@ -280,10 +267,7 @@ export const POST = withRateLimit<{ params: Promise<{ venueId: string }> }>(
  * Used by the UI to show what will be generated before confirming.
  */
 export const GET = withRateLimit<{ params: Promise<{ venueId: string }> }>(
-  async (
-    request: NextRequest,
-    context
-  ) => {
+  async (request: NextRequest, context) => {
     if (!context?.params) {
       return NextResponse.json({ error: "Invalid request" }, { status: 400 })
     }
@@ -298,10 +282,7 @@ export const GET = withRateLimit<{ params: Promise<{ venueId: string }> }>(
 
       const venue = await prisma.venue.findFirst({
         where: {
-          OR: [
-            { id: venueId },
-            { slug: venueId }
-          ]
+          OR: [{ id: venueId }, { slug: venueId }],
         },
       })
 
@@ -317,17 +298,11 @@ export const GET = withRateLimit<{ params: Promise<{ venueId: string }> }>(
       })
 
       if (!callerMembership) {
-        return NextResponse.json(
-          { error: "You don't have access to this venue" },
-          { status: 403 }
-        )
+        return NextResponse.json({ error: "You don't have access to this venue" }, { status: 403 })
       }
 
       if (callerMembership.role !== "OWNER" && callerMembership.role !== "MANAGER") {
-        return NextResponse.json(
-          { error: "Only owners and managers can generate payroll" },
-          { status: 403 }
-        )
+        return NextResponse.json({ error: "Only owners and managers can generate payroll" }, { status: 403 })
       }
 
       const searchParams = request.nextUrl.searchParams
@@ -336,10 +311,7 @@ export const GET = withRateLimit<{ params: Promise<{ venueId: string }> }>(
       const periodEnd = searchParams.get("periodEnd")
 
       if (!membershipId || !periodStart || !periodEnd) {
-        return NextResponse.json(
-          { error: "membershipId, periodStart, and periodEnd are required" },
-          { status: 400 }
-        )
+        return NextResponse.json({ error: "membershipId, periodStart, and periodEnd are required" }, { status: 400 })
       }
 
       const startDate = new Date(periodStart)
@@ -363,17 +335,18 @@ export const GET = withRateLimit<{ params: Promise<{ venueId: string }> }>(
               name: true,
               displayName: true,
               image: true,
-              characters: { orderBy: [{ isPrimary: "desc" }, { createdAt: "asc" }], take: 1, select: { characterName: true } },
+              characters: {
+                orderBy: [{ isPrimary: "desc" }, { createdAt: "asc" }],
+                take: 1,
+                select: { characterName: true },
+              },
             },
           },
         },
       })
 
       if (!staffMembership) {
-        return NextResponse.json(
-          { error: "Staff member not found in this venue" },
-          { status: 404 }
-        )
+        return NextResponse.json({ error: "Staff member not found in this venue" }, { status: 404 })
       }
 
       // Find eligible shifts
@@ -391,10 +364,7 @@ export const GET = withRateLimit<{ params: Promise<{ venueId: string }> }>(
         orderBy: { actualStart: "asc" },
       })
 
-      const roleIds = [
-        ...eligibleShifts.map((s) => s.roleId),
-        staffMembership.roleId,
-      ]
+      const roleIds = [...eligibleShifts.map((s) => s.roleId), staffMembership.roleId]
       const roleRates = await fetchRoleRates(roleIds)
       const resolution = resolveShiftRates(eligibleShifts, staffMembership, roleRates)
       const resolvedById = new Map(resolution.resolved.map((r) => [r.id, r]))
@@ -413,9 +383,7 @@ export const GET = withRateLimit<{ params: Promise<{ venueId: string }> }>(
         }
       })
 
-      const defaultRate = staffMembership.hourlyRate
-        ? Number(staffMembership.hourlyRate)
-        : null
+      const defaultRate = staffMembership.hourlyRate ? Number(staffMembership.hourlyRate) : null
 
       return NextResponse.json({
         staff: {
@@ -439,10 +407,7 @@ export const GET = withRateLimit<{ params: Promise<{ venueId: string }> }>(
       })
     } catch (error) {
       console.error("Error previewing payroll generation:", error)
-      return NextResponse.json(
-        { error: "Internal server error" },
-        { status: 500 }
-      )
+      return NextResponse.json({ error: "Internal server error" }, { status: 500 })
     }
   },
   { requests: 30, window: "1 m" }

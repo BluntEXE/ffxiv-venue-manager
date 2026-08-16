@@ -8,7 +8,7 @@
 
 **Tech Stack:** Next.js 16 App Router (Server + Client Components), TypeScript strict, `Intl.DateTimeFormat` via existing `lib/server-time.ts`, Vitest.
 
-**Known ceiling (documented, not fixed here):** `utcWeeklyToLocal` computes the local day/time for a *recurring* weekly slot using the current UTC↔local offset. During the ~1 week a schedule entry straddles a DST transition, the displayed local day/time may be off by the DST delta (e.g. 1 hour) until the offset stabilizes. This matches how the rest of the app already treats DST (no special-casing anywhere), and affects only a cosmetic weekly-hours display, not bookings or financial data.
+**Known ceiling (documented, not fixed here):** `utcWeeklyToLocal` computes the local day/time for a _recurring_ weekly slot using the current UTC↔local offset. During the ~1 week a schedule entry straddles a DST transition, the displayed local day/time may be off by the DST delta (e.g. 1 hour) until the offset stabilizes. This matches how the rest of the app already treats DST (no special-casing anywhere), and affects only a cosmetic weekly-hours display, not bookings or financial data.
 
 **Explicitly out of scope:** the legacy free-text "hours" fallback path in `app/venues/[slug]/page.tsx` (`openDays`/`defaultHours`/`openNights`, used only when a venue has no structured `scheduleEntries`) stays ST-labeled — it has no structured start/end times to convert, only a day-open bitset and a free-text string. The `isOpenNow`/`matchesInterval`/`getWeekdayOccurrence` business-logic functions in `lib/schedule-utils.ts` stay UTC — they're backend logic (compute a boolean), not user-facing display, per the original Phase A/B policy ("only use ST on the backend, non user facing").
 
@@ -30,6 +30,7 @@
 ### Task 1: Add `monthShort`/`dayOfMonth` kinds to `lib/server-time.ts`
 
 **Files:**
+
 - Modify: `apps/web/lib/server-time.ts:12-26`
 - Test: `apps/web/lib/server-time.test.ts`
 
@@ -94,6 +95,7 @@ git commit -m "Add monthShort/dayOfMonth ServerTimeKind for date-box tiles"
 ### Task 2: Add local weekly-schedule conversion helpers to `lib/schedule-utils.ts`
 
 **Files:**
+
 - Modify: `apps/web/lib/schedule-utils.ts`
 - Create: `apps/web/lib/schedule-utils.test.ts`
 
@@ -134,9 +136,18 @@ describe("localDayOf", () => {
   it("returns the local weekday an entry's start time falls on", () => {
     process.env.TZ = "Europe/London"
     const entry: ScheduleEntry = {
-      id: "1", venueId: "v1", day: 6, startHour: 23, startMin: 30,
-      endHour: null, endMin: null, crossesMidnight: false,
-      interval: "WEEKLY", weekOfMonth: null, commencing: null, label: null,
+      id: "1",
+      venueId: "v1",
+      day: 6,
+      startHour: 23,
+      startMin: 30,
+      endHour: null,
+      endMin: null,
+      crossesMidnight: false,
+      interval: "WEEKLY",
+      weekOfMonth: null,
+      commencing: null,
+      label: null,
     }
     expect(localDayOf(entry)).toBe(0)
   })
@@ -146,9 +157,18 @@ describe("formatLocalEntryTime", () => {
   it("formats a same-day entry with no ST suffix", () => {
     process.env.TZ = "Etc/UTC"
     const entry: ScheduleEntry = {
-      id: "1", venueId: "v1", day: 2, startHour: 20, startMin: 0,
-      endHour: 22, endMin: 30, crossesMidnight: false,
-      interval: "WEEKLY", weekOfMonth: null, commencing: null, label: null,
+      id: "1",
+      venueId: "v1",
+      day: 2,
+      startHour: 20,
+      startMin: 0,
+      endHour: 22,
+      endMin: 30,
+      crossesMidnight: false,
+      interval: "WEEKLY",
+      weekOfMonth: null,
+      commencing: null,
+      label: null,
     }
     expect(formatLocalEntryTime(entry)).toBe("8 PM – 10:30 PM")
   })
@@ -158,9 +178,18 @@ describe("formatLocalEntryTime", () => {
     // to Sunday 00:00 -> Sunday 02:00 local, so the end stays same-day.
     process.env.TZ = "Europe/London"
     const entry: ScheduleEntry = {
-      id: "1", venueId: "v1", day: 6, startHour: 23, startMin: 0,
-      endHour: 1, endMin: 0, crossesMidnight: true,
-      interval: "WEEKLY", weekOfMonth: null, commencing: null, label: null,
+      id: "1",
+      venueId: "v1",
+      day: 6,
+      startHour: 23,
+      startMin: 0,
+      endHour: 1,
+      endMin: 0,
+      crossesMidnight: true,
+      interval: "WEEKLY",
+      weekOfMonth: null,
+      commencing: null,
+      label: null,
     }
     expect(formatLocalEntryTime(entry)).toBe("12 AM – 2 AM")
   })
@@ -234,6 +263,7 @@ git commit -m "Add utcWeeklyToLocal/localDayOf/formatLocalEntryTime schedule hel
 ### Task 3: Convert `VenueScheduleDisplay` to local-bucketed client component
 
 **Files:**
+
 - Modify: `apps/web/components/venue-schedule-display.tsx` (full rewrite, 59 lines)
 
 - [ ] **Step 1: Rewrite the component**
@@ -244,11 +274,19 @@ Replace the entire contents of `apps/web/components/venue-schedule-display.tsx` 
 "use client"
 
 import { useEffect, useState } from "react"
-import { DAY_NAMES, DAY_SHORT, formatEntryTime, formatLocalEntryTime, formatIntervalLabel, localDayOf, type ScheduleEntry } from "@/lib/schedule-utils"
+import {
+  DAY_NAMES,
+  DAY_SHORT,
+  formatEntryTime,
+  formatLocalEntryTime,
+  formatIntervalLabel,
+  localDayOf,
+  type ScheduleEntry,
+} from "@/lib/schedule-utils"
 
 type Props = {
   entries: ScheduleEntry[]
-  compact?: boolean  // true = short day names, no interval label
+  compact?: boolean // true = short day names, no interval label
 }
 
 export function VenueScheduleDisplay({ entries, compact = false }: Props) {
@@ -258,7 +296,7 @@ export function VenueScheduleDisplay({ entries, compact = false }: Props) {
   if (entries.length === 0) {
     return (
       <>
-        {[0,1,2,3,4,5,6].map(i => (
+        {[0, 1, 2, 3, 4, 5, 6].map((i) => (
           <div key={i} className="hours-row closed">
             <span className="day">{compact ? DAY_SHORT[i] : DAY_NAMES[i]}</span>
             <span className="hrs">—</span>
@@ -280,7 +318,7 @@ export function VenueScheduleDisplay({ entries, compact = false }: Props) {
 
   return (
     <>
-      {[0,1,2,3,4,5,6].map(i => {
+      {[0, 1, 2, 3, 4, 5, 6].map((i) => {
         const dayEntries = byDay.get(i)
         const isToday = i === todayDay
         if (!dayEntries || dayEntries.length === 0) {
@@ -328,6 +366,7 @@ git commit -m "Convert VenueScheduleDisplay to local-time day-bucketed client co
 ### Task 4: Convert `FfxivvenuesScheduleDisplay` to local-bucketed client component
 
 **Files:**
+
 - Modify: `apps/web/components/ffxivvenues-schedule-display.tsx` (full rewrite, 83 lines)
 
 - [ ] **Step 1: Rewrite the component**
@@ -342,7 +381,7 @@ import type { FfxivVenueData } from "@/lib/ffxivvenues"
 import { LocalTime } from "@/components/server-time"
 import { utcWeeklyToLocal, formatHHMM } from "@/lib/schedule-utils"
 
-const DAY_NAMES = ["Sunday","Monday","Tuesday","Wednesday","Thursday","Friday","Saturday"]
+const DAY_NAMES = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"]
 
 type Props = {
   data: FfxivVenueData
@@ -367,8 +406,16 @@ export function FfxivvenuesScheduleDisplay({ data, syncedAt }: Props) {
   return (
     <div className="dcard">
       <div className="dh">
-        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="w-4 h-4">
-          <circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/>
+        <svg
+          xmlns="http://www.w3.org/2000/svg"
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          strokeWidth="2"
+          className="w-4 h-4"
+        >
+          <circle cx="12" cy="12" r="10" />
+          <polyline points="12 6 12 12 16 14" />
         </svg>
         Schedule
         <span className="ml-auto text-[0.7rem] text-[var(--fg-faint)] font-normal">via ffxivvenues.com</span>
@@ -378,7 +425,7 @@ export function FfxivvenuesScheduleDisplay({ data, syncedAt }: Props) {
         <p className="px-5 py-3 text-[0.82rem] text-[var(--fg-faint)]">No schedule published on ffxivvenues.com.</p>
       ) : (
         <>
-          {[0,1,2,3,4,5,6].map(i => {
+          {[0, 1, 2, 3, 4, 5, 6].map((i) => {
             const entries = byDay.get(i)
             const isToday = i === todayDay
             if (!entries || entries.length === 0) {
@@ -426,7 +473,9 @@ export function FfxivvenuesScheduleDisplay({ data, syncedAt }: Props) {
         >
           Schedule via ffxivvenues.com →
         </a>
-        <span className="text-[0.7rem] text-[var(--fg-faint)]">Synced <LocalTime date={syncedAt} formatStr="datetime" /></span>
+        <span className="text-[0.7rem] text-[var(--fg-faint)]">
+          Synced <LocalTime date={syncedAt} formatStr="datetime" />
+        </span>
       </div>
     </div>
   )
@@ -452,6 +501,7 @@ git commit -m "Convert FfxivvenuesScheduleDisplay to local-time day-bucketed cli
 ### Task 5: Local-time date-box and time swaps in `app/dashboard/[slug]/events/page.tsx`
 
 **Files:**
+
 - Modify: `apps/web/app/dashboard/[slug]/events/page.tsx`
 
 - [ ] **Step 1: Update imports**
@@ -489,13 +539,17 @@ with:
 Replace line 171:
 
 ```tsx
-                    <p className="text-xs text-muted-foreground mt-0.5">{formatServerTime(event.startTime, "datelong")} · {formatServerTime(event.startTime, "time")} {SERVER_TIME_LABEL}</p>
+<p className="text-xs text-muted-foreground mt-0.5">
+  {formatServerTime(event.startTime, "datelong")} · {formatServerTime(event.startTime, "time")} {SERVER_TIME_LABEL}
+</p>
 ```
 
 with:
 
 ```tsx
-                    <p className="text-xs text-muted-foreground mt-0.5"><LocalTime date={event.startTime} formatStr="datelong" /> · <LocalTime date={event.startTime} formatStr="time" /></p>
+<p className="text-xs text-muted-foreground mt-0.5">
+  <LocalTime date={event.startTime} formatStr="datelong" /> · <LocalTime date={event.startTime} formatStr="time" />
+</p>
 ```
 
 - [ ] **Step 3: Fix the past-events date box and time line**
@@ -517,13 +571,17 @@ with:
 Replace line 216:
 
 ```tsx
-                                  <span className="meta">{formatServerTime(event.startTime, "time")} {SERVER_TIME_LABEL}</span>
+<span className="meta">
+  {formatServerTime(event.startTime, "time")} {SERVER_TIME_LABEL}
+</span>
 ```
 
 with:
 
 ```tsx
-                                  <span className="meta"><LocalTime date={event.startTime} formatStr="time" /></span>
+<span className="meta">
+  <LocalTime date={event.startTime} formatStr="time" />
+</span>
 ```
 
 - [ ] **Step 4: Fix the upcoming-events date box and time line**
@@ -545,19 +603,24 @@ with:
 Replace lines 258-261:
 
 ```tsx
-                        <span className="meta">
-                          {format(new Date(event.startTime), "EEE")} · {formatServerTime(event.startTime, "time")}
-                          {event.endTime ? ` – ${formatServerTime(event.endTime, "time")} ${SERVER_TIME_LABEL}` : ` ${SERVER_TIME_LABEL}`}
-                        </span>
+<span className="meta">
+  {format(new Date(event.startTime), "EEE")} · {formatServerTime(event.startTime, "time")}
+  {event.endTime ? ` – ${formatServerTime(event.endTime, "time")} ${SERVER_TIME_LABEL}` : ` ${SERVER_TIME_LABEL}`}
+</span>
 ```
 
 with:
 
 ```tsx
-                        <span className="meta">
-                          {format(new Date(event.startTime), "EEE")} · <LocalTime date={event.startTime} formatStr="time" />
-                          {event.endTime && <> – <LocalTime date={event.endTime} formatStr="time" /></>}
-                        </span>
+<span className="meta">
+  {format(new Date(event.startTime), "EEE")} · <LocalTime date={event.startTime} formatStr="time" />
+  {event.endTime && (
+    <>
+      {" "}
+      – <LocalTime date={event.endTime} formatStr="time" />
+    </>
+  )}
+</span>
 ```
 
 (`format(new Date(event.startTime), "EEE")` is `date-fns`'s `format`, which is already local-time by default — left unchanged. It was previously showing a local weekday next to a Server-Time hour, a pre-existing mismatch this task incidentally fixes since the time next to it is now local too.)
@@ -582,6 +645,7 @@ git commit -m "Show local time in dashboard events list date boxes and time line
 ### Task 6: Local-time swaps in `app/venues/[slug]/page.tsx`
 
 **Files:**
+
 - Modify: `apps/web/app/venues/[slug]/page.tsx`
 
 - [ ] **Step 1: Add the `LocalTime` import and drop the now-unused `formatServerTime`**
@@ -662,7 +726,7 @@ git commit -m "Show local time in public venue page live-strip and upcoming even
 - [ ] **Step 1: Full type-check**
 
 Run: `cd apps/web && pnpm tsc --noEmit`
-Expected: clean (the two pre-existing unrelated errors in `attendance-overview.tsx`/`event-attendance-chart.tsx` from Phase B, TS7031 implicit-any on recharts Tooltip props, are not part of this diff — confirm they're still the *only* remaining output).
+Expected: clean (the two pre-existing unrelated errors in `attendance-overview.tsx`/`event-attendance-chart.tsx` from Phase B, TS7031 implicit-any on recharts Tooltip props, are not part of this diff — confirm they're still the _only_ remaining output).
 
 - [ ] **Step 2: Full test suite**
 
@@ -672,7 +736,8 @@ Expected: all test files pass, including the new `schedule-utils.test.ts` and th
 - [ ] **Step 3: Live verification against the local dev stack**
 
 Using the local Postgres-backed dev server (`docs/LOCAL_DEV.md`), seed a `ScheduleEntry` whose UTC start time is within ~1 hour of local midnight for the current system timezone (so the day-shift path is actually exercised, not just the identity path), and check:
-- `/dashboard/<slug>` "Hours" card (`VenueScheduleDisplay`) — the entry appears under the correct *local* weekday row, with the correct local time and no " ST" suffix, and the "today" highlight lands on the correct local weekday.
+
+- `/dashboard/<slug>` "Hours" card (`VenueScheduleDisplay`) — the entry appears under the correct _local_ weekday row, with the correct local time and no " ST" suffix, and the "today" highlight lands on the correct local weekday.
 - `/venues/<slug>` public page — same check for both `VenueScheduleDisplay` (Hours card) and, if the test venue has `ffxivvenuesId` data with a synced schedule, `FfxivvenuesScheduleDisplay`.
 - `/dashboard/<slug>/events` — Upcoming, Past, and Drafts tabs all show local date-box month/day and local times; weekday text next to the time now matches the time shown.
 - `/venues/<slug>` — the "Upcoming events" card and, if a `liveEvent` exists, the "Happening now" live strip's "open until" time — both local, no " ST" suffix.

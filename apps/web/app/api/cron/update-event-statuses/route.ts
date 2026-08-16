@@ -29,7 +29,9 @@ export async function GET(request: Request) {
     console.log(`[Cron] Event status update starting at ${now.toISOString()}`)
 
     // 1. Find PUBLISHED events that should be ACTIVE (startTime has passed)
-    console.log(`[Cron] Looking for PUBLISHED events with startTime <= ${now.toISOString()} and endTime >= ${now.toISOString()}`)
+    console.log(
+      `[Cron] Looking for PUBLISHED events with startTime <= ${now.toISOString()} and endTime >= ${now.toISOString()}`
+    )
     const eventsToActivate = await prisma.event.findMany({
       where: {
         status: "PUBLISHED",
@@ -255,9 +257,6 @@ export async function GET(request: Request) {
     })
   } catch (error) {
     console.error("Error in update-event-statuses cron job:", error)
-    return NextResponse.json(
-      { error: "Internal server error" },
-      { status: 500 }
-    )
+    return NextResponse.json({ error: "Internal server error" }, { status: 500 })
   }
 }

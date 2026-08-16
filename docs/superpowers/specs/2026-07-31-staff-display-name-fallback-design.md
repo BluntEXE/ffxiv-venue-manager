@@ -84,6 +84,7 @@ to `resolveDisplayName`.
 ## Call sites
 
 **Shifts:**
+
 - `apps/web/lib/shift-format.ts` — extend `CalendarShift.membership.user` type with
   `displayName` and `characters`.
 - `apps/web/components/shift-day-dialog.tsx` — `staffLabel()` swaps to `resolveDisplayName()`.
@@ -93,16 +94,19 @@ to `resolveDisplayName`.
   `ClockShiftButton` staffName props, `staffForDialog` mapping).
 
 **Live dashboard:**
+
 - `apps/web/app/dashboard/[slug]/live/page.tsx` — extend the `activeShifts` query, swap the
   `onShiftStaff` mapping (currently `nickname ?? user.name ?? invitedName ?? "Staff"` — keep
   `invitedName` as the fallback immediately before `"Staff"`, since that's for staff who
   haven't accepted their invite yet and have no `User` row at all).
 
 **Payroll:**
+
 - `apps/web/app/dashboard/[slug]/payroll/page.tsx` — extend the relevant queries, swap all 3
   inline `nickname ?? displayName ?? name ?? "Unknown"` expressions.
 
 **Staff management:**
+
 - `apps/web/app/dashboard/[slug]/staff/page.tsx` — extend the staff query, pass
   `characterName`/`displayName`/`discordName` through to `staff-table.tsx` as data (not a
   pre-resolved string).
@@ -111,10 +115,11 @@ to `resolveDisplayName`.
   member could be known by, not just nickname/Discord name).
 
 **Sales (webhook + SSE + timeline):**
+
 - `apps/web/lib/api/transactions.ts` — `createTransaction()` currently selects
   `staff: { select: { id: true, name: true } }` (a `User`, not a `Membership` — `Transaction`
   has no direct membership relation). Add a `Membership.findFirst({ where: { userId:
-  staffUserId, venueId } })` lookup for the nickname, extend the `staff` select with
+staffUserId, venueId } })` lookup for the nickname, extend the `staff` select with
   `displayName` and `characters`, resolve once, and use the resolved string for both the
   `venueEventBus.emit` SSE payload (`data.staff.name`) and the `formatSaleLoggedEmbed` call —
   `live-dashboard.tsx`'s SSE consumer needs no changes, it already just displays whatever
@@ -144,7 +149,7 @@ character yet, since the whole fallback chain is moot without one.
 - Visibility is computed server-side in each page: query whether the logged-in user has any
   `UserCharacter` row at all (`prisma.userCharacter.count({ where: { userId } }) === 0`); pass
   that boolean down. No new database table, no dismissal-persistence endpoint — the absence of
-  a linked character *is* the "should still show" condition.
+  a linked character _is_ the "should still show" condition.
 - Links to the existing `apps/web/app/dashboard/account/characters` page.
 
 ## Out of scope

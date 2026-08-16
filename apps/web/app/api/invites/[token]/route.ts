@@ -1,10 +1,7 @@
 import { NextResponse } from "next/server"
 import { prisma } from "@/lib/prisma"
 
-export async function GET(
-  request: Request,
-  { params }: { params: Promise<{ token: string }> }
-) {
+export async function GET(request: Request, { params }: { params: Promise<{ token: string }> }) {
   try {
     const { token } = await params
 
@@ -28,26 +25,17 @@ export async function GET(
     })
 
     if (!membership) {
-      return NextResponse.json(
-        { error: "Invalid invite link" },
-        { status: 404 }
-      )
+      return NextResponse.json({ error: "Invalid invite link" }, { status: 404 })
     }
 
     // Check if invite has expired
     if (membership.inviteExpiresAt && membership.inviteExpiresAt < new Date()) {
-      return NextResponse.json(
-        { error: "This invite has expired" },
-        { status: 410 }
-      )
+      return NextResponse.json({ error: "This invite has expired" }, { status: 410 })
     }
 
     // Check if invite has already been accepted
     if (membership.status === "active" && membership.userId) {
-      return NextResponse.json(
-        { error: "This invite has already been accepted" },
-        { status: 410 }
-      )
+      return NextResponse.json({ error: "This invite has already been accepted" }, { status: 410 })
     }
 
     // Get who invited them (the invitedBy user)
@@ -70,9 +58,6 @@ export async function GET(
     })
   } catch (error) {
     console.error("Error fetching invite:", error)
-    return NextResponse.json(
-      { error: "Failed to fetch invite details" },
-      { status: 500 }
-    )
+    return NextResponse.json({ error: "Failed to fetch invite details" }, { status: 500 })
   }
 }

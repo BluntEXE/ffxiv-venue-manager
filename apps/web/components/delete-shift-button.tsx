@@ -13,7 +13,13 @@ interface DeleteShiftButtonProps {
   slotGroupId?: string | null
 }
 
-export function DeleteShiftButton({ venueSlug, shiftId, hasPayroll, isRecurring, slotGroupId }: DeleteShiftButtonProps) {
+export function DeleteShiftButton({
+  venueSlug,
+  shiftId,
+  hasPayroll,
+  isRecurring,
+  slotGroupId,
+}: DeleteShiftButtonProps) {
   const router = useRouter()
   const [deleting, setDeleting] = useState(false)
 
@@ -39,7 +45,10 @@ export function DeleteShiftButton({ venueSlug, shiftId, hasPayroll, isRecurring,
 
   async function handleDelete() {
     if (isRecurring) {
-      await cancelVia("cancel-series", "Cancel this recurring series? All future instances of this slot will be cancelled. This cannot be undone.")
+      await cancelVia(
+        "cancel-series",
+        "Cancel this recurring series? All future instances of this slot will be cancelled. This cannot be undone."
+      )
       return
     }
 
@@ -83,7 +92,12 @@ export function DeleteShiftButton({ venueSlug, shiftId, hasPayroll, isRecurring,
           variant="ghost"
           size="sm"
           className="text-amber-400 hover:text-amber-400"
-          onClick={() => cancelVia("cancel-group", "Cancel all slots in this group? All future instances of every slot will be cancelled. This cannot be undone.")}
+          onClick={() =>
+            cancelVia(
+              "cancel-group",
+              "Cancel all slots in this group? All future instances of every slot will be cancelled. This cannot be undone."
+            )
+          }
           disabled={deleting}
           aria-label="Cancel all slots"
         >

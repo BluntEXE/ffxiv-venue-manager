@@ -18,15 +18,19 @@ import { CharacterLinkNudge } from "@/components/character-link-nudge"
 import { TodayDateLabel } from "@/components/today-date-label"
 import { format, subDays, subWeeks, formatDistanceToNow } from "date-fns"
 import {
-  Radio, ArrowRight, Users, TrendingUp, Calendar,
-  Heart, BarChart3, Cog, ChevronRight, Clock,
+  Radio,
+  ArrowRight,
+  Users,
+  TrendingUp,
+  Calendar,
+  Heart,
+  BarChart3,
+  Cog,
+  ChevronRight,
+  Clock,
 } from "lucide-react"
 
-export default async function VenueDashboardPage({
-  params,
-}: {
-  params: Promise<{ slug: string }>
-}) {
+export default async function VenueDashboardPage({ params }: { params: Promise<{ slug: string }> }) {
   const session = await getServerSession(authOptions)
   if (!session?.user) redirect("/auth/signin")
 
@@ -57,8 +61,10 @@ export default async function VenueDashboardPage({
 
   // KPI data (owner/manager only)
   let kpis = {
-    revenueThisWeek: 0, revenuePrev: 0,
-    patronsThisWeek: 0, patronsPrev: 0,
+    revenueThisWeek: 0,
+    revenuePrev: 0,
+    patronsThisWeek: 0,
+    patronsPrev: 0,
     avgAttendance: 0,
     upcomingCount: 0,
     newFollowers: venue._count.follows,
@@ -66,11 +72,21 @@ export default async function VenueDashboardPage({
 
   if (canManage) {
     const [revThis, revPrev, patronsThis, patronsPrev, upcomingCount] = await Promise.all([
-      prisma.transaction.aggregate({ where: { venueId: venue.id, createdAt: { gte: weekAgo } }, _sum: { amount: true } }),
-      prisma.transaction.aggregate({ where: { venueId: venue.id, createdAt: { gte: twoWeeksAgo, lt: weekAgo } }, _sum: { amount: true } }),
+      prisma.transaction.aggregate({
+        where: { venueId: venue.id, createdAt: { gte: weekAgo } },
+        _sum: { amount: true },
+      }),
+      prisma.transaction.aggregate({
+        where: { venueId: venue.id, createdAt: { gte: twoWeeksAgo, lt: weekAgo } },
+        _sum: { amount: true },
+      }),
       prisma.patronLog.count({ where: { venueId: venue.id, action: "ENTER", loggedAt: { gte: weekAgo } } }),
-      prisma.patronLog.count({ where: { venueId: venue.id, action: "ENTER", loggedAt: { gte: twoWeeksAgo, lt: weekAgo } } }),
-      prisma.event.count({ where: { venueId: venue.id, startTime: { gte: now }, status: { in: ["PUBLISHED", "ACTIVE"] } } }),
+      prisma.patronLog.count({
+        where: { venueId: venue.id, action: "ENTER", loggedAt: { gte: twoWeeksAgo, lt: weekAgo } },
+      }),
+      prisma.event.count({
+        where: { venueId: venue.id, startTime: { gte: now }, status: { in: ["PUBLISHED", "ACTIVE"] } },
+      }),
     ])
     kpis = {
       revenueThisWeek: Number(revThis._sum.amount ?? 0),
@@ -84,40 +100,55 @@ export default async function VenueDashboardPage({
   }
 
   // Recent events for chart + table (last 8)
-  const recentEvents = canManage ? await prisma.event.findMany({
-    where: { venueId: venue.id, status: { in: ["COMPLETED", "ACTIVE"] }, startTime: { lte: now } },
-    orderBy: { startTime: "desc" },
-    take: 8,
-    select: { id: true, title: true, startTime: true, status: true, eventType: true },
-  }) : []
+  const recentEvents = canManage
+    ? await prisma.event.findMany({
+        where: { venueId: venue.id, status: { in: ["COMPLETED", "ACTIVE"] }, startTime: { lte: now } },
+        orderBy: { startTime: "desc" },
+        take: 8,
+        select: { id: true, title: true, startTime: true, status: true, eventType: true },
+      })
+    : []
 
   // Revenue per event for chart
-  const chartData = canManage ? await Promise.all(
-    recentEvents.slice().reverse().map(async (ev) => {
-      const rev = await prisma.transaction.aggregate({
-        where: { venueId: venue.id, createdAt: { gte: ev.startTime, lt: new Date(ev.startTime.getTime() + 12 * 60 * 60 * 1000) } },
-        _sum: { amount: true },
-      })
-      return {
-        label: format(ev.startTime, "d MMM"),
-        revenue: Number(rev._sum.amount ?? 0),
-        isToday: format(ev.startTime, "yyyy-MM-dd") === format(now, "yyyy-MM-dd"),
-      }
-    })
-  ) : []
+  const chartData = canManage
+    ? await Promise.all(
+        recentEvents
+          .slice()
+          .reverse()
+          .map(async (ev) => {
+            const rev = await prisma.transaction.aggregate({
+              where: {
+                venueId: venue.id,
+                createdAt: { gte: ev.startTime, lt: new Date(ev.startTime.getTime() + 12 * 60 * 60 * 1000) },
+              },
+              _sum: { amount: true },
+            })
+            return {
+              label: format(ev.startTime, "d MMM"),
+              revenue: Number(rev._sum.amount ?? 0),
+              isToday: format(ev.startTime, "yyyy-MM-dd") === format(now, "yyyy-MM-dd"),
+            }
+          })
+      )
+    : []
 
   // Patron counts per recent event for avg attendance + table
   const patronsPerEvent: number[] = []
   if (canManage && recentEvents.length > 0) {
     const patPerEvent = await Promise.all(
-      recentEvents.map(ev =>
+      recentEvents.map((ev) =>
         prisma.patronLog.count({
-          where: { venueId: venue.id, action: "ENTER", loggedAt: { gte: ev.startTime, lt: new Date(ev.startTime.getTime() + 12 * 60 * 60 * 1000) } },
+          where: {
+            venueId: venue.id,
+            action: "ENTER",
+            loggedAt: { gte: ev.startTime, lt: new Date(ev.startTime.getTime() + 12 * 60 * 60 * 1000) },
+          },
         })
       )
     )
     patronsPerEvent.push(...patPerEvent)
-    kpis.avgAttendance = patPerEvent.length > 0 ? Math.round(patPerEvent.reduce((a, b) => a + b, 0) / patPerEvent.length) : 0
+    kpis.avgAttendance =
+      patPerEvent.length > 0 ? Math.round(patPerEvent.reduce((a, b) => a + b, 0) / patPerEvent.length) : 0
   }
 
   // Combine events with revenue (chartData reversed = newest first, same order as recentEvents)
@@ -156,9 +187,10 @@ export default async function VenueDashboardPage({
     orderBy: { createdAt: "desc" },
   })
 
-  const hasLinkedCharacter = (await prisma.userCharacter.count({
-    where: { userId: session.user.id },
-  })) > 0
+  const hasLinkedCharacter =
+    (await prisma.userCharacter.count({
+      where: { userId: session.user.id },
+    })) > 0
 
   // My upcoming shifts
   const myShifts = await prisma.shift.findMany({
@@ -173,14 +205,13 @@ export default async function VenueDashboardPage({
   })
 
   // Delta helpers
-  const pct = (current: number, prev: number) => prev === 0 ? null : Math.round(((current - prev) / prev) * 100)
+  const pct = (current: number, prev: number) => (prev === 0 ? null : Math.round(((current - prev) / prev) * 100))
   const revDelta = pct(kpis.revenueThisWeek, kpis.revenuePrev)
   const patDelta = pct(kpis.patronsThisWeek, kpis.patronsPrev)
 
   return (
     <VenueLayout venueSlug={venue.slug} venueName={venue.name} userRole={userRole}>
       <div className="page-inner space-y-6">
-
         <AnnouncementBanner announcements={announcements} />
         {!hasLinkedCharacter && <CharacterLinkNudge />}
 
@@ -203,7 +234,9 @@ export default async function VenueDashboardPage({
           <div className="flex items-center justify-between gap-4 px-4 py-3 rounded-xl border border-[rgba(16,185,129,0.25)] bg-[rgba(16,185,129,0.07)] shadow-[0_0_20px_rgba(16,185,129,0.06)]">
             <div className="flex items-center gap-3">
               <span className="xiv-live-dot" />
-              <span className="text-[0.72rem] font-bold tracking-[0.12em] text-[var(--success-text)] uppercase">Live now</span>
+              <span className="text-[0.72rem] font-bold tracking-[0.12em] text-[var(--success-text)] uppercase">
+                Live now
+              </span>
               <span className="text-sm text-foreground/80 hidden sm:inline">{liveEvent.title} in progress</span>
             </div>
             <Button asChild variant="outline-blue" size="sm">
@@ -223,7 +256,8 @@ export default async function VenueDashboardPage({
                 value={formatGil(kpis.revenueThisWeek)}
                 delta={revDelta !== null ? `${revDelta > 0 ? "+" : ""}${revDelta}% vs last` : undefined}
                 deltaDirection={revDelta !== null ? (revDelta >= 0 ? "up" : "down") : "neutral"}
-                icon={<BarChart3 />} iconVariant="blue"
+                icon={<BarChart3 />}
+                iconVariant="blue"
               />
             </Card>
             <Card className="p-4">
@@ -232,7 +266,8 @@ export default async function VenueDashboardPage({
                 value={kpis.patronsThisWeek.toLocaleString()}
                 delta={patDelta !== null ? `${patDelta > 0 ? "+" : ""}${patDelta}% vs last` : undefined}
                 deltaDirection={patDelta !== null ? (patDelta >= 0 ? "up" : "down") : "neutral"}
-                icon={<Users />} iconVariant="blue"
+                icon={<Users />}
+                iconVariant="blue"
               />
             </Card>
             <Card className="p-4">
@@ -240,22 +275,27 @@ export default async function VenueDashboardPage({
                 label="Avg attendance"
                 value={kpis.avgAttendance}
                 subtext="per event"
-                icon={<TrendingUp />} iconVariant="success"
+                icon={<TrendingUp />}
+                iconVariant="success"
               />
             </Card>
             <Card className="p-4">
               <StatReadout
                 label="Upcoming events"
                 value={kpis.upcomingCount}
-                subtext={nextEvent ? `next ${formatDistanceToNow(nextEvent.startTime, { addSuffix: true })}` : undefined}
-                icon={<Calendar />} iconVariant="blue"
+                subtext={
+                  nextEvent ? `next ${formatDistanceToNow(nextEvent.startTime, { addSuffix: true })}` : undefined
+                }
+                icon={<Calendar />}
+                iconVariant="blue"
               />
             </Card>
             <Card className="p-4">
               <StatReadout
                 label="Followers"
                 value={kpis.newFollowers.toLocaleString()}
-                icon={<Heart />} iconVariant="warning"
+                icon={<Heart />}
+                iconVariant="warning"
               />
             </Card>
           </div>
@@ -270,15 +310,19 @@ export default async function VenueDashboardPage({
                 <BarChart3 className="w-4 h-4 text-[var(--xiv-blue)]" />
                 Revenue
                 <span className="ml-1 text-xs text-[var(--fg-faint)] font-normal">last {chartData.length} events</span>
-                <Link href={`/dashboard/${slug}/analytics`} className="ml-auto text-xs text-[var(--xiv-blue)] hover:underline flex items-center gap-1 font-normal">
+                <Link
+                  href={`/dashboard/${slug}/analytics`}
+                  className="ml-auto text-xs text-[var(--xiv-blue)] hover:underline flex items-center gap-1 font-normal"
+                >
                   Analytics <ChevronRight className="h-3 w-3" />
                 </Link>
               </div>
               <div className="p-5">
-              {chartData.length > 0
-                ? <OverviewRevenueChart data={chartData} />
-                : <p className="text-sm text-muted-foreground py-8 text-center">No event data yet</p>
-              }
+                {chartData.length > 0 ? (
+                  <OverviewRevenueChart data={chartData} />
+                ) : (
+                  <p className="text-sm text-muted-foreground py-8 text-center">No event data yet</p>
+                )}
               </div>
             </Card>
 
@@ -294,7 +338,9 @@ export default async function VenueDashboardPage({
                   {/* Eyebrow */}
                   <div className="flex items-center gap-2">
                     <span className="w-[6px] h-[6px] bg-[rgba(0,180,255,0.7)] rotate-45 shadow-[0_0_8px_rgba(0,180,255,0.5)]" />
-                    <span className="text-[0.66rem] font-semibold uppercase tracking-[0.14em] text-[var(--xiv-blue)]">Next event</span>
+                    <span className="text-[0.66rem] font-semibold uppercase tracking-[0.14em] text-[var(--xiv-blue)]">
+                      Next event
+                    </span>
                   </div>
                   <h3 className="font-cinzel text-xl font-bold tracking-wide leading-tight">{nextEvent.title}</h3>
                   <div className="flex flex-col gap-2 text-sm text-muted-foreground">
@@ -307,7 +353,9 @@ export default async function VenueDashboardPage({
                   </div>
                 </div>
                 <div className="px-5 pb-5 flex items-center justify-between gap-3 relative z-10">
-                  <Badge variant="tag" className="text-[10px]">{nextEvent.eventType}</Badge>
+                  <Badge variant="tag" className="text-[10px]">
+                    {nextEvent.eventType}
+                  </Badge>
                   <Button asChild variant="outline-blue" size="sm">
                     <Link href={`/dashboard/${slug}/events/${nextEvent.id}`}>
                       <Cog className="h-3.5 w-3.5" /> Manage
@@ -335,69 +383,93 @@ export default async function VenueDashboardPage({
               <div className="flex items-center gap-2 px-[22px] py-[13px] border-b border-[var(--blue-008)] font-semibold text-sm">
                 <Calendar className="w-4 h-4 text-[var(--xiv-blue)]" />
                 Recent events
-                <Link href={`/dashboard/${slug}/events`} className="ml-auto text-xs text-[var(--xiv-blue)] hover:underline flex items-center gap-1 font-normal">
+                <Link
+                  href={`/dashboard/${slug}/events`}
+                  className="ml-auto text-xs text-[var(--xiv-blue)] hover:underline flex items-center gap-1 font-normal"
+                >
                   View all <ChevronRight className="h-3 w-3" />
                 </Link>
               </div>
               <div className="overflow-x-auto">
-              <table className="w-full border-collapse min-w-[280px] sm:min-w-[380px]">
-                <thead>
-                  <tr>
-                    <th className="xiv-th text-left">Event</th>
-                    <th className="xiv-th text-left hidden sm:table-cell">Date</th>
-                    <th className="xiv-th text-right hidden md:table-cell">Attendance</th>
-                    <th className="xiv-th text-right">Revenue</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {recentEventsWithData.length > 0 ? recentEventsWithData.map(ev => (
-                    <tr key={ev.id} className="border-b border-[var(--blue-008)] last:border-0 hover:bg-[var(--blue-004)] transition-colors">
-                      <td className="px-5 py-3.5 text-[0.86rem]">
-                        <div className="flex items-center gap-2 flex-wrap">
-                          <Link href={`/dashboard/${slug}/events/${ev.id}`} className="font-medium text-foreground hover:text-[var(--xiv-blue)] transition-colors">{ev.title}</Link>
-                          {ev.status === "ACTIVE" && (
-                            <span className="text-[0.68rem] font-semibold px-2 py-0.5 rounded-full uppercase tracking-[0.03em] bg-[var(--success-soft)] text-[var(--success-text)] border border-[rgba(16,185,129,0.25)]">Live</span>
-                          )}
-                        </div>
-                      </td>
-                      <td className="xiv-td text-muted-foreground whitespace-nowrap tabular-nums hidden sm:table-cell">{format(ev.startTime, "d MMM")}</td>
-                      <td className="px-5 py-3.5 text-[0.86rem] text-right tabular-nums text-muted-foreground hidden md:table-cell">
-                        {ev.patrons > 0 ? ev.patrons : <span className="text-[var(--fg-faint)]">—</span>}
-                      </td>
-                      <td className="px-5 py-3.5 text-right tabular-nums font-[var(--font-outfit)] font-semibold text-[0.86rem]">
-                        {ev.revenue > 0 ? `${ev.revenue.toLocaleString()} gil` : <span className="text-[var(--fg-faint)] font-normal">—</span>}
-                      </td>
+                <table className="w-full border-collapse min-w-[280px] sm:min-w-[380px]">
+                  <thead>
+                    <tr>
+                      <th className="xiv-th text-left">Event</th>
+                      <th className="xiv-th text-left hidden sm:table-cell">Date</th>
+                      <th className="xiv-th text-right hidden md:table-cell">Attendance</th>
+                      <th className="xiv-th text-right">Revenue</th>
                     </tr>
-                  )) : (
-                    <tr><td colSpan={4} className="px-5 py-6 text-center text-sm text-muted-foreground">No events yet</td></tr>
-                  )}
-                </tbody>
-              </table>
+                  </thead>
+                  <tbody>
+                    {recentEventsWithData.length > 0 ? (
+                      recentEventsWithData.map((ev) => (
+                        <tr
+                          key={ev.id}
+                          className="border-b border-[var(--blue-008)] last:border-0 hover:bg-[var(--blue-004)] transition-colors"
+                        >
+                          <td className="px-5 py-3.5 text-[0.86rem]">
+                            <div className="flex items-center gap-2 flex-wrap">
+                              <Link
+                                href={`/dashboard/${slug}/events/${ev.id}`}
+                                className="font-medium text-foreground hover:text-[var(--xiv-blue)] transition-colors"
+                              >
+                                {ev.title}
+                              </Link>
+                              {ev.status === "ACTIVE" && (
+                                <span className="text-[0.68rem] font-semibold px-2 py-0.5 rounded-full uppercase tracking-[0.03em] bg-[var(--success-soft)] text-[var(--success-text)] border border-[rgba(16,185,129,0.25)]">
+                                  Live
+                                </span>
+                              )}
+                            </div>
+                          </td>
+                          <td className="xiv-td text-muted-foreground whitespace-nowrap tabular-nums hidden sm:table-cell">
+                            {format(ev.startTime, "d MMM")}
+                          </td>
+                          <td className="px-5 py-3.5 text-[0.86rem] text-right tabular-nums text-muted-foreground hidden md:table-cell">
+                            {ev.patrons > 0 ? ev.patrons : <span className="text-[var(--fg-faint)]">—</span>}
+                          </td>
+                          <td className="px-5 py-3.5 text-right tabular-nums font-[var(--font-outfit)] font-semibold text-[0.86rem]">
+                            {ev.revenue > 0 ? (
+                              `${ev.revenue.toLocaleString()} gil`
+                            ) : (
+                              <span className="text-[var(--fg-faint)] font-normal">—</span>
+                            )}
+                          </td>
+                        </tr>
+                      ))
+                    ) : (
+                      <tr>
+                        <td colSpan={4} className="px-5 py-6 text-center text-sm text-muted-foreground">
+                          No events yet
+                        </td>
+                      </tr>
+                    )}
+                  </tbody>
+                </table>
               </div>
             </Card>
 
             {/* Open tasks */}
             <Card className="p-5">
-              {openTasks.length > 0
-                ? <OverviewTasks
-                    tasks={openTasks.map(t => ({
-                      id: t.id,
-                      title: t.title,
-                      dueDate: t.dueDate ? format(t.dueDate, "d MMM") : null,
-                      priority: t.priority,
-                    }))}
-                    venueSlug={slug}
-                  />
-                : (
-                  <div className="flex flex-col items-center justify-center h-full gap-2 text-center py-4">
-                    <p className="stat-label">Open tasks</p>
-                    <p className="text-sm text-muted-foreground">All clear</p>
-                    <Button asChild variant="outline-blue" size="sm">
-                      <Link href={`/dashboard/${slug}/tasks`}>View tasks</Link>
-                    </Button>
-                  </div>
-                )
-              }
+              {openTasks.length > 0 ? (
+                <OverviewTasks
+                  tasks={openTasks.map((t) => ({
+                    id: t.id,
+                    title: t.title,
+                    dueDate: t.dueDate ? format(t.dueDate, "d MMM") : null,
+                    priority: t.priority,
+                  }))}
+                  venueSlug={slug}
+                />
+              ) : (
+                <div className="flex flex-col items-center justify-center h-full gap-2 text-center py-4">
+                  <p className="stat-label">Open tasks</p>
+                  <p className="text-sm text-muted-foreground">All clear</p>
+                  <Button asChild variant="outline-blue" size="sm">
+                    <Link href={`/dashboard/${slug}/tasks`}>View tasks</Link>
+                  </Button>
+                </div>
+              )}
             </Card>
           </div>
         )}
@@ -408,11 +480,19 @@ export default async function VenueDashboardPage({
             <div className="flex items-center gap-2 mb-3">
               <Clock className="w-4 h-4 text-[var(--xiv-blue)]" />
               <span className="text-sm font-semibold">My shifts</span>
-              <Link href={`/dashboard/${slug}/shifts`} className="ml-auto text-xs text-[var(--xiv-blue)] hover:underline">View all</Link>
+              <Link
+                href={`/dashboard/${slug}/shifts`}
+                className="ml-auto text-xs text-[var(--xiv-blue)] hover:underline"
+              >
+                View all
+              </Link>
             </div>
             <div className="space-y-2">
-              {myShifts.map(shift => (
-                <Card key={shift.id} className={`p-4 flex items-center justify-between ${shift.status === "ACTIVE" ? "border-[rgba(16,185,129,0.3)]" : ""}`}>
+              {myShifts.map((shift) => (
+                <Card
+                  key={shift.id}
+                  className={`p-4 flex items-center justify-between ${shift.status === "ACTIVE" ? "border-[rgba(16,185,129,0.3)]" : ""}`}
+                >
                   <p className="text-sm">
                     <LocalTimeRange start={shift.scheduledStart} end={shift.scheduledEnd} />
                   </p>
@@ -429,7 +509,16 @@ export default async function VenueDashboardPage({
         {!canManage && (
           <div>
             <div className="flex items-center gap-2 mb-3">
-              <svg className="w-4 h-4 text-[var(--xiv-blue)]" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>
+              <svg
+                className="w-4 h-4 text-[var(--xiv-blue)]"
+                xmlns="http://www.w3.org/2000/svg"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="2"
+              >
+                <polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2" />
+              </svg>
               <span className="text-sm font-semibold">Quick actions</span>
             </div>
             <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
@@ -450,7 +539,6 @@ export default async function VenueDashboardPage({
             </div>
           </div>
         )}
-
       </div>
     </VenueLayout>
   )

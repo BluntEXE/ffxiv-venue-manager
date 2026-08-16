@@ -60,10 +60,7 @@ export const PATCH = withRateLimit<{
       return NextResponse.json({ id: updated.id, name: updated.name })
     } catch (err: any) {
       if (err instanceof z.ZodError) {
-        return NextResponse.json(
-          { error: "Invalid request", details: err.flatten() },
-          { status: 400 }
-        )
+        return NextResponse.json({ error: "Invalid request", details: err.flatten() }, { status: 400 })
       }
       if (err?.code === "P2002") {
         return NextResponse.json({ error: "A room with this name already exists" }, { status: 409 })

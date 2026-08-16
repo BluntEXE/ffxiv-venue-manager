@@ -12,11 +12,11 @@
 
 ## Files
 
-| File | Action |
-|------|--------|
-| `apps/web/app/api/venues/[venueId]/route.ts` | Modify — add `logoUrl` to PATCH body handling |
-| `apps/web/app/api/proxy-image/route.ts` | Create — server-side image proxy for canvas |
-| `apps/web/components/logo-upload.tsx` | Create — the full upload + crop component |
+| File                                              | Action                                           |
+| ------------------------------------------------- | ------------------------------------------------ |
+| `apps/web/app/api/venues/[venueId]/route.ts`      | Modify — add `logoUrl` to PATCH body handling    |
+| `apps/web/app/api/proxy-image/route.ts`           | Create — server-side image proxy for canvas      |
+| `apps/web/components/logo-upload.tsx`             | Create — the full upload + crop component        |
 | `apps/web/app/dashboard/[slug]/settings/page.tsx` | Modify — add `<LogoUpload>` below banner section |
 
 ---
@@ -24,6 +24,7 @@
 ### Task 1: Add `logoUrl` to venue PATCH route
 
 **Files:**
+
 - Modify: `apps/web/app/api/venues/[venueId]/route.ts`
 
 The existing PATCH handler destructures `{ name, description, location, bannerUrl }` from the body but ignores `logoUrl`. Add it.
@@ -87,6 +88,7 @@ git commit -m "feat(api): support logoUrl in venue PATCH"
 ### Task 2: Create proxy-image API route
 
 **Files:**
+
 - Create: `apps/web/app/api/proxy-image/route.ts`
 
 Gallery images live on `media.xivvenuemanager.com`. Drawing cross-origin images to canvas taints it unless the image server returns permissive CORS headers. Rather than rely on MinIO CORS config, proxy through Next.js. Validates the URL against the configured MinIO bucket to prevent open-proxy abuse.
@@ -147,11 +149,13 @@ git commit -m "feat(api): add proxy-image route for canvas-safe gallery images"
 ### Task 3: Create LogoUpload component
 
 **Files:**
+
 - Create: `apps/web/components/logo-upload.tsx`
 
 This is the main work. State machine: `idle` → file/gallery picked → `cropping` (drag UI) → `saving` → back to `idle` with saved URL shown. Canvas crop outputs 256×256 JPEG.
 
 **Crop geometry constants (used throughout):**
+
 ```
 CONTAINER_WIDTH  = 320   // px — crop UI container
 CONTAINER_HEIGHT = 220   // px
@@ -518,6 +522,7 @@ git commit -m "feat(web): add LogoUpload component with drag-to-crop UI"
 ### Task 4: Wire LogoUpload into venue settings page + deploy
 
 **Files:**
+
 - Modify: `apps/web/app/dashboard/[slug]/settings/page.tsx`
 
 The settings page already has `venueId`, `galleryImages`, and a `bannerUrl`/`setBannerUrl` pattern to follow. Add `logoUrl`/`setLogoUrl` state and render `<LogoUpload>` in the appearance section near the banner.
@@ -559,8 +564,10 @@ setLogoUrl(venue.logoUrl ?? null)
 Find the banner section (around line 323-324):
 
 ```tsx
-<Label>Banner image</Label>
-{venueId && <BannerUpload venueId={venueId} initialUrl={bannerUrl} onUpdate={setBannerUrl} />}
+;<Label>Banner image</Label>
+{
+  venueId && <BannerUpload venueId={venueId} initialUrl={bannerUrl} onUpdate={setBannerUrl} />
+}
 ```
 
 Add the logo section directly above it:

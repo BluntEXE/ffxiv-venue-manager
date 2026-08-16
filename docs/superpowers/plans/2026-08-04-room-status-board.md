@@ -13,6 +13,7 @@
 ## Task 1: Add `Room` model and `'toggle_room'` permission
 
 **Files:**
+
 - Modify: `apps/web/prisma/schema.prisma`
 - Modify: `apps/web/lib/api/plugin-auth.ts`
 
@@ -70,16 +71,16 @@ export async function checkPermission(
 And add `'toggle_room'` to the STAFF-tier allowed actions:
 
 ```typescript
-  if (membership.role === 'STAFF') {
-    return (
-      action === 'log_service' ||
-      action === 'log_patron' ||
-      action === 'log_transaction' ||
-      action === 'view_shifts' ||
-      action === 'clock_shift' ||
-      action === 'toggle_room'
-    )
-  }
+if (membership.role === "STAFF") {
+  return (
+    action === "log_service" ||
+    action === "log_patron" ||
+    action === "log_transaction" ||
+    action === "view_shifts" ||
+    action === "clock_shift" ||
+    action === "toggle_room"
+  )
+}
 ```
 
 - [ ] **Step 4: Validate offline**
@@ -111,6 +112,7 @@ No `DATABASE_URL` in this worktree — same constraint as VIP/ban, schema valida
 ## Task 2: Room-list management API (create/rename/delete, OWNER/MANAGER only)
 
 **Files:**
+
 - Create: `apps/web/app/api/venues/[venueId]/rooms/route.ts`
 - Create: `apps/web/app/api/venues/[venueId]/rooms/[roomId]/route.ts`
 
@@ -152,10 +154,7 @@ export const POST = withRateLimit<{ params: Promise<{ venueId: string }> }>(
         where: { userId: session.user.id, venueId: venue.id, status: "active" },
       })
       if (!membership || !["OWNER", "MANAGER"].includes(membership.role)) {
-        return NextResponse.json(
-          { error: "Owner or Manager role required" },
-          { status: 403 }
-        )
+        return NextResponse.json({ error: "Owner or Manager role required" }, { status: 403 })
       }
 
       const body = await request.json()
@@ -175,10 +174,7 @@ export const POST = withRateLimit<{ params: Promise<{ venueId: string }> }>(
       return NextResponse.json({ id: room.id, name: room.name, isOccupied: room.isOccupied, note: room.note })
     } catch (err) {
       if (err instanceof z.ZodError) {
-        return NextResponse.json(
-          { error: "Invalid request", details: err.flatten() },
-          { status: 400 }
-        )
+        return NextResponse.json({ error: "Invalid request", details: err.flatten() }, { status: 400 })
       }
       console.error("[rooms] error:", err)
       return NextResponse.json({ error: "Internal server error" }, { status: 500 })
@@ -254,10 +250,7 @@ export const PATCH = withRateLimit<{
       return NextResponse.json({ id: updated.id, name: updated.name })
     } catch (err) {
       if (err instanceof z.ZodError) {
-        return NextResponse.json(
-          { error: "Invalid request", details: err.flatten() },
-          { status: 400 }
-        )
+        return NextResponse.json({ error: "Invalid request", details: err.flatten() }, { status: 400 })
       }
       console.error("[rooms/:id] PATCH error:", err)
       return NextResponse.json({ error: "Internal server error" }, { status: 500 })
@@ -324,6 +317,7 @@ Status toggling (Task 3, next) is a SEPARATE endpoint with different (any-active
 ## Task 3: Room status toggle API (any active staff, emits live update)
 
 **Files:**
+
 - Create: `apps/web/app/api/venues/[venueId]/rooms/[roomId]/status/route.ts`
 - Modify: `apps/web/lib/sse/venue-events.ts`
 
@@ -438,10 +432,7 @@ export const PATCH = withRateLimit<{
       return NextResponse.json({ id: updated.id, isOccupied: updated.isOccupied, note: updated.note })
     } catch (err) {
       if (err instanceof z.ZodError) {
-        return NextResponse.json(
-          { error: "Invalid request", details: err.flatten() },
-          { status: 400 }
-        )
+        return NextResponse.json({ error: "Invalid request", details: err.flatten() }, { status: 400 })
       }
       console.error("[rooms/:id/status] error:", err)
       return NextResponse.json({ error: "Internal server error" }, { status: 500 })
@@ -476,6 +467,7 @@ Event `id` uses a synthetic `room-${id}-${timestamp}` string rather than a dedic
 ## Task 4: Plugin-facing room endpoints (read + write)
 
 **Files:**
+
 - Create: `apps/web/app/api/plugin/rooms/route.ts`
 - Create: `apps/web/app/api/plugin/rooms/status/route.ts`
 
@@ -483,10 +475,10 @@ Event `id` uses a synthetic `room-${id}-${timestamp}` string rather than a dedic
 
 ```typescript
 // apps/web/app/api/plugin/rooms/route.ts
-import { NextRequest, NextResponse } from 'next/server'
-import { validateApiKey } from '@/lib/api/plugin-auth'
-import { enforcePluginRateLimit, enforcePluginIpRateLimit } from '@/lib/api/plugin-rate-limit'
-import { prisma } from '@/lib/prisma'
+import { NextRequest, NextResponse } from "next/server"
+import { validateApiKey } from "@/lib/api/plugin-auth"
+import { enforcePluginRateLimit, enforcePluginIpRateLimit } from "@/lib/api/plugin-rate-limit"
+import { prisma } from "@/lib/prisma"
 
 /**
  * GET /api/plugin/rooms?venueId=…
@@ -501,33 +493,33 @@ export async function GET(request: NextRequest) {
     const __ipLimited = await enforcePluginIpRateLimit(request)
     if (__ipLimited) return __ipLimited
 
-    const apiKey = request.headers.get('x-api-key')
-    if (!apiKey) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+    const apiKey = request.headers.get("x-api-key")
+    if (!apiKey) return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
 
     const auth = await validateApiKey(apiKey)
     if (!auth || !auth.userId) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
     }
 
-    const limited = await enforcePluginRateLimit(apiKey, 'read')
+    const limited = await enforcePluginRateLimit(apiKey, "read")
     if (limited) return limited
 
     const { searchParams } = new URL(request.url)
-    const venueId = searchParams.get('venueId')
+    const venueId = searchParams.get("venueId")
     if (!venueId || !auth.venues.includes(venueId)) {
-      return NextResponse.json({ error: 'Invalid venue' }, { status: 400 })
+      return NextResponse.json({ error: "Invalid venue" }, { status: 400 })
     }
 
     const rooms = await prisma.room.findMany({
       where: { venueId },
       select: { id: true, name: true, isOccupied: true, note: true },
-      orderBy: { name: 'asc' },
+      orderBy: { name: "asc" },
     })
 
     return NextResponse.json({ rooms })
   } catch (error) {
-    console.error('[Plugin API] Error fetching rooms:', error)
-    return NextResponse.json({ error: 'Internal server error' }, { status: 500 })
+    console.error("[Plugin API] Error fetching rooms:", error)
+    return NextResponse.json({ error: "Internal server error" }, { status: 500 })
   }
 }
 ```
@@ -536,11 +528,11 @@ export async function GET(request: NextRequest) {
 
 ```typescript
 // apps/web/app/api/plugin/rooms/status/route.ts
-import { NextRequest, NextResponse } from 'next/server'
-import { validateApiKey, checkPermission } from '@/lib/api/plugin-auth'
-import { enforcePluginRateLimit, enforcePluginIpRateLimit } from '@/lib/api/plugin-rate-limit'
-import { prisma } from '@/lib/prisma'
-import { venueEventBus } from '@/lib/sse/venue-events'
+import { NextRequest, NextResponse } from "next/server"
+import { validateApiKey, checkPermission } from "@/lib/api/plugin-auth"
+import { enforcePluginRateLimit, enforcePluginIpRateLimit } from "@/lib/api/plugin-rate-limit"
+import { prisma } from "@/lib/prisma"
+import { venueEventBus } from "@/lib/sse/venue-events"
 
 interface SetRoomStatusPayload {
   venueId: string
@@ -562,39 +554,36 @@ export async function POST(request: NextRequest) {
     const __ipLimited = await enforcePluginIpRateLimit(request)
     if (__ipLimited) return __ipLimited
 
-    const apiKey = request.headers.get('x-api-key')
-    if (!apiKey) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+    const apiKey = request.headers.get("x-api-key")
+    if (!apiKey) return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
 
     const auth = await validateApiKey(apiKey)
     if (!auth || !auth.userId) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
     }
 
-    const limited = await enforcePluginRateLimit(apiKey, 'write')
+    const limited = await enforcePluginRateLimit(apiKey, "write")
     if (limited) return limited
 
     const body: SetRoomStatusPayload = await request.json()
     const { venueId, roomId, isOccupied, note } = body
 
-    if (!venueId || !roomId || typeof isOccupied !== 'boolean') {
-      return NextResponse.json(
-        { error: 'Missing required fields: venueId, roomId, isOccupied' },
-        { status: 400 }
-      )
+    if (!venueId || !roomId || typeof isOccupied !== "boolean") {
+      return NextResponse.json({ error: "Missing required fields: venueId, roomId, isOccupied" }, { status: 400 })
     }
 
     if (!auth.venues.includes(venueId)) {
-      return NextResponse.json({ error: 'Invalid venue' }, { status: 400 })
+      return NextResponse.json({ error: "Invalid venue" }, { status: 400 })
     }
 
-    const canToggle = await checkPermission(auth.userId, venueId, 'toggle_room')
+    const canToggle = await checkPermission(auth.userId, venueId, "toggle_room")
     if (!canToggle) {
-      return NextResponse.json({ error: 'Permission denied' }, { status: 403 })
+      return NextResponse.json({ error: "Permission denied" }, { status: 403 })
     }
 
     const room = await prisma.room.findFirst({ where: { id: roomId, venueId } })
     if (!room) {
-      return NextResponse.json({ error: 'Room not found in this venue' }, { status: 404 })
+      return NextResponse.json({ error: "Room not found in this venue" }, { status: 404 })
     }
 
     const updated = await prisma.room.update({
@@ -609,7 +598,7 @@ export async function POST(request: NextRequest) {
 
     venueEventBus.emit(venueId, {
       id: `room-${updated.id}-${updated.updatedAt.getTime()}`,
-      type: 'room_status',
+      type: "room_status",
       venueId,
       timestamp: updated.updatedAt.toISOString(),
       data: {
@@ -623,8 +612,8 @@ export async function POST(request: NextRequest) {
 
     return NextResponse.json({ success: true })
   } catch (error) {
-    console.error('[Plugin API] Error setting room status:', error)
-    return NextResponse.json({ error: 'Internal server error' }, { status: 500 })
+    console.error("[Plugin API] Error setting room status:", error)
+    return NextResponse.json({ error: "Internal server error" }, { status: 500 })
   }
 }
 ```
@@ -654,6 +643,7 @@ Wait — actually, re-emitting from the dashboard's OWN status route (Task 3) af
 ## Task 5: Rooms dashboard page + live board component
 
 **Files:**
+
 - Create: `apps/web/app/dashboard/[slug]/rooms/page.tsx`
 - Create: `apps/web/components/rooms-board.tsx`
 
@@ -668,11 +658,7 @@ import { prisma } from "@/lib/prisma"
 import { VenueLayout } from "@/components/venue-layout"
 import { RoomsBoard } from "@/components/rooms-board"
 
-export default async function RoomsPage({
-  params,
-}: {
-  params: Promise<{ slug: string }>
-}) {
+export default async function RoomsPage({ params }: { params: Promise<{ slug: string }> }) {
   const session = await getServerSession(authOptions)
   if (!session?.user) redirect("/auth/signin")
 
@@ -701,7 +687,9 @@ export default async function RoomsPage({
         <div className="mb-6 md:mb-8">
           <div className="flex items-center gap-2 mb-1.5">
             <span className="w-[7px] h-[7px] bg-[rgba(0,180,255,0.7)] rotate-45 shadow-[0_0_10px_rgba(0,180,255,0.5)] flex-shrink-0" />
-            <span className="text-[0.72rem] font-semibold uppercase tracking-[0.14em] text-[var(--xiv-blue)]">{venue.name} &middot; {venue.dataCenter} &middot; {venue.world}</span>
+            <span className="text-[0.72rem] font-semibold uppercase tracking-[0.14em] text-[var(--xiv-blue)]">
+              {venue.name} &middot; {venue.dataCenter} &middot; {venue.world}
+            </span>
           </div>
           <h1 className="page-h1">Rooms</h1>
         </div>
@@ -741,15 +729,7 @@ export type RoomItem = {
   updatedByName: string | null
 }
 
-export function RoomsBoard({
-  venueId,
-  canManage,
-  rooms,
-}: {
-  venueId: string
-  canManage: boolean
-  rooms: RoomItem[]
-}) {
+export function RoomsBoard({ venueId, canManage, rooms }: { venueId: string; canManage: boolean; rooms: RoomItem[] }) {
   const [localRooms, setLocalRooms] = useState(rooms)
   const [pendingIds, setPendingIds] = useState<Set<string>>(new Set())
   const [editingNoteId, setEditingNoteId] = useState<string | null>(null)
@@ -782,9 +762,7 @@ export function RoomsBoard({
     if (pendingIds.has(room.id)) return
     const nextOccupied = !room.isOccupied
     setPendingIds((prev) => new Set(prev).add(room.id))
-    setLocalRooms((prev) =>
-      prev.map((r) => (r.id === room.id ? { ...r, isOccupied: nextOccupied } : r))
-    )
+    setLocalRooms((prev) => prev.map((r) => (r.id === room.id ? { ...r, isOccupied: nextOccupied } : r)))
     try {
       const res = await fetch(`/api/venues/${venueId}/rooms/${room.id}/status`, {
         method: "PATCH",
@@ -793,9 +771,7 @@ export function RoomsBoard({
       })
       if (!res.ok) throw new Error("request failed")
     } catch {
-      setLocalRooms((prev) =>
-        prev.map((r) => (r.id === room.id ? { ...r, isOccupied: room.isOccupied } : r))
-      )
+      setLocalRooms((prev) => prev.map((r) => (r.id === room.id ? { ...r, isOccupied: room.isOccupied } : r)))
     } finally {
       setPendingIds((prev) => {
         const next = new Set(prev)
@@ -812,9 +788,7 @@ export function RoomsBoard({
     if (pendingIds.has(room.id)) return
     setPendingIds((prev) => new Set(prev).add(room.id))
     const prevNote = room.note
-    setLocalRooms((prev) =>
-      prev.map((r) => (r.id === room.id ? { ...r, note: trimmed || null } : r))
-    )
+    setLocalRooms((prev) => prev.map((r) => (r.id === room.id ? { ...r, note: trimmed || null } : r)))
     try {
       const res = await fetch(`/api/venues/${venueId}/rooms/${room.id}/status`, {
         method: "PATCH",
@@ -823,9 +797,7 @@ export function RoomsBoard({
       })
       if (!res.ok) throw new Error("request failed")
     } catch {
-      setLocalRooms((prev) =>
-        prev.map((r) => (r.id === room.id ? { ...r, note: prevNote } : r))
-      )
+      setLocalRooms((prev) => prev.map((r) => (r.id === room.id ? { ...r, note: prevNote } : r)))
     } finally {
       setPendingIds((prev) => {
         const next = new Set(prev)
@@ -851,7 +823,10 @@ export function RoomsBoard({
         return
       }
       const created = await res.json()
-      setLocalRooms((prev) => [...prev, { id: created.id, name: created.name, isOccupied: false, note: null, updatedByName: null }])
+      setLocalRooms((prev) => [
+        ...prev,
+        { id: created.id, name: created.name, isOccupied: false, note: null, updatedByName: null },
+      ])
       setNewRoomName("")
     } catch {
       alert("Network error adding room.")
@@ -922,8 +897,19 @@ export function RoomsBoard({
                           style={{ fontSize: "0.85rem", padding: "2px 6px", width: 140 }}
                           autoFocus
                         />
-                        <button type="button" className="tag neutral" onClick={() => saveRename(room)}>Save</button>
-                        <button type="button" className="tag neutral" onClick={() => { setRenamingId(null); setRenameInput("") }}>Cancel</button>
+                        <button type="button" className="tag neutral" onClick={() => saveRename(room)}>
+                          Save
+                        </button>
+                        <button
+                          type="button"
+                          className="tag neutral"
+                          onClick={() => {
+                            setRenamingId(null)
+                            setRenameInput("")
+                          }}
+                        >
+                          Cancel
+                        </button>
                       </div>
                     ) : (
                       room.name
@@ -935,7 +921,10 @@ export function RoomsBoard({
                       onClick={() => toggleStatus(room)}
                       disabled={pendingIds.has(room.id)}
                       className={`tag ${room.isOccupied ? "danger" : "vip"}`}
-                      style={{ cursor: pendingIds.has(room.id) ? "default" : "pointer", opacity: pendingIds.has(room.id) ? 0.6 : 1 }}
+                      style={{
+                        cursor: pendingIds.has(room.id) ? "default" : "pointer",
+                        opacity: pendingIds.has(room.id) ? 0.6 : 1,
+                      }}
                     >
                       {room.isOccupied ? "Occupied" : "Free"}
                     </button>
@@ -951,12 +940,26 @@ export function RoomsBoard({
                           style={{ fontSize: "0.85rem", padding: "2px 6px", width: 160 }}
                           autoFocus
                         />
-                        <button type="button" className="tag neutral" onClick={() => saveNote(room)}>Save</button>
-                        <button type="button" className="tag neutral" onClick={() => { setEditingNoteId(null); setNoteInput("") }}>Cancel</button>
+                        <button type="button" className="tag neutral" onClick={() => saveNote(room)}>
+                          Save
+                        </button>
+                        <button
+                          type="button"
+                          className="tag neutral"
+                          onClick={() => {
+                            setEditingNoteId(null)
+                            setNoteInput("")
+                          }}
+                        >
+                          Cancel
+                        </button>
                       </div>
                     ) : (
                       <span
-                        onClick={() => { setEditingNoteId(room.id); setNoteInput(room.note ?? "") }}
+                        onClick={() => {
+                          setEditingNoteId(room.id)
+                          setNoteInput(room.note ?? "")
+                        }}
                         style={{ cursor: "pointer" }}
                         className={room.note ? "" : "t-muted"}
                       >
@@ -968,8 +971,19 @@ export function RoomsBoard({
                   <td>
                     {canManage && (
                       <div style={{ display: "flex", gap: 6 }}>
-                        <button type="button" className="tag neutral" onClick={() => { setRenamingId(room.id); setRenameInput(room.name) }}>Rename</button>
-                        <button type="button" className="tag danger" onClick={() => deleteRoom(room)}>Delete</button>
+                        <button
+                          type="button"
+                          className="tag neutral"
+                          onClick={() => {
+                            setRenamingId(room.id)
+                            setRenameInput(room.name)
+                          }}
+                        >
+                          Rename
+                        </button>
+                        <button type="button" className="tag danger" onClick={() => deleteRoom(room)}>
+                          Delete
+                        </button>
                       </div>
                     )}
                   </td>
@@ -1028,6 +1042,7 @@ The SSE `useEffect` mirrors `live-dashboard.tsx`'s exact structure (`new EventSo
 ## Task 6: Sidebar navigation entry
 
 **Files:**
+
 - Modify: `apps/web/components/venue-sidebar.tsx`
 
 - [ ] **Step 1: Add the icon import**
@@ -1112,6 +1127,7 @@ This is Task 6 of 12, the last web-app task. Deliberately has NO `roles` array o
 ## Task 7: Plugin — room models and API client methods
 
 **Files:**
+
 - Modify: `VenueManager/XIVAppApiModels.cs`
 - Modify: `VenueManager/XIVAppVenueApi.cs`
 
@@ -1238,6 +1254,7 @@ This task ONLY adds models + client methods — nothing calls them yet (Task 8 b
 ## Task 8: Plugin — Rooms tab (poll-while-visible + toggle UI)
 
 **Files:**
+
 - Create: `VenueManager/UI/Tabs/RoomsTab.cs`
 
 - [ ] **Step 1: Write the tab**
@@ -1448,6 +1465,7 @@ The inline note editing uses `ImGuiInputTextFlags.EnterReturnsTrue` (press Enter
 ## Task 9: Wire RoomsTab into MainWindow
 
 **Files:**
+
 - Modify: `VenueManager/Windows/MainWindow.cs`
 
 - [ ] **Step 1: Add the field and constructor initialization**

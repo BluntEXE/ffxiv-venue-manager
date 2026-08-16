@@ -25,10 +25,7 @@ export const GET = withRateLimit<{ params: Promise<{ venueId: string }> }>(
       // Look up venue by slug or ID
       const venue = await prisma.venue.findFirst({
         where: {
-          OR: [
-            { id: venueId },
-            { slug: venueId }
-          ]
+          OR: [{ id: venueId }, { slug: venueId }],
         },
       })
 
@@ -41,15 +38,12 @@ export const GET = withRateLimit<{ params: Promise<{ venueId: string }> }>(
         where: {
           userId: session.user.id,
           venueId: venue.id,
-        status: "active",
+          status: "active",
         },
       })
 
       if (!membership) {
-        return NextResponse.json(
-          { error: "You don't have access to this venue" },
-          { status: 403 }
-        )
+        return NextResponse.json({ error: "You don't have access to this venue" }, { status: 403 })
       }
 
       // Get all staff members (active with user accounts)
@@ -67,7 +61,11 @@ export const GET = withRateLimit<{ params: Promise<{ venueId: string }> }>(
               image: true,
               discordId: true,
               displayName: true,
-              characters: { orderBy: [{ isPrimary: "desc" }, { createdAt: "asc" }], take: 1, select: { characterName: true } },
+              characters: {
+                orderBy: [{ isPrimary: "desc" }, { createdAt: "asc" }],
+                take: 1,
+                select: { characterName: true },
+              },
             },
           },
           customRole: true,
@@ -81,25 +79,20 @@ export const GET = withRateLimit<{ params: Promise<{ venueId: string }> }>(
       return NextResponse.json(staff)
     } catch (error) {
       console.error("Error fetching staff:", error)
-      return NextResponse.json(
-        { error: "Internal server error" },
-        { status: 500 }
-      )
+      return NextResponse.json({ error: "Internal server error" }, { status: 500 })
     }
   },
   { requests: 60, window: "1 m" }
 )
 
-export async function POST(
-  request: NextRequest,
-  { params }: { params: Promise<{ venueId: string }> }
-) {
+export async function POST(request: NextRequest, { params }: { params: Promise<{ venueId: string }> }) {
   // This endpoint has been deprecated in favor of the invite link system
   // Use POST /api/venues/[venueId]/staff/invite instead
   return NextResponse.json(
     {
       error: "This endpoint is deprecated. Use POST /api/venues/[venueId]/staff/invite to generate invite links.",
-      migration: "The venue manager now uses Discord-only authentication with unique invite links. Email-based invitations are no longer supported."
+      migration:
+        "The venue manager now uses Discord-only authentication with unique invite links. Email-based invitations are no longer supported.",
     },
     { status: 410 } // 410 Gone
   )

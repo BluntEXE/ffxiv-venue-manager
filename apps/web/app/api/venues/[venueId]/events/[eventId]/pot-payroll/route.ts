@@ -100,7 +100,7 @@ async function resolvePotInputs(
     .map((t) => ({
       type: t.type as "SALE" | "TIP",
       amount: t.amount,
-      membershipId: t.staffId ? membershipIdByUserId.get(t.staffId) ?? null : null,
+      membershipId: t.staffId ? (membershipIdByUserId.get(t.staffId) ?? null) : null,
     }))
 
   const staff = Array.from(staffByMembership.values())
@@ -150,27 +150,18 @@ export const POST = withRateLimit<{ params: Promise<{ venueId: string; eventId: 
       if ("error" in resolvedAuth) return resolvedAuth.error
       const { venue, membership: callerMembership } = resolvedAuth
       if (!["OWNER", "MANAGER"].includes(callerMembership.role)) {
-        return NextResponse.json(
-          { error: "Only owners and managers can generate pot payroll" },
-          { status: 403 }
-        )
+        return NextResponse.json({ error: "Only owners and managers can generate pot payroll" }, { status: 403 })
       }
 
       const event = await prisma.event.findFirst({ where: { id: eventId, venueId: venue.id } })
       if (!event) return NextResponse.json({ error: "Event not found" }, { status: 404 })
       if (event.status !== "COMPLETED") {
-        return NextResponse.json(
-          { error: "Pot payroll can only be generated for completed events" },
-          { status: 400 }
-        )
+        return NextResponse.json({ error: "Pot payroll can only be generated for completed events" }, { status: 400 })
       }
 
       const existing = await prisma.potDistribution.findUnique({ where: { eventId } })
       if (existing) {
-        return NextResponse.json(
-          { error: "Pot payroll has already been generated for this event" },
-          { status: 409 }
-        )
+        return NextResponse.json({ error: "Pot payroll has already been generated for this event" }, { status: 409 })
       }
 
       const resolved = await resolvePotInputs(venue.id, eventId, event)
@@ -193,16 +184,14 @@ export const POST = withRateLimit<{ params: Promise<{ venueId: string; eventId: 
         })
 
         const handled = new Set<string>()
-        const contractorPayoutMembershipIds = new Set(
-          result.contractorPayouts.map((p) => p.membershipId)
-        )
+        const contractorPayoutMembershipIds = new Set(result.contractorPayouts.map((p) => p.membershipId))
 
         for (const membershipId of result.recipientMembershipIds) {
           // If this membership also gets a CONTRACTOR_PAYOUT entry below, the kept-tips
           // bonus is folded in there instead — otherwise it would be double-paid.
           const bonus = contractorPayoutMembershipIds.has(membershipId)
             ? null
-            : result.keptTipsByMembership.get(membershipId) ?? null
+            : (result.keptTipsByMembership.get(membershipId) ?? null)
           await tx.payrollEntry.create({
             data: {
               venueId: venue.id,
@@ -263,10 +252,7 @@ export const POST = withRateLimit<{ params: Promise<{ venueId: string; eventId: 
       return NextResponse.json({ distribution }, { status: 201 })
     } catch (error) {
       if (error instanceof Prisma.PrismaClientKnownRequestError && error.code === "P2002") {
-        return NextResponse.json(
-          { error: "Pot payroll has already been generated for this event" },
-          { status: 409 }
-        )
+        return NextResponse.json({ error: "Pot payroll has already been generated for this event" }, { status: 409 })
       }
       console.error("Error generating pot payroll:", error)
       return NextResponse.json({ error: "Internal server error" }, { status: 500 })

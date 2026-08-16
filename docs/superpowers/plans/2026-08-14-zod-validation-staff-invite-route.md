@@ -22,6 +22,7 @@
 ## Task 1: Migrate `app/api/venues/[venueId]/staff/invite/route.ts`
 
 **Files:**
+
 - Modify: `apps/web/app/api/venues/[venueId]/staff/invite/route.ts`
 
 - [ ] **Step 1: Add the zod import and define the invite schema**
@@ -66,36 +67,39 @@ const inviteSchema = z.object({
 Current (`apps/web/app/api/venues/[venueId]/staff/invite/route.ts:22-28`):
 
 ```typescript
-      const { params } = context
-      const { venueId } = await params
-    const body = await request.json()
-    const { role, roleId, invitedName, invitedEmail } = body
+const { params } = context
+const { venueId } = await params
+const body = await request.json()
+const { role, roleId, invitedName, invitedEmail } = body
 
-    // Validate role
-    if (!["STAFF", "MANAGER", "OWNER"].includes(role)) {
-      return NextResponse.json({ error: "Invalid role" }, { status: 400 })
-    }
+// Validate role
+if (!["STAFF", "MANAGER", "OWNER"].includes(role)) {
+  return NextResponse.json({ error: "Invalid role" }, { status: 400 })
+}
 ```
 
 New:
 
 ```typescript
-      const { params } = context
-      const { venueId } = await params
-    const body = await request.json()
-    let role: "STAFF" | "MANAGER" | "OWNER", roleId: string | null | undefined, invitedName: string | null | undefined, invitedEmail: string | null | undefined
-    try {
-      const parsed = inviteSchema.parse(body)
-      role = parsed.role
-      roleId = parsed.roleId
-      invitedName = parsed.invitedName
-      invitedEmail = parsed.invitedEmail
-    } catch (error) {
-      if (error instanceof z.ZodError) {
-        return NextResponse.json({ error: "Validation error", details: error.issues }, { status: 400 })
-      }
-      throw error
-    }
+const { params } = context
+const { venueId } = await params
+const body = await request.json()
+let role: "STAFF" | "MANAGER" | "OWNER",
+  roleId: string | null | undefined,
+  invitedName: string | null | undefined,
+  invitedEmail: string | null | undefined
+try {
+  const parsed = inviteSchema.parse(body)
+  role = parsed.role
+  roleId = parsed.roleId
+  invitedName = parsed.invitedName
+  invitedEmail = parsed.invitedEmail
+} catch (error) {
+  if (error instanceof z.ZodError) {
+    return NextResponse.json({ error: "Validation error", details: error.issues }, { status: 400 })
+  }
+  throw error
+}
 ```
 
 Note the existing file has inconsistent indentation around this block (the `const body = await request.json()` line and its siblings are under-indented relative to the surrounding code, visible in the "Current" snippet above) — preserve that file's existing indentation style for the lines you're not changing; don't take this task as a chance to reformat unrelated code. Match whatever indentation the actual current file has at this location, even if it looks inconsistent.

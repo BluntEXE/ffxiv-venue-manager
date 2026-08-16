@@ -9,10 +9,5 @@ Sentry.init({
   // default. Re-enable selectively if/when traffic justifies the volume.
   tracesSampleRate: 0,
   // Drop noisy client-disconnect / abort errors that are not actionable.
-  ignoreErrors: [
-    "ECONNRESET",
-    "ECONNABORTED",
-    "ETIMEDOUT",
-    "AbortError",
-  ],
+  ignoreErrors: ["ECONNRESET", "ECONNABORTED", "ETIMEDOUT", "AbortError"],
 })

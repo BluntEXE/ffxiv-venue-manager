@@ -36,7 +36,21 @@ const updateSettingsSchema = z.object({
   // ffxivvenues.com integration
   ffxivVenueId: z.string().nullable().optional(),
   // Venue type
-  venueType: z.enum(["BAR_TAVERN","NIGHTCLUB","LOUNGE","HOST_CLUB","CABARET","BATHHOUSE","CASINO","STUDIO","OTHER","TEST_VENUE"]).nullable().optional(),
+  venueType: z
+    .enum([
+      "BAR_TAVERN",
+      "NIGHTCLUB",
+      "LOUNGE",
+      "HOST_CLUB",
+      "CABARET",
+      "BATHHOUSE",
+      "CASINO",
+      "STUDIO",
+      "OTHER",
+      "TEST_VENUE",
+    ])
+    .nullable()
+    .optional(),
   // Venue profile extras stored in settings JSON
   tagline: z.string().max(200).optional(),
   tags: z.array(z.string().max(50)).max(20).optional(),
@@ -46,19 +60,25 @@ const updateSettingsSchema = z.object({
   // Notification preferences
   notifications: z.record(z.string(), z.boolean()).optional(),
   // Discord Shift Bot
-  shiftBot: z.object({
-    enabled: z.boolean(),
-    channelId: z.string().max(20),
-    daysBeforeEvent: z.number().int().min(1).max(14).optional(),
-    templates: z.array(z.object({
-      name: z.string().max(100),
-      startOffsetHours: z.number().min(0).max(23),
-      durationHours: z.number().min(1).max(24),
-      slots: z.number().int().min(1).max(100),
-    })).max(10),
-    thumbnailUrl: z.string().url().optional().or(z.literal("")),
-    cachedGuildIconUrl: z.string().optional(),
-  }).optional(),
+  shiftBot: z
+    .object({
+      enabled: z.boolean(),
+      channelId: z.string().max(20),
+      daysBeforeEvent: z.number().int().min(1).max(14).optional(),
+      templates: z
+        .array(
+          z.object({
+            name: z.string().max(100),
+            startOffsetHours: z.number().min(0).max(23),
+            durationHours: z.number().min(1).max(24),
+            slots: z.number().int().min(1).max(100),
+          })
+        )
+        .max(10),
+      thumbnailUrl: z.string().url().optional().or(z.literal("")),
+      cachedGuildIconUrl: z.string().optional(),
+    })
+    .optional(),
 })
 
 export const GET = withRateLimit<{ params: Promise<{ venueId: string }> }>(
@@ -76,39 +96,36 @@ export const GET = withRateLimit<{ params: Promise<{ venueId: string }> }>(
       const { params } = context
       const { venueId } = await params
 
-    // Check if user has access to this venue
-    const membership = await prisma.membership.findFirst({
-      where: {
-        userId: session.user.id,
-        venueId,
-        status: "active",
-      },
-    })
+      // Check if user has access to this venue
+      const membership = await prisma.membership.findFirst({
+        where: {
+          userId: session.user.id,
+          venueId,
+          status: "active",
+        },
+      })
 
-    if (!membership) {
-      return NextResponse.json(
-        { error: "You don't have access to this venue" },
-        { status: 403 }
-      )
-    }
+      if (!membership) {
+        return NextResponse.json({ error: "You don't have access to this venue" }, { status: 403 })
+      }
 
-    // Get venue settings
-    const venue = await prisma.venue.findUnique({
-      where: { id: venueId },
-      select: {
-        settings: true,
-        discordWebhookUrl: true,
-        partakeTeamId: true,
-        venueType: true,
-        ffxivVenueId: true,
-        ffxivVenueLinkedAt: true,
-        venueSchedule: { select: { syncedAt: true } },
-      },
-    })
+      // Get venue settings
+      const venue = await prisma.venue.findUnique({
+        where: { id: venueId },
+        select: {
+          settings: true,
+          discordWebhookUrl: true,
+          partakeTeamId: true,
+          venueType: true,
+          ffxivVenueId: true,
+          ffxivVenueLinkedAt: true,
+          venueSchedule: { select: { syncedAt: true } },
+        },
+      })
 
-    if (!venue) {
-      return NextResponse.json({ error: "Venue not found" }, { status: 404 })
-    }
+      if (!venue) {
+        return NextResponse.json({ error: "Venue not found" }, { status: 404 })
+      }
 
       return NextResponse.json({
         ...parseVenueSettings(venue.settings),
@@ -121,10 +138,7 @@ export const GET = withRateLimit<{ params: Promise<{ venueId: string }> }>(
       })
     } catch (error) {
       console.error("Error fetching venue settings:", error)
-      return NextResponse.json(
-        { error: "Internal server error" },
-        { status: 500 }
-      )
+      return NextResponse.json({ error: "Internal server error" }, { status: 500 })
     }
   },
   { requests: 60, window: "1 m" }
@@ -145,78 +159,75 @@ export const PUT = withRateLimit<{ params: Promise<{ venueId: string }> }>(
       const { params } = context
       const { venueId } = await params
 
-    // Check if user has permission to update settings (OWNER only)
-    const membership = await prisma.membership.findFirst({
-      where: {
-        userId: session.user.id,
-        venueId,
-        status: "active",
-      },
-    })
+      // Check if user has permission to update settings (OWNER only)
+      const membership = await prisma.membership.findFirst({
+        where: {
+          userId: session.user.id,
+          venueId,
+          status: "active",
+        },
+      })
 
-    if (!membership || membership.role !== "OWNER") {
-      return NextResponse.json(
-        { error: "Only venue owners can update settings" },
-        { status: 403 }
-      )
-    }
+      if (!membership || membership.role !== "OWNER") {
+        return NextResponse.json({ error: "Only venue owners can update settings" }, { status: 403 })
+      }
 
-    const body = await request.json()
-    const validatedData = updateSettingsSchema.parse(body)
+      const body = await request.json()
+      const validatedData = updateSettingsSchema.parse(body)
 
-    // Get current settings
-    const venue = await prisma.venue.findUnique({
-      where: { id: venueId },
-      select: { settings: true },
-    })
+      // Get current settings
+      const venue = await prisma.venue.findUnique({
+        where: { id: venueId },
+        select: { settings: true },
+      })
 
-    if (!venue) {
-      return NextResponse.json({ error: "Venue not found" }, { status: 404 })
-    }
+      if (!venue) {
+        return NextResponse.json({ error: "Venue not found" }, { status: 404 })
+      }
 
-    // Extract top-level venue columns from validated data
-    const { discordWebhookUrl, partakeTeamId, venueType, ffxivVenueId, ...settingsData } = validatedData
+      // Extract top-level venue columns from validated data
+      const { discordWebhookUrl, partakeTeamId, venueType, ffxivVenueId, ...settingsData } = validatedData
 
-    // Merge new settings with existing settings (type-safe)
-    const currentSettings = parseVenueSettings(venue.settings)
-    const newSettings: VenueSettings = {
-      ...currentSettings,
-      ...settingsData,
-    }
+      // Merge new settings with existing settings (type-safe)
+      const currentSettings = parseVenueSettings(venue.settings)
+      const newSettings: VenueSettings = {
+        ...currentSettings,
+        ...settingsData,
+      }
 
-    // Update venue settings, webhook URL, and Partake team ID
-    const updatedVenue = await prisma.venue.update({
-      where: { id: venueId },
-      data: {
-        settings: newSettings as unknown as Prisma.InputJsonValue,
-        ...(discordWebhookUrl !== undefined && {
-          discordWebhookUrl: discordWebhookUrl || null,
-        }),
-        ...(partakeTeamId !== undefined && {
-          partakeTeamId: partakeTeamId,
-        }),
-        ...(venueType !== undefined && {
-          venueType: venueType,
-        }),
-        ...(ffxivVenueId !== undefined && {
-          ffxivVenueId: ffxivVenueId,
-          ffxivVenueLinkedAt: ffxivVenueId ? new Date() : null,
-          ffxivVenueLinkedBy: ffxivVenueId ? session.user.id : null,
-        }),
-      },
-      select: {
-        settings: true,
-        discordWebhookUrl: true,
-        partakeTeamId: true,
-        venueType: true,
-        ffxivVenueId: true,
-      },
-    })
+      // Update venue settings, webhook URL, and Partake team ID
+      const updatedVenue = await prisma.venue.update({
+        where: { id: venueId },
+        data: {
+          settings: newSettings as unknown as Prisma.InputJsonValue,
+          ...(discordWebhookUrl !== undefined && {
+            discordWebhookUrl: discordWebhookUrl || null,
+          }),
+          ...(partakeTeamId !== undefined && {
+            partakeTeamId: partakeTeamId,
+          }),
+          ...(venueType !== undefined && {
+            venueType: venueType,
+          }),
+          ...(ffxivVenueId !== undefined && {
+            ffxivVenueId: ffxivVenueId,
+            ffxivVenueLinkedAt: ffxivVenueId ? new Date() : null,
+            ffxivVenueLinkedBy: ffxivVenueId ? session.user.id : null,
+          }),
+        },
+        select: {
+          settings: true,
+          discordWebhookUrl: true,
+          partakeTeamId: true,
+          venueType: true,
+          ffxivVenueId: true,
+        },
+      })
 
-    // If unlinking, remove synced schedule data
-    if (ffxivVenueId === null) {
-      await prisma.venueSchedule.deleteMany({ where: { venueId } })
-    }
+      // If unlinking, remove synced schedule data
+      if (ffxivVenueId === null) {
+        await prisma.venueSchedule.deleteMany({ where: { venueId } })
+      }
 
       return NextResponse.json({
         ...parseVenueSettings(updatedVenue.settings),
@@ -227,17 +238,11 @@ export const PUT = withRateLimit<{ params: Promise<{ venueId: string }> }>(
       })
     } catch (error) {
       if (error instanceof z.ZodError) {
-        return NextResponse.json(
-          { error: "Validation error", details: error.issues },
-          { status: 400 }
-        )
+        return NextResponse.json({ error: "Validation error", details: error.issues }, { status: 400 })
       }
 
       console.error("Error updating venue settings:", error)
-      return NextResponse.json(
-        { error: "Internal server error" },
-        { status: 500 }
-      )
+      return NextResponse.json({ error: "Internal server error" }, { status: 500 })
     }
   },
   { requests: 20, window: "1 m" }

@@ -4,10 +4,7 @@ import { authOptions } from "@/lib/auth"
 import { prisma } from "@/lib/prisma"
 import { resolveDisplayName } from "@/lib/display-name"
 
-export async function GET(
-  request: NextRequest,
-  { params }: { params: Promise<{ venueId: string }> }
-) {
+export async function GET(request: NextRequest, { params }: { params: Promise<{ venueId: string }> }) {
   const session = await getServerSession(authOptions)
   if (!session?.user?.id) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
@@ -52,7 +49,11 @@ export async function GET(
             name: true,
             displayName: true,
             image: true,
-            characters: { orderBy: [{ isPrimary: "desc" }, { createdAt: "asc" }], take: 1, select: { characterName: true } },
+            characters: {
+              orderBy: [{ isPrimary: "desc" }, { createdAt: "asc" }],
+              take: 1,
+              select: { characterName: true },
+            },
             memberships: {
               where: { venueId },
               select: {
@@ -146,7 +147,11 @@ export async function GET(
                 name: true,
                 displayName: true,
                 image: true,
-                characters: { orderBy: [{ isPrimary: "desc" }, { createdAt: "asc" }], take: 1, select: { characterName: true } },
+                characters: {
+                  orderBy: [{ isPrimary: "desc" }, { createdAt: "asc" }],
+                  take: 1,
+                  select: { characterName: true },
+                },
               },
             },
             customRole: { select: { name: true, color: true } },
@@ -192,10 +197,7 @@ export async function GET(
 
   // Trim to limit
   const trimmed = items.slice(0, limit)
-  const nextCursor =
-    trimmed.length === limit
-      ? trimmed[trimmed.length - 1].timestamp.toISOString()
-      : null
+  const nextCursor = trimmed.length === limit ? trimmed[trimmed.length - 1].timestamp.toISOString() : null
 
   return NextResponse.json({
     items: trimmed,

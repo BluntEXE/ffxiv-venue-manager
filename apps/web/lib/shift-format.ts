@@ -36,9 +36,9 @@ export function hourLabelFor(d: Date | string, timeZone: string | null): string 
 
 export const statusBadgeClass: Record<string, string> = {
   SCHEDULED: "bg-[rgba(0,180,255,0.12)] text-[var(--xiv-blue)] border-[rgba(0,180,255,0.35)]",
-  ACTIVE:    "bg-emerald-500/10 text-emerald-500 border-emerald-500/20",
+  ACTIVE: "bg-emerald-500/10 text-emerald-500 border-emerald-500/20",
   COMPLETED: "bg-zinc-500/10 text-zinc-400 border-zinc-500/20",
-  MISSED:    "bg-amber-500/10 text-amber-500 border-amber-500/20",
+  MISSED: "bg-amber-500/10 text-amber-500 border-amber-500/20",
   CANCELLED: "bg-red-500/10 text-red-400 border-red-500/20",
 }
 
@@ -80,7 +80,11 @@ export const shiftSelect = {
           name: true,
           displayName: true,
           image: true,
-          characters: { orderBy: [{ isPrimary: "desc" }, { createdAt: "asc" }], take: 1, select: { characterName: true } },
+          characters: {
+            orderBy: [{ isPrimary: "desc" }, { createdAt: "asc" }],
+            take: 1,
+            select: { characterName: true },
+          },
         },
       },
     },

@@ -15,6 +15,7 @@
 ### Task 1: Brand assets, fonts, and design tokens
 
 **Files:**
+
 - Create: `apps/shout-crafter/public/xiv-icon.png`
 - Create: `apps/shout-crafter/public/starfield.png`
 - Create: `apps/shout-crafter/public/fonts/Cinzel-VariableFont_wght.ttf`
@@ -59,14 +60,14 @@ Replace the entire contents of `apps/shout-crafter/src/index.css`:
 @import "tailwindcss";
 
 @font-face {
-  font-family: 'Cinzel';
-  src: url('/fonts/Cinzel-VariableFont_wght.ttf') format('truetype');
+  font-family: "Cinzel";
+  src: url("/fonts/Cinzel-VariableFont_wght.ttf") format("truetype");
   font-weight: 400 900;
   font-style: normal;
   font-display: swap;
 }
 
-@import url('https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700;800&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap');
+@import url("https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700;800&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap");
 
 :root {
   /* ---- XIV brand colors ---- */
@@ -86,21 +87,21 @@ Replace the entire contents of `apps/shout-crafter/src/index.css`:
   --blue-004: rgba(0, 180, 255, 0.04);
   --blue-006: rgba(0, 180, 255, 0.06);
   --blue-008: rgba(0, 180, 255, 0.08);
-  --blue-010: rgba(0, 180, 255, 0.10);
+  --blue-010: rgba(0, 180, 255, 0.1);
   --blue-012: rgba(0, 180, 255, 0.12);
   --blue-015: rgba(0, 180, 255, 0.15);
   --blue-018: rgba(0, 180, 255, 0.18);
-  --blue-020: rgba(0, 180, 255, 0.20);
+  --blue-020: rgba(0, 180, 255, 0.2);
   --blue-035: rgba(0, 180, 255, 0.35);
   --blue-045: rgba(0, 180, 255, 0.45);
 
   --glow-card-inset: inset 0 1px 0 rgba(0, 180, 255, 0.12);
 
   /* ---- Type families ---- */
-  --font-display: 'Cinzel', Georgia, serif;
-  --font-heading: 'Outfit', system-ui, sans-serif;
-  --font-sans: 'Inter', system-ui, sans-serif;
-  --font-mono: 'JetBrains Mono', ui-monospace, 'SF Mono', Menlo, monospace;
+  --font-display: "Cinzel", Georgia, serif;
+  --font-heading: "Outfit", system-ui, sans-serif;
+  --font-sans: "Inter", system-ui, sans-serif;
+  --font-mono: "JetBrains Mono", ui-monospace, "SF Mono", Menlo, monospace;
 }
 
 body {
@@ -126,7 +127,7 @@ body {
   overflow: hidden;
 }
 .xiv-btn-shimmer::before {
-  content: '';
+  content: "";
   position: absolute;
   inset: 0;
   background: linear-gradient(120deg, transparent 32%, rgba(255, 255, 255, 0.5) 50%, transparent 68%);
@@ -135,18 +136,33 @@ body {
 }
 
 @keyframes xivShimmer {
-  0% { transform: translateX(-100%); }
-  100% { transform: translateX(100%); }
+  0% {
+    transform: translateX(-100%);
+  }
+  100% {
+    transform: translateX(100%);
+  }
 }
 
 @keyframes starDrift {
-  0%, 100% { transform: scale(1) translate(0, 0); }
-  50% { transform: scale(1.07) translate(-1%, 1%); }
+  0%,
+  100% {
+    transform: scale(1) translate(0, 0);
+  }
+  50% {
+    transform: scale(1.07) translate(-1%, 1%);
+  }
 }
 
 @keyframes fadeSlideUp {
-  from { opacity: 0; transform: translateY(12px); }
-  to   { opacity: 1; transform: translateY(0); }
+  from {
+    opacity: 0;
+    transform: translateY(12px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }
 ```
 
@@ -172,53 +188,54 @@ git commit -m "shout-crafter: add XIV blue brand assets, fonts, and design token
 ### Task 2: Restyle `App.tsx` shell — header, layout, footer, auth states
 
 **Files:**
+
 - Modify: `apps/shout-crafter/src/App.tsx` (full rewrite)
 
 - [ ] **Step 1: Replace `App.tsx`**
 
 ```tsx
-import { useState, useEffect } from 'react'
-import type { ShoutFields, TemplateId, ParsedEvent } from './types'
-import { ImportPanel } from './components/ImportPanel'
-import { ShoutBuilder } from './components/ShoutBuilder'
-import { ShoutPreview } from './components/ShoutPreview'
-import { buildShout } from './lib/shout-templates'
-import type { SeparatorId, DecorId } from './lib/shout-templates'
-import { fetchSession } from './lib/xivvm-auth'
-import type { XivVMSession } from './lib/xivvm-auth'
-import { SavedShouts } from './components/SavedShouts'
-import { FeedbackModal } from './components/FeedbackModal'
-import { ArrowLeft, LogIn, MessageSquare } from 'lucide-react'
+import { useState, useEffect } from "react"
+import type { ShoutFields, TemplateId, ParsedEvent } from "./types"
+import { ImportPanel } from "./components/ImportPanel"
+import { ShoutBuilder } from "./components/ShoutBuilder"
+import { ShoutPreview } from "./components/ShoutPreview"
+import { buildShout } from "./lib/shout-templates"
+import type { SeparatorId, DecorId } from "./lib/shout-templates"
+import { fetchSession } from "./lib/xivvm-auth"
+import type { XivVMSession } from "./lib/xivvm-auth"
+import { SavedShouts } from "./components/SavedShouts"
+import { FeedbackModal } from "./components/FeedbackModal"
+import { ArrowLeft, LogIn, MessageSquare } from "lucide-react"
 
 const EMPTY_FIELDS: ShoutFields = {
-  venueName: '',
-  tagline: '',
-  server: '',
-  location: '',
-  openTime: '',
+  venueName: "",
+  tagline: "",
+  server: "",
+  location: "",
+  openTime: "",
   isAdult: false,
-  djs: '',
-  cta: '',
-  extras: '',
-  links: '',
+  djs: "",
+  cta: "",
+  extras: "",
+  links: "",
 }
 
 function initials(name: string | null): string {
-  if (!name) return '?'
+  if (!name) return "?"
   return name
-    .split(' ')
+    .split(" ")
     .filter(Boolean)
     .slice(0, 2)
-    .map(p => p[0]!.toUpperCase())
-    .join('')
+    .map((p) => p[0]!.toUpperCase())
+    .join("")
 }
 
 export default function App() {
   const [fields, setFields] = useState<ShoutFields>(EMPTY_FIELDS)
-  const [templateId, setTemplateId] = useState<TemplateId>('pre')
-  const [separatorId, setSeparatorId] = useState<SeparatorId>('dot')
+  const [templateId, setTemplateId] = useState<TemplateId>("pre")
+  const [separatorId, setSeparatorId] = useState<SeparatorId>("dot")
   const [showFeedback, setShowFeedback] = useState(false)
-  const [decorId, setDecorId] = useState<DecorId>('diamond')
+  const [decorId, setDecorId] = useState<DecorId>("diamond")
   const [xivvm, setXivvm] = useState<XivVMSession | null>(null)
 
   useEffect(() => {
@@ -227,7 +244,7 @@ export default function App() {
 
   function handleImport(parsed: ParsedEvent) {
     // Merge - only update fields explicitly included in parsed (user chose them in review step)
-    setFields(prev => ({
+    setFields((prev) => ({
       ...prev,
       ...(parsed.venueName !== undefined && { venueName: parsed.venueName }),
       ...(parsed.tagline !== undefined && { tagline: parsed.tagline }),
@@ -244,7 +261,9 @@ export default function App() {
   const [shout, setShout] = useState(generated)
 
   // Sync auto-generated value whenever fields/options change
-  useEffect(() => { setShout(generated) }, [generated])
+  useEffect(() => {
+    setShout(generated)
+  }, [generated])
 
   return (
     <div className="min-h-screen bg-[var(--xiv-navy)] text-[var(--foreground)]">
@@ -252,16 +271,16 @@ export default function App() {
         <div
           className="absolute inset-0 opacity-[0.22]"
           style={{
-            backgroundImage: 'url(/starfield.png)',
-            backgroundSize: 'cover',
-            backgroundPosition: 'center',
-            animation: 'starDrift 22s ease-in-out infinite',
+            backgroundImage: "url(/starfield.png)",
+            backgroundSize: "cover",
+            backgroundPosition: "center",
+            animation: "starDrift 22s ease-in-out infinite",
           }}
         />
         <div
           className="absolute inset-0 pointer-events-none"
           style={{
-            background: 'radial-gradient(ellipse 600px 220px at 50% 0%, rgba(0,180,255,0.14), transparent 70%)',
+            background: "radial-gradient(ellipse 600px 220px at 50% 0%, rgba(0,180,255,0.14), transparent 70%)",
           }}
         />
 
@@ -271,23 +290,23 @@ export default function App() {
               src="/xiv-icon.png"
               alt=""
               className="w-9 h-9"
-              style={{ filter: 'drop-shadow(0 0 9px rgba(0,180,255,0.55))' }}
+              style={{ filter: "drop-shadow(0 0 9px rgba(0,180,255,0.55))" }}
             />
             <div>
               <h1
                 className="font-bold tracking-[0.04em] text-[1.4rem] leading-tight text-[var(--foreground)]"
-                style={{ fontFamily: 'var(--font-display)' }}
+                style={{ fontFamily: "var(--font-display)" }}
               >
                 Shout Crafter
               </h1>
               <p className="text-[0.72rem] text-[var(--muted-foreground)]">
-                Craft{' '}
+                Craft{" "}
                 <code
                   className="px-1 rounded-[0.25rem] text-[var(--xiv-blue)] bg-[var(--blue-010)]"
-                  style={{ fontFamily: 'var(--font-mono)' }}
+                  style={{ fontFamily: "var(--font-mono)" }}
                 >
                   /shout
-                </code>{' '}
+                </code>{" "}
                 ads from Partake & Discord
               </p>
             </div>
@@ -305,7 +324,7 @@ export default function App() {
               <div className="flex items-center gap-2 bg-[var(--blue-006)] rounded-full pl-1 pr-3 py-1">
                 <div
                   className="w-[26px] h-[26px] rounded-full flex items-center justify-center text-[0.65rem] font-bold text-[var(--xiv-navy)]"
-                  style={{ background: 'linear-gradient(135deg,#00b4ff,#0a3a5c)', fontFamily: 'var(--font-heading)' }}
+                  style={{ background: "linear-gradient(135deg,#00b4ff,#0a3a5c)", fontFamily: "var(--font-heading)" }}
                 >
                   {initials(xivvm.user.name)}
                 </div>
@@ -317,7 +336,7 @@ export default function App() {
 
         <div
           className="absolute bottom-0 left-0 right-0 h-px"
-          style={{ background: 'linear-gradient(90deg, transparent, rgba(0,180,255,0.55), transparent)' }}
+          style={{ background: "linear-gradient(90deg, transparent, rgba(0,180,255,0.55), transparent)" }}
         />
       </header>
 
@@ -345,7 +364,7 @@ export default function App() {
             <div className="xiv-card !py-3 flex items-center gap-3">
               <div
                 className="w-[26px] h-[26px] rounded-full flex items-center justify-center text-[0.65rem] font-bold text-[var(--xiv-navy)]"
-                style={{ background: 'linear-gradient(135deg,#00b4ff,#0a3a5c)', fontFamily: 'var(--font-heading)' }}
+                style={{ background: "linear-gradient(135deg,#00b4ff,#0a3a5c)", fontFamily: "var(--font-heading)" }}
               >
                 {initials(xivvm.user.name)}
               </div>
@@ -364,7 +383,12 @@ export default function App() {
               currentTemplate={templateId}
               currentSeparator={separatorId}
               currentDecor={decorId}
-              onLoad={(f, t, s, d) => { setFields(f); setTemplateId(t); setSeparatorId(s); setDecorId(d) }}
+              onLoad={(f, t, s, d) => {
+                setFields(f)
+                setTemplateId(t)
+                setSeparatorId(s)
+                setDecorId(d)
+              }}
             />
           </>
         ) : (
@@ -376,7 +400,10 @@ export default function App() {
               <div className="w-12 h-12 rounded-[0.75rem] bg-[var(--blue-010)] flex items-center justify-center">
                 <LogIn size={22} className="text-[var(--xiv-blue)]" />
               </div>
-              <h2 className="font-semibold text-[1.02rem] text-[var(--foreground)]" style={{ fontFamily: 'var(--font-heading)' }}>
+              <h2
+                className="font-semibold text-[1.02rem] text-[var(--foreground)]"
+                style={{ fontFamily: "var(--font-heading)" }}
+              >
                 Save shouts across your venues
               </h2>
               <p className="text-sm text-[var(--muted-foreground)]">
@@ -385,7 +412,7 @@ export default function App() {
               <a
                 href="https://xivvenuemanager.com"
                 className="xiv-btn-shimmer inline-flex items-center gap-2 bg-[var(--xiv-blue)] text-[var(--xiv-navy)] font-bold text-sm px-4 py-2 rounded-[0.5rem]"
-                style={{ fontFamily: 'var(--font-heading)' }}
+                style={{ fontFamily: "var(--font-heading)" }}
               >
                 <MessageSquare size={16} />
                 Sign in with Discord
@@ -399,7 +426,7 @@ export default function App() {
         <div className="max-w-[880px] mx-auto px-6 py-6 text-center space-y-2">
           <div className="flex items-center justify-center gap-3 flex-wrap text-sm text-[var(--muted-foreground)]">
             <span>
-              Part of{' '}
+              Part of{" "}
               <a href="https://xivvenuemanager.com" className="text-[var(--xiv-blue)] hover:underline">
                 XIV Venue Manager
               </a>
@@ -450,18 +477,19 @@ git commit -m "shout-crafter: restyle app shell with XIV blue header, footer, an
 ### Task 3: Merge selectors into `ShoutBuilder` (Build card) and restyle
 
 **Files:**
+
 - Modify: `apps/shout-crafter/src/components/ShoutBuilder.tsx` (full rewrite)
 - Delete: `apps/shout-crafter/src/components/TemplateSelector.tsx` (folded into ShoutBuilder)
 
 - [ ] **Step 1: Replace `ShoutBuilder.tsx`**
 
 ```tsx
-import type { ShoutFields } from '../types'
-import type { TemplateId } from '../types'
-import { ALL_WORLDS } from '../lib/worlds'
-import { TEMPLATES, SEPARATORS, DECORS } from '../lib/shout-templates'
-import type { SeparatorId, DecorId } from '../lib/shout-templates'
-import { SlidersHorizontal } from 'lucide-react'
+import type { ShoutFields } from "../types"
+import type { TemplateId } from "../types"
+import { ALL_WORLDS } from "../lib/worlds"
+import { TEMPLATES, SEPARATORS, DECORS } from "../lib/shout-templates"
+import type { SeparatorId, DecorId } from "../lib/shout-templates"
+import { SlidersHorizontal } from "lucide-react"
 
 interface Props {
   fields: ShoutFields
@@ -474,18 +502,18 @@ interface Props {
   onDecorChange: (id: DecorId) => void
 }
 
-const pillBase = 'px-[13px] py-[7px] rounded-full text-sm font-medium transition-colors'
-const pillActive = 'bg-[var(--xiv-blue)] text-[var(--xiv-navy)] font-semibold'
-const pillInactive = 'bg-[var(--blue-006)] text-[var(--muted-foreground)] hover:bg-[var(--blue-010)]'
+const pillBase = "px-[13px] py-[7px] rounded-full text-sm font-medium transition-colors"
+const pillActive = "bg-[var(--xiv-blue)] text-[var(--xiv-navy)] font-semibold"
+const pillInactive = "bg-[var(--blue-006)] text-[var(--muted-foreground)] hover:bg-[var(--blue-010)]"
 
 const inputClass =
-  'w-full bg-[var(--blue-004)] text-[var(--foreground)] placeholder-[var(--fg-faint)] rounded-[0.5rem] px-3 py-2 text-sm border border-[var(--blue-015)] focus:border-[var(--xiv-blue)] focus:outline-none focus:shadow-[0_0_0_3px_rgba(0,180,255,0.12)] transition-colors'
+  "w-full bg-[var(--blue-004)] text-[var(--foreground)] placeholder-[var(--fg-faint)] rounded-[0.5rem] px-3 py-2 text-sm border border-[var(--blue-015)] focus:border-[var(--xiv-blue)] focus:outline-none focus:shadow-[0_0_0_3px_rgba(0,180,255,0.12)] transition-colors"
 
-const labelClass = 'block text-[0.68rem] font-semibold text-[var(--muted-foreground)] uppercase tracking-[0.07em]'
+const labelClass = "block text-[0.68rem] font-semibold text-[var(--muted-foreground)] uppercase tracking-[0.07em]"
 
 function Field({ label, full, children }: { label: string; full?: boolean; children: React.ReactNode }) {
   return (
-    <div className={`space-y-1 ${full ? 'col-span-2' : ''}`}>
+    <div className={`space-y-1 ${full ? "col-span-2" : ""}`}>
       <label className={labelClass}>{label}</label>
       {children}
     </div>
@@ -522,7 +550,10 @@ export function ShoutBuilder({
           <SlidersHorizontal size={18} className="text-[var(--xiv-blue)]" />
         </div>
         <div>
-          <h2 className="font-semibold text-[1.02rem] text-[var(--foreground)]" style={{ fontFamily: 'var(--font-heading)' }}>
+          <h2
+            className="font-semibold text-[1.02rem] text-[var(--foreground)]"
+            style={{ fontFamily: "var(--font-heading)" }}
+          >
             Build your shout
           </h2>
           <p className="text-sm text-[var(--muted-foreground)]">Pick a template &amp; style, then edit the fields</p>
@@ -530,7 +561,7 @@ export function ShoutBuilder({
       </div>
 
       <SelectorRow label="Template">
-        {TEMPLATES.map(t => (
+        {TEMPLATES.map((t) => (
           <button
             key={t.id}
             onClick={() => onTemplateChange(t.id)}
@@ -542,12 +573,12 @@ export function ShoutBuilder({
       </SelectorRow>
 
       <SelectorRow label="Separator">
-        {SEPARATORS.map(s => (
+        {SEPARATORS.map((s) => (
           <button
             key={s.id}
             onClick={() => onSeparatorChange(s.id)}
             className={`${pillBase} ${separatorId === s.id ? pillActive : pillInactive}`}
-            style={{ fontFamily: 'var(--font-mono)' }}
+            style={{ fontFamily: "var(--font-mono)" }}
           >
             {s.label}
           </button>
@@ -555,7 +586,7 @@ export function ShoutBuilder({
       </SelectorRow>
 
       <SelectorRow label="Name style">
-        {DECORS.map(d => (
+        {DECORS.map((d) => (
           <button
             key={d.id}
             onClick={() => onDecorChange(d.id)}
@@ -572,7 +603,7 @@ export function ShoutBuilder({
         <Field label="Venue Name">
           <input
             value={fields.venueName}
-            onChange={e => set('venueName', e.target.value)}
+            onChange={(e) => set("venueName", e.target.value)}
             placeholder="The Velvet Lounge"
             className={inputClass}
           />
@@ -581,7 +612,7 @@ export function ShoutBuilder({
         <Field label="Tagline / Vibe" full>
           <input
             value={fields.tagline}
-            onChange={e => set('tagline', e.target.value)}
+            onChange={(e) => set("tagline", e.target.value)}
             placeholder="Cozy adult bar"
             className={inputClass}
           />
@@ -590,20 +621,22 @@ export function ShoutBuilder({
         <Field label="Data Centre / World">
           <input
             value={fields.server}
-            onChange={e => set('server', e.target.value)}
+            onChange={(e) => set("server", e.target.value)}
             placeholder="Chaos Omega"
             list="worlds-list"
             className={inputClass}
           />
           <datalist id="worlds-list">
-            {ALL_WORLDS.map(w => <option key={w} value={w} />)}
+            {ALL_WORLDS.map((w) => (
+              <option key={w} value={w} />
+            ))}
           </datalist>
         </Field>
 
         <Field label="Location (Ward & Plot)">
           <input
             value={fields.location}
-            onChange={e => set('location', e.target.value)}
+            onChange={(e) => set("location", e.target.value)}
             placeholder="Goblet W5 P31"
             className={inputClass}
           />
@@ -612,7 +645,7 @@ export function ShoutBuilder({
         <Field label="Open Time (ST)">
           <input
             value={fields.openTime}
-            onChange={e => set('openTime', e.target.value)}
+            onChange={(e) => set("openTime", e.target.value)}
             placeholder="10PM-2AM ST"
             className={inputClass}
           />
@@ -624,7 +657,7 @@ export function ShoutBuilder({
             <input
               type="checkbox"
               checked={fields.isAdult}
-              onChange={e => onChange({ ...fields, isAdult: e.target.checked })}
+              onChange={(e) => onChange({ ...fields, isAdult: e.target.checked })}
               className="w-4 h-4 accent-[var(--xiv-blue)]"
             />
             <span className="text-sm text-[var(--foreground)]">18+ (adult content)</span>
@@ -634,7 +667,7 @@ export function ShoutBuilder({
         <Field label="DJs (optional)">
           <input
             value={fields.djs}
-            onChange={e => set('djs', e.target.value)}
+            onChange={(e) => set("djs", e.target.value)}
             placeholder="DJ Khaosvoid, DJ Sylverhart"
             className={inputClass}
           />
@@ -643,7 +676,7 @@ export function ShoutBuilder({
         <Field label="Call to Action">
           <input
             value={fields.cta}
-            onChange={e => set('cta', e.target.value)}
+            onChange={(e) => set("cta", e.target.value)}
             placeholder="Come say hi!"
             className={inputClass}
           />
@@ -652,7 +685,7 @@ export function ShoutBuilder({
         <Field label="Extras / Hashtags (optional)">
           <input
             value={fields.extras}
-            onChange={e => set('extras', e.target.value)}
+            onChange={(e) => set("extras", e.target.value)}
             placeholder="#rp #nightlife"
             className={inputClass}
           />
@@ -661,7 +694,7 @@ export function ShoutBuilder({
         <Field label="Links (Discord / Partake)" full>
           <input
             value={fields.links}
-            onChange={e => set('links', e.target.value)}
+            onChange={(e) => set("links", e.target.value)}
             placeholder="discord.gg/xxx | partake.gg/events/123"
             className={inputClass}
           />
@@ -699,44 +732,45 @@ git commit -m "shout-crafter: merge template/separator/decor selectors into rest
 ### Task 4: Restyle `ImportPanel`
 
 **Files:**
+
 - Modify: `apps/shout-crafter/src/components/ImportPanel.tsx` (full rewrite)
 
 - [ ] **Step 1: Replace `ImportPanel.tsx`**
 
 ```tsx
-import { useState } from 'react'
-import type { ParsedEvent } from '../types'
-import { extractEventId, fetchPartakeEvent } from '../lib/partake'
-import { parseDiscordPost } from '../lib/discord-parser'
-import { Download } from 'lucide-react'
+import { useState } from "react"
+import type { ParsedEvent } from "../types"
+import { extractEventId, fetchPartakeEvent } from "../lib/partake"
+import { parseDiscordPost } from "../lib/discord-parser"
+import { Download } from "lucide-react"
 
 interface Props {
   onImport: (parsed: ParsedEvent) => void
 }
 
 const FIELD_LABELS: { key: keyof ParsedEvent; label: string }[] = [
-  { key: 'venueName', label: 'Venue Name' },
-  { key: 'tagline',   label: 'Tagline / Vibe' },
-  { key: 'server',    label: 'DC / World' },
-  { key: 'location',  label: 'Location' },
-  { key: 'openTime',  label: 'Open Time' },
-  { key: 'djs',       label: 'DJs' },
-  { key: 'links',     label: 'Links' },
+  { key: "venueName", label: "Venue Name" },
+  { key: "tagline", label: "Tagline / Vibe" },
+  { key: "server", label: "DC / World" },
+  { key: "location", label: "Location" },
+  { key: "openTime", label: "Open Time" },
+  { key: "djs", label: "DJs" },
+  { key: "links", label: "Links" },
 ]
 
 const inputClass =
-  'flex-1 bg-[var(--blue-004)] text-[var(--foreground)] placeholder-[var(--fg-faint)] rounded-[0.5rem] px-3 py-2 text-sm border border-[var(--blue-015)] focus:border-[var(--xiv-blue)] focus:outline-none focus:shadow-[0_0_0_3px_rgba(0,180,255,0.12)] transition-colors'
+  "flex-1 bg-[var(--blue-004)] text-[var(--foreground)] placeholder-[var(--fg-faint)] rounded-[0.5rem] px-3 py-2 text-sm border border-[var(--blue-015)] focus:border-[var(--xiv-blue)] focus:outline-none focus:shadow-[0_0_0_3px_rgba(0,180,255,0.12)] transition-colors"
 
 const primaryBtn =
-  'px-4 py-2 bg-[var(--xiv-blue)] text-[var(--xiv-navy)] text-sm font-bold rounded-[0.5rem] hover:opacity-90 disabled:opacity-50 transition-opacity'
+  "px-4 py-2 bg-[var(--xiv-blue)] text-[var(--xiv-navy)] text-sm font-bold rounded-[0.5rem] hover:opacity-90 disabled:opacity-50 transition-opacity"
 
 const ghostBtn =
-  'px-4 py-2 bg-[var(--blue-006)] text-[var(--muted-foreground)] text-sm font-medium rounded-[0.5rem] hover:bg-[var(--blue-010)] transition-colors'
+  "px-4 py-2 bg-[var(--blue-006)] text-[var(--muted-foreground)] text-sm font-medium rounded-[0.5rem] hover:bg-[var(--blue-010)] transition-colors"
 
 export function ImportPanel({ onImport }: Props) {
-  const [tab, setTab] = useState<'partake' | 'discord'>('partake')
-  const [partakeUrl, setPartakeUrl] = useState('')
-  const [discordText, setDiscordText] = useState('')
+  const [tab, setTab] = useState<"partake" | "discord">("partake")
+  const [partakeUrl, setPartakeUrl] = useState("")
+  const [discordText, setDiscordText] = useState("")
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [pending, setPending] = useState<ParsedEvent | null>(null)
@@ -746,13 +780,16 @@ export function ImportPanel({ onImport }: Props) {
     setError(null)
     setPending(null)
     const id = extractEventId(partakeUrl)
-    if (!id) { setError('Paste a valid Partake event URL (e.g. partake.gg/events/12345)'); return }
+    if (!id) {
+      setError("Paste a valid Partake event URL (e.g. partake.gg/events/12345)")
+      return
+    }
     setLoading(true)
     try {
       const parsed = await fetchPartakeEvent(id)
       showReview(parsed)
     } catch (e) {
-      setError(e instanceof Error ? e.message : 'Failed to fetch event')
+      setError(e instanceof Error ? e.message : "Failed to fetch event")
     } finally {
       setLoading(false)
     }
@@ -761,23 +798,24 @@ export function ImportPanel({ onImport }: Props) {
   function handleDiscordParse() {
     setError(null)
     setPending(null)
-    if (!discordText.trim()) { setError('Paste some text first'); return }
+    if (!discordText.trim()) {
+      setError("Paste some text first")
+      return
+    }
     showReview(parseDiscordPost(discordText))
   }
 
   function showReview(parsed: ParsedEvent) {
     // Pre-select all fields that have actual content
     const found = new Set(
-      FIELD_LABELS
-        .filter(({ key }) => parsed[key] !== undefined && parsed[key] !== '')
-        .map(({ key }) => key)
+      FIELD_LABELS.filter(({ key }) => parsed[key] !== undefined && parsed[key] !== "").map(({ key }) => key)
     )
     setPending(parsed)
     setSelected(found)
   }
 
   function toggleField(key: keyof ParsedEvent) {
-    setSelected(prev => {
+    setSelected((prev) => {
       const next = new Set(prev)
       next.has(key) ? next.delete(key) : next.add(key)
       return next
@@ -797,14 +835,11 @@ export function ImportPanel({ onImport }: Props) {
     setPending(null)
   }
 
-  const tabClass = (t: typeof tab) =>
-    `${pillBase} ${tab === t ? pillActive : pillInactive}`
+  const tabClass = (t: typeof tab) => `${pillBase} ${tab === t ? pillActive : pillInactive}`
 
-  const foundFields = pending
-    ? FIELD_LABELS.filter(({ key }) => pending[key] !== undefined && pending[key] !== '')
-    : []
+  const foundFields = pending ? FIELD_LABELS.filter(({ key }) => pending[key] !== undefined && pending[key] !== "") : []
   const missingFields = pending
-    ? FIELD_LABELS.filter(({ key }) => pending[key] === undefined || pending[key] === '')
+    ? FIELD_LABELS.filter(({ key }) => pending[key] === undefined || pending[key] === "")
     : []
 
   return (
@@ -814,7 +849,10 @@ export function ImportPanel({ onImport }: Props) {
           <Download size={18} className="text-[var(--xiv-blue)]" />
         </div>
         <div>
-          <h2 className="font-semibold text-[1.02rem] text-[var(--foreground)]" style={{ fontFamily: 'var(--font-heading)' }}>
+          <h2
+            className="font-semibold text-[1.02rem] text-[var(--foreground)]"
+            style={{ fontFamily: "var(--font-heading)" }}
+          >
             Import event
           </h2>
           <p className="text-sm text-[var(--muted-foreground)]">Pull details from a Partake link or a Discord post</p>
@@ -822,35 +860,55 @@ export function ImportPanel({ onImport }: Props) {
       </div>
 
       <div className="flex gap-2">
-        <button className={tabClass('partake')} onClick={() => { setTab('partake'); setPending(null) }}>Partake URL</button>
-        <button className={tabClass('discord')} onClick={() => { setTab('discord'); setPending(null) }}>Discord Paste</button>
+        <button
+          className={tabClass("partake")}
+          onClick={() => {
+            setTab("partake")
+            setPending(null)
+          }}
+        >
+          Partake URL
+        </button>
+        <button
+          className={tabClass("discord")}
+          onClick={() => {
+            setTab("discord")
+            setPending(null)
+          }}
+        >
+          Discord Paste
+        </button>
       </div>
 
       {!pending ? (
         <>
-          {tab === 'partake' ? (
+          {tab === "partake" ? (
             <>
-              <p className="text-xs text-[var(--muted-foreground)]">Paste a Partake event URL to pull in event details.</p>
+              <p className="text-xs text-[var(--muted-foreground)]">
+                Paste a Partake event URL to pull in event details.
+              </p>
               <div className="flex gap-2 flex-wrap">
                 <input
                   type="url"
                   value={partakeUrl}
-                  onChange={e => setPartakeUrl(e.target.value)}
-                  onKeyDown={e => e.key === 'Enter' && handlePartakeFetch()}
+                  onChange={(e) => setPartakeUrl(e.target.value)}
+                  onKeyDown={(e) => e.key === "Enter" && handlePartakeFetch()}
                   placeholder="https://partake.gg/events/12345"
                   className={inputClass}
                 />
                 <button onClick={handlePartakeFetch} disabled={loading} className={primaryBtn}>
-                  {loading ? 'Fetching…' : 'Import'}
+                  {loading ? "Fetching…" : "Import"}
                 </button>
               </div>
             </>
           ) : (
             <>
-              <p className="text-xs text-[var(--muted-foreground)]">Paste a Discord post. We'll pull out what we can.</p>
+              <p className="text-xs text-[var(--muted-foreground)]">
+                Paste a Discord post. We'll pull out what we can.
+              </p>
               <textarea
                 value={discordText}
-                onChange={e => setDiscordText(e.target.value)}
+                onChange={(e) => setDiscordText(e.target.value)}
                 placeholder="Paste Discord post text here…"
                 rows={5}
                 className={`${inputClass} resize-y`}
@@ -876,7 +934,9 @@ export function ImportPanel({ onImport }: Props) {
                     onChange={() => toggleField(key)}
                     className="w-4 h-4 accent-[var(--xiv-blue)]"
                   />
-                  <span className="text-[0.68rem] font-semibold uppercase tracking-[0.07em] text-[var(--muted-foreground)] w-28 shrink-0">{label}</span>
+                  <span className="text-[0.68rem] font-semibold uppercase tracking-[0.07em] text-[var(--muted-foreground)] w-28 shrink-0">
+                    {label}
+                  </span>
                   <span className="text-xs text-[var(--foreground)] truncate">{String(pending[key])}</span>
                 </label>
               ))}
@@ -885,13 +945,17 @@ export function ImportPanel({ onImport }: Props) {
 
           {missingFields.length > 0 && (
             <p className="text-xs text-[var(--fg-faint)]">
-              Not in this post: {missingFields.map(f => f.label).join(', ')}
+              Not in this post: {missingFields.map((f) => f.label).join(", ")}
             </p>
           )}
 
           <div className="flex gap-2 pt-1">
-            <button onClick={applySelected} disabled={selected.size === 0} className={primaryBtn.replace('px-4', 'px-4 disabled:opacity-40')}>
-              Apply {selected.size > 0 ? `${selected.size} field${selected.size > 1 ? 's' : ''}` : ''}
+            <button
+              onClick={applySelected}
+              disabled={selected.size === 0}
+              className={primaryBtn.replace("px-4", "px-4 disabled:opacity-40")}
+            >
+              Apply {selected.size > 0 ? `${selected.size} field${selected.size > 1 ? "s" : ""}` : ""}
             </button>
             <button onClick={() => setPending(null)} className={ghostBtn}>
               Cancel
@@ -903,9 +967,9 @@ export function ImportPanel({ onImport }: Props) {
   )
 }
 
-const pillBase = 'px-[13px] py-[7px] rounded-full text-sm font-medium transition-colors'
-const pillActive = 'bg-[var(--xiv-blue)] text-[var(--xiv-navy)] font-semibold'
-const pillInactive = 'bg-[var(--blue-006)] text-[var(--muted-foreground)] hover:bg-[var(--blue-010)]'
+const pillBase = "px-[13px] py-[7px] rounded-full text-sm font-medium transition-colors"
+const pillActive = "bg-[var(--xiv-blue)] text-[var(--xiv-navy)] font-semibold"
+const pillInactive = "bg-[var(--blue-006)] text-[var(--muted-foreground)] hover:bg-[var(--blue-010)]"
 ```
 
 - [ ] **Step 2: Build**
@@ -928,14 +992,15 @@ git commit -m "shout-crafter: restyle Import card with XIV blue tabs and review 
 ### Task 5: Restyle `ShoutPreview` (Preview card)
 
 **Files:**
+
 - Modify: `apps/shout-crafter/src/components/ShoutPreview.tsx` (full rewrite)
 
 - [ ] **Step 1: Replace `ShoutPreview.tsx`**
 
 ```tsx
-import { useState } from 'react'
-import { SHOUT_CHAR_LIMIT } from '../lib/shout-templates'
-import { Megaphone, Copy, Check } from 'lucide-react'
+import { useState } from "react"
+import { SHOUT_CHAR_LIMIT } from "../lib/shout-templates"
+import { Megaphone, Copy, Check } from "lucide-react"
 
 interface Props {
   shout: string
@@ -947,13 +1012,13 @@ export function ShoutPreview({ shout, onChange }: Props) {
   const len = shout.length
   const over = len > SHOUT_CHAR_LIMIT
   const nearLimit = len > SHOUT_CHAR_LIMIT * 0.9
-  const displayValue = shout ? `/sh ${shout}` : ''
+  const displayValue = shout ? `/sh ${shout}` : ""
 
   const counterColor = over
-    ? 'text-[var(--destructive)]'
+    ? "text-[var(--destructive)]"
     : nearLimit
-    ? 'text-[var(--warning)]'
-    : 'text-[var(--muted-foreground)]'
+      ? "text-[var(--warning)]"
+      : "text-[var(--muted-foreground)]"
 
   async function copy() {
     if (!displayValue) return
@@ -964,14 +1029,14 @@ export function ShoutPreview({ shout, onChange }: Props) {
 
   function handleChange(val: string) {
     // Strip /sh prefix if present so parent state stays clean
-    const stripped = val.replace(/^\/sh\s*/i, '')
+    const stripped = val.replace(/^\/sh\s*/i, "")
     onChange(stripped)
   }
 
   return (
     <div
       className="xiv-card space-y-3"
-      style={{ borderColor: 'var(--blue-020)', boxShadow: 'var(--glow-card-inset), 0 0 24px rgba(0,180,255,0.05)' }}
+      style={{ borderColor: "var(--blue-020)", boxShadow: "var(--glow-card-inset), 0 0 24px rgba(0,180,255,0.05)" }}
     >
       <div className="flex items-center justify-between gap-3 flex-wrap">
         <div className="flex items-center gap-3">
@@ -979,7 +1044,10 @@ export function ShoutPreview({ shout, onChange }: Props) {
             <Megaphone size={18} className="text-[var(--xiv-blue)]" />
           </div>
           <div>
-            <h2 className="font-semibold text-[1.02rem] text-[var(--foreground)]" style={{ fontFamily: 'var(--font-heading)' }}>
+            <h2
+              className="font-semibold text-[1.02rem] text-[var(--foreground)]"
+              style={{ fontFamily: "var(--font-heading)" }}
+            >
               Preview
             </h2>
             <p className="text-sm text-[var(--muted-foreground)]">Editable — paste straight into FFXIV chat</p>
@@ -987,31 +1055,33 @@ export function ShoutPreview({ shout, onChange }: Props) {
         </div>
 
         <div className="flex items-center gap-3">
-          <span className={`text-xs ${counterColor}`} style={{ fontFamily: 'var(--font-mono)' }}>
+          <span className={`text-xs ${counterColor}`} style={{ fontFamily: "var(--font-mono)" }}>
             {len}/{SHOUT_CHAR_LIMIT}
-            {over && ' · over limit'}
+            {over && " · over limit"}
           </span>
           <button
             onClick={copy}
             disabled={!shout}
             className="xiv-btn-shimmer flex items-center gap-1.5 px-4 py-2 bg-[var(--xiv-blue)] text-[var(--xiv-navy)] text-sm font-bold rounded-[0.5rem] disabled:opacity-40 transition-opacity"
-            style={{ fontFamily: 'var(--font-heading)', boxShadow: '0 0 14px rgba(0,180,255,0.22)' }}
+            style={{ fontFamily: "var(--font-heading)", boxShadow: "0 0 14px rgba(0,180,255,0.22)" }}
           >
             {copied ? <Check size={15} /> : <Copy size={15} />}
-            {copied ? 'Copied!' : 'Copy'}
+            {copied ? "Copied!" : "Copy"}
           </button>
         </div>
       </div>
 
       <textarea
         value={displayValue}
-        onChange={e => handleChange(e.target.value)}
+        onChange={(e) => handleChange(e.target.value)}
         rows={4}
         spellCheck={false}
         className={`w-full bg-[var(--blue-004)] text-[var(--xiv-blue)] rounded-[0.5rem] px-3 py-2 text-sm border resize-y focus:outline-none focus:shadow-[0_0_0_3px_rgba(0,180,255,0.12)] transition-colors ${
-          over ? 'border-[var(--destructive)] focus:border-[var(--destructive)]' : 'border-[var(--blue-015)] focus:border-[var(--xiv-blue)]'
+          over
+            ? "border-[var(--destructive)] focus:border-[var(--destructive)]"
+            : "border-[var(--blue-015)] focus:border-[var(--xiv-blue)]"
         }`}
-        style={{ fontFamily: 'var(--font-mono)', lineHeight: 1.6 }}
+        style={{ fontFamily: "var(--font-mono)", lineHeight: 1.6 }}
       />
 
       {over && (
@@ -1044,18 +1114,19 @@ git commit -m "shout-crafter: restyle Preview card with shimmer Copy CTA and blu
 ### Task 6: Restyle `SavedShouts` (My shouts card)
 
 **Files:**
+
 - Modify: `apps/shout-crafter/src/components/SavedShouts.tsx` (full rewrite)
 
 - [ ] **Step 1: Replace `SavedShouts.tsx`**
 
 ```tsx
-import { useState, useEffect } from 'react'
-import type { ShoutFields, TemplateId } from '../types'
-import type { SeparatorId, DecorId } from '../lib/shout-templates'
-import { fetchShouts, saveShout, deleteShout } from '../lib/xivvm-shouts'
-import type { SavedShout } from '../lib/xivvm-shouts'
-import { buildShout } from '../lib/shout-templates'
-import { Bookmark, Trash2 } from 'lucide-react'
+import { useState, useEffect } from "react"
+import type { ShoutFields, TemplateId } from "../types"
+import type { SeparatorId, DecorId } from "../lib/shout-templates"
+import { fetchShouts, saveShout, deleteShout } from "../lib/xivvm-shouts"
+import type { SavedShout } from "../lib/xivvm-shouts"
+import { buildShout } from "../lib/shout-templates"
+import { Bookmark, Trash2 } from "lucide-react"
 
 interface Props {
   currentFields: ShoutFields
@@ -1066,22 +1137,24 @@ interface Props {
 }
 
 const inputClass =
-  'flex-1 bg-[var(--blue-004)] text-[var(--foreground)] placeholder-[var(--fg-faint)] rounded-[0.5rem] px-3 py-2 text-sm border border-[var(--blue-015)] focus:border-[var(--xiv-blue)] focus:outline-none focus:shadow-[0_0_0_3px_rgba(0,180,255,0.12)] transition-colors'
+  "flex-1 bg-[var(--blue-004)] text-[var(--foreground)] placeholder-[var(--fg-faint)] rounded-[0.5rem] px-3 py-2 text-sm border border-[var(--blue-015)] focus:border-[var(--xiv-blue)] focus:outline-none focus:shadow-[0_0_0_3px_rgba(0,180,255,0.12)] transition-colors"
 
 const ghostBtn =
-  'px-3 py-1.5 bg-[var(--blue-006)] text-[var(--muted-foreground)] text-sm font-medium rounded-[0.5rem] hover:bg-[var(--blue-010)] transition-colors'
+  "px-3 py-1.5 bg-[var(--blue-006)] text-[var(--muted-foreground)] text-sm font-medium rounded-[0.5rem] hover:bg-[var(--blue-010)] transition-colors"
 
 const primaryBtn =
-  'px-3 py-2 bg-[var(--xiv-blue)] text-[var(--xiv-navy)] text-sm font-bold rounded-[0.5rem] hover:opacity-90 disabled:opacity-50 transition-opacity'
+  "px-3 py-2 bg-[var(--xiv-blue)] text-[var(--xiv-navy)] text-sm font-bold rounded-[0.5rem] hover:opacity-90 disabled:opacity-50 transition-opacity"
 
 export function SavedShouts({ currentFields, currentTemplate, currentSeparator, currentDecor, onLoad }: Props) {
   const [shouts, setShouts] = useState<SavedShout[]>([])
-  const [label, setLabel] = useState('')
+  const [label, setLabel] = useState("")
   const [saving, setS] = useState(false)
   const [showSave, setShowSave] = useState(false)
   const [error, setError] = useState<string | null>(null)
 
-  useEffect(() => { fetchShouts().then(setShouts) }, [])
+  useEffect(() => {
+    fetchShouts().then(setShouts)
+  }, [])
 
   async function handleSave() {
     if (!label.trim()) return
@@ -1095,15 +1168,18 @@ export function SavedShouts({ currentFields, currentTemplate, currentSeparator, 
       decorId: currentDecor,
     })
     setS(false)
-    if (!saved) { setError('Save failed. Try again.'); return }
-    setShouts(prev => [saved, ...prev])
-    setLabel('')
+    if (!saved) {
+      setError("Save failed. Try again.")
+      return
+    }
+    setShouts((prev) => [saved, ...prev])
+    setLabel("")
     setShowSave(false)
   }
 
   async function handleDelete(id: string) {
     await deleteShout(id)
-    setShouts(prev => prev.filter(s => s.id !== id))
+    setShouts((prev) => prev.filter((s) => s.id !== id))
   }
 
   return (
@@ -1114,13 +1190,16 @@ export function SavedShouts({ currentFields, currentTemplate, currentSeparator, 
             <Bookmark size={18} className="text-[var(--xiv-blue)]" />
           </div>
           <div>
-            <h2 className="font-semibold text-[1.02rem] text-[var(--foreground)]" style={{ fontFamily: 'var(--font-heading)' }}>
+            <h2
+              className="font-semibold text-[1.02rem] text-[var(--foreground)]"
+              style={{ fontFamily: "var(--font-heading)" }}
+            >
               My shouts
             </h2>
             <p className="text-sm text-[var(--muted-foreground)]">Saved across your venues</p>
           </div>
         </div>
-        <button onClick={() => setShowSave(s => !s)} className={ghostBtn}>
+        <button onClick={() => setShowSave((s) => !s)} className={ghostBtn}>
           Save this
         </button>
       </div>
@@ -1129,14 +1208,14 @@ export function SavedShouts({ currentFields, currentTemplate, currentSeparator, 
         <div className="flex gap-2">
           <input
             value={label}
-            onChange={e => setLabel(e.target.value)}
-            onKeyDown={e => e.key === 'Enter' && handleSave()}
+            onChange={(e) => setLabel(e.target.value)}
+            onKeyDown={(e) => e.key === "Enter" && handleSave()}
             placeholder="Name this shout…"
             autoFocus
             className={inputClass}
           />
           <button onClick={handleSave} disabled={saving || !label.trim()} className={primaryBtn}>
-            {saving ? 'Saving…' : 'Save'}
+            {saving ? "Saving…" : "Save"}
           </button>
         </div>
       )}
@@ -1147,11 +1226,14 @@ export function SavedShouts({ currentFields, currentTemplate, currentSeparator, 
         <p className="text-xs text-[var(--fg-faint)]">Nothing saved yet.</p>
       ) : (
         <ul className="space-y-2">
-          {shouts.map(s => (
+          {shouts.map((s) => (
             <li key={s.id} className="flex items-start gap-2 bg-[var(--blue-004)] rounded-[0.5rem] p-3">
               <div className="flex-1 min-w-0">
                 <p className="text-sm font-medium text-[var(--foreground)] truncate">{s.label}</p>
-                <p className="text-xs text-[var(--fg-faint)] truncate mt-0.5" style={{ fontFamily: 'var(--font-mono)' }}>
+                <p
+                  className="text-xs text-[var(--fg-faint)] truncate mt-0.5"
+                  style={{ fontFamily: "var(--font-mono)" }}
+                >
                   {buildShout(s.fields, s.templateId, s.separatorId, s.decorId).slice(0, 80)}
                 </p>
               </div>
@@ -1199,38 +1281,39 @@ git commit -m "shout-crafter: restyle My shouts card with XIV blue rows and tras
 ### Task 7: Restyle `FeedbackModal` and final verification
 
 **Files:**
+
 - Modify: `apps/shout-crafter/src/components/FeedbackModal.tsx` (full rewrite)
 - Modify: `apps/shout-crafter/src/App.css`
 
 - [ ] **Step 1: Replace `FeedbackModal.tsx`**
 
 ```tsx
-import { useState, useEffect } from 'react'
-import { submitFeedback } from '../lib/feedback'
-import type { FeedbackCategory } from '../lib/feedback'
+import { useState, useEffect } from "react"
+import { submitFeedback } from "../lib/feedback"
+import type { FeedbackCategory } from "../lib/feedback"
 
 interface Props {
   onClose: () => void
 }
 
 const CATEGORIES: { id: FeedbackCategory; label: string }[] = [
-  { id: 'BUG_REPORT',      label: 'Bug Report' },
-  { id: 'FEATURE_REQUEST', label: 'Feature Request' },
-  { id: 'IMPROVEMENT',     label: 'Improvement' },
-  { id: 'GENERAL',         label: 'General' },
+  { id: "BUG_REPORT", label: "Bug Report" },
+  { id: "FEATURE_REQUEST", label: "Feature Request" },
+  { id: "IMPROVEMENT", label: "Improvement" },
+  { id: "GENERAL", label: "General" },
 ]
 
 const inputClass =
-  'w-full bg-[var(--blue-004)] text-[var(--foreground)] placeholder-[var(--fg-faint)] rounded-[0.5rem] px-3 py-2 text-sm border border-[var(--blue-015)] focus:border-[var(--xiv-blue)] focus:outline-none focus:shadow-[0_0_0_3px_rgba(0,180,255,0.12)] transition-colors'
+  "w-full bg-[var(--blue-004)] text-[var(--foreground)] placeholder-[var(--fg-faint)] rounded-[0.5rem] px-3 py-2 text-sm border border-[var(--blue-015)] focus:border-[var(--xiv-blue)] focus:outline-none focus:shadow-[0_0_0_3px_rgba(0,180,255,0.12)] transition-colors"
 
-const pillBase = 'px-3 py-1.5 rounded-full text-sm font-medium transition-colors'
-const pillActive = 'bg-[var(--xiv-blue)] text-[var(--xiv-navy)] font-semibold'
-const pillInactive = 'bg-[var(--blue-006)] text-[var(--muted-foreground)] hover:bg-[var(--blue-010)]'
+const pillBase = "px-3 py-1.5 rounded-full text-sm font-medium transition-colors"
+const pillActive = "bg-[var(--xiv-blue)] text-[var(--xiv-navy)] font-semibold"
+const pillInactive = "bg-[var(--blue-006)] text-[var(--muted-foreground)] hover:bg-[var(--blue-010)]"
 
 export function FeedbackModal({ onClose }: Props) {
-  const [category, setCategory] = useState<FeedbackCategory>('BUG_REPORT')
-  const [subject, setSubject] = useState('')
-  const [description, setDescription] = useState('')
+  const [category, setCategory] = useState<FeedbackCategory>("BUG_REPORT")
+  const [subject, setSubject] = useState("")
+  const [description, setDescription] = useState("")
   const [submitting, setSubmitting] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [success, setSuccess] = useState(false)
@@ -1244,14 +1327,16 @@ export function FeedbackModal({ onClose }: Props) {
 
   // Close on Escape
   useEffect(() => {
-    const handler = (e: KeyboardEvent) => { if (e.key === 'Escape') onClose() }
-    window.addEventListener('keydown', handler)
-    return () => window.removeEventListener('keydown', handler)
+    const handler = (e: KeyboardEvent) => {
+      if (e.key === "Escape") onClose()
+    }
+    window.addEventListener("keydown", handler)
+    return () => window.removeEventListener("keydown", handler)
   }, [onClose])
 
   async function handleSubmit() {
     if (!subject.trim() || !description.trim()) {
-      setError('Subject and description are required.')
+      setError("Subject and description are required.")
       return
     }
     setError(null)
@@ -1260,7 +1345,7 @@ export function FeedbackModal({ onClose }: Props) {
       await submitFeedback({ category, subject: subject.trim(), description: description.trim() })
       setSuccess(true)
     } catch (e) {
-      setError(e instanceof Error ? e.message : 'Something went wrong.')
+      setError(e instanceof Error ? e.message : "Something went wrong.")
     } finally {
       setSubmitting(false)
     }
@@ -1270,13 +1355,18 @@ export function FeedbackModal({ onClose }: Props) {
     // Scrim
     <div
       className="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-4"
-      style={{ backgroundColor: 'rgba(0,0,0,0.55)' }}
-      onClick={e => { if (e.target === e.currentTarget) onClose() }}
+      style={{ backgroundColor: "rgba(0,0,0,0.55)" }}
+      onClick={(e) => {
+        if (e.target === e.currentTarget) onClose()
+      }}
     >
       {/* Modal panel */}
       <div className="w-full max-w-lg xiv-card !p-0 overflow-hidden animate-[fadeSlideUp_200ms_ease-out]">
         <div className="px-5 py-4 border-b border-[var(--blue-010)] flex items-center justify-between">
-          <h2 className="font-semibold text-[1.02rem] text-[var(--foreground)]" style={{ fontFamily: 'var(--font-heading)' }}>
+          <h2
+            className="font-semibold text-[1.02rem] text-[var(--foreground)]"
+            style={{ fontFamily: "var(--font-heading)" }}
+          >
             Send Feedback
           </h2>
           <button
@@ -1298,9 +1388,11 @@ export function FeedbackModal({ onClose }: Props) {
           <div className="px-5 py-4 space-y-4">
             {/* Category */}
             <div className="space-y-1.5">
-              <label className="block text-[0.68rem] font-semibold text-[var(--muted-foreground)] uppercase tracking-[0.07em]">Category</label>
+              <label className="block text-[0.68rem] font-semibold text-[var(--muted-foreground)] uppercase tracking-[0.07em]">
+                Category
+              </label>
               <div className="flex gap-2 flex-wrap">
-                {CATEGORIES.map(c => (
+                {CATEGORIES.map((c) => (
                   <button
                     key={c.id}
                     onClick={() => setCategory(c.id)}
@@ -1319,7 +1411,7 @@ export function FeedbackModal({ onClose }: Props) {
               </label>
               <input
                 value={subject}
-                onChange={e => setSubject(e.target.value)}
+                onChange={(e) => setSubject(e.target.value)}
                 placeholder="Brief summary"
                 maxLength={120}
                 className={inputClass}
@@ -1333,25 +1425,23 @@ export function FeedbackModal({ onClose }: Props) {
               </label>
               <textarea
                 value={description}
-                onChange={e => setDescription(e.target.value)}
+                onChange={(e) => setDescription(e.target.value)}
                 placeholder="What happened, or what would you like to see?"
                 rows={4}
                 className={`${inputClass} resize-y`}
               />
             </div>
 
-            {error && (
-              <p className="text-xs text-[var(--destructive)]">{error}</p>
-            )}
+            {error && <p className="text-xs text-[var(--destructive)]">{error}</p>}
 
             <div className="flex gap-2 pt-1">
               <button
                 onClick={handleSubmit}
                 disabled={submitting || !subject.trim() || !description.trim()}
                 className="flex-1 xiv-btn-shimmer px-4 py-2 bg-[var(--xiv-blue)] text-[var(--xiv-navy)] text-sm font-bold rounded-[0.5rem] disabled:opacity-40 transition-opacity"
-                style={{ fontFamily: 'var(--font-heading)' }}
+                style={{ fontFamily: "var(--font-heading)" }}
               >
-                {submitting ? 'Sending…' : 'Send Feedback'}
+                {submitting ? "Sending…" : "Send Feedback"}
               </button>
               <button
                 onClick={onClose}
@@ -1373,6 +1463,7 @@ export function FeedbackModal({ onClose }: Props) {
 `App.css` only contained leftover Vite starter-template styles (hero/next-steps/docs sections) that are no longer used by any component, plus a duplicate `fadeSlideUp` keyframe (now in `index.css`). Replace its contents with nothing:
 
 ```css
+
 ```
 
 (Write the file as a single empty/whitespace file — or remove the import from `main.tsx` if present. Check `main.tsx` first: if it imports `./App.css`, leave the empty file in place rather than editing `main.tsx`, to keep this change minimal.)
@@ -1392,6 +1483,7 @@ cd /home/ehno/xiv-app && pnpm --filter shout-crafter dev
 ```
 
 Open the printed local URL in a browser and confirm against the prototype (`Shout Crafter.dc.html` in the handoff bundle, or the Claude Design project):
+
 - Header: starfield/glow background, crystalline X logo, "Shout Crafter" in Cinzel, back-link, signed-in chip (if signed in)
 - Import card: Partake/Discord pill tabs, review step renders after a successful parse
 - Build card: template/separator/decoration pills + full field grid in one card, tagline and links fields span both columns
@@ -1411,6 +1503,7 @@ git commit -m "shout-crafter: restyle feedback modal and remove unused Vite star
 ---
 
 ## Spec coverage check
+
 - Theme tokens (Task 1) ✓
 - Header w/ starfield + glow + Cinzel + back-link + signed-in chip (Task 2) ✓
 - Import card incl. review step (Task 4) ✓

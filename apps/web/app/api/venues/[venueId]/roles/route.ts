@@ -31,44 +31,38 @@ export const GET = withRateLimit<{ params: Promise<{ venueId: string }> }>(
       const { params } = context
       const { venueId } = await params
 
-    // Check if user has access to this venue
-    const membership = await prisma.membership.findFirst({
-      where: {
-        userId: session.user.id,
-        venueId,
-        status: "active",
-      },
-    })
+      // Check if user has access to this venue
+      const membership = await prisma.membership.findFirst({
+        where: {
+          userId: session.user.id,
+          venueId,
+          status: "active",
+        },
+      })
 
-    if (!membership) {
-      return NextResponse.json(
-        { error: "You don't have access to this venue" },
-        { status: 403 }
-      )
-    }
+      if (!membership) {
+        return NextResponse.json({ error: "You don't have access to this venue" }, { status: 403 })
+      }
 
-    // Get all custom roles for this venue
-    const roles = await prisma.role.findMany({
-      where: { venueId },
-      include: {
-        _count: {
-          select: {
-            memberships: true,
+      // Get all custom roles for this venue
+      const roles = await prisma.role.findMany({
+        where: { venueId },
+        include: {
+          _count: {
+            select: {
+              memberships: true,
+            },
           },
         },
-      },
-      orderBy: {
-        createdAt: "desc",
-      },
-    })
+        orderBy: {
+          createdAt: "desc",
+        },
+      })
 
       return NextResponse.json(roles)
     } catch (error) {
       console.error("Error fetching roles:", error)
-      return NextResponse.json(
-        { error: "Internal server error" },
-        { status: 500 }
-      )
+      return NextResponse.json({ error: "Internal server error" }, { status: 500 })
     }
   },
   { requests: 60, window: "1 m" }
@@ -89,67 +83,55 @@ export const POST = withRateLimit<{ params: Promise<{ venueId: string }> }>(
       const { params } = context
       const { venueId } = await params
 
-    // Check if user has permission to manage roles
-    const membership = await prisma.membership.findFirst({
-      where: {
-        userId: session.user.id,
-        venueId,
-        status: "active",
-      },
-    })
+      // Check if user has permission to manage roles
+      const membership = await prisma.membership.findFirst({
+        where: {
+          userId: session.user.id,
+          venueId,
+          status: "active",
+        },
+      })
 
-    if (!membership || !["OWNER", "MANAGER"].includes(membership.role)) {
-      return NextResponse.json(
-        { error: "You don't have permission to create roles" },
-        { status: 403 }
-      )
-    }
+      if (!membership || !["OWNER", "MANAGER"].includes(membership.role)) {
+        return NextResponse.json({ error: "You don't have permission to create roles" }, { status: 403 })
+      }
 
-    const body = await request.json()
-    const validatedData = createRoleSchema.parse(body)
+      const body = await request.json()
+      const validatedData = createRoleSchema.parse(body)
 
-    // Check if role name already exists for this venue
-    const existingRole = await prisma.role.findFirst({
-      where: {
-        venueId,
-        name: validatedData.name,
-      },
-    })
+      // Check if role name already exists for this venue
+      const existingRole = await prisma.role.findFirst({
+        where: {
+          venueId,
+          name: validatedData.name,
+        },
+      })
 
-    if (existingRole) {
-      return NextResponse.json(
-        { error: "A role with this name already exists" },
-        { status: 400 }
-      )
-    }
+      if (existingRole) {
+        return NextResponse.json({ error: "A role with this name already exists" }, { status: 400 })
+      }
 
-    const newRole = await prisma.role.create({
-      data: {
-        venueId,
-        name: validatedData.name,
-        responsibilities: validatedData.responsibilities,
-        color: validatedData.color,
-        permissions: validatedData.permissions || {},
-        hourlyRate: validatedData.hourlyRate,
-        potPayoutMode: validatedData.potPayoutMode,
-        contractorSharesPot: validatedData.contractorSharesPot,
-      },
-    })
+      const newRole = await prisma.role.create({
+        data: {
+          venueId,
+          name: validatedData.name,
+          responsibilities: validatedData.responsibilities,
+          color: validatedData.color,
+          permissions: validatedData.permissions || {},
+          hourlyRate: validatedData.hourlyRate,
+          potPayoutMode: validatedData.potPayoutMode,
+          contractorSharesPot: validatedData.contractorSharesPot,
+        },
+      })
 
       return NextResponse.json(newRole, { status: 201 })
     } catch (error) {
       if (error instanceof z.ZodError) {
-        return NextResponse.json(
-          { error: "Validation error", details: error.issues },
-          { status: 400 }
-        )
+        return NextResponse.json({ error: "Validation error", details: error.issues }, { status: 400 })
       }
 
       console.error("Error creating role:", error)
-      return NextResponse.json(
-        { error: "Internal server error" },
-        { status: 500 }
-      )
+      return NextResponse.json({ error: "Internal server error" }, { status: 500 })
     }
   },
   { requests: 10, window: "1 m" }

@@ -15,6 +15,7 @@
 ### Task 0: Schema change — optional `membershipId`, add `roleId` + `OPEN` status
 
 **Files:**
+
 - Modify: `apps/web/prisma/schema.prisma:681-719` (ShiftStatus enum + Shift model)
 
 - [ ] **Step 1: Add `OPEN` to `ShiftStatus`**
@@ -121,6 +122,7 @@ git commit -m "schema: allow shifts to exist without an assigned member (open sh
 Regenerating the client (Task 0, Step 6) will surface every spot that reads `shift.membership.*` or `shift.membershipId` without a null check. Two known call sites:
 
 **Files:**
+
 - Modify: `apps/web/app/api/venues/[venueId]/shifts/route.ts:73-78` (GET response mapping)
 - Modify: `apps/web/app/dashboard/[slug]/shifts/page.tsx:163-178` (staff × day grid build)
 
@@ -163,22 +165,22 @@ This also requires adding `role: { select: { id: true, name: true, color: true }
 The loop at line 163 (`for (const shift of weekShifts)`) currently assumes every shift has a `membershipId`. Guard it:
 
 ```typescript
-  for (const shift of weekShifts) {
-    if (!shift.membershipId) continue // open shifts get their own row, built separately below
-    const mid = shift.membershipId
-    if (!staffMap.has(mid)) {
-      staffMap.set(mid, {
-        membershipId: mid,
-        name: shift.membership!.user?.name ?? "Unknown",
-        image: shift.membership!.user?.image ?? null,
-        cells: new Map(),
-      })
-    }
-    const member = staffMap.get(mid)!
-    const key = utcDayKey(new Date(shift.scheduledStart))
-    if (!member.cells.has(key)) member.cells.set(key, [])
-    member.cells.get(key)!.push(shift)
+for (const shift of weekShifts) {
+  if (!shift.membershipId) continue // open shifts get their own row, built separately below
+  const mid = shift.membershipId
+  if (!staffMap.has(mid)) {
+    staffMap.set(mid, {
+      membershipId: mid,
+      name: shift.membership!.user?.name ?? "Unknown",
+      image: shift.membership!.user?.image ?? null,
+      cells: new Map(),
+    })
   }
+  const member = staffMap.get(mid)!
+  const key = utcDayKey(new Date(shift.scheduledStart))
+  if (!member.cells.has(key)) member.cells.set(key, [])
+  member.cells.get(key)!.push(shift)
+}
 ```
 
 (`shift.membership!` is safe here — we just confirmed `membershipId` is set, and the relation is `onDelete: Cascade` so it can't be null when the FK is set)
@@ -203,6 +205,7 @@ git commit -m "fix: guard shift.membership access now that shifts can be unassig
 ### Task 2: API — accept "open, role required" when creating a shift
 
 **Files:**
+
 - Modify: `apps/web/app/api/venues/[venueId]/shifts/route.ts:99-186` (POST handler)
 
 - [ ] **Step 1: Update the request schema to allow either a member or a role**
@@ -228,68 +231,64 @@ const createShiftSchema = z
 Replace the body from "Verify the target membership..." (around line 138) through the `prisma.shift.create` call (around line 162) with:
 
 ```typescript
-    let targetMembership: { userId: string | null } | null = null
-    let roleId: string | null = null
+let targetMembership: { userId: string | null } | null = null
+let roleId: string | null = null
 
-    if (parsed.data.membershipId) {
-      // Assigning to a specific person — verify they belong to this venue
-      const member = await prisma.membership.findFirst({
-        where: { id: parsed.data.membershipId, venueId: venue.id, status: "active" },
-        select: { userId: true },
+if (parsed.data.membershipId) {
+  // Assigning to a specific person — verify they belong to this venue
+  const member = await prisma.membership.findFirst({
+    where: { id: parsed.data.membershipId, venueId: venue.id, status: "active" },
+    select: { userId: true },
+  })
+  if (!member) {
+    return NextResponse.json({ error: "Staff member not found at this venue" }, { status: 400 })
+  }
+  targetMembership = member
+} else if (parsed.data.roleId) {
+  // Leaving the shift open — verify the role belongs to this venue
+  const role = await prisma.role.findFirst({
+    where: { id: parsed.data.roleId, venueId: venue.id },
+    select: { id: true },
+  })
+  if (!role) {
+    return NextResponse.json({ error: "Role not found at this venue" }, { status: 400 })
+  }
+  roleId = role.id
+}
+
+const scheduledStart = new Date(parsed.data.scheduledStart)
+const shift = await prisma.shift.create({
+  data: {
+    venueId: venue.id,
+    membershipId: parsed.data.membershipId ?? null,
+    roleId,
+    status: parsed.data.membershipId ? "SCHEDULED" : "OPEN",
+    scheduledStart,
+    scheduledEnd: new Date(parsed.data.scheduledEnd),
+    notes: parsed.data.notes ?? null,
+  },
+})
+
+// Queue shift reminder 1 hour before start — only meaningful for assigned shifts
+if (targetMembership?.userId) {
+  const reminderAt = new Date(scheduledStart.getTime() - 60 * 60 * 1000)
+  if (reminderAt > new Date()) {
+    prisma.pendingNotification
+      .create({
+        data: {
+          userId: targetMembership.userId,
+          type: "SHIFT_REMINDER",
+          title: "Shift starting soon",
+          body: `Your shift at ${venue.name} starts in 1 hour.`,
+          data: { venueId: venue.id, shiftId: shift.id },
+          scheduledFor: reminderAt,
+        },
       })
-      if (!member) {
-        return NextResponse.json(
-          { error: "Staff member not found at this venue" },
-          { status: 400 }
-        )
-      }
-      targetMembership = member
-    } else if (parsed.data.roleId) {
-      // Leaving the shift open — verify the role belongs to this venue
-      const role = await prisma.role.findFirst({
-        where: { id: parsed.data.roleId, venueId: venue.id },
-        select: { id: true },
-      })
-      if (!role) {
-        return NextResponse.json(
-          { error: "Role not found at this venue" },
-          { status: 400 }
-        )
-      }
-      roleId = role.id
-    }
+      .catch(() => {}) // non-blocking
+  }
+}
 
-    const scheduledStart = new Date(parsed.data.scheduledStart)
-    const shift = await prisma.shift.create({
-      data: {
-        venueId: venue.id,
-        membershipId: parsed.data.membershipId ?? null,
-        roleId,
-        status: parsed.data.membershipId ? "SCHEDULED" : "OPEN",
-        scheduledStart,
-        scheduledEnd: new Date(parsed.data.scheduledEnd),
-        notes: parsed.data.notes ?? null,
-      },
-    })
-
-    // Queue shift reminder 1 hour before start — only meaningful for assigned shifts
-    if (targetMembership?.userId) {
-      const reminderAt = new Date(scheduledStart.getTime() - 60 * 60 * 1000)
-      if (reminderAt > new Date()) {
-        prisma.pendingNotification.create({
-          data: {
-            userId: targetMembership.userId,
-            type: "SHIFT_REMINDER",
-            title: "Shift starting soon",
-            body: `Your shift at ${venue.name} starts in 1 hour.`,
-            data: { venueId: venue.id, shiftId: shift.id },
-            scheduledFor: reminderAt,
-          },
-        }).catch(() => {}) // non-blocking
-      }
-    }
-
-    return NextResponse.json({ shift }, { status: 201 })
+return NextResponse.json({ shift }, { status: 201 })
 ```
 
 Note: the `include: { membership: { select: { userId: true } } }` on the original `prisma.shift.create` is dropped — we already fetched `targetMembership` separately above, so the extra include would be redundant.
@@ -319,6 +318,7 @@ git commit -m "feat: allow creating open shifts that require a role instead of a
 ### Task 3: Dialog UI — "assign now" vs. "leave open, require role"
 
 **Files:**
+
 - Modify: `apps/web/components/create-shift-dialog.tsx`
 - Modify: `apps/web/app/dashboard/[slug]/shifts/page.tsx:217-225` (pass roles into the dialog)
 
@@ -327,11 +327,11 @@ git commit -m "feat: allow creating open shifts that require a role instead of a
 In `shifts/page.tsx`, alongside the existing `activeStaff` query (around line 137), add:
 
 ```typescript
-  const venueRoles = await prisma.role.findMany({
-    where: { venueId: venue.id },
-    select: { id: true, name: true, color: true },
-    orderBy: { name: "asc" },
-  })
+const venueRoles = await prisma.role.findMany({
+  where: { venueId: venue.id },
+  select: { id: true, name: true, color: true },
+  orderBy: { name: "asc" },
+})
 ```
 
 Then in the JSX where `<CreateShiftDialog ... />` is rendered (around line 220), add the `roles` prop:
@@ -418,10 +418,10 @@ And the fetch body:
 Update the reset block after a successful submit to also clear the new fields:
 
 ```typescript
-      setMode("assign")
-      setMembershipId("")
-      setRoleId("")
-      setDate("")
+setMode("assign")
+setMembershipId("")
+setRoleId("")
+setDate("")
 ```
 
 - [ ] **Step 4: Add the mode toggle and conditional select to the form JSX**
@@ -429,66 +429,63 @@ Update the reset block after a successful submit to also clear the new fields:
 Replace the "Staff Member" `<Select>` block (the first `<div className="space-y-2">` inside the form) with:
 
 ```tsx
-          <div className="space-y-2">
-            <Label>Assignment</Label>
-            <div className="flex gap-2">
-              <Button
-                type="button"
-                variant={mode === "assign" ? "default" : "outline"}
-                size="sm"
-                onClick={() => setMode("assign")}
-              >
-                Assign to staff member
-              </Button>
-              <Button
-                type="button"
-                variant={mode === "open" ? "default" : "outline"}
-                size="sm"
-                onClick={() => setMode("open")}
-              >
-                Leave open (require role)
-              </Button>
-            </div>
-          </div>
+;<div className="space-y-2">
+  <Label>Assignment</Label>
+  <div className="flex gap-2">
+    <Button
+      type="button"
+      variant={mode === "assign" ? "default" : "outline"}
+      size="sm"
+      onClick={() => setMode("assign")}
+    >
+      Assign to staff member
+    </Button>
+    <Button type="button" variant={mode === "open" ? "default" : "outline"} size="sm" onClick={() => setMode("open")}>
+      Leave open (require role)
+    </Button>
+  </div>
+</div>
 
-          {mode === "assign" ? (
-            <div className="space-y-2">
-              <Label htmlFor="staff">Staff Member</Label>
-              <Select value={membershipId} onValueChange={setMembershipId}>
-                <SelectTrigger>
-                  <SelectValue placeholder="Select staff member" />
-                </SelectTrigger>
-                <SelectContent>
-                  {staff.map((s) => (
-                    <SelectItem key={s.id} value={s.id}>
-                      {s.name}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-          ) : (
-            <div className="space-y-2">
-              <Label htmlFor="role">Required Role</Label>
-              <Select value={roleId} onValueChange={setRoleId}>
-                <SelectTrigger>
-                  <SelectValue placeholder="Select required role" />
-                </SelectTrigger>
-                <SelectContent>
-                  {roles.map((r) => (
-                    <SelectItem key={r.id} value={r.id}>
-                      {r.name}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-              {roles.length === 0 && (
-                <p className="text-xs text-muted-foreground">
-                  No custom roles set up yet — create one in Staff settings first.
-                </p>
-              )}
-            </div>
-          )}
+{
+  mode === "assign" ? (
+    <div className="space-y-2">
+      <Label htmlFor="staff">Staff Member</Label>
+      <Select value={membershipId} onValueChange={setMembershipId}>
+        <SelectTrigger>
+          <SelectValue placeholder="Select staff member" />
+        </SelectTrigger>
+        <SelectContent>
+          {staff.map((s) => (
+            <SelectItem key={s.id} value={s.id}>
+              {s.name}
+            </SelectItem>
+          ))}
+        </SelectContent>
+      </Select>
+    </div>
+  ) : (
+    <div className="space-y-2">
+      <Label htmlFor="role">Required Role</Label>
+      <Select value={roleId} onValueChange={setRoleId}>
+        <SelectTrigger>
+          <SelectValue placeholder="Select required role" />
+        </SelectTrigger>
+        <SelectContent>
+          {roles.map((r) => (
+            <SelectItem key={r.id} value={r.id}>
+              {r.name}
+            </SelectItem>
+          ))}
+        </SelectContent>
+      </Select>
+      {roles.length === 0 && (
+        <p className="text-xs text-muted-foreground">
+          No custom roles set up yet — create one in Staff settings first.
+        </p>
+      )}
+    </div>
+  )
+}
 ```
 
 - [ ] **Step 5: Update the dialog title/description to reflect both modes**
@@ -518,6 +515,7 @@ cd ~/xiv-app/apps/web && npm run dev
 ```
 
 Open the Shifts page as an OWNER/MANAGER, click "Schedule Shift":
+
 - Default mode "Assign to staff member" — pick a person, submit, confirm it appears as a `SCHEDULED` chip in that person's row (matches existing behavior, regression check).
 - Switch to "Leave open (require role)" — pick a role, submit, confirm the dialog closes without error and `router.refresh()` reloads the page.
 
@@ -533,6 +531,7 @@ git commit -m "feat: add 'leave open, require role' mode to the create-shift dia
 ### Task 4: Render open shifts in the weekly grid
 
 **Files:**
+
 - Modify: `apps/web/app/dashboard/[slug]/shifts/page.tsx`
 
 - [ ] **Step 1: Collect open shifts per day, separate from the staff rows**
@@ -540,15 +539,15 @@ git commit -m "feat: add 'leave open, require role' mode to the create-shift dia
 After the staff-row build loop (the one guarded in Task 1, Step 3), add:
 
 ```typescript
-  // Open shifts (no member assigned yet) — shown in their own row, grouped by required role
-  const openShiftsByDay = new Map<string, ShiftRow[]>()
-  for (const shift of weekShifts) {
-    if (shift.membershipId) continue
-    const key = utcDayKey(new Date(shift.scheduledStart))
-    if (!openShiftsByDay.has(key)) openShiftsByDay.set(key, [])
-    openShiftsByDay.get(key)!.push(shift)
-  }
-  const hasOpenShifts = openShiftsByDay.size > 0
+// Open shifts (no member assigned yet) — shown in their own row, grouped by required role
+const openShiftsByDay = new Map<string, ShiftRow[]>()
+for (const shift of weekShifts) {
+  if (shift.membershipId) continue
+  const key = utcDayKey(new Date(shift.scheduledStart))
+  if (!openShiftsByDay.has(key)) openShiftsByDay.set(key, [])
+  openShiftsByDay.get(key)!.push(shift)
+}
+const hasOpenShifts = openShiftsByDay.size > 0
 ```
 
 - [ ] **Step 2: Add a chip style for open shifts**
@@ -557,11 +556,11 @@ In the `statusChip` map near the top of the file, add an entry for `OPEN`:
 
 ```typescript
 const statusChip: Record<string, string> = {
-  OPEN:      "bg-amber-500/10 text-amber-400 border-amber-500/20 border-dashed",
+  OPEN: "bg-amber-500/10 text-amber-400 border-amber-500/20 border-dashed",
   SCHEDULED: "bg-[rgba(0,180,255,0.10)] text-[var(--xiv-blue)] border-[rgba(0,180,255,0.28)]",
-  ACTIVE:    "bg-emerald-500/10 text-emerald-400 border-emerald-500/20",
+  ACTIVE: "bg-emerald-500/10 text-emerald-400 border-emerald-500/20",
   COMPLETED: "bg-zinc-500/10 text-zinc-400 border-zinc-500/20",
-  MISSED:    "bg-amber-500/10 text-amber-400 border-amber-500/20",
+  MISSED: "bg-amber-500/10 text-amber-400 border-amber-500/20",
   CANCELLED: "bg-zinc-500/10 text-zinc-400 border-zinc-500/15 line-through",
 }
 ```
@@ -573,31 +572,33 @@ const statusChip: Record<string, string> = {
 Inside the grid, immediately after the closing of the `staffRows.map(...)` block and before the "Empty state" div, add:
 
 ```tsx
-            {hasOpenShifts && (
-              <>
-                <div key="open-shifts-name" className="sg-staff">
-                  <span className="av-sm flex-shrink-0 border border-dashed border-amber-500/40 bg-amber-500/10 text-amber-400">
-                    !
-                  </span>
-                  <span className="truncate text-amber-400">Open shifts</span>
-                </div>
-                {weekDays.map((day) => {
-                  const key = utcDayKey(day)
-                  const dayShifts = openShiftsByDay.get(key) ?? []
-                  const isToday = key === todayKey
-                  return (
-                    <div key={`open-${key}`} className={`sg-cell${isToday ? " today-col" : ""}`}>
-                      {dayShifts.map((shift) => (
-                        <span key={shift.id} className={`shift-chip ${statusChip.OPEN}`}>
-                          {fmtHour(shift.scheduledStart)}–{fmtHour(shift.scheduledEnd)}
-                          {shift.role?.name ? ` · ${shift.role.name}` : ""}
-                        </span>
-                      ))}
-                    </div>
-                  )
-                })}
-              </>
-            )}
+{
+  hasOpenShifts && (
+    <>
+      <div key="open-shifts-name" className="sg-staff">
+        <span className="av-sm flex-shrink-0 border border-dashed border-amber-500/40 bg-amber-500/10 text-amber-400">
+          !
+        </span>
+        <span className="truncate text-amber-400">Open shifts</span>
+      </div>
+      {weekDays.map((day) => {
+        const key = utcDayKey(day)
+        const dayShifts = openShiftsByDay.get(key) ?? []
+        const isToday = key === todayKey
+        return (
+          <div key={`open-${key}`} className={`sg-cell${isToday ? " today-col" : ""}`}>
+            {dayShifts.map((shift) => (
+              <span key={shift.id} className={`shift-chip ${statusChip.OPEN}`}>
+                {fmtHour(shift.scheduledStart)}–{fmtHour(shift.scheduledEnd)}
+                {shift.role?.name ? ` · ${shift.role.name}` : ""}
+              </span>
+            ))}
+          </div>
+        )
+      })}
+    </>
+  )
+}
 ```
 
 This requires `role: { select: { name: true } }` to be added to the `include` on the `weekShifts` query (around line 117) — add it alongside the existing `membership` include:
@@ -614,23 +615,21 @@ This requires `role: { select: { name: true } }` to be added to the `include` on
 The KPI at line ~178 currently conflates "open" with "missed":
 
 ```typescript
-  const openSlots = weekShifts.filter((s) => s.status === "MISSED").length
+const openSlots = weekShifts.filter((s) => s.status === "MISSED").length
 ```
 
 This was a placeholder before `OPEN` existed — it should count the new status:
 
 ```typescript
-  const openSlots = weekShifts.filter((s) => s.status === "OPEN").length
-  const missedCount = weekShifts.filter((s) => s.status === "MISSED").length
+const openSlots = weekShifts.filter((s) => s.status === "OPEN").length
+const missedCount = weekShifts.filter((s) => s.status === "MISSED").length
 ```
 
 Update the `coverPct` calculation (which referenced `openSlots` to mean "uncovered") to use `missedCount` instead, since coverage is about shifts that were scheduled-but-not-worked, not about not-yet-filled slots:
 
 ```typescript
-  const coverPct =
-    weekShifts.length === 0
-      ? 100
-      : Math.round(((weekShifts.length - missedCount) / weekShifts.length) * 100)
+const coverPct =
+  weekShifts.length === 0 ? 100 : Math.round(((weekShifts.length - missedCount) / weekShifts.length) * 100)
 ```
 
 - [ ] **Step 5: Run dev server, verify visually against the design system**
@@ -640,6 +639,7 @@ cd ~/xiv-app/apps/web && npm run dev
 ```
 
 Create an open shift via the dialog (Task 3), then on the Shifts page confirm:
+
 - An "Open shifts" row appears below the staff rows, only when there's at least one open shift this week.
 - The chip shows time range + role name, with the dashed-amber styling (distinct from blue `SCHEDULED` and solid-amber `MISSED`).
 - The "Open shifts" KPI number matches the count of `OPEN`-status chips visible in the grid.

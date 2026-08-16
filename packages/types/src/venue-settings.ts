@@ -40,10 +40,10 @@ export interface WebhookSettings {
  * startOffsetHours is relative to the Partake event start time.
  */
 export interface ShiftTemplate {
-  name: string              // e.g. "Early Shift"
-  startOffsetHours: number  // 0 = same as event start
-  durationHours: number     // e.g. 4
-  slots: number             // max staff for this shift
+  name: string // e.g. "Early Shift"
+  startOffsetHours: number // 0 = same as event start
+  durationHours: number // e.g. 4
+  slots: number // max staff for this shift
 }
 
 /**
@@ -51,10 +51,10 @@ export interface ShiftTemplate {
  */
 export interface ShiftBotSettings {
   enabled: boolean
-  channelId: string         // Discord channel ID to post embeds in
-  daysBeforeEvent?: number  // how many days before to post — undefined = 3
+  channelId: string // Discord channel ID to post embeds in
+  daysBeforeEvent?: number // how many days before to post — undefined = 3
   templates: ShiftTemplate[] // empty = one shift matching full event duration
-  thumbnailUrl?: string     // custom embed thumbnail; falls back to guild icon
+  thumbnailUrl?: string // custom embed thumbnail; falls back to guild icon
   cachedGuildIconUrl?: string // auto-fetched guild icon, refreshed on first post
 }
 
@@ -103,9 +103,9 @@ export interface VenueSettings {
   tagline?: string
   tags?: string[]
   /** Location & hours */
-  defaultHours?: string   // e.g. "10PM–2AM"
-  openNights?: string     // e.g. "Fri & Sat"
-  isAdult?: boolean       // 18+ venue
+  defaultHours?: string // e.g. "10PM–2AM"
+  openNights?: string // e.g. "Fri & Sat"
+  isAdult?: boolean // 18+ venue
   /** Web notification preferences (key = notification type, value = enabled) */
   notifications?: Record<string, boolean>
   /** Discord shift bot configuration */

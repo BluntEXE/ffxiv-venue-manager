@@ -13,10 +13,19 @@ interface VenueLayoutClientProps {
 }
 
 const PAGE_LABELS: Record<string, string> = {
-  "": "Overview", analytics: "Analytics", live: "Live Mode", events: "Events",
-  staff: "Staff", shifts: "Shifts", tasks: "Tasks", services: "Services",
-  sales: "Sales", payroll: "Payroll", timeline: "Timeline",
-  "patron-logs": "Patron Logs", settings: "Settings",
+  "": "Overview",
+  analytics: "Analytics",
+  live: "Live Mode",
+  events: "Events",
+  staff: "Staff",
+  shifts: "Shifts",
+  tasks: "Tasks",
+  services: "Services",
+  sales: "Sales",
+  payroll: "Payroll",
+  timeline: "Timeline",
+  "patron-logs": "Patron Logs",
+  settings: "Settings",
 }
 
 export function VenueLayoutClient({ children, slug }: VenueLayoutClientProps) {
@@ -64,9 +73,7 @@ export function VenueLayoutClient({ children, slug }: VenueLayoutClientProps) {
         userEmail={session?.user?.email || undefined}
         venues={venues}
       />
-      <main className="[@media(min-width:1081px)]:ml-[300px] relative z-[1]">
-        {children}
-      </main>
+      <main className="[@media(min-width:1081px)]:ml-[300px] relative z-[1]">{children}</main>
     </div>
   )
 }

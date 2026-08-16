@@ -12,10 +12,7 @@ export function verifyBotAuth(request: Request): NextResponse | null {
   const botSecret = process.env.EORZEA_BOT_API_SECRET
   if (!botSecret) {
     console.error("EORZEA_BOT_API_SECRET not configured")
-    return NextResponse.json(
-      { error: "Server misconfiguration" },
-      { status: 500 }
-    )
+    return NextResponse.json({ error: "Server misconfiguration" }, { status: 500 })
   }
 
   const provided = request.headers.get("x-bot-secret") ?? ""

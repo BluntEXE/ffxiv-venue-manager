@@ -8,11 +8,7 @@ import { VenueLayout } from "@/components/venue-layout"
 import { LiveDashboard } from "@/components/live-dashboard"
 import { resolveDisplayName } from "@/lib/display-name"
 
-export default async function LivePage({
-  params,
-}: {
-  params: Promise<{ slug: string }>
-}) {
+export default async function LivePage({ params }: { params: Promise<{ slug: string }> }) {
   const session = await getServerSession(authOptions)
   if (!session?.user) redirect("/auth/signin")
 
@@ -32,10 +28,7 @@ export default async function LivePage({
   const userRole = venue.memberships[0].role
   const canManage = ["OWNER", "MANAGER"].includes(userRole)
   const settings = (venue.settings as any) ?? {}
-  const showRevenue =
-    canManage ||
-    settings.revenueVisibility === "all" ||
-    (settings.revenueVisibility === "own")
+  const showRevenue = canManage || settings.revenueVisibility === "all" || settings.revenueVisibility === "own"
 
   // Find the currently active event (or the next upcoming one)
   const now = new Date()
@@ -76,20 +69,20 @@ export default async function LivePage({
 
   // Get current patron count
   const patronCount = activeEvent
-    ? await prisma.patronLog.count({
+    ? (await prisma.patronLog.count({
         where: {
           venueId: venue.id,
           action: "ENTER",
           timestamp: { gte: activeEvent.startTime },
         },
-      }) -
-      await prisma.patronLog.count({
+      })) -
+      (await prisma.patronLog.count({
         where: {
           venueId: venue.id,
           action: "LEAVE",
           timestamp: { gte: activeEvent.startTime },
         },
-      })
+      }))
     : 0
 
   // Calculate revenue (respect visibility)
@@ -107,30 +100,29 @@ export default async function LivePage({
     }
   }
 
-  const revenueDisplay =
-    canManage
+  const revenueDisplay = canManage
+    ? totalRevenue
+    : settings.revenueVisibility === "all"
       ? totalRevenue
-      : settings.revenueVisibility === "all"
-        ? totalRevenue
-        : settings.revenueVisibility === "own"
-          ? personalRevenue
-          : null
+      : settings.revenueVisibility === "own"
+        ? personalRevenue
+        : null
 
   // Sale count follows the same visibility scoping as revenue, so the
   // "Transactions" stat doesn't show a venue-wide count next to a
   // personal-only gil amount.
   const saleCountDisplay =
-    !canManage && settings.revenueVisibility === "own"
-      ? personalSaleCount
-      : activeEvent?.transactions.length ?? 0
+    !canManage && settings.revenueVisibility === "own" ? personalSaleCount : (activeEvent?.transactions.length ?? 0)
 
   // Patron roster (recent ENTERs, crude in-venue list)
-  const patronRoster = activeEvent ? await prisma.patronLog.findMany({
-    where: { venueId: venue.id, action: "ENTER", loggedAt: { gte: activeEvent.startTime } },
-    orderBy: { loggedAt: "desc" },
-    take: 20,
-    select: { characterName: true, loggedAt: true },
-  }) : []
+  const patronRoster = activeEvent
+    ? await prisma.patronLog.findMany({
+        where: { venueId: venue.id, action: "ENTER", loggedAt: { gte: activeEvent.startTime } },
+        orderBy: { loggedAt: "desc" },
+        take: 20,
+        select: { characterName: true, loggedAt: true },
+      })
+    : []
 
   // On-shift staff
   const activeShifts = await prisma.shift.findMany({
@@ -143,7 +135,11 @@ export default async function LivePage({
               name: true,
               displayName: true,
               image: true,
-              characters: { orderBy: [{ isPrimary: "desc" }, { createdAt: "asc" }], take: 1, select: { characterName: true } },
+              characters: {
+                orderBy: [{ isPrimary: "desc" }, { createdAt: "asc" }],
+                take: 1,
+                select: { characterName: true },
+              },
             },
           },
         },
@@ -153,23 +149,23 @@ export default async function LivePage({
   })
 
   // New patrons tonight (first visit this event)
-  const newTonightCount = activeEvent ? await prisma.patronLog.count({
-    where: { venueId: venue.id, action: "ENTER", loggedAt: { gte: activeEvent.startTime } },
-  }) : 0
+  const newTonightCount = activeEvent
+    ? await prisma.patronLog.count({
+        where: { venueId: venue.id, action: "ENTER", loggedAt: { gte: activeEvent.startTime } },
+      })
+    : 0
 
   return (
-    <VenueLayout
-      venueSlug={venue.slug}
-      venueName={venue.name}
-      userRole={userRole}
-    >
+    <VenueLayout venueSlug={venue.slug} venueName={venue.name} userRole={userRole}>
       <div className="page-inner">
         {/* Header — matches all other dashboard pages */}
         <div className="head-row">
           <div>
             <div className="flex items-center gap-2 mb-1.5">
               <span className="w-[7px] h-[7px] bg-[rgba(0,180,255,0.7)] rotate-45 shadow-[0_0_10px_rgba(0,180,255,0.5)] flex-shrink-0" />
-              <span className="text-[0.72rem] font-semibold uppercase tracking-[0.14em] text-[var(--xiv-blue)]">{venue.name} &middot; {venue.dataCenter} &middot; {venue.world}</span>
+              <span className="text-[0.72rem] font-semibold uppercase tracking-[0.14em] text-[var(--xiv-blue)]">
+                {venue.name} &middot; {venue.dataCenter} &middot; {venue.world}
+              </span>
             </div>
             <h1 className="page-h1">Live Mode</h1>
           </div>
@@ -195,16 +191,12 @@ export default async function LivePage({
             currentUserId={session.user.id}
             scopeSalesToOwn={!canManage && settings.revenueVisibility === "own"}
             canManage={canManage}
-            revenueLabel={
-              canManage || settings.revenueVisibility === "all"
-                ? "Total Revenue"
-                : "My Sales"
-            }
-            patronRoster={patronRoster.map(p => ({
+            revenueLabel={canManage || settings.revenueVisibility === "all" ? "Total Revenue" : "My Sales"}
+            patronRoster={patronRoster.map((p) => ({
               name: p.characterName ?? "Unknown",
               arrivedAt: p.loggedAt.toISOString(),
             }))}
-            onShiftStaff={activeShifts.map(s => {
+            onShiftStaff={activeShifts.map((s) => {
               const name = resolveDisplayName({
                 characterName: s.membership?.user?.characters?.[0]?.characterName,
                 nickname: s.membership?.nickname,

@@ -19,7 +19,7 @@
 **Real gaps confirmed by reading `apps/web/app/api/upload/route.ts` during planning (2026-08-14):**
 
 1. `apps/web/app/api/upload/route.ts:44` — `const { filename, contentType, size } = await req.json()` has zero validation on `filename`. It's used at line 58 as `path.extname(filename)` — if `filename` is `undefined`, `null`, a number, or any non-string, Node's `path.extname()` throws a `TypeError`. This route has **no try/catch anywhere** — the whole handler is a bare `async function`, so that throw becomes an unhandled rejection and Next.js returns its generic framework-level 500, not a clean 400 with a useful message.
-2. `apps/web/app/api/upload/route.ts:53` — `if (size > MAX_SIZE)` is the *only* check on `size`. If `size` is `undefined` (omitted from the request body entirely), `undefined > MAX_SIZE` evaluates to `false` in JavaScript (any comparison against `undefined` is `false`, it's not coerced to `0`) — so the size check silently passes, `ensureBucket()` runs, and a presigned S3 PUT URL is generated and returned with **no upper bound enforced at all**. S3 presigned PUT URLs don't inherently cap the uploaded object's size unless a bucket policy does (this bucket's policy, set in `ensureBucket()` at lines 20-27, only grants public `GetObject` read access — no size-limiting `PutObject` condition). A caller that omits `size` (or sends a negative number, or a string, or `NaN`) can upload an arbitrarily large file through the resulting presigned URL, completely bypassing the "under 10MB" intent.
+2. `apps/web/app/api/upload/route.ts:53` — `if (size > MAX_SIZE)` is the _only_ check on `size`. If `size` is `undefined` (omitted from the request body entirely), `undefined > MAX_SIZE` evaluates to `false` in JavaScript (any comparison against `undefined` is `false`, it's not coerced to `0`) — so the size check silently passes, `ensureBucket()` runs, and a presigned S3 PUT URL is generated and returned with **no upper bound enforced at all**. S3 presigned PUT URLs don't inherently cap the uploaded object's size unless a bucket policy does (this bucket's policy, set in `ensureBucket()` at lines 20-27, only grants public `GetObject` read access — no size-limiting `PutObject` condition). A caller that omits `size` (or sends a negative number, or a string, or `NaN`) can upload an arbitrarily large file through the resulting presigned URL, completely bypassing the "under 10MB" intent.
 
 **`contentType` is already correctly guarded** (`apps/web/app/api/upload/route.ts:50-52`, `ALLOWED_TYPES.includes(contentType)`) — this plan brings it into the zod schema too (for response-shape consistency and to reuse the existing `ALLOWED_TYPES` array as the enum source), but it's not a "real gap" fix on its own, the existing check already works correctly. Per this rollout's established priority rule, the two genuinely broken fields (`filename`, `size`) are the actual justification for this increment.
 
@@ -30,6 +30,7 @@
 ## Task 1: Migrate `app/api/upload/route.ts`
 
 **Files:**
+
 - Modify: `apps/web/app/api/upload/route.ts`
 
 - [ ] **Step 1: Add `as const` to `ALLOWED_TYPES`, add the zod import, define the schema**
@@ -41,7 +42,12 @@ import { getServerSession } from "next-auth"
 import { authOptions } from "@/lib/auth"
 import { NextResponse } from "next/server"
 import { getUploadUrl, BUCKET, s3 } from "@/lib/storage"
-import { CreateBucketCommand, HeadBucketCommand, PutBucketPolicyCommand, PutBucketCorsCommand } from "@aws-sdk/client-s3"
+import {
+  CreateBucketCommand,
+  HeadBucketCommand,
+  PutBucketPolicyCommand,
+  PutBucketCorsCommand,
+} from "@aws-sdk/client-s3"
 import { randomBytes } from "crypto"
 import path from "path"
 
@@ -57,7 +63,12 @@ import { z } from "zod"
 import { authOptions } from "@/lib/auth"
 import { NextResponse } from "next/server"
 import { getUploadUrl, BUCKET, s3 } from "@/lib/storage"
-import { CreateBucketCommand, HeadBucketCommand, PutBucketPolicyCommand, PutBucketCorsCommand } from "@aws-sdk/client-s3"
+import {
+  CreateBucketCommand,
+  HeadBucketCommand,
+  PutBucketPolicyCommand,
+  PutBucketCorsCommand,
+} from "@aws-sdk/client-s3"
 import { randomBytes } from "crypto"
 import path from "path"
 

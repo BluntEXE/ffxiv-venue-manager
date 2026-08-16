@@ -22,10 +22,7 @@ type PrismaLike = Prisma.TransactionClient | typeof defaultPrisma
  * Safe to call at venue create, service create, staff invite, and in
  * backfill scripts.
  */
-export async function ensureManagerRole(
-  venueId: string,
-  client: PrismaLike = defaultPrisma
-): Promise<Role> {
+export async function ensureManagerRole(venueId: string, client: PrismaLike = defaultPrisma): Promise<Role> {
   return client.role.upsert({
     where: { venueId_name: { venueId, name: "Manager" } },
     update: {},

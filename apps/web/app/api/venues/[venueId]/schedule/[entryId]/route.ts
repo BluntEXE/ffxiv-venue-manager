@@ -5,16 +5,16 @@ import { prisma } from "@/lib/prisma"
 import { z } from "zod"
 
 const updateSchema = z.object({
-  day:            z.number().int().min(0).max(6).optional(),
-  startHour:      z.number().int().min(0).max(23).optional(),
-  startMin:       z.number().int().min(0).max(59).optional(),
-  endHour:        z.number().int().min(0).max(23).nullable().optional(),
-  endMin:         z.number().int().min(0).max(59).nullable().optional(),
-  crossesMidnight:z.boolean().optional(),
-  interval:       z.enum(["WEEKLY", "BIWEEKLY", "MONTHLY"]).optional(),
-  weekOfMonth:    z.number().int().min(1).max(5).nullable().optional(),
-  commencing:     z.string().datetime().nullable().optional(),
-  label:          z.string().max(50).nullable().optional(),
+  day: z.number().int().min(0).max(6).optional(),
+  startHour: z.number().int().min(0).max(23).optional(),
+  startMin: z.number().int().min(0).max(59).optional(),
+  endHour: z.number().int().min(0).max(23).nullable().optional(),
+  endMin: z.number().int().min(0).max(59).nullable().optional(),
+  crossesMidnight: z.boolean().optional(),
+  interval: z.enum(["WEEKLY", "BIWEEKLY", "MONTHLY"]).optional(),
+  weekOfMonth: z.number().int().min(1).max(5).nullable().optional(),
+  commencing: z.string().datetime().nullable().optional(),
+  label: z.string().max(50).nullable().optional(),
 })
 
 async function requireManager(venueId: string, userId: string) {
@@ -24,10 +24,7 @@ async function requireManager(venueId: string, userId: string) {
   return !!membership
 }
 
-export async function PUT(
-  req: NextRequest,
-  { params }: { params: Promise<{ venueId: string; entryId: string }> }
-) {
+export async function PUT(req: NextRequest, { params }: { params: Promise<{ venueId: string; entryId: string }> }) {
   const session = await getServerSession(authOptions)
   if (!session?.user?.id) return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
 
@@ -45,18 +42,14 @@ export async function PUT(
     where: { id: entryId },
     data: {
       ...body.data,
-      commencing: body.data.commencing !== undefined
-        ? (body.data.commencing ? new Date(body.data.commencing) : null)
-        : undefined,
+      commencing:
+        body.data.commencing !== undefined ? (body.data.commencing ? new Date(body.data.commencing) : null) : undefined,
     },
   })
   return NextResponse.json(updated)
 }
 
-export async function DELETE(
-  _req: NextRequest,
-  { params }: { params: Promise<{ venueId: string; entryId: string }> }
-) {
+export async function DELETE(_req: NextRequest, { params }: { params: Promise<{ venueId: string; entryId: string }> }) {
   const session = await getServerSession(authOptions)
   if (!session?.user?.id) return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
 

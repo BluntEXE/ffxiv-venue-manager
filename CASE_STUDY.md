@@ -1,6 +1,7 @@
 <div align="center">
 
 # XIV Venue Manager
+
 ### Production venue management for an MMO community
 
 [![Next.js](https://img.shields.io/badge/Next.js-16-000000?logo=next.js)](https://nextjs.org)
@@ -39,14 +40,14 @@ A two-part venue management system for **Final Fantasy XIV** social venues: a **
                           └──────────────────┘
 ```
 
-| | |
-|---|---|
-| **Lines of code** | ~115,000 (109k TS web · 5.7k C# plugin); mobile tracked separately (~3.5k TS) |
-| **API routes** | 81 |
-| **Database tables** | 25 |
-| **Commits** | 573 (web) · 348 (plugin), ongoing since December 2025 |
-| **Knowledge-graph nodes** | 1,054 entities, 204 communities |
-| **Solo built** | Yes - every line, every decision |
+|                           |                                                                               |
+| ------------------------- | ----------------------------------------------------------------------------- |
+| **Lines of code**         | ~115,000 (109k TS web · 5.7k C# plugin); mobile tracked separately (~3.5k TS) |
+| **API routes**            | 81                                                                            |
+| **Database tables**       | 25                                                                            |
+| **Commits**               | 573 (web) · 348 (plugin), ongoing since December 2025                         |
+| **Knowledge-graph nodes** | 1,054 entities, 204 communities                                               |
+| **Solo built**            | Yes - every line, every decision                                              |
 
 ---
 
@@ -70,6 +71,7 @@ FFXIV exposes plugin APIs through the **Dalamud** framework. A plugin can observ
 A two-tier system, each tier doing what it's good at.
 
 ### Tier 1: Dalamud plugin (C#, ~5k LOC)
+
 - Runs inside the FFXIV game client
 - Observes patron arrivals/departures via zone-change + party events
 - Provides chat commands (`/xvenue`, `/xvm`, `sale!`, `target!`) for instant logging without leaving the game
@@ -77,6 +79,7 @@ A two-tier system, each tier doing what it's good at.
 - Authenticates to the web app via per-user API key
 
 ### Tier 2: Web app (Next.js 16 + PostgreSQL, ~32k LOC)
+
 - 81-route REST API: plugin-facing routes (API key auth) + dashboard routes (Discord OAuth)
 - Live page with **server-sent events** (SSE) for real-time patron flow
 - Analytics dashboards per venue
@@ -86,11 +89,13 @@ A two-tier system, each tier doing what it's good at.
 - [Partake.gg](https://partake.gg) event sync integration
 
 ### Android companion app (Expo/React Native, ~2.6k LOC)
+
 - Staff clock-in/out for active shifts
 - Service sale logging
 - Covers staff who aren't running the game client
 
 ### Design principle
+
 > The plugin is the **primary action surface**. The website is the **fallback + analytics surface**.
 > Players are already in the game, in the venue, busy. The plugin lets them act in 1-2 keystrokes; the website is where they review, configure, and analyze.
 
@@ -149,6 +154,7 @@ graph TB
 ```
 
 **Key flows:**
+
 - **Patron logging:** Plugin detects game-side patron arrival, POSTs to `/api/plugin/patron-visits`, server dedupes (60s window), classifies as staff vs patron via active shift, attributes to active event, publishes to SSE bus, live dashboard updates without polling
 - **Authentication split:** Two separate auth surfaces because the audiences differ. Plugin and mobile clients (machine-to-machine) use rotatable API keys with hashed storage. Browser clients use Discord OAuth via NextAuth.
 - **Caching:** Redis sits between Next.js and Postgres for hot reads (venues, services, transactions). Same Redis instance backs rate limiting via separate key namespaces (`cache:` vs `rl:`).
@@ -157,21 +163,21 @@ graph TB
 
 ## Tech Stack & Why
 
-| Layer | Choice | Why this and not the alternative |
-|---|---|---|
-| **Frontend framework** | Next.js 16 App Router | Server Components mean dashboard data joins happen on the server, no waterfall fetches. Standalone build keeps the production image lean. |
-| **Language** | TypeScript with `strict: true` | The plugin-to-server contract is the single most important interface in the system. A typed contract catches drift at build time, not in production. |
-| **Database** | PostgreSQL 16 | Relational because the domain is relational: venues have memberships, memberships have shifts, shifts have transactions. Joins, not document gymnastics. |
-| **ORM** | Prisma | Generated types feed the TS strictness. Schema-first migrations force thinking about data shape before writing routes. |
-| **Caching + rate limiting** | Redis 7 (single instance, ioredis client) | One container, two key namespaces. `allkeys-lru` so cache evicts under pressure but rate-limit keys (1-min TTL) never get squeezed out. |
-| **Auth (browser)** | NextAuth + Discord OAuth | FFXIV's social fabric runs on Discord. Forcing users into a second account would have killed adoption. |
-| **Auth (plugin/mobile)** | Hashed API keys (SHA-256, 32-char nanoid) | Plugin and mobile clients can't do an OAuth dance. Keys are hashed at rest with `keyHash` lookups, never plaintext. |
-| **Real-time** | Server-Sent Events | Unidirectional (server to browser) is enough for live patron flow. WebSockets would be overkill, and SSE survives proxy/CDN setups better. |
-| **Game client** | Dalamud framework, C# / .NET | Standard FFXIV plugin runtime. C# bindings for game state are the only realistic option. |
-| **Mobile** | Expo / React Native | Shared TS codebase with the web app's types. Staff already had Android devices; iOS deferred for cost, not technical reasons. |
-| **Deployment** | Docker Compose on a self-hosted Linux server | Solo project: managed Kubernetes adds failure modes I don't need. Compose is reproducible, debuggable, and survives reboots. |
-| **CI/CD** | GitHub Actions for lint + `npm audit`; manual deploy via SSH | Solo project: full continuous deployment isn't worth the failure modes when I'm the only one shipping. |
-| **Schema migrations** | `prisma db push` (not migrations) | A solo, small-data project: schema iterates faster than migration files. Documented trade-off - would change at multi-engineer scale. |
+| Layer                       | Choice                                                       | Why this and not the alternative                                                                                                                         |
+| --------------------------- | ------------------------------------------------------------ | -------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **Frontend framework**      | Next.js 16 App Router                                        | Server Components mean dashboard data joins happen on the server, no waterfall fetches. Standalone build keeps the production image lean.                |
+| **Language**                | TypeScript with `strict: true`                               | The plugin-to-server contract is the single most important interface in the system. A typed contract catches drift at build time, not in production.     |
+| **Database**                | PostgreSQL 16                                                | Relational because the domain is relational: venues have memberships, memberships have shifts, shifts have transactions. Joins, not document gymnastics. |
+| **ORM**                     | Prisma                                                       | Generated types feed the TS strictness. Schema-first migrations force thinking about data shape before writing routes.                                   |
+| **Caching + rate limiting** | Redis 7 (single instance, ioredis client)                    | One container, two key namespaces. `allkeys-lru` so cache evicts under pressure but rate-limit keys (1-min TTL) never get squeezed out.                  |
+| **Auth (browser)**          | NextAuth + Discord OAuth                                     | FFXIV's social fabric runs on Discord. Forcing users into a second account would have killed adoption.                                                   |
+| **Auth (plugin/mobile)**    | Hashed API keys (SHA-256, 32-char nanoid)                    | Plugin and mobile clients can't do an OAuth dance. Keys are hashed at rest with `keyHash` lookups, never plaintext.                                      |
+| **Real-time**               | Server-Sent Events                                           | Unidirectional (server to browser) is enough for live patron flow. WebSockets would be overkill, and SSE survives proxy/CDN setups better.               |
+| **Game client**             | Dalamud framework, C# / .NET                                 | Standard FFXIV plugin runtime. C# bindings for game state are the only realistic option.                                                                 |
+| **Mobile**                  | Expo / React Native                                          | Shared TS codebase with the web app's types. Staff already had Android devices; iOS deferred for cost, not technical reasons.                            |
+| **Deployment**              | Docker Compose on a self-hosted Linux server                 | Solo project: managed Kubernetes adds failure modes I don't need. Compose is reproducible, debuggable, and survives reboots.                             |
+| **CI/CD**                   | GitHub Actions for lint + `npm audit`; manual deploy via SSH | Solo project: full continuous deployment isn't worth the failure modes when I'm the only one shipping.                                                   |
+| **Schema migrations**       | `prisma db push` (not migrations)                            | A solo, small-data project: schema iterates faster than migration files. Documented trade-off - would change at multi-engineer scale.                    |
 
 ---
 
@@ -196,6 +202,7 @@ The cost: the API surface stays small on purpose. There are 12 plugin-facing rou
 Six months in I ran a full security audit against the production app. A line-by-line review against an actual checklist. **18 findings:** 4 Critical, 6 High, 7 Medium, 5 Low.
 
 **What got fixed (highlights):**
+
 - **API keys hashed at rest** (was: plaintext in DB). Migration was non-trivial because existing keys had no `keyHash`; would have logged out every plugin user mid-session.
 - **Secrets out of `docker-compose.yml`** and out of the Docker image (was: `COPY .env .env` baked secrets into image layers)
 - **Rate limiting on all plugin + dashboard routes** with Redis-backed sliding-window
@@ -205,6 +212,7 @@ Six months in I ran a full security audit against the production app. A line-by-
 - **SSH password auth disabled**, ed25519 keys only
 
 **What got intentionally deferred, with rationale:**
+
 - **Strict CSP:** initially deferred given low threat model, later completed (2026-05-07) - nonce-based CSP with `unsafe-eval`/`unsafe-inline` removed, implemented via per-request nonce generation in `proxy.ts`
 - **Database password rotation:** the password was weak but the database isn't externally exposed; rotated when convenient, not as fire-drill
 - **Invite token venue-name leak:** non-issue - anyone joining will see the venue name regardless
@@ -212,7 +220,7 @@ Six months in I ran a full security audit against the production app. A line-by-
 Documenting every deferred item with the reason it was deferred and the trigger that should bring it back matters more than claiming everything is fixed. "I fixed everything" is less useful than knowing which things you chose not to fix and why.
 
 **The bug I shipped on top of the audit:**
-Even after the audit declared rate limiting "fixed," a test exposed an ordering bug: the rate limit ran *after* API-key validation. Bad or missing keys returned 401 before any counter incremented, leaving the keyspace open to unthrottled brute-force probing - each attempt costing a database lookup. Fixed by adding a per-IP pre-filter that runs **before** key validation. Verified: 80-request burst from one IP gave 60x 401 + 20x 429.
+Even after the audit declared rate limiting "fixed," a test exposed an ordering bug: the rate limit ran _after_ API-key validation. Bad or missing keys returned 401 before any counter incremented, leaving the keyspace open to unthrottled brute-force probing - each attempt costing a database lookup. Fixed by adding a per-IP pre-filter that runs **before** key validation. Verified: 80-request burst from one IP gave 60x 401 + 20x 429.
 
 Audits check whether a control exists. They don't check whether it's positioned to do its job.
 
@@ -225,6 +233,7 @@ The live page (`/dashboard/<venue>/live`) shows patrons entering and leaving in 
 Traffic is unidirectional - the server pushes events to the browser, the browser never sends back. SSE rides on plain HTTP/1.1, no protocol upgrade dance, no special proxy config, and works through every reverse proxy I'd deploy behind. The native `EventSource` API handles reconnection without a client library. One open HTTP/2 connection per viewer, idle 99% of the time.
 
 The architecture is straightforward:
+
 ```
 plugin POST /api/plugin/patron-visits
   └─► server validates, dedupes, classifies
@@ -253,23 +262,23 @@ The cost: SSE doesn't survive a server restart - connections drop and the browse
 
 <div align="center">
 
-| Metric | Value |
-|---|---|
-| Total LOC | ~115,000 |
-| Web app (TS/TSX) | ~109,000 |
-| Mobile app (TS/TSX) | 3,451 |
-| Plugin (C#) | 5,761 |
-| API routes | 81 |
-| Database tables | 25 |
-| Plugin-facing routes | 12 |
-| Web-only routes | 57 |
-| Mobile-facing routes | 12 |
-| Cron jobs | 4 |
-| Commits | 573 (web) · 348 (plugin), ongoing |
-| Active development span | December 2025 - present (ongoing) |
-| Production environment | Single self-hosted Linux box |
-| Container count | 7 (web, postgres, redis, cron, xiv-stats, adminer, static-ehno) |
-| Redis memory ceiling | 256 MB (`allkeys-lru`) |
+| Metric                  | Value                                                           |
+| ----------------------- | --------------------------------------------------------------- |
+| Total LOC               | ~115,000                                                        |
+| Web app (TS/TSX)        | ~109,000                                                        |
+| Mobile app (TS/TSX)     | 3,451                                                           |
+| Plugin (C#)             | 5,761                                                           |
+| API routes              | 81                                                              |
+| Database tables         | 25                                                              |
+| Plugin-facing routes    | 12                                                              |
+| Web-only routes         | 57                                                              |
+| Mobile-facing routes    | 12                                                              |
+| Cron jobs               | 4                                                               |
+| Commits                 | 573 (web) · 348 (plugin), ongoing                               |
+| Active development span | December 2025 - present (ongoing)                               |
+| Production environment  | Single self-hosted Linux box                                    |
+| Container count         | 7 (web, postgres, redis, cron, xiv-stats, adminer, static-ehno) |
+| Redis memory ceiling    | 256 MB (`allkeys-lru`)                                          |
 
 </div>
 
@@ -278,6 +287,7 @@ The cost: SSE doesn't survive a server restart - connections drop and the browse
 ## Limitations & Roadmap
 
 **What it doesn't do (yet):**
+
 - No multi-region deployment - single box, single region
 - No iOS app - Android companion app ships (Expo/React Native, Play Store); iOS deferred (cost)
 - No public API for third parties - `/api/plugin/*` is for the official plugin only
@@ -285,10 +295,12 @@ The cost: SSE doesn't survive a server restart - connections drop and the browse
 - No automated database backups beyond manual nightly tarballs
 
 **What's in the queue (deferred-with-trigger):**
+
 - Cache stampede protection + observability (deferred until traffic justifies)
 - Multi-replica web tier (would require swapping in-process event bus for Redis pub/sub)
 
 **What I'd build next if this were a job:**
+
 - iOS companion app (Android shipped; deferred for cost, not technical reasons)
 - Public read API for venue listings (with rate-limited keys)
 - Per-venue custom branding so each venue feels distinct
@@ -303,6 +315,7 @@ The cost: SSE doesn't survive a server restart - connections drop and the browse
 - **Plugin distribution:** Released as a [Dalamud third-party repo](https://github.com/goatcorp/Dalamud) (binary zips, auto-updated by the Dalamud installer)
 
 For a deeper engineering walkthrough see [`apps/web/docs/engineering/`](./apps/web/docs/engineering) - broken into:
+
 - [Architecture](./apps/web/docs/engineering/architecture.md) - system diagram, component responsibilities, data flow
 - [Security](./apps/web/docs/engineering/security.md) - full audit narrative, what was fixed, what was deferred and why
 - [Scaling](./apps/web/docs/engineering/scaling.md) - Redis + rate limit decisions, what changes at 10x and 100x
@@ -311,7 +324,7 @@ For a deeper engineering walkthrough see [`apps/web/docs/engineering/`](./apps/w
 
 <div align="center">
 
-*Built solo by **Ehno** (`@BluntEXE` on GitHub).*
-*FFXIV character "Ehno" credited as plugin author; GitHub handle "BluntEXE" used for code.*
+_Built solo by **Ehno** (`@BluntEXE` on GitHub)._
+_FFXIV character "Ehno" credited as plugin author; GitHub handle "BluntEXE" used for code._
 
 </div>

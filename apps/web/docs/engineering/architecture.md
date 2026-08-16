@@ -69,13 +69,13 @@ xiv-app/
 
 19 Prisma models. The five anchors:
 
-| Model | Role |
-|---|---|
-| `User` | Account identity (Discord-linked via NextAuth `Account`) |
-| `UserCharacter` | Maps an FFXIV character (name + world) to a user. One user can have many characters. |
-| `Venue` | The tenant boundary. Almost everything else has `venueId`. |
-| `Membership` | Many-to-many between User and Venue, with role + status. The fundamental authorization record. |
-| `ApiKey` | Plugin credentials, hashed at rest as `keyHash`. |
+| Model           | Role                                                                                           |
+| --------------- | ---------------------------------------------------------------------------------------------- |
+| `User`          | Account identity (Discord-linked via NextAuth `Account`)                                       |
+| `UserCharacter` | Maps an FFXIV character (name + world) to a user. One user can have many characters.           |
+| `Venue`         | The tenant boundary. Almost everything else has `venueId`.                                     |
+| `Membership`    | Many-to-many between User and Venue, with role + status. The fundamental authorization record. |
+| `ApiKey`        | Plugin credentials, hashed at rest as `keyHash`.                                               |
 
 Auxiliary models layer on top: `Event`, `Shift`, `PatronLog`, `Transaction`, `Service`, `Role`, `Task`, `PayrollEntry`, `Webhook`, `Feedback`, `EventTemplate`, plus NextAuth's `Session` and `VerificationToken`.
 
@@ -84,18 +84,21 @@ Auxiliary models layer on top: `Event`, `Shift`, `PatronLog`, `Transaction`, `Se
 The plugin and browser have different threat models, so they use different auth.
 
 ### Browser: NextAuth + Discord OAuth
+
 - All dashboard routes are session-protected via `getServerSession(authOptions)`
 - Sessions are JWT-strategy, 7-day max age, refreshed every 24 hours
 - The whole `/api/auth/[...nextauth]` catch-all is wrapped to throttle `signin` and `callback` paths to 10/min/IP. Polled paths (`/session`, `/csrf`) are exempt because the NextAuth client polls them aggressively for legit refresh.
 
 ### Plugin: hashed API keys
+
 - Generated as `vm_<32-char nanoid>` (192 bits of entropy)
 - Stored as `SHA-256(key)` in the `ApiKey.keyHash` column. Plaintext is never persisted in lookups.
 - Plugin sends `x-api-key: vm_...` header on every request
 - Server validates: hash incoming, lookup `keyHash + revokedAt: null + active membership`
-- Per-IP rate limit runs *before* `validateApiKey()` so brute-force probing is throttled at 60/min/IP regardless of header validity (see [security.md](./security.md))
+- Per-IP rate limit runs _before_ `validateApiKey()` so brute-force probing is throttled at 60/min/IP regardless of header validity (see [security.md](./security.md))
 
 ### Cron: timing-safe Bearer
+
 - `Authorization: Bearer <CRON_SECRET>` against a constant-time comparison via `crypto.timingSafeEqual`
 - Prevents timing-based secret extraction; matters because the cron container hits localhost over docker-compose network
 
@@ -104,6 +107,7 @@ The plugin and browser have different threat models, so they use different auth.
 The plugin↔web HTTP surface is the most stability-sensitive interface in the system. Plugins ship as binary zips; users can't auto-update them. Field renames are silent compatibility breaks.
 
 Discipline applied:
+
 1. **Plugin-facing routes live under `/api/plugin/*`** and are treated as a public-stable surface (12 routes total)
 2. **Lenient on read, strict on write**: server ignores unknown fields in incoming payloads, type-checks known ones
 3. **Additive evolution only**: new fields are always optional, removals require a deprecation window
@@ -139,6 +143,7 @@ sequenceDiagram
 ```
 
 Three subtle pieces:
+
 - **Dedupe**: 60s sliding window on `(venueId, character, world, action)`. Multiple staff plugins observing the same arrival collapse to one row.
 - **Classification**: a character is "working" only if their linked user has an `ACTIVE` shift at this venue right now. Off-duty staff log as patrons (the "visit-as-friend" case).
 - **Event attribution**: snapshotted to `eventId` at log time, so later event reschedules don't retro-rewrite history.
@@ -153,12 +158,14 @@ The live page (`/dashboard/<venue>/live`) shows arrivals as they happen. Impleme
 - Browser uses the native `EventSource` API; no client library
 
 Trade-offs:
+
 - **In-process bus is single-replica.** Multi-replica web tier would need Redis pub/sub. Pre-provisioned (Redis is already there), so it's a 50-line swap when needed.
 - **Connections drop on server restart.** Browser auto-reconnects. For sub-second blips this is acceptable; for chat it would not be.
 
 ## Caching layer
 
 `lib/redis-cache.ts` uses the shared ioredis singleton. Six routes use it (cache-aside via `getOrSet`):
+
 - `GET /api/venues` (a user's venues)
 - `GET /api/venues/[venueId]`
 - `GET /api/venues/[venueId]/services` + `[serviceId]`
@@ -166,6 +173,7 @@ Trade-offs:
 - `lib/api/transactions.ts` (helper)
 
 TTLs (`cacheTTL` in `lib/redis-cache.ts`):
+
 - Venues: 5 min
 - Venue settings: 10 min
 - Memberships: 5 min
@@ -178,12 +186,12 @@ Invalidation is explicit in mutating routes. `invalidateCache(cacheKeys.userVenu
 
 Four scheduled jobs run from a separate `cron-jobs` container:
 
-| Schedule | Path | Purpose |
-|---|---|---|
-| `*/5 * * * *` | `update-event-statuses` | Transition events between PUBLISHED → ACTIVE → COMPLETED based on time |
-| `*/15 * * * *` | `event-reminders` | Send Discord webhook reminders before events |
-| `0 * * * *` | `sync-partake-events` | Pull from Partake.gg API |
-| `0 0 * * *` | `daily-sales-summary` | Aggregate previous day, post to webhook |
+| Schedule       | Path                    | Purpose                                                                |
+| -------------- | ----------------------- | ---------------------------------------------------------------------- |
+| `*/5 * * * *`  | `update-event-statuses` | Transition events between PUBLISHED → ACTIVE → COMPLETED based on time |
+| `*/15 * * * *` | `event-reminders`       | Send Discord webhook reminders before events                           |
+| `0 * * * *`    | `sync-partake-events`   | Pull from Partake.gg API                                               |
+| `0 0 * * *`    | `daily-sales-summary`   | Aggregate previous day, post to webhook                                |
 
 All four authenticate via `verifyCronAuth(request)` with constant-time comparison.
 

@@ -1,9 +1,9 @@
-import { nanoid } from 'nanoid'
-import crypto from 'crypto'
-import { NextRequest, NextResponse } from 'next/server'
-import { prisma } from '@/lib/prisma'
-import { venueEventBus } from '@/lib/sse/venue-events'
-import { enforcePluginIpRateLimit, enforcePluginRateLimit } from '@/lib/api/plugin-rate-limit'
+import { nanoid } from "nanoid"
+import crypto from "crypto"
+import { NextRequest, NextResponse } from "next/server"
+import { prisma } from "@/lib/prisma"
+import { venueEventBus } from "@/lib/sse/venue-events"
+import { enforcePluginIpRateLimit, enforcePluginRateLimit } from "@/lib/api/plugin-rate-limit"
 
 /**
  * SHA-256 hash of an API key for storage + lookup. The plaintext key is
@@ -13,7 +13,7 @@ import { enforcePluginIpRateLimit, enforcePluginRateLimit } from '@/lib/api/plug
  * entropy, beyond brute-force rainbow attacks even unsalted.
  */
 export function hashApiKey(key: string): string {
-  return crypto.createHash('sha256').update(key).digest('hex')
+  return crypto.createHash("sha256").update(key).digest("hex")
 }
 
 /**
@@ -21,11 +21,7 @@ export function hashApiKey(key: string): string {
  * at creation). Only the SHA-256 hash is persisted, plus a non-sensitive
  * keyPreview (first 8 + last 4 chars) for the dashboard listing.
  */
-export async function generateApiKey(
-  userId: string,
-  name?: string,
-  venueId?: string
-): Promise<string> {
+export async function generateApiKey(userId: string, name?: string, venueId?: string): Promise<string> {
   const key = `vm_${nanoid(32)}`
   const id = nanoid()
   const keyHash = hashApiKey(key)
@@ -37,9 +33,9 @@ export async function generateApiKey(
       userId,
       keyHash,
       keyPreview,
-      name: name || 'Plugin API Key',
-      venueId
-    }
+      name: name || "Plugin API Key",
+      venueId,
+    },
   })
 
   return key
@@ -53,7 +49,7 @@ export async function validateApiKey(apiKey: string): Promise<{
   user: any | null
   venues: string[]
 } | null> {
-  if (!apiKey || !apiKey.startsWith('vm_')) {
+  if (!apiKey || !apiKey.startsWith("vm_")) {
     return null
   }
 
@@ -63,35 +59,37 @@ export async function validateApiKey(apiKey: string): Promise<{
   const apiKeyRecord = await prisma.apiKey.findFirst({
     where: { keyHash, revokedAt: null },
     include: {
-      user: true
-    }
+      user: true,
+    },
   })
 
   if (!apiKeyRecord) {
     return null
   }
-  
+
   // Fire-and-forget: bump lastUsedAt so the web UI shows when each key
   // was last seen. We intentionally do NOT await - swallowing errors and
   // not blocking validation keeps plugin requests fast.
-  prisma.apiKey.update({
-    where: { id: apiKeyRecord.id },
-    data: { lastUsedAt: new Date() },
-  }).catch(() => {})
-  
+  prisma.apiKey
+    .update({
+      where: { id: apiKeyRecord.id },
+      data: { lastUsedAt: new Date() },
+    })
+    .catch(() => {})
+
   // Get venues the user has access to
   const memberships = await prisma.membership.findMany({
     where: {
       userId: apiKeyRecord.userId,
-      status: 'active'
+      status: "active",
     },
     select: {
-      venueId: true
-    }
+      venueId: true,
+    },
   })
-  
-  const venues = memberships.map(m => m.venueId)
-  
+
+  const venues = memberships.map((m) => m.venueId)
+
   // If key has specific venue, only allow that one
   if (apiKeyRecord.venueId) {
     if (!venues.includes(apiKeyRecord.venueId)) {
@@ -100,22 +98,24 @@ export async function validateApiKey(apiKey: string): Promise<{
     return {
       userId: apiKeyRecord.userId,
       user: apiKeyRecord.user,
-      venues: [apiKeyRecord.venueId]
+      venues: [apiKeyRecord.venueId],
     }
   }
-  
+
   return {
     userId: apiKeyRecord.userId,
     user: apiKeyRecord.user,
-    venues
+    venues,
   }
 }
 
-export type PluginAuth = { userId: string; venues: string[]; user: NonNullable<Awaited<ReturnType<typeof validateApiKey>>>['user'] }
+export type PluginAuth = {
+  userId: string
+  venues: string[]
+  user: NonNullable<Awaited<ReturnType<typeof validateApiKey>>>["user"]
+}
 
-export type PluginAuthGateResult =
-  | { ok: true; auth: PluginAuth }
-  | { ok: false; response: NextResponse }
+export type PluginAuthGateResult = { ok: true; auth: PluginAuth } | { ok: false; response: NextResponse }
 
 /**
  * Shared preamble for every /api/plugin/* route: per-IP throttle, API-key
@@ -124,21 +124,18 @@ export type PluginAuthGateResult =
  * business-logic try/catch begins, so their existing per-route error
  * messages and Zod-validation branches are untouched by this helper.
  */
-export async function pluginAuthGate(
-  request: NextRequest,
-  kind: 'read' | 'write'
-): Promise<PluginAuthGateResult> {
+export async function pluginAuthGate(request: NextRequest, kind: "read" | "write"): Promise<PluginAuthGateResult> {
   const ipLimited = await enforcePluginIpRateLimit(request)
   if (ipLimited) return { ok: false, response: ipLimited }
 
-  const apiKey = request.headers.get('x-api-key')
+  const apiKey = request.headers.get("x-api-key")
   if (!apiKey) {
-    return { ok: false, response: NextResponse.json({ error: 'Unauthorized' }, { status: 401 }) }
+    return { ok: false, response: NextResponse.json({ error: "Unauthorized" }, { status: 401 }) }
   }
 
   const auth = await validateApiKey(apiKey)
   if (!auth || !auth.userId) {
-    return { ok: false, response: NextResponse.json({ error: 'Unauthorized' }, { status: 401 }) }
+    return { ok: false, response: NextResponse.json({ error: "Unauthorized" }, { status: 401 }) }
   }
 
   const limited = await enforcePluginRateLimit(apiKey, kind)
@@ -154,7 +151,7 @@ export async function revokeApiKey(keyId: string): Promise<boolean> {
   try {
     await prisma.apiKey.update({
       where: { id: keyId },
-      data: { revokedAt: new Date() }
+      data: { revokedAt: new Date() },
     })
     return true
   } catch {
@@ -169,9 +166,9 @@ export async function getUserApiKeys(userId: string) {
   return prisma.apiKey.findMany({
     where: {
       userId,
-      revokedAt: null
+      revokedAt: null,
     },
-    orderBy: { createdAt: 'desc' }
+    orderBy: { createdAt: "desc" },
   })
 }
 
@@ -182,18 +179,18 @@ export async function getUserVenues(userId: string) {
   const memberships = await prisma.membership.findMany({
     where: {
       userId,
-      status: 'active'
+      status: "active",
     },
     include: {
-      venue: true
-    }
+      venue: true,
+    },
   })
-  
-  return memberships.map(m => ({
+
+  return memberships.map((m) => ({
     id: m.venue.id,
     name: m.venue.name,
     slug: m.venue.slug,
-    role: m.role
+    role: m.role,
   }))
 }
 
@@ -203,40 +200,40 @@ export async function getUserVenues(userId: string) {
 export async function checkPermission(
   userId: string,
   venueId: string,
-  action: 'view' | 'log_service' | 'log_transaction' | 'log_patron' | 'view_shifts' | 'clock_shift' | 'toggle_room'
+  action: "view" | "log_service" | "log_transaction" | "log_patron" | "view_shifts" | "clock_shift" | "toggle_room"
 ): Promise<boolean> {
   const membership = await prisma.membership.findFirst({
     where: {
       userId,
       venueId,
-      status: 'active'
-    }
+      status: "active",
+    },
   })
-  
+
   if (!membership) {
     return false
   }
-  
+
   // OWNER and MANAGER can do everything
-  if (membership.role === 'OWNER' || membership.role === 'MANAGER') {
+  if (membership.role === "OWNER" || membership.role === "MANAGER") {
     return true
   }
-  
+
   // STAFF can log services, patron visits, and transactions (sales).
   // Aligned with the web transactions POST route, which only checks for
   // active membership - any active member can log a sale from either
   // surface.
-  if (membership.role === 'STAFF') {
+  if (membership.role === "STAFF") {
     return (
-      action === 'log_service' ||
-      action === 'log_patron' ||
-      action === 'log_transaction' ||
-      action === 'view_shifts' ||
-      action === 'clock_shift' ||
-      action === 'toggle_room'
+      action === "log_service" ||
+      action === "log_patron" ||
+      action === "log_transaction" ||
+      action === "view_shifts" ||
+      action === "clock_shift" ||
+      action === "toggle_room"
     )
   }
-  
+
   return false
 }
 
@@ -396,7 +393,7 @@ export async function logPatronVisit(data: {
 export async function getPatronVisits(venueId: string, limit = 50) {
   return prisma.patronLog.findMany({
     where: { venueId },
-    orderBy: { timestamp: 'desc' },
-    take: limit
+    orderBy: { timestamp: "desc" },
+    take: limit,
   })
 }

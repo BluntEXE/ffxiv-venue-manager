@@ -23,10 +23,7 @@ export interface DateRange {
 /**
  * Calculate total revenue from transactions for a venue within a date range
  */
-export async function calculateRevenue(
-  venueId: string,
-  dateRange?: DateRange
-): Promise<number> {
+export async function calculateRevenue(venueId: string, dateRange?: DateRange): Promise<number> {
   const transactions = await prisma.transaction.findMany({
     where: {
       venueId,

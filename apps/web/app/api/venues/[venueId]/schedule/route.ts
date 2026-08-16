@@ -5,16 +5,16 @@ import { prisma } from "@/lib/prisma"
 import { z } from "zod"
 
 const entrySchema = z.object({
-  day:             z.number().int().min(0).max(6),
-  startHour:       z.number().int().min(0).max(23),
-  startMin:        z.number().int().min(0).max(59),
-  endHour:         z.number().int().min(0).max(23).nullable().optional(),
-  endMin:          z.number().int().min(0).max(59).nullable().optional(),
+  day: z.number().int().min(0).max(6),
+  startHour: z.number().int().min(0).max(23),
+  startMin: z.number().int().min(0).max(59),
+  endHour: z.number().int().min(0).max(23).nullable().optional(),
+  endMin: z.number().int().min(0).max(59).nullable().optional(),
   crossesMidnight: z.boolean().default(false),
-  interval:        z.enum(["WEEKLY", "BIWEEKLY", "MONTHLY"]).default("WEEKLY"),
-  weekOfMonth:     z.number().int().min(1).max(5).nullable().optional(),
-  commencing:      z.string().datetime().nullable().optional(),
-  label:           z.string().max(50).nullable().optional(),
+  interval: z.enum(["WEEKLY", "BIWEEKLY", "MONTHLY"]).default("WEEKLY"),
+  weekOfMonth: z.number().int().min(1).max(5).nullable().optional(),
+  commencing: z.string().datetime().nullable().optional(),
+  label: z.string().max(50).nullable().optional(),
 })
 
 async function requireManager(venueId: string, userId: string) {
@@ -24,10 +24,7 @@ async function requireManager(venueId: string, userId: string) {
   return !!membership
 }
 
-export async function GET(
-  _req: NextRequest,
-  { params }: { params: Promise<{ venueId: string }> }
-) {
+export async function GET(_req: NextRequest, { params }: { params: Promise<{ venueId: string }> }) {
   const { venueId } = await params
   const entries = await prisma.venueScheduleEntry.findMany({
     where: { venueId },
@@ -36,10 +33,7 @@ export async function GET(
   return NextResponse.json(entries)
 }
 
-export async function POST(
-  req: NextRequest,
-  { params }: { params: Promise<{ venueId: string }> }
-) {
+export async function POST(req: NextRequest, { params }: { params: Promise<{ venueId: string }> }) {
   const session = await getServerSession(authOptions)
   if (!session?.user?.id) return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
 

@@ -13,13 +13,7 @@ import {
 } from "@/components/ui/dialog"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select"
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { useRouter } from "next/navigation"
 
 interface StaffMember {
@@ -59,7 +53,15 @@ interface CreateShiftDialogProps {
   events?: EventOption[]
 }
 
-export function CreateShiftDialog({ venueSlug, staff, roles, trigger, prefill, potModeEnabled, events }: CreateShiftDialogProps) {
+export function CreateShiftDialog({
+  venueSlug,
+  staff,
+  roles,
+  trigger,
+  prefill,
+  potModeEnabled,
+  events,
+}: CreateShiftDialogProps) {
   const router = useRouter()
   const [open, setOpen] = useState(false)
   const [submitting, setSubmitting] = useState(false)
@@ -118,9 +120,7 @@ export function CreateShiftDialog({ venueSlug, staff, roles, trigger, prefill, p
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({
-            ...(mode === "assign"
-              ? { membershipId, ...(roleId ? { roleId } : {}) }
-              : { roleId }),
+            ...(mode === "assign" ? { membershipId, ...(roleId ? { roleId } : {}) } : { roleId }),
             scheduledStart,
             scheduledEnd,
             notes: notes || undefined,
@@ -159,9 +159,7 @@ export function CreateShiftDialog({ venueSlug, staff, roles, trigger, prefill, p
 
   return (
     <Dialog open={open} onOpenChange={setOpen}>
-      <DialogTrigger asChild>
-        {trigger ?? <Button>Schedule Shift</Button>}
-      </DialogTrigger>
+      <DialogTrigger asChild>{trigger ?? <Button>Schedule Shift</Button>}</DialogTrigger>
       <DialogContent className="sm:max-w-md">
         <DialogHeader>
           <DialogTitle>{prefill ? "Duplicate Shift" : "Schedule a Shift"}</DialogTitle>
@@ -232,8 +230,8 @@ export function CreateShiftDialog({ venueSlug, staff, roles, trigger, prefill, p
                   )}
                 </div>
                 <p className="text-xs text-muted-foreground">
-                  Tags this shift with a role for pay purposes. The role's rate is used
-                  instead of the staff member's own rate when payroll is generated.
+                  Tags this shift with a role for pay purposes. The role's rate is used instead of the staff member's
+                  own rate when payroll is generated.
                 </p>
               </div>
             </div>
@@ -308,7 +306,9 @@ export function CreateShiftDialog({ venueSlug, staff, roles, trigger, prefill, p
           <div className="space-y-3 p-4 border border-[var(--blue-015)] rounded-lg bg-[var(--blue-004)]">
             <div className="flex items-center justify-between">
               <div>
-                <Label htmlFor="repeating" className="text-sm font-semibold">Repeating Shift</Label>
+                <Label htmlFor="repeating" className="text-sm font-semibold">
+                  Repeating Shift
+                </Label>
                 <p className="text-xs text-muted-foreground mt-0.5">Generates future instances automatically</p>
               </div>
               <button
@@ -321,13 +321,18 @@ export function CreateShiftDialog({ venueSlug, staff, roles, trigger, prefill, p
                   repeating ? "bg-[var(--xiv-blue)]" : "bg-muted"
                 }`}
               >
-                <span className={`inline-block h-4 w-4 rounded-full bg-white shadow transition-transform ${repeating ? "translate-x-6" : "translate-x-1"}`} />
+                <span
+                  className={`inline-block h-4 w-4 rounded-full bg-white shadow transition-transform ${repeating ? "translate-x-6" : "translate-x-1"}`}
+                />
               </button>
             </div>
             {repeating && (
               <div className="space-y-2">
                 <Label htmlFor="recurrenceRule">Frequency</Label>
-                <Select value={recurrenceRule} onValueChange={(v) => setRecurrenceRule(v as "WEEKLY" | "BIWEEKLY" | "MONTHLY")}>
+                <Select
+                  value={recurrenceRule}
+                  onValueChange={(v) => setRecurrenceRule(v as "WEEKLY" | "BIWEEKLY" | "MONTHLY")}
+                >
                   <SelectTrigger>
                     <SelectValue />
                   </SelectTrigger>
@@ -343,38 +348,21 @@ export function CreateShiftDialog({ venueSlug, staff, roles, trigger, prefill, p
 
           <div className="space-y-2">
             <Label htmlFor="date">Date</Label>
-            <Input
-              id="date"
-              type="date"
-              value={date}
-              onChange={(e) => setDate(e.target.value)}
-            />
+            <Input id="date" type="date" value={date} onChange={(e) => setDate(e.target.value)} />
           </div>
 
           <div className="grid grid-cols-2 gap-4">
             <div className="space-y-2">
               <Label htmlFor="start">Start</Label>
-              <Input
-                id="start"
-                type="time"
-                value={startTime}
-                onChange={(e) => setStartTime(e.target.value)}
-              />
+              <Input id="start" type="time" value={startTime} onChange={(e) => setStartTime(e.target.value)} />
             </div>
             <div className="space-y-2">
               <Label htmlFor="end">End</Label>
-              <Input
-                id="end"
-                type="time"
-                value={endTime}
-                onChange={(e) => setEndTime(e.target.value)}
-              />
+              <Input id="end" type="time" value={endTime} onChange={(e) => setEndTime(e.target.value)} />
             </div>
           </div>
 
-          <p className="text-xs text-muted-foreground">
-            Times shown in your local time
-          </p>
+          <p className="text-xs text-muted-foreground">Times shown in your local time</p>
 
           <div className="space-y-2">
             <Label htmlFor="notes">Notes (optional)</Label>
@@ -386,9 +374,7 @@ export function CreateShiftDialog({ venueSlug, staff, roles, trigger, prefill, p
             />
           </div>
 
-          {error && (
-            <p className="text-sm text-destructive">{error}</p>
-          )}
+          {error && <p className="text-sm text-destructive">{error}</p>}
         </div>
 
         <DialogFooter>

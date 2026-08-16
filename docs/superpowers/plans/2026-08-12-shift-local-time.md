@@ -24,7 +24,7 @@ The `?w=` URL param that selects which week's data to fetch is set server-side, 
 
 **3. The widened Prisma query buffer is ±14 hours on each side of the ST week window.**
 
-Real-world UTC offsets range from UTC-12 to UTC+14. A shift at the very edge of the ST week window could belong to a different local day for a viewer at either extreme. ±14 hours on both ends covers the full range with margin. This only affects which rows are *fetched* — the bucketing logic (Task 2) still places each shift in the correct local day-column, or drops it from the visible grid if its local day falls outside the 7 displayed columns (rare, only possible at the two extreme-offset edges of the window).
+Real-world UTC offsets range from UTC-12 to UTC+14. A shift at the very edge of the ST week window could belong to a different local day for a viewer at either extreme. ±14 hours on both ends covers the full range with margin. This only affects which rows are _fetched_ — the bucketing logic (Task 2) still places each shift in the correct local day-column, or drops it from the visible grid if its local day falls outside the 7 displayed columns (rare, only possible at the two extreme-offset edges of the window).
 
 - [ ] **Step 1: No action needed** — decisions above are the plan's baseline; implement against them.
 
@@ -33,10 +33,11 @@ Real-world UTC offsets range from UTC-12 to UTC+14. A shift at the very edge of 
 ## Task 1: Local-day-bucketing utilities, hydration-safe
 
 **Files:**
+
 - Create: `apps/web/lib/local-day.ts`
 - Test: `apps/web/lib/local-day.test.ts`
 
-Mirrors the existing `utcDayKey`/`fmtHour` shape (both the copy in `app/dashboard/[slug]/shifts/page.tsx:36-52` and the shared one in `lib/shift-format.ts`) but keyed by the *viewer's* local calendar day instead of UTC. No React/hydration-guard logic lives here — that's Task 2's job, wrapping these pure functions.
+Mirrors the existing `utcDayKey`/`fmtHour` shape (both the copy in `app/dashboard/[slug]/shifts/page.tsx:36-52` and the shared one in `lib/shift-format.ts`) but keyed by the _viewer's_ local calendar day instead of UTC. No React/hydration-guard logic lives here — that's Task 2's job, wrapping these pure functions.
 
 - [ ] **Step 1: Write the failing tests**
 
@@ -140,6 +141,7 @@ git commit -m "feat(web): add viewer-local day/hour formatting utilities"
 ## Task 2: Widen the week-grid's Prisma query window
 
 **Files:**
+
 - Modify: `apps/web/app/dashboard/[slug]/shifts/page.tsx:104-141`
 
 Currently `weekShifts` is fetched with `scheduledStart: { gte: weekStart, lt: weekEnd }` — an exact ST Monday-to-Monday window. Widen by 14 hours on each side so shifts near the boundary are fetched even if a viewer's local day places them outside the ST week; bucketing (Task 3) will place or drop them correctly.
@@ -149,20 +151,20 @@ Currently `weekShifts` is fetched with `scheduledStart: { gte: weekStart, lt: we
 Current (`apps/web/app/dashboard/[slug]/shifts/page.tsx:104-106`):
 
 ```typescript
-  const base = w ? new Date(w + "T00:00:00Z") : new Date()
-  const weekStart = getWeekMonday(base)
-  const weekEnd = addUTCDays(weekStart, 7) // exclusive upper bound
+const base = w ? new Date(w + "T00:00:00Z") : new Date()
+const weekStart = getWeekMonday(base)
+const weekEnd = addUTCDays(weekStart, 7) // exclusive upper bound
 ```
 
 Add directly below it:
 
 ```typescript
-  const FETCH_LOOKBACK_MS = 24 * 60 * 60 * 1000 // covers the full negative-offset range (UTC-12); positive offsets never shift the day backward from weekStart's UTC grid
-  const fetchWindowStart = new Date(weekStart.getTime() - FETCH_LOOKBACK_MS)
-  const fetchWindowEnd = weekEnd
+const FETCH_LOOKBACK_MS = 24 * 60 * 60 * 1000 // covers the full negative-offset range (UTC-12); positive offsets never shift the day backward from weekStart's UTC grid
+const fetchWindowStart = new Date(weekStart.getTime() - FETCH_LOOKBACK_MS)
+const fetchWindowEnd = weekEnd
 ```
 
-**Correction, found in code review during execution (2026-08-12):** an earlier draft of this step used a symmetric ±14h pad. That's wrong — `weekDays[i]` are exact UTC midnights, so a negative-offset viewer's `dayKeyOf` shifts the *whole column* back one calendar day (not just individual shift times), while a positive-offset viewer's day-key never shifts at all (adding a positive offset to a UTC midnight stays within the same UTC calendar day). The union of what any real-world offset (UTC-12 to UTC+14) can need is `[weekStart - 24h, weekEnd)` — asymmetric, lookback-only. The trailing pad after `weekEnd` is never needed by any viewer. 24h (not a smaller precise-per-offset value) is used because the offset at a column's local midnight can differ from the offset at `weekStart` across a DST transition inside the displayed week.
+**Correction, found in code review during execution (2026-08-12):** an earlier draft of this step used a symmetric ±14h pad. That's wrong — `weekDays[i]` are exact UTC midnights, so a negative-offset viewer's `dayKeyOf` shifts the _whole column_ back one calendar day (not just individual shift times), while a positive-offset viewer's day-key never shifts at all (adding a positive offset to a UTC midnight stays within the same UTC calendar day). The union of what any real-world offset (UTC-12 to UTC+14) can need is `[weekStart - 24h, weekEnd)` — asymmetric, lookback-only. The trailing pad after `weekEnd` is never needed by any viewer. 24h (not a smaller precise-per-offset value) is used because the offset at a column's local midnight can differ from the offset at `weekStart` across a DST transition inside the displayed week.
 
 - [ ] **Step 2: Use the padded window in the query**
 
@@ -206,6 +208,7 @@ git commit -m "fix(web): widen shifts week-grid fetch window to cover all local-
 ## Task 3: New `ShiftsWeekView` client component — local-day bucketing with mount guard
 
 **Files:**
+
 - Create: `apps/web/components/shifts-week-view.tsx`
 - Modify: `apps/web/app/dashboard/[slug]/shifts/page.tsx`
 
@@ -501,6 +504,7 @@ export function ShiftsWeekView(props: ShiftsWeekViewProps) {
 - [ ] **Step 3: Wire `ShiftsWeekView` into `page.tsx`, removing the migrated JSX/logic**
 
 In `apps/web/app/dashboard/[slug]/shifts/page.tsx`:
+
 - Remove the local `fmtHour`, `utcTimeKey` functions (lines 41-52) — no longer used in this file (grid/action-item rendering moved out). Keep `utcDayKey`, `getWeekMonday`, `addUTCDays`, `fmtWeekLabel` — still used for the fetch window and prev/next nav (Task 0 decision 1).
 - Remove the KPI computation block, `staffMap`/`staffRows` building, `openShiftsByDay` building, `actionShifts`/`actionShiftsByDay`/`dayLabel` (all now live in `ShiftsWeekView`).
 - Remove the KPIs JSX block, the week-nav label + "Back to current week" link (kept in `ShiftsWeekView`, prev/next `<Link>`s stay here), the Weekly grid JSX block, and the Action items JSX block.
@@ -558,6 +562,7 @@ git commit -m "feat(web): render shifts week grid in viewer-local time"
 ## Task 4: Migrate `lib/shift-format.ts`, `shifts-calendar.tsx`, `shift-day-dialog.tsx`
 
 **Files:**
+
 - Modify: `apps/web/lib/shift-format.ts`
 - Modify: `apps/web/components/shifts-calendar.tsx`
 - Modify: `apps/web/components/shift-day-dialog.tsx`
@@ -679,5 +684,6 @@ cd apps/web/../.. && git push origin main
 ---
 
 ## Deferred, not in this plan's scope
+
 - Fully viewer-local week navigation (the `?w=` anchor and Monday-Sunday boundary itself becoming timezone-aware) — Task 0 decision 1's compromise. Would need either a timezone cookie set on first client visit + server-side redirect, or moving the week-selection logic client-side entirely.
 - `PendingNotification` body text becoming per-viewer-local — Task 0 decision 2. Needs notification storage to keep raw timestamps and template at render time, a schema-level change.

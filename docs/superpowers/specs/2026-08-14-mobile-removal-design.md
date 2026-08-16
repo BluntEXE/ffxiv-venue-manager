@@ -24,6 +24,7 @@ This is sub-project 1 of a larger two-part effort: mobile removal, then a codeba
 Chosen over a single-pass removal because the DB drop is the one irreversible step, and deploying the code removal first gives a real signal (errors or silence) about whether anything was missed — before anything gets dropped. Also required by production safety: **a live event is in progress**, so no deploy or DB change happens until it ends.
 
 ### Stage 1 — Code removal (local branch, zero prod risk)
+
 - Delete `apps/mobile/` entirely.
 - Delete all 25 routes under `apps/web/app/api/mobile/**`.
 - Delete the 3 mobile-exclusive lib files.
@@ -35,11 +36,13 @@ Chosen over a single-pass removal because the DB drop is the one irreversible st
 - Commit, push to a branch (not deployed yet).
 
 ### Stage 2 — Deploy + soak (holds until live event ends)
+
 - Merge/push to main.
 - Deploy via `~/bin/deploy-xiv-web.sh --green` (zero-downtime blue-green).
 - Soak window on GlitchTip: since the audit found zero external consumers of the mobile API surface, any error referencing `/api/mobile/*` or the deleted lib files during this window means the audit missed something, and should be investigated before proceeding to Stage 3.
 
 ### Stage 3 — DB drop (Tuesday maintenance window, 09:00–11:00 UTC)
+
 - Manual `pg_dump` backup first (standing rule, non-negotiable for schema/DDL work).
 - Run the Prisma `db push` (per this project's established no-migrations-table workflow) to actually drop `RefreshToken`, `NotificationPreference`, `DeviceToken` from the live schema.
 - Verify via direct `psql` query that the tables are gone and no other table references them (FK check).

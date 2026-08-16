@@ -11,10 +11,7 @@ import { z } from "zod"
  * List shifts for a venue. Any active member can view.
  * Query params: from (ISO date), to (ISO date) for date range filtering.
  */
-export async function GET(
-  request: NextRequest,
-  { params }: { params: Promise<{ venueId: string }> }
-) {
+export async function GET(request: NextRequest, { params }: { params: Promise<{ venueId: string }> }) {
   try {
     const session = await getServerSession(authOptions)
     if (!session?.user?.id) {
@@ -82,10 +79,7 @@ export async function GET(
     })
   } catch (error) {
     console.error("Error fetching shifts:", error)
-    return NextResponse.json(
-      { error: "Internal server error" },
-      { status: 500 }
-    )
+    return NextResponse.json({ error: "Internal server error" }, { status: 500 })
   }
 }
 
@@ -106,13 +100,11 @@ const createShiftSchema = z
   })
   // Cross-field rule (spans membershipId and roleId), so the error is form-level: no single field is "wrong" on its own.
   .refine((data) => Boolean(data.membershipId) || Boolean(data.roleId), {
-    message: "Provide a staff member (assign now), a role (leave open), or both (assign now with a role tagged for pay)",
+    message:
+      "Provide a staff member (assign now), a role (leave open), or both (assign now with a role tagged for pay)",
   })
 
-export async function POST(
-  request: NextRequest,
-  { params }: { params: Promise<{ venueId: string }> }
-) {
+export async function POST(request: NextRequest, { params }: { params: Promise<{ venueId: string }> }) {
   try {
     const session = await getServerSession(authOptions)
     if (!session?.user?.id) {
@@ -132,19 +124,13 @@ export async function POST(
       where: { userId: session.user.id, venueId: venue.id, status: "active" },
     })
     if (!membership || !["OWNER", "MANAGER"].includes(membership.role)) {
-      return NextResponse.json(
-        { error: "Only managers can create shifts" },
-        { status: 403 }
-      )
+      return NextResponse.json({ error: "Only managers can create shifts" }, { status: 403 })
     }
 
     const body = await request.json()
     const parsed = createShiftSchema.safeParse(body)
     if (!parsed.success) {
-      return NextResponse.json(
-        { error: "Validation error", details: parsed.error.issues },
-        { status: 400 }
-      )
+      return NextResponse.json({ error: "Validation error", details: parsed.error.issues }, { status: 400 })
     }
 
     let targetMembership: { userId: string | null } | null = null
@@ -157,10 +143,7 @@ export async function POST(
         select: { userId: true },
       })
       if (!member) {
-        return NextResponse.json(
-          { error: "Staff member not found at this venue" },
-          { status: 400 }
-        )
+        return NextResponse.json({ error: "Staff member not found at this venue" }, { status: 400 })
       }
       targetMembership = member
     }
@@ -173,10 +156,7 @@ export async function POST(
         select: { id: true },
       })
       if (!role) {
-        return NextResponse.json(
-          { error: "Role not found at this venue" },
-          { status: 400 }
-        )
+        return NextResponse.json({ error: "Role not found at this venue" }, { status: 400 })
       }
       verifiedRoleId = role.id
     }
@@ -188,10 +168,7 @@ export async function POST(
         select: { id: true },
       })
       if (!event) {
-        return NextResponse.json(
-          { error: "Event not found at this venue" },
-          { status: 400 }
-        )
+        return NextResponse.json({ error: "Event not found at this venue" }, { status: 400 })
       }
       verifiedEventId = event.id
     }
@@ -249,9 +226,6 @@ export async function POST(
     return NextResponse.json({ shift }, { status: 201 })
   } catch (error) {
     console.error("Error creating shift:", error)
-    return NextResponse.json(
-      { error: "Internal server error" },
-      { status: 500 }
-    )
+    return NextResponse.json({ error: "Internal server error" }, { status: 500 })
   }
 }

@@ -3,13 +3,7 @@
 import { useEffect, useState } from "react"
 import { Breadcrumb } from "@/components/breadcrumb"
 import { Button } from "@/components/ui/button"
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card"
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Badge } from "@/components/ui/badge"
@@ -135,23 +129,14 @@ export default function CharactersPage() {
 
   return (
     <div className="container mx-auto p-4 md:p-6 lg:p-8 max-w-4xl">
-      <Breadcrumb
-        items={[
-          { label: "Dashboard", href: "/dashboard" },
-          { label: "My Characters" },
-        ]}
-      />
+      <Breadcrumb items={[{ label: "Dashboard", href: "/dashboard" }, { label: "My Characters" }]} />
 
       <div className="mb-6 md:mb-8">
-        <h1 className="page-h1">
-          My Characters
-        </h1>
+        <h1 className="page-h1">My Characters</h1>
         <p className="text-sm md:text-base text-muted-foreground mt-1 md:mt-2">
-          Link your FFXIV characters so the plugin can tell when you&apos;re
-          working a shift versus visiting as a patron. When any of these
-          characters arrive at a venue while you have an active shift, the
-          visit is logged as staff presence. Otherwise it&apos;s logged as a
-          patron visit.
+          Link your FFXIV characters so the plugin can tell when you&apos;re working a shift versus visiting as a
+          patron. When any of these characters arrive at a venue while you have an active shift, the visit is logged as
+          staff presence. Otherwise it&apos;s logged as a patron visit.
         </p>
       </div>
 
@@ -163,9 +148,7 @@ export default function CharactersPage() {
 
       {success && (
         <Alert className="mb-6 border-emerald-500/40 bg-emerald-500/10">
-          <AlertDescription className="text-emerald-300">
-            {success}
-          </AlertDescription>
+          <AlertDescription className="text-emerald-300">{success}</AlertDescription>
         </Alert>
       )}
 
@@ -173,8 +156,7 @@ export default function CharactersPage() {
         <CardHeader>
           <CardTitle>Link a character</CardTitle>
           <CardDescription>
-            Name and world must match exactly as they appear in-game. Each
-            character can only be linked to one account.
+            Name and world must match exactly as they appear in-game. Each character can only be linked to one account.
           </CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">
@@ -216,15 +198,12 @@ export default function CharactersPage() {
       <Card>
         <CardHeader>
           <CardTitle>Linked characters</CardTitle>
-          <CardDescription>
-            Characters currently linked to this account
-          </CardDescription>
+          <CardDescription>Characters currently linked to this account</CardDescription>
         </CardHeader>
         <CardContent>
           {characters.length === 0 ? (
             <p className="text-sm text-muted-foreground">
-              No characters linked yet. Link at least one so the plugin can
-              identify you.
+              No characters linked yet. Link at least one so the plugin can identify you.
             </p>
           ) : (
             <ul className="space-y-3">
@@ -235,23 +214,14 @@ export default function CharactersPage() {
                 >
                   <div className="flex flex-col sm:flex-row sm:items-center gap-2">
                     <span className="font-medium">{c.characterName}</span>
-                    <span className="text-muted-foreground text-sm">
-                      @ {c.world}
-                    </span>
+                    <span className="text-muted-foreground text-sm">@ {c.world}</span>
                     {c.isPrimary && (
-                      <Badge
-                        variant="outline"
-                        className="border-emerald-500/40 text-emerald-300"
-                      >
+                      <Badge variant="outline" className="border-emerald-500/40 text-emerald-300">
                         Primary
                       </Badge>
                     )}
                   </div>
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={() => removeCharacter(c.id, c.characterName)}
-                  >
+                  <Button variant="outline" size="sm" onClick={() => removeCharacter(c.id, c.characterName)}>
                     Unlink
                   </Button>
                 </li>

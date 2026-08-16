@@ -1,4 +1,5 @@
 # All Venues Tab — Design Spec
+
 **Date:** 2026-06-24
 **Status:** Approved
 
@@ -10,11 +11,11 @@ Add a third "All" tab to the mobile Discover screen. Shows every active venue re
 
 Three tabs in the existing pill container:
 
-| Tab | Shows | Unchanged? |
-|-----|-------|-----------|
-| Open Now | Venues with an active shift right now | Yes |
-| Tonight | Venues with a shift scheduled today | Yes |
-| All | Every active venue, filtered by name/DC | New |
+| Tab      | Shows                                   | Unchanged? |
+| -------- | --------------------------------------- | ---------- |
+| Open Now | Venues with an active shift right now   | Yes        |
+| Tonight  | Venues with a shift scheduled today     | Yes        |
+| All      | Every active venue, filtered by name/DC | New        |
 
 ## All Tab — Controls
 
@@ -25,6 +26,7 @@ Three tabs in the existing pill container:
 ## Venue Rows
 
 Matches the existing Open Now / Tonight `VenueRow` component exactly:
+
 - 44px icon placeholder (storefront icon)
 - Venue name (bold, 14px)
 - World · DC (subtext)
@@ -45,9 +47,11 @@ Sort is applied server-side.
 **New endpoint:** `GET /api/mobile/discover/all`
 
 Query params:
+
 - `dc` (optional): data centre name, e.g. `Crystal`. Omit for all DCs.
 
 Response shape — array of venues:
+
 ```ts
 {
   id: string
@@ -69,10 +73,10 @@ Implementation: query all `isActive: true` venues, left-join shifts for today. A
 
 ## Screens / Files Changed
 
-| File | Change |
-|------|--------|
-| `apps/mobile/app/(app)/discover.tsx` | Add `all` to `Tab` type; add search input + DC chips when `all` active; fetch from new endpoint |
-| `apps/web/app/api/mobile/discover/all/route.ts` | New API route |
+| File                                            | Change                                                                                          |
+| ----------------------------------------------- | ----------------------------------------------------------------------------------------------- |
+| `apps/mobile/app/(app)/discover.tsx`            | Add `all` to `Tab` type; add search input + DC chips when `all` active; fetch from new endpoint |
+| `apps/web/app/api/mobile/discover/all/route.ts` | New API route                                                                                   |
 
 No new screens. No new components (reuses `VenueRow`, `VenueSkeleton`, `EmptyState`).
 

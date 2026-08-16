@@ -41,14 +41,17 @@ export async function GET(request: Request) {
     for (const event of venue.events) {
       if (event.startTime > cutoff) continue
 
-      const templates = shiftBot.templates.length > 0
-        ? shiftBot.templates
-        : [{
-            name: "Event Shift",
-            startOffsetHours: 0,
-            durationHours: Math.round((event.endTime.getTime() - event.startTime.getTime()) / 3_600_000),
-            slots: 10,
-          }]
+      const templates =
+        shiftBot.templates.length > 0
+          ? shiftBot.templates
+          : [
+              {
+                name: "Event Shift",
+                startOffsetHours: 0,
+                durationHours: Math.round((event.endTime.getTime() - event.startTime.getTime()) / 3_600_000),
+                slots: 10,
+              },
+            ]
 
       try {
         await postShiftEmbedsForEvent(

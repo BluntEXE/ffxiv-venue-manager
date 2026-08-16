@@ -88,13 +88,13 @@ export async function GET(request: Request) {
       // Calculate summary statistics
       const totalSales = transactions.length
       const totalRevenue = transactions.reduce(
-        (sum: number, t: typeof transactions[number]) => sum + Number(t.amount),
+        (sum: number, t: (typeof transactions)[number]) => sum + Number(t.amount),
         0
       )
 
       // Find top service
       const serviceSales = new Map<string, { name: string; count: number }>()
-      transactions.forEach((t: typeof transactions[number]) => {
+      transactions.forEach((t: (typeof transactions)[number]) => {
         if (t.service) {
           const existing = serviceSales.get(t.service.id)
           if (existing) {
@@ -110,9 +110,7 @@ export async function GET(request: Request) {
 
       let topService: { name: string; sales: number } | null = null
       if (serviceSales.size > 0) {
-        const sorted = Array.from(serviceSales.values()).sort(
-          (a, b) => b.count - a.count
-        )
+        const sorted = Array.from(serviceSales.values()).sort((a, b) => b.count - a.count)
         topService = {
           name: sorted[0].name,
           sales: sorted[0].count,
@@ -157,9 +155,6 @@ export async function GET(request: Request) {
     })
   } catch (error) {
     console.error("Error in daily sales summary cron job:", error)
-    return NextResponse.json(
-      { error: "Internal server error" },
-      { status: 500 }
-    )
+    return NextResponse.json({ error: "Internal server error" }, { status: 500 })
   }
 }

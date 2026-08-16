@@ -15,6 +15,7 @@
 ### Task 1: Shared shift-format helpers and types
 
 **Files:**
+
 - Create: `apps/web/lib/shift-format.ts`
 
 - [ ] **Step 1: Write the helper file**
@@ -44,9 +45,9 @@ export function fmtHour(iso: string | Date): string {
 
 export const statusBadgeClass: Record<string, string> = {
   SCHEDULED: "bg-[rgba(0,180,255,0.12)] text-[var(--xiv-blue)] border-[rgba(0,180,255,0.35)]",
-  ACTIVE:    "bg-emerald-500/10 text-emerald-500 border-emerald-500/20",
+  ACTIVE: "bg-emerald-500/10 text-emerald-500 border-emerald-500/20",
   COMPLETED: "bg-zinc-500/10 text-zinc-400 border-zinc-500/20",
-  MISSED:    "bg-amber-500/10 text-amber-500 border-amber-500/20",
+  MISSED: "bg-amber-500/10 text-amber-500 border-amber-500/20",
   CANCELLED: "bg-red-500/10 text-red-400 border-red-500/20",
 }
 
@@ -88,6 +89,7 @@ git commit -m "feat(shifts): add shared date helpers and CalendarShift type for 
 ### Task 2: `ShiftDayDialog` component
 
 **Files:**
+
 - Create: `apps/web/components/shift-day-dialog.tsx`
 
 This dialog is built standalone first (before the calendar that will open it) since the calendar's click handler depends on this component's prop contract.
@@ -331,6 +333,7 @@ git commit -m "feat(shifts): add ShiftDayDialog for per-day shift view/managemen
 ### Task 3: `ShiftsCalendar` component
 
 **Files:**
+
 - Create: `apps/web/components/shifts-calendar.tsx`
 
 - [ ] **Step 1: Write the component**
@@ -534,6 +537,7 @@ git commit -m "feat(shifts): add ShiftsCalendar month view with own-shift cells"
 ### Task 4: Wire the calendar tab into the Shifts page
 
 **Files:**
+
 - Modify: `apps/web/app/dashboard/[slug]/shifts/page.tsx`
 
 - [ ] **Step 1: Add the `view` search param and calendar data fetch**
@@ -565,13 +569,13 @@ export default async function ShiftsPage({
 And the destructure a few lines below:
 
 ```typescript
-  const { w } = await searchParams
+const { w } = await searchParams
 ```
 
 becomes:
 
 ```typescript
-  const { w, view = "week" } = await searchParams
+const { w, view = "week" } = await searchParams
 ```
 
 - [ ] **Step 2: Add the calendar-window shift fetch**
@@ -579,10 +583,11 @@ becomes:
 Immediately after the existing `weekShifts`/`activeShifts` `Promise.all` block (after line 135, `])`), add:
 
 ```typescript
-  // Calendar view only: 6-month rolling window (3 back, 3 forward), independent
-  // of the week grid's ?w= offset. Only fetched when actually viewing the
-  // calendar tab, to avoid pulling months of shift history on every page load.
-  const calendarShifts = view === "calendar"
+// Calendar view only: 6-month rolling window (3 back, 3 forward), independent
+// of the week grid's ?w= offset. Only fetched when actually viewing the
+// calendar tab, to avoid pulling months of shift history on every page load.
+const calendarShifts =
+  view === "calendar"
     ? await prisma.shift.findMany({
         where: {
           venueId: venue.id,
@@ -727,6 +732,7 @@ Navigate to `/dashboard/<slug>/shifts` (defaults to `?view=week`). Confirm the p
 - [ ] **Step 3: Verify the Calendar tab as a manager/owner**
 
 Click the "Calendar" tab. Confirm:
+
 - Month grid renders with today highlighted
 - Prev/next/Today navigation works
 - Cells show only your own shifts (if any this month)
@@ -738,6 +744,7 @@ Click the "Calendar" tab. Confirm:
 - [ ] **Step 4: Verify the Calendar tab as regular staff**
 
 Log in as (or temporarily test with) a non-manager account. Confirm:
+
 - Cells show only that user's own shifts, no coverage dots
 - Clicking a date with one of their shifts shows a read-only row (no delete/duplicate buttons) with a working clock-in/out button where applicable
 - Clicking a date with no shifts of their own shows "You have no shifts this day." even if other staff are working that day

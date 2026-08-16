@@ -1,10 +1,4 @@
-export const FFXIV_DISTRICTS = [
-  "Goblet",
-  "Mist",
-  "Lavender Beds",
-  "Shirogane",
-  "Empyreum",
-] as const
+export const FFXIV_DISTRICTS = ["Goblet", "Mist", "Lavender Beds", "Shirogane", "Empyreum"] as const
 
 export type FfxivDistrict = (typeof FFXIV_DISTRICTS)[number]
 
@@ -44,13 +38,19 @@ export function formatLifestreamCommand(v: VenueLocationFields): string {
 }
 
 /** Short location string (district + ward + plot/apartment only, no DC/world). */
-export function formatVenueLocationShort(v: Pick<VenueLocationFields, "district" | "ward" | "plot" | "apartment" | "location">): string | null {
+export function formatVenueLocationShort(
+  v: Pick<VenueLocationFields, "district" | "ward" | "plot" | "apartment" | "location">
+): string | null {
   if (v.district || v.ward || v.plot || v.apartment) {
-    return [
-      v.district ?? null,
-      v.ward != null ? `W${v.ward}` : null,
-      v.plot != null ? `P${v.plot}` : v.apartment != null ? `Apt${v.apartment}` : null,
-    ].filter(Boolean).join(" ") || null
+    return (
+      [
+        v.district ?? null,
+        v.ward != null ? `W${v.ward}` : null,
+        v.plot != null ? `P${v.plot}` : v.apartment != null ? `Apt${v.apartment}` : null,
+      ]
+        .filter(Boolean)
+        .join(" ") || null
+    )
   }
   return v.location ?? null
 }

@@ -42,7 +42,7 @@ Bot's own reactions, and reactions from other bots, are ignored (`reaction.messa
 ### Spend catalog (v1: exactly two perks)
 
 - **XP Boost** (slug `xp_boost`) **— 500 Gil.** Doubles XP earned for 1 hour. Adds `xpBoostExpiresAt DateTime?` to `DiscordMember`. `messageXp()`'s caller in `messageCreate.ts` checks `now < xpBoostExpiresAt` and doubles `earned` if so. **Stacking rule: buying while one is active extends the timer** — new expiry is `max(now, currentExpiry) + 1h`, never resets or rejects.
-- **Cooldown Skip** (slug `cooldown_skip`) **— 100 Gil.** Bypasses the existing 60-second chat-XP cooldown once. Adds `cooldownSkips Int @default(0)` to `DiscordMember`. The cooldown is currently tracked in an **in-memory `Map`** in `messageCreate.ts` (not the DB) — when a message would be blocked by that in-memory check, the handler queries `cooldownSkips` for that user; if `> 0`, decrement it, let the message earn XP anyway, and still update the in-memory cooldown timestamp to now (so the *next* message still respects the normal 60s window — a skip consumes exactly one block, not the whole cooldown system). If `cooldownSkips` is `0`, the message is blocked as today, no DB write.
+- **Cooldown Skip** (slug `cooldown_skip`) **— 100 Gil.** Bypasses the existing 60-second chat-XP cooldown once. Adds `cooldownSkips Int @default(0)` to `DiscordMember`. The cooldown is currently tracked in an **in-memory `Map`** in `messageCreate.ts` (not the DB) — when a message would be blocked by that in-memory check, the handler queries `cooldownSkips` for that user; if `> 0`, decrement it, let the message earn XP anyway, and still update the in-memory cooldown timestamp to now (so the _next_ message still respects the normal 60s window — a skip consumes exactly one block, not the whole cooldown system). If `cooldownSkips` is `0`, the message is blocked as today, no DB write.
 - Skips stack freely, no cap on banked count.
 
 ### New command
@@ -52,6 +52,7 @@ Bot's own reactions, and reactions from other bots, are ignored (`reaction.messa
 ## Data model changes
 
 On `apps/eorzea-bot/prisma/schema.prisma`:
+
 - New model `GilReactionReward` (see above)
 - `DiscordMember` gains `xpBoostExpiresAt DateTime?` and `cooldownSkips Int @default(0)`
 - `DiscordMember.gil` (already exists, currently unused) becomes the live balance
@@ -72,7 +73,8 @@ One-time backfill, run manually after deploy (not an automated migration): every
 ## Testing / rollout
 
 No automated test suite in this codebase — verify manually:
-- React to a live Tonight post, confirm `+25 Gil` on `/myprofile`; react/unreact/react again on the *same* message, confirm no second payout.
+
+- React to a live Tonight post, confirm `+25 Gil` on `/myprofile`; react/unreact/react again on the _same_ message, confirm no second payout.
 - Submit `/suggest`, confirm `+50 Gil`.
 - Run `/clockin` against a real or test shift, confirm `+100 Gil` on the real success path; confirm the `alreadyActive` no-op path awards nothing.
 - `/gil buy xp_boost`, confirm `xpBoostExpiresAt` is set and the next chat message awards double XP; buy again before it expires, confirm the timer extends rather than resets.

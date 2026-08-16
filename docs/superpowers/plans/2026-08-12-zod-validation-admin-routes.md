@@ -17,15 +17,27 @@
 **Enum values, confirmed from `apps/web/prisma/schema.prisma:830-844`:**
 
 ```typescript
-enum FeedbackCategory { BUG_REPORT, FEATURE_REQUEST, IMPROVEMENT, GENERAL }
-enum FeedbackStatus { NEW, UNDER_REVIEW, PLANNED, IN_PROGRESS, COMPLETED, WONT_FIX }
+enum FeedbackCategory {
+  BUG_REPORT,
+  FEATURE_REQUEST,
+  IMPROVEMENT,
+  GENERAL,
+}
+enum FeedbackStatus {
+  NEW,
+  UNDER_REVIEW,
+  PLANNED,
+  IN_PROGRESS,
+  COMPLETED,
+  WONT_FIX,
+}
 ```
 
 These match `app/api/admin/feedback/[feedbackId]/route.ts`'s inline status array exactly — use the Prisma schema as the source of truth going forward, not the route's copy (which this plan removes in Task 2).
 
 **`app/api/admin/announcements/[id]/route.ts` needs no zod schema.** Its only handler is `DELETE`, and the only input is `id`, which comes from the Next.js route segment (`context.params`) — already a guaranteed string by the time the handler runs, not a request body. There is nothing here to validate with zod. This plan does not touch that file. (Confirmed by reading it in full during planning — it has no `request.json()` call at all.)
 
-**No route-handler-level test precedent exists in this codebase.** `app/api/**/*.test.ts` — zero files. The one existing API-adjacent test, `lib/api/transactions.test.ts`, tests a plain exported function (`createTransaction`) with Prisma mocked at the module level, not a `NextRequest` passed through an exported `GET`/`POST` handler wrapped in `withRateLimit(...)`. Building a full request/response test harness for Next.js route handlers is a bigger undertaking than this 4-route increment warrants. This plan's tests (Task 1) cover the *schemas* directly — real, meaningful unit tests, just not full-request integration tests — and Task 4 covers the routes themselves with manual `curl` verification, matching how this codebase has verified other API-route work.
+**No route-handler-level test precedent exists in this codebase.** `app/api/**/*.test.ts` — zero files. The one existing API-adjacent test, `lib/api/transactions.test.ts`, tests a plain exported function (`createTransaction`) with Prisma mocked at the module level, not a `NextRequest` passed through an exported `GET`/`POST` handler wrapped in `withRateLimit(...)`. Building a full request/response test harness for Next.js route handlers is a bigger undertaking than this 4-route increment warrants. This plan's tests (Task 1) cover the _schemas_ directly — real, meaningful unit tests, just not full-request integration tests — and Task 4 covers the routes themselves with manual `curl` verification, matching how this codebase has verified other API-route work.
 
 - [ ] **Step 1: No action needed** — confirmed above.
 
@@ -34,6 +46,7 @@ These match `app/api/admin/feedback/[feedbackId]/route.ts`'s inline status array
 ## Task 1: Add feedback field schemas to the shared registry, with tests
 
 **Files:**
+
 - Modify: `apps/web/lib/validation.ts`
 - Test: `apps/web/lib/validation.test.ts` (new file — none exists yet for this module)
 
@@ -129,6 +142,7 @@ git commit -m "feat(web): add feedback status/category/adminNotes to shared vali
 ## Task 2: Migrate `app/api/admin/feedback/[feedbackId]/route.ts` (PATCH)
 
 **Files:**
+
 - Modify: `apps/web/app/api/admin/feedback/[feedbackId]/route.ts`
 
 - [ ] **Step 1: Replace the manual status check with a zod schema**
@@ -136,26 +150,23 @@ git commit -m "feat(web): add feedback status/category/adminNotes to shared vali
 Current (`apps/web/app/api/admin/feedback/[feedbackId]/route.ts`, inside the `PATCH` handler):
 
 ```typescript
-      const { feedbackId } = await params
-      const body = await request.json()
-      const { status, adminNotes } = body
+const { feedbackId } = await params
+const body = await request.json()
+const { status, adminNotes } = body
 
-      // Validate status if provided
-      const validStatuses = ["NEW", "UNDER_REVIEW", "PLANNED", "IN_PROGRESS", "COMPLETED", "WONT_FIX"]
-      if (status && !validStatuses.includes(status)) {
-        return NextResponse.json(
-          { error: `Invalid status. Must be one of: ${validStatuses.join(", ")}` },
-          { status: 400 }
-        )
-      }
+// Validate status if provided
+const validStatuses = ["NEW", "UNDER_REVIEW", "PLANNED", "IN_PROGRESS", "COMPLETED", "WONT_FIX"]
+if (status && !validStatuses.includes(status)) {
+  return NextResponse.json({ error: `Invalid status. Must be one of: ${validStatuses.join(", ")}` }, { status: 400 })
+}
 ```
 
 Replace with:
 
 ```typescript
-      const { feedbackId } = await params
-      const body = await request.json()
-      const { status, adminNotes } = updateSchema.parse(body)
+const { feedbackId } = await params
+const body = await request.json()
+const { status, adminNotes } = updateSchema.parse(body)
 ```
 
 Add this schema definition near the top of the file, after the imports:
@@ -223,6 +234,7 @@ git commit -m "refactor(web): validate admin feedback PATCH body with shared zod
 ## Task 3: Migrate `app/api/admin/feedback/route.ts` (GET query params)
 
 **Files:**
+
 - Modify: `apps/web/app/api/admin/feedback/route.ts`
 
 - [ ] **Step 1: Replace the unchecked `as any` casts with validated query params**
@@ -299,6 +311,7 @@ git commit -m "fix(web): validate admin feedback list query params instead of ca
 ## Task 4: Migrate `app/api/admin/announcements/route.ts` onto the shared registry
 
 **Files:**
+
 - Modify: `apps/web/app/api/admin/announcements/route.ts`
 
 This route already validates correctly (local `createSchema`, `.parse()` + `ZodError` catch) — the only change is pulling its `link` field from the shared registry instead of a local one-off, for consistency now that the registry has grown.
@@ -369,6 +382,7 @@ cd apps/web && pnpm dev
 ```
 
 As an admin user:
+
 - `GET /api/admin/feedback?status=NEW` → 200, filtered results.
 - `GET /api/admin/feedback?status=NOT_A_REAL_STATUS` → 400 with a validation-error body (this is the fixed gap — previously this silently returned unfiltered results instead of erroring).
 - `PATCH /api/admin/feedback/<id>` with `{ "status": "COMPLETED" }` → 200, status updates.

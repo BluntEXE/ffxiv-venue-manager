@@ -11,10 +11,7 @@ import { prisma } from "@/lib/prisma"
  * characterName/world/workingUserId snapshot - unlinking doesn't rewrite
  * history, it just stops future visits from classifying as this user.
  */
-export async function DELETE(
-  _request: NextRequest,
-  { params }: { params: Promise<{ id: string }> }
-) {
+export async function DELETE(_request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   const session = await getServerSession(authOptions)
   if (!session?.user) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 })

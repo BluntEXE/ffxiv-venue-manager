@@ -1,6 +1,6 @@
-import { NextRequest, NextResponse } from 'next/server'
-import { pluginAuthGate } from '@/lib/api/plugin-auth'
-import { prisma } from '@/lib/prisma'
+import { NextRequest, NextResponse } from "next/server"
+import { pluginAuthGate } from "@/lib/api/plugin-auth"
+import { prisma } from "@/lib/prisma"
 
 /**
  * GET /api/plugin/services?venueId=…
@@ -26,18 +26,18 @@ import { prisma } from '@/lib/prisma'
  */
 export async function GET(request: NextRequest) {
   try {
-    const gate = await pluginAuthGate(request, 'read')
+    const gate = await pluginAuthGate(request, "read")
     if (!gate.ok) return gate.response
     const { auth } = gate
 
     const { searchParams } = new URL(request.url)
-    const venueId = searchParams.get('venueId')
+    const venueId = searchParams.get("venueId")
     if (!venueId || !auth.venues.includes(venueId)) {
-      return NextResponse.json({ error: 'Invalid venue' }, { status: 400 })
+      return NextResponse.json({ error: "Invalid venue" }, { status: 400 })
     }
 
     const membership = await prisma.membership.findFirst({
-      where: { userId: auth.userId, venueId, status: 'active' },
+      where: { userId: auth.userId, venueId, status: "active" },
       include: {
         customRole: {
           include: { services: true },
@@ -55,7 +55,7 @@ export async function GET(request: NextRequest) {
 
     const uniqueRoles = Array.from(new Map(allRoles.map((r) => [r.id, r])).values())
 
-    const serviceMap = new Map<string, (typeof uniqueRoles)[number]['services'][number]>()
+    const serviceMap = new Map<string, (typeof uniqueRoles)[number]["services"][number]>()
     for (const role of uniqueRoles) {
       for (const svc of role.services) {
         serviceMap.set(svc.id, svc)
@@ -76,10 +76,10 @@ export async function GET(request: NextRequest) {
 
     return NextResponse.json({
       services,
-      userRole: uniqueRoles.length > 0 ? uniqueRoles.map((r) => r.name).join(' / ') : null,
+      userRole: uniqueRoles.length > 0 ? uniqueRoles.map((r) => r.name).join(" / ") : null,
     })
   } catch (error) {
-    console.error('[Plugin API] Error fetching services:', error)
-    return NextResponse.json({ error: 'Internal server error' }, { status: 500 })
+    console.error("[Plugin API] Error fetching services:", error)
+    return NextResponse.json({ error: "Internal server error" }, { status: 500 })
   }
 }

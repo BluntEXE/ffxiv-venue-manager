@@ -28,10 +28,7 @@ export const GET = withRateLimit<{ params: Promise<{ venueId: string }> }>(
       // Look up venue by slug or ID
       let venue = await prisma.venue.findFirst({
         where: {
-          OR: [
-            { id: venueId },
-            { slug: venueId }
-          ]
+          OR: [{ id: venueId }, { slug: venueId }],
         },
       })
 
@@ -44,15 +41,12 @@ export const GET = withRateLimit<{ params: Promise<{ venueId: string }> }>(
         where: {
           userId: session.user.id,
           venueId: venue.id,
-        status: "active",
+          status: "active",
         },
       })
 
       if (!membership) {
-        return NextResponse.json(
-          { error: "You don't have access to this venue" },
-          { status: 403 }
-        )
+        return NextResponse.json({ error: "You don't have access to this venue" }, { status: 403 })
       }
 
       const now = new Date()
@@ -62,10 +56,18 @@ export const GET = withRateLimit<{ params: Promise<{ venueId: string }> }>(
       const { searchParams } = new URL(request.url)
       const period = searchParams.get("period") ?? "30d"
       const periodStart = period === "90d" ? subDays(now, 90) : period === "all" ? undefined : subDays(now, 30)
-      const eventLimit  = period === "all" ? 100 : period === "90d" ? 40 : 20
+      const eventLimit = period === "all" ? 100 : period === "90d" ? 40 : 20
 
       // Fetch all data in parallel for better performance
-      const [allEvents, allTransactions, allPatronLogs, allPayrollEntries, followerCount, followersByMonth, patronVisits] = await Promise.all([
+      const [
+        allEvents,
+        allTransactions,
+        allPatronLogs,
+        allPayrollEntries,
+        followerCount,
+        followersByMonth,
+        patronVisits,
+      ] = await Promise.all([
         // Get all events with basic info
         prisma.event.findMany({
           where: {
@@ -117,7 +119,7 @@ export const GET = withRateLimit<{ params: Promise<{ venueId: string }> }>(
         prisma.payrollEntry.findMany({
           where: {
             venueId: venue.id,
-            isPaid: true // Only paid payroll counts as actual expense
+            isPaid: true, // Only paid payroll counts as actual expense
           },
           select: {
             id: true,
@@ -157,9 +159,7 @@ export const GET = withRateLimit<{ params: Promise<{ venueId: string }> }>(
       ])
 
       // Process events for different views
-      const completedOrActiveEvents = allEvents.filter(
-        (e) => e.status === "COMPLETED" || e.status === "ACTIVE"
-      )
+      const completedOrActiveEvents = allEvents.filter((e) => e.status === "COMPLETED" || e.status === "ACTIVE")
 
       // Last 10 events for revenue chart
       const last10Events = completedOrActiveEvents.slice(0, 10).reverse()
@@ -169,13 +169,8 @@ export const GET = withRateLimit<{ params: Promise<{ venueId: string }> }>(
 
       // Calculate revenue and payroll per event
       const revenueByEvent = last10Events.map((event) => {
-        const eventTransactions = allTransactions.filter(
-          (t) => t.eventId === event.id
-        )
-        const revenue = eventTransactions.reduce(
-          (sum, t) => sum + Number(t.amount),
-          0
-        )
+        const eventTransactions = allTransactions.filter((t) => t.eventId === event.id)
+        const revenue = eventTransactions.reduce((sum, t) => sum + Number(t.amount), 0)
 
         // Calculate payroll for this event.
         // TODO(payroll-alloc): payroll entries are period-scoped, not event-scoped.
@@ -200,10 +195,7 @@ export const GET = withRateLimit<{ params: Promise<{ venueId: string }> }>(
           return eventDayStart >= periodStartDay && eventDayStart <= periodEndDay
         })
 
-        const payroll = eventPayroll.reduce(
-          (sum, entry) => sum + Number(entry.totalAmount),
-          0
-        )
+        const payroll = eventPayroll.reduce((sum, entry) => sum + Number(entry.totalAmount), 0)
 
         const netProfit = revenue - payroll
 
@@ -245,7 +237,7 @@ export const GET = withRateLimit<{ params: Promise<{ venueId: string }> }>(
         let currentCount = 0
         let maxCount = 0
         eventLogs.forEach((log) => {
-          currentCount += (log.countChange ?? 0)
+          currentCount += log.countChange ?? 0
           maxCount = Math.max(maxCount, currentCount)
         })
 
@@ -274,9 +266,7 @@ export const GET = withRateLimit<{ params: Promise<{ venueId: string }> }>(
 
         // Determine actual end time (event end or last log, whichever is later)
         const lastLog = eventLogs[eventLogs.length - 1]
-        const actualEnd = lastLog && new Date(lastLog.timestamp) > eventEnd
-          ? new Date(lastLog.timestamp)
-          : eventEnd
+        const actualEnd = lastLog && new Date(lastLog.timestamp) > eventEnd ? new Date(lastLog.timestamp) : eventEnd
 
         // Process in 15-minute intervals
         while (currentTime <= actualEnd) {
@@ -284,7 +274,7 @@ export const GET = withRateLimit<{ params: Promise<{ venueId: string }> }>(
           while (logIndex < eventLogs.length) {
             const logTime = new Date(eventLogs[logIndex].timestamp)
             if (logTime > currentTime) break
-            currentCount += (eventLogs[logIndex].countChange ?? 0)
+            currentCount += eventLogs[logIndex].countChange ?? 0
             logIndex++
           }
 
@@ -315,9 +305,7 @@ export const GET = withRateLimit<{ params: Promise<{ venueId: string }> }>(
         .sort((a, b) => a.time.localeCompare(b.time))
 
       // Calculate event statistics
-      const recentEvents = allEvents.filter(
-        (e) => new Date(e.startTime) >= past30Days
-      )
+      const recentEvents = allEvents.filter((e) => new Date(e.startTime) >= past30Days)
 
       const eventStats = {
         total: allEvents.length,
@@ -327,10 +315,10 @@ export const GET = withRateLimit<{ params: Promise<{ venueId: string }> }>(
       }
 
       // Patron mix — categorise by visit count
-      const mixNew     = patronVisits.filter(p => p._count._all <= 2).length
-      const mixRegular = patronVisits.filter(p => p._count._all >= 3 && p._count._all <= 9).length
-      const mixVip     = patronVisits.filter(p => p._count._all >= 10).length
-      const mixTotal   = patronVisits.length || 1 // avoid /0
+      const mixNew = patronVisits.filter((p) => p._count._all <= 2).length
+      const mixRegular = patronVisits.filter((p) => p._count._all >= 3 && p._count._all <= 9).length
+      const mixVip = patronVisits.filter((p) => p._count._all >= 10).length
+      const mixTotal = patronVisits.length || 1 // avoid /0
 
       // Busiest nights — day-of-week distribution from patron ENTER logs
       const DAY_NAMES = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"]
@@ -353,9 +341,7 @@ export const GET = withRateLimit<{ params: Promise<{ venueId: string }> }>(
       const totalTransactions = allTransactions.length
       const avgSpend = totalTransactions > 0 ? Math.round(totalRevenue / totalTransactions) : 0
       // Repeat rate: patrons with 3+ visits / total unique patrons
-      const repeatRate = mixTotal > 1
-        ? Math.round(((mixRegular + mixVip) / mixTotal) * 100)
-        : 0
+      const repeatRate = mixTotal > 1 ? Math.round(((mixRegular + mixVip) / mixTotal) * 100) : 0
 
       // Calculate financial summary (revenue vs payroll for last 10 events)
       const financialSummary = await getRecentEventsFinancialSummary(venue.id, 10)
@@ -367,9 +353,7 @@ export const GET = withRateLimit<{ params: Promise<{ venueId: string }> }>(
         // Summary stats
         summary: {
           totalRevenue,
-          avgRevenuePerEvent: revenueByEvent.length > 0
-            ? Math.round(totalRevenue / revenueByEvent.length)
-            : 0,
+          avgRevenuePerEvent: revenueByEvent.length > 0 ? Math.round(totalRevenue / revenueByEvent.length) : 0,
           totalPatrons,
           avgSpend,
           repeatRate,
@@ -404,13 +388,13 @@ export const GET = withRateLimit<{ params: Promise<{ venueId: string }> }>(
 
         // Patron mix & engagement
         patronMix: {
-          new:     mixNew,
+          new: mixNew,
           regular: mixRegular,
-          vip:     mixVip,
-          total:   mixTotal,
-          newPct:     Math.round((mixNew     / mixTotal) * 100),
+          vip: mixVip,
+          total: mixTotal,
+          newPct: Math.round((mixNew / mixTotal) * 100),
           regularPct: Math.round((mixRegular / mixTotal) * 100),
-          vipPct:     Math.round((mixVip     / mixTotal) * 100),
+          vipPct: Math.round((mixVip / mixTotal) * 100),
         },
         busiestNights,
 
@@ -419,10 +403,7 @@ export const GET = withRateLimit<{ params: Promise<{ venueId: string }> }>(
       })
     } catch (error) {
       console.error("Error fetching analytics:", error)
-      return NextResponse.json(
-        { error: "Internal server error" },
-        { status: 500 }
-      )
+      return NextResponse.json({ error: "Internal server error" }, { status: 500 })
     }
   },
   { requests: 30, window: "1 m" }

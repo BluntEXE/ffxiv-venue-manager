@@ -1,4 +1,4 @@
-const API = 'https://xivvenuemanager.com/api/shout-crafter/me'
+const API = "https://xivvenuemanager.com/api/shout-crafter/me"
 
 interface XivVMUser {
   id: string
@@ -19,7 +19,7 @@ export interface XivVMSession {
 
 export async function fetchSession(): Promise<XivVMSession> {
   try {
-    const res = await fetch(API, { credentials: 'include' })
+    const res = await fetch(API, { credentials: "include" })
     if (!res.ok) return { user: null, venues: [] }
     return await res.json()
   } catch {

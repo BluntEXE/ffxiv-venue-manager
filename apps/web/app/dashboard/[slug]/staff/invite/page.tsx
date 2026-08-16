@@ -6,29 +6,13 @@ import Link from "next/link"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select"
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card"
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Alert, AlertDescription } from "@/components/ui/alert"
 import { CheckCircle2, Copy, Link as LinkIcon, Share2 } from "lucide-react"
 import { VenueLayoutClient } from "@/components/venue-layout-client"
 
-export default function InviteStaffPage({
-  params,
-}: {
-  params: Promise<{ slug: string }>
-}) {
+export default function InviteStaffPage({ params }: { params: Promise<{ slug: string }> }) {
   const { slug } = use(params)
   const router = useRouter()
   const [name, setName] = useState("")
@@ -43,7 +27,7 @@ export default function InviteStaffPage({
 
   // Check if Web Share API is available
   useEffect(() => {
-    setCanShare(typeof navigator !== 'undefined' && !!navigator.share)
+    setCanShare(typeof navigator !== "undefined" && !!navigator.share)
   }, [])
 
   // Fetch user's role for the venue
@@ -126,7 +110,7 @@ export default function InviteStaffPage({
     if (inviteUrl && navigator.share) {
       try {
         await navigator.share({
-          title: 'Join Our Venue Staff',
+          title: "Join Our Venue Staff",
           text: `You've been invited to join ${name ? name + "'s venue" : "our venue"} staff! Click the link to accept:`,
           url: inviteUrl,
         })
@@ -146,264 +130,237 @@ export default function InviteStaffPage({
 
   if (inviteUrl) {
     return (
-      <VenueLayoutClient slug={slug}><div className="page-inner max-w-2xl">
-        {/* Header */}
-        <div className="mb-8">
-          <h1 className="text-2xl md:text-4xl font-bold">Invite Link Created!</h1>
-          <p className="text-muted-foreground mt-2">
-            Share this link with your new staff member
-          </p>
-        </div>
+      <VenueLayoutClient slug={slug}>
+        <div className="page-inner max-w-2xl">
+          {/* Header */}
+          <div className="mb-8">
+            <h1 className="text-2xl md:text-4xl font-bold">Invite Link Created!</h1>
+            <p className="text-muted-foreground mt-2">Share this link with your new staff member</p>
+          </div>
 
-        {/* Success Card */}
-        <Card className="mb-6 border-green-400/20">
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <CheckCircle2 className="h-5 w-5 text-emerald-400" />
-              Invitation Ready
-            </CardTitle>
-            <CardDescription>
-              {name && `Invite for ${name} has been created. `}
-              This link expires in 7 days.
-            </CardDescription>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            {/* Invite Link Display */}
-            <div className="space-y-2">
-              <Label>Invite Link</Label>
-              <div className="flex gap-2">
-                <Input
-                  value={inviteUrl}
-                  readOnly
-                  className="font-mono text-sm"
-                />
-                <Button
-                  onClick={handleCopyLink}
-                  variant="outline"
-                  className="shrink-0"
-                >
-                  {copied ? (
-                    <>
-                      <CheckCircle2 className="mr-2 h-4 w-4" />
-                      Copied!
-                    </>
-                  ) : (
-                    <>
-                      <Copy className="mr-2 h-4 w-4" />
-                      Copy
-                    </>
-                  )}
-                </Button>
-                {canShare && (
-                  <Button
-                    onClick={handleShare}
-                    variant="outline"
-                    className="shrink-0"
-                  >
-                    <Share2 className="mr-2 h-4 w-4" />
-                    Share
+          {/* Success Card */}
+          <Card className="mb-6 border-green-400/20">
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <CheckCircle2 className="h-5 w-5 text-emerald-400" />
+                Invitation Ready
+              </CardTitle>
+              <CardDescription>
+                {name && `Invite for ${name} has been created. `}
+                This link expires in 7 days.
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              {/* Invite Link Display */}
+              <div className="space-y-2">
+                <Label>Invite Link</Label>
+                <div className="flex gap-2">
+                  <Input value={inviteUrl} readOnly className="font-mono text-sm" />
+                  <Button onClick={handleCopyLink} variant="outline" className="shrink-0">
+                    {copied ? (
+                      <>
+                        <CheckCircle2 className="mr-2 h-4 w-4" />
+                        Copied!
+                      </>
+                    ) : (
+                      <>
+                        <Copy className="mr-2 h-4 w-4" />
+                        Copy
+                      </>
+                    )}
                   </Button>
+                  {canShare && (
+                    <Button onClick={handleShare} variant="outline" className="shrink-0">
+                      <Share2 className="mr-2 h-4 w-4" />
+                      Share
+                    </Button>
+                  )}
+                </div>
+              </div>
+
+              {/* Invite Details */}
+              <div className="rounded-lg bg-muted p-4 space-y-2 text-sm">
+                <p>
+                  <strong>Role:</strong> {role}
+                </p>
+                {name && (
+                  <p>
+                    <strong>Name:</strong> {name}
+                  </p>
+                )}
+                {email && (
+                  <p>
+                    <strong>Email (for reference):</strong> {email}
+                  </p>
                 )}
               </div>
-            </div>
 
-            {/* Invite Details */}
-            <div className="rounded-lg bg-muted p-4 space-y-2 text-sm">
+              {/* Action Buttons */}
+              <div className="flex gap-4 pt-4">
+                <Button onClick={handleCreateAnother} variant="outline">
+                  <LinkIcon className="mr-2 h-4 w-4" />
+                  Create Another Invite
+                </Button>
+                <Button asChild>
+                  <Link href={`/dashboard/${slug}/staff`}>View Staff List</Link>
+                </Button>
+              </div>
+            </CardContent>
+          </Card>
+
+          {/* Instructions Card */}
+          <Card>
+            <CardHeader>
+              <CardTitle>Next Steps</CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-2 text-sm text-muted-foreground">
               <p>
-                <strong>Role:</strong> {role}
+                1. <strong>Share the link</strong> using the Share button to send directly via Discord, or Copy to paste
+                manually
               </p>
-              {name && (
-                <p>
-                  <strong>Name:</strong> {name}
-                </p>
-              )}
-              {email && (
-                <p>
-                  <strong>Email (for reference):</strong> {email}
-                </p>
-              )}
-            </div>
-
-            {/* Action Buttons */}
-            <div className="flex gap-4 pt-4">
-              <Button onClick={handleCreateAnother} variant="outline">
-                <LinkIcon className="mr-2 h-4 w-4" />
-                Create Another Invite
-              </Button>
-              <Button asChild>
-                <Link href={`/dashboard/${slug}/staff`}>
-                  View Staff List
-                </Link>
-              </Button>
-            </div>
-          </CardContent>
-        </Card>
-
-        {/* Instructions Card */}
-        <Card>
-          <CardHeader>
-            <CardTitle>Next Steps</CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-2 text-sm text-muted-foreground">
-            <p>
-              1. <strong>Share the link</strong> using the Share button to send directly via Discord, or Copy to paste manually
-            </p>
-            <p>
-              2. <strong>Send it to your staff member</strong> via Discord DM or other secure method
-            </p>
-            <p>
-              3. <strong>They'll sign in with Discord</strong> and be automatically added to your venue
-            </p>
-            <p>
-              4. <strong>Check pending invites</strong> on the staff page to see who hasn't accepted yet
-            </p>
-          </CardContent>
-        </Card>
-      </div></VenueLayoutClient>
+              <p>
+                2. <strong>Send it to your staff member</strong> via Discord DM or other secure method
+              </p>
+              <p>
+                3. <strong>They'll sign in with Discord</strong> and be automatically added to your venue
+              </p>
+              <p>
+                4. <strong>Check pending invites</strong> on the staff page to see who hasn't accepted yet
+              </p>
+            </CardContent>
+          </Card>
+        </div>
+      </VenueLayoutClient>
     )
   }
 
   return (
-    <VenueLayoutClient slug={slug}><div className="page-inner max-w-2xl">
-      {/* Header */}
-      <div className="mb-8">
-        <h1 className="text-2xl md:text-4xl font-bold">Create Staff Invite</h1>
-        <p className="text-muted-foreground mt-2">
-          Generate a unique invite link for a new team member
-        </p>
-      </div>
+    <VenueLayoutClient slug={slug}>
+      <div className="page-inner max-w-2xl">
+        {/* Header */}
+        <div className="mb-8">
+          <h1 className="text-2xl md:text-4xl font-bold">Create Staff Invite</h1>
+          <p className="text-muted-foreground mt-2">Generate a unique invite link for a new team member</p>
+        </div>
 
-      {/* Error Message */}
-      {error && (
-        <Alert className="mb-6 bg-destructive/10 border-destructive/20">
-          <AlertDescription className="text-destructive">{error}</AlertDescription>
-        </Alert>
-      )}
+        {/* Error Message */}
+        {error && (
+          <Alert className="mb-6 bg-destructive/10 border-destructive/20">
+            <AlertDescription className="text-destructive">{error}</AlertDescription>
+          </Alert>
+        )}
 
-      {/* Invite Form */}
-      <Card>
-        <CardHeader>
-          <CardTitle>Staff Information</CardTitle>
-          <CardDescription>
-            All fields are optional. The invite link will work regardless.
-          </CardDescription>
-        </CardHeader>
-        <CardContent>
-          <form onSubmit={handleSubmit} className="space-y-6">
-            {/* Name Input (Optional) */}
-            <div className="space-y-2">
-              <Label htmlFor="name">
-                Name <span className="text-muted-foreground">(optional)</span>
-              </Label>
-              <Input
-                id="name"
-                type="text"
-                placeholder="John Doe"
-                value={name}
-                onChange={(e) => setName(e.target.value)}
-                disabled={isLoading}
-              />
-              <p className="text-sm text-muted-foreground">
-                For your reference. Helps you identify pending invites.
-              </p>
-            </div>
-
-            {/* Email Input (Optional - Display Only) */}
-            <div className="space-y-2">
-              <Label htmlFor="email">
-                Email <span className="text-muted-foreground">(optional, for reference only)</span>
-              </Label>
-              <Input
-                id="email"
-                type="email"
-                placeholder="staff@example.com"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                disabled={isLoading}
-              />
-              <p className="text-sm text-muted-foreground">
-                Not used for authentication. Only stored for your records.
-              </p>
-            </div>
-
-            {/* Role Selection */}
-            <div className="space-y-2">
-              <Label htmlFor="role">
-                Role <span className="text-red-500">*</span>
-              </Label>
-              <Select
-                value={role}
-                onValueChange={(value: string) => setRole(value as "STAFF" | "MANAGER" | "OWNER")}
-                disabled={isLoading}
-              >
-                <SelectTrigger>
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="STAFF">Staff</SelectItem>
-                  <SelectItem value="MANAGER">Manager</SelectItem>
-                  {currentUserRole === "OWNER" && (
-                    <SelectItem value="OWNER">Owner</SelectItem>
-                  )}
-                </SelectContent>
-              </Select>
-              <div className="text-sm text-muted-foreground space-y-1">
-                <p>
-                  <strong>Staff:</strong> Can view events, log sales, view tasks
-                </p>
-                <p>
-                  <strong>Manager:</strong> Can create/edit events, manage tasks, view reports
-                </p>
-                {currentUserRole === "OWNER" && (
-                  <p>
-                    <strong>Owner:</strong> Full access - can manage all settings, staff, and remove other owners
-                  </p>
-                )}
+        {/* Invite Form */}
+        <Card>
+          <CardHeader>
+            <CardTitle>Staff Information</CardTitle>
+            <CardDescription>All fields are optional. The invite link will work regardless.</CardDescription>
+          </CardHeader>
+          <CardContent>
+            <form onSubmit={handleSubmit} className="space-y-6">
+              {/* Name Input (Optional) */}
+              <div className="space-y-2">
+                <Label htmlFor="name">
+                  Name <span className="text-muted-foreground">(optional)</span>
+                </Label>
+                <Input
+                  id="name"
+                  type="text"
+                  placeholder="John Doe"
+                  value={name}
+                  onChange={(e) => setName(e.target.value)}
+                  disabled={isLoading}
+                />
+                <p className="text-sm text-muted-foreground">For your reference. Helps you identify pending invites.</p>
               </div>
-            </div>
 
-            {/* Form Actions */}
-            <div className="flex flex-wrap gap-2 sm:flex-nowrap sm:gap-4">
-              <Button type="submit" disabled={isLoading} className="w-full sm:w-auto">
-                {isLoading ? "Generating Link..." : "Generate Invite Link"}
-              </Button>
-              <Button
-                type="button"
-                variant="outline"
-                asChild
-                disabled={isLoading}
-                className="w-full sm:w-auto"
-              >
-                <Link href={`/dashboard/${slug}/staff`}>Cancel</Link>
-              </Button>
-            </div>
-          </form>
-        </CardContent>
-      </Card>
+              {/* Email Input (Optional - Display Only) */}
+              <div className="space-y-2">
+                <Label htmlFor="email">
+                  Email <span className="text-muted-foreground">(optional, for reference only)</span>
+                </Label>
+                <Input
+                  id="email"
+                  type="email"
+                  placeholder="staff@example.com"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  disabled={isLoading}
+                />
+                <p className="text-sm text-muted-foreground">
+                  Not used for authentication. Only stored for your records.
+                </p>
+              </div>
 
-      {/* Info Card */}
-      <Card className="mt-6">
-        <CardHeader>
-          <CardTitle>How Discord Invites Work</CardTitle>
-        </CardHeader>
-        <CardContent className="space-y-2 text-sm text-muted-foreground">
-          <p>
-            1. <strong>Generate Link:</strong> Create a unique, secure invite link
-          </p>
-          <p>
-            2. <strong>Share Link:</strong> Send the link to your staff member via Discord DM
-          </p>
-          <p>
-            3. <strong>Discord Sign-In:</strong> They click the link and sign in with Discord
-          </p>
-          <p>
-            4. <strong>Auto-Accept:</strong> They're automatically added to your venue
-          </p>
-          <p className="pt-2 text-xs">
-            Links expire after 7 days and can only be used once.
-          </p>
-        </CardContent>
-      </Card>
-    </div></VenueLayoutClient>
+              {/* Role Selection */}
+              <div className="space-y-2">
+                <Label htmlFor="role">
+                  Role <span className="text-red-500">*</span>
+                </Label>
+                <Select
+                  value={role}
+                  onValueChange={(value: string) => setRole(value as "STAFF" | "MANAGER" | "OWNER")}
+                  disabled={isLoading}
+                >
+                  <SelectTrigger>
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="STAFF">Staff</SelectItem>
+                    <SelectItem value="MANAGER">Manager</SelectItem>
+                    {currentUserRole === "OWNER" && <SelectItem value="OWNER">Owner</SelectItem>}
+                  </SelectContent>
+                </Select>
+                <div className="text-sm text-muted-foreground space-y-1">
+                  <p>
+                    <strong>Staff:</strong> Can view events, log sales, view tasks
+                  </p>
+                  <p>
+                    <strong>Manager:</strong> Can create/edit events, manage tasks, view reports
+                  </p>
+                  {currentUserRole === "OWNER" && (
+                    <p>
+                      <strong>Owner:</strong> Full access - can manage all settings, staff, and remove other owners
+                    </p>
+                  )}
+                </div>
+              </div>
+
+              {/* Form Actions */}
+              <div className="flex flex-wrap gap-2 sm:flex-nowrap sm:gap-4">
+                <Button type="submit" disabled={isLoading} className="w-full sm:w-auto">
+                  {isLoading ? "Generating Link..." : "Generate Invite Link"}
+                </Button>
+                <Button type="button" variant="outline" asChild disabled={isLoading} className="w-full sm:w-auto">
+                  <Link href={`/dashboard/${slug}/staff`}>Cancel</Link>
+                </Button>
+              </div>
+            </form>
+          </CardContent>
+        </Card>
+
+        {/* Info Card */}
+        <Card className="mt-6">
+          <CardHeader>
+            <CardTitle>How Discord Invites Work</CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-2 text-sm text-muted-foreground">
+            <p>
+              1. <strong>Generate Link:</strong> Create a unique, secure invite link
+            </p>
+            <p>
+              2. <strong>Share Link:</strong> Send the link to your staff member via Discord DM
+            </p>
+            <p>
+              3. <strong>Discord Sign-In:</strong> They click the link and sign in with Discord
+            </p>
+            <p>
+              4. <strong>Auto-Accept:</strong> They're automatically added to your venue
+            </p>
+            <p className="pt-2 text-xs">Links expire after 7 days and can only be used once.</p>
+          </CardContent>
+        </Card>
+      </div>
+    </VenueLayoutClient>
   )
 }

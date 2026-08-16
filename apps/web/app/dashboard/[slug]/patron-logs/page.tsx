@@ -83,9 +83,7 @@ export default async function PatronLogsPage({
       where: { venueId: venue.id },
       select: { id: true, characterName: true, world: true, isVip: true, isBanned: true, banReason: true },
     })
-    const patronMap = new Map(
-      patronRecords.map((p) => [`${p.characterName}|${p.world}`, p])
-    )
+    const patronMap = new Map(patronRecords.map((p) => [`${p.characterName}|${p.world}`, p]))
 
     // Total spent: match transaction.customerName to characterName (fuzzy)
     const spendGroups = await prisma.transaction.groupBy({
@@ -95,9 +93,7 @@ export default async function PatronLogsPage({
       orderBy: { customerName: "asc" },
       take: 2000,
     })
-    const spendMap = new Map(
-      spendGroups.map(s => [s.customerName!.toLowerCase().trim(), Number(s._sum.amount ?? 0)])
-    )
+    const spendMap = new Map(spendGroups.map((s) => [s.customerName!.toLowerCase().trim(), Number(s._sum.amount ?? 0)]))
 
     patronProfiles = grouped
       .filter((r) => r.characterName)
@@ -193,7 +189,9 @@ export default async function PatronLogsPage({
         <div className="mb-6 md:mb-8">
           <div className="flex items-center gap-2 mb-1.5">
             <span className="w-[7px] h-[7px] bg-[rgba(0,180,255,0.7)] rotate-45 shadow-[0_0_10px_rgba(0,180,255,0.5)] flex-shrink-0" />
-            <span className="text-[0.72rem] font-semibold uppercase tracking-[0.14em] text-[var(--xiv-blue)]">{venue.name} &middot; {venue.dataCenter} &middot; {venue.world}</span>
+            <span className="text-[0.72rem] font-semibold uppercase tracking-[0.14em] text-[var(--xiv-blue)]">
+              {venue.name} &middot; {venue.dataCenter} &middot; {venue.world}
+            </span>
           </div>
           <h1 className="page-h1">Patron Logs</h1>
         </div>
@@ -223,7 +221,11 @@ export default async function PatronLogsPage({
         </div>
 
         {activeTab === "profiles" ? (
-          <PatronProfilesTable profiles={patronProfiles} venueId={venue.id} canSetVip={["OWNER", "MANAGER"].includes(userRole)} />
+          <PatronProfilesTable
+            profiles={patronProfiles}
+            venueId={venue.id}
+            canSetVip={["OWNER", "MANAGER"].includes(userRole)}
+          />
         ) : (
           <PatronLogsManager
             venueId={venue.id}
@@ -246,9 +248,7 @@ export default async function PatronLogsPage({
               startTime: e.startTime.toISOString(),
               endTime: e.endTime?.toISOString() ?? null,
             }))}
-            staff={staff
-              .filter((m) => m.user)
-              .map((m) => ({ id: m.user!.id, name: m.user!.name ?? "(no name)" }))}
+            staff={staff.filter((m) => m.user).map((m) => ({ id: m.user!.id, name: m.user!.name ?? "(no name)" }))}
             characters={distinctCharacters
               .filter((c) => c.characterName)
               .map((c) => ({ name: c.characterName!, world: c.world ?? "" }))}

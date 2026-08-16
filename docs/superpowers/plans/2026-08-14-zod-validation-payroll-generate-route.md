@@ -8,7 +8,7 @@
 
 **Tech Stack:** TypeScript, Next.js App Router route handlers, Zod.
 
-**Confirmed real client request shape (checked during planning, 2026-08-14):** `app/dashboard/[slug]/payroll/page.tsx:413-422` (the only caller) does `baseRate: genRateOverride ? parseFloat(genRateOverride) : undefined` and `bonusAmount: genBonus ? parseFloat(genBonus) : undefined` — client-side `parseFloat` on malformed input produces `NaN`, and `JSON.stringify` serializes `NaN` to `null` (a JSON quirk — `NaN`/`Infinity` aren't valid JSON, `JSON.stringify` silently converts them to `null`). So the real browser UI is *incidentally* protected from ever sending a non-numeric `baseRate`/`bonusAmount` — the actual exposure is a **non-browser caller** (curl, a future API client, or a malicious direct request) sending a JSON string like `{"baseRate": "not-a-number"}`, which the browser UI can never produce but the API itself has always accepted with no check. This is a real gap in the route's public contract, just a lower-likelihood one than Increment 9's — still worth closing since it's the identical crash bug class (`new Decimal("abc")` throws uncaught) already fixed twice elsewhere in this same payroll feature area.
+**Confirmed real client request shape (checked during planning, 2026-08-14):** `app/dashboard/[slug]/payroll/page.tsx:413-422` (the only caller) does `baseRate: genRateOverride ? parseFloat(genRateOverride) : undefined` and `bonusAmount: genBonus ? parseFloat(genBonus) : undefined` — client-side `parseFloat` on malformed input produces `NaN`, and `JSON.stringify` serializes `NaN` to `null` (a JSON quirk — `NaN`/`Infinity` aren't valid JSON, `JSON.stringify` silently converts them to `null`). So the real browser UI is _incidentally_ protected from ever sending a non-numeric `baseRate`/`bonusAmount` — the actual exposure is a **non-browser caller** (curl, a future API client, or a malicious direct request) sending a JSON string like `{"baseRate": "not-a-number"}`, which the browser UI can never produce but the API itself has always accepted with no check. This is a real gap in the route's public contract, just a lower-likelihood one than Increment 9's — still worth closing since it's the identical crash bug class (`new Decimal("abc")` throws uncaught) already fixed twice elsewhere in this same payroll feature area.
 
 **Real gaps confirmed by reading the route during planning (2026-08-14):**
 
@@ -23,6 +23,7 @@
 ## Task 1: Migrate the 3-field validation gap in `app/api/venues/[venueId]/payroll/generate/route.ts`
 
 **Files:**
+
 - Modify: `apps/web/app/api/venues/[venueId]/payroll/generate/route.ts`
 
 - [ ] **Step 1: Add the zod import and define a local schema for the 3 fields**
@@ -58,14 +59,24 @@ const Decimal = Prisma.Decimal
 type Decimal = InstanceType<typeof Prisma.Decimal>
 
 const payrollGenerateOptionalsSchema = z.object({
-  baseRate: z.union([
-    z.coerce.number().min(0, "Invalid base rate. Must be a positive number").max(999999999, "Invalid base rate. Must be a positive number"),
-    z.null(),
-  ]).optional(),
-  bonusAmount: z.union([
-    z.coerce.number().min(0, "Invalid bonus amount. Must be a positive number").max(999999999, "Invalid bonus amount. Must be a positive number"),
-    z.null(),
-  ]).optional(),
+  baseRate: z
+    .union([
+      z.coerce
+        .number()
+        .min(0, "Invalid base rate. Must be a positive number")
+        .max(999999999, "Invalid base rate. Must be a positive number"),
+      z.null(),
+    ])
+    .optional(),
+  bonusAmount: z
+    .union([
+      z.coerce
+        .number()
+        .min(0, "Invalid bonus amount. Must be a positive number")
+        .max(999999999, "Invalid bonus amount. Must be a positive number"),
+      z.null(),
+    ])
+    .optional(),
   notes: z.string().max(10000, "Notes must be 10,000 characters or less").optional().nullable(),
 })
 ```
@@ -77,75 +88,63 @@ const payrollGenerateOptionalsSchema = z.object({
 Current (`apps/web/app/api/venues/[venueId]/payroll/generate/route.ts:75-95`):
 
 ```typescript
-      const body = await request.json()
-      const { membershipId, periodStart, periodEnd, baseRate, bonusAmount, notes } = body
+const body = await request.json()
+const { membershipId, periodStart, periodEnd, baseRate, bonusAmount, notes } = body
 
-      // Validate required fields
-      if (!membershipId || !periodStart || !periodEnd) {
-        return NextResponse.json(
-          { error: "membershipId, periodStart, and periodEnd are required" },
-          { status: 400 }
-        )
-      }
+// Validate required fields
+if (!membershipId || !periodStart || !periodEnd) {
+  return NextResponse.json({ error: "membershipId, periodStart, and periodEnd are required" }, { status: 400 })
+}
 
-      const startDate = new Date(periodStart)
-      const endDate = new Date(periodEnd)
-      endDate.setUTCHours(23, 59, 59, 999)
+const startDate = new Date(periodStart)
+const endDate = new Date(periodEnd)
+endDate.setUTCHours(23, 59, 59, 999)
 
-      if (isNaN(startDate.getTime()) || isNaN(endDate.getTime())) {
-        return NextResponse.json({ error: "Invalid date format" }, { status: 400 })
-      }
-      if (endDate < startDate) {
-        return NextResponse.json(
-          { error: "Period end must be after period start" },
-          { status: 400 }
-        )
-      }
+if (isNaN(startDate.getTime()) || isNaN(endDate.getTime())) {
+  return NextResponse.json({ error: "Invalid date format" }, { status: 400 })
+}
+if (endDate < startDate) {
+  return NextResponse.json({ error: "Period end must be after period start" }, { status: 400 })
+}
 ```
 
 New (only the destructure line changes — the required-field check and all date validation below it stay byte-for-byte identical):
 
 ```typescript
-      const body = await request.json()
-      const { membershipId, periodStart, periodEnd } = body
+const body = await request.json()
+const { membershipId, periodStart, periodEnd } = body
 
-      let baseRate: number | null | undefined, bonusAmount: number | null | undefined, notes: string | null | undefined
-      try {
-        const parsedOptionals = payrollGenerateOptionalsSchema.parse(body)
-        baseRate = parsedOptionals.baseRate
-        bonusAmount = parsedOptionals.bonusAmount
-        notes = parsedOptionals.notes
-      } catch (error) {
-        if (error instanceof z.ZodError) {
-          return NextResponse.json({ error: "Validation error", details: error.issues }, { status: 400 })
-        }
-        throw error
-      }
+let baseRate: number | null | undefined, bonusAmount: number | null | undefined, notes: string | null | undefined
+try {
+  const parsedOptionals = payrollGenerateOptionalsSchema.parse(body)
+  baseRate = parsedOptionals.baseRate
+  bonusAmount = parsedOptionals.bonusAmount
+  notes = parsedOptionals.notes
+} catch (error) {
+  if (error instanceof z.ZodError) {
+    return NextResponse.json({ error: "Validation error", details: error.issues }, { status: 400 })
+  }
+  throw error
+}
 
-      // Validate required fields
-      if (!membershipId || !periodStart || !periodEnd) {
-        return NextResponse.json(
-          { error: "membershipId, periodStart, and periodEnd are required" },
-          { status: 400 }
-        )
-      }
+// Validate required fields
+if (!membershipId || !periodStart || !periodEnd) {
+  return NextResponse.json({ error: "membershipId, periodStart, and periodEnd are required" }, { status: 400 })
+}
 
-      const startDate = new Date(periodStart)
-      const endDate = new Date(periodEnd)
-      endDate.setUTCHours(23, 59, 59, 999)
+const startDate = new Date(periodStart)
+const endDate = new Date(periodEnd)
+endDate.setUTCHours(23, 59, 59, 999)
 
-      if (isNaN(startDate.getTime()) || isNaN(endDate.getTime())) {
-        return NextResponse.json({ error: "Invalid date format" }, { status: 400 })
-      }
-      if (endDate < startDate) {
-        return NextResponse.json(
-          { error: "Period end must be after period start" },
-          { status: 400 }
-        )
-      }
+if (isNaN(startDate.getTime()) || isNaN(endDate.getTime())) {
+  return NextResponse.json({ error: "Invalid date format" }, { status: 400 })
+}
+if (endDate < startDate) {
+  return NextResponse.json({ error: "Period end must be after period start" }, { status: 400 })
+}
 ```
 
-The new validation block runs BEFORE the existing `membershipId`/`periodStart`/`periodEnd` required-field check — this is a deliberate, low-risk ordering choice (validate the optional-field *shapes* first, then check the separate required-field *presence*), not a functional requirement; either order is fine since the two checks are independent of each other's fields. Everything else in the function (the `new Decimal(baseRate)` usage at the override-rate branch, the `bonusAmount ? new Decimal(bonusAmount) : null` line, the `notes: notes || null` line, the shift-fetching/aggregation logic, the `prisma.payrollEntry.create` call, the response) is completely unchanged — it already correctly references `baseRate`/`bonusAmount`/`notes` as local variables, which now come from the validated `parsedOptionals` object instead of raw destructuring.
+The new validation block runs BEFORE the existing `membershipId`/`periodStart`/`periodEnd` required-field check — this is a deliberate, low-risk ordering choice (validate the optional-field _shapes_ first, then check the separate required-field _presence_), not a functional requirement; either order is fine since the two checks are independent of each other's fields. Everything else in the function (the `new Decimal(baseRate)` usage at the override-rate branch, the `bonusAmount ? new Decimal(bonusAmount) : null` line, the `notes: notes || null` line, the shift-fetching/aggregation logic, the `prisma.payrollEntry.create` call, the response) is completely unchanged — it already correctly references `baseRate`/`bonusAmount`/`notes` as local variables, which now come from the validated `parsedOptionals` object instead of raw destructuring.
 
 - [ ] **Step 3: Typecheck**
 

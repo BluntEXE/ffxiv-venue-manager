@@ -27,7 +27,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     { url: `${BASE}/guide/events`, lastModified: new Date(), changeFrequency: "monthly", priority: 0.8 },
     { url: `${BASE}/guide/staff-management`, lastModified: new Date(), changeFrequency: "monthly", priority: 0.8 },
     { url: `${BASE}/guide/promoting`, lastModified: new Date(), changeFrequency: "monthly", priority: 0.8 },
-    ...DATA_CENTRES.map(dc => ({
+    ...DATA_CENTRES.map((dc) => ({
       url: `${BASE}/discover/${dc.slug}`,
       lastModified: new Date(),
       changeFrequency: "daily" as const,

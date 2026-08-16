@@ -41,9 +41,18 @@ describe("localDayOf", () => {
   it("returns the local weekday an entry's start time falls on", () => {
     process.env.TZ = "Europe/London"
     const entry: ScheduleEntry = {
-      id: "1", venueId: "v1", day: 6, startHour: 23, startMin: 30,
-      endHour: null, endMin: null, crossesMidnight: false,
-      interval: "WEEKLY", weekOfMonth: null, commencing: null, label: null,
+      id: "1",
+      venueId: "v1",
+      day: 6,
+      startHour: 23,
+      startMin: 30,
+      endHour: null,
+      endMin: null,
+      crossesMidnight: false,
+      interval: "WEEKLY",
+      weekOfMonth: null,
+      commencing: null,
+      label: null,
     }
     expect(localDayOf(entry)).toBe(0)
   })
@@ -53,9 +62,18 @@ describe("formatLocalEntryTime", () => {
   it("formats a same-day entry with no ST suffix", () => {
     process.env.TZ = "Etc/UTC"
     const entry: ScheduleEntry = {
-      id: "1", venueId: "v1", day: 2, startHour: 20, startMin: 0,
-      endHour: 22, endMin: 30, crossesMidnight: false,
-      interval: "WEEKLY", weekOfMonth: null, commencing: null, label: null,
+      id: "1",
+      venueId: "v1",
+      day: 2,
+      startHour: 20,
+      startMin: 0,
+      endHour: 22,
+      endMin: 30,
+      crossesMidnight: false,
+      interval: "WEEKLY",
+      weekOfMonth: null,
+      commencing: null,
+      label: null,
     }
     expect(formatLocalEntryTime(entry)).toBe("8 PM – 10:30 PM")
   })
@@ -65,9 +83,18 @@ describe("formatLocalEntryTime", () => {
     // to Sunday 00:00 -> Sunday 02:00 local, so the end stays same-day.
     process.env.TZ = "Europe/London"
     const entry: ScheduleEntry = {
-      id: "1", venueId: "v1", day: 6, startHour: 23, startMin: 0,
-      endHour: 1, endMin: 0, crossesMidnight: true,
-      interval: "WEEKLY", weekOfMonth: null, commencing: null, label: null,
+      id: "1",
+      venueId: "v1",
+      day: 6,
+      startHour: 23,
+      startMin: 0,
+      endHour: 1,
+      endMin: 0,
+      crossesMidnight: true,
+      interval: "WEEKLY",
+      weekOfMonth: null,
+      commencing: null,
+      label: null,
     }
     expect(formatLocalEntryTime(entry)).toBe("12 AM – 2 AM")
   })

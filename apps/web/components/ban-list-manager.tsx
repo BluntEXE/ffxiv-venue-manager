@@ -13,13 +13,7 @@ export type BannedPatron = {
   bannedBy: { id: string; name: string | null } | null
 }
 
-export function BanListManager({
-  venueId,
-  patrons,
-}: {
-  venueId: string
-  patrons: BannedPatron[]
-}) {
+export function BanListManager({ venueId, patrons }: { venueId: string; patrons: BannedPatron[] }) {
   const [localPatrons, setLocalPatrons] = useState(patrons)
   const [pendingIds, setPendingIds] = useState<Set<string>>(new Set())
 
@@ -72,7 +66,10 @@ export function BanListManager({
                 onClick={() => unban(p)}
                 disabled={pendingIds.has(p.id)}
                 className="tag neutral"
-                style={{ cursor: pendingIds.has(p.id) ? "default" : "pointer", opacity: pendingIds.has(p.id) ? 0.6 : 1 }}
+                style={{
+                  cursor: pendingIds.has(p.id) ? "default" : "pointer",
+                  opacity: pendingIds.has(p.id) ? 0.6 : 1,
+                }}
               >
                 Unban
               </button>

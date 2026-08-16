@@ -1,6 +1,6 @@
-import { NextRequest, NextResponse } from 'next/server'
-import { pluginAuthGate } from '@/lib/api/plugin-auth'
-import { prisma } from '@/lib/prisma'
+import { NextRequest, NextResponse } from "next/server"
+import { pluginAuthGate } from "@/lib/api/plugin-auth"
+import { prisma } from "@/lib/prisma"
 
 /**
  * GET /api/plugin/roles?venueId=…
@@ -25,18 +25,18 @@ import { prisma } from '@/lib/prisma'
  */
 export async function GET(request: NextRequest) {
   try {
-    const gate = await pluginAuthGate(request, 'read')
+    const gate = await pluginAuthGate(request, "read")
     if (!gate.ok) return gate.response
     const { auth } = gate
 
     const { searchParams } = new URL(request.url)
-    const venueId = searchParams.get('venueId')
+    const venueId = searchParams.get("venueId")
     if (!venueId || !auth.venues.includes(venueId)) {
-      return NextResponse.json({ error: 'Invalid venue' }, { status: 400 })
+      return NextResponse.json({ error: "Invalid venue" }, { status: 400 })
     }
 
     const membership = await prisma.membership.findFirst({
-      where: { userId: auth.userId, venueId, status: 'active' },
+      where: { userId: auth.userId, venueId, status: "active" },
       include: { customRole: true },
     })
 
@@ -44,7 +44,7 @@ export async function GET(request: NextRequest) {
     const roles = role ? [{ id: role.id, name: role.name }] : []
     return NextResponse.json({ roles })
   } catch (error) {
-    console.error('[Plugin API] Error fetching roles:', error)
-    return NextResponse.json({ error: 'Internal server error' }, { status: 500 })
+    console.error("[Plugin API] Error fetching roles:", error)
+    return NextResponse.json({ error: "Internal server error" }, { status: 500 })
   }
 }

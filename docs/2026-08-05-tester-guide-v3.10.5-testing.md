@@ -57,12 +57,14 @@ Link a drink (a Service) to a real FFXIV item, track how many you have, and stop
 **To turn it on:** Dashboard → Settings → Bar Inventory Tracking, toggle Enabled.
 
 **To link a drink to an item, two ways:**
+
 - Dashboard → Services → edit a service → search for the item by name, pick it, set a stock count.
 - In-game, plugin's new Inventory tab (only visible once the venue has inventory tracking on) → Link Item on a service → search in-game, pick it, set a stock count.
 
 Both ways write to the same place. Link from either side, doesn't matter which.
 
 **What to expect:**
+
 - The plugin's Sales tab shows "(N left)" next to a stocked drink in the dropdown.
 - Selling one decrements the count, from either the dashboard or the plugin.
 - Hit zero, the next sale gets rejected with an out-of-stock error naming the drink.
@@ -88,6 +90,7 @@ Previously, the plugin only tracked patrons while they were inside your house. S
 ## Reporting back
 
 For anything that breaks, the most useful report includes:
+
 - Which feature, and which of the two "to use it" paths (dashboard or plugin) if it applies.
 - What you expected vs. what happened.
 - If it's plugin-side: your plugin version number (Settings tab or the header) and whether you're on the testing channel.

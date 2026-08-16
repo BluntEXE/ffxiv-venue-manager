@@ -92,11 +92,7 @@ export async function fetchPartakeEvents(teamId: number): Promise<PartakeEvent[]
  * Sync events from Partake for a single venue.
  * Returns summary of created/updated/skipped counts.
  */
-export async function syncVenuePartakeEvents(venue: {
-  id: string
-  ownerId: string
-  partakeTeamId: number
-}) {
+export async function syncVenuePartakeEvents(venue: { id: string; ownerId: string; partakeTeamId: number }) {
   const results = { synced: 0, created: 0, updated: 0, skipped: 0, errors: 0 }
 
   const events = await fetchPartakeEvents(venue.partakeTeamId)

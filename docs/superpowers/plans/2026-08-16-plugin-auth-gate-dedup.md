@@ -5,11 +5,13 @@
 **Goal:** Collapse the identical ~15-20 line auth/rate-limit preamble (IP rate-limit → API-key header check → `validateApiKey` → per-key rate-limit) currently hand-duplicated across 20 `/api/plugin/*` route files into one shared `pluginAuthGate()` helper — findings-report cluster #1, the single largest duplication cluster by file count, flagged HIGH value and security-relevant.
 
 **Architecture:** Add `pluginAuthGate(request, kind)` to `lib/api/plugin-auth.ts` (the module that already owns `validateApiKey`/`generateApiKey`/`revokeApiKey` — the natural home, since this helper is "the" plugin-auth check). It returns a discriminated union: `{ ok: true, auth }` or `{ ok: false, response }`, so each route's own `try/catch`, Zod validation branch, and error-log message text — all of which genuinely differ per route and are NOT part of the duplicated cluster — stay completely untouched. Each route's preamble collapses from ~15-20 lines to 3:
+
 ```ts
 const gate = await pluginAuthGate(request, "read")
 if (!gate.ok) return gate.response
 const { auth } = gate
 ```
+
 This is a pure refactor of the preamble only — every route keeps its own outer `try`, its own `catch` block (with its own log message and any `ZodError` handling), and everything after the preamble (venue-scoping checks, business logic, response shape) untouched.
 
 **Known, deliberate behavior change (confirm before executing):** 18 of the 20 files return a flat `{ error: "Unauthorized" }` for both "missing API key" and "invalid API key" cases. Exactly 2 files — `app/api/plugin/events/active/route.ts` and `app/api/plugin/venues/route.ts` — currently distinguish `"Unauthorized - missing API key"` vs. `"Unauthorized - invalid API key"`. The shared gate standardizes all 20 routes on the majority's plain `"Unauthorized"` (status code 401 unchanged in all cases — only these 2 files' JSON `error` string text changes). Grepped both files' only real consumer (the Dalamud plugin, not part of this repo) — plugin C# code was not available to check in this pass; this is a text-only change behind an unchanged 401 status code, low risk, but flagged explicitly rather than silently folded in.
@@ -32,6 +34,7 @@ This is a pure refactor of the preamble only — every route keeps its own outer
 ### Task 1: Add `pluginAuthGate` to `lib/api/plugin-auth.ts`
 
 **Files:**
+
 - Modify: `apps/web/lib/api/plugin-auth.ts`
 - Test: `apps/web/lib/api/plugin-auth.test.ts`
 
@@ -68,9 +71,7 @@ beforeEach(() => {
 
 describe("pluginAuthGate", () => {
   it("returns 429 without checking the API key when IP-limited", async () => {
-    vi.mocked(enforcePluginIpRateLimit).mockResolvedValueOnce(
-      new Response(null, { status: 429 }) as any
-    )
+    vi.mocked(enforcePluginIpRateLimit).mockResolvedValueOnce(new Response(null, { status: 429 }) as any)
     const result = await pluginAuthGate(makeRequest({ "x-api-key": "vm_x" }), "read")
     expect(result.ok).toBe(false)
     if (!result.ok) expect(result.response.status).toBe(429)
@@ -100,12 +101,13 @@ describe("pluginAuthGate", () => {
 
   it("returns the per-key rate-limit response when over budget", async () => {
     vi.mocked(prisma.apiKey.findFirst).mockResolvedValueOnce({
-      id: "k1", userId: "u1", venueId: null, user: { id: "u1" },
+      id: "k1",
+      userId: "u1",
+      venueId: null,
+      user: { id: "u1" },
     } as any)
     vi.mocked(prisma.membership.findMany).mockResolvedValueOnce([{ venueId: "v1" }] as any)
-    vi.mocked(enforcePluginRateLimit).mockResolvedValueOnce(
-      new Response(null, { status: 429 }) as any
-    )
+    vi.mocked(enforcePluginRateLimit).mockResolvedValueOnce(new Response(null, { status: 429 }) as any)
     const result = await pluginAuthGate(makeRequest({ "x-api-key": "vm_ok" }), "write")
     expect(result.ok).toBe(false)
     if (!result.ok) expect(result.response.status).toBe(429)
@@ -114,7 +116,10 @@ describe("pluginAuthGate", () => {
 
   it("returns ok:true with userId/venues when everything passes", async () => {
     vi.mocked(prisma.apiKey.findFirst).mockResolvedValueOnce({
-      id: "k1", userId: "u1", venueId: null, user: { id: "u1", name: "Test" },
+      id: "k1",
+      userId: "u1",
+      venueId: null,
+      user: { id: "u1", name: "Test" },
     } as any)
     vi.mocked(prisma.membership.findMany).mockResolvedValueOnce([{ venueId: "v1" }, { venueId: "v2" }] as any)
     const result = await pluginAuthGate(makeRequest({ "x-api-key": "vm_ok" }), "read")
@@ -137,18 +142,20 @@ Expected: FAIL — `pluginAuthGate` is not exported yet.
 In `apps/web/lib/api/plugin-auth.ts`, add the import at the top:
 
 ```ts
-import { NextRequest, NextResponse } from 'next/server'
-import { enforcePluginIpRateLimit, enforcePluginRateLimit } from '@/lib/api/plugin-rate-limit'
+import { NextRequest, NextResponse } from "next/server"
+import { enforcePluginIpRateLimit, enforcePluginRateLimit } from "@/lib/api/plugin-rate-limit"
 ```
 
 Then add after `validateApiKey`'s closing brace (before `revokeApiKey`):
 
 ```ts
-export type PluginAuth = { userId: string; venues: string[]; user: NonNullable<Awaited<ReturnType<typeof validateApiKey>>>['user'] }
+export type PluginAuth = {
+  userId: string
+  venues: string[]
+  user: NonNullable<Awaited<ReturnType<typeof validateApiKey>>>["user"]
+}
 
-export type PluginAuthGateResult =
-  | { ok: true; auth: PluginAuth }
-  | { ok: false; response: NextResponse }
+export type PluginAuthGateResult = { ok: true; auth: PluginAuth } | { ok: false; response: NextResponse }
 
 /**
  * Shared preamble for every /api/plugin/* route: per-IP throttle, API-key
@@ -157,21 +164,18 @@ export type PluginAuthGateResult =
  * business-logic try/catch begins, so their existing per-route error
  * messages and Zod-validation branches are untouched by this helper.
  */
-export async function pluginAuthGate(
-  request: NextRequest,
-  kind: 'read' | 'write'
-): Promise<PluginAuthGateResult> {
+export async function pluginAuthGate(request: NextRequest, kind: "read" | "write"): Promise<PluginAuthGateResult> {
   const ipLimited = await enforcePluginIpRateLimit(request)
   if (ipLimited) return { ok: false, response: ipLimited }
 
-  const apiKey = request.headers.get('x-api-key')
+  const apiKey = request.headers.get("x-api-key")
   if (!apiKey) {
-    return { ok: false, response: NextResponse.json({ error: 'Unauthorized' }, { status: 401 }) }
+    return { ok: false, response: NextResponse.json({ error: "Unauthorized" }, { status: 401 }) }
   }
 
   const auth = await validateApiKey(apiKey)
   if (!auth || !auth.userId) {
-    return { ok: false, response: NextResponse.json({ error: 'Unauthorized' }, { status: 401 }) }
+    return { ok: false, response: NextResponse.json({ error: "Unauthorized" }, { status: 401 }) }
   }
 
   const limited = await enforcePluginRateLimit(apiKey, kind)
@@ -203,6 +207,7 @@ git commit -m "Add pluginAuthGate shared preamble to lib/api/plugin-auth.ts"
 ### Task 2: Migrate `venues`, `events/active`, `roles`, `roles/[venueId]`, `services`
 
 **Files:**
+
 - Modify: `apps/web/app/api/plugin/venues/route.ts`
 - Modify: `apps/web/app/api/plugin/events/active/route.ts`
 - Modify: `apps/web/app/api/plugin/roles/route.ts`
@@ -220,7 +225,7 @@ import { enforcePluginRateLimit, enforcePluginIpRateLimit } from '@/lib/api/plug
 
 /**
  * GET /api/plugin/venues
- * 
+ *
  * Returns list of venues the authenticated user has access to.
  * Used by the Dalamud plugin to show available venues.
  */
@@ -230,16 +235,16 @@ export async function GET(request: NextRequest) {
     if (__ipLimited) return __ipLimited
 
     const apiKey = request.headers.get('x-api-key')
-    
+
     if (!apiKey) {
       return NextResponse.json(
         { error: 'Unauthorized - missing API key' },
         { status: 401 }
       )
     }
-    
+
     const auth = await validateApiKey(apiKey)
-    
+
     if (!auth || !auth.userId) {
       return NextResponse.json(
         { error: 'Unauthorized - invalid API key' },
@@ -262,7 +267,7 @@ import { getUserVenues, pluginAuthGate } from '@/lib/api/plugin-auth'
 
 /**
  * GET /api/plugin/venues
- * 
+ *
  * Returns list of venues the authenticated user has access to.
  * Used by the Dalamud plugin to show available venues.
  */
@@ -277,6 +282,7 @@ export async function GET(request: NextRequest) {
 ```
 
 Rules applied, use identically for every file in this task and Tasks 3-5:
+
 - The `validateApiKey` import is dropped from `@/lib/api/plugin-auth` (no longer called directly by the route); `pluginAuthGate` is added to that same import line, alongside whatever else the route already imports from that module (e.g. `getUserVenues` here).
 - The whole `import { enforcePluginRateLimit, enforcePluginIpRateLimit } from '@/lib/api/plugin-rate-limit'` line is deleted — neither function is called directly by the route anymore.
 - The preamble (everything from `const __ipLimited = ...` or equivalent, through the `enforcePluginRateLimit(apiKey, kind)` check, inclusive) collapses to the 3-line `gate`/`if (!gate.ok)`/`const { auth }` shown above.
@@ -350,6 +356,7 @@ git commit -m "Migrate venues/events-active/roles/services plugin routes onto pl
 ### Task 3: Migrate `rooms`, `rooms/status`, `inventory-settings`, `inventory/link-item`, `inventory/restock`
 
 **Files:**
+
 - Modify: `apps/web/app/api/plugin/rooms/route.ts`
 - Modify: `apps/web/app/api/plugin/rooms/status/route.ts`
 - Modify: `apps/web/app/api/plugin/inventory-settings/route.ts`
@@ -365,7 +372,7 @@ All 5 use the plain `"Unauthorized"` message (confirmed via grep during planning
 For each file: swap `validateApiKey` for `pluginAuthGate` in the `@/lib/api/plugin-auth` import (keep any other imports from that module unchanged), delete the `@/lib/api/plugin-rate-limit` import line, collapse the preamble to:
 
 ```ts
-const gate = await pluginAuthGate(request, "read")  // or "write" per the file's existing kind
+const gate = await pluginAuthGate(request, "read") // or "write" per the file's existing kind
 if (!gate.ok) return gate.response
 const { auth } = gate
 ```
@@ -392,6 +399,7 @@ git commit -m "Migrate rooms/inventory plugin routes onto pluginAuthGate"
 ### Task 4: Migrate `patrons/ban`, `patrons/banned`, `patrons/vip`, `patron-visits`, `characters`
 
 **Files:**
+
 - Modify: `apps/web/app/api/plugin/patrons/ban/route.ts`
 - Modify: `apps/web/app/api/plugin/patrons/banned/route.ts`
 - Modify: `apps/web/app/api/plugin/patrons/vip/route.ts`
@@ -426,6 +434,7 @@ git commit -m "Migrate patrons/patron-visits/characters plugin routes onto plugi
 ### Task 5: Migrate `shifts`, `shifts/claim`, `shifts/clock-in`, `shifts/clock-out`, `transactions`
 
 **Files:**
+
 - Modify: `apps/web/app/api/plugin/shifts/route.ts`
 - Modify: `apps/web/app/api/plugin/shifts/claim/route.ts`
 - Modify: `apps/web/app/api/plugin/shifts/clock-in/route.ts`
@@ -474,6 +483,7 @@ Expected: no output — every one of the 20 route files (21 preambles counting `
 - [ ] **Step 3: Live verification against the local dev stack**
 
 Using a real plugin API key generated via the dashboard's `/dashboard/<slug>/settings/api-keys` page (same approach as the prior rate-limit-dedup increment's verification):
+
 - **Happy path:** `curl -s -H "x-api-key: <key>" http://localhost:3000/api/plugin/venues` → 200 with the expected venue list shape.
 - **Missing key:** `curl -s -o /dev/null -w "%{http_code}\n" http://localhost:3000/api/plugin/venues` (no header) → 401, body `{"error":"Unauthorized"}`.
 - **Invalid key:** `curl -s -o /dev/null -w "%{http_code}\n" -H "x-api-key: vm_not_a_real_key" http://localhost:3000/api/plugin/venues` → 401, body `{"error":"Unauthorized"}`.

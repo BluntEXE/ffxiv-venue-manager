@@ -21,17 +21,38 @@ function buildCsp(nonce: string): string {
   ].join("; ")
 }
 
-const PUBLIC_PATHS = ["/privacy", "/", "/auth/signin", "/auth/error", "/auth/signout-shoutcrafter", "/test", "/stats", "/discover", "/sitemap.xml", "/llms.txt"]
-const PUBLIC_PREFIXES = ["/.well-known/", "/guide/", "/invite/", "/venues/", "/following", "/discover/", "/api/invites/", "/api/shout-crafter/", "/api/feedback", "/api/stats", "/api/public/"]
+const PUBLIC_PATHS = [
+  "/privacy",
+  "/",
+  "/auth/signin",
+  "/auth/error",
+  "/auth/signout-shoutcrafter",
+  "/test",
+  "/stats",
+  "/discover",
+  "/sitemap.xml",
+  "/llms.txt",
+]
+const PUBLIC_PREFIXES = [
+  "/.well-known/",
+  "/guide/",
+  "/invite/",
+  "/venues/",
+  "/following",
+  "/discover/",
+  "/api/invites/",
+  "/api/shout-crafter/",
+  "/api/feedback",
+  "/api/stats",
+  "/api/public/",
+]
 
 export async function proxy(req: NextRequest) {
   const nonce = Buffer.from(crypto.randomUUID()).toString("base64")
   const csp = buildCsp(nonce)
 
   const path = req.nextUrl.pathname
-  const isPublic =
-    PUBLIC_PATHS.some(p => path === p) ||
-    PUBLIC_PREFIXES.some(p => path.startsWith(p))
+  const isPublic = PUBLIC_PATHS.some((p) => path === p) || PUBLIC_PREFIXES.some((p) => path.startsWith(p))
 
   if (!isPublic) {
     const token = await getToken({ req, secret: process.env.NEXTAUTH_SECRET })

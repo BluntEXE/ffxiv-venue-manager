@@ -24,7 +24,9 @@ export function NavbarClient({ session, venues }: NavbarClientProps) {
   const { toggle } = useSidebar()
   const pathname = usePathname()
   const [pluginSynced, setPluginSynced] = useState(false)
-  const [notifications, setNotifications] = useState<Array<{ id: string; type: string; title: string; body: string; link?: string; read: boolean; createdAt: string }>>([])
+  const [notifications, setNotifications] = useState<
+    Array<{ id: string; type: string; title: string; body: string; link?: string; read: boolean; createdAt: string }>
+  >([])
   const [unreadCount, setUnreadCount] = useState(0)
   const [notifOpen, setNotifOpen] = useState(false)
 
@@ -42,7 +44,10 @@ export function NavbarClient({ session, venues }: NavbarClientProps) {
 
   // Poll plugin sync status every 30s when on a venue page
   useEffect(() => {
-    if (!isVenuePage || !currentVenue?.id) { setPluginSynced(false); return }
+    if (!isVenuePage || !currentVenue?.id) {
+      setPluginSynced(false)
+      return
+    }
     let cancelled = false
     const check = async () => {
       try {
@@ -50,11 +55,16 @@ export function NavbarClient({ session, venues }: NavbarClientProps) {
         if (!res.ok || cancelled) return
         const { lastUsedAt } = await res.json()
         if (!cancelled) setPluginSynced(!!lastUsedAt && Date.now() - new Date(lastUsedAt).getTime() < PLUGIN_STALE_MS)
-      } catch { /* network error — keep last state */ }
+      } catch {
+        /* network error — keep last state */
+      }
     }
     check()
     const interval = setInterval(check, 30_000)
-    return () => { cancelled = true; clearInterval(interval) }
+    return () => {
+      cancelled = true
+      clearInterval(interval)
+    }
   }, [isVenuePage, currentVenue?.id])
 
   // Fetch notifications on mount + every 60s
@@ -70,24 +80,32 @@ export function NavbarClient({ session, venues }: NavbarClientProps) {
           setNotifications(data.notifications)
           setUnreadCount(data.unreadCount)
         }
-      } catch { /* silent */ }
+      } catch {
+        /* silent */
+      }
     }
     fetchNotifs()
     const interval = setInterval(fetchNotifs, 60_000)
-    return () => { cancelled = true; clearInterval(interval) }
+    return () => {
+      cancelled = true
+      clearInterval(interval)
+    }
   }, [session])
 
   const markAllRead = async () => {
     if (unreadCount === 0) return
     setUnreadCount(0)
-    setNotifications(n => n.map(x => ({ ...x, read: true })))
-    await fetch("/api/notifications", { method: "PATCH", headers: { "Content-Type": "application/json" }, body: JSON.stringify({}) })
+    setNotifications((n) => n.map((x) => ({ ...x, read: true })))
+    await fetch("/api/notifications", {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({}),
+    })
   }
 
   return (
     <nav className="sticky top-0 z-50 w-full xiv-nav xiv-glass relative">
       <div className="h-[60px] flex items-center gap-5 px-6">
-
         {/* Hamburger — left of brand, only visible below 1081px on venue pages */}
         {isVenuePage && (
           <button
@@ -123,7 +141,12 @@ export function NavbarClient({ session, venues }: NavbarClientProps) {
             <>
               {/* Dashboard shortcut — hidden once you're already on a venue page, the sidebar covers it there */}
               {!isVenuePage && venues.length > 0 && (
-                <Button asChild variant="ghost" size="sm" className="text-muted-foreground hover:text-foreground hover:bg-[var(--blue-007)]">
+                <Button
+                  asChild
+                  variant="ghost"
+                  size="sm"
+                  className="text-muted-foreground hover:text-foreground hover:bg-[var(--blue-007)]"
+                >
                   <Link href={venues.length === 1 ? `/dashboard/${venues[0].slug}` : "/dashboard"}>
                     <LayoutDashboard className="h-4 w-4 sm:mr-1" />
                     <span className="hidden sm:inline">Dashboard</span>
@@ -140,20 +163,35 @@ export function NavbarClient({ session, venues }: NavbarClientProps) {
               )}
 
               {/* Bell */}
-              <Popover open={notifOpen} onOpenChange={(o) => { setNotifOpen(o); if (o) markAllRead() }}>
+              <Popover
+                open={notifOpen}
+                onOpenChange={(o) => {
+                  setNotifOpen(o)
+                  if (o) markAllRead()
+                }}
+              >
                 <PopoverTrigger asChild>
-                  <button className="relative p-[7px] rounded-[var(--radius-md)] text-muted-foreground hover:text-foreground hover:bg-[var(--blue-007)] transition-colors" aria-label="Notifications">
+                  <button
+                    className="relative p-[7px] rounded-[var(--radius-md)] text-muted-foreground hover:text-foreground hover:bg-[var(--blue-007)] transition-colors"
+                    aria-label="Notifications"
+                  >
                     <Bell className="h-[19px] w-[19px]" />
                     {unreadCount > 0 && (
                       <span className="absolute top-[5px] right-[5px] min-w-[7px] h-[7px] rounded-full bg-[var(--xiv-blue)] border-2 border-background" />
                     )}
                   </button>
                 </PopoverTrigger>
-                <PopoverContent align="end" className="w-80 p-0 border-[var(--blue-018)] bg-[rgba(7,11,20,0.97)] backdrop-blur-2xl">
+                <PopoverContent
+                  align="end"
+                  className="w-80 p-0 border-[var(--blue-018)] bg-[rgba(7,11,20,0.97)] backdrop-blur-2xl"
+                >
                   <div className="flex items-center justify-between px-4 py-3 border-b border-[var(--blue-008)]">
                     <span className="font-semibold text-sm">Notifications</span>
                     {unreadCount > 0 && (
-                      <button onClick={markAllRead} className="flex items-center gap-1.5 text-xs text-[var(--xiv-blue)] hover:underline">
+                      <button
+                        onClick={markAllRead}
+                        className="flex items-center gap-1.5 text-xs text-[var(--xiv-blue)] hover:underline"
+                      >
                         <CheckCheck className="h-3 w-3" /> Mark all read
                       </button>
                     )}
@@ -163,7 +201,9 @@ export function NavbarClient({ session, venues }: NavbarClientProps) {
                       <div className="flex flex-col items-center justify-center py-10 px-4 text-center">
                         <Bell className="h-8 w-8 text-[var(--fg-faint)] mb-3 opacity-30" />
                         <p className="text-sm text-muted-foreground">No notifications yet</p>
-                        <p className="text-xs text-[var(--fg-faint)] mt-1">Followers, staff joins, and task assignments appear here</p>
+                        <p className="text-xs text-[var(--fg-faint)] mt-1">
+                          Followers, staff joins, and task assignments appear here
+                        </p>
                       </div>
                     ) : (
                       notifications.map((n) => (
@@ -173,7 +213,9 @@ export function NavbarClient({ session, venues }: NavbarClientProps) {
                           onClick={() => setNotifOpen(false)}
                           className={`flex gap-3 px-4 py-3 border-b border-[var(--blue-008)] last:border-b-0 hover:bg-[var(--blue-007)] transition-colors ${n.read ? "opacity-60" : ""}`}
                         >
-                          <span className={`mt-0.5 w-2 h-2 rounded-full flex-shrink-0 ${n.read ? "bg-transparent" : "bg-[var(--xiv-blue)]"}`} />
+                          <span
+                            className={`mt-0.5 w-2 h-2 rounded-full flex-shrink-0 ${n.read ? "bg-transparent" : "bg-[var(--xiv-blue)]"}`}
+                          />
                           <div className="flex-1 min-w-0">
                             <p className="text-sm font-medium leading-tight">{n.title}</p>
                             <p className="text-xs text-muted-foreground mt-0.5 leading-snug">{n.body}</p>
@@ -190,8 +232,18 @@ export function NavbarClient({ session, venues }: NavbarClientProps) {
 
               <FeedbackDialog />
 
-              <Button asChild variant="ghost" size="sm" className="text-[var(--support-pink)] hover:text-pink-300 hover:bg-[rgba(243,139,168,0.08)]">
-                <Link href="https://ko-fi.com/ehnocure" target="_blank" rel="noopener noreferrer" aria-label="Support on Ko-fi">
+              <Button
+                asChild
+                variant="ghost"
+                size="sm"
+                className="text-[var(--support-pink)] hover:text-pink-300 hover:bg-[rgba(243,139,168,0.08)]"
+              >
+                <Link
+                  href="https://ko-fi.com/ehnocure"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  aria-label="Support on Ko-fi"
+                >
                   <Heart className="h-4 w-4 sm:mr-1" />
                   <span className="hidden sm:inline">Support</span>
                 </Link>
@@ -205,16 +257,35 @@ export function NavbarClient({ session, venues }: NavbarClientProps) {
             </>
           ) : (
             <>
-              <Button asChild variant="ghost" size="sm" className="text-pink-400 hover:text-pink-300 hover:bg-pink-500/10">
-                <Link href="https://ko-fi.com/ehnocure" target="_blank" rel="noopener noreferrer" aria-label="Support on Ko-fi">
+              <Button
+                asChild
+                variant="ghost"
+                size="sm"
+                className="text-pink-400 hover:text-pink-300 hover:bg-pink-500/10"
+              >
+                <Link
+                  href="https://ko-fi.com/ehnocure"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  aria-label="Support on Ko-fi"
+                >
                   <Heart className="h-4 w-4 sm:mr-1" />
                   <span className="hidden sm:inline">Support</span>
                 </Link>
               </Button>
-              <Button asChild variant="ghost" size="sm" className="hidden sm:inline-flex text-sm text-foreground/60 hover:text-foreground hover:bg-[rgba(0,180,255,0.06)]">
+              <Button
+                asChild
+                variant="ghost"
+                size="sm"
+                className="hidden sm:inline-flex text-sm text-foreground/60 hover:text-foreground hover:bg-[rgba(0,180,255,0.06)]"
+              >
                 <Link href="/auth/signin">Sign In</Link>
               </Button>
-              <Button asChild size="sm" className="font-cinzel font-semibold tracking-wide ml-1 text-xs xiv-btn-shimmer xiv-cta">
+              <Button
+                asChild
+                size="sm"
+                className="font-cinzel font-semibold tracking-wide ml-1 text-xs xiv-btn-shimmer xiv-cta"
+              >
                 <Link href="/auth/signin">Get Started</Link>
               </Button>
             </>

@@ -24,6 +24,7 @@
 ## Task 1: Migrate the 6-field validation gap in `app/api/venues/[venueId]/payroll/[payrollId]/route.ts`'s PATCH handler
 
 **Files:**
+
 - Modify: `apps/web/app/api/venues/[venueId]/payroll/[payrollId]/route.ts`
 
 - [ ] **Step 1: Add the zod import and define a local schema for the 6 fields**
@@ -55,26 +56,35 @@ const Decimal = Prisma.Decimal
 type Decimal = InstanceType<typeof Prisma.Decimal>
 
 const payrollPatchSchema = z.object({
-  baseRate: z.coerce.number()
+  baseRate: z.coerce
+    .number()
     .min(0, "Invalid base rate. Must be a positive number")
     .max(999999999, "Invalid base rate. Must be a positive number")
     .optional(),
-  hoursWorked: z.union([
-    z.coerce.number()
-      .min(0, "Invalid hours worked. Must be a positive number")
-      .max(9999, "Invalid hours worked. Must be a positive number"),
-    z.null(),
-  ]).optional(),
-  bonusAmount: z.union([
-    z.coerce.number()
-      .min(0, "Invalid bonus amount. Must be a positive number")
-      .max(999999999, "Invalid bonus amount. Must be a positive number"),
-    z.null(),
-  ]).optional(),
-  periodStart: z.string()
+  hoursWorked: z
+    .union([
+      z.coerce
+        .number()
+        .min(0, "Invalid hours worked. Must be a positive number")
+        .max(9999, "Invalid hours worked. Must be a positive number"),
+      z.null(),
+    ])
+    .optional(),
+  bonusAmount: z
+    .union([
+      z.coerce
+        .number()
+        .min(0, "Invalid bonus amount. Must be a positive number")
+        .max(999999999, "Invalid bonus amount. Must be a positive number"),
+      z.null(),
+    ])
+    .optional(),
+  periodStart: z
+    .string()
     .refine((v) => !isNaN(new Date(v).getTime()), "Invalid date format")
     .optional(),
-  periodEnd: z.string()
+  periodEnd: z
+    .string()
     .refine((v) => !isNaN(new Date(v).getTime()), "Invalid date format")
     .optional(),
   notes: z.string().max(10000, "Notes must be 10,000 characters or less").optional().nullable(),
@@ -82,6 +92,7 @@ const payrollPatchSchema = z.object({
 ```
 
 Notes on this schema's design:
+
 - `baseRate` uses `z.coerce.number()` (not plain `z.number()`) because the old code's `parseFloat(baseRate)` (in the sibling POST route) accepted either a JSON number or a numeric string — `z.coerce.number()` preserves that same leniency (it calls `Number(x)` internally, same coercion `parseFloat`/`Number` both perform for well-formed numeric strings). A non-numeric string like `"abc"` still fails cleanly (`Number("abc")` is `NaN`, which zod's `z.number()` — the base type `z.coerce.number()` wraps — rejects).
 - `hoursWorked`/`bonusAmount` are `z.union([<validated number>, z.null()])` rather than a plain nullable number, because the OLD code's own semantics were "any falsy value (including `0`, empty string, or explicit `null`) becomes `null`" (`hoursWorked ? new Decimal(hoursWorked) : null`) — this task does not change that downstream falsy-collapse behavior (see Step 2), it only adds validation for the case where a truthy, malformed value is sent. `z.null()` in the union lets an explicit `null` pass straight through without going through the numeric coercion/bounds check (which would otherwise reject `null` outright, since `Number(null)` is `0`, not `null`, and coercing `null` to `0` would silently change its meaning).
 - `periodStart`/`periodEnd` use a `.refine()` with the exact same check the sibling POST route already does (`isNaN(date.getTime())`) rather than a stricter format like `validators.datetime` (ISO 8601 only) — this preserves identical acceptance behavior to the POST route's proven-working validation rather than guessing at a new, possibly-stricter format with no confirmed real caller to test against.
@@ -92,145 +103,130 @@ Notes on this schema's design:
 Current (`apps/web/app/api/venues/[venueId]/payroll/[payrollId]/route.ts:81-141`):
 
 ```typescript
-      const body = await request.json()
-      const {
-        isPaid,
-        manualEntryName,
-        baseRate,
-        hoursWorked,
-        bonusAmount,
-        periodStart,
-        periodEnd,
-        notes,
-      } = body
+const body = await request.json()
+const { isPaid, manualEntryName, baseRate, hoursWorked, bonusAmount, periodStart, periodEnd, notes } = body
 
-      // Prepare update data
-      const updateData: {
-        isPaid?: boolean
-        paidAt?: Date | null
-        paidBy?: string | null
-        manualEntryName?: string | null
-        baseRate?: Decimal
-        hoursWorked?: Decimal | null
-        bonusAmount?: Decimal | null
-        totalAmount?: Decimal
-        periodStart?: Date
-        periodEnd?: Date
-        notes?: string | null
-      } = {}
+// Prepare update data
+const updateData: {
+  isPaid?: boolean
+  paidAt?: Date | null
+  paidBy?: string | null
+  manualEntryName?: string | null
+  baseRate?: Decimal
+  hoursWorked?: Decimal | null
+  bonusAmount?: Decimal | null
+  totalAmount?: Decimal
+  periodStart?: Date
+  periodEnd?: Date
+  notes?: string | null
+} = {}
 
-      // Update manual entry name if provided (only for manual entries)
-      if (manualEntryName !== undefined && existingEntry.isManualEntry) {
-        if (manualEntryName && manualEntryName.trim().length > 255) {
-          return NextResponse.json(
-            { error: "Name must be 255 characters or less" },
-            { status: 400 }
-          )
-        }
-        updateData.manualEntryName = manualEntryName ? manualEntryName.trim() : null
-      }
+// Update manual entry name if provided (only for manual entries)
+if (manualEntryName !== undefined && existingEntry.isManualEntry) {
+  if (manualEntryName && manualEntryName.trim().length > 255) {
+    return NextResponse.json({ error: "Name must be 255 characters or less" }, { status: 400 })
+  }
+  updateData.manualEntryName = manualEntryName ? manualEntryName.trim() : null
+}
 
-      // Handle marking as paid/unpaid
-      if (typeof isPaid === "boolean") {
-        updateData.isPaid = isPaid
-        if (isPaid) {
-          updateData.paidAt = new Date()
-          updateData.paidBy = session.user.id
-        } else {
-          updateData.paidAt = null
-          updateData.paidBy = null
-        }
-      }
+// Handle marking as paid/unpaid
+if (typeof isPaid === "boolean") {
+  updateData.isPaid = isPaid
+  if (isPaid) {
+    updateData.paidAt = new Date()
+    updateData.paidBy = session.user.id
+  } else {
+    updateData.paidAt = null
+    updateData.paidBy = null
+  }
+}
 
-      // Update other fields if provided
-      if (baseRate !== undefined) updateData.baseRate = new Decimal(baseRate)
-      if (hoursWorked !== undefined) {
-        updateData.hoursWorked = hoursWorked ? new Decimal(hoursWorked) : null
-      }
-      if (bonusAmount !== undefined) {
-        updateData.bonusAmount = bonusAmount ? new Decimal(bonusAmount) : null
-      }
-      if (periodStart) updateData.periodStart = new Date(periodStart)
-      if (periodEnd) updateData.periodEnd = new Date(periodEnd)
-      if (notes !== undefined) updateData.notes = notes
+// Update other fields if provided
+if (baseRate !== undefined) updateData.baseRate = new Decimal(baseRate)
+if (hoursWorked !== undefined) {
+  updateData.hoursWorked = hoursWorked ? new Decimal(hoursWorked) : null
+}
+if (bonusAmount !== undefined) {
+  updateData.bonusAmount = bonusAmount ? new Decimal(bonusAmount) : null
+}
+if (periodStart) updateData.periodStart = new Date(periodStart)
+if (periodEnd) updateData.periodEnd = new Date(periodEnd)
+if (notes !== undefined) updateData.notes = notes
 ```
 
 New (only the destructure at the top changes — everything else, including the entire body of the function shown above, is byte-for-byte identical):
 
 ```typescript
-      const body = await request.json()
-      const { isPaid, manualEntryName } = body
+const body = await request.json()
+const { isPaid, manualEntryName } = body
 
-      let baseRate: number | undefined,
-        hoursWorked: number | null | undefined,
-        bonusAmount: number | null | undefined,
-        periodStart: string | undefined,
-        periodEnd: string | undefined,
-        notes: string | null | undefined
-      try {
-        const parsed = payrollPatchSchema.parse(body)
-        baseRate = parsed.baseRate
-        hoursWorked = parsed.hoursWorked
-        bonusAmount = parsed.bonusAmount
-        periodStart = parsed.periodStart
-        periodEnd = parsed.periodEnd
-        notes = parsed.notes
-      } catch (error) {
-        if (error instanceof z.ZodError) {
-          return NextResponse.json({ error: "Validation error", details: error.issues }, { status: 400 })
-        }
-        throw error
-      }
+let baseRate: number | undefined,
+  hoursWorked: number | null | undefined,
+  bonusAmount: number | null | undefined,
+  periodStart: string | undefined,
+  periodEnd: string | undefined,
+  notes: string | null | undefined
+try {
+  const parsed = payrollPatchSchema.parse(body)
+  baseRate = parsed.baseRate
+  hoursWorked = parsed.hoursWorked
+  bonusAmount = parsed.bonusAmount
+  periodStart = parsed.periodStart
+  periodEnd = parsed.periodEnd
+  notes = parsed.notes
+} catch (error) {
+  if (error instanceof z.ZodError) {
+    return NextResponse.json({ error: "Validation error", details: error.issues }, { status: 400 })
+  }
+  throw error
+}
 
-      // Prepare update data
-      const updateData: {
-        isPaid?: boolean
-        paidAt?: Date | null
-        paidBy?: string | null
-        manualEntryName?: string | null
-        baseRate?: Decimal
-        hoursWorked?: Decimal | null
-        bonusAmount?: Decimal | null
-        totalAmount?: Decimal
-        periodStart?: Date
-        periodEnd?: Date
-        notes?: string | null
-      } = {}
+// Prepare update data
+const updateData: {
+  isPaid?: boolean
+  paidAt?: Date | null
+  paidBy?: string | null
+  manualEntryName?: string | null
+  baseRate?: Decimal
+  hoursWorked?: Decimal | null
+  bonusAmount?: Decimal | null
+  totalAmount?: Decimal
+  periodStart?: Date
+  periodEnd?: Date
+  notes?: string | null
+} = {}
 
-      // Update manual entry name if provided (only for manual entries)
-      if (manualEntryName !== undefined && existingEntry.isManualEntry) {
-        if (manualEntryName && manualEntryName.trim().length > 255) {
-          return NextResponse.json(
-            { error: "Name must be 255 characters or less" },
-            { status: 400 }
-          )
-        }
-        updateData.manualEntryName = manualEntryName ? manualEntryName.trim() : null
-      }
+// Update manual entry name if provided (only for manual entries)
+if (manualEntryName !== undefined && existingEntry.isManualEntry) {
+  if (manualEntryName && manualEntryName.trim().length > 255) {
+    return NextResponse.json({ error: "Name must be 255 characters or less" }, { status: 400 })
+  }
+  updateData.manualEntryName = manualEntryName ? manualEntryName.trim() : null
+}
 
-      // Handle marking as paid/unpaid
-      if (typeof isPaid === "boolean") {
-        updateData.isPaid = isPaid
-        if (isPaid) {
-          updateData.paidAt = new Date()
-          updateData.paidBy = session.user.id
-        } else {
-          updateData.paidAt = null
-          updateData.paidBy = null
-        }
-      }
+// Handle marking as paid/unpaid
+if (typeof isPaid === "boolean") {
+  updateData.isPaid = isPaid
+  if (isPaid) {
+    updateData.paidAt = new Date()
+    updateData.paidBy = session.user.id
+  } else {
+    updateData.paidAt = null
+    updateData.paidBy = null
+  }
+}
 
-      // Update other fields if provided
-      if (baseRate !== undefined) updateData.baseRate = new Decimal(baseRate)
-      if (hoursWorked !== undefined) {
-        updateData.hoursWorked = hoursWorked ? new Decimal(hoursWorked) : null
-      }
-      if (bonusAmount !== undefined) {
-        updateData.bonusAmount = bonusAmount ? new Decimal(bonusAmount) : null
-      }
-      if (periodStart) updateData.periodStart = new Date(periodStart)
-      if (periodEnd) updateData.periodEnd = new Date(periodEnd)
-      if (notes !== undefined) updateData.notes = notes
+// Update other fields if provided
+if (baseRate !== undefined) updateData.baseRate = new Decimal(baseRate)
+if (hoursWorked !== undefined) {
+  updateData.hoursWorked = hoursWorked ? new Decimal(hoursWorked) : null
+}
+if (bonusAmount !== undefined) {
+  updateData.bonusAmount = bonusAmount ? new Decimal(bonusAmount) : null
+}
+if (periodStart) updateData.periodStart = new Date(periodStart)
+if (periodEnd) updateData.periodEnd = new Date(periodEnd)
+if (notes !== undefined) updateData.notes = notes
 ```
 
 Everything from `// Recalculate totalAmount if any payment fields changed` onward (`apps/web/app/api/venues/[venueId]/payroll/[payrollId]/route.ts:143-195`, the `prisma.payrollEntry.update` call and its `include`, the final response) is completely unchanged — it already reads `baseRate`/`hoursWorked`/`bonusAmount` as local variables, which now come from the validated `parsed` object instead of raw destructuring, with identical runtime shape (`number | null | undefined`) to before.

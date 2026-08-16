@@ -28,6 +28,7 @@
 ### Task 1: Schema — add recurrence fields to `Shift`
 
 **Files:**
+
 - Modify: `apps/web/prisma/schema.prisma:783-810` (the `Shift` model)
 
 - [ ] **Step 1: Add the fields**
@@ -119,6 +120,7 @@ git commit -m "feat(shifts): add recurrenceRule and parentShiftId to Shift model
 ### Task 2: Recurrence helper — window-fill occurrence count
 
 **Files:**
+
 - Modify: `apps/web/lib/recurrence.ts`
 
 - [ ] **Step 1: Add `occurrencesToFillWindow`**
@@ -130,9 +132,12 @@ export type RecurrenceRule = "WEEKLY" | "BIWEEKLY" | "MONTHLY"
 
 function nextOccurrence(date: Date, rule: RecurrenceRule): Date {
   switch (rule) {
-    case "WEEKLY":   return addWeeks(date, 1)
-    case "BIWEEKLY": return addWeeks(date, 2)
-    case "MONTHLY":  return addMonths(date, 1)
+    case "WEEKLY":
+      return addWeeks(date, 1)
+    case "BIWEEKLY":
+      return addWeeks(date, 2)
+    case "MONTHLY":
+      return addMonths(date, 1)
   }
 }
 
@@ -174,6 +179,7 @@ export function occurrencesToFillWindow(rule: RecurrenceRule, windowWeeks: numbe
 - [ ] **Step 2: Verify with a throwaway script**
 
 Run:
+
 ```bash
 cd apps/web && npx tsx -e "
 import { occurrencesToFillWindow } from './lib/recurrence'
@@ -184,6 +190,7 @@ console.log(occurrencesToFillWindow('WEEKLY', 0))   // expect 0
 console.log(occurrencesToFillWindow('WEEKLY', -2))  // expect 0
 "
 ```
+
 Expected output: `6`, `3`, `2`, `0`, `0` on separate lines
 
 - [ ] **Step 3: Typecheck**
@@ -204,6 +211,7 @@ git commit -m "feat(shifts): add occurrencesToFillWindow helper to recurrence li
 ### Task 3: Extract shift-reminder queuing into a shared helper
 
 **Files:**
+
 - Create: `apps/web/lib/shift-notifications.ts`
 - Modify: `apps/web/app/api/venues/[venueId]/shifts/route.ts:207-220` (the existing inline reminder block)
 
@@ -229,16 +237,18 @@ export function queueShiftReminder(
   const reminderAt = new Date(scheduledStart.getTime() - 60 * 60 * 1000)
   if (reminderAt <= new Date()) return
 
-  return prisma.pendingNotification.create({
-    data: {
-      userId,
-      type: "SHIFT_REMINDER",
-      title: "Shift starting soon",
-      body: `Your shift at ${venueName} starts in 1 hour.`,
-      data: { venueId, shiftId },
-      scheduledFor: reminderAt,
-    },
-  }).catch(() => {}) // non-blocking, matches existing behavior
+  return prisma.pendingNotification
+    .create({
+      data: {
+        userId,
+        type: "SHIFT_REMINDER",
+        title: "Shift starting soon",
+        body: `Your shift at ${venueName} starts in 1 hour.`,
+        data: { venueId, shiftId },
+        scheduledFor: reminderAt,
+      },
+    })
+    .catch(() => {}) // non-blocking, matches existing behavior
 }
 ```
 
@@ -258,31 +268,33 @@ import { queueShiftReminder } from "@/lib/shift-notifications"
 Replace this existing block:
 
 ```typescript
-    // Queue shift reminder 1 hour before start: only meaningful for assigned shifts
-    if (targetMembership?.userId) {
-      const reminderAt = new Date(scheduledStart.getTime() - 60 * 60 * 1000)
-      if (reminderAt > new Date()) {
-        prisma.pendingNotification.create({
-          data: {
-            userId: targetMembership.userId,
-            type: "SHIFT_REMINDER",
-            title: "Shift starting soon",
-            body: `Your shift at ${venue.name} starts in 1 hour.`,
-            data: { venueId: venue.id, shiftId: shift.id },
-            scheduledFor: reminderAt,
-          },
-        }).catch(() => {}) // non-blocking
-      }
-    }
+// Queue shift reminder 1 hour before start: only meaningful for assigned shifts
+if (targetMembership?.userId) {
+  const reminderAt = new Date(scheduledStart.getTime() - 60 * 60 * 1000)
+  if (reminderAt > new Date()) {
+    prisma.pendingNotification
+      .create({
+        data: {
+          userId: targetMembership.userId,
+          type: "SHIFT_REMINDER",
+          title: "Shift starting soon",
+          body: `Your shift at ${venue.name} starts in 1 hour.`,
+          data: { venueId: venue.id, shiftId: shift.id },
+          scheduledFor: reminderAt,
+        },
+      })
+      .catch(() => {}) // non-blocking
+  }
+}
 ```
 
 with:
 
 ```typescript
-    // Queue shift reminder 1 hour before start: only meaningful for assigned shifts
-    if (targetMembership?.userId) {
-      queueShiftReminder(targetMembership.userId, venue.id, venue.name, shift.id, scheduledStart)
-    }
+// Queue shift reminder 1 hour before start: only meaningful for assigned shifts
+if (targetMembership?.userId) {
+  queueShiftReminder(targetMembership.userId, venue.id, venue.name, shift.id, scheduledStart)
+}
 ```
 
 - [ ] **Step 4: Typecheck**
@@ -302,6 +314,7 @@ curl -s -X POST http://localhost:3000/api/venues/<venueId>/shifts \
   -H "Cookie: next-auth.session-token=<token>" \
   -d '{"membershipId":"<membershipId>","scheduledStart":"2026-08-05T19:00:00.000Z","scheduledEnd":"2026-08-05T23:00:00.000Z"}'
 ```
+
 Expected: `201` with the created shift; then check `pendingNotification` got a `SHIFT_REMINDER` row:
 
 Run: `docker exec postgres psql -U postgres -d venue_manager -c "SELECT type, \"scheduledFor\" FROM \"PendingNotification\" ORDER BY \"createdAt\" DESC LIMIT 1;"`
@@ -320,6 +333,7 @@ git commit -m "refactor(shifts): extract queueShiftReminder into a shared helper
 ### Task 4: Generate recurring child shifts on creation
 
 **Files:**
+
 - Modify: `apps/web/app/api/venues/[venueId]/shifts/route.ts`
 
 - [ ] **Step 1: Extend the request schema**
@@ -356,61 +370,61 @@ Expected: error — `recurrenceRule` is parsed but unused, and the shift `create
 Find this block in the `POST` handler:
 
 ```typescript
-    const scheduledStart = new Date(parsed.data.scheduledStart)
-    const shift = await prisma.shift.create({
-      data: {
-        venueId: venue.id,
-        membershipId: parsed.data.membershipId ?? null,
-        roleId: verifiedRoleId,
-        status: parsed.data.membershipId ? "SCHEDULED" : "OPEN",
-        scheduledStart,
-        scheduledEnd: new Date(parsed.data.scheduledEnd),
-        notes: parsed.data.notes ?? null,
-      },
-    })
+const scheduledStart = new Date(parsed.data.scheduledStart)
+const shift = await prisma.shift.create({
+  data: {
+    venueId: venue.id,
+    membershipId: parsed.data.membershipId ?? null,
+    roleId: verifiedRoleId,
+    status: parsed.data.membershipId ? "SCHEDULED" : "OPEN",
+    scheduledStart,
+    scheduledEnd: new Date(parsed.data.scheduledEnd),
+    notes: parsed.data.notes ?? null,
+  },
+})
 ```
 
 Replace it with:
 
 ```typescript
-    const scheduledStart = new Date(parsed.data.scheduledStart)
-    const scheduledEnd = new Date(parsed.data.scheduledEnd)
-    const recurrenceRule = parsed.data.recurrenceRule
+const scheduledStart = new Date(parsed.data.scheduledStart)
+const scheduledEnd = new Date(parsed.data.scheduledEnd)
+const recurrenceRule = parsed.data.recurrenceRule
 
-    const shift = await prisma.shift.create({
-      data: {
-        venueId: venue.id,
-        membershipId: parsed.data.membershipId ?? null,
-        roleId: verifiedRoleId,
-        status: parsed.data.membershipId ? "SCHEDULED" : "OPEN",
-        scheduledStart,
-        scheduledEnd,
-        notes: parsed.data.notes ?? null,
-        recurrenceRule: recurrenceRule ?? null,
-      },
-    })
+const shift = await prisma.shift.create({
+  data: {
+    venueId: venue.id,
+    membershipId: parsed.data.membershipId ?? null,
+    roleId: verifiedRoleId,
+    status: parsed.data.membershipId ? "SCHEDULED" : "OPEN",
+    scheduledStart,
+    scheduledEnd,
+    notes: parsed.data.notes ?? null,
+    recurrenceRule: recurrenceRule ?? null,
+  },
+})
 
-    let childShifts: { id: string; scheduledStart: Date }[] = []
-    if (recurrenceRule) {
-      const count = occurrencesToFillWindow(recurrenceRule as RecurrenceRule, 6)
-      const occurrences = generateOccurrences(scheduledStart, scheduledEnd, recurrenceRule as RecurrenceRule, count)
-      await prisma.shift.createMany({
-        data: occurrences.map((o) => ({
-          venueId: venue.id,
-          membershipId: parsed.data.membershipId ?? null,
-          roleId: verifiedRoleId,
-          status: parsed.data.membershipId ? "SCHEDULED" : "OPEN",
-          scheduledStart: o.startTime,
-          scheduledEnd: o.endTime,
-          notes: parsed.data.notes ?? null,
-          parentShiftId: shift.id,
-        })),
-      })
-      childShifts = await prisma.shift.findMany({
-        where: { parentShiftId: shift.id },
-        select: { id: true, scheduledStart: true },
-      })
-    }
+let childShifts: { id: string; scheduledStart: Date }[] = []
+if (recurrenceRule) {
+  const count = occurrencesToFillWindow(recurrenceRule as RecurrenceRule, 6)
+  const occurrences = generateOccurrences(scheduledStart, scheduledEnd, recurrenceRule as RecurrenceRule, count)
+  await prisma.shift.createMany({
+    data: occurrences.map((o) => ({
+      venueId: venue.id,
+      membershipId: parsed.data.membershipId ?? null,
+      roleId: verifiedRoleId,
+      status: parsed.data.membershipId ? "SCHEDULED" : "OPEN",
+      scheduledStart: o.startTime,
+      scheduledEnd: o.endTime,
+      notes: parsed.data.notes ?? null,
+      parentShiftId: shift.id,
+    })),
+  })
+  childShifts = await prisma.shift.findMany({
+    where: { parentShiftId: shift.id },
+    select: { id: true, scheduledStart: true },
+  })
+}
 ```
 
 - [ ] **Step 4: Queue reminders for every assigned occurrence, not just the parent**
@@ -418,22 +432,22 @@ Replace it with:
 Find this block (now using the helper from Task 3):
 
 ```typescript
-    // Queue shift reminder 1 hour before start: only meaningful for assigned shifts
-    if (targetMembership?.userId) {
-      queueShiftReminder(targetMembership.userId, venue.id, venue.name, shift.id, scheduledStart)
-    }
+// Queue shift reminder 1 hour before start: only meaningful for assigned shifts
+if (targetMembership?.userId) {
+  queueShiftReminder(targetMembership.userId, venue.id, venue.name, shift.id, scheduledStart)
+}
 ```
 
 Replace it with:
 
 ```typescript
-    // Queue shift reminders 1 hour before start for every assigned occurrence (parent + children)
-    if (targetMembership?.userId) {
-      queueShiftReminder(targetMembership.userId, venue.id, venue.name, shift.id, scheduledStart)
-      for (const child of childShifts) {
-        queueShiftReminder(targetMembership.userId, venue.id, venue.name, child.id, child.scheduledStart)
-      }
-    }
+// Queue shift reminders 1 hour before start for every assigned occurrence (parent + children)
+if (targetMembership?.userId) {
+  queueShiftReminder(targetMembership.userId, venue.id, venue.name, shift.id, scheduledStart)
+  for (const child of childShifts) {
+    queueShiftReminder(targetMembership.userId, venue.id, venue.name, child.id, child.scheduledStart)
+  }
+}
 ```
 
 - [ ] **Step 5: Typecheck**
@@ -451,12 +465,15 @@ curl -s -X POST http://localhost:3000/api/venues/<venueId>/shifts \
   -H "Cookie: next-auth.session-token=<token>" \
   -d '{"membershipId":"<membershipId>","scheduledStart":"2026-08-05T19:00:00.000Z","scheduledEnd":"2026-08-05T23:00:00.000Z","recurrenceRule":"WEEKLY"}'
 ```
+
 Expected: `201`, parent shift returned
 
 Run:
+
 ```bash
 docker exec postgres psql -U postgres -d venue_manager -c "SELECT id, scheduled_start, parent_shift_id FROM shifts WHERE parent_shift_id IS NOT NULL OR id = '<parentShiftIdFromResponse>' ORDER BY scheduled_start;"
 ```
+
 Expected: 1 parent row (`parent_shift_id` null) + 6 child rows, each 7 days apart, starting 2026-08-12 through 2026-09-16
 
 - [ ] **Step 7: Manually verify — monthly recurrence generates 2 occurrences**
@@ -482,6 +499,7 @@ git commit -m "feat(shifts): generate recurring child shifts on creation"
 ### Task 5: Cancel-series endpoint
 
 **Files:**
+
 - Modify: `apps/web/lib/shift-audit.ts`
 - Create: `apps/web/app/api/venues/[venueId]/shifts/[shiftId]/cancel-series/route.ts`
 
@@ -584,12 +602,15 @@ Using the weekly-recurring parent shift ID created in Task 4 Step 6:
 curl -s -X POST http://localhost:3000/api/venues/<venueId>/shifts/<parentShiftId>/cancel-series \
   -H "Cookie: next-auth.session-token=<token>"
 ```
+
 Expected: `{"cancelled":7}` (parent + 6 children, all future)
 
 Run:
+
 ```bash
 docker exec postgres psql -U postgres -d venue_manager -c "SELECT status, count(*) FROM shifts WHERE id = '<parentShiftId>' OR parent_shift_id = '<parentShiftId>' GROUP BY status;"
 ```
+
 Expected: all 7 rows `CANCELLED`
 
 Also verify calling it again on a **child** ID (not the parent) resolves to the same series and returns `{"cancelled":0}` (already cancelled, nothing left in `OPEN/CLAIMED/SCHEDULED`).
@@ -607,6 +628,7 @@ git commit -m "feat(shifts): add cancel-series endpoint"
 ### Task 6: Roll-forward cron
 
 **Files:**
+
 - Create: `apps/web/app/api/cron/roll-forward-shifts/route.ts`
 
 - [ ] **Step 1: Create the cron route**
@@ -672,12 +694,7 @@ export async function GET(request: Request) {
       const count = occurrencesToFillWindow(rule, WINDOW_WEEKS - weeksRemaining)
       if (count <= 0) continue
 
-      const occurrences = generateOccurrences(
-        latestChild.scheduledStart,
-        latestChild.scheduledEnd,
-        rule,
-        count
-      )
+      const occurrences = generateOccurrences(latestChild.scheduledStart, latestChild.scheduledEnd, rule, count)
 
       const created = await prisma.$transaction(
         occurrences.map((o) =>
@@ -735,15 +752,19 @@ WHERE parent_shift_id = '<biweeklyParentId>' OR id = '<biweeklyParentId>';"
 ```
 
 Run the cron locally:
+
 ```bash
 curl -s http://localhost:3000/api/cron/roll-forward-shifts -H "authorization: Bearer <CRON_SECRET from .env.local>"
 ```
+
 Expected: `{"success":true,"seriesChecked":<N>,"generated":<count>}` with `generated` > 0
 
 Run:
+
 ```bash
 docker exec postgres psql -U postgres -d venue_manager -c "SELECT count(*) FROM shifts WHERE parent_shift_id = '<biweeklyParentId>';"
 ```
+
 Expected: more children than before (window refilled to 6 weeks)
 
 - [ ] **Step 4: Manually verify — series with only cancelled children is skipped**
@@ -768,6 +789,7 @@ After deploying, register the new cron endpoint in QStash (same place the other 
 ### Task 7: UI — repeating toggle in `CreateShiftDialog`
 
 **Files:**
+
 - Modify: `apps/web/components/create-shift-dialog.tsx`
 
 - [ ] **Step 1: Add state**
@@ -775,9 +797,9 @@ After deploying, register the new cron endpoint in QStash (same place the other 
 After the existing `quantity` state:
 
 ```typescript
-  const [quantity, setQuantity] = useState(1)
-  const [repeating, setRepeating] = useState(false)
-  const [recurrenceRule, setRecurrenceRule] = useState<"WEEKLY" | "BIWEEKLY" | "MONTHLY">("WEEKLY")
+const [quantity, setQuantity] = useState(1)
+const [repeating, setRepeating] = useState(false)
+const [recurrenceRule, setRecurrenceRule] = useState<"WEEKLY" | "BIWEEKLY" | "MONTHLY">("WEEKLY")
 ```
 
 - [ ] **Step 2: Include it in the submit payload, and reset it after success**
@@ -808,31 +830,31 @@ Replace with:
 Find the reset block after a successful submit:
 
 ```typescript
-      setMode(prefill?.mode ?? "assign")
-      setMembershipId(prefill?.membershipId ?? "")
-      setRoleId(prefill?.roleId ?? "")
-      setDate(prefill?.date ?? "")
-      setStartTime(prefill?.startTime ?? "19:00")
-      setEndTime(prefill?.endTime ?? "23:00")
-      setNotes(prefill?.notes ?? "")
-      setQuantity(1)
-      setOpen(false)
+setMode(prefill?.mode ?? "assign")
+setMembershipId(prefill?.membershipId ?? "")
+setRoleId(prefill?.roleId ?? "")
+setDate(prefill?.date ?? "")
+setStartTime(prefill?.startTime ?? "19:00")
+setEndTime(prefill?.endTime ?? "23:00")
+setNotes(prefill?.notes ?? "")
+setQuantity(1)
+setOpen(false)
 ```
 
 Replace with:
 
 ```typescript
-      setMode(prefill?.mode ?? "assign")
-      setMembershipId(prefill?.membershipId ?? "")
-      setRoleId(prefill?.roleId ?? "")
-      setDate(prefill?.date ?? "")
-      setStartTime(prefill?.startTime ?? "19:00")
-      setEndTime(prefill?.endTime ?? "23:00")
-      setNotes(prefill?.notes ?? "")
-      setQuantity(1)
-      setRepeating(false)
-      setRecurrenceRule("WEEKLY")
-      setOpen(false)
+setMode(prefill?.mode ?? "assign")
+setMembershipId(prefill?.membershipId ?? "")
+setRoleId(prefill?.roleId ?? "")
+setDate(prefill?.date ?? "")
+setStartTime(prefill?.startTime ?? "19:00")
+setEndTime(prefill?.endTime ?? "23:00")
+setNotes(prefill?.notes ?? "")
+setQuantity(1)
+setRepeating(false)
+setRecurrenceRule("WEEKLY")
+setOpen(false)
 ```
 
 - [ ] **Step 3: Typecheck**
@@ -847,81 +869,85 @@ Expected: no errors
 Find the existing quantity block:
 
 ```tsx
-          {mode === "open" && (
-            <div className="space-y-2">
-              <Label htmlFor="quantity">How many open slots?</Label>
-              <Input
-                id="quantity"
-                type="number"
-                min={1}
-                max={20}
-                value={quantity}
-                onChange={(e) => setQuantity(Number(e.target.value))}
-                className="w-24"
-              />
-              <p className="text-xs text-muted-foreground">
-                Creates this many identical open shifts for staff to claim.
-              </p>
-            </div>
-          )}
+{
+  mode === "open" && (
+    <div className="space-y-2">
+      <Label htmlFor="quantity">How many open slots?</Label>
+      <Input
+        id="quantity"
+        type="number"
+        min={1}
+        max={20}
+        value={quantity}
+        onChange={(e) => setQuantity(Number(e.target.value))}
+        className="w-24"
+      />
+      <p className="text-xs text-muted-foreground">Creates this many identical open shifts for staff to claim.</p>
+    </div>
+  )
+}
 ```
 
 Replace with:
 
 ```tsx
-          {mode === "open" && !repeating && (
-            <div className="space-y-2">
-              <Label htmlFor="quantity">How many open slots?</Label>
-              <Input
-                id="quantity"
-                type="number"
-                min={1}
-                max={20}
-                value={quantity}
-                onChange={(e) => setQuantity(Number(e.target.value))}
-                className="w-24"
-              />
-              <p className="text-xs text-muted-foreground">
-                Creates this many identical open shifts for staff to claim.
-              </p>
-            </div>
-          )}
+{
+  mode === "open" && !repeating && (
+    <div className="space-y-2">
+      <Label htmlFor="quantity">How many open slots?</Label>
+      <Input
+        id="quantity"
+        type="number"
+        min={1}
+        max={20}
+        value={quantity}
+        onChange={(e) => setQuantity(Number(e.target.value))}
+        className="w-24"
+      />
+      <p className="text-xs text-muted-foreground">Creates this many identical open shifts for staff to claim.</p>
+    </div>
+  )
+}
 
-          <div className="space-y-3 p-4 border border-[var(--blue-015)] rounded-lg bg-[var(--blue-004)]">
-            <div className="flex items-center justify-between">
-              <div>
-                <Label htmlFor="repeating" className="text-sm font-semibold">Repeating Shift</Label>
-                <p className="text-xs text-muted-foreground mt-0.5">Generates future instances automatically</p>
-              </div>
-              <button
-                type="button"
-                role="switch"
-                aria-checked={repeating}
-                id="repeating"
-                onClick={() => setRepeating(!repeating)}
-                className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--xiv-blue)] ${
-                  repeating ? "bg-[var(--xiv-blue)]" : "bg-muted"
-                }`}
-              >
-                <span className={`inline-block h-4 w-4 rounded-full bg-white shadow transition-transform ${repeating ? "translate-x-6" : "translate-x-1"}`} />
-              </button>
-            </div>
-            {repeating && (
-              <div className="space-y-2">
-                <Label htmlFor="recurrenceRule">Frequency</Label>
-                <Select value={recurrenceRule} onValueChange={(v) => setRecurrenceRule(v as "WEEKLY" | "BIWEEKLY" | "MONTHLY")}>
-                  <SelectTrigger>
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="WEEKLY">Weekly</SelectItem>
-                    <SelectItem value="BIWEEKLY">Every two weeks</SelectItem>
-                    <SelectItem value="MONTHLY">Monthly</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-            )}
-          </div>
+;<div className="space-y-3 p-4 border border-[var(--blue-015)] rounded-lg bg-[var(--blue-004)]">
+  <div className="flex items-center justify-between">
+    <div>
+      <Label htmlFor="repeating" className="text-sm font-semibold">
+        Repeating Shift
+      </Label>
+      <p className="text-xs text-muted-foreground mt-0.5">Generates future instances automatically</p>
+    </div>
+    <button
+      type="button"
+      role="switch"
+      aria-checked={repeating}
+      id="repeating"
+      onClick={() => setRepeating(!repeating)}
+      className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--xiv-blue)] ${
+        repeating ? "bg-[var(--xiv-blue)]" : "bg-muted"
+      }`}
+    >
+      <span
+        className={`inline-block h-4 w-4 rounded-full bg-white shadow transition-transform ${repeating ? "translate-x-6" : "translate-x-1"}`}
+      />
+    </button>
+  </div>
+  {repeating && (
+    <div className="space-y-2">
+      <Label htmlFor="recurrenceRule">Frequency</Label>
+      <Select value={recurrenceRule} onValueChange={(v) => setRecurrenceRule(v as "WEEKLY" | "BIWEEKLY" | "MONTHLY")}>
+        <SelectTrigger>
+          <SelectValue />
+        </SelectTrigger>
+        <SelectContent>
+          <SelectItem value="WEEKLY">Weekly</SelectItem>
+          <SelectItem value="BIWEEKLY">Every two weeks</SelectItem>
+          <SelectItem value="MONTHLY">Monthly</SelectItem>
+        </SelectContent>
+      </Select>
+    </div>
+  )}
+</div>
 ```
 
 Also update the submit loop so `quantity` is ignored while repeating (repeating already produces multiple rows server-side; don't multiply that further):
@@ -929,13 +955,13 @@ Also update the submit loop so `quantity` is ignored while repeating (repeating 
 Find:
 
 ```typescript
-      const count = mode === "open" ? Math.max(1, Math.min(20, quantity)) : 1
+const count = mode === "open" ? Math.max(1, Math.min(20, quantity)) : 1
 ```
 
 Replace with:
 
 ```typescript
-      const count = mode === "open" && !repeating ? Math.max(1, Math.min(20, quantity)) : 1
+const count = mode === "open" && !repeating ? Math.max(1, Math.min(20, quantity)) : 1
 ```
 
 - [ ] **Step 5: Typecheck**
@@ -946,6 +972,7 @@ Expected: no errors
 - [ ] **Step 6: Manually verify in the browser**
 
 Run: `cd apps/web && npm run dev`, open `http://localhost:3000/dashboard/<venueSlug>/shifts`, click "Schedule Shift":
+
 - Toggle "Repeating Shift" on with mode = "Leave open" — confirm the quantity field disappears and the Frequency select appears
 - Pick "Every two weeks", fill in date/time, submit
 - Confirm the dialog closes and the shift grid shows the new open shift on the chosen date (children aren't visible in-grid until their week is navigated to, but the immediate parent shift should appear)
@@ -964,6 +991,7 @@ git commit -m "feat(shifts): add repeating toggle to CreateShiftDialog"
 ### Task 8: UI — cancel series from the shifts grid
 
 **Files:**
+
 - Modify: `apps/web/components/delete-shift-button.tsx`
 - Modify: `apps/web/app/dashboard/[slug]/shifts/page.tsx:417-419`
 
@@ -1060,22 +1088,24 @@ Expected: no errors
 In `apps/web/app/dashboard/[slug]/shifts/page.tsx`, find:
 
 ```tsx
-                          {canManage && (
-                            <DeleteShiftButton venueSlug={slug} shiftId={shift.id} hasPayroll={false} />
-                          )}
+{
+  canManage && <DeleteShiftButton venueSlug={slug} shiftId={shift.id} hasPayroll={false} />
+}
 ```
 
 Replace with:
 
 ```tsx
-                          {canManage && (
-                            <DeleteShiftButton
-                              venueSlug={slug}
-                              shiftId={shift.id}
-                              hasPayroll={false}
-                              isRecurring={Boolean(shift.recurrenceRule || shift.parentShiftId)}
-                            />
-                          )}
+{
+  canManage && (
+    <DeleteShiftButton
+      venueSlug={slug}
+      shiftId={shift.id}
+      hasPayroll={false}
+      isRecurring={Boolean(shift.recurrenceRule || shift.parentShiftId)}
+    />
+  )
+}
 ```
 
 - [ ] **Step 4: Typecheck**
@@ -1086,14 +1116,17 @@ Expected: no errors
 - [ ] **Step 5: Manually verify in the browser**
 
 With `npm run dev` running, open the shifts grid for a venue with the biweekly recurring open series created earlier:
+
 - Confirm its icon in the grid is the amber `Repeat` icon, not the red trash icon
 - Confirm a plain (non-recurring) open shift still shows the red trash icon
 - Click the `Repeat` icon on the recurring one, confirm the series-cancel warning text, confirm
 
 Run:
+
 ```bash
 docker exec postgres psql -U postgres -d venue_manager -c "SELECT status, count(*) FROM shifts WHERE parent_shift_id = '<thatSeriesParentId>' OR id = '<thatSeriesParentId>' GROUP BY status;"
 ```
+
 Expected: all `CANCELLED`
 
 - [ ] **Step 6: Commit**

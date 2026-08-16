@@ -5,7 +5,11 @@ import { authOptions } from "@/lib/auth"
 import { prisma } from "@/lib/prisma"
 
 const profileSchema = z.object({
-  displayName: z.string().trim().min(1, "Display name is required").max(50, "Display name too long (max 50 characters)"),
+  displayName: z
+    .string()
+    .trim()
+    .min(1, "Display name is required")
+    .max(50, "Display name too long (max 50 characters)"),
 })
 
 export async function PATCH(req: Request) {

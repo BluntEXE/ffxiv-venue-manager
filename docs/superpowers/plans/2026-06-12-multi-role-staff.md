@@ -4,7 +4,7 @@
 
 **Goal:** Let a venue manager assign a staff member more than one custom role (e.g. Vanex is both "Court" and "Gposer"), so that person shows up under all relevant roles and can provide services tied to any of their assigned roles.
 
-**Architecture:** Add a many-to-many join table `MembershipRoleAssignment` between `Membership` and `Role` for "additional roles", while keeping the existing `Membership.roleId` / `customRole` relation as the staff member's *primary* role (used for filters, badges, default shift role). The staff detail page gets a multi-select for additional roles. The plugin `/api/plugin/services` endpoint, the staff table badges, and the open-shift role display are updated to consider primary + additional roles together.
+**Architecture:** Add a many-to-many join table `MembershipRoleAssignment` between `Membership` and `Role` for "additional roles", while keeping the existing `Membership.roleId` / `customRole` relation as the staff member's _primary_ role (used for filters, badges, default shift role). The staff detail page gets a multi-select for additional roles. The plugin `/api/plugin/services` endpoint, the staff table badges, and the open-shift role display are updated to consider primary + additional roles together.
 
 **Tech Stack:** Next.js 15 App Router, Prisma (postgres, `db push` workflow — no migration files are tracked), Zod validation, shadcn/ui components.
 
@@ -26,6 +26,7 @@
 ### Task 1: Schema migration — add `MembershipRoleAssignment` join table
 
 **Files:**
+
 - Modify: `apps/web/prisma/schema.prisma:212-270`
 
 - [ ] **Step 1: Add the join model and back-relations**
@@ -110,6 +111,7 @@ git commit -m "feat: add membership_role_assignments join table for multi-role s
 ### Task 2: Staff PATCH endpoint — accept and sync `additionalRoleIds`
 
 **Files:**
+
 - Modify: `apps/web/app/api/venues/[venueId]/staff/[membershipId]/route.ts:10-150`
 
 - [ ] **Step 1: Extend the Zod schema**
@@ -193,6 +195,7 @@ git commit -m "feat: support assigning multiple additional roles to staff"
 ### Task 3: Staff detail page — multi-select for additional roles
 
 **Files:**
+
 - Modify: `apps/web/app/dashboard/[slug]/staff/[membershipId]/page.tsx:43-90,130-390`
 
 - [ ] **Step 1: Extend the `StaffMember` and add state**
@@ -200,7 +203,10 @@ git commit -m "feat: support assigning multiple additional roles to staff"
 Near the `roleId: string | null` field (line 43) and `customRole` (line 52), add:
 
 ```typescript
-additionalRoles: { role: CustomRole }[]
+additionalRoles: {
+  role: CustomRole
+}
+;[]
 ```
 
 Near `const [selectedCustomRole, setSelectedCustomRole] = useState<string | null>(null)` (line 90), add:
@@ -230,12 +236,13 @@ additionalRoleIds: selectedAdditionalRoleIds,
 In the "Role Management" card, after the "Custom Role" block (around line 361-390), add a new block:
 
 ```tsx
-{/* Additional Roles */}
-<div className="space-y-2">
+{
+  /* Additional Roles */
+}
+;<div className="space-y-2">
   <Label>Additional Roles</Label>
   <p className="text-xs text-muted-foreground">
-    Lets this person provide services and fill shifts for these roles too,
-    on top of their custom role above.
+    Lets this person provide services and fill shifts for these roles too, on top of their custom role above.
   </p>
   <div className="flex flex-wrap gap-2">
     {customRoles
@@ -263,9 +270,7 @@ In the "Role Management" card, after the "Custom Role" block (around line 361-39
       })}
   </div>
   {customRoles.length <= 1 && (
-    <p className="text-xs text-muted-foreground">
-      Create more roles in Staff settings to assign additional roles.
-    </p>
+    <p className="text-xs text-muted-foreground">Create more roles in Staff settings to assign additional roles.</p>
   )}
 </div>
 ```
@@ -292,6 +297,7 @@ git commit -m "feat: add additional-roles multi-select to staff detail page"
 ### Task 4: Staff list — show additional role badges
 
 **Files:**
+
 - Modify: `apps/web/app/dashboard/[slug]/staff/page.tsx:62,154`
 - Modify: `apps/web/components/staff-table.tsx:15,185-196`
 
@@ -319,7 +325,11 @@ additionalRoles: m.additionalRoles.map((ar) => ({
 In `apps/web/components/staff-table.tsx`, find the member type definition with `customRole: { name: string; color: string } | null` (line 15) and add:
 
 ```typescript
-additionalRoles: { name: string; color: string }[]
+additionalRoles: {
+  name: string
+  color: string
+}
+;[]
 ```
 
 - [ ] **Step 4: Render extra badges**
@@ -327,19 +337,21 @@ additionalRoles: { name: string; color: string }[]
 Find the "Role" cell block (around lines 185-196) that renders `member.customRole` as a badge. After that badge, add:
 
 ```tsx
-{member.additionalRoles.map((role) => (
-  <span
-    key={role.name}
-    className="ml-1 text-xs font-semibold px-2 py-0.5 rounded-full border"
-    style={{
-      color: role.color,
-      borderColor: role.color + "55",
-      background: role.color + "18",
-    }}
-  >
-    {role.name}
-  </span>
-))}
+{
+  member.additionalRoles.map((role) => (
+    <span
+      key={role.name}
+      className="ml-1 text-xs font-semibold px-2 py-0.5 rounded-full border"
+      style={{
+        color: role.color,
+        borderColor: role.color + "55",
+        background: role.color + "18",
+      }}
+    >
+      {role.name}
+    </span>
+  ))
+}
 ```
 
 - [ ] **Step 5: Manual verification**
@@ -362,6 +374,7 @@ git commit -m "feat: show additional role badges in staff list"
 ### Task 5: Plugin services endpoint — union services across all assigned roles
 
 **Files:**
+
 - Modify: `apps/web/app/api/plugin/services/route.ts:45-66`
 
 - [ ] **Step 1: Include additionalRoles in the membership query**
@@ -370,7 +383,7 @@ Replace the `prisma.membership.findFirst` call (lines 45-52):
 
 ```typescript
 const membership = await prisma.membership.findFirst({
-  where: { userId: auth.userId, venueId, status: 'active' },
+  where: { userId: auth.userId, venueId, status: "active" },
   include: {
     customRole: {
       include: { services: true },
@@ -392,7 +405,7 @@ const allRoles = [
   ...(membership?.additionalRoles.map((ar) => ar.role) ?? []),
 ]
 
-const serviceMap = new Map<string, (typeof allRoles)[number]['services'][number]>()
+const serviceMap = new Map<string, (typeof allRoles)[number]["services"][number]>()
 for (const role of allRoles) {
   for (const svc of role.services) {
     serviceMap.set(svc.id, svc)
@@ -413,10 +426,10 @@ const services = Array.from(serviceMap.values()).map((svc) => ({
 Replace line 65 (`userRole: role?.name ?? null`) — keep the field name `userRole` for plugin compatibility (don't widen its type to an array, since `XIVAppApiClient.cs` expects a single string), but join multiple names so the plugin displays something meaningful:
 
 ```typescript
-    return NextResponse.json({
-      services,
-      userRole: allRoles.length > 0 ? allRoles.map((r) => r.name).join(' / ') : null,
-    })
+return NextResponse.json({
+  services,
+  userRole: allRoles.length > 0 ? allRoles.map((r) => r.name).join(" / ") : null,
+})
 ```
 
 - [ ] **Step 4: Update the file's doc comment**
@@ -448,5 +461,5 @@ git commit -m "feat: union plugin services across all of a staff member's assign
 
 ## Out of Scope (note, don't implement)
 
-- Open-shift role matching (`create-shift-dialog.tsx` "Required Role" dropdown) still uses a single `roleId` per shift — a shift open for "Gposer" won't also match someone whose *additional* role is Gposer for claim eligibility unless the claim endpoint is later updated. If that turns out to matter in practice, it's a follow-up to `app/api/venues/[venueId]/shifts/[shiftId]/route.ts`'s claim action.
+- Open-shift role matching (`create-shift-dialog.tsx` "Required Role" dropdown) still uses a single `roleId` per shift — a shift open for "Gposer" won't also match someone whose _additional_ role is Gposer for claim eligibility unless the claim endpoint is later updated. If that turns out to matter in practice, it's a follow-up to `app/api/venues/[venueId]/shifts/[shiftId]/route.ts`'s claim action.
 - Sales logging eligibility (`app/api/plugin/services/route.ts` mentions a separate "Manager custom role can log anything" carve-out in `app/api/venues/[venueId]/services/route.ts` — re-check that logic still makes sense once staff can have multiple roles, but it's unaffected by this plan's changes.

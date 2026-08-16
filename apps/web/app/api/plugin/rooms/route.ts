@@ -1,6 +1,6 @@
-import { NextRequest, NextResponse } from 'next/server'
-import { pluginAuthGate } from '@/lib/api/plugin-auth'
-import { prisma } from '@/lib/prisma'
+import { NextRequest, NextResponse } from "next/server"
+import { pluginAuthGate } from "@/lib/api/plugin-auth"
+import { prisma } from "@/lib/prisma"
 
 /**
  * GET /api/plugin/rooms?venueId=…
@@ -17,20 +17,20 @@ export async function GET(request: NextRequest) {
     const { auth } = gate
 
     const { searchParams } = new URL(request.url)
-    const venueId = searchParams.get('venueId')
+    const venueId = searchParams.get("venueId")
     if (!venueId || !auth.venues.includes(venueId)) {
-      return NextResponse.json({ error: 'Invalid venue' }, { status: 400 })
+      return NextResponse.json({ error: "Invalid venue" }, { status: 400 })
     }
 
     const rooms = await prisma.room.findMany({
       where: { venueId },
       select: { id: true, name: true, isOccupied: true, note: true },
-      orderBy: { name: 'asc' },
+      orderBy: { name: "asc" },
     })
 
     return NextResponse.json({ rooms })
   } catch (error) {
-    console.error('[Plugin API] Error fetching rooms:', error)
-    return NextResponse.json({ error: 'Internal server error' }, { status: 500 })
+    console.error("[Plugin API] Error fetching rooms:", error)
+    return NextResponse.json({ error: "Internal server error" }, { status: 500 })
   }
 }

@@ -1,10 +1,12 @@
 # Mobile Feedback + GlitchTip — Design Spec
+
 **Date:** 2026-06-24
 **Status:** Approved
 
 ## Overview
 
 Two independent additions to the mobile app:
+
 1. **Feedback screen** -- hidden route accessible via a subtle Settings link. Submits to the existing web feedback system via a new mobile API endpoint.
 2. **GlitchTip crash reporting** -- `@sentry/react-native` wired to the self-hosted GlitchTip instance. Automatic crash capture, no UI.
 
@@ -23,6 +25,7 @@ Implementation: creates `prisma.feedback` record, fires Discord webhook via `sen
 ### New screen: `apps/mobile/app/feedback.tsx`
 
 Standalone stack screen (no tab). Fields:
+
 - **Category** -- four buttons (pill style): Bug Report / Feature Request / Improvement / General. Default: General.
 - **Subject** -- single-line text input, required, max 100 chars
 - **Description** -- multiline text input, required, min 10 chars
@@ -48,6 +51,7 @@ Navigates to `/(app)/feedback` (or the feedback modal route). Styled subtly -- s
 ### Dependencies
 
 Add to `apps/mobile/package.json`:
+
 - `@sentry/react-native` (latest compatible with Expo SDK 51)
 
 ### Initialisation
@@ -55,13 +59,13 @@ Add to `apps/mobile/package.json`:
 In `apps/mobile/app/_layout.tsx`, init Sentry before the root navigator renders:
 
 ```typescript
-import * as Sentry from '@sentry/react-native'
+import * as Sentry from "@sentry/react-native"
 
 Sentry.init({
   dsn: process.env.EXPO_PUBLIC_SENTRY_DSN,
-  environment: __DEV__ ? 'development' : 'production',
-  tracesSampleRate: 0,         // errors only, no performance tracing
-  enableNativeNagger: false,   // suppress native setup warning in Expo managed
+  environment: __DEV__ ? "development" : "production",
+  tracesSampleRate: 0, // errors only, no performance tracing
+  enableNativeNagger: false, // suppress native setup warning in Expo managed
 })
 ```
 
@@ -83,11 +87,11 @@ Performance tracing is disabled (`tracesSampleRate: 0`) to avoid noise.
 
 ## Files
 
-| File | Action |
-|------|--------|
-| `apps/web/app/api/mobile/feedback/route.ts` | Create |
-| `apps/mobile/app/feedback.tsx` | Create |
-| `apps/mobile/app/(app)/settings.tsx` | Modify — add feedback link in About section |
-| `apps/mobile/app/_layout.tsx` | Modify — init Sentry |
-| `apps/mobile/package.json` | Modify — add `@sentry/react-native` |
-| `apps/mobile/eas.json` | Modify — add `EXPO_PUBLIC_SENTRY_DSN` to all profiles |
+| File                                        | Action                                                |
+| ------------------------------------------- | ----------------------------------------------------- |
+| `apps/web/app/api/mobile/feedback/route.ts` | Create                                                |
+| `apps/mobile/app/feedback.tsx`              | Create                                                |
+| `apps/mobile/app/(app)/settings.tsx`        | Modify — add feedback link in About section           |
+| `apps/mobile/app/_layout.tsx`               | Modify — init Sentry                                  |
+| `apps/mobile/package.json`                  | Modify — add `@sentry/react-native`                   |
+| `apps/mobile/eas.json`                      | Modify — add `EXPO_PUBLIC_SENTRY_DSN` to all profiles |

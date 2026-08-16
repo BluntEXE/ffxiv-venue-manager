@@ -20,10 +20,10 @@ this has zero effect on venues that don't opt in.
 
 The original spec from the venue owner's partner defined the pot as "total profits
 (gross sales) minus venue tax," with contractors receiving their own sales minus tax
-*and* sharing in that same pot. Since gross sales already include contractor sales,
+_and_ sharing in that same pot. Since gross sales already include contractor sales,
 this double-counts contractor revenue — once paid directly, once baked into the pot
 they also draw from. The corrected formula (below) builds the pot from non-contractor
-sales plus *only the tax skimmed from* contractor sales, not contractor gross.
+sales plus _only the tax skimmed from_ contractor sales, not contractor gross.
 
 ## Data model
 

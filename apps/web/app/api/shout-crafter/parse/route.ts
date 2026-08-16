@@ -50,7 +50,10 @@ function sanitizeFields(raw: unknown): ExtractedFields {
     if (typeof value === "string" && value.trim()) {
       result[field] = value.trim()
     } else if (Array.isArray(value) && value.every((v) => typeof v === "string")) {
-      const joined = value.map((v) => v.trim()).filter(Boolean).join(", ")
+      const joined = value
+        .map((v) => v.trim())
+        .filter(Boolean)
+        .join(", ")
       if (joined) result[field] = joined
     }
   }

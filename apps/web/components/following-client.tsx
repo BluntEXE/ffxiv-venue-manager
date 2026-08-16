@@ -22,17 +22,11 @@ type FollowingVenue = {
   activeEvent: { title: string } | null
 }
 
-export function FollowingClient({
-  venues,
-  followCount,
-}: {
-  venues: FollowingVenue[]
-  followCount: number
-}) {
+export function FollowingClient({ venues, followCount }: { venues: FollowingVenue[]; followCount: number }) {
   const [search, setSearch] = useState("")
   const [tab, setTab] = useState<"open" | "all">("open")
 
-  const filtered = venues.filter(v => {
+  const filtered = venues.filter((v) => {
     if (tab === "open" && !v.isOpenNow) return false
     if (search) {
       const q = search.toLowerCase()
@@ -41,8 +35,8 @@ export function FollowingClient({
     return true
   })
 
-  const open   = filtered.filter(v => v.isOpenNow)
-  const closed = filtered.filter(v => !v.isOpenNow)
+  const open = filtered.filter((v) => v.isOpenNow)
+  const closed = filtered.filter((v) => !v.isOpenNow)
 
   return (
     <div className="page-inner" style={{ maxWidth: 940 }}>
@@ -51,7 +45,9 @@ export function FollowingClient({
         <div>
           <div className="flex items-center gap-2 mb-1.5">
             <span className="w-[7px] h-[7px] bg-[rgba(0,180,255,0.7)] rotate-45 shadow-[0_0_10px_rgba(0,180,255,0.5)] flex-shrink-0" />
-            <span className="text-[0.72rem] font-semibold uppercase tracking-[0.14em] text-[var(--xiv-blue)]">Following</span>
+            <span className="text-[0.72rem] font-semibold uppercase tracking-[0.14em] text-[var(--xiv-blue)]">
+              Following
+            </span>
           </div>
           <h1 className="page-h1">Following</h1>
           <p className="text-sm text-muted-foreground mt-0.5 max-w-[560px]">
@@ -77,10 +73,20 @@ export function FollowingClient({
           </button>
         </div>
         <div className="flex-1 min-w-[200px] relative flex items-center">
-          <svg className="absolute left-[14px] w-4 h-4 text-[var(--fg-faint)] pointer-events-none" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
+          <svg
+            className="absolute left-[14px] w-4 h-4 text-[var(--fg-faint)] pointer-events-none"
+            xmlns="http://www.w3.org/2000/svg"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            strokeWidth="2"
+          >
+            <circle cx="11" cy="11" r="8" />
+            <path d="m21 21-4.35-4.35" />
+          </svg>
           <input
             value={search}
-            onChange={e => setSearch(e.target.value)}
+            onChange={(e) => setSearch(e.target.value)}
             placeholder="Search followed venues…"
             className="w-full bg-[var(--card)] border border-[var(--blue-015)] rounded-[var(--radius-md)] py-[10px] pl-10 pr-[14px] text-[0.88rem] text-foreground placeholder:text-[var(--fg-faint)] outline-none focus:border-[var(--blue-035)] transition-colors"
           />
@@ -103,10 +109,14 @@ export function FollowingClient({
               <div className="section-label">
                 <span className="sl-label">Open now</span>
                 <span className="ln" />
-                <span className="count">{open.length} of {followCount} open</span>
+                <span className="count">
+                  {open.length} of {followCount} open
+                </span>
               </div>
               <div className="space-y-2">
-                {open.map(v => <VenueC3Card key={v.id} venue={v} showFollow />)}
+                {open.map((v) => (
+                  <VenueC3Card key={v.id} venue={v} showFollow />
+                ))}
               </div>
             </>
           )}
@@ -119,7 +129,9 @@ export function FollowingClient({
                 <span className="ln" />
               </div>
               <div className="space-y-2">
-                {closed.map(v => <VenueC3Card key={v.id} venue={v} dimmed showFollow />)}
+                {closed.map((v) => (
+                  <VenueC3Card key={v.id} venue={v} dimmed showFollow />
+                ))}
               </div>
             </>
           )}
@@ -133,21 +145,15 @@ export function FollowingClient({
   )
 }
 
-function VenueC3Card({
-  venue,
-  dimmed,
-  showFollow,
-}: {
-  venue: FollowingVenue
-  dimmed?: boolean
-  showFollow?: boolean
-}) {
+function VenueC3Card({ venue, dimmed, showFollow }: { venue: FollowingVenue; dimmed?: boolean; showFollow?: boolean }) {
   const isOpen = venue.isOpenNow
 
   return (
     <div className={`vcard c3 flex items-center gap-4 px-[18px] py-4 ${dimmed ? "opacity-70" : ""}`}>
       {/* Icon badge */}
-      <div className={`iconbadge flex-shrink-0 rounded-[var(--radius-lg)] w-[54px] h-[54px] grid place-items-center ${dimmed ? "bg-[rgba(108,112,134,0.10)] border-[var(--border)] text-[var(--fg-faint)]" : ""}`}>
+      <div
+        className={`iconbadge flex-shrink-0 rounded-[var(--radius-lg)] w-[54px] h-[54px] grid place-items-center ${dimmed ? "bg-[rgba(108,112,134,0.10)] border-[var(--border)] text-[var(--fg-faint)]" : ""}`}
+      >
         <Building2 className="w-[25px] h-[25px]" />
       </div>
 
@@ -155,9 +161,7 @@ function VenueC3Card({
       <div className="flex-1 min-w-0">
         <div className="flex items-center gap-[10px] flex-wrap">
           <span className={`vname text-[1.18rem] ${dimmed ? "text-[var(--fg-subtle)]" : ""}`}>{venue.name}</span>
-          {isOpen && venue.activeEvent && (
-            <span className="tag hidden sm:inline">{venue.activeEvent.title}</span>
-          )}
+          {isOpen && venue.activeEvent && <span className="tag hidden sm:inline">{venue.activeEvent.title}</span>}
         </div>
         <div className="flex items-center gap-[18px] mt-[7px] flex-wrap">
           <span className="meta">
@@ -170,9 +174,15 @@ function VenueC3Card({
       {/* Right */}
       <div className="flex items-center gap-2 flex-shrink-0">
         {isOpen ? (
-          <span className="status open"><span className="dot" />Open</span>
+          <span className="status open">
+            <span className="dot" />
+            Open
+          </span>
         ) : (
-          <span className="status closed"><span className="dot" />Closed</span>
+          <span className="status closed">
+            <span className="dot" />
+            Closed
+          </span>
         )}
         {showFollow && (
           <VenueFollowButton venueId={venue.id} isFollowing={true} followCount={venue.followCount} compact />

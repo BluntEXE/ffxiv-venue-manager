@@ -1,11 +1,19 @@
 "use client"
 
 import { useEffect, useState } from "react"
-import { DAY_NAMES, DAY_SHORT, formatEntryTime, formatLocalEntryTime, formatIntervalLabel, localDayOf, type ScheduleEntry } from "@/lib/schedule-utils"
+import {
+  DAY_NAMES,
+  DAY_SHORT,
+  formatEntryTime,
+  formatLocalEntryTime,
+  formatIntervalLabel,
+  localDayOf,
+  type ScheduleEntry,
+} from "@/lib/schedule-utils"
 
 type Props = {
   entries: ScheduleEntry[]
-  compact?: boolean  // true = short day names, no interval label
+  compact?: boolean // true = short day names, no interval label
 }
 
 export function VenueScheduleDisplay({ entries, compact = false }: Props) {
@@ -15,7 +23,7 @@ export function VenueScheduleDisplay({ entries, compact = false }: Props) {
   if (entries.length === 0) {
     return (
       <>
-        {[0,1,2,3,4,5,6].map(i => (
+        {[0, 1, 2, 3, 4, 5, 6].map((i) => (
           <div key={i} className="hours-row closed">
             <span className="day">{compact ? DAY_SHORT[i] : DAY_NAMES[i]}</span>
             <span className="hrs">—</span>
@@ -37,7 +45,7 @@ export function VenueScheduleDisplay({ entries, compact = false }: Props) {
 
   return (
     <>
-      {[0,1,2,3,4,5,6].map(i => {
+      {[0, 1, 2, 3, 4, 5, 6].map((i) => {
         const dayEntries = byDay.get(i)
         const isToday = i === todayDay
         if (!dayEntries || dayEntries.length === 0) {

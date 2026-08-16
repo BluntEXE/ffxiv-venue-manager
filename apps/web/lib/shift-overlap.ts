@@ -1,10 +1,7 @@
 import { prisma } from "@/lib/prisma"
 import type { Shift } from "@/generated/prisma/client"
 
-export type ClaimResult =
-  | { merged: true; shift: Shift }
-  | { merged: false; shift: Shift }
-  | null // shift was claimed/changed concurrently
+export type ClaimResult = { merged: true; shift: Shift } | { merged: false; shift: Shift } | null // shift was claimed/changed concurrently
 
 /**
  * Claim an OPEN shift for a membership.
@@ -38,7 +35,8 @@ export async function claimShiftWithMerge(shift: Shift, membershipId: string): P
     if (!stillOpen) return null
 
     if (mergeable) {
-      const scheduledStart = mergeable.scheduledStart < shift.scheduledStart ? mergeable.scheduledStart : shift.scheduledStart
+      const scheduledStart =
+        mergeable.scheduledStart < shift.scheduledStart ? mergeable.scheduledStart : shift.scheduledStart
       const scheduledEnd = mergeable.scheduledEnd > shift.scheduledEnd ? mergeable.scheduledEnd : shift.scheduledEnd
 
       const updated = await tx.shift.update({

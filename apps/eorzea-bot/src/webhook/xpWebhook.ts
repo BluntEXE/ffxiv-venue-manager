@@ -1,6 +1,6 @@
-import { Client } from 'discord.js';
-import prisma from '../utils/prisma.js';
-import { rankForXp, type GrandCompany } from '../utils/xp.js';
+import { Client } from "discord.js"
+import prisma from "../utils/prisma.js"
+import { rankForXp, type GrandCompany } from "../utils/xp.js"
 
 export async function awardXp(client: Client, discordId: string, amount: number, reason: string): Promise<void> {
   try {
@@ -14,33 +14,36 @@ export async function awardXp(client: Client, discordId: string, amount: number,
         RETURNING xp, (xp - ${amount}) AS old_xp, gc
       )
       SELECT old_xp::text, xp::text AS new_xp, gc FROM updated
-    `;
+    `
 
-    if (!rows[0]) return;
+    if (!rows[0]) return
 
-    const oldXp = parseInt(rows[0].old_xp, 10);
-    const newXp = parseInt(rows[0].new_xp, 10);
-    const gc    = (rows[0].gc as GrandCompany | null) ?? null;
+    const oldXp = parseInt(rows[0].old_xp, 10)
+    const newXp = parseInt(rows[0].new_xp, 10)
+    const gc = (rows[0].gc as GrandCompany | null) ?? null
 
-    const oldRank = rankForXp(oldXp, gc);
-    const newRank = rankForXp(newXp, gc);
+    const oldRank = rankForXp(oldXp, gc)
+    const newRank = rankForXp(newXp, gc)
 
     if (newRank.index > oldRank.index) {
-      const user = await client.users.fetch(discordId).catch(() => null);
+      const user = await client.users.fetch(discordId).catch(() => null)
       if (user) {
-        await user.send({
-          embeds: [{
-            color: 0x00b4ff,
-            title: `${newRank.emoji} Rank Up!`,
-            description:
-              `You've been promoted to:\n### ${newRank.name}`,
-            footer: { text: 'XIV Venue Manager Community · /rank to see your progress' },
-            timestamp: new Date().toISOString(),
-          }],
-        }).catch(() => null);
+        await user
+          .send({
+            embeds: [
+              {
+                color: 0x00b4ff,
+                title: `${newRank.emoji} Rank Up!`,
+                description: `You've been promoted to:\n### ${newRank.name}`,
+                footer: { text: "XIV Venue Manager Community · /rank to see your progress" },
+                timestamp: new Date().toISOString(),
+              },
+            ],
+          })
+          .catch(() => null)
       }
     }
   } catch (err) {
-    console.error(`[XP] Failed to award ${amount} XP to ${discordId}:`, err);
+    console.error(`[XP] Failed to award ${amount} XP to ${discordId}:`, err)
   }
 }

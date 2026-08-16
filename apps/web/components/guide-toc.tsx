@@ -3,15 +3,12 @@
 import { useState, useEffect } from "react"
 import Link from "next/link"
 
-interface TocItem { id: string; label: string }
+interface TocItem {
+  id: string
+  label: string
+}
 
-export function GuideTOC({
-  items,
-  footerLink,
-}: {
-  items: TocItem[]
-  footerLink: { href: string; label: string }
-}) {
+export function GuideTOC({ items, footerLink }: { items: TocItem[]; footerLink: { href: string; label: string } }) {
   const [activeId, setActiveId] = useState(items[0]?.id ?? "")
 
   useEffect(() => {

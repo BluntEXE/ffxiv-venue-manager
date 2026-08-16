@@ -105,15 +105,16 @@ the JSON response as an ephemeral embed or plain message via `editReply`.
 ## Testing / rollout
 
 No user-facing web/plugin/mobile changes — purely additive (new bot commands
-+ new bot-only web endpoints). Verify by:
 
-- Linking a test Discord account, scheduling a test shift, confirming
+- new bot-only web endpoints). Verify by:
+
+* Linking a test Discord account, scheduling a test shift, confirming
   `/clockin` only succeeds inside the 30-min-before/60-min-after window and
   fails with the correct message outside it.
-- Confirming `/clockin` while already `ACTIVE` returns the friendly no-op,
+* Confirming `/clockin` while already `ACTIVE` returns the friendly no-op,
   not an error.
-- Confirming `/clockout` completes the shift and the appropriate What's
+* Confirming `/clockout` completes the shift and the appropriate What's
   Happening region board updates (reusing the manual verification pattern
   from the discord-feed-channels rollout).
-- Confirming an unlinked test account gets the "link Discord" message rather
+* Confirming an unlinked test account gets the "link Discord" message rather
   than a raw error.

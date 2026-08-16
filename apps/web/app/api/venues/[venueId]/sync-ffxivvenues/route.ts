@@ -15,16 +15,12 @@ async function requireOwner(venueId: string, userId: string) {
  * GET ?ffxivId=xxx — preview fetch: returns venue name for link confirmation.
  * Does NOT save anything.
  */
-export async function GET(
-  req: NextRequest,
-  { params }: { params: Promise<{ venueId: string }> }
-) {
+export async function GET(req: NextRequest, { params }: { params: Promise<{ venueId: string }> }) {
   const session = await getServerSession(authOptions)
   if (!session?.user?.id) return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
 
   const { venueId } = await params
-  if (!(await requireOwner(venueId, session.user.id)))
-    return NextResponse.json({ error: "Forbidden" }, { status: 403 })
+  if (!(await requireOwner(venueId, session.user.id))) return NextResponse.json({ error: "Forbidden" }, { status: 403 })
 
   const ffxivId = req.nextUrl.searchParams.get("ffxivId")
   if (!ffxivId) return NextResponse.json({ error: "ffxivId required" }, { status: 400 })
@@ -38,16 +34,12 @@ export async function GET(
 /**
  * POST — trigger a sync for this venue's linked ffxivvenues listing.
  */
-export async function POST(
-  _req: NextRequest,
-  { params }: { params: Promise<{ venueId: string }> }
-) {
+export async function POST(_req: NextRequest, { params }: { params: Promise<{ venueId: string }> }) {
   const session = await getServerSession(authOptions)
   if (!session?.user?.id) return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
 
   const { venueId } = await params
-  if (!(await requireOwner(venueId, session.user.id)))
-    return NextResponse.json({ error: "Forbidden" }, { status: 403 })
+  if (!(await requireOwner(venueId, session.user.id))) return NextResponse.json({ error: "Forbidden" }, { status: 403 })
 
   const venue = await prisma.venue.findUnique({
     where: { id: venueId },
@@ -59,7 +51,10 @@ export async function POST(
   const result = await syncFfxivVenue(venueId, venue.ffxivVenueId)
 
   if (!result.ok)
-    return NextResponse.json({ error: result.error, unlinked: result.unlinked ?? false }, { status: result.unlinked ? 410 : 502 })
+    return NextResponse.json(
+      { error: result.error, unlinked: result.unlinked ?? false },
+      { status: result.unlinked ? 410 : 502 }
+    )
 
   return NextResponse.json({ ok: true, venueName: result.venueName })
 }

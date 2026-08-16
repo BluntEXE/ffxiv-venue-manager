@@ -24,7 +24,10 @@ export function GalleryManager({ venueId, initialImages }: GalleryManagerProps) 
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ filename: file.name, contentType: file.type, size: file.size }),
       })
-      if (!res.ok) { const d = await res.json(); throw new Error(d.error || "Failed to get upload URL") }
+      if (!res.ok) {
+        const d = await res.json()
+        throw new Error(d.error || "Failed to get upload URL")
+      }
       const { uploadUrl, storedUrl } = await res.json()
 
       // 2. PUT directly to MinIO
@@ -38,7 +41,10 @@ export function GalleryManager({ venueId, initialImages }: GalleryManagerProps) 
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ url: publicUrl }),
       })
-      if (!reg.ok) { const d = await reg.json(); throw new Error(d.error || "Failed to save") }
+      if (!reg.ok) {
+        const d = await reg.json()
+        throw new Error(d.error || "Failed to save")
+      }
       const { galleryImages } = await reg.json()
       setImages(galleryImages)
     } catch (e: unknown) {
@@ -117,16 +123,17 @@ export function GalleryManager({ venueId, initialImages }: GalleryManagerProps) 
         </button>
       )}
 
-      {uploading && (
-        <p className="text-xs text-[var(--xiv-blue)] text-center animate-pulse">Uploading…</p>
-      )}
+      {uploading && <p className="text-xs text-[var(--xiv-blue)] text-center animate-pulse">Uploading…</p>}
 
       <input
         ref={inputRef}
         type="file"
         accept="image/jpeg,image/png,image/webp,image/gif"
         className="hidden"
-        onChange={(e) => { const f = e.target.files?.[0]; if (f) upload(f) }}
+        onChange={(e) => {
+          const f = e.target.files?.[0]
+          if (f) upload(f)
+        }}
       />
     </div>
   )

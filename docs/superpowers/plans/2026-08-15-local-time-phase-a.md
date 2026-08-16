@@ -22,6 +22,7 @@
 ## Task 1: `app/dashboard/[slug]/analytics/page.tsx`
 
 **Files:**
+
 - Modify: `apps/web/app/dashboard/[slug]/analytics/page.tsx`
 
 **Context:** Client Component (`"use client"` at line 1). Followers-by-month card label.
@@ -33,12 +34,23 @@ Find the import of `ServerTime` from `@/components/server-time` near the top of 
 - [ ] **Step 2: Swap the call site**
 
 Change:
+
 ```tsx
-<StatReadout label={<ServerTime date={`${month}-01`} formatStr="monthyear" />} value={`+${count as number}`} subtext="new followers" />
+<StatReadout
+  label={<ServerTime date={`${month}-01`} formatStr="monthyear" />}
+  value={`+${count as number}`}
+  subtext="new followers"
+/>
 ```
+
 to:
+
 ```tsx
-<StatReadout label={<LocalTime date={`${month}-01`} formatStr="monthyear" />} value={`+${count as number}`} subtext="new followers" />
+<StatReadout
+  label={<LocalTime date={`${month}-01`} formatStr="monthyear" />}
+  value={`+${count as number}`}
+  subtext="new followers"
+/>
 ```
 
 - [ ] **Step 3: Typecheck**
@@ -46,6 +58,7 @@ to:
 ```bash
 cd apps/web && npx tsc --noEmit
 ```
+
 Expected: 0 errors.
 
 - [ ] **Step 4: Commit**
@@ -60,6 +73,7 @@ git commit -m "chore: show follower-month label in viewer-local time (local-time
 ## Task 2: `app/dashboard/[slug]/events/[eventId]/page.tsx`
 
 **Files:**
+
 - Modify: `apps/web/app/dashboard/[slug]/events/[eventId]/page.tsx`
 
 **Context:** Server Component (no `"use client"`). Event detail sidebar "Date & Time" card. `<ServerTime>`/`<LocalTime>` are themselves client components, so swapping the JSX tag works fine from this Server Component.
@@ -71,6 +85,7 @@ Find the import of `ServerTime` and `SERVER_TIME_LABEL` from `@/components/serve
 - [ ] **Step 2: Swap the 4 call sites**
 
 Change:
+
 ```tsx
 <div>
   <p className="text-sm text-muted-foreground">Start</p>
@@ -91,7 +106,9 @@ Change:
   </p>
 </div>
 ```
+
 to:
+
 ```tsx
 <div>
   <p className="text-sm text-muted-foreground">Start</p>
@@ -118,6 +135,7 @@ to:
 ```bash
 cd apps/web && npx tsc --noEmit
 ```
+
 Expected: 0 errors.
 
 - [ ] **Step 4: Commit**
@@ -132,6 +150,7 @@ git commit -m "chore: show event start/end time in viewer-local time (local-time
 ## Task 3: `app/dashboard/[slug]/settings/page.tsx`
 
 **Files:**
+
 - Modify: `apps/web/app/dashboard/[slug]/settings/page.tsx`
 
 **Context:** Client Component. "Last synced" line under the ffxivvenues.com integration toggle. Note: the "ST" here is a **literal hardcoded string**, not `SERVER_TIME_LABEL` — confirm with `grep -n "SERVER_TIME_LABEL" apps/web/app/dashboard/\[slug\]/settings/page.tsx` (expected: no matches) before editing, so you don't go looking for an import that isn't there.
@@ -143,10 +162,13 @@ Find the import of `ServerTime` from `@/components/server-time` and change it to
 - [ ] **Step 2: Swap the call site**
 
 Change:
+
 ```tsx
 Schedule synced every 2 hours.{ffxivVenueSyncedAt && <> Last synced: <ServerTime date={ffxivVenueSyncedAt} /> ST</>}
 ```
+
 to:
+
 ```tsx
 Schedule synced every 2 hours.{ffxivVenueSyncedAt && <> Last synced: <LocalTime date={ffxivVenueSyncedAt} /></>}
 ```
@@ -156,6 +178,7 @@ Schedule synced every 2 hours.{ffxivVenueSyncedAt && <> Last synced: <LocalTime 
 ```bash
 cd apps/web && npx tsc --noEmit
 ```
+
 Expected: 0 errors.
 
 - [ ] **Step 4: Commit**
@@ -170,6 +193,7 @@ git commit -m "chore: show ffxivvenues last-synced time in viewer-local time (lo
 ## Task 4: `components/generate-pot-payroll-button.tsx`
 
 **Files:**
+
 - Modify: `apps/web/components/generate-pot-payroll-button.tsx`
 
 **Context:** Client Component. Pot payroll generation confirmation text on the event detail page.
@@ -177,10 +201,13 @@ git commit -m "chore: show ffxivvenues last-synced time in viewer-local time (lo
 - [ ] **Step 1: Swap the import**
 
 Change:
+
 ```tsx
 import { ServerTime, SERVER_TIME_LABEL } from "@/components/server-time"
 ```
+
 to:
+
 ```tsx
 import { LocalTime } from "@/components/server-time"
 ```
@@ -188,10 +215,13 @@ import { LocalTime } from "@/components/server-time"
 - [ ] **Step 2: Swap the call site**
 
 Change:
+
 ```tsx
 Generated <ServerTime date={existingDistribution.generatedAt} formatStr="datetimelong" /> {SERVER_TIME_LABEL} —{" "}
 ```
+
 to:
+
 ```tsx
 Generated <LocalTime date={existingDistribution.generatedAt} formatStr="datetimelong" /> —{" "}
 ```
@@ -201,6 +231,7 @@ Generated <LocalTime date={existingDistribution.generatedAt} formatStr="datetime
 ```bash
 cd apps/web && npx tsc --noEmit
 ```
+
 Expected: 0 errors.
 
 - [ ] **Step 4: Commit**
@@ -215,6 +246,7 @@ git commit -m "chore: show pot payroll generated-at time in viewer-local time (l
 ## Task 5: `components/live-dashboard.tsx`
 
 **Files:**
+
 - Modify: `apps/web/components/live-dashboard.tsx`
 
 **Context:** Client Component. Live event session bar ("Started HH:MM ST") and activity feed item timestamps. Currently imports the bare functions from `@/lib/server-time` (not the JSX component) — both usages are inside plain template-literal-adjacent JSX text, not attribute strings, so they can become `<LocalTime>` JSX instead of staying as bare function calls; that's the more idiomatic fix and matches how other files in this phase do it.
@@ -222,10 +254,13 @@ git commit -m "chore: show pot payroll generated-at time in viewer-local time (l
 - [ ] **Step 1: Swap the import**
 
 Change:
+
 ```tsx
 import { formatServerTime, SERVER_TIME_LABEL } from "@/lib/server-time"
 ```
+
 to:
+
 ```tsx
 import { LocalTime } from "@/components/server-time"
 ```
@@ -233,19 +268,30 @@ import { LocalTime } from "@/components/server-time"
 - [ ] **Step 2: Swap the 2 call sites**
 
 Change:
+
 ```tsx
 Started {formatServerTime(event.startTime, "time")} {SERVER_TIME_LABEL}
 ```
+
 to:
+
 ```tsx
 Started <LocalTime date={event.startTime} formatStr="time" />
 ```
 
 Change:
+
 ```tsx
-{formatServerTime(item.timestamp, "time")} {SERVER_TIME_LABEL}
+{
+  formatServerTime(item.timestamp, "time")
+}
+{
+  SERVER_TIME_LABEL
+}
 ```
+
 to:
+
 ```tsx
 <LocalTime date={item.timestamp} formatStr="time" />
 ```
@@ -255,6 +301,7 @@ to:
 ```bash
 cd apps/web && npx tsc --noEmit
 ```
+
 Expected: 0 errors.
 
 - [ ] **Step 4: Commit**
@@ -269,6 +316,7 @@ git commit -m "chore: show live-dashboard event/activity times in viewer-local t
 ## Task 6: `components/patron-logs-manager.tsx`
 
 **Files:**
+
 - Modify: `apps/web/components/patron-logs-manager.tsx`
 
 **Context:** Client Component. Event filter dropdown label, log table timestamp column, and a hover tooltip built as an HTML `title` attribute string (must use the bare `formatLocalTime` function here, not JSX, since `title` attributes can't contain React elements).
@@ -276,10 +324,13 @@ git commit -m "chore: show live-dashboard event/activity times in viewer-local t
 - [ ] **Step 1: Swap the import**
 
 Change:
+
 ```tsx
 import { formatServerTime, SERVER_TIME_LABEL } from "@/components/server-time"
 ```
+
 to:
+
 ```tsx
 import { formatLocalTime } from "@/components/server-time"
 ```
@@ -287,28 +338,44 @@ import { formatLocalTime } from "@/components/server-time"
 - [ ] **Step 2: Swap the 3 call sites**
 
 Change:
+
 ```tsx
 {e.title} ({formatServerTime(e.startTime, "datelong")})
 ```
+
 to:
+
 ```tsx
 {e.title} ({formatLocalTime(e.startTime, "datelong")})
 ```
 
 Change:
+
 ```tsx
-{formatServerTime(l.timestamp, "datetimelong")} {SERVER_TIME_LABEL}
+{
+  formatServerTime(l.timestamp, "datetimelong")
+}
+{
+  SERVER_TIME_LABEL
+}
 ```
+
 to:
+
 ```tsx
-{formatLocalTime(l.timestamp, "datetimelong")}
+{
+  formatLocalTime(l.timestamp, "datetimelong")
+}
 ```
 
 Change:
+
 ```tsx
 title={`Reclassified by ${l.reclassifiedBy?.name ?? "?"} on ${formatServerTime(l.reclassifiedAt, "datetimelong")} ${SERVER_TIME_LABEL}${l.reclassifyReason ? ` - ${l.reclassifyReason}` : ""}`}
 ```
+
 to:
+
 ```tsx
 title={`Reclassified by ${l.reclassifiedBy?.name ?? "?"} on ${formatLocalTime(l.reclassifiedAt, "datetimelong")}${l.reclassifyReason ? ` - ${l.reclassifyReason}` : ""}`}
 ```
@@ -318,6 +385,7 @@ title={`Reclassified by ${l.reclassifiedBy?.name ?? "?"} on ${formatLocalTime(l.
 ```bash
 cd apps/web && npx tsc --noEmit
 ```
+
 Expected: 0 errors.
 
 - [ ] **Step 4: Commit**
@@ -332,6 +400,7 @@ git commit -m "chore: show patron-log times in viewer-local time (local-time pha
 ## Task 7: `components/ban-list-manager.tsx`
 
 **Files:**
+
 - Modify: `apps/web/components/ban-list-manager.tsx`
 
 **Context:** Client Component. Ban list table "Banned at" column. No `SERVER_TIME_LABEL` used (column has its own header label).
@@ -339,10 +408,13 @@ git commit -m "chore: show patron-log times in viewer-local time (local-time pha
 - [ ] **Step 1: Swap the import**
 
 Change:
+
 ```tsx
 import { formatServerTime } from "@/lib/server-time"
 ```
+
 to:
+
 ```tsx
 import { formatLocalTime } from "@/components/server-time"
 ```
@@ -350,10 +422,13 @@ import { formatLocalTime } from "@/components/server-time"
 - [ ] **Step 2: Swap the call site**
 
 Change:
+
 ```tsx
 <td className="hide t-muted">{p.bannedAt ? formatServerTime(p.bannedAt, "datetime") : "—"}</td>
 ```
+
 to:
+
 ```tsx
 <td className="hide t-muted">{p.bannedAt ? formatLocalTime(p.bannedAt, "datetime") : "—"}</td>
 ```
@@ -363,6 +438,7 @@ to:
 ```bash
 cd apps/web && npx tsc --noEmit
 ```
+
 Expected: 0 errors.
 
 - [ ] **Step 4: Commit**
@@ -377,6 +453,7 @@ git commit -m "chore: show ban-list banned-at time in viewer-local time (local-t
 ## Task 8: `components/patron-profiles-table.tsx`
 
 **Files:**
+
 - Modify: `apps/web/components/patron-profiles-table.tsx`
 
 **Context:** Client Component. Patron table "Last seen" column. Same pattern as Task 7.
@@ -384,10 +461,13 @@ git commit -m "chore: show ban-list banned-at time in viewer-local time (local-t
 - [ ] **Step 1: Swap the import**
 
 Change:
+
 ```tsx
 import { formatServerTime } from "@/lib/server-time"
 ```
+
 to:
+
 ```tsx
 import { formatLocalTime } from "@/components/server-time"
 ```
@@ -395,10 +475,13 @@ import { formatLocalTime } from "@/components/server-time"
 - [ ] **Step 2: Swap the call site**
 
 Change:
+
 ```tsx
 <td className="hide t-muted">{formatServerTime(p.lastSeen, "datetime")}</td>
 ```
+
 to:
+
 ```tsx
 <td className="hide t-muted">{formatLocalTime(p.lastSeen, "datetime")}</td>
 ```
@@ -408,6 +491,7 @@ to:
 ```bash
 cd apps/web && npx tsc --noEmit
 ```
+
 Expected: 0 errors.
 
 - [ ] **Step 4: Commit**
@@ -428,6 +512,7 @@ git commit -m "chore: show patron last-seen time in viewer-local time (local-tim
 ```bash
 cd apps/web && npx tsc --noEmit && npx vitest run
 ```
+
 Expected: 0 errors, 54/54 tests passing (same baseline as before this plan).
 
 - [ ] **Step 2: Live check every changed surface against the local dev server**

@@ -30,10 +30,7 @@ export const POST = withRateLimit(
       // Check authentication
       const session = await getServerSession(authOptions)
       if (!session?.user?.id) {
-        return NextResponse.json(
-          { error: "Unauthorized" },
-          { status: 401 }
-        )
+        return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
       }
 
       // Parse and validate request body
@@ -46,10 +43,7 @@ export const POST = withRateLimit(
       })
 
       if (existingVenue) {
-        return NextResponse.json(
-          { error: "A venue with this slug already exists" },
-          { status: 400 }
-        )
+        return NextResponse.json({ error: "A venue with this slug already exists" }, { status: 400 })
       }
 
       // Create venue + owner membership + Manager role atomically.
@@ -123,17 +117,11 @@ export const POST = withRateLimit(
       return NextResponse.json(venue, { status: 201 })
     } catch (error) {
       if (error instanceof z.ZodError) {
-        return NextResponse.json(
-          { error: "Validation error", details: error.issues },
-          { status: 400 }
-        )
+        return NextResponse.json({ error: "Validation error", details: error.issues }, { status: 400 })
       }
 
       console.error("Error creating venue:", error)
-      return NextResponse.json(
-        { error: "Internal server error" },
-        { status: 500 }
-      )
+      return NextResponse.json({ error: "Internal server error" }, { status: 500 })
     }
   },
   { requests: 10, window: "1 m" }
@@ -144,10 +132,7 @@ export const GET = withRateLimit(
     try {
       const session = await getServerSession(authOptions)
       if (!session?.user?.id) {
-        return NextResponse.json(
-          { error: "Unauthorized" },
-          { status: 401 }
-        )
+        return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
       }
 
       // Cache venues per user (5 minute TTL)
@@ -179,10 +164,7 @@ export const GET = withRateLimit(
       return NextResponse.json(venues)
     } catch (error) {
       console.error("Error fetching venues:", error)
-      return NextResponse.json(
-        { error: "Internal server error" },
-        { status: 500 }
-      )
+      return NextResponse.json({ error: "Internal server error" }, { status: 500 })
     }
   },
   { requests: 60, window: "1 m" }

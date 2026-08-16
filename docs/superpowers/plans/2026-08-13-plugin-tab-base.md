@@ -23,6 +23,7 @@
 ### Task 1: Add the `ITab` interface
 
 **Files:**
+
 - Create: `VenueManager/UI/Tabs/ITab.cs`
 
 - [ ] **Step 1: Write the interface**
@@ -66,6 +67,7 @@ git commit -m "feat: add ITab interface for shared tab base"
 These three have no visibility gate today (`navButton` is called unconditionally for each in `MainWindow.drawNavIcons`), so `IsVisible` is a constant `true`.
 
 **Files:**
+
 - Modify: `VenueManager/UI/Tabs/SalesTab.cs`
 - Modify: `VenueManager/UI/Tabs/ShiftsTab.cs`
 - Modify: `VenueManager/UI/Tabs/RoomsTab.cs`
@@ -73,15 +75,19 @@ These three have no visibility gate today (`navButton` is called unconditionally
 - [ ] **Step 1: `SalesTab.cs` — add `: ITab` and the four properties**
 
 Change:
+
 ```csharp
 public class SalesTab
 ```
+
 to:
+
 ```csharp
 public class SalesTab : ITab
 ```
 
 Add directly below the `private Plugin plugin;` field block (same location/order used in every other tab in this task, for consistency):
+
 ```csharp
   public string Name => "Sales";
   public FontAwesomeIcon Icon => FontAwesomeIcon.DollarSign;
@@ -94,6 +100,7 @@ Add directly below the `private Plugin plugin;` field block (same location/order
 ```csharp
 public class ShiftsTab : ITab
 ```
+
 ```csharp
   public string Name => "My Shift";
   public FontAwesomeIcon Icon => FontAwesomeIcon.CalendarCheck;
@@ -106,6 +113,7 @@ public class ShiftsTab : ITab
 ```csharp
 public class RoomsTab : ITab
 ```
+
 ```csharp
   public string Name => "Rooms";
   public FontAwesomeIcon Icon => FontAwesomeIcon.DoorOpen;
@@ -131,6 +139,7 @@ git commit -m "feat: implement ITab on SalesTab, ShiftsTab, RoomsTab"
 ### Task 3: Implement `ITab` on `GuestsTab`, `GuestLogTab` (gated by `configuration.showGuestsTab`)
 
 **Files:**
+
 - Modify: `VenueManager/UI/Tabs/GuestsTab.cs`
 - Modify: `VenueManager/UI/Tabs/GuestLogTab.cs`
 
@@ -139,6 +148,7 @@ git commit -m "feat: implement ITab on SalesTab, ShiftsTab, RoomsTab"
 ```csharp
 public class GuestsTab : ITab
 ```
+
 ```csharp
   public string Name => "Patrons";
   public FontAwesomeIcon Icon => FontAwesomeIcon.UserFriends;
@@ -151,6 +161,7 @@ public class GuestsTab : ITab
 ```csharp
 public class GuestLogTab : ITab
 ```
+
 ```csharp
   public string Name => "History";
   public FontAwesomeIcon Icon => FontAwesomeIcon.History;
@@ -176,6 +187,7 @@ git commit -m "feat: implement ITab on GuestsTab, GuestLogTab"
 ### Task 4: Implement `ITab` on `VenuesTab` and `InventoryTab` (each has its own gate)
 
 **Files:**
+
 - Modify: `VenueManager/UI/Tabs/VenuesTab.cs`
 - Modify: `VenueManager/UI/Tabs/InventoryTab.cs`
 
@@ -184,6 +196,7 @@ git commit -m "feat: implement ITab on GuestsTab, GuestLogTab"
 ```csharp
 public class VenuesTab : ITab
 ```
+
 ```csharp
   public string Name => "Venues";
   public FontAwesomeIcon Icon => FontAwesomeIcon.Building;
@@ -196,6 +209,7 @@ public class VenuesTab : ITab
 ```csharp
 public class InventoryTab : ITab
 ```
+
 ```csharp
   public string Name => "Inventory";
   public FontAwesomeIcon Icon => FontAwesomeIcon.WineGlass;
@@ -221,6 +235,7 @@ git commit -m "feat: implement ITab on VenuesTab, InventoryTab"
 ### Task 5: Implement `ITab` on `SettingsTab` (always visible, no gate)
 
 **Files:**
+
 - Modify: `VenueManager/UI/Tabs/SettingsTab.cs`
 
 - [ ] **Step 1**
@@ -228,6 +243,7 @@ git commit -m "feat: implement ITab on VenuesTab, InventoryTab"
 ```csharp
 public class SettingsTab : ITab
 ```
+
 ```csharp
   public string Name => "Settings";
   public FontAwesomeIcon Icon => FontAwesomeIcon.Cog;
@@ -255,11 +271,13 @@ git commit -m "feat: implement ITab on SettingsTab"
 This is the task that actually removes the duplication — everything before this was additive scaffolding.
 
 **Files:**
+
 - Modify: `VenueManager/Windows/MainWindow.cs` (full rewrite of the class body; constructor, fields, and all four draw-path methods change)
 
 - [ ] **Step 1: Replace the field block, enum, and constructor**
 
 Current (lines 12–55):
+
 ```csharp
 public class MainWindow : Window, IDisposable
 {
@@ -308,6 +326,7 @@ public class MainWindow : Window, IDisposable
 ```
 
 New:
+
 ```csharp
 public class MainWindow : Window, IDisposable
 {
@@ -369,6 +388,7 @@ Add `using System.Collections.Generic;` to the top of the file (not currently im
 - [ ] **Step 2: Replace `OpenTab`**
 
 Current:
+
 ```csharp
     // Called by slash commands to jump to a named tab.
     public void OpenTab(string name)
@@ -389,6 +409,7 @@ Current:
 ```
 
 New:
+
 ```csharp
     // Called by slash commands to jump to a named tab.
     public void OpenTab(string name)
@@ -403,12 +424,14 @@ Add `using System.Linq;`.
 - [ ] **Step 3: Replace `Draw()`'s first-run check**
 
 Current:
+
 ```csharp
             if (string.IsNullOrEmpty(configuration.xivAppApiKey))
                 _currentTab = Tab.Settings;
 ```
 
 New:
+
 ```csharp
             if (string.IsNullOrEmpty(configuration.xivAppApiKey))
                 _currentTab = settingsTab;
@@ -417,6 +440,7 @@ New:
 - [ ] **Step 4: Replace `drawNavIcons`**
 
 Current:
+
 ```csharp
     private void drawNavIcons()
     {
@@ -450,6 +474,7 @@ Current:
 ```
 
 New:
+
 ```csharp
     private void drawNavIcons()
     {
@@ -473,6 +498,7 @@ New:
 - [ ] **Step 5: Replace `navButton`**
 
 Current:
+
 ```csharp
     private void navButton(Tab tab, FontAwesomeIcon icon, string tooltip)
     {
@@ -500,6 +526,7 @@ Current:
 ```
 
 New:
+
 ```csharp
     private void navButton(ITab tab)
     {
@@ -531,6 +558,7 @@ New:
 - [ ] **Step 6: Replace `drawTabContent`**
 
 Current:
+
 ```csharp
     private void drawTabContent()
     {
@@ -555,6 +583,7 @@ Current:
 ```
 
 New:
+
 ```csharp
     private void drawTabContent()
     {
@@ -603,6 +632,7 @@ dotnet build -c Release
 - [ ] **Step 3: Manual in-game verification**
 
 Confirm, with a real dev-plugin load:
+
 1. Every tab still opens from the sidebar (all 8 icons present, correct order: Patrons, Sales, History, My Shift, Rooms, Inventory, Venues, then Settings pinned at bottom).
 2. Hiding "Patrons"/"History" via Settings → `showGuestsTab` toggle still hides both icons live and falls back to Sales if either was the active tab.
 3. Hiding "Venues" via `showVenueTab` toggle behaves the same way.
@@ -617,7 +647,7 @@ Confirm, with a real dev-plugin load:
 
 ## Web packages/ hoisting — deferred, not scheduled
 
-Per the roadmap's own Phase 4 description: *"do only if/when a second consumer actually needs [`lib/format.ts`, `lib/server-time.ts`, `lib/validation.ts`]; otherwise defer indefinitely (YAGNI — don't hoist for a consumer that doesn't exist yet)."*
+Per the roadmap's own Phase 4 description: _"do only if/when a second consumer actually needs [`lib/format.ts`, `lib/server-time.ts`, `lib/validation.ts`]; otherwise defer indefinitely (YAGNI — don't hoist for a consumer that doesn't exist yet)."_
 
 Mobile is deferred (see [[project_xiv_app_mobile_v1]]) and Aetherphone integration (the other plausible second consumer) is still at the outreach stage (see [[project_aetherphone_venue_integration]]) — no second consumer exists today. **No task for this in the current plan.** Revisit only when a concrete second consumer is being built, at which point scope a dedicated plan for exactly what that consumer needs (don't pre-hoist the full set of three files speculatively).
 

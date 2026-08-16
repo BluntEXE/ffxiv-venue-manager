@@ -1,4 +1,5 @@
 # Mobile Open Shifts — Design Spec
+
 **Date:** 2026-06-24
 **Status:** Approved
 
@@ -15,14 +16,15 @@ Returns all `OPEN` status shifts across all venues the authenticated user is an 
 **Auth:** existing `requireMobileAuth` / `isAuthFailure` guard (same as `/api/mobile/my/shifts`).
 
 **Response shape per shift:**
+
 ```ts
 {
   id: string
   venueId: string
   venueName: string
-  scheduledStart: string   // ISO datetime
-  scheduledEnd: string     // ISO datetime
-  roleName: string | null  // from shift.role.name if set
+  scheduledStart: string // ISO datetime
+  scheduledEnd: string // ISO datetime
+  roleName: string | null // from shift.role.name if set
 }
 ```
 
@@ -46,6 +48,7 @@ Section only renders when there is at least one open shift available. Once all s
 ### Shift rows
 
 Each row shows:
+
 - Scheduled time range (formatted in ST, same as upcoming shifts)
 - Venue name
 - Role name if set (subtext, same colour as world/DC)
@@ -65,7 +68,7 @@ Open shifts fetched in the same `loadShifts` call as upcoming shifts (parallel `
 
 ## Files
 
-| File | Action |
-|------|--------|
-| `apps/web/app/api/mobile/my/open-shifts/route.ts` | Create |
-| `apps/mobile/app/(app)/home.tsx` | Modify — add open shifts state, section render, collapse toggle |
+| File                                              | Action                                                          |
+| ------------------------------------------------- | --------------------------------------------------------------- |
+| `apps/web/app/api/mobile/my/open-shifts/route.ts` | Create                                                          |
+| `apps/mobile/app/(app)/home.tsx`                  | Modify — add open shifts state, section render, collapse toggle |

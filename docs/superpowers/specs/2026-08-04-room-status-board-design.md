@@ -1,4 +1,5 @@
 # Room Status Board — Design Spec
+
 **Date:** 2026-08-04
 **Status:** Approved
 

@@ -47,19 +47,19 @@ export default async function FollowingPage() {
     orderBy: { createdAt: "desc" },
   })
 
-  const venues = follows.map(f => ({
-    id:          f.venue.id,
-    name:        f.venue.name,
-    slug:        f.venue.slug,
-    dataCenter:  f.venue.dataCenter,
-    world:       f.venue.world,
-    district:    f.venue.district,
-    ward:        f.venue.ward,
-    plot:        f.venue.plot,
-    apartment:   f.venue.apartment,
-    location:    f.venue.location,
+  const venues = follows.map((f) => ({
+    id: f.venue.id,
+    name: f.venue.name,
+    slug: f.venue.slug,
+    dataCenter: f.venue.dataCenter,
+    world: f.venue.world,
+    district: f.venue.district,
+    ward: f.venue.ward,
+    plot: f.venue.plot,
+    apartment: f.venue.apartment,
+    location: f.venue.location,
     followCount: f.venue._count.follows,
-    isOpenNow:   isVenueOpenNow({
+    isOpenNow: isVenueOpenNow({
       hasActiveEvent: f.venue.events.length > 0,
       scheduleEntries: f.venue.scheduleEntries,
       ffxivSchedule: f.venue.venueSchedule?.data,

@@ -17,6 +17,7 @@
 ### Task 1: `resolveDisplayName` helper
 
 **Files:**
+
 - Create: `apps/web/lib/display-name.ts`
 
 - [ ] **Step 1: Write the file**
@@ -37,13 +38,7 @@ export function resolveDisplayName(input: {
   displayName?: string | null
   discordName?: string | null
 }): string {
-  return (
-    input.characterName ||
-    input.nickname ||
-    input.displayName ||
-    input.discordName ||
-    "Unknown"
-  )
+  return input.characterName || input.nickname || input.displayName || input.discordName || "Unknown"
 }
 ```
 
@@ -65,6 +60,7 @@ git commit -m "feat(names): add resolveDisplayName helper (character > nickname 
 ### Task 2: Shifts calendar — type + `ShiftDayDialog`
 
 **Files:**
+
 - Modify: `apps/web/lib/shift-format.ts`
 - Modify: `apps/web/components/shift-day-dialog.tsx`
 
@@ -99,13 +95,27 @@ to:
 In `apps/web/components/shift-day-dialog.tsx`, change the import line:
 
 ```typescript
-import { fmtHour, statusBadgeClass, utcDayKey, type CalendarShift, type StaffMember, type RoleOption } from "@/lib/shift-format"
+import {
+  fmtHour,
+  statusBadgeClass,
+  utcDayKey,
+  type CalendarShift,
+  type StaffMember,
+  type RoleOption,
+} from "@/lib/shift-format"
 ```
 
 to:
 
 ```typescript
-import { fmtHour, statusBadgeClass, utcDayKey, type CalendarShift, type StaffMember, type RoleOption } from "@/lib/shift-format"
+import {
+  fmtHour,
+  statusBadgeClass,
+  utcDayKey,
+  type CalendarShift,
+  type StaffMember,
+  type RoleOption,
+} from "@/lib/shift-format"
 import { resolveDisplayName } from "@/lib/display-name"
 ```
 
@@ -148,6 +158,7 @@ git commit -m "feat(names): resolve shift-day-dialog staff names through resolve
 ### Task 3: Shifts page — queries + 5 display spots
 
 **Files:**
+
 - Modify: `apps/web/app/dashboard/[slug]/shifts/page.tsx`
 
 - [ ] **Step 1: Add the import**
@@ -270,44 +281,48 @@ to:
 Change:
 
 ```typescript
-  const activeStaff = await prisma.membership.findMany({
-    where: { venueId: venue.id, status: "active", userId: { not: null } },
-    include: { user: { select: { id: true, name: true, image: true } } },
-  })
-  const staffForDialog = activeStaff.map((m) => ({
-    id: m.id,
-    name: m.nickname ?? m.user?.name ?? "Unknown",
-    image: m.user?.image ?? null,
-  }))
+const activeStaff = await prisma.membership.findMany({
+  where: { venueId: venue.id, status: "active", userId: { not: null } },
+  include: { user: { select: { id: true, name: true, image: true } } },
+})
+const staffForDialog = activeStaff.map((m) => ({
+  id: m.id,
+  name: m.nickname ?? m.user?.name ?? "Unknown",
+  image: m.user?.image ?? null,
+}))
 ```
 
 to:
 
 ```typescript
-  const activeStaff = await prisma.membership.findMany({
-    where: { venueId: venue.id, status: "active", userId: { not: null } },
-    include: {
-      user: {
-        select: {
-          id: true,
-          name: true,
-          displayName: true,
-          image: true,
-          characters: { orderBy: [{ isPrimary: "desc" }, { createdAt: "asc" }], take: 1, select: { characterName: true } },
+const activeStaff = await prisma.membership.findMany({
+  where: { venueId: venue.id, status: "active", userId: { not: null } },
+  include: {
+    user: {
+      select: {
+        id: true,
+        name: true,
+        displayName: true,
+        image: true,
+        characters: {
+          orderBy: [{ isPrimary: "desc" }, { createdAt: "asc" }],
+          take: 1,
+          select: { characterName: true },
         },
       },
     },
-  })
-  const staffForDialog = activeStaff.map((m) => ({
-    id: m.id,
-    name: resolveDisplayName({
-      characterName: m.user?.characters?.[0]?.characterName,
-      nickname: m.nickname,
-      displayName: m.user?.displayName,
-      discordName: m.user?.name,
-    }),
-    image: m.user?.image ?? null,
-  }))
+  },
+})
+const staffForDialog = activeStaff.map((m) => ({
+  id: m.id,
+  name: resolveDisplayName({
+    characterName: m.user?.characters?.[0]?.characterName,
+    nickname: m.nickname,
+    displayName: m.user?.displayName,
+    discordName: m.user?.name,
+  }),
+  image: m.user?.image ?? null,
+}))
 ```
 
 - [ ] **Step 5: Swap the staff-grid `name` assignment**
@@ -423,6 +438,7 @@ git commit -m "feat(names): resolve shifts page staff names through resolveDispl
 ### Task 4: Live dashboard — `activeShifts` query + `onShiftStaff`
 
 **Files:**
+
 - Modify: `apps/web/app/dashboard/[slug]/live/page.tsx`
 
 - [ ] **Step 1: Add the import**
@@ -436,38 +452,42 @@ import { resolveDisplayName } from "@/lib/display-name"
 Change:
 
 ```typescript
-  const activeShifts = await prisma.shift.findMany({
-    where: { venueId: venue.id, status: "ACTIVE" },
-    include: {
-      membership: {
-        include: { user: { select: { name: true, image: true } } },
-      },
+const activeShifts = await prisma.shift.findMany({
+  where: { venueId: venue.id, status: "ACTIVE" },
+  include: {
+    membership: {
+      include: { user: { select: { name: true, image: true } } },
     },
-    take: 10,
-  })
+  },
+  take: 10,
+})
 ```
 
 to:
 
 ```typescript
-  const activeShifts = await prisma.shift.findMany({
-    where: { venueId: venue.id, status: "ACTIVE" },
-    include: {
-      membership: {
-        include: {
-          user: {
-            select: {
-              name: true,
-              displayName: true,
-              image: true,
-              characters: { orderBy: [{ isPrimary: "desc" }, { createdAt: "asc" }], take: 1, select: { characterName: true } },
+const activeShifts = await prisma.shift.findMany({
+  where: { venueId: venue.id, status: "ACTIVE" },
+  include: {
+    membership: {
+      include: {
+        user: {
+          select: {
+            name: true,
+            displayName: true,
+            image: true,
+            characters: {
+              orderBy: [{ isPrimary: "desc" }, { createdAt: "asc" }],
+              take: 1,
+              select: { characterName: true },
             },
           },
         },
       },
     },
-    take: 10,
-  })
+  },
+  take: 10,
+})
 ```
 
 - [ ] **Step 3: Swap the `onShiftStaff` mapping**
@@ -498,7 +518,7 @@ to:
             })}
 ```
 
-Note: `invitedName` (a placeholder set for staff who haven't accepted their invite and have no `User` row yet) is folded into the `discordName` slot ahead of the final `"Unknown"` fallback — it's the right tier for "we don't have a real account yet, but we have *something* to call them," and this preserves the original chain's exact fallback order (nickname → Discord name → invitedName → "Staff") with character name added on top. The `name === "Unknown" ? "Staff" : name` line preserves the original code's final fallback word ("Staff", not "Unknown") for this specific call site, since that's what the live dashboard used before — computed once, not called twice.
+Note: `invitedName` (a placeholder set for staff who haven't accepted their invite and have no `User` row yet) is folded into the `discordName` slot ahead of the final `"Unknown"` fallback — it's the right tier for "we don't have a real account yet, but we have _something_ to call them," and this preserves the original chain's exact fallback order (nickname → Discord name → invitedName → "Staff") with character name added on top. The `name === "Unknown" ? "Staff" : name` line preserves the original code's final fallback word ("Staff", not "Unknown") for this specific call site, since that's what the live dashboard used before — computed once, not called twice.
 
 - [ ] **Step 4: Verify it type-checks**
 
@@ -518,6 +538,7 @@ git commit -m "feat(names): resolve live dashboard on-shift staff names through 
 ### Task 5: Staff management page + `StaffTable`
 
 **Files:**
+
 - Modify: `apps/web/app/dashboard/[slug]/staff/page.tsx`
 - Modify: `apps/web/components/staff-table.tsx`
 
@@ -530,51 +551,55 @@ In `apps/web/app/dashboard/[slug]/staff/page.tsx`, near the other imports (this 
 Change:
 
 ```typescript
-  const staff = await prisma.membership.findMany({
-    where: { venueId: venue.id },
-    include: {
-      user: {
-        select: {
-          id: true,
-          name: true,
-          image: true,
-          discordId: true,
-        },
+const staff = await prisma.membership.findMany({
+  where: { venueId: venue.id },
+  include: {
+    user: {
+      select: {
+        id: true,
+        name: true,
+        image: true,
+        discordId: true,
       },
-      customRole: true,
-      additionalRoles: { include: { role: { select: { name: true, color: true } } } },
     },
-    orderBy: [
-      { role: "asc" }, // OWNER first, then MANAGER, then STAFF
-      { createdAt: "asc" },
-    ],
-  })
+    customRole: true,
+    additionalRoles: { include: { role: { select: { name: true, color: true } } } },
+  },
+  orderBy: [
+    { role: "asc" }, // OWNER first, then MANAGER, then STAFF
+    { createdAt: "asc" },
+  ],
+})
 ```
 
 to:
 
 ```typescript
-  const staff = await prisma.membership.findMany({
-    where: { venueId: venue.id },
-    include: {
-      user: {
-        select: {
-          id: true,
-          name: true,
-          displayName: true,
-          image: true,
-          discordId: true,
-          characters: { orderBy: [{ isPrimary: "desc" }, { createdAt: "asc" }], take: 1, select: { characterName: true } },
+const staff = await prisma.membership.findMany({
+  where: { venueId: venue.id },
+  include: {
+    user: {
+      select: {
+        id: true,
+        name: true,
+        displayName: true,
+        image: true,
+        discordId: true,
+        characters: {
+          orderBy: [{ isPrimary: "desc" }, { createdAt: "asc" }],
+          take: 1,
+          select: { characterName: true },
         },
       },
-      customRole: true,
-      additionalRoles: { include: { role: { select: { name: true, color: true } } } },
     },
-    orderBy: [
-      { role: "asc" }, // OWNER first, then MANAGER, then STAFF
-      { createdAt: "asc" },
-    ],
-  })
+    customRole: true,
+    additionalRoles: { include: { role: { select: { name: true, color: true } } } },
+  },
+  orderBy: [
+    { role: "asc" }, // OWNER first, then MANAGER, then STAFF
+    { createdAt: "asc" },
+  ],
+})
 ```
 
 - [ ] **Step 3: Pass the raw fields through to `StaffTable`**
@@ -663,7 +688,13 @@ export type StaffMember = {
   joinedAt: string
   isOnShift: boolean
   nickname: string | null
-  user: { id: string; name: string | null; displayName: string | null; image: string | null; characterName: string | null } | null
+  user: {
+    id: string
+    name: string | null
+    displayName: string | null
+    image: string | null
+    characterName: string | null
+  } | null
   venueId: string
 }
 
@@ -682,23 +713,29 @@ function memberDisplayName(member: Pick<StaffMember, "nickname" | "user">): stri
 Change:
 
 ```typescript
-      if (search) {
-        const q = search.toLowerCase()
-        if (!(m.nickname ?? m.user?.name ?? "").toLowerCase().includes(q) &&
-            !(m.user?.name ?? "").toLowerCase().includes(q) &&
-            !(m.customRole?.name ?? "").toLowerCase().includes(q)) return false
-      }
+if (search) {
+  const q = search.toLowerCase()
+  if (
+    !(m.nickname ?? m.user?.name ?? "").toLowerCase().includes(q) &&
+    !(m.user?.name ?? "").toLowerCase().includes(q) &&
+    !(m.customRole?.name ?? "").toLowerCase().includes(q)
+  )
+    return false
+}
 ```
 
 to:
 
 ```typescript
-      if (search) {
-        const q = search.toLowerCase()
-        if (!memberDisplayName(m).toLowerCase().includes(q) &&
-            !(m.user?.name ?? "").toLowerCase().includes(q) &&
-            !(m.customRole?.name ?? "").toLowerCase().includes(q)) return false
-      }
+if (search) {
+  const q = search.toLowerCase()
+  if (
+    !memberDisplayName(m).toLowerCase().includes(q) &&
+    !(m.user?.name ?? "").toLowerCase().includes(q) &&
+    !(m.customRole?.name ?? "").toLowerCase().includes(q)
+  )
+    return false
+}
 ```
 
 - [ ] **Step 6: Swap the avatar-initials and primary-name display**
@@ -753,6 +790,7 @@ git commit -m "feat(names): resolve staff table names through resolveDisplayName
 ### Task 6: Staff API route (`/api/venues/[venueId]/staff`)
 
 **Files:**
+
 - Modify: `apps/web/app/api/venues/[venueId]/staff/route.ts`
 
 This route feeds the payroll page's staff dropdown (Task 8) via `fetch`. It already selects `displayName`; only needs the character sub-select added.
@@ -808,6 +846,7 @@ git commit -m "feat(names): include primary character in staff API response"
 ### Task 7: Payroll API routes (4 files) + payroll page (3 display spots)
 
 **Files:**
+
 - Modify: `apps/web/app/api/venues/[venueId]/payroll/route.ts`
 - Modify: `apps/web/app/api/venues/[venueId]/payroll/[payrollId]/route.ts`
 - Modify: `apps/web/app/api/venues/[venueId]/payroll/generate/route.ts`
@@ -1040,20 +1079,28 @@ The `staff` state (rendered at the two `SelectItem`/dropdown spots) comes from `
 Change:
 
 ```typescript
-                          {member.nickname ?? member.user?.displayName ?? member.user?.name ?? "Unknown"}
-                          {member.hourlyRate ? ` (${member.hourlyRate} Gil/hr)` : ""}
+{
+  member.nickname ?? member.user?.displayName ?? member.user?.name ?? "Unknown"
+}
+{
+  member.hourlyRate ? ` (${member.hourlyRate} Gil/hr)` : ""
+}
 ```
 
 to:
 
 ```typescript
-                          {resolveDisplayName({
-                            characterName: member.user?.characters?.[0]?.characterName,
-                            nickname: member.nickname,
-                            displayName: member.user?.displayName,
-                            discordName: member.user?.name,
-                          })}
-                          {member.hourlyRate ? ` (${member.hourlyRate} Gil/hr)` : ""}
+{
+  resolveDisplayName({
+    characterName: member.user?.characters?.[0]?.characterName,
+    nickname: member.nickname,
+    displayName: member.user?.displayName,
+    discordName: member.user?.name,
+  })
+}
+{
+  member.hourlyRate ? ` (${member.hourlyRate} Gil/hr)` : ""
+}
 ```
 
 Change:
@@ -1080,22 +1127,22 @@ to:
 Change:
 
 ```typescript
-                  const name = entry.isManualEntry
-                    ? entry.manualEntryName || "Unknown"
-                    : entry.membership?.nickname ?? entry.membership?.user?.displayName ?? entry.membership?.user?.name ?? "Unknown"
+const name = entry.isManualEntry
+  ? entry.manualEntryName || "Unknown"
+  : (entry.membership?.nickname ?? entry.membership?.user?.displayName ?? entry.membership?.user?.name ?? "Unknown")
 ```
 
 to:
 
 ```typescript
-                  const name = entry.isManualEntry
-                    ? entry.manualEntryName || "Unknown"
-                    : resolveDisplayName({
-                        characterName: entry.membership?.user?.characters?.[0]?.characterName,
-                        nickname: entry.membership?.nickname,
-                        displayName: entry.membership?.user?.displayName,
-                        discordName: entry.membership?.user?.name,
-                      })
+const name = entry.isManualEntry
+  ? entry.manualEntryName || "Unknown"
+  : resolveDisplayName({
+      characterName: entry.membership?.user?.characters?.[0]?.characterName,
+      nickname: entry.membership?.nickname,
+      displayName: entry.membership?.user?.displayName,
+      discordName: entry.membership?.user?.name,
+    })
 ```
 
 - [ ] **Step 6: Verify it type-checks**
@@ -1116,6 +1163,7 @@ git commit -m "feat(names): resolve payroll staff names through resolveDisplayNa
 ### Task 8: Sales — `transactions.ts` + `discord-webhook.ts`
 
 **Files:**
+
 - Modify: `apps/web/lib/api/transactions.ts`
 - Modify: `apps/web/lib/discord-webhook.ts` (no code change — signature already compatible, listed for reference only)
 
@@ -1198,29 +1246,29 @@ to:
 Change:
 
 ```typescript
-      const embed = formatSaleLoggedEmbed({
-        amount: Number(newTransaction.amount),
-        service: newTransaction.service,
-        customerName: sanitizeDiscordContent(newTransaction.customerName, {
-          maxLength: 100,
-          stripUrls: true,
-        }),
-        staff: newTransaction.staff,
-      })
+const embed = formatSaleLoggedEmbed({
+  amount: Number(newTransaction.amount),
+  service: newTransaction.service,
+  customerName: sanitizeDiscordContent(newTransaction.customerName, {
+    maxLength: 100,
+    stripUrls: true,
+  }),
+  staff: newTransaction.staff,
+})
 ```
 
 to:
 
 ```typescript
-      const embed = formatSaleLoggedEmbed({
-        amount: Number(newTransaction.amount),
-        service: newTransaction.service,
-        customerName: sanitizeDiscordContent(newTransaction.customerName, {
-          maxLength: 100,
-          stripUrls: true,
-        }),
-        staff: resolvedStaffName ? { name: resolvedStaffName } : null,
-      })
+const embed = formatSaleLoggedEmbed({
+  amount: Number(newTransaction.amount),
+  service: newTransaction.service,
+  customerName: sanitizeDiscordContent(newTransaction.customerName, {
+    maxLength: 100,
+    stripUrls: true,
+  }),
+  staff: resolvedStaffName ? { name: resolvedStaffName } : null,
+})
 ```
 
 - [ ] **Step 4: Use the resolved name in the SSE payload**
@@ -1228,37 +1276,37 @@ to:
 Change:
 
 ```typescript
-  venueEventBus.emit(venueId, {
-    id: newTransaction.id,
-    type: "sale",
-    venueId,
-    timestamp: newTransaction.createdAt.toISOString(),
-    data: {
-      amount: Number(newTransaction.amount),
-      customerName: newTransaction.customerName,
-      service: newTransaction.service,
-      staff: newTransaction.staff,
-      notes: newTransaction.notes,
-    },
-  })
+venueEventBus.emit(venueId, {
+  id: newTransaction.id,
+  type: "sale",
+  venueId,
+  timestamp: newTransaction.createdAt.toISOString(),
+  data: {
+    amount: Number(newTransaction.amount),
+    customerName: newTransaction.customerName,
+    service: newTransaction.service,
+    staff: newTransaction.staff,
+    notes: newTransaction.notes,
+  },
+})
 ```
 
 to:
 
 ```typescript
-  venueEventBus.emit(venueId, {
-    id: newTransaction.id,
-    type: "sale",
-    venueId,
-    timestamp: newTransaction.createdAt.toISOString(),
-    data: {
-      amount: Number(newTransaction.amount),
-      customerName: newTransaction.customerName,
-      service: newTransaction.service,
-      staff: resolvedStaffName ? { id: newTransaction.staff?.id, name: resolvedStaffName } : null,
-      notes: newTransaction.notes,
-    },
-  })
+venueEventBus.emit(venueId, {
+  id: newTransaction.id,
+  type: "sale",
+  venueId,
+  timestamp: newTransaction.createdAt.toISOString(),
+  data: {
+    amount: Number(newTransaction.amount),
+    customerName: newTransaction.customerName,
+    service: newTransaction.service,
+    staff: resolvedStaffName ? { id: newTransaction.staff?.id, name: resolvedStaffName } : null,
+    notes: newTransaction.notes,
+  },
+})
 ```
 
 This keeps `data.staff.id`/`data.staff.name` shaped exactly as `live-dashboard.tsx`'s SSE consumer already expects (`data.staff?.id === currentUserId`, `data.staff.name`) — no changes needed there.
@@ -1281,6 +1329,7 @@ git commit -m "feat(names): resolve sale-logged staff name for webhook + live SS
 ### Task 9: Staff-joined webhook (`invites/[token]/accept`)
 
 **Files:**
+
 - Modify: `apps/web/app/api/invites/[token]/accept/route.ts`
 
 - [ ] **Step 1: Add the import**
@@ -1336,24 +1385,24 @@ to:
 Change:
 
 ```typescript
-      const embed = formatStaffJoinedEmbed({
-        name: session.user.name || null,
-        role: membership.role,
-      })
+const embed = formatStaffJoinedEmbed({
+  name: session.user.name || null,
+  role: membership.role,
+})
 ```
 
 to:
 
 ```typescript
-      const embed = formatStaffJoinedEmbed({
-        name: resolveDisplayName({
-          characterName: updatedMembership.user?.characters?.[0]?.characterName,
-          nickname: updatedMembership.nickname,
-          displayName: updatedMembership.user?.displayName,
-          discordName: updatedMembership.user?.name ?? session.user.name,
-        }),
-        role: membership.role,
-      })
+const embed = formatStaffJoinedEmbed({
+  name: resolveDisplayName({
+    characterName: updatedMembership.user?.characters?.[0]?.characterName,
+    nickname: updatedMembership.nickname,
+    displayName: updatedMembership.user?.displayName,
+    discordName: updatedMembership.user?.name ?? session.user.name,
+  }),
+  role: membership.role,
+})
 ```
 
 - [ ] **Step 4: Verify it type-checks**
@@ -1374,6 +1423,7 @@ git commit -m "feat(names): resolve staff-joined webhook name through resolveDis
 ### Task 10: Activity timeline (`/api/venues/[venueId]/timeline`)
 
 **Files:**
+
 - Modify: `apps/web/app/api/venues/[venueId]/timeline/route.ts`
 
 - [ ] **Step 1: Add the import**
@@ -1552,6 +1602,7 @@ git commit -m "feat(names): resolve timeline sale + shift staff names through re
 ### Task 11: Character-link nudge banner
 
 **Files:**
+
 - Create: `apps/web/components/character-link-nudge.tsx`
 - Modify: `apps/web/app/dashboard/page.tsx`
 - Modify: `apps/web/app/dashboard/[slug]/page.tsx`
@@ -1622,29 +1673,30 @@ import { CharacterLinkNudge } from "@/components/character-link-nudge"
 Add the character-count query right after the existing `announcements` query:
 
 ```typescript
-  const announcements = await prisma.announcement.findMany({
-    where: {
-      OR: [{ expiresAt: null }, { expiresAt: { gt: now } }],
-      dismissals: { none: { userId: session.user.id } },
-    },
-    select: { id: true, title: true, message: true, link: true, linkLabel: true },
-    orderBy: { createdAt: "desc" },
-  })
+const announcements = await prisma.announcement.findMany({
+  where: {
+    OR: [{ expiresAt: null }, { expiresAt: { gt: now } }],
+    dismissals: { none: { userId: session.user.id } },
+  },
+  select: { id: true, title: true, message: true, link: true, linkLabel: true },
+  orderBy: { createdAt: "desc" },
+})
 ```
 
 becomes:
 
 ```typescript
-  const announcements = await prisma.announcement.findMany({
-    where: {
-      OR: [{ expiresAt: null }, { expiresAt: { gt: now } }],
-      dismissals: { none: { userId: session.user.id } },
-    },
-    select: { id: true, title: true, message: true, link: true, linkLabel: true },
-    orderBy: { createdAt: "desc" },
-  })
+const announcements = await prisma.announcement.findMany({
+  where: {
+    OR: [{ expiresAt: null }, { expiresAt: { gt: now } }],
+    dismissals: { none: { userId: session.user.id } },
+  },
+  select: { id: true, title: true, message: true, link: true, linkLabel: true },
+  orderBy: { createdAt: "desc" },
+})
 
-  const hasLinkedCharacter = (await prisma.userCharacter.count({
+const hasLinkedCharacter =
+  (await prisma.userCharacter.count({
     where: { userId: session.user.id },
   })) > 0
 ```
@@ -1673,29 +1725,30 @@ import { CharacterLinkNudge } from "@/components/character-link-nudge"
 Add the same character-count query right after its existing `announcements` query:
 
 ```typescript
-  const announcements = await prisma.announcement.findMany({
-    where: {
-      OR: [{ expiresAt: null }, { expiresAt: { gt: now } }],
-      dismissals: { none: { userId: session.user.id } },
-    },
-    select: { id: true, title: true, message: true, link: true, linkLabel: true },
-    orderBy: { createdAt: "desc" },
-  })
+const announcements = await prisma.announcement.findMany({
+  where: {
+    OR: [{ expiresAt: null }, { expiresAt: { gt: now } }],
+    dismissals: { none: { userId: session.user.id } },
+  },
+  select: { id: true, title: true, message: true, link: true, linkLabel: true },
+  orderBy: { createdAt: "desc" },
+})
 ```
 
 becomes:
 
 ```typescript
-  const announcements = await prisma.announcement.findMany({
-    where: {
-      OR: [{ expiresAt: null }, { expiresAt: { gt: now } }],
-      dismissals: { none: { userId: session.user.id } },
-    },
-    select: { id: true, title: true, message: true, link: true, linkLabel: true },
-    orderBy: { createdAt: "desc" },
-  })
+const announcements = await prisma.announcement.findMany({
+  where: {
+    OR: [{ expiresAt: null }, { expiresAt: { gt: now } }],
+    dismissals: { none: { userId: session.user.id } },
+  },
+  select: { id: true, title: true, message: true, link: true, linkLabel: true },
+  orderBy: { createdAt: "desc" },
+})
 
-  const hasLinkedCharacter = (await prisma.userCharacter.count({
+const hasLinkedCharacter =
+  (await prisma.userCharacter.count({
     where: { userId: session.user.id },
   })) > 0
 ```
@@ -1745,18 +1798,21 @@ Expected: starts without errors
 - [ ] **Step 2: Verify the fallback chain for an account with no linked character**
 
 Log in as a staff member with no `UserCharacter` row. Confirm:
+
 - The character-link nudge banner appears on `/dashboard` and on a venue's `/dashboard/<slug>` page, below any real announcements (if none are active, confirm the nudge still renders correctly on its own)
 - Their name shows as nickname (if set) or Discord name (if not) everywhere: shifts week grid, shifts calendar day dialog, live dashboard on-shift list, staff table, payroll dropdown/table
 
 - [ ] **Step 3: Verify the fallback chain for an account with a linked character**
 
 Either use an account that already has one, or link one via `/dashboard/account/characters` for a test account. Confirm:
+
 - The nudge banner no longer appears for that account
 - Their character name now shows everywhere from Step 2, taking priority over nickname/Discord name
 
 - [ ] **Step 4: Verify the sales webhook and live feed**
 
 Log a sale (via the web dashboard's Log Sale flow or the plugin, whichever is available) as the character-linked account. Confirm:
+
 - The live activity feed on `/dashboard/<slug>/live` shows the character name in the sale entry, not the Discord name
 - If a Discord webhook is configured for the test venue, confirm the "Sale Logged" embed's "Logged By" field shows the character name
 - Reload the live page and confirm the historical activity feed (loaded from `/api/venues/[venueId]/timeline`) also shows the character name for that same sale

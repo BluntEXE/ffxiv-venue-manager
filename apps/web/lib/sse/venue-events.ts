@@ -24,5 +24,5 @@ class VenueEventBus extends EventEmitter {
 
 // Singleton - survives across hot reloads in dev via globalThis
 const globalBus = globalThis as unknown as { __venueEventBus?: VenueEventBus }
-export const venueEventBus = globalBus.__venueEventBus ??= new VenueEventBus()
+export const venueEventBus = (globalBus.__venueEventBus ??= new VenueEventBus())
 venueEventBus.setMaxListeners(200)

@@ -27,10 +27,7 @@ export const GET = withRateLimit(
       })
 
       if (!user?.isAdmin) {
-        return NextResponse.json(
-          { error: "Forbidden - Admin access required" },
-          { status: 403 }
-        )
+        return NextResponse.json({ error: "Forbidden - Admin access required" }, { status: 403 })
       }
 
       const queryResult = querySchema.safeParse({
@@ -75,10 +72,7 @@ export const GET = withRateLimit(
       return NextResponse.json(feedback)
     } catch (error) {
       console.error("Error fetching admin feedback:", error)
-      return NextResponse.json(
-        { error: "Internal server error" },
-        { status: 500 }
-      )
+      return NextResponse.json({ error: "Internal server error" }, { status: 500 })
     }
   },
   { requests: 60, window: "1 m" }

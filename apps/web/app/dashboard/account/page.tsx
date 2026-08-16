@@ -27,12 +27,27 @@ export default async function ProfilePage() {
   if (!user) redirect("/auth/signin")
 
   const initials = user.name
-    ? user.name.split(" ").map(n => n[0]).join("").toUpperCase().slice(0, 2)
+    ? user.name
+        .split(" ")
+        .map((n) => n[0])
+        .join("")
+        .toUpperCase()
+        .slice(0, 2)
     : "U"
 
   const navItems = [
-    { icon: Scroll,    label: "My Characters",  href: "/dashboard/account/characters",  desc: "Manage your FFXIV character names" },
-    { icon: Settings,  label: "Account Settings", href: "/dashboard/account/settings",   desc: "Display name, privacy and danger zone" },
+    {
+      icon: Scroll,
+      label: "My Characters",
+      href: "/dashboard/account/characters",
+      desc: "Manage your FFXIV character names",
+    },
+    {
+      icon: Settings,
+      label: "Account Settings",
+      href: "/dashboard/account/settings",
+      desc: "Display name, privacy and danger zone",
+    },
   ]
 
   return (
@@ -42,7 +57,9 @@ export default async function ProfilePage() {
         <div>
           <div className="flex items-center gap-2 mb-1.5">
             <span className="w-[7px] h-[7px] bg-[rgba(0,180,255,0.7)] rotate-45 shadow-[0_0_10px_rgba(0,180,255,0.5)] flex-shrink-0" />
-            <span className="text-[0.72rem] font-semibold uppercase tracking-[0.14em] text-[var(--xiv-blue)]">Account</span>
+            <span className="text-[0.72rem] font-semibold uppercase tracking-[0.14em] text-[var(--xiv-blue)]">
+              Account
+            </span>
           </div>
           <h1 className="page-h1">Profile</h1>
         </div>
@@ -51,8 +68,10 @@ export default async function ProfilePage() {
       {/* Profile card */}
       <div className="vcard flex items-start gap-6 px-7 py-6 mt-8">
         {/* Avatar */}
-        <div className="flex-shrink-0 w-[72px] h-[72px] rounded-full grid place-items-center text-xl font-bold text-white"
-          style={{ background: "linear-gradient(135deg, #5865F2, #00b4ff)" }}>
+        <div
+          className="flex-shrink-0 w-[72px] h-[72px] rounded-full grid place-items-center text-xl font-bold text-white"
+          style={{ background: "linear-gradient(135deg, #5865F2, #00b4ff)" }}
+        >
           {user.image ? (
             // eslint-disable-next-line @next/next/no-img-element
             <img src={user.image} alt={user.name ?? ""} className="w-full h-full rounded-full object-cover" />
@@ -73,7 +92,9 @@ export default async function ProfilePage() {
           <div className="flex items-center gap-4 mt-3 flex-wrap">
             {user.discordId && (
               <span className="inline-flex items-center gap-1.5 text-[0.74rem] font-medium text-[#5865F2] bg-[rgba(88,101,242,0.1)] border border-[rgba(88,101,242,0.25)] px-2.5 py-1 rounded-full">
-                <svg className="w-3 h-3" viewBox="0 0 24 24" fill="currentColor"><path d="M20.317 4.37a19.791 19.791 0 0 0-4.885-1.515.074.074 0 0 0-.079.037c-.21.375-.444.864-.608 1.25a18.27 18.27 0 0 0-5.487 0 12.64 12.64 0 0 0-.617-1.25.077.077 0 0 0-.079-.037A19.736 19.736 0 0 0 3.677 4.37a.07.07 0 0 0-.032.027C.533 9.046-.32 13.58.099 18.057c.002.022.015.043.033.054a19.9 19.9 0 0 0 5.993 3.03.078.078 0 0 0 .084-.028 14.09 14.09 0 0 0 1.226-1.994.076.076 0 0 0-.041-.106 13.107 13.107 0 0 1-1.872-.892.077.077 0 0 1-.008-.128 10.2 10.2 0 0 0 .372-.292.074.074 0 0 1 .077-.01c3.928 1.793 8.18 1.793 12.062 0a.074.074 0 0 1 .078.01c.12.098.246.198.373.292a.077.077 0 0 1-.006.127 12.299 12.299 0 0 1-1.873.892.077.077 0 0 0-.041.107c.36.698.772 1.362 1.225 1.993a.076.076 0 0 0 .084.028 19.839 19.839 0 0 0 6.002-3.03.077.077 0 0 0 .032-.054c.5-5.177-.838-9.674-3.549-13.66a.061.061 0 0 0-.031-.03z"/></svg>
+                <svg className="w-3 h-3" viewBox="0 0 24 24" fill="currentColor">
+                  <path d="M20.317 4.37a19.791 19.791 0 0 0-4.885-1.515.074.074 0 0 0-.079.037c-.21.375-.444.864-.608 1.25a18.27 18.27 0 0 0-5.487 0 12.64 12.64 0 0 0-.617-1.25.077.077 0 0 0-.079-.037A19.736 19.736 0 0 0 3.677 4.37a.07.07 0 0 0-.032.027C.533 9.046-.32 13.58.099 18.057c.002.022.015.043.033.054a19.9 19.9 0 0 0 5.993 3.03.078.078 0 0 0 .084-.028 14.09 14.09 0 0 0 1.226-1.994.076.076 0 0 0-.041-.106 13.107 13.107 0 0 1-1.872-.892.077.077 0 0 1-.008-.128 10.2 10.2 0 0 0 .372-.292.074.074 0 0 1 .077-.01c3.928 1.793 8.18 1.793 12.062 0a.074.074 0 0 1 .078.01c.12.098.246.198.373.292a.077.077 0 0 1-.006.127 12.299 12.299 0 0 1-1.873.892.077.077 0 0 0-.041.107c.36.698.772 1.362 1.225 1.993a.076.076 0 0 0 .084.028 19.839 19.839 0 0 0 6.002-3.03.077.077 0 0 0 .032-.054c.5-5.177-.838-9.674-3.549-13.66a.061.061 0 0 0-.031-.03z" />
+                </svg>
                 Discord linked
               </span>
             )}
@@ -93,7 +114,7 @@ export default async function ProfilePage() {
             <span className="count">{user.memberships.length}</span>
           </div>
           <div className="space-y-2">
-            {user.memberships.map(m => (
+            {user.memberships.map((m) => (
               <Link
                 key={m.id}
                 href={`/dashboard/${m.venue.slug}`}

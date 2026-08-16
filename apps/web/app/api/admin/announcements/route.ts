@@ -27,7 +27,7 @@ export const GET = withRateLimit(
   async (request: NextRequest) => {
     try {
       const session = await getServerSession(authOptions)
-      if (!await requireAdmin(session)) {
+      if (!(await requireAdmin(session))) {
         return NextResponse.json({ error: "Forbidden" }, { status: 403 })
       }
 
@@ -52,7 +52,7 @@ export const POST = withRateLimit(
   async (request: NextRequest) => {
     try {
       const session = await getServerSession(authOptions)
-      if (!session?.user?.id || !await requireAdmin(session)) {
+      if (!session?.user?.id || !(await requireAdmin(session))) {
         return NextResponse.json({ error: "Forbidden" }, { status: 403 })
       }
 

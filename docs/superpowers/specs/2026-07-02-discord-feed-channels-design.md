@@ -8,7 +8,7 @@ Three community Discord channels (fed by the Aetherlink bot / `eorzea-bot`) aren
 doing what they're meant to:
 
 - **Tonight** — meant to show venues opening that day. Currently empty most days:
-  the cron requires a shift still *covering right now* (`scheduledEnd >= now`),
+  the cron requires a shift still _covering right now_ (`scheduledEnd >= now`),
   and runs at 18:00 UTC — after several venues have already opened and closed for
   the day (real shift data clusters 14:00–20:00 UTC).
 - **Events** — meant to show any event (manually created or Partake-synced) in
@@ -82,14 +82,14 @@ doing what they're meant to:
   are now edited-in-place boards/digests rather than fire-and-forget posts.
   Add a small table to the bot's own Prisma schema (`apps/eorzea-bot/prisma`),
   e.g. `TrackedMessage { key String @id, channelId String, messageId String,
-  updatedAt DateTime @updatedAt }`, keyed by board type: `events:day-0` through
+updatedAt DateTime @updatedAt }`, keyed by board type: `events:day-0` through
   `events:day-6`, `region:na`, `region:eu`, `region:jp`, `region:oce`.
   `tonight` doesn't need a row — it stays one-shot, never edited.
 
 ## Error handling
 
 - Existing `postToBot` pattern (fire-and-forget, swallow errors) stays for
-  triggering — but the *edit* calls inside the bot need to fall back to
+  triggering — but the _edit_ calls inside the bot need to fall back to
   "message not found → repost and store new ID" (e.g. if a moderator deletes
   a tracked message manually), same defensive pattern `channels.ts`
   (`postEmbed`) already uses for missing channels.

@@ -13,6 +13,7 @@
 ## Task 1: Delete `apps/mobile`
 
 **Files:**
+
 - Delete: `apps/mobile/` (entire directory)
 
 - [ ] **Step 1: Delete the directory**
@@ -44,6 +45,7 @@ git commit -m "chore: remove apps/mobile"
 ## Task 2: Delete the 25 mobile API routes and 3 mobile-exclusive lib files
 
 **Files:**
+
 - Delete: `apps/web/app/api/mobile/` (entire directory, 25 route files confirmed via `find apps/web/app/api/mobile -name route.ts`)
 - Delete: `apps/web/lib/mobile-auth-guard.ts`
 - Delete: `apps/web/lib/mobile-operator-auth.ts`
@@ -83,6 +85,7 @@ git commit -m "chore: remove mobile API routes and mobile-exclusive auth libs"
 ## Task 3: Remove mobile-exclusive Prisma models from the schema
 
 **Files:**
+
 - Modify: `apps/web/prisma/schema.prisma`
 
 Schema edit only — this does NOT run `prisma db push` or touch the live database. That happens in Stage 3, separately, in the maintenance window.
@@ -192,10 +195,11 @@ git commit -m "chore: remove RefreshToken, DeviceToken, NotificationPreference f
 ## Task 4: Strip the dead push-notification-send code from the two cron routes
 
 **Files:**
+
 - Modify: `apps/web/app/api/cron/dispatch-notifications/route.ts`
 - Delete: `apps/web/app/api/cron/poll-push-receipts/route.ts`
 
-**Context:** `dispatch-notifications` currently does two things: (1) queues `EVENT_REMINDER_30M` rows into `PendingNotification` for upcoming events (`queueEventReminders`, untouched — stays), and (2) finds due `PendingNotification` rows, sends them via Expo push using each user's `deviceTokens`, and marks them sent. Part (2)'s send step depends entirely on `DeviceToken`, which is being deleted — so it's removed. The due rows still need `sentAt` set even without a real send, otherwise the same rows get re-selected and reprocessed every 60-second cron tick forever (unbounded query growth). `poll-push-receipts` exists *only* to poll Expo for delivery receipts of pushes sent by the code being removed in this task — once nothing ever sets `receiptId` again, the entire route has no purpose, so it's deleted outright rather than edited into a permanent no-op.
+**Context:** `dispatch-notifications` currently does two things: (1) queues `EVENT_REMINDER_30M` rows into `PendingNotification` for upcoming events (`queueEventReminders`, untouched — stays), and (2) finds due `PendingNotification` rows, sends them via Expo push using each user's `deviceTokens`, and marks them sent. Part (2)'s send step depends entirely on `DeviceToken`, which is being deleted — so it's removed. The due rows still need `sentAt` set even without a real send, otherwise the same rows get re-selected and reprocessed every 60-second cron tick forever (unbounded query growth). `poll-push-receipts` exists _only_ to poll Expo for delivery receipts of pushes sent by the code being removed in this task — once nothing ever sets `receiptId` again, the entire route has no purpose, so it's deleted outright rather than edited into a permanent no-op.
 
 **Known gap this creates (explicitly out of scope to fix here — noted per the design spec's scope boundary):** `PendingNotification` rows are still created by non-mobile code (`app/api/plugin/shifts/clock-in`, `app/api/plugin/shifts/claim`, `app/api/bot/shifts/clock-in`, `lib/shift-notifications.ts`) for shift reminders and claim approvals — after this change they'll be created and immediately marked sent with no actual delivery to anyone. This was already effectively true for any user without the mobile app installed; this task doesn't change delivery for web users, it just removes the one delivery channel (mobile push) that existed. Fixing notification delivery is web-side follow-up work, not part of mobile removal.
 
@@ -282,7 +286,7 @@ export async function POST(req: Request) {
 
 async function queueEventReminders(now: Date) {
   const windowStart = new Date(now.getTime() + 28 * 60 * 1000)
-  const windowEnd   = new Date(now.getTime() + 32 * 60 * 1000)
+  const windowEnd = new Date(now.getTime() + 32 * 60 * 1000)
 
   const events = await prisma.event.findMany({
     where: {
@@ -377,7 +381,7 @@ export async function POST(req: Request) {
 
 async function queueEventReminders(now: Date) {
   const windowStart = new Date(now.getTime() + 28 * 60 * 1000)
-  const windowEnd   = new Date(now.getTime() + 32 * 60 * 1000)
+  const windowEnd = new Date(now.getTime() + 32 * 60 * 1000)
 
   const events = await prisma.event.findMany({
     where: {
@@ -453,6 +457,7 @@ git commit -m "chore: remove dead Expo push-send/receipt-poll code (mobile remov
 ## Task 5: Fix the stale CI comment and update the roadmap doc
 
 **Files:**
+
 - Modify: `.github/workflows/security.yml`
 - Modify: `docs/superpowers/plans/2026-08-11-codebase-cleanup-roadmap.md`
 
@@ -461,7 +466,7 @@ git commit -m "chore: remove dead Expo push-send/receipt-poll code (mobile remov
 Around line 70, current:
 
 ```yaml
-              # anything that doesn't touch apps__web at all - mobile build
+# anything that doesn't touch apps__web at all - mobile build
 ```
 
 Read the surrounding 5-10 lines first to confirm the exact current wording and indentation (the audit only sampled this line), then replace the mobile reference with accurate current wording — the comment should no longer describe a "mobile build" path since `apps/mobile` no longer exists. If the surrounding logic itself doesn't actually change (this task is comment-only, not a CI logic change), just correct the comment text to describe what the workflow condition actually does now.

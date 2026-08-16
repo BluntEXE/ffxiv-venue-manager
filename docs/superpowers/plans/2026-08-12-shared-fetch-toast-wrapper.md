@@ -30,6 +30,7 @@ All 4 target API routes (`/api/feedback`, `/api/upload`, `/api/venues/[venueId]`
 ## Task 1: Add `sonner` and mount `<Toaster />`
 
 **Files:**
+
 - Modify: `apps/web/package.json` (add dependency)
 - Modify: `apps/web/app/layout.tsx:1-98`
 
@@ -119,6 +120,7 @@ git commit -m "feat(web): add sonner toast library, mount Toaster in root layout
 ## Task 2: Build `apiFetch()` with tests
 
 **Files:**
+
 - Create: `apps/web/lib/api-fetch.ts`
 - Test: `apps/web/lib/api-fetch.test.ts`
 
@@ -130,11 +132,14 @@ import { describe, it, expect, vi, afterEach } from "vitest"
 import { apiFetch, ApiError } from "./api-fetch"
 
 function mockFetchOnce(response: { ok: boolean; status: number; body?: unknown; text?: string }) {
-  vi.stubGlobal("fetch", vi.fn().mockResolvedValue({
-    ok: response.ok,
-    status: response.status,
-    text: async () => response.text ?? (response.body === undefined ? "" : JSON.stringify(response.body)),
-  }))
+  vi.stubGlobal(
+    "fetch",
+    vi.fn().mockResolvedValue({
+      ok: response.ok,
+      status: response.status,
+      text: async () => response.text ?? (response.body === undefined ? "" : JSON.stringify(response.body)),
+    })
+  )
 }
 
 afterEach(() => {
@@ -286,6 +291,7 @@ git commit -m "feat(web): add apiFetch helper with typed ApiError"
 ## Task 3: Migrate `venue-follow-button.tsx` — fixes a real silent-failure bug
 
 **Files:**
+
 - Modify: `apps/web/components/venue-follow-button.tsx`
 
 This is the highest-value migration of the 4: today a failed follow/unfollow (expired session, network blip, 404 on a stale venue) shows **zero** feedback — the button just does nothing and `loading` resets. `apiFetch` + `toast.error` gives the user an actual signal for the first time.
@@ -295,39 +301,39 @@ This is the highest-value migration of the 4: today a failed follow/unfollow (ex
 Current (`apps/web/components/venue-follow-button.tsx:19-32`):
 
 ```typescript
-  const toggle = async () => {
-    setLoading(true)
-    try {
-      const res = await fetch(`/api/venues/${venueId}/follow`, {
-        method: following ? "DELETE" : "POST",
-      })
-      if (res.ok) {
-        setFollowing(!following)
-        setCount(c => following ? c - 1 : c + 1)
-      }
-    } finally {
-      setLoading(false)
+const toggle = async () => {
+  setLoading(true)
+  try {
+    const res = await fetch(`/api/venues/${venueId}/follow`, {
+      method: following ? "DELETE" : "POST",
+    })
+    if (res.ok) {
+      setFollowing(!following)
+      setCount((c) => (following ? c - 1 : c + 1))
     }
+  } finally {
+    setLoading(false)
   }
+}
 ```
 
 Replace with:
 
 ```typescript
-  const toggle = async () => {
-    setLoading(true)
-    try {
-      await apiFetch(`/api/venues/${venueId}/follow`, {
-        method: following ? "DELETE" : "POST",
-      })
-      setFollowing(!following)
-      setCount(c => following ? c - 1 : c + 1)
-    } catch (e) {
-      toast.error(e instanceof ApiError ? e.message : "Couldn't update follow status. Try again.")
-    } finally {
-      setLoading(false)
-    }
+const toggle = async () => {
+  setLoading(true)
+  try {
+    await apiFetch(`/api/venues/${venueId}/follow`, {
+      method: following ? "DELETE" : "POST",
+    })
+    setFollowing(!following)
+    setCount((c) => (following ? c - 1 : c + 1))
+  } catch (e) {
+    toast.error(e instanceof ApiError ? e.message : "Couldn't update follow status. Try again.")
+  } finally {
+    setLoading(false)
   }
+}
 ```
 
 Add the imports at the top of the file:
@@ -368,6 +374,7 @@ git commit -m "fix(web): surface follow/unfollow failures via toast instead of s
 ## Task 4: Migrate `feedback-dialog.tsx`
 
 **Files:**
+
 - Modify: `apps/web/components/feedback-dialog.tsx`
 
 - [ ] **Step 1: Replace the fetch call and the `alert()`**
@@ -375,76 +382,76 @@ git commit -m "fix(web): surface follow/unfollow failures via toast instead of s
 Current (`apps/web/components/feedback-dialog.tsx:47-81`):
 
 ```typescript
-    try {
-      const response = await fetch("/api/feedback", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          category,
-          subject,
-          description,
-          url: window.location.href,
-        }),
-      })
+try {
+  const response = await fetch("/api/feedback", {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify({
+      category,
+      subject,
+      description,
+      url: window.location.href,
+    }),
+  })
 
-      if (!response.ok) {
-        throw new Error("Failed to submit feedback")
-      }
+  if (!response.ok) {
+    throw new Error("Failed to submit feedback")
+  }
 
-      // Show success state
-      setIsSuccess(true)
+  // Show success state
+  setIsSuccess(true)
 
-      // Reset form after 2 seconds and close dialog
-      setTimeout(() => {
-        setCategory("")
-        setSubject("")
-        setDescription("")
-        setIsSuccess(false)
-        setIsOpen(false)
-      }, 2000)
-    } catch (error) {
-      console.error("Error submitting feedback:", error)
-      alert("Failed to submit feedback. Please try again.")
-    } finally {
-      setIsSubmitting(false)
-    }
+  // Reset form after 2 seconds and close dialog
+  setTimeout(() => {
+    setCategory("")
+    setSubject("")
+    setDescription("")
+    setIsSuccess(false)
+    setIsOpen(false)
+  }, 2000)
+} catch (error) {
+  console.error("Error submitting feedback:", error)
+  alert("Failed to submit feedback. Please try again.")
+} finally {
+  setIsSubmitting(false)
+}
 ```
 
 Replace with:
 
 ```typescript
-    try {
-      await apiFetch("/api/feedback", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          category,
-          subject,
-          description,
-          url: window.location.href,
-        }),
-      })
+try {
+  await apiFetch("/api/feedback", {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify({
+      category,
+      subject,
+      description,
+      url: window.location.href,
+    }),
+  })
 
-      // Show success state
-      setIsSuccess(true)
+  // Show success state
+  setIsSuccess(true)
 
-      // Reset form after 2 seconds and close dialog
-      setTimeout(() => {
-        setCategory("")
-        setSubject("")
-        setDescription("")
-        setIsSuccess(false)
-        setIsOpen(false)
-      }, 2000)
-    } catch (error) {
-      toast.error(error instanceof ApiError ? error.message : "Failed to submit feedback. Please try again.")
-    } finally {
-      setIsSubmitting(false)
-    }
+  // Reset form after 2 seconds and close dialog
+  setTimeout(() => {
+    setCategory("")
+    setSubject("")
+    setDescription("")
+    setIsSuccess(false)
+    setIsOpen(false)
+  }, 2000)
+} catch (error) {
+  toast.error(error instanceof ApiError ? error.message : "Failed to submit feedback. Please try again.")
+} finally {
+  setIsSubmitting(false)
+}
 ```
 
 Add the imports:
@@ -480,6 +487,7 @@ git commit -m "fix(web): replace feedback-dialog alert() with toast, surface rea
 ## Task 5: Migrate `banner-upload.tsx`
 
 **Files:**
+
 - Modify: `apps/web/components/banner-upload.tsx`
 
 Removes the local `error` state and inline dismissible error `<div>` entirely — the toast fully replaces it, and keeping both would mean the same failure is shown twice in two different UI locations.
@@ -489,69 +497,75 @@ Removes the local `error` state and inline dismissible error `<div>` entirely �
 Current (`apps/web/components/banner-upload.tsx:19-49`):
 
 ```typescript
-  const upload = async (file: File) => {
-    setError("")
-    setUploading(true)
-    try {
-      const res = await fetch("/api/upload", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ filename: file.name, contentType: file.type, size: file.size }),
-      })
-      if (!res.ok) { const d = await res.json(); throw new Error(d.error || "Failed to get upload URL") }
-      const { uploadUrl, storedUrl } = await res.json()
-
-      const put = await fetch(uploadUrl, { method: "PUT", body: file, headers: { "Content-Type": file.type } })
-      if (!put.ok) throw new Error("Upload failed")
-
-      const patch = await fetch(`/api/venues/${venueId}`, {
-        method: "PATCH",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ bannerUrl: storedUrl }),
-      })
-      if (!patch.ok) { const d = await patch.json(); throw new Error(d.error || "Failed to save") }
-
-      setUrl(storedUrl)
-      onUpdate(storedUrl)
-    } catch (e: unknown) {
-      setError(e instanceof Error ? e.message : "Upload failed")
-    } finally {
-      setUploading(false)
-      if (inputRef.current) inputRef.current.value = ""
+const upload = async (file: File) => {
+  setError("")
+  setUploading(true)
+  try {
+    const res = await fetch("/api/upload", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ filename: file.name, contentType: file.type, size: file.size }),
+    })
+    if (!res.ok) {
+      const d = await res.json()
+      throw new Error(d.error || "Failed to get upload URL")
     }
+    const { uploadUrl, storedUrl } = await res.json()
+
+    const put = await fetch(uploadUrl, { method: "PUT", body: file, headers: { "Content-Type": file.type } })
+    if (!put.ok) throw new Error("Upload failed")
+
+    const patch = await fetch(`/api/venues/${venueId}`, {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ bannerUrl: storedUrl }),
+    })
+    if (!patch.ok) {
+      const d = await patch.json()
+      throw new Error(d.error || "Failed to save")
+    }
+
+    setUrl(storedUrl)
+    onUpdate(storedUrl)
+  } catch (e: unknown) {
+    setError(e instanceof Error ? e.message : "Upload failed")
+  } finally {
+    setUploading(false)
+    if (inputRef.current) inputRef.current.value = ""
   }
+}
 ```
 
 Replace with:
 
 ```typescript
-  const upload = async (file: File) => {
-    setUploading(true)
-    try {
-      const { uploadUrl, storedUrl } = await apiFetch<{ uploadUrl: string; storedUrl: string }>("/api/upload", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ filename: file.name, contentType: file.type, size: file.size }),
-      })
+const upload = async (file: File) => {
+  setUploading(true)
+  try {
+    const { uploadUrl, storedUrl } = await apiFetch<{ uploadUrl: string; storedUrl: string }>("/api/upload", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ filename: file.name, contentType: file.type, size: file.size }),
+    })
 
-      await apiFetch(uploadUrl, { method: "PUT", body: file, headers: { "Content-Type": file.type } })
+    await apiFetch(uploadUrl, { method: "PUT", body: file, headers: { "Content-Type": file.type } })
 
-      await apiFetch(`/api/venues/${venueId}`, {
-        method: "PATCH",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ bannerUrl: storedUrl }),
-      })
+    await apiFetch(`/api/venues/${venueId}`, {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ bannerUrl: storedUrl }),
+    })
 
-      setUrl(storedUrl)
-      onUpdate(storedUrl)
-      toast.success("Banner updated")
-    } catch (e: unknown) {
-      toast.error(e instanceof ApiError ? e.message : "Upload failed")
-    } finally {
-      setUploading(false)
-      if (inputRef.current) inputRef.current.value = ""
-    }
+    setUrl(storedUrl)
+    onUpdate(storedUrl)
+    toast.success("Banner updated")
+  } catch (e: unknown) {
+    toast.error(e instanceof ApiError ? e.message : "Upload failed")
+  } finally {
+    setUploading(false)
+    if (inputRef.current) inputRef.current.value = ""
   }
+}
 ```
 
 Note: the presigned S3 `PUT` returns no JSON body — `apiFetch` already handles that (`parseBody` returns `undefined` on an empty response, and since the `PUT` succeeds with `res.ok`, no error is thrown). No special-casing needed at the call site.
@@ -561,40 +575,43 @@ Note: the presigned S3 `PUT` returns no JSON body — `apiFetch` already handles
 Current (`apps/web/components/banner-upload.tsx:51-65`):
 
 ```typescript
-  const remove = async () => {
-    setError("")
-    try {
-      const patch = await fetch(`/api/venues/${venueId}`, {
-        method: "PATCH",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ bannerUrl: null }),
-      })
-      if (!patch.ok) { const d = await patch.json(); throw new Error(d.error || "Failed to remove") }
-      setUrl(null)
-      onUpdate(null)
-    } catch (e: unknown) {
-      setError(e instanceof Error ? e.message : "Failed to remove")
+const remove = async () => {
+  setError("")
+  try {
+    const patch = await fetch(`/api/venues/${venueId}`, {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ bannerUrl: null }),
+    })
+    if (!patch.ok) {
+      const d = await patch.json()
+      throw new Error(d.error || "Failed to remove")
     }
+    setUrl(null)
+    onUpdate(null)
+  } catch (e: unknown) {
+    setError(e instanceof Error ? e.message : "Failed to remove")
   }
+}
 ```
 
 Replace with:
 
 ```typescript
-  const remove = async () => {
-    try {
-      await apiFetch(`/api/venues/${venueId}`, {
-        method: "PATCH",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ bannerUrl: null }),
-      })
-      setUrl(null)
-      onUpdate(null)
-      toast.success("Banner removed")
-    } catch (e: unknown) {
-      toast.error(e instanceof ApiError ? e.message : "Failed to remove banner")
-    }
+const remove = async () => {
+  try {
+    await apiFetch(`/api/venues/${venueId}`, {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ bannerUrl: null }),
+    })
+    setUrl(null)
+    onUpdate(null)
+    toast.success("Banner removed")
+  } catch (e: unknown) {
+    toast.error(e instanceof ApiError ? e.message : "Failed to remove banner")
   }
+}
 ```
 
 - [ ] **Step 3: Delete the now-unused `error` state and its JSX, update imports**
@@ -635,6 +652,7 @@ git commit -m "refactor(web): migrate banner-upload to apiFetch + toast, drop in
 ## Task 6: Migrate `logo-upload.tsx`
 
 **Files:**
+
 - Modify: `apps/web/components/logo-upload.tsx`
 
 Same pattern as Task 5, applied to the crop-then-upload flow. `confirmCrop`'s catch also resets `stage` back to `"cropping"` (not `"idle"`) so the user doesn't lose their crop position on a failed save — preserve that behavior exactly, only swap the error surface.
@@ -644,99 +662,105 @@ Same pattern as Task 5, applied to the crop-then-upload flow. `confirmCrop`'s ca
 Current (`apps/web/components/logo-upload.tsx:138-183`):
 
 ```typescript
-  const confirmCrop = async () => {
-    if (!crop) return
-    setError("")
-    setStage("saving")
-    try {
-      const canvas = document.createElement("canvas")
-      canvas.width  = OUTPUT_SIZE
-      canvas.height = OUTPUT_SIZE
-      const ctx = canvas.getContext("2d")!
-      const scaleToNatural = crop.imgEl.naturalWidth / crop.renderedW
-      const srcX    = (FRAME_LEFT - crop.imgX) * scaleToNatural
-      const srcY    = (FRAME_TOP  - crop.imgY) * scaleToNatural
-      const srcSize = FRAME_SIZE  * scaleToNatural
-      ctx.drawImage(crop.imgEl, srcX, srcY, srcSize, srcSize, 0, 0, OUTPUT_SIZE, OUTPUT_SIZE)
+const confirmCrop = async () => {
+  if (!crop) return
+  setError("")
+  setStage("saving")
+  try {
+    const canvas = document.createElement("canvas")
+    canvas.width = OUTPUT_SIZE
+    canvas.height = OUTPUT_SIZE
+    const ctx = canvas.getContext("2d")!
+    const scaleToNatural = crop.imgEl.naturalWidth / crop.renderedW
+    const srcX = (FRAME_LEFT - crop.imgX) * scaleToNatural
+    const srcY = (FRAME_TOP - crop.imgY) * scaleToNatural
+    const srcSize = FRAME_SIZE * scaleToNatural
+    ctx.drawImage(crop.imgEl, srcX, srcY, srcSize, srcSize, 0, 0, OUTPUT_SIZE, OUTPUT_SIZE)
 
-      const blob = await new Promise<Blob>((resolve, reject) =>
-        canvas.toBlob(b => b ? resolve(b) : reject(new Error("Canvas export failed")), "image/jpeg", 0.9)
-      )
+    const blob = await new Promise<Blob>((resolve, reject) =>
+      canvas.toBlob((b) => (b ? resolve(b) : reject(new Error("Canvas export failed"))), "image/jpeg", 0.9)
+    )
 
-      const uploadRes = await fetch("/api/upload", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ filename: "logo.jpg", contentType: "image/jpeg", size: blob.size }),
-      })
-      if (!uploadRes.ok) { const d = await uploadRes.json(); throw new Error(d.error || "Upload URL failed") }
-      const { uploadUrl, storedUrl } = await uploadRes.json()
-
-      const put = await fetch(uploadUrl, { method: "PUT", body: blob, headers: { "Content-Type": "image/jpeg" } })
-      if (!put.ok) throw new Error("Upload failed")
-
-      const patch = await fetch(`/api/venues/${venueId}`, {
-        method: "PATCH",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ logoUrl: storedUrl }),
-      })
-      if (!patch.ok) { const d = await patch.json(); throw new Error(d.error || "Failed to save") }
-
-      setSavedUrl(storedUrl)
-      onUpdate(storedUrl)
-      setStage("idle")
-      setCrop(null)
-    } catch (e: unknown) {
-      setError(e instanceof Error ? e.message : "Failed to save logo")
-      setStage("cropping")
+    const uploadRes = await fetch("/api/upload", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ filename: "logo.jpg", contentType: "image/jpeg", size: blob.size }),
+    })
+    if (!uploadRes.ok) {
+      const d = await uploadRes.json()
+      throw new Error(d.error || "Upload URL failed")
     }
+    const { uploadUrl, storedUrl } = await uploadRes.json()
+
+    const put = await fetch(uploadUrl, { method: "PUT", body: blob, headers: { "Content-Type": "image/jpeg" } })
+    if (!put.ok) throw new Error("Upload failed")
+
+    const patch = await fetch(`/api/venues/${venueId}`, {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ logoUrl: storedUrl }),
+    })
+    if (!patch.ok) {
+      const d = await patch.json()
+      throw new Error(d.error || "Failed to save")
+    }
+
+    setSavedUrl(storedUrl)
+    onUpdate(storedUrl)
+    setStage("idle")
+    setCrop(null)
+  } catch (e: unknown) {
+    setError(e instanceof Error ? e.message : "Failed to save logo")
+    setStage("cropping")
   }
+}
 ```
 
 Replace with:
 
 ```typescript
-  const confirmCrop = async () => {
-    if (!crop) return
-    setStage("saving")
-    try {
-      const canvas = document.createElement("canvas")
-      canvas.width  = OUTPUT_SIZE
-      canvas.height = OUTPUT_SIZE
-      const ctx = canvas.getContext("2d")!
-      const scaleToNatural = crop.imgEl.naturalWidth / crop.renderedW
-      const srcX    = (FRAME_LEFT - crop.imgX) * scaleToNatural
-      const srcY    = (FRAME_TOP  - crop.imgY) * scaleToNatural
-      const srcSize = FRAME_SIZE  * scaleToNatural
-      ctx.drawImage(crop.imgEl, srcX, srcY, srcSize, srcSize, 0, 0, OUTPUT_SIZE, OUTPUT_SIZE)
+const confirmCrop = async () => {
+  if (!crop) return
+  setStage("saving")
+  try {
+    const canvas = document.createElement("canvas")
+    canvas.width = OUTPUT_SIZE
+    canvas.height = OUTPUT_SIZE
+    const ctx = canvas.getContext("2d")!
+    const scaleToNatural = crop.imgEl.naturalWidth / crop.renderedW
+    const srcX = (FRAME_LEFT - crop.imgX) * scaleToNatural
+    const srcY = (FRAME_TOP - crop.imgY) * scaleToNatural
+    const srcSize = FRAME_SIZE * scaleToNatural
+    ctx.drawImage(crop.imgEl, srcX, srcY, srcSize, srcSize, 0, 0, OUTPUT_SIZE, OUTPUT_SIZE)
 
-      const blob = await new Promise<Blob>((resolve, reject) =>
-        canvas.toBlob(b => b ? resolve(b) : reject(new Error("Canvas export failed")), "image/jpeg", 0.9)
-      )
+    const blob = await new Promise<Blob>((resolve, reject) =>
+      canvas.toBlob((b) => (b ? resolve(b) : reject(new Error("Canvas export failed"))), "image/jpeg", 0.9)
+    )
 
-      const { uploadUrl, storedUrl } = await apiFetch<{ uploadUrl: string; storedUrl: string }>("/api/upload", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ filename: "logo.jpg", contentType: "image/jpeg", size: blob.size }),
-      })
+    const { uploadUrl, storedUrl } = await apiFetch<{ uploadUrl: string; storedUrl: string }>("/api/upload", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ filename: "logo.jpg", contentType: "image/jpeg", size: blob.size }),
+    })
 
-      await apiFetch(uploadUrl, { method: "PUT", body: blob, headers: { "Content-Type": "image/jpeg" } })
+    await apiFetch(uploadUrl, { method: "PUT", body: blob, headers: { "Content-Type": "image/jpeg" } })
 
-      await apiFetch(`/api/venues/${venueId}`, {
-        method: "PATCH",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ logoUrl: storedUrl }),
-      })
+    await apiFetch(`/api/venues/${venueId}`, {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ logoUrl: storedUrl }),
+    })
 
-      setSavedUrl(storedUrl)
-      onUpdate(storedUrl)
-      setStage("idle")
-      setCrop(null)
-      toast.success("Logo updated")
-    } catch (e: unknown) {
-      toast.error(e instanceof ApiError ? e.message : "Failed to save logo")
-      setStage("cropping")
-    }
+    setSavedUrl(storedUrl)
+    onUpdate(storedUrl)
+    setStage("idle")
+    setCrop(null)
+    toast.success("Logo updated")
+  } catch (e: unknown) {
+    toast.error(e instanceof ApiError ? e.message : "Failed to save logo")
+    setStage("cropping")
   }
+}
 ```
 
 Note: `Canvas export failed` (the `toBlob` rejection) is a plain `Error`, not an `ApiError` — it correctly falls through to the generic `"Failed to save logo"` toast message via the `instanceof ApiError` check, same as today's `e instanceof Error ? e.message : ...` fallback would have shown a less accurate message. This is an acceptable, pre-existing-shaped fallback, not a regression.
@@ -746,40 +770,43 @@ Note: `Canvas export failed` (the `toBlob` rejection) is a plain `Error`, not an
 Current (`apps/web/components/logo-upload.tsx:185-199`):
 
 ```typescript
-  const remove = async () => {
-    setError("")
-    try {
-      const patch = await fetch(`/api/venues/${venueId}`, {
-        method: "PATCH",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ logoUrl: null }),
-      })
-      if (!patch.ok) { const d = await patch.json(); throw new Error(d.error || "Failed to remove") }
-      setSavedUrl(null)
-      onUpdate(null)
-    } catch (e: unknown) {
-      setError(e instanceof Error ? e.message : "Failed to remove")
+const remove = async () => {
+  setError("")
+  try {
+    const patch = await fetch(`/api/venues/${venueId}`, {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ logoUrl: null }),
+    })
+    if (!patch.ok) {
+      const d = await patch.json()
+      throw new Error(d.error || "Failed to remove")
     }
+    setSavedUrl(null)
+    onUpdate(null)
+  } catch (e: unknown) {
+    setError(e instanceof Error ? e.message : "Failed to remove")
   }
+}
 ```
 
 Replace with:
 
 ```typescript
-  const remove = async () => {
-    try {
-      await apiFetch(`/api/venues/${venueId}`, {
-        method: "PATCH",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ logoUrl: null }),
-      })
-      setSavedUrl(null)
-      onUpdate(null)
-      toast.success("Logo removed")
-    } catch (e: unknown) {
-      toast.error(e instanceof ApiError ? e.message : "Failed to remove logo")
-    }
+const remove = async () => {
+  try {
+    await apiFetch(`/api/venues/${venueId}`, {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ logoUrl: null }),
+    })
+    setSavedUrl(null)
+    onUpdate(null)
+    toast.success("Logo removed")
+  } catch (e: unknown) {
+    toast.error(e instanceof ApiError ? e.message : "Failed to remove logo")
   }
+}
 ```
 
 - [ ] **Step 3: Delete the now-unused `error` state and its JSX, update `cancelCrop`, update imports**
@@ -787,60 +814,71 @@ Replace with:
 Remove `const [error, setError] = useState("")` (`apps/web/components/logo-upload.tsx:42`) and the `{error && (...)}` block (currently lines 206-211). Update `cancelCrop` (`apps/web/components/logo-upload.tsx:201`) — it currently calls `setError("")` as part of resetting state:
 
 ```typescript
-  const cancelCrop = () => { setStage("idle"); setCrop(null); setError("") }
+const cancelCrop = () => {
+  setStage("idle")
+  setCrop(null)
+  setError("")
+}
 ```
 
 becomes:
 
 ```typescript
-  const cancelCrop = () => { setStage("idle"); setCrop(null) }
+const cancelCrop = () => {
+  setStage("idle")
+  setCrop(null)
+}
 ```
 
 `handleFile` and `loadImage`'s `img.onerror`/`reader.onerror` (lines 63, 69, 72, 77) also call `setError(...)` for pre-upload validation failures (bad file type, oversized file, unreadable file, failed image load) — these aren't API failures, `apiFetch` doesn't cover them. Convert these 4 call sites to `toast.error(...)` too, for consistency (a validation failure deserves the same visible feedback as an API failure, and leaving the old inline-error path only for these 4 would mean two different error UIs coexist in one component):
 
 ```typescript
-  const handleFile = (file: File) => {
-    if (!["image/jpeg", "image/png", "image/webp"].includes(file.type)) {
-      toast.error("JPEG, PNG or WebP only"); return
-    }
-    if (file.size > 10 * 1024 * 1024) {
-      toast.error("Max 10 MB"); return
-    }
-    const reader = new FileReader()
-    reader.onload = (e) => { if (e.target?.result) loadImage(e.target.result as string) }
-    reader.onerror = () => toast.error("Failed to read file")
-    reader.readAsDataURL(file)
+const handleFile = (file: File) => {
+  if (!["image/jpeg", "image/png", "image/webp"].includes(file.type)) {
+    toast.error("JPEG, PNG or WebP only")
+    return
   }
+  if (file.size > 10 * 1024 * 1024) {
+    toast.error("Max 10 MB")
+    return
+  }
+  const reader = new FileReader()
+  reader.onload = (e) => {
+    if (e.target?.result) loadImage(e.target.result as string)
+  }
+  reader.onerror = () => toast.error("Failed to read file")
+  reader.readAsDataURL(file)
+}
 ```
 
 ```typescript
-  const loadImage = useCallback((src: string) => {
-    const img = new Image()
-    img.onload = () => {
-      const scale = Math.max(FRAME_SIZE / img.naturalWidth, FRAME_SIZE / img.naturalHeight)
-      const rW = img.naturalWidth  * scale
-      const rH = img.naturalHeight * scale
-      setCrop({
-        imgEl:     img,
-        src,
-        renderedW: Math.round(rW),
-        renderedH: Math.round(rH),
-        imgX:      Math.round((CONTAINER_W - rW) / 2),
-        imgY:      Math.round((CONTAINER_H - rH) / 2),
-      })
-      setStage("cropping")
-    }
-    img.onerror = () => toast.error("Failed to load image")
-    img.src = src
-  }, [])
+const loadImage = useCallback((src: string) => {
+  const img = new Image()
+  img.onload = () => {
+    const scale = Math.max(FRAME_SIZE / img.naturalWidth, FRAME_SIZE / img.naturalHeight)
+    const rW = img.naturalWidth * scale
+    const rH = img.naturalHeight * scale
+    setCrop({
+      imgEl: img,
+      src,
+      renderedW: Math.round(rW),
+      renderedH: Math.round(rH),
+      imgX: Math.round((CONTAINER_W - rW) / 2),
+      imgY: Math.round((CONTAINER_H - rH) / 2),
+    })
+    setStage("cropping")
+  }
+  img.onerror = () => toast.error("Failed to load image")
+  img.src = src
+}, [])
 ```
 
 And `handleGalleryPick` (currently calls `setError("")` before `loadImage`) simplifies to just calling `loadImage` directly:
 
 ```typescript
-  const handleGalleryPick = (url: string) => {
-    loadImage(`/api/proxy-image?url=${encodeURIComponent(url)}`)
-  }
+const handleGalleryPick = (url: string) => {
+  loadImage(`/api/proxy-image?url=${encodeURIComponent(url)}`)
+}
 ```
 
 Add the imports:
@@ -917,5 +955,6 @@ Visit `https://xivvenuemanager.com`, log in, follow/unfollow a real venue, submi
 ---
 
 ## Deferred, not in this plan's scope
+
 - The remaining ~131 raw-`fetch` call sites across the rest of the app (staff-table mutations, event forms, shift actions, etc.) — Phase 3 is explicitly scoped to these 4 low-stakes surfaces only per the roadmap's fragile-feature freeze and "start small" intent. A follow-up phase can widen `apiFetch` adoption once this batch has proven itself in production.
 - A generic `useMutation`-style hook wrapping `apiFetch` with built-in loading/toast state — the roadmap mentions this as an option ("apiFetch()/mutation hook"), but 4 call sites don't yet show a strong enough repeated shape to justify the abstraction (YAGNI — each of the 4 has a slightly different success side-effect: state flip, dialog close, image swap). Revisit once a 5th+ surface is migrated and the pattern repeats identically.

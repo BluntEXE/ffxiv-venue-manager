@@ -109,16 +109,12 @@ export async function POST(request: NextRequest) {
     if (err?.code === "P2002") {
       return NextResponse.json(
         {
-          error:
-            "That character is already linked to an account. If this is your character, contact support.",
+          error: "That character is already linked to an account. If this is your character, contact support.",
         },
         { status: 409 }
       )
     }
     console.error("[user-characters POST] Error:", err)
-    return NextResponse.json(
-      { error: "Failed to link character" },
-      { status: 500 }
-    )
+    return NextResponse.json({ error: "Failed to link character" }, { status: 500 })
   }
 }

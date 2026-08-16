@@ -23,13 +23,15 @@ export const authOptions: NextAuthOptions = {
       // user.id is only present for existing users (new users get their id
       // after the adapter creates them post-callback).
       if (account?.provider === "discord" && user?.id) {
-        prisma.user.update({
-          where: { id: user.id },
-          data: {
-            ...(user.image ? { image: user.image } : {}),
-            discordId: account.providerAccountId,
-          },
-        }).catch(() => {})
+        prisma.user
+          .update({
+            where: { id: user.id },
+            data: {
+              ...(user.image ? { image: user.image } : {}),
+              discordId: account.providerAccountId,
+            },
+          })
+          .catch(() => {})
       }
       return true
     },
@@ -79,18 +81,21 @@ export const authOptions: NextAuthOptions = {
     updateAge: 24 * 60 * 60,
   },
   // Scope session cookie to parent domain so subdomains (shout.xivvenuemanager.com) can read it
-  cookies: process.env.NODE_ENV === "production" ? {
-    sessionToken: {
-      name: `__Secure-next-auth.session-token`,
-      options: {
-        httpOnly: true,
-        sameSite: "lax" as const,
-        path: "/",
-        domain: ".xivvenuemanager.com",
-        secure: true,
-      },
-    },
-  } : undefined,
+  cookies:
+    process.env.NODE_ENV === "production"
+      ? {
+          sessionToken: {
+            name: `__Secure-next-auth.session-token`,
+            options: {
+              httpOnly: true,
+              sameSite: "lax" as const,
+              path: "/",
+              domain: ".xivvenuemanager.com",
+              secure: true,
+            },
+          },
+        }
+      : undefined,
   // Trust the host header (important for proxies like Vercel)
   // @ts-ignore - trustHost is valid in NextAuth v4 but might be missing in type definitions
   trustHost: true,

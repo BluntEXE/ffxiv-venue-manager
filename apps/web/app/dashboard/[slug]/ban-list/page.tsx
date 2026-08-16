@@ -5,11 +5,7 @@ import { prisma } from "@/lib/prisma"
 import { VenueLayout } from "@/components/venue-layout"
 import { BanListManager } from "@/components/ban-list-manager"
 
-export default async function BanListPage({
-  params,
-}: {
-  params: Promise<{ slug: string }>
-}) {
+export default async function BanListPage({ params }: { params: Promise<{ slug: string }> }) {
   const session = await getServerSession(authOptions)
   if (!session?.user) redirect("/auth/signin")
 
@@ -41,7 +37,9 @@ export default async function BanListPage({
         <div className="mb-6 md:mb-8">
           <div className="flex items-center gap-2 mb-1.5">
             <span className="w-[7px] h-[7px] bg-[rgba(0,180,255,0.7)] rotate-45 shadow-[0_0_10px_rgba(0,180,255,0.5)] flex-shrink-0" />
-            <span className="text-[0.72rem] font-semibold uppercase tracking-[0.14em] text-[var(--xiv-blue)]">{venue.name} &middot; {venue.dataCenter} &middot; {venue.world}</span>
+            <span className="text-[0.72rem] font-semibold uppercase tracking-[0.14em] text-[var(--xiv-blue)]">
+              {venue.name} &middot; {venue.dataCenter} &middot; {venue.world}
+            </span>
           </div>
           <h1 className="page-h1">Ban List</h1>
         </div>

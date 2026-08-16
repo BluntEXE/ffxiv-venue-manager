@@ -45,15 +45,12 @@ export const PATCH = withRateLimit<{ params: Promise<{ venueId: string; transact
         where: {
           userId: session.user.id,
           venueId: venue.id,
-        status: "active",
+          status: "active",
         },
       })
 
       if (!membership) {
-        return NextResponse.json(
-          { error: "You don't have access to this venue" },
-          { status: 403 }
-        )
+        return NextResponse.json({ error: "You don't have access to this venue" }, { status: 403 })
       }
 
       // Verify transaction belongs to this venue
@@ -100,17 +97,11 @@ export const PATCH = withRateLimit<{ params: Promise<{ venueId: string; transact
       return NextResponse.json(transaction)
     } catch (error) {
       if (error instanceof z.ZodError) {
-        return NextResponse.json(
-          { error: "Validation error", details: error.issues },
-          { status: 400 }
-        )
+        return NextResponse.json({ error: "Validation error", details: error.issues }, { status: 400 })
       }
 
       console.error("Error updating transaction:", error)
-      return NextResponse.json(
-        { error: "Internal server error" },
-        { status: 500 }
-      )
+      return NextResponse.json({ error: "Internal server error" }, { status: 500 })
     }
   },
   { requests: 20, window: "1 m" }
@@ -146,15 +137,12 @@ export const DELETE = withRateLimit<{ params: Promise<{ venueId: string; transac
         where: {
           userId: session.user.id,
           venueId: venue.id,
-        status: "active",
+          status: "active",
         },
       })
 
       if (!membership) {
-        return NextResponse.json(
-          { error: "You don't have access to this venue" },
-          { status: 403 }
-        )
+        return NextResponse.json({ error: "You don't have access to this venue" }, { status: 403 })
       }
 
       // Verify transaction belongs to this venue
@@ -176,10 +164,7 @@ export const DELETE = withRateLimit<{ params: Promise<{ venueId: string; transac
       return NextResponse.json({ success: true })
     } catch (error) {
       console.error("Error deleting transaction:", error)
-      return NextResponse.json(
-        { error: "Internal server error" },
-        { status: 500 }
-      )
+      return NextResponse.json({ error: "Internal server error" }, { status: 500 })
     }
   },
   { requests: 5, window: "1 m" }

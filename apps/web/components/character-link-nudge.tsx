@@ -27,8 +27,8 @@ export function CharacterLinkNudge() {
     >
       <div className="px-5 py-3.5 pr-10 flex items-center gap-3 flex-wrap">
         <p className="text-sm text-muted-foreground flex-1 min-w-0">
-          Link your FFXIV character so sales, shifts, and staff lists show your character
-          name instead of your Discord name.
+          Link your FFXIV character so sales, shifts, and staff lists show your character name instead of your Discord
+          name.
         </p>
         <Link
           href="/dashboard/account/characters"

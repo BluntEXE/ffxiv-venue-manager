@@ -1,14 +1,14 @@
-import { NextRequest, NextResponse } from 'next/server'
-import { z } from 'zod'
-import { pluginAuthGate } from '@/lib/api/plugin-auth'
-import { prisma } from '@/lib/prisma'
-import { validators } from '@/lib/validation'
+import { NextRequest, NextResponse } from "next/server"
+import { z } from "zod"
+import { pluginAuthGate } from "@/lib/api/plugin-auth"
+import { prisma } from "@/lib/prisma"
+import { validators } from "@/lib/validation"
 
 const banSchema = z.object({
-  venueId: z.string().min(1, 'venueId is required'),
+  venueId: z.string().min(1, "venueId is required"),
   characterName: validators.characterName,
   world: validators.world,
-  reason: z.string().trim().min(1, 'Reason is required').max(500, 'Reason too long (max 500 characters)'),
+  reason: z.string().trim().min(1, "Reason is required").max(500, "Reason too long (max 500 characters)"),
 })
 
 /**
@@ -21,7 +21,7 @@ const banSchema = z.object({
  */
 export async function POST(request: NextRequest) {
   try {
-    const gate = await pluginAuthGate(request, 'write')
+    const gate = await pluginAuthGate(request, "write")
     if (!gate.ok) return gate.response
     const { auth } = gate
 
@@ -29,14 +29,14 @@ export async function POST(request: NextRequest) {
     const { venueId, characterName, world, reason } = banSchema.parse(body)
 
     if (!auth.venues.includes(venueId)) {
-      return NextResponse.json({ error: 'Invalid venue' }, { status: 400 })
+      return NextResponse.json({ error: "Invalid venue" }, { status: 400 })
     }
 
     const membership = await prisma.membership.findFirst({
-      where: { userId: auth.userId, venueId, status: 'active' },
+      where: { userId: auth.userId, venueId, status: "active" },
     })
-    if (!membership || !['OWNER', 'MANAGER'].includes(membership.role)) {
-      return NextResponse.json({ error: 'Owner or Manager role required' }, { status: 403 })
+    if (!membership || !["OWNER", "MANAGER"].includes(membership.role)) {
+      return NextResponse.json({ error: "Owner or Manager role required" }, { status: 403 })
     }
 
     await prisma.patron.upsert({
@@ -63,9 +63,9 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ success: true })
   } catch (error) {
     if (error instanceof z.ZodError) {
-      return NextResponse.json({ error: 'Validation error', details: error.issues }, { status: 400 })
+      return NextResponse.json({ error: "Validation error", details: error.issues }, { status: 400 })
     }
-    console.error('[Plugin API] Error banning patron:', error)
-    return NextResponse.json({ error: 'Internal server error' }, { status: 500 })
+    console.error("[Plugin API] Error banning patron:", error)
+    return NextResponse.json({ error: "Internal server error" }, { status: 500 })
   }
 }

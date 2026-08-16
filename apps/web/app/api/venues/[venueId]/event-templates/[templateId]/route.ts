@@ -12,8 +12,14 @@ const updateTemplateSchema = z.object({
   description: validators.eventDescription,
   eventType: z.enum(["PERFORMANCE", "GAME_NIGHT", "SPECIAL", "SOCIAL", "PRIVATE", "OTHER"]).optional(),
   timezone: z.string().optional(),
-  defaultStartTime: z.string().regex(/^([01]\d|2[0-3]):([0-5]\d)$/, "Invalid time format. Use HH:MM").optional(),
-  defaultEndTime: z.string().regex(/^([01]\d|2[0-3]):([0-5]\d)$/, "Invalid time format. Use HH:MM").optional(),
+  defaultStartTime: z
+    .string()
+    .regex(/^([01]\d|2[0-3]):([0-5]\d)$/, "Invalid time format. Use HH:MM")
+    .optional(),
+  defaultEndTime: z
+    .string()
+    .regex(/^([01]\d|2[0-3]):([0-5]\d)$/, "Invalid time format. Use HH:MM")
+    .optional(),
 })
 
 // PATCH - Update an event template
@@ -46,15 +52,12 @@ export const PATCH = withRateLimit<{ params: Promise<{ venueId: string; template
         where: {
           userId: session.user.id,
           venueId: venue.id,
-        status: "active",
+          status: "active",
         },
       })
 
       if (!membership || (membership.role !== "OWNER" && membership.role !== "MANAGER")) {
-        return NextResponse.json(
-          { error: "You don't have permission to update templates" },
-          { status: 403 }
-        )
+        return NextResponse.json({ error: "You don't have permission to update templates" }, { status: 403 })
       }
 
       // Verify template belongs to this venue
@@ -86,17 +89,11 @@ export const PATCH = withRateLimit<{ params: Promise<{ venueId: string; template
       return NextResponse.json(template)
     } catch (error) {
       if (error instanceof z.ZodError) {
-        return NextResponse.json(
-          { error: "Validation error", details: error.issues },
-          { status: 400 }
-        )
+        return NextResponse.json({ error: "Validation error", details: error.issues }, { status: 400 })
       }
 
       console.error("Error updating event template:", error)
-      return NextResponse.json(
-        { error: "Internal server error" },
-        { status: 500 }
-      )
+      return NextResponse.json({ error: "Internal server error" }, { status: 500 })
     }
   },
   { requests: 20, window: "1 m" }
@@ -132,15 +129,12 @@ export const DELETE = withRateLimit<{ params: Promise<{ venueId: string; templat
         where: {
           userId: session.user.id,
           venueId: venue.id,
-        status: "active",
+          status: "active",
         },
       })
 
       if (!membership || (membership.role !== "OWNER" && membership.role !== "MANAGER")) {
-        return NextResponse.json(
-          { error: "You don't have permission to delete templates" },
-          { status: 403 }
-        )
+        return NextResponse.json({ error: "You don't have permission to delete templates" }, { status: 403 })
       }
 
       // Verify template belongs to this venue
@@ -159,10 +153,7 @@ export const DELETE = withRateLimit<{ params: Promise<{ venueId: string; templat
       return NextResponse.json({ success: true })
     } catch (error) {
       console.error("Error deleting event template:", error)
-      return NextResponse.json(
-        { error: "Internal server error" },
-        { status: 500 }
-      )
+      return NextResponse.json({ error: "Internal server error" }, { status: 500 })
     }
   },
   { requests: 5, window: "1 m" }

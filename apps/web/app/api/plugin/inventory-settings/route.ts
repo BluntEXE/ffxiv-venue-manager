@@ -1,6 +1,6 @@
-import { NextRequest, NextResponse } from 'next/server'
-import { pluginAuthGate } from '@/lib/api/plugin-auth'
-import { prisma } from '@/lib/prisma'
+import { NextRequest, NextResponse } from "next/server"
+import { pluginAuthGate } from "@/lib/api/plugin-auth"
+import { prisma } from "@/lib/prisma"
 
 /**
  * GET /api/plugin/inventory-settings?venueId=…
@@ -16,9 +16,9 @@ export async function GET(request: NextRequest) {
     const { auth } = gate
 
     const { searchParams } = new URL(request.url)
-    const venueId = searchParams.get('venueId')
+    const venueId = searchParams.get("venueId")
     if (!venueId || !auth.venues.includes(venueId)) {
-      return NextResponse.json({ error: 'Invalid venue' }, { status: 400 })
+      return NextResponse.json({ error: "Invalid venue" }, { status: 400 })
     }
 
     const settings = await prisma.venueInventorySettings.findUnique({
@@ -28,7 +28,7 @@ export async function GET(request: NextRequest) {
 
     return NextResponse.json({ enabled: settings?.enabled ?? false })
   } catch (error) {
-    console.error('[Plugin API] Error fetching inventory settings:', error)
-    return NextResponse.json({ error: 'Internal server error' }, { status: 500 })
+    console.error("[Plugin API] Error fetching inventory settings:", error)
+    return NextResponse.json({ error: "Internal server error" }, { status: 500 })
   }
 }

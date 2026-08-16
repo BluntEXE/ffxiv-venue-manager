@@ -11,12 +11,14 @@ Bring the daily-use member functionality of the standalone XIV Venue Manager Syn
 ## Scope (v1)
 
 In scope:
+
 1. **Settings screen** — API key entry, venue selection, character linking
 2. **Dashboard hub** — at-a-glance clock status + quick actions
 3. **Shift screen** — claim open shifts, clock in/out, view upcoming shifts
 4. **Sales screen** — log a sale against a role-scoped service list
 
 Explicitly out of scope for this design (tracked separately, not blocking):
+
 - **Non-Discord / owner-issued API keys.** Key generation is Discord-OAuth-gated site-wide (`lib/auth.ts:6-14`, only provider) and strictly self-service (`app/api/plugin/keys/route.ts:45-126`, always binds to the requester's own session). Members who can't/won't use Discord login are handled manually today; building an alternate issuance path is a separate backend project, not an Aetherphone UI concern.
 - **Server-side role enforcement on `POST /api/plugin/transactions`.** The endpoint doesn't currently verify a submitted `serviceId` belongs to the caller's role (`app/api/plugin/transactions/route.ts:62-66` only checks a broad log-transaction permission). Pre-existing gap, low real-world risk, tracked as a follow-up.
 - Patron tracking and payroll glance — not part of this app; patron tracking is passive (plugin already reports visits automatically) and payroll is owner/manager-facing, not a member daily-use action.
@@ -44,7 +46,7 @@ Apps/VenueSync/
 
 ### New backend endpoint: character linking
 
-`POST /api/plugin/characters` (new) — authenticates via `x-api-key` header like other `/api/plugin/*` routes (not session auth, unlike the existing manual web form at `app/api/user-characters/route.ts` which requires `getServerSession`). Body: `{ characterName, world }`. Upserts a `UserCharacter` row keyed on the existing unique `(characterName, world)` constraint (`prisma/schema.prisma:97-109`), setting `userId` from the authenticated API key's owner. If the unique key already exists under a *different* `userId`, return `409 Conflict` rather than silently reassigning it — a name+world pair is claimed by whoever links it first.
+`POST /api/plugin/characters` (new) — authenticates via `x-api-key` header like other `/api/plugin/*` routes (not session auth, unlike the existing manual web form at `app/api/user-characters/route.ts` which requires `getServerSession`). Body: `{ characterName, world }`. Upserts a `UserCharacter` row keyed on the existing unique `(characterName, world)` constraint (`prisma/schema.prisma:97-109`), setting `userId` from the authenticated API key's owner. If the unique key already exists under a _different_ `userId`, return `409 Conflict` rather than silently reassigning it — a name+world pair is claimed by whoever links it first.
 
 This is the only new backend work this design requires. Everything else reuses existing endpoints.
 
@@ -65,6 +67,7 @@ enum VenueSyncRoute { Dashboard, Shifts, Sales, Settings }
 Two shapes were considered. **Dashboard hub** (chosen): home screen is a glanceable status card + three tappable rows (Log a Sale / Upcoming Shifts / Session stats), each pushes its own full screen. **Segmented strip**: Shift and Sales share one screen behind filter chips, only Settings is pushed separately.
 
 Dashboard hub wins because:
+
 - It reuses `ViewRouter` exactly as-is; the segmented strip would need a second nav idiom with no prior art in the codebase.
 - The single most common thing a member opens this app to check — "am I clocked in right now?" — needs to be the first thing shown, not sharing space with a chip row.
 - Shift and Sales aren't filtered views of the same data (unlike Venues' time-range chips) — they're different actions with different follow-up screens, so collapsing them saves one tap at the cost of clarity.

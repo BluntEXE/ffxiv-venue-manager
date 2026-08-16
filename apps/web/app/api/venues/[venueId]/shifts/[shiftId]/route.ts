@@ -62,17 +62,11 @@ export async function PATCH(
     // --- CLAIM ---
     if (parsed.data.action === "claim") {
       if (shift.status !== "OPEN") {
-        return NextResponse.json(
-          { error: `Shift is already ${shift.status.toLowerCase()}` },
-          { status: 400 }
-        )
+        return NextResponse.json({ error: `Shift is already ${shift.status.toLowerCase()}` }, { status: 400 })
       }
       const claimResult = await claimShiftWithMerge(shift, membership.id)
       if (claimResult === null) {
-        return NextResponse.json(
-          { error: "This shift was just claimed by someone else" },
-          { status: 409 }
-        )
+        return NextResponse.json({ error: "This shift was just claimed by someone else" }, { status: 409 })
       }
       await logShiftAudit(claimResult.shift.id, "CLAIM", session.user.id, "web")
       // Notify managers/owners that a claim needs approval (skip if merged
@@ -87,20 +81,24 @@ export async function PATCH(
             where: { id: session.user.id },
             select: { displayName: true, name: true },
           }),
-        ]).then(([managers, claimant]) => {
-          const staffName = claimant?.displayName ?? claimant?.name ?? "A staff member"
-          const shiftDate = formatServerTime(shift.scheduledStart, "shiftdate")
-          return prisma.pendingNotification.createMany({
-            data: managers.filter(m => m.userId).map((m) => ({
-              userId: m.userId!,
-              type: "SHIFT_CLAIM_SUBMITTED" as const,
-              title: "Shift claim pending",
-              body: `${staffName} claimed the ${shiftDate} shift at ${venue.name}.`,
-              data: { venueId: venue.id, shiftId: shift.id },
-              scheduledFor: new Date(),
-            })),
+        ])
+          .then(([managers, claimant]) => {
+            const staffName = claimant?.displayName ?? claimant?.name ?? "A staff member"
+            const shiftDate = formatServerTime(shift.scheduledStart, "shiftdate")
+            return prisma.pendingNotification.createMany({
+              data: managers
+                .filter((m) => m.userId)
+                .map((m) => ({
+                  userId: m.userId!,
+                  type: "SHIFT_CLAIM_SUBMITTED" as const,
+                  title: "Shift claim pending",
+                  body: `${staffName} claimed the ${shiftDate} shift at ${venue.name}.`,
+                  data: { venueId: venue.id, shiftId: shift.id },
+                  scheduledFor: new Date(),
+                })),
+            })
           })
-        }).catch(() => {})
+          .catch(() => {})
       }
       return NextResponse.json({
         success: true,
@@ -120,10 +118,7 @@ export async function PATCH(
         return NextResponse.json({ error: "Only managers can approve claims" }, { status: 403 })
       }
       if (shift.status !== "CLAIMED") {
-        return NextResponse.json(
-          { error: `Shift is ${shift.status.toLowerCase()}, not claimed` },
-          { status: 400 }
-        )
+        return NextResponse.json({ error: `Shift is ${shift.status.toLowerCase()}, not claimed` }, { status: 400 })
       }
       const result = await prisma.shift.updateMany({
         where: { id: shift.id, status: "CLAIMED" },
@@ -142,29 +137,33 @@ export async function PATCH(
           const now = new Date()
           const shiftDate = formatServerTime(shift.scheduledStart, "shiftdate")
           // Immediate approval notification
-          prisma.pendingNotification.create({
-            data: {
-              userId: claimant.userId,
-              type: "SHIFT_CLAIM_APPROVED",
-              title: "Shift claim approved",
-              body: `Your claim for the ${shiftDate} shift at ${venue.name} was approved. You're on the schedule!`,
-              data: { venueId: venue.id, shiftId: shift.id },
-              scheduledFor: now,
-            },
-          }).catch(() => {})
+          prisma.pendingNotification
+            .create({
+              data: {
+                userId: claimant.userId,
+                type: "SHIFT_CLAIM_APPROVED",
+                title: "Shift claim approved",
+                body: `Your claim for the ${shiftDate} shift at ${venue.name} was approved. You're on the schedule!`,
+                data: { venueId: venue.id, shiftId: shift.id },
+                scheduledFor: now,
+              },
+            })
+            .catch(() => {})
           // Shift reminder 1 hour before start
           const reminderAt = new Date(shift.scheduledStart.getTime() - 60 * 60 * 1000)
           if (reminderAt > now) {
-            prisma.pendingNotification.create({
-              data: {
-                userId: claimant.userId,
-                type: "SHIFT_REMINDER",
-                title: "Shift starting soon",
-                body: `Your shift at ${venue.name} starts in 1 hour.`,
-                data: { venueId: venue.id, shiftId: shift.id },
-                scheduledFor: reminderAt,
-              },
-            }).catch(() => {})
+            prisma.pendingNotification
+              .create({
+                data: {
+                  userId: claimant.userId,
+                  type: "SHIFT_REMINDER",
+                  title: "Shift starting soon",
+                  body: `Your shift at ${venue.name} starts in 1 hour.`,
+                  data: { venueId: venue.id, shiftId: shift.id },
+                  scheduledFor: reminderAt,
+                },
+              })
+              .catch(() => {})
           }
         }
       }
@@ -177,10 +176,7 @@ export async function PATCH(
         return NextResponse.json({ error: "Only managers can reject claims" }, { status: 403 })
       }
       if (shift.status !== "CLAIMED") {
-        return NextResponse.json(
-          { error: `Shift is ${shift.status.toLowerCase()}, not claimed` },
-          { status: 400 }
-        )
+        return NextResponse.json({ error: `Shift is ${shift.status.toLowerCase()}, not claimed` }, { status: 400 })
       }
       const result = await prisma.shift.updateMany({
         where: { id: shift.id, status: "CLAIMED" },
@@ -198,16 +194,18 @@ export async function PATCH(
         })
         if (claimant?.userId) {
           const shiftDate = formatServerTime(shift.scheduledStart, "shiftdate")
-          prisma.pendingNotification.create({
-            data: {
-              userId: claimant.userId,
-              type: "SHIFT_CLAIM_REJECTED",
-              title: "Shift claim not approved",
-              body: `Your claim for the ${shiftDate} shift at ${venue.name} wasn't approved. The slot is still open.`,
-              data: { venueId: venue.id, shiftId: shift.id },
-              scheduledFor: new Date(),
-            },
-          }).catch(() => {})
+          prisma.pendingNotification
+            .create({
+              data: {
+                userId: claimant.userId,
+                type: "SHIFT_CLAIM_REJECTED",
+                title: "Shift claim not approved",
+                body: `Your claim for the ${shiftDate} shift at ${venue.name} wasn't approved. The slot is still open.`,
+                data: { venueId: venue.id, shiftId: shift.id },
+                scheduledFor: new Date(),
+              },
+            })
+            .catch(() => {})
         }
       }
       return NextResponse.json({ success: true, shift: { id: shift.id, status: "OPEN" } })
@@ -232,16 +230,10 @@ export async function PATCH(
         const earliest = new Date(shift.scheduledStart.getTime() - 30 * 60 * 1000)
         const latest = new Date(shift.scheduledStart.getTime() + 60 * 60 * 1000)
         if (now < earliest) {
-          return NextResponse.json(
-            { error: "Too early to clock in (earliest 30 min before start)" },
-            { status: 400 }
-          )
+          return NextResponse.json({ error: "Too early to clock in (earliest 30 min before start)" }, { status: 400 })
         }
         if (now > latest) {
-          return NextResponse.json(
-            { error: "Clock-in window has passed (60 min after start)" },
-            { status: 400 }
-          )
+          return NextResponse.json({ error: "Clock-in window has passed (60 min after start)" }, { status: 400 })
         }
       }
 
@@ -353,10 +345,7 @@ export async function DELETE(
       where: { userId: session.user.id, venueId: venue.id, status: "active" },
     })
     if (!membership || !["OWNER", "MANAGER"].includes(membership.role)) {
-      return NextResponse.json(
-        { error: "Only managers can delete shifts" },
-        { status: 403 }
-      )
+      return NextResponse.json({ error: "Only managers can delete shifts" }, { status: 403 })
     }
 
     const shift = await prisma.shift.findFirst({

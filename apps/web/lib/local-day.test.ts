@@ -30,8 +30,12 @@ describe("localHourLabel", () => {
 
   it("matches the UTC helpers exactly, so first paint can't mismatch hydration", () => {
     for (const iso of [
-      "2026-01-15T00:00:00Z", "2026-01-15T00:30:00Z", "2026-01-15T12:00:00Z",
-      "2026-01-15T22:00:00Z", "2026-01-15T23:59:00Z", "2026-07-04T09:05:00Z",
+      "2026-01-15T00:00:00Z",
+      "2026-01-15T00:30:00Z",
+      "2026-01-15T12:00:00Z",
+      "2026-01-15T22:00:00Z",
+      "2026-01-15T23:59:00Z",
+      "2026-07-04T09:05:00Z",
     ]) {
       const d = new Date(iso)
       expect(localDayKey(d, "UTC")).toBe(utcDayKey(d))

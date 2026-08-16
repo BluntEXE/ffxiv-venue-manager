@@ -34,43 +34,40 @@ export const GET = withRateLimit<{ params: Promise<{ venueId: string; serviceId:
       const { params } = context
       const { venueId, serviceId } = await params
 
-    // Check permissions
-    const membership = await prisma.membership.findFirst({
-      where: {
-        userId: session.user.id,
-        venueId,
-        status: "active",
-      },
-    })
+      // Check permissions
+      const membership = await prisma.membership.findFirst({
+        where: {
+          userId: session.user.id,
+          venueId,
+          status: "active",
+        },
+      })
 
-    if (!membership) {
-      return NextResponse.json(
-        { error: "You don't have access to this venue" },
-        { status: 403 }
-      )
-    }
+      if (!membership) {
+        return NextResponse.json({ error: "You don't have access to this venue" }, { status: 403 })
+      }
 
-    const service = await prisma.service.findUnique({
-      where: { id: serviceId, venueId },
-      include: {
-        roles: {
-          select: {
-            id: true,
-            name: true,
-            color: true,
+      const service = await prisma.service.findUnique({
+        where: { id: serviceId, venueId },
+        include: {
+          roles: {
+            select: {
+              id: true,
+              name: true,
+              color: true,
+            },
+          },
+          _count: {
+            select: {
+              transactions: true,
+            },
           },
         },
-        _count: {
-          select: {
-            transactions: true,
-          },
-        },
-      },
-    })
+      })
 
-    if (!service) {
-      return NextResponse.json({ error: "Service not found" }, { status: 404 })
-    }
+      if (!service) {
+        return NextResponse.json({ error: "Service not found" }, { status: 404 })
+      }
 
       return NextResponse.json(service)
     } catch (error) {
@@ -96,59 +93,55 @@ export const PUT = withRateLimit<{ params: Promise<{ venueId: string; serviceId:
       const { params } = context
       const { venueId, serviceId } = await params
 
-    // Check permissions
-    const membership = await prisma.membership.findFirst({
-      where: {
-        userId: session.user.id,
-        venueId,
-        status: "active",
-      },
-    })
+      // Check permissions
+      const membership = await prisma.membership.findFirst({
+        where: {
+          userId: session.user.id,
+          venueId,
+          status: "active",
+        },
+      })
 
-    if (!membership || !["OWNER", "MANAGER"].includes(membership.role)) {
-      return NextResponse.json(
-        { error: "You don't have permission to update services" },
-        { status: 403 }
-      )
-    }
+      if (!membership || !["OWNER", "MANAGER"].includes(membership.role)) {
+        return NextResponse.json({ error: "You don't have permission to update services" }, { status: 403 })
+      }
 
-    const body = await request.json()
-    const { roleIds, ...validatedData } = updateServiceSchema.parse(body)
+      const body = await request.json()
+      const { roleIds, ...validatedData } = updateServiceSchema.parse(body)
 
-    const updatedService = await prisma.service.update({
-      where: { id: serviceId, venueId },
-      data: {
-        ...validatedData,
-        roles: roleIds ? {
-          set: roleIds.map(id => ({ id })),
-        } : undefined,
-      },
-      include: {
-        roles: {
-          select: {
-            id: true,
-            name: true,
-            color: true,
+      const updatedService = await prisma.service.update({
+        where: { id: serviceId, venueId },
+        data: {
+          ...validatedData,
+          roles: roleIds
+            ? {
+                set: roleIds.map((id) => ({ id })),
+              }
+            : undefined,
+        },
+        include: {
+          roles: {
+            select: {
+              id: true,
+              name: true,
+              color: true,
+            },
+          },
+          _count: {
+            select: {
+              transactions: true,
+            },
           },
         },
-        _count: {
-          select: {
-            transactions: true,
-          },
-        },
-      },
-    })
+      })
 
-    // Invalidate services cache
-    await invalidateCache(cacheKeys.venueServices(venueId))
+      // Invalidate services cache
+      await invalidateCache(cacheKeys.venueServices(venueId))
 
       return NextResponse.json(updatedService)
     } catch (error) {
       if (error instanceof z.ZodError) {
-        return NextResponse.json(
-          { error: "Validation error", details: error.issues },
-          { status: 400 }
-        )
+        return NextResponse.json({ error: "Validation error", details: error.issues }, { status: 400 })
       }
 
       console.error("Error updating service:", error)
@@ -173,36 +166,33 @@ export const DELETE = withRateLimit<{ params: Promise<{ venueId: string; service
       const { params } = context
       const { venueId, serviceId } = await params
 
-    // Check permissions
-    const membership = await prisma.membership.findFirst({
-      where: {
-        userId: session.user.id,
-        venueId,
-        status: "active",
-      },
-    })
+      // Check permissions
+      const membership = await prisma.membership.findFirst({
+        where: {
+          userId: session.user.id,
+          venueId,
+          status: "active",
+        },
+      })
 
-    if (!membership || membership.role !== "OWNER") {
-      return NextResponse.json(
-        { error: "Only owners can delete services" },
-        { status: 403 }
-      )
-    }
+      if (!membership || membership.role !== "OWNER") {
+        return NextResponse.json({ error: "Only owners can delete services" }, { status: 403 })
+      }
 
-    const service = await prisma.service.findUnique({
-      where: { id: serviceId, venueId },
-    })
+      const service = await prisma.service.findUnique({
+        where: { id: serviceId, venueId },
+      })
 
-    if (!service) {
-      return NextResponse.json({ error: "Service not found" }, { status: 404 })
-    }
+      if (!service) {
+        return NextResponse.json({ error: "Service not found" }, { status: 404 })
+      }
 
-    await prisma.service.delete({
-      where: { id: serviceId, venueId },
-    })
+      await prisma.service.delete({
+        where: { id: serviceId, venueId },
+      })
 
-    // Invalidate services cache
-    await invalidateCache(cacheKeys.venueServices(venueId))
+      // Invalidate services cache
+      await invalidateCache(cacheKeys.venueServices(venueId))
 
       return NextResponse.json({ success: true })
     } catch (error) {

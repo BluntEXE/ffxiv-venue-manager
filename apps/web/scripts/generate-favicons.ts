@@ -43,12 +43,9 @@ async function generateFavicons() {
     console.log("\nAlso copying full logo to public/logo.png...")
 
     // Copy full logo to public folder
-    await sharp("Logo.png")
-      .png()
-      .toFile("public/logo.png")
+    await sharp("Logo.png").png().toFile("public/logo.png")
 
     console.log("✅ Copied Logo.png -> public/logo.png")
-
   } catch (error) {
     console.error("\n❌ Error generating favicons:", error)
     process.exit(1)
