@@ -10,6 +10,11 @@
  */
 import { describe, it, expect, vi, beforeAll, afterAll } from "vitest"
 
+// Requires DATABASE_URL (vitest doesn't auto-load .env.local - run via
+// `dotenv-cli -e .env.local -- vitest run`, see LOCAL_DEV.md). Skips cleanly
+// under a plain `vitest run` instead of failing on a missing connection.
+const hasDbUrl = !!process.env.DATABASE_URL
+
 vi.mock("@/lib/discord-bot", () => ({
   editBotMessage: vi.fn().mockResolvedValue(undefined),
   postBotMessage: vi.fn().mockResolvedValue("msg-id"),
@@ -23,46 +28,46 @@ import { handleShiftAccept, handleShiftDecline, handleShiftMaybe } from "./shift
 const VENUE_SLUG = "local-test-venue"
 const DISCORD_USER_ID = "737311137967767553" // Ehno Cure fixture, matches local seed data
 
-let eventId: string
-let embedId: string
+describe.skipIf(!hasDbUrl)("shift-bot handlers against a real local Postgres", () => {
+  let eventId: string
+  let embedId: string
 
-beforeAll(async () => {
-  const venue = await prisma.venue.findUniqueOrThrow({ where: { slug: VENUE_SLUG } })
-  const user = await prisma.user.findFirstOrThrow({ where: { discordId: DISCORD_USER_ID } })
+  beforeAll(async () => {
+    const venue = await prisma.venue.findUniqueOrThrow({ where: { slug: VENUE_SLUG } })
+    const user = await prisma.user.findFirstOrThrow({ where: { discordId: DISCORD_USER_ID } })
 
-  const event = await prisma.event.create({
-    data: {
-      venue: { connect: { id: venue.id } },
-      createdBy: { connect: { id: user.id } },
-      title: "cluster4-integration-test",
-      startTime: new Date(Date.now() + 3600_000),
-      endTime: new Date(Date.now() + 7200_000),
-    },
+    const event = await prisma.event.create({
+      data: {
+        venue: { connect: { id: venue.id } },
+        createdBy: { connect: { id: user.id } },
+        title: "cluster4-integration-test",
+        startTime: new Date(Date.now() + 3600_000),
+        endTime: new Date(Date.now() + 7200_000),
+      },
+    })
+    eventId = event.id
+
+    const embed = await prisma.shiftSignupEmbed.create({
+      data: {
+        venue: { connect: { id: venue.id } },
+        event: { connect: { id: event.id } },
+        templateName: "Integration Test Shift",
+        discordMessageId: `test-${Date.now()}`,
+        channelId: "test-channel",
+        scheduledStart: event.startTime,
+        scheduledEnd: event.endTime,
+        slots: 1,
+      },
+    })
+    embedId = embed.id
   })
-  eventId = event.id
 
-  const embed = await prisma.shiftSignupEmbed.create({
-    data: {
-      venue: { connect: { id: venue.id } },
-      event: { connect: { id: event.id } },
-      templateName: "Integration Test Shift",
-      discordMessageId: `test-${Date.now()}`,
-      channelId: "test-channel",
-      scheduledStart: event.startTime,
-      scheduledEnd: event.endTime,
-      slots: 1,
-    },
+  afterAll(async () => {
+    await prisma.shift.deleteMany({ where: { shiftSignupEmbedId: embedId } })
+    await prisma.shiftSignupEmbed.delete({ where: { id: embedId } })
+    await prisma.event.delete({ where: { id: eventId } })
   })
-  embedId = embed.id
-})
 
-afterAll(async () => {
-  await prisma.shift.deleteMany({ where: { shiftSignupEmbedId: embedId } })
-  await prisma.shiftSignupEmbed.delete({ where: { id: embedId } })
-  await prisma.event.delete({ where: { id: eventId } })
-})
-
-describe("shift-bot handlers against a real local Postgres", () => {
   it("accept creates a real Shift row and refreshes the embed", async () => {
     const result = await handleShiftAccept(embedId, DISCORD_USER_ID, "EhnoCure")
     expect(result.content).toContain("You are signed up for")

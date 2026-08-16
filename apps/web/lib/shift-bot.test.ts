@@ -91,7 +91,7 @@ describe("refreshEmbedFromRecord (via handleShiftMaybe)", () => {
 
     expect(editBotMessage).toHaveBeenCalledOnce()
     const [, , payload] = vi.mocked(editBotMessage).mock.calls[0]
-    expect(payload.embeds[0]).toMatchObject({
+    expect(payload.embeds?.[0]).toMatchObject({
       author: { name: "Velvet Rift" },
       description: expect.stringContaining("Grand Opening"),
       thumbnail: { url: "https://example.com/icon.png" },
