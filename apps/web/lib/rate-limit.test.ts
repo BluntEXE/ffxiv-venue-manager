@@ -43,7 +43,7 @@ describe("buildRateLimitResponse", () => {
   })
 
   it("computes Retry-After as the ceiling of seconds until reset", async () => {
-    const reset = Date.now() + 4500
+    const reset = Date.now() + 4200
     const rl: RateLimitResult = { success: false, limit: 10, remaining: 0, reset }
     const res = buildRateLimitResponse(rl, "x")
     expect(res.headers.get("Retry-After")).toBe("5")
