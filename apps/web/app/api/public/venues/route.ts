@@ -111,6 +111,8 @@ export async function GET(req: NextRequest) {
         commencing: e.commencing,
         label: e.label,
       })),
+      // Schedule-only by design, unlike the web UI's isVenueOpenNow: this contract
+      // is driven by staff shifts (openSince/nextOpen above), not Event records.
       openNow: isOpenNow(scheduleEntries),
       // Next few resolved occurrences within the next 14 days, UTC start/end.
       nextOpenings: resolveUpcomingOccurrences(scheduleEntries, { days: 14, limit: 5 }),
