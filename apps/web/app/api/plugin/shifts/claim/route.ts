@@ -1,8 +1,7 @@
 import { NextRequest, NextResponse } from "next/server"
 import { z } from "zod"
 import { prisma } from "@/lib/prisma"
-import { validateApiKey } from "@/lib/api/plugin-auth"
-import { enforcePluginRateLimit, enforcePluginIpRateLimit } from "@/lib/api/plugin-rate-limit"
+import { pluginAuthGate } from "@/lib/api/plugin-auth"
 import { claimShiftWithMerge } from "@/lib/shift-overlap"
 import { formatServerTime } from "@/lib/server-time"
 
@@ -18,21 +17,9 @@ const bodySchema = z.object({
 
 export async function POST(request: NextRequest) {
   try {
-    const __ipLimited = await enforcePluginIpRateLimit(request)
-    if (__ipLimited) return __ipLimited
-
-    const apiKey = request.headers.get("x-api-key")
-    if (!apiKey) {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
-    }
-
-    const auth = await validateApiKey(apiKey)
-    if (!auth || !auth.userId) {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
-    }
-
-    const limited = await enforcePluginRateLimit(apiKey, "write")
-    if (limited) return limited
+    const gate = await pluginAuthGate(request, "write")
+    if (!gate.ok) return gate.response
+    const { auth } = gate
 
     const body = await request.json()
     const parsed = bodySchema.safeParse(body)
