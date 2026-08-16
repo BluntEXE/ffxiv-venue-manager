@@ -95,6 +95,33 @@ export function ShiftsWeekView(props: ShiftsWeekViewProps) {
     })
   }
 
+  function duplicateShiftDialog(
+    shift: ShiftRow,
+    modeField: { mode: "assign"; membershipId: string | undefined } | { mode: "open"; roleId: string | undefined },
+  ) {
+    return (
+      <CreateShiftDialog
+        venueSlug={props.slug}
+        staff={props.staffForDialog}
+        roles={props.venueRoles}
+        potModeEnabled={props.potModeEnabled}
+        events={props.eventsForDialog}
+        trigger={<Button variant="ghost" size="sm" aria-label="Duplicate shift" className="h-6 w-6 p-0"><Copy className="h-3.5 w-3.5" /></Button>}
+        prefill={{
+          ...modeField,
+          date: dayKeyOf(shift.scheduledStart),
+          startTime: mounted
+            ? localTimeInput(shift.scheduledStart, timeZone)
+            : new Date(shift.scheduledStart).toISOString().slice(11, 16),
+          endTime: mounted
+            ? localTimeInput(shift.scheduledEnd, timeZone)
+            : new Date(shift.scheduledEnd).toISOString().slice(11, 16),
+          notes: shift.notes ?? undefined,
+        }}
+      />
+    )
+  }
+
   const weekStart = new Date(props.weekStartISO)
   const weekDays = Array.from({ length: 7 }, (_, i) => {
     const d = new Date(weekStart)
@@ -245,28 +272,8 @@ export function ShiftsWeekView(props: ShiftsWeekViewProps) {
                             {hourLabelOf(shift.scheduledStart)}–{hourLabelOf(shift.scheduledEnd)}
                             {shift.role?.name ? ` · ${shift.role.name}` : ""}
                           </span>
-                          {props.canManage && (
-                            <CreateShiftDialog
-                              venueSlug={props.slug}
-                              staff={props.staffForDialog}
-                              roles={props.venueRoles}
-                              potModeEnabled={props.potModeEnabled}
-                              events={props.eventsForDialog}
-                              trigger={<Button variant="ghost" size="sm" aria-label="Duplicate shift" className="h-6 w-6 p-0"><Copy className="h-3.5 w-3.5" /></Button>}
-                              prefill={{
-                                mode: "assign",
-                                membershipId: shift.membershipId ?? undefined,
-                                date: dayKeyOf(shift.scheduledStart),
-                                startTime: mounted
-                                  ? localTimeInput(shift.scheduledStart, timeZone)
-                                  : new Date(shift.scheduledStart).toISOString().slice(11, 16),
-                                endTime: mounted
-                                  ? localTimeInput(shift.scheduledEnd, timeZone)
-                                  : new Date(shift.scheduledEnd).toISOString().slice(11, 16),
-                                notes: shift.notes ?? undefined,
-                              }}
-                            />
-                          )}
+                          {props.canManage &&
+                            duplicateShiftDialog(shift, { mode: "assign", membershipId: shift.membershipId ?? undefined })}
                         </div>
                       )
                     )}
@@ -294,28 +301,8 @@ export function ShiftsWeekView(props: ShiftsWeekViewProps) {
                           timeLabel={`${hourLabelOf(shift.scheduledStart)}–${hourLabelOf(shift.scheduledEnd)}${shift.role?.name ? ` · ${shift.role.name}` : ""}`}
                           canClaim={!props.canManage}
                         />
-                        {props.canManage && (
-                          <CreateShiftDialog
-                            venueSlug={props.slug}
-                            staff={props.staffForDialog}
-                            roles={props.venueRoles}
-                            potModeEnabled={props.potModeEnabled}
-                            events={props.eventsForDialog}
-                            trigger={<Button variant="ghost" size="sm" aria-label="Duplicate shift" className="h-6 w-6 p-0"><Copy className="h-3.5 w-3.5" /></Button>}
-                            prefill={{
-                              mode: "open",
-                              roleId: shift.roleId ?? undefined,
-                              date: dayKeyOf(shift.scheduledStart),
-                              startTime: mounted
-                                ? localTimeInput(shift.scheduledStart, timeZone)
-                                : new Date(shift.scheduledStart).toISOString().slice(11, 16),
-                              endTime: mounted
-                                ? localTimeInput(shift.scheduledEnd, timeZone)
-                                : new Date(shift.scheduledEnd).toISOString().slice(11, 16),
-                              notes: shift.notes ?? undefined,
-                            }}
-                          />
-                        )}
+                        {props.canManage &&
+                          duplicateShiftDialog(shift, { mode: "open", roleId: shift.roleId ?? undefined })}
                         {props.canManage && (
                           <DeleteShiftButton
                             venueSlug={props.slug}
