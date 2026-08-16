@@ -1,0 +1,611 @@
+<title>Architecture Notes</title>
+<style>
+:root {
+  --bg: #070b14;
+  --card: #0a0f1e;
+  --card-alt: #0d1424;
+  --xiv-blue: #00b4ff;
+  --border: rgba(0, 180, 255, 0.18);
+  --border-strong: rgba(0, 180, 255, 0.3);
+  --hover: rgba(0, 180, 255, 0.06);
+  --ink: #e8f1f8;
+  --ink-dim: #8ba3b8;
+  --ink-faint: #5a7186;
+  --code-bg: rgba(0, 180, 255, 0.08);
+  --code-ink: #00b4ff;
+  --font-display: "Cinzel", Georgia, "Times New Roman", serif;
+  --font-body: -apple-system, "Segoe UI", system-ui, sans-serif;
+  --font-mono: ui-monospace, "SF Mono", "Cascadia Code", "Consolas", monospace;
+}
+
+* { box-sizing: border-box; }
+html { scroll-behavior: smooth; }
+
+body {
+  margin: 0;
+  background: var(--bg);
+  color: var(--ink);
+  font-family: var(--font-body);
+  line-height: 1.65;
+  font-size: 16px;
+}
+
+body::before {
+  content: "";
+  position: fixed;
+  inset: 0;
+  z-index: -1;
+  background:
+    radial-gradient(ellipse 900px 500px at 15% -5%, rgba(0, 180, 255, 0.10), transparent 60%),
+    radial-gradient(ellipse 700px 500px at 100% 20%, rgba(0, 180, 255, 0.06), transparent 55%);
+}
+
+::selection { background: rgba(0, 180, 255, 0.25); color: #fff; }
+
+a { color: var(--xiv-blue); }
+a:focus-visible, button:focus-visible, summary:focus-visible {
+  outline: 2px solid var(--xiv-blue);
+  outline-offset: 2px;
+}
+
+.shell {
+  display: grid;
+  grid-template-columns: 268px minmax(0, 1fr);
+  max-width: 1200px;
+  margin: 0 auto;
+}
+
+/* ---- Sidebar ---- */
+.sidebar {
+  position: sticky;
+  top: 0;
+  align-self: start;
+  height: 100vh;
+  overflow-y: auto;
+  padding: 2.25rem 1.5rem 2rem 0;
+  border-right: 1px solid var(--border);
+}
+
+.brand-mark {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  margin-bottom: 0.3rem;
+}
+
+.brand-glyph {
+  width: 30px;
+  height: 30px;
+  border-radius: 7px;
+  background: linear-gradient(155deg, rgba(0,180,255,0.22), rgba(0,180,255,0.04));
+  border: 1px solid var(--border-strong);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-family: var(--font-display);
+  font-size: 0.95rem;
+  color: var(--xiv-blue);
+  flex-shrink: 0;
+}
+
+.brand-name {
+  font-family: var(--font-display);
+  font-size: 0.92rem;
+  letter-spacing: 0.06em;
+  color: var(--ink);
+  line-height: 1.3;
+}
+
+.brand-sub {
+  font-family: var(--font-mono);
+  font-size: 0.68rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--ink-faint);
+  margin: 0.65rem 0 0;
+}
+
+.sidebar nav {
+  margin-top: 1.85rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.1rem;
+}
+
+.sidebar nav a {
+  text-decoration: none;
+  color: var(--ink-dim);
+  font-size: 0.87rem;
+  padding: 0.45rem 0.65rem;
+  border-radius: 5px;
+  border-left: 2px solid transparent;
+  display: flex;
+  align-items: baseline;
+  gap: 0.55rem;
+  transition: background 0.12s ease, color 0.12s ease, border-color 0.12s ease;
+}
+
+.sidebar nav a:hover {
+  color: var(--ink);
+  background: var(--hover);
+  border-left-color: var(--border-strong);
+}
+
+.sidebar nav a .idx {
+  font-family: var(--font-mono);
+  font-size: 0.7rem;
+  color: var(--xiv-blue);
+  opacity: 0.7;
+  flex-shrink: 0;
+}
+
+.sidebar .meta {
+  margin-top: 2.5rem;
+  padding-top: 1.25rem;
+  border-top: 1px solid var(--border);
+  font-size: 0.78rem;
+  color: var(--ink-faint);
+  line-height: 1.75;
+}
+
+.sidebar .meta code {
+  font-family: var(--font-mono);
+  background: var(--code-bg);
+  padding: 0.05rem 0.32rem;
+  border-radius: 3px;
+  color: var(--xiv-blue);
+}
+
+/* ---- Main content ---- */
+main {
+  padding: 3.75rem 3rem 6rem;
+  min-width: 0;
+}
+
+header.page-head {
+  margin-bottom: 3.25rem;
+  max-width: 62ch;
+}
+
+.eyebrow {
+  font-family: var(--font-mono);
+  font-size: 0.73rem;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--xiv-blue);
+  margin: 0 0 1rem;
+}
+
+h1 {
+  font-family: var(--font-display);
+  font-weight: 600;
+  font-size: 2.5rem;
+  letter-spacing: 0.02em;
+  line-height: 1.2;
+  margin: 0 0 1rem;
+  text-wrap: balance;
+  color: var(--ink);
+  text-shadow: 0 0 32px rgba(0, 180, 255, 0.18);
+}
+
+.dek {
+  color: var(--ink-dim);
+  font-size: 1.02rem;
+  margin: 0;
+  max-width: 60ch;
+}
+
+.dek code { font-family: var(--font-mono); background: var(--code-bg); padding: 0.05rem 0.35rem; border-radius: 3px; font-size: 0.92em; color: var(--xiv-blue); }
+
+section.subsystem {
+  max-width: 68ch;
+  margin-bottom: 3.75rem;
+  scroll-margin-top: 2rem;
+}
+
+section.subsystem > h2 {
+  font-family: var(--font-display);
+  font-weight: 600;
+  font-size: 1.28rem;
+  letter-spacing: 0.03em;
+  color: var(--ink);
+  margin: 0 0 1.5rem;
+  padding-bottom: 0.85rem;
+  border-bottom: 1px solid var(--border);
+  display: flex;
+  align-items: baseline;
+  gap: 0.65rem;
+}
+
+section.subsystem > h2 .num {
+  font-family: var(--font-mono);
+  font-weight: 400;
+  color: var(--xiv-blue);
+  font-size: 0.8em;
+}
+
+.intro {
+  color: var(--ink-dim);
+  font-size: 0.97rem;
+  margin: -0.5rem 0 1.5rem;
+}
+
+.note {
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-left: 2px solid var(--xiv-blue);
+  border-radius: 8px;
+  padding: 1.1rem 1.3rem;
+  margin-bottom: 1rem;
+  transition: border-color 0.15s ease, box-shadow 0.15s ease;
+}
+
+.note:hover {
+  border-color: var(--border-strong);
+  box-shadow: 0 0 0 1px var(--border), 0 8px 24px -12px rgba(0, 180, 255, 0.25);
+}
+
+.note p { margin: 0 0 0.7rem; font-size: 0.95rem; }
+.note p:last-child { margin-bottom: 0; }
+
+.note .claim {
+  font-weight: 600;
+  color: var(--ink);
+}
+
+.note code {
+  font-family: var(--font-mono);
+  background: var(--code-bg);
+  padding: 0.05rem 0.34rem;
+  border-radius: 3px;
+  font-size: 0.87em;
+  color: var(--xiv-blue);
+}
+
+.note ol, .note ul {
+  margin: 0.5rem 0 0.7rem;
+  padding-left: 1.3rem;
+  font-size: 0.95rem;
+  color: var(--ink);
+}
+
+.note li { margin-bottom: 0.32rem; }
+.note li:last-child { margin-bottom: 0; }
+
+.cmdblock {
+  background: var(--code-bg);
+  border: 1px solid var(--border);
+  border-radius: 7px;
+  padding: 0.95rem 1.15rem;
+  margin: 0.75rem 0 1rem;
+  overflow-x: auto;
+  font-family: var(--font-mono);
+  font-size: 0.82rem;
+  line-height: 1.8;
+  color: var(--ink-dim);
+  white-space: pre;
+}
+
+.cmdblock .arrow { color: var(--xiv-blue); }
+
+.tag {
+  display: inline-block;
+  font-family: var(--font-mono);
+  font-size: 0.72rem;
+  padding: 0.12rem 0.5rem;
+  border-radius: 999px;
+  background: rgba(0, 180, 255, 0.12);
+  border: 1px solid var(--border-strong);
+  color: var(--xiv-blue);
+  margin-right: 0.4rem;
+  letter-spacing: 0.03em;
+}
+
+.footer-note {
+  max-width: 68ch;
+  margin-top: 4rem;
+  padding-top: 1.5rem;
+  border-top: 1px solid var(--border);
+  color: var(--ink-faint);
+  font-size: 0.85rem;
+}
+
+@media (max-width: 860px) {
+  .shell { grid-template-columns: 1fr; }
+  .sidebar {
+    position: static;
+    height: auto;
+    border-right: none;
+    border-bottom: 1px solid var(--border);
+    padding: 1.5rem;
+  }
+  main { padding: 2rem 1.5rem 4rem; }
+}
+</style>
+
+<div class="shell">
+  <aside class="sidebar">
+    <div class="brand-mark">
+      <span class="brand-glyph">V</span>
+      <span class="brand-name">XIV Venue<br>Manager</span>
+    </div>
+    <p class="brand-sub">Architecture Notes</p>
+    <nav>
+      <a href="#housing"><span class="idx">01</span> Housing / location detection</a>
+      <a href="#dtr"><span class="idx">02</span> Status bar (DTR)</a>
+      <a href="#shifts"><span class="idx">03</span> Shift tracking</a>
+      <a href="#patron"><span class="idx">04</span> Patron sync &amp; chat alerts</a>
+      <a href="#commands"><span class="idx">05</span> Slash commands</a>
+      <a href="#startup"><span class="idx">06</span> Startup / configuration</a>
+      <a href="#settings"><span class="idx">07</span> Settings UI</a>
+    </nav>
+    <div class="meta">
+      Extracted from inline comments in<br>
+      <code>Plugin.cs</code> and <code>SettingsTab.cs</code><br>
+      Phase 5, codebase-cleanup roadmap
+    </div>
+  </aside>
+
+  <main>
+    <header class="page-head">
+      <p class="eyebrow">Dalamud plugin — design rationale</p>
+      <h1>Architecture Notes</h1>
+      <p class="dek">Why the code is shaped the way it is. Extracted from inline comments in <code>Plugin.cs</code> and <code>UI/Tabs/SettingsTab.cs</code> so inline comments could shrink to short pointers, with the full reasoning kept here instead of duplicated at every call site.</p>
+    </header>
+
+    <section class="subsystem" id="housing">
+      <h2><span class="num">01</span> Housing / location detection</h2>
+      <p class="intro">Detecting "the player is at a venue" combines two separate signals — a discrete Dalamud event (<code>OnTerritoryChanged</code>) and a per-tick poll — because walking through a door and walking onto a plot's exterior boundary don't both fire the same events.</p>
+
+      <div class="note">
+        <p><span class="claim">"In house" means "at the venue," not "inside the building."</span> <code>OnTerritoryChanged</code> treats <code>housingManager-&gt;IsInside() || housingManager-&gt;IsOutside()</code> as the same state — both interior instance and standing on the plot exterior feed the same tracking/logging path, so a patron never gets double-counted for walking through the door versus already being outside on the plot.</p>
+      </div>
+
+      <div class="note">
+        <p><span class="claim">Exterior entry has no discrete event to hook.</span> <code>OnTerritoryChanged</code> fires on zone <em>load</em>. Walking from a ward's general area onto a specific plot's exterior boundary isn't a zone load, so a low-frequency poll (<code>entryPollStopwatch</code>, runs always, independent of the in-house <code>stopwatch</code>) is the only way to catch that transition. <code>HousingManager</code> calls are safe to make unconditionally everywhere in the game world, not just near housing — this mirrors the same assumption Aetherphone's own tracker relies on for its equivalent detector.</p>
+      </div>
+
+      <div class="note">
+        <p><span class="claim">Leaving the plot exterior without a territory change is debounced.</span> <code>OnTerritoryChanged</code> never fires when a player walks off the plot exterior but stays in the same ward zone — the only place that notices is the per-tick check in <code>OnFrameworkUpdate</code>. That check is debounced via <code>notAtPlotSinceMs</code>: it tracks how long <code>HouseIdentity.Current()</code> has continuously read null while the player is marked in-house, and only calls <code>leftHouse()</code> once that gate (2000ms in the exterior-tick path, 1000ms in the older <code>OnTerritoryChanged</code> gate) has been crossed.</p>
+        <p>A single transient misread right after entering would otherwise trip <code>leftHouse()</code> almost immediately, with nothing left to recover it — only an actual zone change restarts tracking. None of the early-return paths in the debounce restart the underlying stopwatch, so once the gate has been crossed once, those paths get hit every frame (not once a second) until a full pass succeeds.</p>
+      </div>
+
+      <div class="note">
+        <p><span class="claim">Composite house IDs need the player's world resolved first.</span> The computed ID (works both inside and outside, unlike the native <code>GetCurrentIndoorHouseId()</code> which needs no world argument) requires <code>Objects[0]</code> to resolve to a valid <code>IPlayerCharacter</code> for the current world. If it doesn't, the code bails and retries next tick rather than falling back to a stale or zero world id — <code>Objects[0]</code> resolution is already known to be flaky the instant after a territory change, and a wrong world id here would silently corrupt the computed house identity instead of failing loudly like the surrounding <code>catch</code> already does for other errors.</p>
+      </div>
+
+      <div class="note">
+        <p><span class="claim">Legacy house ID migration — two paths, deliberately not nested.</span> Houses saved before exterior tracking shipped are keyed under the legacy interior-only <code>GetCurrentIndoorHouseId()</code> value. <code>MigrateLegacyHouseId()</code> re-keys a house to the new composite id, moving <code>venueList</code>, the xiv-app venue link, and the on-disk guest-list file together in one step so patron history isn't orphaned under a dead key — it runs at most once per house, the first time it's visited after this shipped.</p>
+        <p>Two migration paths exist because the legacy id genuinely isn't available while outside (see <code>HouseIdentity.cs</code>):</p>
+        <ol>
+          <li>If <code>housingManager-&gt;IsInside()</code>, migrate by the legacy interior id directly — only fires once the player has stepped inside at least once.</li>
+          <li>Otherwise, <code>MigrateVenueByLocation()</code> matches the saved venue by physical location (world/ward/plot/room/type) instead of the unavailable legacy id — works inside or outside, so a legacy-keyed venue heals on the very first exterior visit instead of requiring an interior visit first.</li>
+        </ol>
+        <p>The migration check is deliberately <strong>not</strong> nested inside the "houseId just changed" branch below it. If the player walked the exterior first, <code>pluginState.currentHouse.houseId</code> already equals the computed house id (same physical plot, same formula) by the time they step inside — so no "change" is ever detected, and a transition-gated migration would never run. After a successful migration, <code>houseId</code> is force-cleared to <code>0</code> so the "if changed" branch below correctly treats the now-known id as a fresh transition.</p>
+      </div>
+
+      <div class="note">
+        <p><span class="claim">Guest-list load uses upsert, not add.</span> Re-entering a house already visited this session (leave, then come back — trivial now via the exterior) would otherwise throw on a duplicate key, which the surrounding <code>catch</code> swallowed silently, cutting off the name-resolution code that ran right after it.</p>
+      </div>
+
+      <div class="note">
+        <p><span class="claim">Display name resolution uses the same precedence in two places.</span> Both <code>BuildVenueLabel()</code> (DTR text) and the main-window-header resolution in <code>OnFrameworkUpdate</code> prefer the xiv-app linked name first (nicer branding, e.g. "Rose Garden") and fall back to the locally-saved venue name. The header specifically was never set until this logic ran, so it always showed "(no venue)" regardless of whether the house was actually registered — this fixed that.</p>
+      </div>
+
+      <div class="note">
+        <p><span class="claim">Guest-list reconciliation on load is silent.</span> On the first pass after loading a guest list from disk, guests restored as <code>inHouse=true</code> who aren't actually here anymore left during a prior session. The code reconciles local state silently (<code>skipLeaveSync</code>) instead of syncing a "leave" with no matching "enter" in this session, which would otherwise produce a phantom departure event with no arrival to pair it with.</p>
+      </div>
+    </section>
+
+    <section class="subsystem" id="dtr">
+      <h2><span class="num">02</span> Status bar (DTR)</h2>
+
+      <div class="note">
+        <p><span class="claim">The DTR entry is always created; visibility is config-driven.</span> Get/Remove churn isn't used to hide the entry — <code>dtrEntry.Shown</code> is toggled by the display-mode config instead. Clicking it opens the main window, matching what users expect from a plugin tray icon.</p>
+      </div>
+
+      <div class="note">
+        <p><span class="claim">Text refresh is throttled to ~2s, but callable with <code>force=true</code>.</span> <code>UpdateDtrBar()</code> runs every framework tick, but the body only re-allocates the <code>SeString</code> every ~2s — the DTR is at-a-glance, not something a player watches update in real time, so a fresh string 60×/s for a strip they only glance at would be wasted work. <code>force=true</code> bypasses the throttle to push an immediate update on state transitions (mode change, entering/leaving a house) — used by <code>leftHouse()</code> so "Outside" replaces the venue name without waiting for the throttle window.</p>
+      </div>
+
+      <div class="note">
+        <p><span class="claim">The shift poller is kicked on the same tick as the DTR refresh.</span> Cheap to call unconditionally since <code>PollActiveShiftAsync()</code> internally no-ops unless 30s have passed and no previous call is in flight.</p>
+      </div>
+
+      <div class="note">
+        <p><span class="claim"><code>BuildVenueLabel()</code> precedence:</span> xiv-app linked name first (nice branding), then the locally-saved venue name (functional but plain, e.g. a raw ward/plot tag), then "Outside" if the player isn't in a house at all.</p>
+      </div>
+
+      <div class="note">
+        <p><span class="claim"><code>BuildShiftLabel()</code> renders three shapes:</span></p>
+        <ul>
+          <li><code>ACTIVE</code> → "On shift 1h23m" (elapsed time since <code>actualStart</code>)</li>
+          <li><code>SCHEDULED</code> → "Shift in 45m" (time until <code>scheduledStart</code>), only when within the next 2 hours — further out isn't worth surfacing on an at-a-glance strip</li>
+          <li>Neither → "Off shift" in prefix mode, or <code>""</code> in <code>compact</code> mode</li>
+        </ul>
+        <p><code>compact</code> mode exists because the <code>Combined</code> display mode joins several sub-labels into one string and needs to drop empty/off-shift entries entirely rather than padding them in with visible "Off shift" noise.</p>
+      </div>
+
+      <div class="note">
+        <p><span class="claim"><code>InvalidateShiftPollCache()</code> exists to make clock actions feel instant.</span> Called after any successful clock-in/out so the DTR label reflects the new state within one frame, rather than waiting up to 30s for the normal poll interval to naturally expire.</p>
+      </div>
+    </section>
+
+    <section class="subsystem" id="shifts">
+      <h2><span class="num">03</span> Shift tracking</h2>
+
+      <div class="note">
+        <p><span class="claim">The active-shift cache and <code>ShiftsTab</code>'s own polling aren't coordinated.</span> <code>activeShift</code> is populated by a background poll every 30s so the DTR can surface clock-in status even when the user never opens the Shifts tab. <code>null</code> means either "no active shift" or "haven't polled yet / the API call failed" — those two states aren't distinguished. The two polls run on separate schedules, but 30s is cheap enough that the caches converge within a tick of each other in practice.</p>
+      </div>
+
+      <div class="note">
+        <p><span class="claim"><code>clockSem</code> is a single mutex for all clock-in/clock-out operations</span>, regardless of which path triggers them (chat command vs. UI button). <code>WaitAsync(0)</code> is a non-blocking try-acquire — if the semaphore is already held, the caller gets told "a clock action is already in progress" immediately rather than blocking the calling thread waiting for the other operation to finish.</p>
+      </div>
+
+      <div class="note">
+        <p><span class="claim">The lazy shift poller picks "the most relevant" shift for DTR purposes</span>, in this priority order:</p>
+        <ol>
+          <li>Any <code>ACTIVE</code> shift wins (the user is clocked in right now).</li>
+          <li>Otherwise, the earliest <code>SCHEDULED</code> shift starting in the future.</li>
+          <li>Otherwise, <code>null</code> (clears the cache).</li>
+        </ol>
+        <p>Runs at most once per 30s, skips itself if a previous call is still in flight, and swallows errors silently — the DTR fallback of "Off shift" is a truthful display when the server can't be reached.</p>
+      </div>
+
+      <div class="note">
+        <p><span class="claim">The shift-end chat reminder fires once, then repeats every 15 minutes.</span> When an <code>ACTIVE</code> shift runs past its scheduled end, <code>CheckShiftEndReminder</code> prints once immediately, then again every 15 min in case the first message was missed. State is tracked per shift ID and clears automatically once the shift is no longer <code>ACTIVE</code>.</p>
+      </div>
+
+      <div class="note">
+        <p><span class="claim">VIP/banned patron lists poll on the same 30s cadence as the shift poller.</span> These lists were previously only loaded on plugin startup and via the manual "Fetch Venues" button, so marking someone VIP or banned on the dashboard never reached the plugin without a manual resync. <code>PollVipBannedPatronsAsync</code> closes that gap, matching <code>PollActiveShiftAsync</code>'s existing pattern (in-flight guard, cooldown, silent-swallow errors).</p>
+      </div>
+    </section>
+
+    <section class="subsystem" id="patron">
+      <h2><span class="num">04</span> Patron sync &amp; chat alerts</h2>
+
+      <div class="note">
+        <p><span class="claim">Session sales counters are intentionally not persisted.</span> <code>SessionSalesTotal</code>/<code>SessionSalesCount</code> reset on plugin reload and drive the dashboard strip's session tally. "Session" here means plugin lifetime, not calendar day — persisting them via <code>Configuration</code> would conflate the two.</p>
+      </div>
+
+      <div class="note">
+        <p><span class="claim">The event-presence cache has a 60s TTL per venue</span> and gates patron-visit sync when the user has opted into "sync only during events" — see <code>EventPresenceCache</code> itself for the caching mechanics.</p>
+      </div>
+
+      <div class="note">
+        <p><span class="claim"><code>TryLogPatronVisit</code> deliberately does NOT filter out the plugin user's own character.</span> Staff who are off-duty (no active shift) count as patrons visiting their own venue, and the server classifies attribution via <code>wasWorking</code> at insert time.</p>
+        <p>Gating order (cheapest checks first):</p>
+        <ol>
+          <li>Sync enabled + API key present + client configured.</li>
+          <li>Current house → xiv-app venue ID mapping exists (if not, silent skip — the VenuesTab linking UI is the remedy).</li>
+          <li>If <code>syncOnlyDuringEvents</code>, the cached event-presence flag must be true — on a cache miss, fetch async and bail for <em>this</em> arrival; the next arrival within the TTL goes through once the cache is warm.</li>
+          <li>Post.</li>
+        </ol>
+        <p>All failures log at Debug level and swallow — a sync hiccup should never surface in chat during live service.</p>
+      </div>
+
+      <div class="note">
+        <p><span class="claim">Chat/sound alerts are only meaningful at a registered venue.</span> Without a known venue, every house the player walks into — theirs or not — would spam the same "has entered/left" line with no venue name to attach it to, so unregistered houses are silently skipped for both entry and leave alerts.</p>
+      </div>
+
+      <div class="note">
+        <p><span class="claim">The auto-greeter fires independently of chat alert settings and snooze.</span> A venue owner may want automated <code>/tell</code> greetings without the visual chat noise of entry/leave alerts. It skips already-here players when the greeter re-enters the venue (fires on <code>entryCount == 1</code> for the first-visit message, <code>&gt; 1</code> for the re-entry message) and only fires at registered venues while a shift is active.</p>
+      </div>
+    </section>
+
+    <section class="subsystem" id="commands">
+      <h2><span class="num">05</span> Slash commands</h2>
+
+      <div class="note">
+        <p><span class="claim"><code>/xvm sale</code> / <code>tip</code> / <code>target</code> family</span> — split on whitespace, first token is the verb, second token is the amount (integer), the rest is a free-text customer name (may contain spaces):</p>
+        <div class="cmdblock">/xvm sale                   <span class="arrow">→</span> open Sales tab, no prefill
+/xvm sale 500               <span class="arrow">→</span> open Sales tab, amount=500
+/xvm sale 500 Ehno Smith    <span class="arrow">→</span> open Sales tab, amount=500, customer="Ehno Smith"
+/xvm sale! 500 Ehno         <span class="arrow">→</span> log immediately, no UI, chat toast on result
+/xvm tip 500 Ehno           <span class="arrow">→</span> open Sales tab, Tip selected, amount=500, customer="Ehno"
+/xvm tip! 500 Ehno          <span class="arrow">→</span> log a tip immediately, no UI, chat toast on result
+/xvm target                 <span class="arrow">→</span> open Sales tab with current target prefilled
+/xvm target 500             <span class="arrow">→</span> open Sales tab with current target + amount</div>
+        <p>For <code>/xvm target</code> (not <code>target!</code>), the "customer" override is the game target, not an args field — with no target the code falls through with <code>null</code> and lets the Sales tab's own "Use Target" flow handle it next frame.</p>
+      </div>
+
+      <div class="note">
+        <p><span class="claim">Per-subcommand <code>AddHandler</code> calls exist purely so <code>/xlhelp</code> lists each subcommand.</span> Dalamud dispatches everything on the parent command (<code>OnCommand</code> receives e.g. <code>args="sale 500 Ehno"</code>) — the actual routing logic lives entirely in <code>OnCommand</code>'s args parser. The individual <code>AddHandler</code> calls are sugar for discoverability only.</p>
+      </div>
+
+      <div class="note">
+        <p><span class="claim">The four silent (<code>!</code>-suffixed) command handlers</span> all bypass their respective tab's form state entirely, write straight through to the XIV-App API, and post a chat toast on the result:</p>
+        <ul>
+          <li><code>LogSaleSilentAsync</code> — success increments the dashboard session tally so the strip readout stays consistent regardless of which code path logged the sale.</li>
+          <li><code>LogTipSilentAsync</code> — same shape as the sale path, tagged <code>type="TIP"</code> so the server counts it separately.</li>
+          <li><code>BanPatronSilentAsync</code> — works even for a character with no prior visit history; the server finds-or-creates the <code>Patron</code> row.</li>
+          <li>The shift clock silent commands share <code>clockSem</code> with the UI buttons and reset the shift-poll cache on success so the DTR updates within one frame.</li>
+        </ul>
+      </div>
+    </section>
+
+    <section class="subsystem" id="startup">
+      <h2><span class="num">06</span> Startup / configuration</h2>
+
+      <div class="note">
+        <p><span class="claim">The XIV-App API client is always instantiated, even with no key set</span>, so the Settings tab can lazy-configure it the moment the user pastes a key. This used to be gated on the key already being present at construction time, which made first-time setup require a full game restart before "Fetch Venues" would work.</p>
+      </div>
+
+      <div class="note">
+        <p><span class="claim">Startup auto-load is fire-and-forget from the constructor</span>, so a server outage at launch can't block plugin init. The Settings tab still renders cleanly with empty lists in the worst case, and the manual "Fetch Venues" button remains as a retry path. It picks the previously-selected venue if it still exists, otherwise the first one.</p>
+      </div>
+
+      <div class="note">
+        <p><span class="claim">The cached <code>PluginVersion</code> string is read from the loaded assembly</span>, not hardcoded — <code>Plugin.cs</code>, <code>XIVVenueManagerSync.json</code>, and <code>repo.json</code> are kept in lockstep by the build+ship ritual, so reading from the running assembly means the dashboard strip and the changelog-on-update check auto-follow whatever version the user actually has installed.</p>
+      </div>
+    </section>
+
+    <section class="subsystem" id="settings">
+      <h2><span class="num">07</span> Settings UI <span style="color: var(--ink-faint); font-family: var(--font-mono); font-weight: 400; font-size: 0.7em; letter-spacing: 0;">SettingsTab.cs</span></h2>
+
+      <div class="note">
+        <p><span class="claim">XIV-App Sync is drawn first</span> because it's the plugin's primary workflow — a fresh install should land on the setup the user actually needs to do, not scroll past unrelated toggles first.</p>
+      </div>
+
+      <div class="note">
+        <p><span class="claim">The status line under "Fetch Venues" exists so users see success/failure of button-press actions</span> instead of a silent no-op. Default color is the muted overlay so a fresh "Fetching…" line reads as in-progress rather than success or failure. The row is reserved via a <code>Dummy</code> placeholder whether or not a status is active, so appearing/disappearing text doesn't shove the rest of the section up and down.</p>
+      </div>
+
+      <div class="note">
+        <p><span class="claim">The API key field is masked by default</span> — keys are sensitive, and a default-hidden field means screenshots/shares don't leak them. The key is also trimmed on every keystroke, to strip the whitespace/newlines that regularly sneak in from Discord copy-paste — an untrimmed key made <code>HttpClient.DefaultRequestHeaders.Add</code> throw a <code>FormatException</code>, and the key was silently never applied.</p>
+      </div>
+
+      <div class="note">
+        <p><span class="claim">Auto-fetch fires on blur</span> (<code>IsItemDeactivatedAfterEdit</code>), not on every keystroke — a paste + click-elsewhere is enough to trigger a venue fetch, no separate "Fetch Venues" click required.</p>
+      </div>
+
+      <div class="note">
+        <p><span class="claim">Inline key-format validation is a warning, not an error color.</span> If the entered key doesn't start with <code>vm_</code>, the message renders in yellow (warn), not red — the user is still mid-entry at that point, nothing has actually failed yet.</p>
+      </div>
+
+      <div class="note">
+        <p><span class="claim">The server URL field falls back to the public host when blank.</span> Users who leave the placeholder hint in place expect the plugin to "just work" against the default server — handled both in <code>ReconfigureXivAppClient()</code> and independently mirrored wherever the URL is read.</p>
+      </div>
+
+      <div class="note">
+        <p><span class="claim"><code>FetchXivAppVenuesAsync</code> self-heals a stale client config.</span> If a key was just pasted and <code>ReconfigureXivAppClient</code> hasn't fired yet, the fetch path reconfigures again before making the request, rather than surfacing a confusing "not configured" error for what the user just did.</p>
+      </div>
+
+      <div class="note">
+        <p><span class="claim">Venue auto-select/re-hydrate on fetch</span> avoids a "(none fetched yet)" status sticking around: if no venue is selected yet, the first fetched venue becomes selected; if one was already selected, its roles/services get re-fetched so an already-configured plugin's first load after an update doesn't show stale placeholder text.</p>
+      </div>
+
+      <div class="note">
+        <p><span class="claim"><code>LoadVenueDataWithFeedbackAsync</code> writes a terminal "✓ Loaded: …" status regardless of per-fetch errors.</span> The individual fetch helpers already log-and-swallow their own failures, so partial data (e.g. roles fetched but VIPs failed) is still useful to surface rather than blocking the whole status line on one failed sub-fetch.</p>
+      </div>
+
+      <div class="note">
+        <p><span class="claim"><code>FetchXivAppRolesAsync</code> storing the result was itself a bug fix</span> — the fetch previously logged the count and discarded the actual list, which was the root cause of a "roles not updating" report. The Settings indicator now reads from <code>plugin.xivAppRoles</code>, which this call populates.</p>
+      </div>
+
+      <div class="note">
+        <p><span class="claim">The venue selector tracks <code>plugin.currentXivAppVenueId</code> separately from <code>Configuration.selectedVenueId</code>.</span> Other code paths need a single source of truth that updates the instant the user switches venues in the dropdown, before a <code>Configuration.Save()</code> round-trip would otherwise be visible elsewhere.</p>
+      </div>
+
+      <div class="note">
+        <p><span class="claim">Roles/Services status lines truncate to 3 names with hover-to-reveal.</span> A venue with many roles or services would otherwise wrap ugly across the settings tab; users specifically need to see Services for the Sales tab workflow, so the label is present even when truncated.</p>
+      </div>
+
+      <div class="note">
+        <p><span class="claim">Sound and chat alerts are both gated on <code>showGuestsTab</code></span> for the same reason: the Patrons tab owns the patron-event source that fires both the doorbell and chat lines. When the tab is hidden, both sections are grayed, not removed — so users can still see the section exists and understand why it's inactive.</p>
+      </div>
+
+      <div class="note">
+        <p><span class="claim">Debug Info is collapsed by default and read-only.</span> Support-surface content, only interesting when debugging a ticket, so it doesn't clutter the tab for everyday use. <code>ReadOnly</code> gives users a copy-paste target for bug reports. Housing-manager reads inside this block fail outside houses; the failure is swallowed but logged once at Debug level so a blank Debug block can still be correlated to a real cause via the plugin log.</p>
+      </div>
+
+      <div class="note">
+        <p><span class="claim">Section-break rhythm was previously inconsistent</span> (some breaks used <code>Separator()</code> alone, others <code>Separator()+Spacing()</code>) — <code>DrawSectionSeparator()</code> now standardizes every break. Section headers use a blue accent color specifically so users can scan section boundaries at a glance on what is otherwise a long, single-scroll tab.</p>
+      </div>
+    </section>
+
+    <p class="footer-note"><span class="tag">Phase 5</span> Codebase-cleanup roadmap — doc extraction complete. Inline comments in both source files were thinned to short pointers back into this document; nothing here was invented, only moved out of the source.</p>
+  </main>
+</div>
+
+</body></html>
