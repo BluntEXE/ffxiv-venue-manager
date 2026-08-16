@@ -1,0 +1,121 @@
+npm warn Unknown project config "node-linker". This will stop working in the next major version of npm. See `npm help npmrc` for supported config options.
+npm warn Unknown project config "strict-peer-dependencies". This will stop working in the next major version of npm. See `npm help npmrc` for supported config options.
+npm notice run xiv-venue-manager@0.0.0 npx
+npm notice run 'knip'
+(node:620901) [DEP0205] DeprecationWarning: `module.register()` is deprecated. Use `module.registerHooks()` instead.
+(Use `node --trace-deprecation ...` to show where the warning was created)
+Unused files (16)
+apps/shout-crafter/src/App.css                  
+apps/shout-crafter/src/lib/storage.ts           
+apps/web/apply-indexes.js                       
+apps/web/clean-pending-owner.js                 
+apps/web/components/dashboard-analytics.tsx     
+apps/web/components/manage-staff-role-dialog.tsx
+apps/web/components/ui/scroll-area.tsx          
+apps/web/components/ui/sheet.tsx                
+apps/web/components/ui/tabs.tsx                 
+apps/web/encode-password.js                     
+apps/web/scripts/generate-favicons.ts           
+apps/web/scripts/list-users.ts                  
+apps/web/scripts/make-admin.ts                  
+apps/web/test-db-connection.js                  
+docker/homepage/config/custom.js                
+scripts/backfill-venue-types.ts                 
+Unused dependencies (3)
+@radix-ui/react-scroll-area  apps/web/package.json:30:6
+@radix-ui/react-tabs         apps/web/package.json:34:6
+jose                         apps/web/package.json:42:6
+Unused devDependencies (3)
+dotenv  apps/web/package.json:66:6
+sharp   apps/web/package.json:69:6
+tsx     apps/web/package.json:71:6
+Unlisted binaries (1)
+ts-node  apps/discord-bot/package.json
+Unused exports (55)
+db                                    apps/discord-bot/src/db.ts:3:14                 
+MANAGED_ROLES                         apps/eorzea-bot/src/utils/membership.ts:12:14   
+getHighestMembership        function  apps/eorzea-bot/src/utils/membership.ts:27:23   
+MESSAGE_XP                            apps/eorzea-bot/src/utils/xp.ts:38:14           
+LOYALTY_TIERS                         apps/eorzea-bot/src/utils/xp.ts:68:14           
+WORLDS                                apps/shout-crafter/src/lib/worlds.ts:1:14       
+findDatacenter              function  apps/shout-crafter/src/lib/worlds.ts:23:17      
+AlertDialogPortal                     apps/web/components/ui/alert-dialog.tsx:147:3   
+AlertDialogOverlay                    apps/web/components/ui/alert-dialog.tsx:148:3   
+AlertTitle                            apps/web/components/ui/alert.tsx:66:17          
+badgeVariants                         apps/web/components/ui/badge.tsx:51:17          
+CalendarDayButton                     apps/web/components/ui/calendar.tsx:216:20      
+CardFooter                            apps/web/components/ui/card.tsx:87:3            
+CardAction                            apps/web/components/ui/card.tsx:89:3            
+DialogClose                           apps/web/components/ui/dialog.tsx:134:3         
+DialogOverlay                         apps/web/components/ui/dialog.tsx:139:3         
+DialogPortal                          apps/web/components/ui/dialog.tsx:140:3         
+DropdownMenuPortal                    apps/web/components/ui/dropdown-menu.tsx:243:3  
+DropdownMenuGroup                     apps/web/components/ui/dropdown-menu.tsx:246:3  
+DropdownMenuLabel                     apps/web/components/ui/dropdown-menu.tsx:247:3  
+DropdownMenuCheckboxItem              apps/web/components/ui/dropdown-menu.tsx:249:3  
+DropdownMenuRadioGroup                apps/web/components/ui/dropdown-menu.tsx:250:3  
+DropdownMenuRadioItem                 apps/web/components/ui/dropdown-menu.tsx:251:3  
+DropdownMenuShortcut                  apps/web/components/ui/dropdown-menu.tsx:253:3  
+DropdownMenuSub                       apps/web/components/ui/dropdown-menu.tsx:254:3  
+DropdownMenuSubTrigger                apps/web/components/ui/dropdown-menu.tsx:255:3  
+DropdownMenuSubContent                apps/web/components/ui/dropdown-menu.tsx:256:3  
+LoadingSpinner              function  apps/web/components/ui/loading-spinner.tsx:18:17
+PopoverAnchor                         apps/web/components/ui/popover.tsx:48:51        
+SelectGroup                           apps/web/components/ui/select.tsx:179:3         
+SelectLabel                           apps/web/components/ui/select.tsx:181:3         
+SelectScrollDownButton                apps/web/components/ui/select.tsx:182:3         
+SelectScrollUpButton                  apps/web/components/ui/select.tsx:183:3         
+SelectSeparator                       apps/web/components/ui/select.tsx:184:3         
+TableFooter                           apps/web/components/ui/table.tsx:111:3          
+TableCaption                          apps/web/components/ui/table.tsx:115:3          
+generateApiKey              function  apps/web/lib/api/plugin-auth.ts:22:23           
+revokeApiKey                function  apps/web/lib/api/plugin-auth.ts:115:23          
+getUserApiKeys              function  apps/web/lib/api/plugin-auth.ts:130:23          
+getVenueRoles               function  apps/web/lib/api/plugin-auth.ts:165:23          
+deleteBotMessage            function  apps/web/lib/discord-bot.ts:54:23               
+deleteDiscordMessage        function  apps/web/lib/discord-webhook.ts:193:23          
+DiscordColors                         apps/web/lib/discord-webhook.ts:241:14          
+calculateRevenue            function  apps/web/lib/financial-calculations.ts:26:23    
+calculatePayrollExpenses    function  apps/web/lib/financial-calculations.ts:52:23    
+calculateNetProfit          function  apps/web/lib/financial-calculations.ts:79:17    
+calculateProfitMargin       function  apps/web/lib/financial-calculations.ts:86:17    
+calculatePayrollPercentage  function  apps/web/lib/financial-calculations.ts:94:17    
+getFinancialSummary         function  apps/web/lib/financial-calculations.ts:102:23   
+getCached                   function  apps/web/lib/redis-cache.ts:45:23               
+setCache                    function  apps/web/lib/redis-cache.ts:57:23               
+invalidateCacheKeys         function  apps/web/lib/redis-cache.ts:96:23               
+redis                                 apps/web/lib/redis-cache.ts:117:10              
+buildShiftEmbed             function  apps/web/lib/shift-bot.ts:20:17                 
+publicUrl                   function  apps/web/lib/storage.ts:43:17                   
+Unused exported types (23)
+MembershipRole          type       apps/eorzea-bot/src/utils/membership.ts:3:13 
+XivVMUser               interface  apps/shout-crafter/src/lib/xivvm-auth.ts:3:18
+XivVMVenue              interface  apps/shout-crafter/src/lib/xivvm-auth.ts:9:18
+SavedShout              interface  apps/shout-crafter/src/types.ts:16:18        
+BreadcrumbItem          interface  apps/web/components/breadcrumb.tsx:4:18      
+DataTableColumn         interface  apps/web/components/ui/data-table.tsx:6:18   
+StatReadoutProps        type       apps/web/components/ui/stat-readout.tsx:79:15
+IconVariant             type       apps/web/components/ui/stat-readout.tsx:79:33
+DiscordButtonComponent  interface  apps/web/lib/discord-bot.ts:4:18             
+DiscordActionRow        interface  apps/web/lib/discord-bot.ts:12:18            
+WebhookGroup            type       apps/web/lib/discord-webhook.ts:75:13        
+FfxivTime               type       apps/web/lib/ffxivvenues.ts:8:13             
+FfxivUtcSchedule        type       apps/web/lib/ffxivvenues.ts:15:13            
+FfxivScheduleEntry      type       apps/web/lib/ffxivvenues.ts:23:13            
+FfxivOpening            type       apps/web/lib/ffxivvenues.ts:33:13            
+FfxivScheduleOverride   type       apps/web/lib/ffxivvenues.ts:40:13            
+FfxivNotice             type       apps/web/lib/ffxivvenues.ts:47:13            
+DateRange               interface  apps/web/lib/financial-calculations.ts:18:18 
+NotificationType        type       apps/web/lib/notify.ts:4:13                  
+RateResolvedShift       interface  apps/web/lib/payroll-rates.ts:14:18          
+PotRole                 type       apps/web/lib/pot-payroll.ts:5:13             
+PotContractorPayout     interface  apps/web/lib/pot-payroll.ts:30:18            
+FfxivDistrict           type       apps/web/lib/venue-location.ts:9:13          
+Configuration hints (7)
+**/generated/**                           knip.json  Remove from ignore                                           
+**/.next/**                               knip.json  Remove from ignore                                           
+**/dist/**                                knip.json  Remove from ignore                                           
+src/index.ts            apps/discord-bot  knip.json  Remove redundant entry pattern                               
+src/index.ts            apps/eorzea-bot   knip.json  Remove redundant entry pattern                               
+src/deploy-commands.ts  apps/eorzea-bot   knip.json  Remove redundant entry pattern                               
+.prisma                 apps/eorzea-bot   knip.json  Compiled extension excluded by project (imports not followed)
