@@ -2,6 +2,7 @@
 
 import Link from "next/link"
 import { usePathname } from "next/navigation"
+import { useEffect, useState } from "react"
 import { Button } from "@/components/ui/button"
 import { VenueSwitcher } from "./venue-switcher"
 import { FeedbackDialog } from "./feedback-dialog"
@@ -63,6 +64,8 @@ export function VenueSidebar({
 }: VenueSidebarProps) {
   const pathname = usePathname()
   const { open, setOpen } = useSidebar()
+  const [mounted, setMounted] = useState(false)
+  useEffect(() => setMounted(true), [])
 
   const navGroups: NavGroup[] = [
     {
@@ -223,7 +226,7 @@ export function VenueSidebar({
       {userName && (
         <div className="pb-2 border-b border-[var(--blue-008)]">
           <p className="text-sm font-medium">{userName}</p>
-          {userEmail && <p className="text-xs text-muted-foreground">{userEmail}</p>}
+          {mounted && userEmail && <p className="text-xs text-muted-foreground">{userEmail}</p>}
         </div>
       )}
       <div onClick={onNavigate}><FeedbackDialog /></div>
