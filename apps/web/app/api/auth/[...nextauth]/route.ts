@@ -1,7 +1,7 @@
 import NextAuth from "next-auth"
 import { authOptions } from "@/lib/auth"
-import { NextRequest, NextResponse } from "next/server"
-import { checkLimit } from "@/lib/rate-limit"
+import { NextRequest } from "next/server"
+import { checkLimit, getIp, buildRateLimitResponse } from "@/lib/rate-limit"
 
 const nextAuthHandler = NextAuth(authOptions)
 
@@ -27,27 +27,10 @@ async function withAuthThrottle(
     const ip = getIp(req)
     const rl = await checkLimit(`auth-ip:${ip}`, 10, 60)
     if (!rl.success) {
-      return NextResponse.json(
-        { error: "Too many requests", message: "Auth flow rate limit exceeded" },
-        {
-          status: 429,
-          headers: {
-            "X-RateLimit-Limit": String(rl.limit),
-            "X-RateLimit-Remaining": String(rl.remaining),
-            "X-RateLimit-Reset": String(rl.reset),
-            "Retry-After": String(Math.ceil((rl.reset - Date.now()) / 1000)),
-          },
-        }
-      )
+      return buildRateLimitResponse(rl, "Auth flow rate limit exceeded")
     }
   }
   return nextAuthHandler(req, ctx)
-}
-
-function getIp(req: NextRequest): string {
-  const fwd = req.headers.get("x-forwarded-for")
-  if (fwd) return fwd.split(",")[0].trim()
-  return req.headers.get("x-real-ip") || req.headers.get("cf-connecting-ip") || "anonymous"
 }
 
 export { withAuthThrottle as GET, withAuthThrottle as POST }
