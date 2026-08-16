@@ -1,3 +1,4 @@
+import { NextRequest, NextResponse } from "next/server"
 import { redis, ready } from "@/lib/redis"
 
 /**
@@ -80,6 +81,27 @@ export async function checkLimit(
   } catch (e) {
     return memLimit(identifier, limit, windowMs)
   }
+}
+
+export function getIp(req: NextRequest): string {
+  const fwd = req.headers.get("x-forwarded-for")
+  if (fwd) return fwd.split(",")[0].trim()
+  return req.headers.get("x-real-ip") || req.headers.get("cf-connecting-ip") || "anonymous"
+}
+
+export function buildRateLimitResponse(rl: RateLimitResult, message: string): NextResponse {
+  return NextResponse.json(
+    { error: "Too many requests", message },
+    {
+      status: 429,
+      headers: {
+        "X-RateLimit-Limit": String(rl.limit),
+        "X-RateLimit-Remaining": String(rl.remaining),
+        "X-RateLimit-Reset": String(rl.reset),
+        "Retry-After": String(Math.ceil((rl.reset - Date.now()) / 1000)),
+      },
+    }
+  )
 }
 
 /**

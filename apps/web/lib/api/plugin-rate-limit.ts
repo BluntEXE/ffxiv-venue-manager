@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server"
 import { createHash } from "crypto"
-import { checkLimit, budgets } from "@/lib/rate-limit"
+import { checkLimit, budgets, getIp, buildRateLimitResponse } from "@/lib/rate-limit"
 
 /**
  * Per-IP pre-filter for plugin routes. Runs BEFORE validateApiKey so that
@@ -20,27 +20,7 @@ export async function enforcePluginIpRateLimit(
   const ip = getIp(request)
   const rl = await checkLimit(`plugin-ip:${ip}`, ipBudget.limit, ipBudget.windowSec)
   if (rl.success) return null
-  return NextResponse.json(
-    {
-      error: "Too many requests",
-      message: `Rate limit ${ipBudget.limit}/${ipBudget.windowSec}s exceeded`,
-    },
-    {
-      status: 429,
-      headers: {
-        "X-RateLimit-Limit": String(rl.limit),
-        "X-RateLimit-Remaining": String(rl.remaining),
-        "X-RateLimit-Reset": String(rl.reset),
-        "Retry-After": String(Math.ceil((rl.reset - Date.now()) / 1000)),
-      },
-    }
-  )
-}
-
-function getIp(req: NextRequest): string {
-  const fwd = req.headers.get("x-forwarded-for")
-  if (fwd) return fwd.split(",")[0].trim()
-  return req.headers.get("x-real-ip") || req.headers.get("cf-connecting-ip") || "anonymous"
+  return buildRateLimitResponse(rl, `Rate limit ${ipBudget.limit}/${ipBudget.windowSec}s exceeded`)
 }
 
 /**
@@ -61,19 +41,5 @@ export async function enforcePluginRateLimit(
   const id = createHash("sha256").update(apiKey).digest("hex").slice(0, 16)
   const rl = await checkLimit(`plugin:${id}`, budget.limit, budget.windowSec)
   if (rl.success) return null
-  return NextResponse.json(
-    {
-      error: "Too many requests",
-      message: `Rate limit ${budget.limit}/${budget.windowSec}s exceeded`,
-    },
-    {
-      status: 429,
-      headers: {
-        "X-RateLimit-Limit": String(rl.limit),
-        "X-RateLimit-Remaining": String(rl.remaining),
-        "X-RateLimit-Reset": String(rl.reset),
-        "Retry-After": String(Math.ceil((rl.reset - Date.now()) / 1000)),
-      },
-    }
-  )
+  return buildRateLimitResponse(rl, `Rate limit ${budget.limit}/${budget.windowSec}s exceeded`)
 }
