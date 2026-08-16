@@ -1,0 +1,673 @@
+<title>Codebase Cleanup Roadmap</title>
+<style>
+:root {
+  --bg: #070b14;
+  --card: #0a0f1e;
+  --card-alt: #0d1424;
+  --xiv-blue: #00b4ff;
+  --border: rgba(0, 180, 255, 0.18);
+  --border-strong: rgba(0, 180, 255, 0.3);
+  --hover: rgba(0, 180, 255, 0.06);
+  --ink: #e8f1f8;
+  --ink-dim: #8ba3b8;
+  --ink-faint: #5a7186;
+  --code-bg: rgba(0, 180, 255, 0.08);
+  --code-ink: #00b4ff;
+  --font-display: "Cinzel", Georgia, "Times New Roman", serif;
+  --font-body: -apple-system, "Segoe UI", system-ui, sans-serif;
+  --font-mono: ui-monospace, "SF Mono", "Cascadia Code", "Consolas", monospace;
+}
+
+* { box-sizing: border-box; }
+html { scroll-behavior: smooth; }
+
+body {
+  margin: 0;
+  background: var(--bg);
+  color: var(--ink);
+  font-family: var(--font-body);
+  line-height: 1.65;
+  font-size: 16px;
+}
+
+body::before {
+  content: "";
+  position: fixed;
+  inset: 0;
+  z-index: -1;
+  background:
+    radial-gradient(ellipse 900px 500px at 15% -5%, rgba(0, 180, 255, 0.10), transparent 60%),
+    radial-gradient(ellipse 700px 500px at 100% 20%, rgba(0, 180, 255, 0.06), transparent 55%);
+}
+
+::selection { background: rgba(0, 180, 255, 0.25); color: #fff; }
+
+a { color: var(--xiv-blue); }
+a:focus-visible, button:focus-visible, summary:focus-visible {
+  outline: 2px solid var(--xiv-blue);
+  outline-offset: 2px;
+}
+
+.shell {
+  display: grid;
+  grid-template-columns: 268px minmax(0, 1fr);
+  max-width: 1200px;
+  margin: 0 auto;
+}
+
+/* ---- Sidebar ---- */
+.sidebar {
+  position: sticky;
+  top: 0;
+  align-self: start;
+  height: 100vh;
+  overflow-y: auto;
+  padding: 2.25rem 1.5rem 2rem 0;
+  border-right: 1px solid var(--border);
+}
+
+.brand-mark {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  margin-bottom: 0.3rem;
+}
+
+.brand-glyph {
+  width: 30px;
+  height: 30px;
+  border-radius: 7px;
+  background: linear-gradient(155deg, rgba(0,180,255,0.22), rgba(0,180,255,0.04));
+  border: 1px solid var(--border-strong);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-family: var(--font-display);
+  font-size: 0.95rem;
+  color: var(--xiv-blue);
+  flex-shrink: 0;
+}
+
+.brand-name {
+  font-family: var(--font-display);
+  font-size: 0.92rem;
+  letter-spacing: 0.06em;
+  color: var(--ink);
+  line-height: 1.3;
+}
+
+.brand-sub {
+  font-family: var(--font-mono);
+  font-size: 0.68rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--ink-faint);
+  margin: 0.65rem 0 0;
+}
+
+.sidebar nav {
+  margin-top: 1.85rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.1rem;
+}
+
+.sidebar nav a {
+  text-decoration: none;
+  color: var(--ink-dim);
+  font-size: 0.87rem;
+  padding: 0.45rem 0.65rem;
+  border-radius: 5px;
+  border-left: 2px solid transparent;
+  display: flex;
+  align-items: baseline;
+  gap: 0.55rem;
+  transition: background 0.12s ease, color 0.12s ease, border-color 0.12s ease;
+}
+
+.sidebar nav a:hover {
+  color: var(--ink);
+  background: var(--hover);
+  border-left-color: var(--border-strong);
+}
+
+.sidebar nav a .idx {
+  font-family: var(--font-mono);
+  font-size: 0.7rem;
+  color: var(--xiv-blue);
+  opacity: 0.7;
+  flex-shrink: 0;
+}
+
+.sidebar .meta {
+  margin-top: 2.5rem;
+  padding-top: 1.25rem;
+  border-top: 1px solid var(--border);
+  font-size: 0.78rem;
+  color: var(--ink-faint);
+  line-height: 1.75;
+}
+
+.sidebar .meta code {
+  font-family: var(--font-mono);
+  background: var(--code-bg);
+  padding: 0.05rem 0.32rem;
+  border-radius: 3px;
+  color: var(--xiv-blue);
+}
+
+/* ---- Main content ---- */
+main {
+  padding: 3.75rem 3rem 6rem;
+  min-width: 0;
+}
+
+header.page-head {
+  margin-bottom: 3.25rem;
+  max-width: 62ch;
+}
+
+.eyebrow {
+  font-family: var(--font-mono);
+  font-size: 0.73rem;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--xiv-blue);
+  margin: 0 0 1rem;
+}
+
+h1 {
+  font-family: var(--font-display);
+  font-weight: 600;
+  font-size: 2.5rem;
+  letter-spacing: 0.02em;
+  line-height: 1.2;
+  margin: 0 0 1rem;
+  text-wrap: balance;
+  color: var(--ink);
+  text-shadow: 0 0 32px rgba(0, 180, 255, 0.18);
+}
+
+.dek {
+  color: var(--ink-dim);
+  font-size: 1.02rem;
+  margin: 0;
+  max-width: 60ch;
+}
+
+.dek code { font-family: var(--font-mono); background: var(--code-bg); padding: 0.05rem 0.35rem; border-radius: 3px; font-size: 0.92em; color: var(--xiv-blue); }
+
+section.subsystem {
+  max-width: 68ch;
+  margin-bottom: 3.75rem;
+  scroll-margin-top: 2rem;
+}
+
+section.subsystem > h2 {
+  font-family: var(--font-display);
+  font-weight: 600;
+  font-size: 1.28rem;
+  letter-spacing: 0.03em;
+  color: var(--ink);
+  margin: 0 0 1.5rem;
+  padding-bottom: 0.85rem;
+  border-bottom: 1px solid var(--border);
+  display: flex;
+  align-items: baseline;
+  gap: 0.65rem;
+}
+
+section.subsystem > h2 .num {
+  font-family: var(--font-mono);
+  font-weight: 400;
+  color: var(--xiv-blue);
+  font-size: 0.8em;
+}
+
+.intro {
+  color: var(--ink-dim);
+  font-size: 0.97rem;
+  margin: -0.5rem 0 1.5rem;
+}
+
+.note {
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-left: 2px solid var(--xiv-blue);
+  border-radius: 8px;
+  padding: 1.1rem 1.3rem;
+  margin-bottom: 1rem;
+  transition: border-color 0.15s ease, box-shadow 0.15s ease;
+}
+
+.note:hover {
+  border-color: var(--border-strong);
+  box-shadow: 0 0 0 1px var(--border), 0 8px 24px -12px rgba(0, 180, 255, 0.25);
+}
+
+.note p { margin: 0 0 0.7rem; font-size: 0.95rem; }
+.note p:last-child { margin-bottom: 0; }
+
+.note .claim {
+  font-weight: 600;
+  color: var(--ink);
+}
+
+.note code {
+  font-family: var(--font-mono);
+  background: var(--code-bg);
+  padding: 0.05rem 0.34rem;
+  border-radius: 3px;
+  font-size: 0.87em;
+  color: var(--xiv-blue);
+}
+
+.note ol, .note ul {
+  margin: 0.5rem 0 0.7rem;
+  padding-left: 1.3rem;
+  font-size: 0.95rem;
+  color: var(--ink);
+}
+
+.note li { margin-bottom: 0.32rem; }
+.note li:last-child { margin-bottom: 0; }
+
+.cmdblock {
+  background: var(--code-bg);
+  border: 1px solid var(--border);
+  border-radius: 7px;
+  padding: 0.95rem 1.15rem;
+  margin: 0.75rem 0 1rem;
+  overflow-x: auto;
+  font-family: var(--font-mono);
+  font-size: 0.82rem;
+  line-height: 1.8;
+  color: var(--ink-dim);
+  white-space: pre;
+}
+
+.cmdblock .arrow { color: var(--xiv-blue); }
+
+.tag {
+  display: inline-block;
+  font-family: var(--font-mono);
+  font-size: 0.72rem;
+  padding: 0.12rem 0.5rem;
+  border-radius: 999px;
+  background: rgba(0, 180, 255, 0.12);
+  border: 1px solid var(--border-strong);
+  color: var(--xiv-blue);
+  margin-right: 0.4rem;
+  letter-spacing: 0.03em;
+}
+
+.footer-note {
+  max-width: 68ch;
+  margin-top: 4rem;
+  padding-top: 1.5rem;
+  border-top: 1px solid var(--border);
+  color: var(--ink-faint);
+  font-size: 0.85rem;
+}
+
+@media (max-width: 860px) {
+  .shell { grid-template-columns: 1fr; }
+  .sidebar {
+    position: static;
+    height: auto;
+    border-right: none;
+    border-bottom: 1px solid var(--border);
+    padding: 1.5rem;
+  }
+  main { padding: 2rem 1.5rem 4rem; }
+}
+</style>
+
+<div class="shell">
+  <aside class="sidebar">
+    <div class="brand-mark">
+      <span class="brand-glyph">R</span>
+      <span class="brand-name">XIV Venue<br>Manager</span>
+    </div>
+    <p class="brand-sub">Codebase Cleanup Roadmap</p>
+    <nav>
+      <a href="#overview"><span class="idx">01</span> Overview &amp; ground rules</a>
+      <a href="#phases"><span class="idx">02</span> Phases 1&ndash;5</a>
+      <a href="#deferred"><span class="idx">03</span> Deferred &amp; shipped items</a>
+      <a href="#zod"><span class="idx">04</span> Zod-validation rollout</a>
+      <a href="#mobile"><span class="idx">05</span> Mobile removal</a>
+      <a href="#sweep"><span class="idx">06</span> Codebase sweep</a>
+    </nav>
+    <div class="meta">
+      Reorganized rendering of the<br>
+      <code>codebase-cleanup-roadmap.md</code><br>
+      docs/superpowers/plans
+    </div>
+  </aside>
+
+  <main>
+    <header class="page-head">
+      <p class="eyebrow">Roadmap &amp; changelog &mdash; web + plugin</p>
+      <h1>Codebase Cleanup Roadmap</h1>
+      <p class="dek">Reduce duplication across <code>~/xiv-app</code> (web) and <code>~/VenueManager</code> (plugin); replace inline WHAT-comments with living docs/specs while preserving WHY-rationale, without touching the fragile recently-shipped feature areas until they&rsquo;ve settled. Everything that shipped from this roadmap, tracked to its commit and its verification.</p>
+    </header>
+
+    <section class="subsystem" id="overview">
+      <h2><span class="num">01</span> Overview &amp; ground rules</h2>
+      <p class="intro">What this roadmap is, what it&rsquo;s aiming at, and the rules every phase follows. A roadmap of plans, not a single executable plan.</p>
+
+      <div class="note">
+        <p><span class="tag">roadmap</span><span class="claim">This is a roadmap of plans, not a single executable plan.</span> Per <code>superpowers:writing-plans</code> scope-check guidance, each phase below covers an independent subsystem and gets its own detailed plan (written via <code>superpowers:writing-plans</code>, executed via <code>superpowers:subagent-driven-development</code> or <code>superpowers:executing-plans</code>) when it&rsquo;s next up.</p>
+      </div>
+
+      <div class="note">
+        <p><span class="claim">Reduce duplication across <code>~/xiv-app</code> (web) and <code>~/VenueManager</code> (plugin); replace inline WHAT-comments with living docs/specs while preserving WHY-rationale, without touching the fragile recently-shipped feature areas until they&rsquo;ve settled.</span></p>
+        <p><strong>Scope:</strong> <code>apps/web</code> + VenueManager plugin. Mobile excluded (deferred &mdash; team may pivot to Aetherphone integration instead of mobile app polish).</p>
+        <p><strong>Source scans:</strong> web app scan (2026-08-11), plugin scan (2026-08-11) &mdash; see conversation for full findings.</p>
+      </div>
+
+      <div class="note">
+        <p><span class="claim">Ground rules for every phase:</span></p>
+        <ol>
+          <li><strong>Fragile-feature freeze &mdash; LIFTED 2026-08-13.</strong> Patron tracking, VIP tracking, ban list, room status board, and bar inventory mapping all in-game verified 2026-08-13 (see memory). Phases touching these areas may now proceed. <code>LifestreamIpc.cs</code> / <code>TerritoryUtils.cs</code> / house-entry polling (plugin) were never gated by this rule &mdash; no open freeze remains.</li>
+          <li><strong>One phase = one PR/branch.</strong> No bundling. Verify (tests/manual) before moving to the next phase.</li>
+          <li><strong>Comments:</strong> don&rsquo;t blanket-strip. Extract WHY-rationale to docs first (Phase 5), then thin comments in the same diff. WHAT-comments (redundant) can go immediately wherever encountered, no separate phase needed.</li>
+          <li><strong>Docs destination:</strong> <code>docs/specs/&lt;feature&gt;.md</code> per feature area, created/updated as each phase touches that area. Commit messages still carry the immediate &ldquo;why&rdquo; for the change itself (existing convention, unchanged).</li>
+        </ol>
+      </div>
+
+      <div class="note">
+        <p><span class="tag">current status</span><span class="claim">Phases 1-3 + DataTable + shift-local-time + zod-validation increments 1-2 are done, deployed, and verified.</span> Phase 4 (plugin tab base) shipped and in-game verified 2026-08-13 as plugin <code>v3.10.8-testing</code> &mdash; not yet promoted to stable, that&rsquo;s a user call on timing. Fragile-feature freeze lifted 2026-08-13. Zod-validation increment 2 manually verified 2026-08-14 via curl against the live API using a disposable test venue (<code>TestingOut</code>/slug <code>t</code>) &mdash; all 7 checks from Task 6 passed, test API key + service deleted after.</p>
+      </div>
+    </section>
+
+    <section class="subsystem" id="phases">
+      <h2><span class="num">02</span> Phases 1&ndash;5</h2>
+      <p class="intro">The five phases of the original roadmap. Each gets its own detailed plan when it&rsquo;s next up; status reflects where each landed.</p>
+
+      <div class="note">
+        <p><span class="tag">DONE</span><span class="tag">deployed 2026-08-12</span><span class="claim">Phase 1 &mdash; Web: date/time formatting consolidation &mdash; DONE, deployed 2026-08-12.</span> <strong>Risk: low.</strong> Read-only display pages mostly; 2 files (<code>staff-table</code>, <code>shifts-calendar</code>) touch scheduling &mdash; treat those as medium.</p>
+        <p>Replace hand-rolled <code>toLocaleDateString</code>/<code>toLocaleTimeString</code>/<code>Intl.DateTimeFormat</code> calls (28 files) with <code>lib/server-time.ts</code>. Fix <code>events/new/page.tsx</code>&rsquo;s direct <code>Intl.DateTimeFormat</code> call. Swap <code>analytics/page.tsx:304</code>&rsquo;s inline gil-compact logic for the existing <code>formatGilCompact</code> helper while in the area.</p>
+        <p><strong>Verify:</strong> visual diff per page (dates render identically), no logic change.</p>
+        <p>Shipped as the detailed <a href="2026-08-11-server-time-consolidation.md">server-time-consolidation plan</a> &mdash; scope expanded mid-flight (viewer-local time split, <code>formatLocalTime</code>/<code>&lt;LocalTime&gt;</code>) per direct stakeholder direction, plus caught/fixed two real scheduling bugs (overnight shifts, event-creation timezone) along the way. Commits <code>369bb93</code> and earlier pushed to <code>origin/main</code> and deployed via <code>deploy-xiv-web.sh --green</code> 2026-08-12 &mdash; 13/13 smoke checks passed, tests 10/10.</p>
+      </div>
+
+      <div class="note">
+        <p><span class="tag">DONE</span><span class="tag">verified in-game 2026-08-11</span><span class="claim">Phase 2 &mdash; Plugin: shared HTTP request wrapper &mdash; DONE, verified in-game (2026-08-11).</span> <strong>Risk: low.</strong> Pure refactor behind the existing <code>XIVAppApiClient</code> seam, no hooks/game-state involved.</p>
+        <p>Add a single <code>SendAsync&lt;T&gt;</code> (or similar) helper to <code>XIVAppApiClient</code> that owns the <code>GetAsync &rarr; IsSuccessStatusCode &rarr; ReadFromJsonAsync &rarr; catch(HttpRequestException)/catch(TaskCanceledException)/catch(Exception)</code> shape. Migrate <code>XIVAppVenueApi.cs</code> (11 try/catch &rarr; ~1), <code>XIVAppShiftApi.cs</code>, <code>XIVAppPatronApi.cs</code> (4 each) onto it.</p>
+        <p><strong>Verify:</strong> existing behavior unchanged &mdash; each migrated call site should produce identical success/error handling; smoke-test one call per API class against the live server.</p>
+        <p>Shipped as <code>~/VenueManager</code> commits <code>ae91426</code>..<code>09caa87</code>, released as <strong>v3.10.7-testing</strong> (2026-08-11), live-verified in-game by the user.</p>
+      </div>
+
+      <div class="note">
+        <p><span class="tag">DONE</span><span class="tag">deployed 2026-08-12</span><span class="claim">Phase 3 &mdash; Web: shared client fetch/error wrapper (low-stakes surfaces only) &mdash; DONE, deployed 2026-08-12.</span></p>
+        <p>Detailed plan: <a href="2026-08-12-shared-fetch-toast-wrapper.md">2026-08-12-shared-fetch-toast-wrapper.md</a>.</p>
+        <p><strong>Risk: low, if scoped correctly.</strong> Start on <code>feedback-dialog</code>, <code>banner-upload</code>, <code>logo-upload</code>, <code>venue-follow-button</code> &mdash; explicitly <strong>not</strong> patron/VIP/ban-list/room-status.</p>
+        <p>Build <code>apiFetch()</code>/mutation hook to replace raw <code>fetch</code> + <code>try/catch</code> + <code>alert()</code>. Wire an actual toast library (none currently used &mdash; 0 hits for sonner/use-toast) as part of this, since <code>alert()</code> is the current fallback everywhere.</p>
+        <p>Shipped via <code>superpowers:subagent-driven-development</code> (7 tasks, each with spec-compliance + code-quality review gates) in worktree <code>worktree-shared-fetch-toast-wrapper</code>, merged to <code>main</code> and deployed 2026-08-12. Added <code>sonner</code> + themed <code>&lt;Toaster&gt;</code>, <code>lib/api-fetch.ts</code> (<code>apiFetch</code>/<code>ApiError</code>, prefers server&rsquo;s <code>message</code> field over <code>error</code>, 8 unit tests), migrated all 4 target components &mdash; fixed a real silent-failure bug in <code>venue-follow-button.tsx</code> (follow/unfollow errors were previously swallowed with zero user feedback) and added in-flight guards to <code>banner-upload</code>/<code>logo-upload</code>&rsquo;s <code>remove()</code> (found during review, missing in the original code too). Standardized error-copy register to &ldquo;Failed to X. Please try again.&rdquo; across all 4 components. Live-verified post-deploy: feedback dialog, follow/unfollow, and the upload UI all mount and behave correctly with zero console errors.</p>
+        <p><strong>Verify:</strong> manual QA on the 4 target surfaces &mdash; success + error + network-failure paths.</p>
+      </div>
+
+      <div class="note">
+        <p><span class="tag">RESOLVED 2026-08-16</span><span class="claim">Separate finding during Phase 3 QA, not a regression: <code>/discover</code> throws a real React hydration error (#418) on every page load.</span> Reproduced twice, does not occur on <code>/privacy</code> or dashboard/settings pages, and the globally-mounted <code>&lt;Toaster&gt;</code> doesn&rsquo;t explain it.</p>
+        <p>Root cause (found 2026-08-16, unrelated to Phase 1&rsquo;s date formatting): same mechanism as the 2026-08-13 shifts-page #418 fix &mdash; <code>venue-sidebar.tsx</code>&rsquo;s mobile sidebar renders the logged-in user&rsquo;s raw email server-side, Cloudflare Email Obfuscation (still active on <code>/discover</code>/<code>/following</code> &mdash; the 2026-08-13 fix scoped its exclusion to <code>/dashboard/</code> only) rewrites it into CSP-blocked decode markup, hydration mismatches. That exclusion&rsquo;s original rationale (&ldquo;public pages may show venue contact emails&rdquo;) didn&rsquo;t actually hold &mdash; no <code>contactEmail</code> field exists in the schema.</p>
+        <p>Fixed by guarding the render behind a <code>mounted</code> check (SSR emits nothing, client shows the email post-mount) rather than widening the Cloudflare rule &mdash; fixes the source for any current/future page reusing this sidebar. Commit <code>1ceee62</code>, verified against local dev server (confirmed absent from SSR text output, present in DOM post-mount). See <code>[[project_shifts_page_418_stale_bundle]]</code> for the original investigation.</p>
+      </div>
+
+      <div class="note">
+        <p><span class="tag">SCOPED 2026-08-13</span><span class="claim">Phase 4 &mdash; Plugin: shared tab base + web: packages/ hoisting &mdash; SCOPED 2026-08-13.</span></p>
+        <p>Detailed plan: <a href="2026-08-13-plugin-tab-base.md">2026-08-13-plugin-tab-base.md</a>.</p>
+        <p><strong>Risk: medium.</strong> Touches every tab&rsquo;s entry point (plugin) &mdash; no hooks/game-state, verify visually. Web packages/ move is low risk (mechanical) but do after Phase 1/3 land so there&rsquo;s less to move twice.</p>
+        <ul>
+          <li>Plugin: introduce <code>ITab</code>/base-tab abstraction for the 8 tab classes (<code>VenuesTab</code>, <code>SettingsTab</code>, <code>GuestsTab</code>, <code>GuestLogTab</code>, <code>SalesTab</code>, <code>ShiftsTab</code>, <code>RoomsTab</code>, <code>InventoryTab</code>) currently drawn ad hoc by <code>MainWindow</code>.</li>
+          <li>Web: hoist <code>lib/format.ts</code>, <code>lib/server-time.ts</code>, <code>lib/validation.ts</code> into <code>packages/</code> now that mobile is deferred &mdash; do only if/when a second consumer actually needs them; otherwise defer indefinitely (YAGNI &mdash; don&rsquo;t hoist for a consumer that doesn&rsquo;t exist yet).</li>
+        </ul>
+        <p><strong>Verify:</strong> every tab still opens/closes/draws correctly (plugin); web build + existing tests pass after the move.</p>
+        <p>packages/ hoisting: no second consumer exists yet (mobile deferred, Aetherphone integration still at outreach stage) &mdash; plan defers it explicitly, no task scheduled. Status note: per the current-status note (Section 01), Phase 4 shipped and was in-game verified 2026-08-13 as plugin <code>v3.10.8-testing</code> &mdash; not yet promoted to stable, that&rsquo;s a user call on timing.</p>
+      </div>
+
+      <div class="note">
+        <p><span class="tag">folded into Phases 1&ndash;4</span><span class="claim">Phase 5 &mdash; Docs: extract WHY-rationale, thin comments.</span> <strong>Risk: low, mechanical, but needs care not to lose rationale.</strong></p>
+        <ul>
+          <li>Plugin: <code>Plugin.cs</code> (309 comment lines, ~10 multi-line rationale blocks &mdash; debounce timing, DTR cache coordination, mutex <code>WaitAsync(0)</code> reasoning) &rarr; extract into <code>docs/ARCHITECTURE.md</code>. Same for <code>SettingsTab.cs</code> (85 lines, UX/gating rationale).</li>
+          <li>Web: as each phase above touches a file, move any WHY-comments found into the matching <code>docs/specs/&lt;feature&gt;.md</code>, strip WHAT-comments on sight.</li>
+          <li>This phase is largely folded into Phases 1-4&rsquo;s diffs rather than a standalone sweep &mdash; the &ldquo;big two&rdquo; plugin files are the only piece large enough to warrant dedicated time.</li>
+        </ul>
+        <p><strong>Verify:</strong> grep for <code>//</code>/<code>///</code> post-cleanup to confirm no orphaned rationale was deleted outright (moved, not lost).</p>
+      </div>
+    </section>
+
+    <section class="subsystem" id="deferred">
+      <h2><span class="num">03</span> Deferred &amp; shipped items</h2>
+      <p class="intro">The original roadmap&rsquo;s &ldquo;Deferred (catalogued, not scheduled)&rdquo; list &mdash; each item as it now stands: shipped, or still not done.</p>
+
+      <div class="note">
+        <p><span class="tag">DONE</span><span class="tag">deployed 2026-08-12</span><span class="claim">Deferred &rarr; Done, deployed 2026-08-12: Web: shared <code>DataTable</code> primitive for staff-table/patron-profiles-table/ban-list-manager/rooms-board.</span> Deferred until those feature areas are confirmed stable (in-game verify resolved) &mdash; plan: <a href="2026-08-12-shared-data-table.md">2026-08-12-shared-data-table.md</a>.</p>
+        <p>Built via subagent-driven-development (6 tasks, spec+quality review gates each). One real code-review catch fixed along the way: <code>staff-table.tsx</code>&rsquo;s migration initially left dead Tailwind classes silently overridden by <code>globals.css</code>&rsquo;s unlayered <code>.dtable</code> rules &mdash; caught and fixed before merge. Live-verified at desktop and 375px widths across all 4 tables.</p>
+      </div>
+
+      <div class="note">
+        <p><span class="tag">DONE</span><span class="tag">deployed incrementally</span><span class="claim">Deferred &rarr; done incrementally: Web: zod validation registry widened to remaining 133/135 API routes &mdash; do incrementally, admin/low-traffic routes first, once Phase 3&rsquo;s pattern is proven.</span></p>
+        <p>Increment 1: DONE, deployed 2026-08-13 (commit <code>e9420c4</code>) &mdash; <a href="2026-08-12-zod-validation-admin-routes.md">2026-08-12-zod-validation-admin-routes.md</a>. Increment 2: DONE, deployed 2026-08-13 (commit <code>463d906</code>) &mdash; <a href="2026-08-13-zod-validation-plugin-write-routes.md">2026-08-13-zod-validation-plugin-write-routes.md</a>. ~129 routes remained after Increment 1, ~125 after Increment 2. Full write-up for every increment &mdash; including live-verification details &mdash; in Section 04.</p>
+      </div>
+
+      <div class="note">
+        <p><span class="tag">NOT DONE</span><span class="claim">Deferred: Mobile app &mdash; out of scope, may be superseded by Aetherphone integration.</span> See Section 05 for the subsequent decision to remove <code>apps/mobile</code> entirely.</p>
+      </div>
+
+      <div class="note">
+        <p><span class="tag">DONE</span><span class="tag">deployed 2026-08-12</span><span class="claim">Product decision raised 2026-08-12, not yet built at the time of writing: shift times currently render in Server Time (ST) &mdash; DONE, deployed 2026-08-12.</span> Plan: <a href="2026-08-12-shift-local-time.md">2026-08-12-shift-local-time.md</a>. Decided: shifts week grid and calendar tab now render in viewer-local time (mount-guarded, matching the <code>&lt;LocalTime&gt;</code> hydration-safe pattern); plugin-facing claim/cancel/reminder notification text stays in ST (shared roster content, no single &ldquo;owner&rdquo; viewer).</p>
+        <p>Built via subagent-driven-development (5 tasks). Caught and fixed two real hydration-mismatch risks during review: the calendar tab&rsquo;s <code>todayKey</code> reading a live clock pre-mount (same bug class as the day&rsquo;s #418 incident &mdash; fixed by threading a server-computed <code>todayKeyST</code> prop through, matching the week view&rsquo;s existing pattern), and a pre-existing 12h/24h format mismatch in the day-dialog&rsquo;s duplicate-shift prefill.</p>
+        <p>Also traced and closed out a recurring production #418 hydration error on this same page during the session &mdash; root cause was a stale client bundle held open across today&rsquo;s unusually high number of blue-green deploys, not a code bug; confirmed via clean reproduction in a fresh private tab. Merged to <code>main</code> (<code>0fc8c86</code>), deployed via <code>deploy-xiv-web.sh --green</code>, 13/13 smoke checks passed.</p>
+      </div>
+
+      <div class="note">
+        <p><span class="tag">FIXED 2026-08-12</span><span class="claim">Bug, found 2026-08-11 while creating test shift data: overnight shifts couldn&rsquo;t be scheduled at all &mdash; Fixed 2026-08-12.</span> Commit <code>a52d696</code> (worktree <code>shift-event-timezone-fixes</code>, merged to <code>main</code>, not yet deployed). <code>create-shift-dialog.tsx</code> now rolls the end date to the next day when the end time is earlier than the start.</p>
+      </div>
+
+      <div class="note">
+        <p><span class="tag">FIXED 2026-08-12</span><span class="claim">Bug, found 2026-08-11 while creating a test event: event creation silently used the operator&rsquo;s browser timezone with no indication, while shift creation forced literal Server-Time digits with no indication either &mdash; two different unlabeled input models &mdash; Fixed 2026-08-12, same commit.</span></p>
+        <p>Resolved by standardizing on &ldquo;operator enters in their own local time, app converts to UTC for storage&rdquo; for both forms (matching how <code>DateTimePicker</code> already behaved, and how the dashboard now displays times back to viewers in their own local time) &mdash; not by forcing literal Server-Time input as originally proposed below. Server Time (ST) stays the model only for things with no single &ldquo;owner&rdquo; of the input: opening hours, Discord/broadcast text. Both forms now explicitly labeled &ldquo;your local time.&rdquo; Guide pages (<code>guide/owner</code>, <code>guide/staff</code>) updated to match.</p>
+      </div>
+    </section>
+
+    <section class="subsystem" id="zod">
+      <h2><span class="num">04</span> Zod-validation rollout</h2>
+      <p class="intro">Fourteen increments, one card each. Every increment is DONE, deployed via <code>deploy-xiv-web.sh --green</code> unless noted, and live-verified. Commit hashes, test counts, and every bug caught along the way are kept below.</p>
+
+      <div class="note">
+        <p><span class="tag">DONE</span><span class="tag">deployed 2026-08-13</span><span class="claim">Increment 1 &mdash; admin routes &mdash; done, deployed 2026-08-13 (commit <code>e9420c4</code>).</span> Plan: <a href="2026-08-12-zod-validation-admin-routes.md">2026-08-12-zod-validation-admin-routes.md</a>. Built via subagent-driven-development in an isolated git worktree (4 tasks, spec+quality review gates each, plus a final whole-branch review).</p>
+        <p>Covered 4 admin routes: added <code>feedbackStatus</code>/<code>feedbackCategory</code>/<code>adminNotes</code> to the shared <code>validators</code> registry; migrated the feedback PATCH route to <code>.parse()</code>+ZodError catch; migrated the feedback list GET route to <code>safeParse</code> for query params, closing a real <code>as any</code>-cast gap (an invalid <code>?status=</code> previously silently returned unfiltered results instead of erroring); reused <code>validators.url</code> in the announcements route instead of a duplicated local field.</p>
+        <p>One real plan inaccuracy caught by review: the plan claimed <code>validators.url</code> was &ldquo;already used by 2 other routes&rdquo; &mdash; actually zero, this route is the only consumer. One latent (non-blocking) risk flagged in final review: the migrated feedback PATCH schema doesn&rsquo;t accept explicit <code>null</code> for <code>status</code>/<code>adminNotes</code> the way the old manual check silently did &mdash; inert today since the only caller never sends <code>null</code>, worth a look if an &ldquo;explicitly clear adminNotes&rdquo; feature is ever added.</p>
+        <p>45/45 tests, typecheck, and build all green; deployed via <code>--green</code>, 13/13 smoke checks passed. ~129 routes remain for future increments &mdash; see plan&rsquo;s own &ldquo;Remaining rollout&rdquo; section for the established pattern to follow.</p>
+        <p><strong>Live-verified 2026-08-14</strong> (a full session after original ship, closing the one increment in this whole rollout that had only deploy-time smoke-test confidence rather than actual live request/response testing): 5/5 checks against the admin feedback PATCH and GET routes &mdash; invalid <code>status</code> on PATCH 400s, oversized <code>adminNotes</code> 400s, a valid update actually persists (status + adminNotes + reviewedBy/reviewedAt all set correctly), and &mdash; the specific real bug this increment fixed &mdash; <code>?status=NOT_A_STATUS</code> on GET now correctly 400s instead of silently returning unfiltered results, confirmed against a disposable test row (created via the now-verified <code>/api/feedback</code> POST route, deleted after). Every increment in the zod-validation rollout (1 through 6) now has real, confirmed live verification, not just code review or unit tests.</p>
+      </div>
+
+      <div class="note">
+        <p><span class="tag">DONE</span><span class="tag">deployed 2026-08-13</span><span class="claim">Increment 2 &mdash; plugin write routes &mdash; done, deployed 2026-08-13 (commit <code>463d906</code>).</span> Plan: <a href="2026-08-13-zod-validation-plugin-write-routes.md">2026-08-13-zod-validation-plugin-write-routes.md</a>. Same subagent-driven-development pattern in an isolated worktree (5 tasks + final review).</p>
+        <p>Covered the 4 Dalamud-plugin-authenticated write routes (ban patron, room status, inventory link-item, inventory restock) &mdash; a different, higher-traffic category than Increment 1&rsquo;s admin routes. Added <code>characterName</code>/<code>world</code> to the shared registry (genuinely multi-consumer, 15 routes codebase-wide).</p>
+        <p>Two real plan-premise errors caught and fixed during review, not before shipping: a whitespace-only ban <code>reason</code> silently passing validation (fixed with <code>.trim()</code>), and the plan&rsquo;s own stated goal &mdash; that rejecting <code>itemId: 0</code> was a bug &mdash; being wrong (item ID 0 is FFXIV&rsquo;s &ldquo;no item&rdquo; sentinel; two sibling routes already establish <code>.positive()</code> as correct, and the dashboard has a truthy check that would have desynced against a stored 0). Also independently caught and dropped an invented <code>stockCount</code> upper bound that didn&rsquo;t match two sibling routes&rsquo; actual (unbounded) convention before it ever shipped.</p>
+        <p>51/51 tests, typecheck, build all green. ~125 routes remain.</p>
+        <p>Manually verified 2026-08-14 via curl against the live API using a disposable test venue (<code>TestingOut</code>/slug <code>t</code>) &mdash; all 7 checks from Task 6 passed, test API key + service deleted after.</p>
+      </div>
+
+      <div class="note">
+        <p><span class="tag">DONE</span><span class="tag">deployed &amp; verified 2026-08-14</span><span class="claim">Increment 3 &mdash; character routes &mdash; done, deployed and verified 2026-08-14.</span> Plan: <a href="2026-08-14-zod-validation-character-routes.md">2026-08-14-zod-validation-character-routes.md</a>. Built via subagent-driven-development in worktree <code>zod-validation-character-routes</code> (4 tasks + spec/quality review gates each, all passed). Migrated <code>user-characters</code> (session-auth), <code>plugin/characters</code> and <code>plugin/patron-visits</code> (plugin-API-key-auth) onto the shared <code>characterName</code>/<code>world</code> validators.</p>
+        <p>One real regression caught by code-quality review and fixed before continuing: the plan&rsquo;s own literal code trimmed <em>after</em> <code>.parse()</code> instead of during validation, letting whitespace-only <code>characterName</code>/<code>world</code> bypass the length check &mdash; fixed at the registry level (<code>validators.characterName</code>/<code>world</code> now <code>.trim()</code> internally in <code>lib/validation.ts</code>), which also pre-empted the same bug in the two later routes.</p>
+        <p>Also closed a real logic bug in <code>patron-visits</code>: <code>world</code> was typed as required but never actually checked, so an omitted <code>world</code> silently broke Prisma&rsquo;s dedupe-query scoping; and stopped forwarding a client-suppliable <code>countChange</code> to <code>logPatronVisit</code> that a malicious caller could use to skew analytics (the function&rsquo;s own doc comment already said this should never happen &mdash; the code just wasn&rsquo;t enforcing it).</p>
+        <p>54/54 tests, typecheck, build all green. Deployed via <code>deploy-xiv-web.sh --green</code> (commit <code>db3ebb8</code>), 13/13 smoke checks passed.</p>
+        <p>Manually verified live via curl+API-key against the <code>TestingOut</code>/slug <code>t</code> test venue &mdash; all 7 checks (4 rejections, 3 regression-check successes) passed exactly as expected across <code>plugin/characters</code> and <code>plugin/patron-visits</code>; test key, patron-log row, and linked test character deleted after. <code>user-characters</code> (session-auth) wasn&rsquo;t separately browser-tested at the time but shares the identical validated pattern.</p>
+        <p><strong>Update 2026-08-14 (later same day):</strong> subsequently verified live once a browser session became available &mdash; 3/3 checks (oversized characterName 400, whitespace-only 400, trim round-trip confirmed exact); test character created and deleted after.</p>
+      </div>
+
+      <div class="note">
+        <p><span class="tag">DONE</span><span class="tag">deployed &amp; verified 2026-08-14</span><span class="claim">Increment 4 &mdash; feedback routes &mdash; done, deployed and verified 2026-08-14.</span> Plan: <a href="2026-08-14-zod-validation-feedback-routes.md">2026-08-14-zod-validation-feedback-routes.md</a>. Built via subagent-driven-development in worktree <code>zod-validation-feedback-routes</code> (2 tasks + spec/quality review gates each, all passed, no fix cycles needed this time). Migrated <code>app/api/feedback</code> (web, session-auth) and <code>app/api/mobile/feedback</code> (mobile, JWT-auth) onto the already-existing <code>feedbackCategory</code>/<code>feedbackSubject</code>/<code>feedbackDescription</code>/<code>url</code> validators &mdash; these were added to the registry back in Increment 1 but had only ever been consumed by the admin GET/PATCH routes, never by the two routes that actually create a <code>Feedback</code> row from raw user input.</p>
+        <p>Closed two real gaps: unbounded <code>subject</code>/<code>description</code> (no length cap at all previously) and a category enum manually re-declared as a local array in each route instead of sharing the registry&rsquo;s <code>feedbackCategory</code> &mdash; confirmed byte-identical values before/after, no silent accept/reject drift.</p>
+        <p>54/54 tests, typecheck, build all green. Deployed via <code>deploy-xiv-web.sh --green</code> (commit <code>2703fb3</code>), 13/13 smoke checks passed.</p>
+        <p>Manually verified live: <code>mobile/feedback</code> via a hand-signed HS256 JWT (jose wasn&rsquo;t reachable as a bare require inside the standalone build, so the token was signed locally with Node&rsquo;s <code>crypto</code> against the real <code>MOBILE_JWT_SECRET</code> pulled from the container env &mdash; same HS256 compact-JWS format <code>jose</code> produces) &mdash; 6 checks (3 rejections, missing-auth regression check, and a whitespace-trim check confirmed directly against the DB row) all passed. <code>app/api/feedback</code> (web) confirmed still correctly 401s with no session.</p>
+        <p><strong>Update 2026-08-14 (later same day):</strong> the 400 paths were subsequently verified live once a real browser session became available &mdash; see the note appended to Increment 5 below. All 4 checks (oversized subject, invalid category, description too short, invalid URL) passed.</p>
+      </div>
+
+      <div class="note">
+        <p><span class="tag">DONE</span><span class="tag">deployed &amp; fully verified 2026-08-14</span><span class="claim">Increment 5 &mdash; account routes &mdash; done, deployed and fully verified 2026-08-14.</span> Plan: <a href="2026-08-14-zod-validation-account-routes.md">2026-08-14-zod-validation-account-routes.md</a>. Built via subagent-driven-development in worktree <code>zod-validation-account-routes</code> (3 tasks + spec/quality review gates each, all passed, no fix cycles needed).</p>
+        <p>Migrated <code>user/profile</code> PATCH (unbounded <code>displayName</code> &rarr; capped 50 chars, route-local schema), <code>plugin/keys</code> POST (unbounded API-key <code>name</code> &rarr; capped 50 chars, route-local schema), <code>notifications</code> PATCH (bare unchecked <code>ids: string[] | undefined</code> type assertion &rarr; real zod-validated array, closing a malformed-input &rarr; uncaught-Prisma-error &rarr; framework-500 path, now a clean 400). All 3 fields confirmed single-consumer (grepped for other writers before deciding to keep local rather than add to the shared registry).</p>
+        <p>One theoretical regression flagged by code-quality review on <code>plugin/keys</code> (<code>venueId: null</code> would now 400 where old code silently treated it as &ldquo;account-wide&rdquo;) &mdash; checked both real callers (<code>dashboard/api-keys</code>, <code>dashboard/[slug]/settings/api-keys</code> pages) and confirmed neither ever sends <code>null</code>/<code>""</code>, only omits the field entirely; left as-is per the established &ldquo;don&rsquo;t invent constraints for callers that don&rsquo;t exist&rdquo; convention (mirrors Increment 2&rsquo;s reverted invented <code>stockCount</code> bound).</p>
+        <p>54/54 tests, typecheck, build all green. Deployed via <code>deploy-xiv-web.sh --green</code> (commit <code>e880797</code>), 13/13 smoke checks passed.</p>
+        <p>Initial pass found no active authenticated browser session, so only the auth boundary was curl-checked (all 3 routes correctly reject unauthenticated requests &mdash; though <code>user/profile</code> and <code>notifications</code> return a pre-existing <code>307</code> to <code>/auth/signin</code> rather than a <code>401</code> JSON, confirmed via the <em>untouched</em> <code>GET /api/notifications</code> handler that this is a pre-existing quirk unrelated to this change, not a regression).</p>
+        <p><strong>Update 2026-08-14 (later same day):</strong> user logged into a browser session Claude could drive, closing this gap. Full live verification via authenticated <code>fetch()</code> calls in-page (no need for a full UI click-through &mdash; same session, same route, more precise boundary testing): <code>user/profile</code> &mdash; 3/3 (oversized displayName 400, whitespace-only 400, trim round-trip confirmed exact); <code>plugin/keys</code> &mdash; 2/2 (oversized name 400, trim round-trip confirmed, test key created and deleted after); <code>notifications</code> &mdash; 3/3 (malformed <code>ids</code> array of numbers 400, wrong-type <code>ids</code> string 400, omitted <code>ids</code> still marks-all-read 200). Same session was also used to close Increment 4&rsquo;s remaining gap: <code>app/api/feedback</code> &mdash; 4/4 (oversized subject, invalid category, description too short, invalid URL, all 400). All 3 increments in this rollout are now fully live-verified, not just code-reviewed.</p>
+      </div>
+
+      <div class="note">
+        <p><span class="tag">DONE</span><span class="tag">deployed &amp; fully verified 2026-08-14</span><span class="claim">Increment 6 &mdash; upload route &mdash; done, deployed and fully verified 2026-08-14.</span> Plan: <a href="2026-08-14-zod-validation-upload-route.md">2026-08-14-zod-validation-upload-route.md</a>. Built via subagent-driven-development in worktree <code>zod-validation-upload-route</code> (1 code task + spec/quality review gates, one real fix-cycle). Migrated <code>app/api/upload</code> POST &mdash; closed two real bugs, not just registry-consistency: a missing <code>filename</code> previously crashed the route with an uncaught <code>TypeError</code> (<code>path.extname(undefined)</code>, zero try/catch anywhere in the handler &rarr; raw framework 500), and a missing/non-numeric <code>size</code> previously bypassed the 10MB cap silently (<code>undefined &gt; MAX_SIZE</code> is <code>false</code> in JS, not an error &mdash; a caller omitting <code>size</code> got an unbounded presigned S3 PUT URL).</p>
+        <p>Confirmed all 3 real callers (<code>banner-upload.tsx</code>, <code>logo-upload.tsx</code>, <code>gallery-manager.tsx</code>) always send valid values &mdash; zero risk to real traffic.</p>
+        <p>Deliberately broke from this rollout&rsquo;s usual <code>{error: "Validation error", details}</code> shape: since this route&rsquo;s error strings are read and displayed directly by those 3 components, the fix surfaces the <em>specific</em> zod message as the top-level <code>error</code> field, preserving the exact pre-existing text for the two checks that already worked.</p>
+        <p>Code-quality review caught one real gap in the first pass: custom <code>.min()</code>/<code>.positive()</code> messages only fired for present-but-malformed input, not for the field being omitted entirely (zod&rsquo;s base type-check message won substituted first) &mdash; fixed with zod v4&rsquo;s <code>{ error: "..." }</code> constructor-level override, verified against the real installed zod runtime including a control test (stripping the override and confirming the message reverts) to rule out a hallucinated no-op API.</p>
+        <p>54/54 tests, typecheck, build all green. Deployed via <code>deploy-xiv-web.sh --green</code> (commit <code>72e9a97</code>), 13/13 smoke checks passed.</p>
+        <p>Manually verified live via the same authenticated browser session as Increments 4/5&rsquo;s follow-up &mdash; 6/6 checks (missing filename, missing size, negative size, oversized size, invalid contentType, and a valid request that correctly returned a real presigned URL) all passed exactly as expected. No cleanup needed &mdash; this route only issues presigned URLs, never writes anything itself.</p>
+      </div>
+
+      <div class="note">
+        <p><span class="tag">DONE</span><span class="tag">deployed &amp; fully verified 2026-08-14</span><span class="claim">Increment 7 &mdash; venue update route &mdash; done, deployed and fully verified 2026-08-14.</span> Plan: <a href="2026-08-14-zod-validation-venue-update-route.md">2026-08-14-zod-validation-venue-update-route.md</a>. Built via subagent-driven-development in worktree <code>zod-validation-venue-update</code> (2 code tasks + spec/quality review gates each, no fix cycles). Migrated <code>app/api/venues/[venueId]/route.ts</code>&rsquo;s PATCH handler (the main venue-settings-edit route) onto 8 registry validators (<code>venueName</code>, <code>venueDescription</code>, <code>venueDistrict</code>, <code>venueWard</code>, <code>venuePlot</code>, <code>venueApartment</code>, <code>venueLocation</code>, <code>url</code> x2) that already existed &mdash; added back when venue <em>creation</em> (<code>app/api/venues/route.ts</code>) was migrated, but never wired into this far-more-frequently-used <em>update</em> route.</p>
+        <p>Closed a real crash bug: <code>Number(ward)</code> on a non-numeric string produced <code>NaN</code>, which Prisma rejected at write time with an uncaught runtime error (zero try/catch in the route) &mdash; a malformed <code>ward</code>/<code>plot</code>/<code>apartment</code> crashed with a 500 instead of a clean 400. Also closed unbounded <code>name</code>/<code>description</code>/<code>district</code>/<code>location</code> and unvalidated <code>bannerUrl</code>/<code>logoUrl</code> (any string accepted as an image URL, no format check).</p>
+        <p>Task 1 first widened <code>venueDescription</code>/<code>venueLocation</code>/<code>url</code> to accept explicit <code>null</code> (additive-only) since this is a partial-update route where the real client sends <code>null</code> to mean &ldquo;clear this field&rdquo; &mdash; verified against all 3 real callers (<code>settings/page.tsx</code>, <code>banner-upload.tsx</code>, <code>logo-upload.tsx</code>) before writing the schema, confirming exact request shapes rather than guessing.</p>
+        <p>Code-quality review independently found and confirmed a genuine pre-existing latent bug in the <em>old</em> code (not introduced by this diff): <code>name !== undefined &amp;&amp; { name: String(name).trim() }</code> never special-cased <code>null</code>, so <code>String(null).trim()</code> would have silently written the literal string <code>"null"</code> as a venue&rsquo;s name if any caller ever sent it &mdash; the new schema correctly 400s that case instead.</p>
+        <p>54/54 tests, typecheck, build all green. Deployed via <code>deploy-xiv-web.sh --green</code> (commit <code>ecc1b87</code>), 13/13 smoke checks passed.</p>
+        <p>Manually verified live against &ldquo;Velvet Rift&rdquo; &mdash; a real <code>TEST_VENUE</code>-typed venue the account owns, found specifically to avoid touching real venue data &mdash; 7/7 checks (malformed <code>ward</code> 400 not 500, explicit-null description clear, oversized name 400, invalid bannerUrl format 400, explicit-null bannerUrl clear, valid ward set, explicit-null name correctly rejected) all passed exactly as expected; venue&rsquo;s <code>ward</code>/<code>bannerUrl</code> restored to original values after (description was already <code>null</code>, no restore needed).</p>
+      </div>
+
+      <div class="note">
+        <p><span class="tag">DONE</span><span class="tag">deployed &amp; fully verified 2026-08-14</span><span class="claim">Increment 8 &mdash; staff invite route &mdash; done, deployed and fully verified 2026-08-14.</span> Plan: <a href="2026-08-14-zod-validation-staff-invite-route.md">2026-08-14-zod-validation-staff-invite-route.md</a>. Built via subagent-driven-development in worktree <code>zod-validation-staff-invite</code> (1 code task + spec/quality review gates, no fix cycles). Migrated <code>app/api/venues/[venueId]/staff/invite/route.ts</code> POST &mdash; closed unbounded <code>invitedEmail</code> (zero format check despite <code>validators.email</code> already existing in the registry with <strong>zero prior consumers anywhere in the codebase</strong> &mdash; this is the first real use of that field) and unbounded <code>invitedName</code> (new route-local cap, 100 chars, matching the <code>customerName</code> precedent).</p>
+        <p><code>role</code> folded into the same schema for completeness even though its existing manual check already worked correctly. Confirmed the real client (<code>staff/invite/page.tsx</code>) never sends <code>roleId</code>, and doesn&rsquo;t string-match on the specific old <code>"Invalid role"</code> error text, so wrapping it in the rollout&rsquo;s standard <code>{error: "Validation error", details}</code> shape has no functional impact.</p>
+        <p>54/54 tests, typecheck, build all green. Deployed via <code>deploy-xiv-web.sh --green</code> (commit <code>3293a56</code>), 13/13 smoke checks passed.</p>
+        <p>Manually verified live against &ldquo;Velvet Rift&rdquo; (the same disposable <code>TEST_VENUE</code> used in Increment 7) &mdash; 5/5 checks (valid invite created with working URL, invalid email format 400, oversized name 400, invalid role 400 regression check, explicit-null name/email defaults still work) all passed; the 2 real pending-invite rows created during verification deleted after.</p>
+      </div>
+
+      <div class="note">
+        <p><span class="tag">DONE</span><span class="tag">deployed &amp; fully verified 2026-08-14</span><span class="claim">Increment 9 &mdash; payroll PATCH route &mdash; done, deployed and fully verified 2026-08-14.</span> Plan: <a href="2026-08-14-zod-validation-payroll-patch-route.md">2026-08-14-zod-validation-payroll-patch-route.md</a>. Built via subagent-driven-development in worktree <code>zod-validation-payroll-patch</code> (1 code task + spec/quality review gates, no fix cycles).</p>
+        <p>On closer inspection, <code>app/api/venues/[venueId]/payroll/route.ts</code> (the POST route flagged after Increment 8 as a candidate) turned out to already have thorough manual bounds-checking on every field &mdash; not a real gap, deprioritized per this rollout&rsquo;s own rule. Its <strong>sibling PATCH route</strong> (<code>payroll/[payrollId]/route.ts</code>), checked instead, had a genuine, demonstrated inconsistency: <code>new Decimal("abc")</code> (Decimal.js) throws uncaught for a non-numeric <code>baseRate</code>/<code>hoursWorked</code>/<code>bonusAmount</code> (no try/catch beyond the generic 500 handler), <code>new Date("not-a-date")</code> for <code>periodStart</code>/<code>periodEnd</code> had no <code>isNaN</code> check (Prisma rejects <code>Invalid Date</code> at write time, uncaught), and <code>notes</code> had no length cap &mdash; despite the POST sibling already validating all of these.</p>
+        <p>Narrowly scoped to just those 6 fields; <code>isPaid</code>/<code>manualEntryName</code> (already correctly validated, the latter entangled with business logic) deliberately left untouched. Confirmed via code review that <code>hoursWorked: 0</code>&rsquo;s pre-existing falsy-collapse-to-null behavior (an old ternary, untouched by this diff) is unchanged by the new validation layer &mdash; traced explicitly, not assumed.</p>
+        <p>The real UI (<code>payroll/page.tsx</code>) only ever sends <code>{ isPaid: boolean }</code> to this route &mdash; the 6-field gap was real but previously unreachable through any UI path, so zero regression risk against actual traffic.</p>
+        <p>54/54 tests, typecheck, build all green. Deployed via <code>deploy-xiv-web.sh --green</code> (commit <code>0c581d5</code>), 13/13 smoke checks passed.</p>
+        <p>Manually verified live against a disposable manual payroll entry created on &ldquo;Velvet Rift&rdquo; (the same <code>TEST_VENUE</code> used in Increments 7-8) &mdash; 7/7 checks (mark-paid regression, malformed baseRate/hoursWorked/periodStart all correctly 400 not 500, oversized notes 400, a real baseRate update correctly recalculating totalAmount, explicit-null hoursWorked-clear) all passed; disposable entry deleted after.</p>
+      </div>
+
+      <div class="note">
+        <p><span class="tag">DONE</span><span class="tag">deployed &amp; fully verified 2026-08-14</span><span class="claim">Increment 10 &mdash; payroll generate route &mdash; done, deployed and fully verified 2026-08-14, with a real bug caught and fixed mid-review.</span> Plan: <a href="2026-08-14-zod-validation-payroll-generate-route.md">2026-08-14-zod-validation-payroll-generate-route.md</a>. Built via subagent-driven-development in worktree <code>zod-validation-payroll-generate</code> (1 code task + spec/quality review gates, 1 fix cycle). Migrated <code>app/api/venues/[venueId]/payroll/generate/route.ts</code> POST &mdash; same crash-bug class as Increment 9 (<code>new Decimal("abc")</code> throws uncaught for malformed <code>baseRate</code>/<code>bonusAmount</code>), plus an uncapped <code>notes</code> field.</p>
+        <p>Real UI (<code>payroll/page.tsx</code>) does client-side <code>parseFloat()</code> before sending, and <code>JSON.stringify(NaN)</code> silently serializes to <code>null</code> &mdash; verified this quirk directly &mdash; so the real browser client can never trigger the crash; the gap only matters for non-browser callers, still a real hole in the public API contract.</p>
+        <p><strong>Code-quality review caught a genuine financial-correctness bug before it shipped</strong>: the first-pass schema used <code>z.union([z.coerce.number()..., z.null()])</code> &mdash; since <code>z.coerce.number()</code> runs <code>Number(null) &rarr; 0</code> and <em>succeeds</em> rather than failing, the union&rsquo;s first branch always won, silently turning an explicit <code>baseRate: null</code> (the documented &ldquo;use the default rate&rdquo; signal) into <code>0</code> &mdash; which would have taken the manual-override branch with a $0 rate, silently creating a <code>totalAmount: 0</code> payroll entry with no error, instead of correctly falling through to per-shift role-rate resolution. Fixed by reordering the union (<code>z.null()</code> first), independently re-verified against the real zod runtime and the downstream control-flow trace before merging.</p>
+        <p><strong>Also retroactively applied the identical fix to Increment 9&rsquo;s already-shipped <code>payroll/[payrollId]/route.ts</code> PATCH schema</strong> (<code>hoursWorked</code>/<code>bonusAmount</code>) &mdash; that route had the exact same union-order defect but it was invisible in production only because its downstream code happened to use a falsy check (<code>hoursWorked ? ... : null</code>) rather than a strict <code>!== null</code> check, so <code>0</code> coincidentally still collapsed to <code>null</code> in the DB write; fixed for correctness rather than left as a &ldquo;works by accident&rdquo; landmine, verified the same way, deployed in the same push.</p>
+        <p>54/54 tests, typecheck, build all green. Deployed via <code>deploy-xiv-web.sh --green</code> (commit <code>1f59ced</code>), 13/13 smoke checks passed.</p>
+        <p>Manually verified live against the &ldquo;Velvet Rift&rdquo; test venue&rsquo;s real membership &mdash; 4/4 checks (malformed baseRate/bonusAmount correctly 400, oversized notes 400, and &mdash; the specific bug this review caught &mdash; <code>baseRate: null</code> now correctly passes validation and reaches the downstream business-logic layer instead of silently becoming a $0 override) all passed.</p>
+      </div>
+
+      <div class="note">
+        <p><span class="claim">Rollout status after 10 increments:</span> ~60 non-mobile routes remain with zero zod usage, though most of the remainder are GET-only with no body, cron/webhook/system-internal routes, or DELETE-only routes with no body to validate &mdash; the pool of routes with a genuinely demonstrated real gap continues thinning fast.</p>
+        <p><strong>Pattern note for future increments:</strong> when a schema needs to accept both <code>null</code> and a coerced-number type in a <code>z.union</code>, always put <code>z.null()</code> FIRST &mdash; <code>z.coerce.number()</code> silently succeeds on <code>null</code> (coercing it to <code>0</code>) rather than failing, so <code>z.union([z.coerce.number()..., z.null()])</code> will never actually reach its <code>z.null()</code> arm. This bug pattern was introduced once (Increment 9) and repeated once (Increment 10&rsquo;s first pass) before being caught &mdash; worth remembering as a standing gotcha for this specific zod idiom.</p>
+        <p>The real-gap-driven phase was checked in on with the user at this point &mdash; decided to continue into consistency-only migrations (routes already using zod locally, just not the shared registry) rather than stop.</p>
+      </div>
+
+      <div class="note">
+        <p><span class="tag">DONE</span><span class="tag">deployed &amp; fully verified 2026-08-14</span><span class="claim">Increment 11 &mdash; roles/services/tasks routes &mdash; done, deployed and fully verified 2026-08-14. First consistency-only increment of the rollout.</span> Plan: <a href="2026-08-14-zod-validation-roles-services-tasks.md">2026-08-14-zod-validation-roles-services-tasks.md</a>. Built via subagent-driven-development in worktree <code>zod-validation-roles-services-tasks</code> (4 code tasks + spec/quality review gates each, no fix cycles).</p>
+        <p>Wired 6 registry validators (<code>roleName</code>, <code>roleDescription</code>, <code>serviceName</code>, <code>serviceDescription</code>, <code>taskTitle</code>, <code>taskDescription</code>) &mdash; all with <strong>zero consumers anywhere in the codebase</strong> until this increment &mdash; into the 6 routes (3 create + 3 update) that actually build/edit these entities. All 6 routes already used the full <code>.parse()</code>+<code>ZodError</code> pattern with local schemas, so this was purely mechanical field-swapping, not restructuring.</p>
+        <p>Turned out to close a real gap along the way, not just a consistency one: every one of the 6 routes&rsquo; <code>description</code>/<code>responsibilities</code> field was completely unbounded (registry caps: role 500 chars, service 1000, task 2000) &mdash; <code>name</code>/<code>title</code> bounds were already correct locally, just duplicated instead of shared. One registry widening needed first (<code>taskDescription</code> &rarr; <code>.nullable()</code>, zero-risk given zero prior consumers) to preserve the task-update route&rsquo;s existing explicit-null-to-clear behavior.</p>
+        <p>54/54 tests, typecheck, build all green. Deployed via <code>deploy-xiv-web.sh --green</code> (commit <code>a649569</code>), 13/13 smoke checks passed.</p>
+        <p>Manually verified live against the &ldquo;Velvet Rift&rdquo; test venue &mdash; 6/6 checks (oversized description/responsibilities correctly 400 for all 3 entity types, normal creation still succeeds for all 3), plus a dedicated check that the task-update route&rsquo;s <code>description: null</code> clear still works exactly as before; all 3 disposable test entities deleted after.</p>
+      </div>
+
+      <div class="note">
+        <p><span class="claim">Rollout status after 11 increments:</span> the real-gap-driven phase is functionally exhausted &mdash; every route with a demonstrated crash/security/unbounded-input gap found during systematic scanning has been migrated. Remaining work is consistency-only: routes with local, already-correct zod schemas that duplicate registry-eligible fields instead of sharing them (this increment&rsquo;s pattern), plus the still-untouched <code>venues/[venueId]/settings/route.ts</code> (has local <code>discordWebhookUrl</code>/<code>thumbnailUrl</code> url checks using <code>.or(z.literal(""))</code>, a shape the shared <code>url</code>/<code>webhookUrl</code> validators don&rsquo;t currently support &mdash; would need registry work first, not a quick swap) and any other local-schema routes found by grepping for <code>z.object</code> without <code>validators.</code> in <code>app/api</code>. Continued scanning turned up another real gap, not just a consistency one, before starting increment 12.</p>
+      </div>
+
+      <div class="note">
+        <p><span class="tag">DONE</span><span class="tag">deployed &amp; fully verified 2026-08-14</span><span class="claim">Increment 12 &mdash; staff update route &mdash; done, deployed and fully verified 2026-08-14.</span> Plan: <a href="2026-08-14-zod-validation-staff-update-route.md">2026-08-14-zod-validation-staff-update-route.md</a>. Built via subagent-driven-development in worktree <code>zod-validation-staff-update</code> (1 code task + spec/quality review gates, no fix cycles).</p>
+        <p>While scanning local-schema routes for consistency-only work, found <code>app/api/venues/[venueId]/staff/[membershipId]/route.ts</code> (edit an existing staff membership) had the exact same unvalidated <code>invitedEmail</code>/<code>invitedName</code> gap Increment 8 already fixed on the sibling <code>staff/invite/route.ts</code> (invite <em>creation</em>) &mdash; zero format check on email, zero length cap on name.</p>
+        <p>Checked all 3 real callers of this route (<code>app/dashboard/[slug]/staff/[membershipId]/page.tsx</code>) &mdash; none ever sends these 2 fields (only <code>role</code>/<code>roleId</code>/<code>additionalRoleIds</code> or <code>tipPooled</code>), so this was a real gap in the API contract, currently unreachable via any UI, same category as several prior increments. Fixed by reusing <code>validators.email</code> (2nd real consumer now) and a route-local 100-char <code>invitedName</code> cap matching Increment 8&rsquo;s identical field exactly.</p>
+        <p>54/54 tests, typecheck, build all green. Deployed via <code>deploy-xiv-web.sh --green</code> (commit <code>deacc1b</code>), 13/13 smoke checks passed.</p>
+        <p>Manually verified live against the account&rsquo;s own OWNER membership on the &ldquo;Velvet Rift&rdquo; test venue &mdash; 4/4 checks (invalid email 400, oversized name 400, valid values actually set, explicit-null clear restores both to <code>null</code>) all passed, ending in the original <code>null</code>/<code>null</code> state with nothing to clean up.</p>
+      </div>
+
+      <div class="note">
+        <p><span class="claim">Rollout status after 12 increments:</span> real-gap scanning keeps finding the occasional genuine hit even while primarily looking for consistency-only work &mdash; worth continuing to check for gaps first before assuming a route is &ldquo;just&rdquo; a registry-consistency swap. Continued scanning found a 4th real-gap batch before starting increment 13.</p>
+      </div>
+
+      <div class="note">
+        <p><span class="tag">DONE</span><span class="tag">deployed &amp; fully verified 2026-08-14</span><span class="claim">Increment 13 &mdash; events/templates routes &mdash; done, deployed and fully verified 2026-08-14.</span> Plan: <a href="2026-08-14-zod-validation-events-templates.md">2026-08-14-zod-validation-events-templates.md</a>. Built via subagent-driven-development in worktree <code>zod-validation-events-templates</code> (2 code tasks + spec/quality review gates each, no fix cycles).</p>
+        <p>While auditing the ~27 unchecked consistency-only routes at the user&rsquo;s request, found <code>events</code>/<code>events/[eventId]</code>/<code>event-templates</code>/<code>event-templates/[templateId]</code> all had completely unbounded <code>title</code>/<code>description</code> fields &mdash; no <code>.max()</code> at all &mdash; despite <code>validators.eventTitle</code> (150 chars) and <code>validators.eventDescription</code> (3000 chars) already existing in the registry with <strong>zero prior consumers</strong>, same pattern as Increments 8, 11, and 12. Also newly capped the event-template&rsquo;s own <code>name</code> field (its label, distinct from the <code>title</code> it generates) at 100 chars locally &mdash; no matching registry entry, kept local.</p>
+        <p>Checked real callers first (<code>events/new/page.tsx</code>, <code>events/[eventId]/edit/page.tsx</code>) &mdash; both send <code>description: ... || undefined</code>, never <code>null</code>, so no registry widening was needed this time (unlike Increment 7).</p>
+        <p>Code-quality review independently cross-checked that the template&rsquo;s caps (150/3000) exactly match the events route&rsquo;s own caps, confirming a valid saved template can never fail downstream when applied to create a real event.</p>
+        <p>54/54 tests, typecheck, build all green. Deployed via <code>deploy-xiv-web.sh --green</code> (commit <code>e15113a</code>), 13/13 smoke checks passed.</p>
+        <p>Manually verified live against the &ldquo;Velvet Rift&rdquo; test venue &mdash; 5/5 checks (oversized event title 400, oversized template name 400, oversized template description 400, normal event creation 201, normal template creation 201) all passed; both test entities deleted after.</p>
+      </div>
+
+      <div class="note">
+        <p><span class="tag">DONE</span><span class="tag">deployed &amp; fully verified 2026-08-14</span><span class="claim">Increment 14 &mdash; shift notes &mdash; done, deployed and fully verified 2026-08-14.</span> Plan: <a href="2026-08-14-zod-validation-shift-notes.md">2026-08-14-zod-validation-shift-notes.md</a>. Built via subagent-driven-development in worktree <code>zod-validation-shift-notes</code> (1 code task + spec/quality review gates, no code fix cycles &mdash; one doc-only correction).</p>
+        <p>Closed out the audit of the 5 previously-unchecked consistency-pool routes requested by the user: <code>inventory-settings</code>, <code>patrons/[patronId]/vip</code>, and <code>pot-settings</code> were all already minimal and correctly bounded (no gap, no action). <code>schedule</code>/<code>schedule/[entryId]</code> were also already fully correct, every field bounded including a 50-char <code>label</code> cap.</p>
+        <p><code>shifts</code>/<code>shifts/[shiftId]</code> turned up the 5th real gap of this rollout: <code>notes</code> on shift creation was completely unbounded &mdash; and unlike most gaps found late in this pass, this one is <strong>confirmed live-reachable</strong>, not just a theoretical API-contract hole: <code>components/create-shift-dialog.tsx</code> binds it to a real single-line <code>Input</code> with no client-side length limit either. Capped at 200 chars, kept route-local (no exact registry match &mdash; closest are <code>taskNotes</code>/1000 and <code>payrollNotes</code>/<code>transactionNotes</code>/500, all for different entities).</p>
+        <p>Code-quality review caught a real error in the plan&rsquo;s own reasoning (not the code): the plan claimed the 200-char cap matched <code>plugin/rooms/status/route.ts</code>&rsquo;s <code>note</code> field precedent &mdash; that field is actually 500 chars, not 200. The code&rsquo;s 200-char cap still stands independently justified (single-line-input UX), but the plan doc was corrected before merging rather than left with a false citation.</p>
+        <p>54/54 tests, typecheck, build all green. Deployed via <code>deploy-xiv-web.sh --green</code> (commit <code>1939382</code>), 13/13 smoke checks passed.</p>
+        <p>Manually verified live against the &ldquo;Velvet Rift&rdquo; test venue &mdash; 2/2 checks (oversized notes 400, normal notes 201 with the value persisted correctly) passed; test shift deleted after.</p>
+      </div>
+
+      <div class="note">
+        <p><span class="claim">Rollout status after 14 increments &mdash; consistency-pool audit complete.</span> All 32 non-registry-using, non-mobile routes with local zod schemas have now been checked. Final tally: 5 real gaps found and fixed hiding behind &ldquo;already has zod&rdquo; routes (Increments 8, 11 &times;3, 12, 13, 14 &mdash; several increments each covered multiple routes), the rest were already correctly bounded by hand and left untouched.</p>
+        <p>Combined with the earlier real-gap-driven phase (Increments 2-7, 9-10), the zod-validation rollout has now covered every non-mobile route with a genuinely demonstrated gap &mdash; crash bug, unbounded input, missing format check, or security bypass &mdash; that systematic scanning could find. Remaining ~55 non-mobile routes with zero zod are GET-only/no-body/cron/webhook/path-param-only, not meaningful candidates for this pattern. This is a natural completion point for the rollout as a whole, pending any future real-gap or consistency work the user wants to pick up separately.</p>
+      </div>
+    </section>
+
+    <section class="subsystem" id="mobile">
+      <h2><span class="num">05</span> Mobile removal</h2>
+      <p class="intro">The mobile app was removed entirely, per the user&rsquo;s 2026-08-14 decision. Note: increments shipped after that date deliberately did not target <code>/api/mobile/*</code> routes.</p>
+
+      <div class="note">
+        <p><span class="tag">2026-08-14</span><span class="claim">Mobile deprecation note: the user has decided to remove the mobile app (<code>apps/mobile</code>) entirely</span> &mdash; see memory <code>project_xiv_app_mobile_v1.md</code>. Future zod-validation increments should not target <code>/api/mobile/*</code> routes; treat them as candidates for removal, not further hardening.</p>
+      </div>
+
+      <div class="note">
+        <p><span class="tag">Stage 1 complete</span><span class="claim">Mobile removal &mdash; Stage 1 complete (2026-08-14).</span> <code>apps/mobile</code>, all 25 <code>/api/mobile/*</code> routes, and the 3 mobile-exclusive lib files (<code>lib/mobile-auth-guard.ts</code>, <code>lib/mobile-operator-auth.ts</code>, <code>lib/auth/mobile-auth.ts</code>) are deleted. <code>RefreshToken</code>, <code>DeviceToken</code>, and <code>NotificationPreference</code> are removed from <code>schema.prisma</code> (code-only &mdash; <code>prisma db push</code> has NOT been run against the live database yet).</p>
+        <p><code>dispatch-notifications/route.ts</code> had its Expo push-send step removed (now just marks due <code>PendingNotification</code> rows as sent with no delivery &mdash; see the route&rsquo;s own doc comment); <code>poll-push-receipts/route.ts</code> was deleted outright since its entire purpose was polling receipts for the now-removed push-send call.</p>
+        <p>Stage 2 (deploy) is held until the current live event ends; Stage 3 (<code>pg_dump</code> backup + live schema drop) happens in the next Tuesday 09:00&ndash;11:00 UTC maintenance window. See <code>docs/superpowers/specs/2026-08-14-mobile-removal-design.md</code> for the full design and audit findings.</p>
+      </div>
+    </section>
+
+    <section class="subsystem" id="sweep">
+      <h2><span class="num">06</span> Codebase sweep</h2>
+      <p class="intro">The findings report plus every Stage 2 cluster resolved so far. Cluster #1, #2/#3, #6, and #7 are closed; cluster #4 and <code>lib/middleware/with-rate-limit.ts</code> remain open, along with the plugin&rsquo;s 9 C# findings.</p>
+
+      <div class="note">
+        <p><span class="tag">Stage 1</span><span class="tag">recovered 2026-08-16</span><span class="claim">Codebase sweep Stage 1 findings report &mdash; recovered 2026-08-16.</span> The report (<code>docs/superpowers/plans/2026-08-15-codebase-sweep-findings-report.md</code>) and its raw knip/jscpd/plugin-audit data existed only on an orphaned, never-merged worktree branch (<code>worktree-codebase-sweep-stage1</code>) &mdash; too stale to merge directly by the time this was noticed, so the final (3-audit-pass) version was cherry-picked into <code>main</code> as a fresh docs commit instead. Stage 2 Increment 1 (dead-code deletion) was already separately merged earlier &mdash; see commit <code>3b9a62c</code>.</p>
+      </div>
+
+      <div class="note">
+        <p><span class="tag">Stage 2</span><span class="tag">DONE 2026-08-16</span><span class="claim">Codebase sweep Stage 2 &mdash; rate-limit 429-response dedup (clusters #2/#3).</span> <a href="2026-08-16-ratelimit-response-dedup.md">2026-08-16-ratelimit-response-dedup.md</a>. Closes findings report clusters #2/#3 (HIGH value, security-relevant): the 429 rate-limit response shape and IP-extraction logic were hand-rolled identically in 3 places (twice inside <code>lib/api/plugin-rate-limit.ts</code>, once in <code>app/api/auth/[...nextauth]/route.ts</code>).</p>
+        <p>Built via subagent-driven-development (3 code tasks + spec/quality review gates each, 1 fix cycle &mdash; a test-quality nit where <code>4500ms</code> didn&rsquo;t actually discriminate <code>ceil</code> from <code>round</code> due to JS&rsquo;s round-half-up tie-breaking, fixed to <code>4200ms</code>). Extracted <code>getIp</code>/<code>buildRateLimitResponse</code> into the existing canonical <code>lib/rate-limit.ts</code> (6 new unit tests, this module had zero coverage before), migrated both duplicate call sites onto them &mdash; pure refactor, byte-for-byte identical response shape confirmed by review.</p>
+        <p>70/70 tests, typecheck clean. Live-verified against the local dev stack: happy path 200, burst of 65 requests against a real plugin API key correctly 429s at request 61 with all 4 rate-limit headers populated and the exact expected JSON body, zero server-side errors during the burst; session-authenticated dashboard traffic confirmed unaffected (separate rate-limit bucket) confirming no over-broad throttling.</p>
+        <p>Code-quality review surfaced a <strong>4th duplicate site the original findings report missed</strong>: <code>lib/middleware/with-rate-limit.ts</code> has its own hand-rolled <code>X-RateLimit-*</code> header-stamping and its own <code>getIpIdentifier()</code> duplicating <code>getIp</code>&rsquo;s exact fallback chain &mdash; structurally different enough (stamps headers on <em>both</em> success and failure responses, not just 429s) that it wasn&rsquo;t a pure drop-in for this increment, left as a follow-up. Cluster #1 (20-file plugin-route auth/rate-limit call-site boilerplate) remains open &mdash; larger extraction, scoped as its own future increment.</p>
+      </div>
+
+      <div class="note">
+        <p><span class="tag">Stage 2</span><span class="tag">DONE 2026-08-16</span><span class="claim">Codebase sweep Stage 2 &mdash; plugin-route auth/rate-limit gate dedup (cluster #1).</span> <a href="2026-08-16-plugin-auth-gate-dedup.md">2026-08-16-plugin-auth-gate-dedup.md</a>. Closes findings report cluster #1 (HIGH value, the largest cluster in the whole sweep by file count): all 20 <code>/api/plugin/*</code> route files (21 preambles, since <code>patron-visits/route.ts</code> has two independent handlers) hand-duplicated the same ~15-20 line auth/rate-limit preamble (IP throttle &rarr; API-key header check &rarr; <code>validateApiKey</code> &rarr; per-key throttle).</p>
+        <p>Built via subagent-driven-development (1 helper task + 4 route-migration tasks &times; 5 files each + final verification, spec/quality review gates on every task, zero fix cycles needed &mdash; a first for this whole codebase-sweep/zod-validation lineage of rollouts). Added <code>pluginAuthGate(request, kind)</code> to <code>lib/api/plugin-auth.ts</code> (5 new unit tests), returning a discriminated union so each route&rsquo;s own try/catch, Zod validation, and log messages stay completely untouched &mdash; only the preamble collapses to 3 lines.</p>
+        <p>One deliberate, reviewed behavior change: 2 of the 20 files (<code>venues</code>, <code>events/active</code>) previously split &ldquo;missing API key&rdquo; vs &ldquo;invalid API key&rdquo; into two different 401 message strings; both now collapse to the shared gate&rsquo;s flat <code>"Unauthorized"</code> (401 status unchanged) &mdash; confirmed safe by directly reading the real Dalamud plugin&rsquo;s C# HTTP client (<code>~/VenueManager/VenueManager/XIVAppApiClient.cs</code>), which only logs the error string for debugging and never parses/displays it.</p>
+        <p>75/75 tests, typecheck clean across all 5 tasks. Live-verified against the local dev stack with a real plugin API key: happy-path 200s across 4 different routes (including both of <code>patron-visits</code>&rsquo;s independent GET/POST handlers), missing/invalid-key 401s with the correct flat message on every route including both message-text-collapse files, a write-kind route (<code>shifts/claim</code>) correctly rate-limiting and 429ing under burst load then resetting after its window, zero server-side errors throughout.</p>
+        <p>Session limits interrupted one subagent mid-rollout (Task 1&rsquo;s spec review) &mdash; recovered by doing that one review pass directly instead of via subagent, no gap in verification rigor. This closes findings report cluster #1, the last HIGH-value item &mdash; remaining open items are cluster #4/#6/#7 (MEDIUM, <code>shift-bot.ts</code>/staff-name-resolution/<code>shifts-week-view.tsx</code> internal duplication), <code>lib/middleware/with-rate-limit.ts</code> (the 4th rate-limit duplicate site found during the prior increment), and the plugin&rsquo;s own 9 C# structural-duplication findings (untouched by any web-side work).</p>
+      </div>
+
+      <div class="note">
+        <p><span class="tag">Stage 2</span><span class="tag">DONE 2026-08-16</span><span class="claim">Codebase sweep Stage 2 &mdash; shifts-week-view.tsx internal dedup (cluster #7).</span> Closes findings report cluster #7 (LOW-MEDIUM): the claimed-shift and open-shift branches in <code>components/shifts-week-view.tsx</code> both rendered a near-identical <code>CreateShiftDialog</code> &ldquo;Duplicate shift&rdquo; block, differing only in <code>prefill.mode</code>/<code>membershipId</code> vs <code>mode</code>/<code>roleId</code>.</p>
+        <p>First increment delegated to opencode (model <code>opencode/big-pickle</code>, isolated in worktree <code>sweep-cluster7-shifts-week-view</code>) rather than built directly &mdash; extracted a local <code>duplicateShiftDialog(shift, modeField)</code> helper nested in the component (closure retains <code>props</code>/<code>mounted</code>/<code>timeZone</code>), used at both call sites.</p>
+        <p>75/75 tests, typecheck clean; diff-reviewed line-by-line against the original to confirm byte-identical prop values before accepting. Live-verified against the local dev stack via the real UI (not fake data): created one assigned shift and one open (Manager-role) shift on <code>local-test-venue</code>, confirmed both branches&rsquo; duplicate button opens with the exact correct prefill (staff/role, date, times, notes), then deleted both test shifts.</p>
+        <p>Opencode tooling note: two retries needed before this worked &mdash; first hang was <code>small_model</code> (session-title generation) defaulting to a paid model with an exhausted account balance, fixed by pinning <code>small_model</code> to <code>opencode/big-pickle</code> in <code>~/.config/opencode/opencode.json</code>; second hang was transient (retried with the prompt piped from a file instead of inline, succeeded). Remaining open items unchanged except this one: cluster #4/#6 (MEDIUM), <code>lib/middleware/with-rate-limit.ts</code>, and the plugin&rsquo;s 9 C# findings.</p>
+      </div>
+
+      <div class="note">
+        <p><span class="tag">Stage 2</span><span class="tag">DONE 2026-08-16</span><span class="claim">Codebase sweep Stage 2 &mdash; staff-name resolution dedup (cluster #6).</span> Closes findings report cluster #6 (MEDIUM): <code>staffLabel</code> (<code>shift-day-dialog.tsx</code>) and <code>shiftStaffName</code> (<code>shifts-week-view.tsx</code>) had identical <code>resolveDisplayName(...)</code> bodies but different parameter types (<code>CalendarShift</code> vs <code>ShiftRow</code>) &mdash; the findings report&rsquo;s first draft had incorrectly claimed identical name/type, corrected on review.</p>
+        <p>Built directly (not delegated to opencode this time &mdash; the change was already fully scoped from reading both files, so delegation&rsquo;s exploration-offloading benefit didn&rsquo;t apply; review/test/live-check burden is the same either way). Noticed both functions only ever read <code>shift.membership</code>, never any other field, so extracted <code>staffNameOf(membership)</code> into <code>lib/shift-format.ts</code> (which already owns both <code>ShiftRow</code>/<code>CalendarShift</code> and other shared shift helpers) taking just the membership slice &mdash; sidesteps reconciling the two shift types entirely.</p>
+        <p>75/75 tests, typecheck clean. Live-verified against the local dev stack: created a test shift, confirmed the staff name renders correctly in both the week view (<code>shiftStaffName</code>&rsquo;s old call site) and the calendar day dialog (<code>staffLabel</code>&rsquo;s old call site), then cleaned up. Remaining open items: cluster #4 (HIGH, <code>shift-bot.ts</code> handler duplication), <code>lib/middleware/with-rate-limit.ts</code>, and the plugin&rsquo;s 9 C# findings.</p>
+      </div>
+    </section>
+
+    <p class="footer-note"><span class="tag">Roadmap</span> Reorganized from <code>2026-08-11-codebase-cleanup-roadmap.md</code> &mdash; nothing here was invented, only moved out of the source.</p>
+  </main>
+</div>
+
+</body></html>
