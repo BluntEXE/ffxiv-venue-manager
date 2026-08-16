@@ -1,8 +1,7 @@
 import { NextRequest, NextResponse } from "next/server"
 import { z } from "zod"
 import { prisma } from "@/lib/prisma"
-import { validateApiKey, checkPermission } from "@/lib/api/plugin-auth"
-import { enforcePluginRateLimit, enforcePluginIpRateLimit } from "@/lib/api/plugin-rate-limit"
+import { pluginAuthGate, checkPermission } from "@/lib/api/plugin-auth"
 
 /**
  * GET /api/plugin/shifts?venueId=X
@@ -18,21 +17,9 @@ const querySchema = z.object({
 
 export async function GET(request: NextRequest) {
   try {
-    const __ipLimited = await enforcePluginIpRateLimit(request)
-    if (__ipLimited) return __ipLimited
-
-    const apiKey = request.headers.get("x-api-key")
-    if (!apiKey) {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
-    }
-
-    const auth = await validateApiKey(apiKey)
-    if (!auth || !auth.userId) {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
-    }
-
-    const limited = await enforcePluginRateLimit(apiKey, "read")
-    if (limited) return limited
+    const gate = await pluginAuthGate(request, "read")
+    if (!gate.ok) return gate.response
+    const { auth } = gate
 
     const params = Object.fromEntries(request.nextUrl.searchParams)
     const parsed = querySchema.safeParse(params)
