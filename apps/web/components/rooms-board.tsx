@@ -2,6 +2,8 @@
 
 import { useState, useEffect } from "react"
 import { DataTable } from "@/components/ui/data-table"
+import { Input } from "@/components/ui/input"
+import { Button } from "@/components/ui/button"
 
 export type RoomItem = {
   id: string
@@ -287,17 +289,18 @@ export function RoomsBoard({ venueId, canManage, rooms }: { venueId: string; can
       </div>
 
       {canManage && (
-        <div style={{ display: "flex", gap: 6, marginTop: 16 }}>
-          <input
+        <div className="panel mt-4 p-4 flex items-center gap-3">
+          <Input
             type="text"
             value={newRoomName}
             onChange={(e) => setNewRoomName(e.target.value)}
             placeholder="New room name…"
-            style={{ fontSize: "0.85rem", padding: "4px 8px", width: 200 }}
+            className="max-w-[240px]"
+            onKeyDown={(e) => e.key === "Enter" && addRoom()}
           />
-          <button type="button" className="tag vip" disabled={!newRoomName.trim() || adding} onClick={addRoom}>
-            Add Room
-          </button>
+          <Button type="button" size="sm" disabled={!newRoomName.trim() || adding} onClick={addRoom}>
+            {adding ? "Adding…" : "Add Room"}
+          </Button>
         </div>
       )}
     </div>
