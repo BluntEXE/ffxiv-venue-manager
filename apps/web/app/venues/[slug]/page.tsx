@@ -36,7 +36,7 @@ import { SiteFooter } from "@/components/site-footer"
 import { VenueScheduleDisplay } from "@/components/venue-schedule-display"
 import { FfxivvenuesScheduleDisplay } from "@/components/ffxivvenues-schedule-display"
 import type { FfxivVenueData } from "@/lib/ffxivvenues"
-import { isOpenNow } from "@/lib/schedule-utils"
+import { isVenueOpenNow } from "@/lib/schedule-utils"
 
 export default async function VenueProfilePage({
   params,
@@ -80,9 +80,11 @@ export default async function VenueProfilePage({
 
   const liveEvent     = venue.events.find(e => e.status === "ACTIVE")
   const upcomingEvents = venue.events.filter(e => e.status === "PUBLISHED")
-  const openFromSchedule = isOpenNow(venue.scheduleEntries)
-  const openFromFfxivvenues = (venue.venueSchedule?.data as FfxivVenueData | null)?.resolution?.isNow === true
-  const isOpen = !!liveEvent || openFromSchedule || openFromFfxivvenues
+  const isOpen = isVenueOpenNow({
+    hasActiveEvent: !!liveEvent,
+    scheduleEntries: venue.scheduleEntries,
+    ffxivResolutionIsNow: (venue.venueSchedule?.data as FfxivVenueData | null)?.resolution?.isNow === true,
+  })
   const tzLabel       = getServerTimeLabel(venue.dataCenter)
   const todayUTCDay   = new Date().getUTCDay()
   const DAY_NAMES     = ["Sunday","Monday","Tuesday","Wednesday","Thursday","Friday","Saturday"]

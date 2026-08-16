@@ -80,6 +80,21 @@ export function isOpenNow(entries: ScheduleEntry[]): boolean {
   return entries.some(isEntryActiveNow)
 }
 
+/**
+ * Canonical "is this venue open right now" check, combining every signal a
+ * venue can be open from. Used to keep the venue detail page, Discover, and
+ * Following in agreement — each previously computed this differently
+ * (Discover/Following ignored the schedule entirely; only the detail page
+ * combined all three signals).
+ */
+export function isVenueOpenNow(opts: {
+  hasActiveEvent: boolean
+  scheduleEntries: ScheduleEntry[]
+  ffxivResolutionIsNow?: boolean
+}): boolean {
+  return opts.hasActiveEvent || isOpenNow(opts.scheduleEntries) || opts.ffxivResolutionIsNow === true
+}
+
 export type ResolvedOpening = { start: string; end: string | null }
 
 /**

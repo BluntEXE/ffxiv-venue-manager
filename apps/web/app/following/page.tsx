@@ -10,6 +10,8 @@ export const metadata: Metadata = {
 import { prisma } from "@/lib/prisma"
 import { FollowingClient } from "@/components/following-client"
 import { ExploreLayout } from "@/components/explore-layout"
+import { isVenueOpenNow } from "@/lib/schedule-utils"
+import type { FfxivVenueData } from "@/lib/ffxivvenues"
 
 export const dynamic = "force-dynamic"
 
@@ -38,6 +40,8 @@ export default async function FollowingPage() {
             take: 1,
             select: { title: true },
           },
+          scheduleEntries: true,
+          venueSchedule: { select: { data: true } },
         },
       },
     },
@@ -56,7 +60,11 @@ export default async function FollowingPage() {
     apartment:   f.venue.apartment,
     location:    f.venue.location,
     followCount: f.venue._count.follows,
-    isOpenNow:   f.venue.events.length > 0,
+    isOpenNow:   isVenueOpenNow({
+      hasActiveEvent: f.venue.events.length > 0,
+      scheduleEntries: f.venue.scheduleEntries,
+      ffxivResolutionIsNow: (f.venue.venueSchedule?.data as FfxivVenueData | null)?.resolution?.isNow === true,
+    }),
     activeEvent: f.venue.events[0] ?? null,
   }))
 
