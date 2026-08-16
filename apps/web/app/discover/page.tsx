@@ -5,7 +5,6 @@ import { prisma } from "@/lib/prisma"
 import { DiscoverClient, type DiscoverVenue } from "@/components/discover-client"
 import { ExploreLayout } from "@/components/explore-layout"
 import { isVenueOpenNow } from "@/lib/schedule-utils"
-import type { FfxivVenueData } from "@/lib/ffxivvenues"
 
 export const metadata: Metadata = {
   title: "Discover Venues",
@@ -79,7 +78,7 @@ export default async function DiscoverPage() {
       isOpenNow:     isVenueOpenNow({
         hasActiveEvent: activeEvent !== null,
         scheduleEntries: v.scheduleEntries,
-        ffxivResolutionIsNow: (v.venueSchedule?.data as FfxivVenueData | null)?.resolution?.isNow === true,
+        ffxivSchedule: v.venueSchedule?.data,
       }),
       isTonightOpen: v.events.length > 0,
       activeEvent:   activeEvent ? { title: activeEvent.title } : null,

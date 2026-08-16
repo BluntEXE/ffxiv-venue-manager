@@ -83,7 +83,7 @@ export default async function VenueProfilePage({
   const isOpen = isVenueOpenNow({
     hasActiveEvent: !!liveEvent,
     scheduleEntries: venue.scheduleEntries,
-    ffxivResolutionIsNow: (venue.venueSchedule?.data as FfxivVenueData | null)?.resolution?.isNow === true,
+    ffxivSchedule: venue.venueSchedule?.data,
   })
   const tzLabel       = getServerTimeLabel(venue.dataCenter)
   const todayUTCDay   = new Date().getUTCDay()

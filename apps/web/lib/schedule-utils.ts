@@ -90,9 +90,10 @@ export function isOpenNow(entries: ScheduleEntry[]): boolean {
 export function isVenueOpenNow(opts: {
   hasActiveEvent: boolean
   scheduleEntries: ScheduleEntry[]
-  ffxivResolutionIsNow?: boolean
+  ffxivSchedule?: unknown
 }): boolean {
-  return opts.hasActiveEvent || isOpenNow(opts.scheduleEntries) || opts.ffxivResolutionIsNow === true
+  const ffxivIsNow = (opts.ffxivSchedule as { resolution?: { isNow?: boolean } } | null | undefined)?.resolution?.isNow === true
+  return opts.hasActiveEvent || isOpenNow(opts.scheduleEntries) || ffxivIsNow
 }
 
 export type ResolvedOpening = { start: string; end: string | null }

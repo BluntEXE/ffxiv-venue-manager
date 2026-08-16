@@ -11,7 +11,6 @@ import { prisma } from "@/lib/prisma"
 import { FollowingClient } from "@/components/following-client"
 import { ExploreLayout } from "@/components/explore-layout"
 import { isVenueOpenNow } from "@/lib/schedule-utils"
-import type { FfxivVenueData } from "@/lib/ffxivvenues"
 
 export const dynamic = "force-dynamic"
 
@@ -63,7 +62,7 @@ export default async function FollowingPage() {
     isOpenNow:   isVenueOpenNow({
       hasActiveEvent: f.venue.events.length > 0,
       scheduleEntries: f.venue.scheduleEntries,
-      ffxivResolutionIsNow: (f.venue.venueSchedule?.data as FfxivVenueData | null)?.resolution?.isNow === true,
+      ffxivSchedule: f.venue.venueSchedule?.data,
     }),
     activeEvent: f.venue.events[0] ?? null,
   }))
