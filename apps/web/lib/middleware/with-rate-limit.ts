@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server"
-import { checkLimit } from "@/lib/rate-limit"
+import { checkLimit, getIp, buildRateLimitResponse } from "@/lib/rate-limit"
 
 /**
  * Rate limiting middleware for web API routes.
@@ -24,29 +24,18 @@ export function withRateLimit<T = unknown>(
     const windowSec = Math.max(1, Math.floor(parseWindow(options?.window || "1 m") / 1000))
     const identifier = options?.getIdentifier
       ? await options.getIdentifier(req)
-      : `ip:${getIpIdentifier(req)}:${req.method}:${req.nextUrl.pathname}`
+      : `ip:${getIp(req)}:${req.method}:${req.nextUrl.pathname}`
 
     const rl = await checkLimit(identifier, maxRequests, windowSec)
 
-    const response = rl.success
-      ? await handler(req, context)
-      : NextResponse.json(
-          {
-            error: "Too many requests",
-            message: "You have exceeded the rate limit. Please try again later.",
-          },
-          { status: 429 }
-        )
+    if (!rl.success) {
+      return buildRateLimitResponse(rl, "You have exceeded the rate limit. Please try again later.")
+    }
 
+    const response = await handler(req, context)
     response.headers.set("X-RateLimit-Limit", rl.limit.toString())
     response.headers.set("X-RateLimit-Remaining", rl.remaining.toString())
     response.headers.set("X-RateLimit-Reset", rl.reset.toString())
-    if (!rl.success) {
-      response.headers.set(
-        "Retry-After",
-        String(Math.ceil((rl.reset - Date.now()) / 1000))
-      )
-    }
     return response
   }
 }
@@ -65,12 +54,3 @@ function parseWindow(window: string): number {
   return value * multipliers[unit]
 }
 
-function getIpIdentifier(req: NextRequest): string {
-  const forwarded = req.headers.get("x-forwarded-for")
-  const realIp = req.headers.get("x-real-ip")
-  const cfConnectingIp = req.headers.get("cf-connecting-ip")
-  if (forwarded) return forwarded.split(",")[0].trim()
-  if (realIp) return realIp
-  if (cfConnectingIp) return cfConnectingIp
-  return "anonymous"
-}
