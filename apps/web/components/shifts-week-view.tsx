@@ -12,8 +12,7 @@ import { OpenShiftChip } from "@/components/open-shift-chip"
 import { DeleteShiftButton } from "@/components/delete-shift-button"
 import { ClockShiftButton } from "@/components/clock-shift-button"
 import { localDayKey, localHourLabel, browserTimeZone, localTimeInput } from "@/lib/local-day"
-import { resolveDisplayName } from "@/lib/display-name"
-import type { ShiftRow } from "@/lib/shift-format"
+import { staffNameOf, type ShiftRow } from "@/lib/shift-format"
 
 const ST_TZ = "Etc/UTC"
 
@@ -86,15 +85,6 @@ export function ShiftsWeekView(props: ShiftsWeekViewProps) {
       return m === 0 ? `${h12}${ampm}` : `${h12}:${String(m).padStart(2, "0")}${ampm}`
     })()
 
-  function shiftStaffName(shift: ShiftRow): string {
-    return resolveDisplayName({
-      characterName: shift.membership?.user?.characters?.[0]?.characterName,
-      nickname: shift.membership?.nickname,
-      displayName: shift.membership?.user?.displayName,
-      discordName: shift.membership?.user?.name,
-    })
-  }
-
   function duplicateShiftDialog(
     shift: ShiftRow,
     modeField: { mode: "assign"; membershipId: string | undefined } | { mode: "open"; roleId: string | undefined },
@@ -150,7 +140,7 @@ export function ShiftsWeekView(props: ShiftsWeekViewProps) {
     if (!staffMap.has(mid)) {
       staffMap.set(mid, {
         membershipId: mid,
-        name: shiftStaffName(shift),
+        name: staffNameOf(shift.membership),
         cells: new Map(),
       })
     }
@@ -352,12 +342,12 @@ export function ShiftsWeekView(props: ShiftsWeekViewProps) {
                         <Avatar className="h-8 w-8 flex-shrink-0">
                           <AvatarImage src={shift.membership?.user?.image ?? undefined} />
                           <AvatarFallback className="text-[0.65rem] font-bold">
-                            {shiftStaffName(shift).slice(0, 2).toUpperCase()}
+                            {staffNameOf(shift.membership).slice(0, 2).toUpperCase()}
                           </AvatarFallback>
                         </Avatar>
                         <div className="flex-1 min-w-0">
                           <p className="text-sm font-medium truncate">
-                            {shiftStaffName(shift)}
+                            {staffNameOf(shift.membership)}
                           </p>
                           <p className="text-xs text-muted-foreground">
                             {hourLabelOf(shift.scheduledStart)} — {hourLabelOf(shift.scheduledEnd)}
@@ -368,10 +358,10 @@ export function ShiftsWeekView(props: ShiftsWeekViewProps) {
                             {shift.status}
                           </Badge>
                           {props.canManage && shift.status === "SCHEDULED" && (
-                            <ClockShiftButton venueSlug={props.slug} shiftId={shift.id} action="clock-in" staffName={shiftStaffName(shift)} />
+                            <ClockShiftButton venueSlug={props.slug} shiftId={shift.id} action="clock-in" staffName={staffNameOf(shift.membership)} />
                           )}
                           {props.canManage && shift.status === "ACTIVE" && (
-                            <ClockShiftButton venueSlug={props.slug} shiftId={shift.id} action="clock-out" staffName={shiftStaffName(shift)} />
+                            <ClockShiftButton venueSlug={props.slug} shiftId={shift.id} action="clock-out" staffName={staffNameOf(shift.membership)} />
                           )}
                           {!props.canManage && shift.membershipId === props.currentMembershipId && shift.status === "SCHEDULED" && (
                             <ClockShiftButton venueSlug={props.slug} shiftId={shift.id} action="clock-in" staffName="yourself" />

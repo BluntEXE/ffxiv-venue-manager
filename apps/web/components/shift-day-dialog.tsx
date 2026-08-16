@@ -18,9 +18,8 @@ import { DeleteShiftButton } from "@/components/delete-shift-button"
 import { OpenShiftChip } from "@/components/open-shift-chip"
 import { ClaimedShiftChip } from "@/components/claimed-shift-chip"
 import { Copy } from "lucide-react"
-import { dayKeyFor, hourLabelFor, statusBadgeClass, type CalendarShift, type StaffMember, type RoleOption } from "@/lib/shift-format"
+import { dayKeyFor, hourLabelFor, statusBadgeClass, staffNameOf, type CalendarShift, type StaffMember, type RoleOption } from "@/lib/shift-format"
 import { browserTimeZone, localTimeInput } from "@/lib/local-day"
-import { resolveDisplayName } from "@/lib/display-name"
 
 interface ShiftDayDialogProps {
   date: Date | null
@@ -32,15 +31,6 @@ interface ShiftDayDialogProps {
   venueId: string
   staffForDialog: StaffMember[]
   roles: RoleOption[]
-}
-
-function staffLabel(shift: CalendarShift): string {
-  return resolveDisplayName({
-    characterName: shift.membership?.user?.characters?.[0]?.characterName,
-    nickname: shift.membership?.nickname,
-    displayName: shift.membership?.user?.displayName,
-    discordName: shift.membership?.user?.name,
-  })
 }
 
 export function ShiftDayDialog({
@@ -148,12 +138,12 @@ export function ShiftDayDialog({
                     <Avatar className="h-7 w-7 flex-shrink-0">
                       <AvatarImage src={shift.membership?.user?.image ?? undefined} />
                       <AvatarFallback className="text-[0.62rem] font-bold">
-                        {staffLabel(shift).slice(0, 2).toUpperCase()}
+                        {staffNameOf(shift.membership).slice(0, 2).toUpperCase()}
                       </AvatarFallback>
                     </Avatar>
                   )}
                   <div className="min-w-0">
-                    {canManage && <div className="text-sm font-medium truncate">{staffLabel(shift)}</div>}
+                    {canManage && <div className="text-sm font-medium truncate">{staffNameOf(shift.membership)}</div>}
                     <div className="text-xs text-muted-foreground">
                       {hourLabelFor(shift.scheduledStart, timeZone)}–{hourLabelFor(shift.scheduledEnd, timeZone)}
                       {shift.role?.name ? ` · ${shift.role.name}` : ""}
@@ -178,7 +168,7 @@ export function ShiftDayDialog({
                           venueSlug={venueSlug}
                           shiftId={shift.id}
                           action="clock-in"
-                          staffName={canManage ? staffLabel(shift) : "yourself"}
+                          staffName={canManage ? staffNameOf(shift.membership) : "yourself"}
                         />
                       )}
                       {(canManage || shift.membershipId === currentMembershipId) && shift.status === "ACTIVE" && (
@@ -186,7 +176,7 @@ export function ShiftDayDialog({
                           venueSlug={venueSlug}
                           shiftId={shift.id}
                           action="clock-out"
-                          staffName={canManage ? staffLabel(shift) : "yourself"}
+                          staffName={canManage ? staffNameOf(shift.membership) : "yourself"}
                         />
                       )}
                       {canManage && (

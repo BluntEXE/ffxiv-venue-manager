@@ -2,6 +2,7 @@
 
 import { Prisma } from "@/generated/prisma/client"
 import { localDayKey, localHourLabel } from "./local-day"
+import { resolveDisplayName } from "./display-name"
 
 // FFXIV server time = UTC (see apps/web/app/dashboard/[slug]/shifts/page.tsx).
 // These mirror that page's private utcDayKey/fmtHour helpers so the calendar
@@ -112,4 +113,13 @@ export interface CalendarShift {
     } | null
   } | null
   role: { name: string } | null
+}
+
+export function staffNameOf(membership: CalendarShift["membership"]): string {
+  return resolveDisplayName({
+    characterName: membership?.user?.characters?.[0]?.characterName,
+    nickname: membership?.nickname,
+    displayName: membership?.user?.displayName,
+    discordName: membership?.user?.name,
+  })
 }
