@@ -1,7 +1,9 @@
 import { nanoid } from 'nanoid'
 import crypto from 'crypto'
+import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
 import { venueEventBus } from '@/lib/sse/venue-events'
+import { enforcePluginIpRateLimit, enforcePluginRateLimit } from '@/lib/api/plugin-rate-limit'
 
 /**
  * SHA-256 hash of an API key for storage + lookup. The plaintext key is
@@ -107,6 +109,42 @@ export async function validateApiKey(apiKey: string): Promise<{
     user: apiKeyRecord.user,
     venues
   }
+}
+
+export type PluginAuth = { userId: string; venues: string[]; user: NonNullable<Awaited<ReturnType<typeof validateApiKey>>>['user'] }
+
+export type PluginAuthGateResult =
+  | { ok: true; auth: PluginAuth }
+  | { ok: false; response: NextResponse }
+
+/**
+ * Shared preamble for every /api/plugin/* route: per-IP throttle, API-key
+ * presence check, key validation, per-key throttle. Kept out of each
+ * route's own try/catch on purpose - callers unwrap this before their own
+ * business-logic try/catch begins, so their existing per-route error
+ * messages and Zod-validation branches are untouched by this helper.
+ */
+export async function pluginAuthGate(
+  request: NextRequest,
+  kind: 'read' | 'write'
+): Promise<PluginAuthGateResult> {
+  const ipLimited = await enforcePluginIpRateLimit(request)
+  if (ipLimited) return { ok: false, response: ipLimited }
+
+  const apiKey = request.headers.get('x-api-key')
+  if (!apiKey) {
+    return { ok: false, response: NextResponse.json({ error: 'Unauthorized' }, { status: 401 }) }
+  }
+
+  const auth = await validateApiKey(apiKey)
+  if (!auth || !auth.userId) {
+    return { ok: false, response: NextResponse.json({ error: 'Unauthorized' }, { status: 401 }) }
+  }
+
+  const limited = await enforcePluginRateLimit(apiKey, kind)
+  if (limited) return { ok: false, response: limited }
+
+  return { ok: true, auth: { userId: auth.userId, venues: auth.venues, user: auth.user } }
 }
 
 /**
