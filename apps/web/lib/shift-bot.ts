@@ -122,6 +122,59 @@ async function refreshEmbed(embedRecord: {
   await editBotMessage(embedRecord.channelId, embedRecord.discordMessageId, payload)
 }
 
+type EmbedWithRelations = {
+  id: string
+  templateName: string
+  scheduledStart: Date
+  scheduledEnd: Date
+  slots: number
+  waitlist: unknown
+  channelId: string
+  discordMessageId: string
+  event: { title: string } | null
+  venue: { name: string; settings: unknown } | null
+}
+
+function extractThumbnailUrl(venue: { settings: unknown } | null): string | undefined {
+  const settings = venue?.settings as Record<string, unknown> | null
+  const shiftBot = settings?.shiftBot as { thumbnailUrl?: string; cachedGuildIconUrl?: string } | undefined
+  return shiftBot?.thumbnailUrl || shiftBot?.cachedGuildIconUrl
+}
+
+/**
+ * Re-derive eventTitle/venueName/thumbnailUrl from the embed's relations and refresh it.
+ */
+async function refreshEmbedFromRecord(embed: EmbedWithRelations, overrides?: { waitlist?: WaitlistEntry[] }) {
+  await refreshEmbed({
+    ...embed,
+    ...overrides,
+    eventTitle: embed.event?.title ?? "",
+    venueName: embed.venue?.name ?? "",
+    thumbnailUrl: extractThumbnailUrl(embed.venue),
+  })
+}
+
+/**
+ * Resolve the Discord user's active membership at this venue and any existing
+ * non-cancelled shift they hold on this embed. Each step short-circuits to
+ * null on failure — callers branch on the result themselves rather than this
+ * helper enforcing a single error-message policy.
+ */
+async function resolveMembershipAndShift(embedId: string, venueId: string, discordUserId: string) {
+  const user = await prisma.user.findFirst({ where: { discordId: discordUserId } })
+  if (!user) return { user: null, membership: null, shift: null }
+
+  const membership = await prisma.membership.findFirst({
+    where: { userId: user.id, venueId, status: "active" },
+  })
+  if (!membership) return { user, membership: null, shift: null }
+
+  const shift = await prisma.shift.findFirst({
+    where: { shiftSignupEmbedId: embedId, membershipId: membership.id, status: { not: "CANCELLED" } },
+  })
+  return { user, membership, shift }
+}
+
 export async function handleShiftAccept(
   embedId: string,
   discordUserId: string,
@@ -138,17 +191,9 @@ export async function handleShiftAccept(
 
   if (!embed || embed.cancelledAt) return { content: "This shift is no longer available." }
 
-  const user = await prisma.user.findFirst({ where: { discordId: discordUserId } })
+  const { user, membership, shift: existing } = await resolveMembershipAndShift(embedId, embed.venueId, discordUserId)
   if (!user) return { content: "You need to sign up at xivvenuemanager.com first." }
-
-  const membership = await prisma.membership.findFirst({
-    where: { userId: user.id, venueId: embed.venueId, status: "active" },
-  })
   if (!membership) return { content: "You are not a staff member of this venue." }
-
-  const existing = await prisma.shift.findFirst({
-    where: { shiftSignupEmbedId: embedId, membershipId: membership.id, status: { not: "CANCELLED" } },
-  })
   if (existing) return { content: "You are already signed up for this shift." }
 
   const waitlist = embed.waitlist as unknown as WaitlistEntry[]
@@ -193,9 +238,7 @@ export async function handleShiftAccept(
       include: { event: { select: { title: true } }, venue: { select: { name: true, settings: true } } },
     })
     if (updatedEmbed) {
-      const settings = updatedEmbed.venue?.settings as Record<string, unknown> | null
-      const shiftBot = settings?.shiftBot as { thumbnailUrl?: string; cachedGuildIconUrl?: string } | undefined
-      await refreshEmbed({ ...updatedEmbed, eventTitle: updatedEmbed.event?.title ?? "", venueName: updatedEmbed.venue?.name ?? "", thumbnailUrl: shiftBot?.thumbnailUrl || shiftBot?.cachedGuildIconUrl })
+      await refreshEmbedFromRecord(updatedEmbed)
     }
     return { content: `Slots are full — you have been added to the waitlist (position ${newWaitlistPosition}).` }
   }
@@ -223,9 +266,7 @@ export async function handleShiftAccept(
     }
   }
 
-  const settings = embed.venue?.settings as Record<string, unknown> | null
-  const shiftBot = settings?.shiftBot as { thumbnailUrl?: string; cachedGuildIconUrl?: string } | undefined
-  await refreshEmbed({ ...embed, eventTitle: embed.event?.title ?? "", venueName: embed.venue?.name ?? "", thumbnailUrl: shiftBot?.thumbnailUrl || shiftBot?.cachedGuildIconUrl })
+  await refreshEmbedFromRecord(embed)
   return { content: `You are signed up for **${embed.templateName}**. See you there!` }
 }
 
@@ -239,40 +280,21 @@ export async function handleShiftDecline(
   })
   if (!embed) return { content: "Shift not found." }
 
-  const user = await prisma.user.findFirst({ where: { discordId: discordUserId } })
-
-  if (user) {
-    const membership = await prisma.membership.findFirst({
-      where: { userId: user.id, venueId: embed.venueId, status: "active" },
-    })
-
-    if (membership) {
-      const shift = await prisma.shift.findFirst({
-        where: { shiftSignupEmbedId: embedId, membershipId: membership.id, status: { not: "CANCELLED" } },
-      })
-
-      if (shift) {
-        await prisma.shift.update({ where: { id: shift.id }, data: { status: "CANCELLED" } })
-
-        const settings = embed.venue?.settings as Record<string, unknown> | null
-        const shiftBot = settings?.shiftBot as { thumbnailUrl?: string; cachedGuildIconUrl?: string } | undefined
-        const embedWithMeta = { ...embed, eventTitle: embed.event?.title ?? "", venueName: embed.venue?.name ?? "", thumbnailUrl: shiftBot?.thumbnailUrl || shiftBot?.cachedGuildIconUrl }
-        await refreshEmbed(embedWithMeta)
-        if ((embed.waitlist as unknown as WaitlistEntry[]).length > 0) {
-          return { content: "You have been removed from this shift. A slot is now available for those on the maybe list." }
-        }
-        return { content: "You have been removed from this shift." }
-      }
+  const { shift } = await resolveMembershipAndShift(embedId, embed.venueId, discordUserId)
+  if (shift) {
+    await prisma.shift.update({ where: { id: shift.id }, data: { status: "CANCELLED" } })
+    await refreshEmbedFromRecord(embed)
+    if ((embed.waitlist as unknown as WaitlistEntry[]).length > 0) {
+      return { content: "You have been removed from this shift. A slot is now available for those on the maybe list." }
     }
+    return { content: "You have been removed from this shift." }
   }
 
   const waitlist = embed.waitlist as unknown as WaitlistEntry[]
   const newWaitlist = waitlist.filter((w) => w.discordUserId !== discordUserId)
   if (newWaitlist.length < waitlist.length) {
     await prisma.shiftSignupEmbed.update({ where: { id: embedId }, data: { waitlist: asJsonArray(newWaitlist) } })
-    const settings = embed.venue?.settings as Record<string, unknown> | null
-    const shiftBot = settings?.shiftBot as { thumbnailUrl?: string; cachedGuildIconUrl?: string } | undefined
-    await refreshEmbed({ ...embed, waitlist: newWaitlist, eventTitle: embed.event?.title ?? "", venueName: embed.venue?.name ?? "", thumbnailUrl: shiftBot?.thumbnailUrl || shiftBot?.cachedGuildIconUrl })
+    await refreshEmbedFromRecord(embed, { waitlist: newWaitlist })
     return { content: "You have been removed from the waitlist." }
   }
 
@@ -294,27 +316,15 @@ export async function handleShiftMaybe(
   const alreadyWaiting = waitlist.some((w) => w.discordUserId === discordUserId)
   if (alreadyWaiting) return { content: "You are already on the maybe list." }
 
-  const user = await prisma.user.findFirst({ where: { discordId: discordUserId } })
-  if (user) {
-    const membership = await prisma.membership.findFirst({
-      where: { userId: user.id, venueId: embed.venueId, status: "active" },
-    })
-    if (membership) {
-      const existing = await prisma.shift.findFirst({
-        where: { shiftSignupEmbedId: embedId, membershipId: membership.id, status: { not: "CANCELLED" } },
-      })
-      if (existing) return { content: "You are already accepted for this shift. Click Decline first to move to maybe." }
-    }
-  }
+  const { shift: existing } = await resolveMembershipAndShift(embedId, embed.venueId, discordUserId)
+  if (existing) return { content: "You are already accepted for this shift. Click Decline first to move to maybe." }
 
   const newWaitlist: WaitlistEntry[] = [
     ...waitlist,
     { discordUserId, discordUsername, signedUpAt: new Date().toISOString() },
   ]
   await prisma.shiftSignupEmbed.update({ where: { id: embedId }, data: { waitlist: asJsonArray(newWaitlist) } })
-  const settings = embed.venue?.settings as Record<string, unknown> | null
-  const shiftBot = settings?.shiftBot as { thumbnailUrl?: string; cachedGuildIconUrl?: string } | undefined
-  await refreshEmbed({ ...embed, waitlist: newWaitlist, eventTitle: embed.event?.title ?? "", venueName: embed.venue?.name ?? "", thumbnailUrl: shiftBot?.thumbnailUrl || shiftBot?.cachedGuildIconUrl })
+  await refreshEmbedFromRecord(embed, { waitlist: newWaitlist })
   return { content: "Marked as maybe — you will be notified if a slot opens up." }
 }
 
