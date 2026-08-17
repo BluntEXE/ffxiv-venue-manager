@@ -702,7 +702,7 @@ export default async function Home() {
                   We use
                 </div>
                 <div className="flex flex-wrap gap-2">
-                  {["Schedule sync", "Open Now status", "2-hourly auto-sync"].map((t) => (
+                  {["Schedule sync", "Open Now status"].map((t) => (
                     <span
                       key={t}
                       className="text-[0.75rem] px-2.5 py-1 rounded-full border border-[var(--blue-015)] bg-[var(--blue-008)] text-[var(--xiv-blue)]"
@@ -714,6 +714,62 @@ export default async function Home() {
               </div>
               <div className="flex items-center gap-1.5 text-[0.8rem] text-[var(--xiv-blue)] group-hover:underline">
                 Visit ffxivvenues.com
+                <svg
+                  className="w-3.5 h-3.5 transition-transform group-hover:translate-x-0.5"
+                  xmlns="http://www.w3.org/2000/svg"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="2"
+                >
+                  <path d="M5 12h14M12 5l7 7-7 7" />
+                </svg>
+              </div>
+            </a>
+
+            {/* Frogge */}
+            <a
+              href="https://discord.com/oauth2/authorize?client_id=1224902245821321338"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="group rounded-xl border border-[var(--blue-018)] bg-[var(--card)] p-7 flex flex-col gap-5 transition-all duration-[250ms] hover:border-[rgba(0,180,255,0.45)] hover:shadow-[0_0_20px_rgba(0,180,255,0.07),inset_0_1px_0_rgba(0,180,255,0.12)] hover:-translate-y-0.5 xiv-scroll-reveal"
+            >
+              <div className="flex items-center gap-4">
+                <div className="w-14 h-14 rounded-xl overflow-hidden flex-shrink-0 bg-black flex items-center justify-center">
+                  <Image
+                    src="/partners/frogge-logo.png"
+                    alt="Frogge"
+                    width={56}
+                    height={56}
+                    className="object-contain"
+                  />
+                </div>
+                <div>
+                  <p className="font-[var(--font-outfit)] font-semibold text-[1.1rem]">Frogge</p>
+                  <p className="text-[0.78rem] text-[var(--xiv-blue)]">Discord Management for Venues</p>
+                </div>
+              </div>
+              <p className="text-[0.88rem] text-muted-foreground leading-[1.6]">
+                A comprehensive Discord application for managing all FFXIV venue-related needs in the comfort of your
+                own server.
+              </p>
+              <div className="mt-auto">
+                <div className="text-[0.78rem] text-[var(--fg-faint)] font-medium uppercase tracking-wide mb-2">
+                  Frogge provides
+                </div>
+                <div className="flex flex-wrap gap-2">
+                  {["VIP Management", "Staff Tracking", "Schedule/Event Sync", "Lodestone Verification"].map((t) => (
+                    <span
+                      key={t}
+                      className="text-[0.75rem] px-2.5 py-1 rounded-full border border-[var(--blue-015)] bg-[var(--blue-008)] text-[var(--xiv-blue)]"
+                    >
+                      {t}
+                    </span>
+                  ))}
+                </div>
+              </div>
+              <div className="flex items-center gap-1.5 text-[0.8rem] text-[var(--xiv-blue)] group-hover:underline">
+                Visit Frogge
                 <svg
                   className="w-3.5 h-3.5 transition-transform group-hover:translate-x-0.5"
                   xmlns="http://www.w3.org/2000/svg"
