@@ -30,7 +30,9 @@ overrides:
   "esbuild@>=0.27.3 <0.28.1": ">=0.28.1"
   "hono": ">=4.12.25"
   "ws": ">=8.21.0"
-  "undici": ">=6.27.0"
+  "undici": "^8.10.0"
+  "body-parser@<1.20.6": "^1.20.6"
+  "@opentelemetry/core@<2.8.0": ">=2.8.0"
 
 auditConfig:
   ignoreCves:
