@@ -3,7 +3,7 @@
 import { useState } from "react"
 import { useRouter } from "next/navigation"
 import Link from "next/link"
-import { ArrowLeft, ArrowRight, Check } from "lucide-react"
+import { ArrowLeft, ArrowRight, Check, ExternalLink } from "lucide-react"
 import { FFXIV_DISTRICTS } from "@/lib/venue-location"
 
 // ── DC / World data ──────────────────────────────────────────────
@@ -198,7 +198,7 @@ export function GetStartedWizard({ userName }: { userName: string }) {
                   maxWidth: "36ch",
                 }}
               >
-                Your venue is ready. Open the dashboard to schedule events, invite staff, and go live.
+                Your venue is ready. Open the dashboard to schedule events and manage your staff.
               </p>
               <button
                 onClick={() => router.push(`/dashboard/${createdSlug}`)}
@@ -354,6 +354,8 @@ export function GetStartedWizard({ userName }: { userName: string }) {
                       cursor: "pointer",
                       fontWeight: housingType === "house" ? 600 : 400,
                       opacity: housingType === "house" ? 1 : 0.6,
+                      backgroundImage: "none",
+                      paddingRight: 13,
                     }}
                   >
                     House
@@ -367,6 +369,8 @@ export function GetStartedWizard({ userName }: { userName: string }) {
                       cursor: "pointer",
                       fontWeight: housingType === "apartment" ? 600 : 400,
                       opacity: housingType === "apartment" ? 1 : 0.6,
+                      backgroundImage: "none",
+                      paddingRight: 13,
                     }}
                   >
                     Apartment
@@ -500,9 +504,39 @@ export function GetStartedWizard({ userName }: { userName: string }) {
                   </div>
                 ))}
                 <p style={{ color: "var(--muted-foreground)", fontSize: "0.9rem", marginTop: 16, lineHeight: 1.55 }}>
-                  Ready? We'll create your venue and take you straight to the dashboard. Install the Dalamud plugin and
-                  invite staff from there.
+                  Ready? We'll create your venue and take you straight to the dashboard. Install the Dalamud plugin to
+                  start capturing patrons and logging sales.
                 </p>
+                <div
+                  style={{
+                    marginTop: 16,
+                    padding: "16px 18px",
+                    borderRadius: "var(--radius-lg)",
+                    border: "1px solid var(--blue-018)",
+                    background: "var(--card)",
+                  }}
+                >
+                  <div style={{ fontWeight: 600, fontSize: "0.95rem", marginBottom: 6 }}>Add Frogge to Discord</div>
+                  <p style={{ color: "var(--muted-foreground)", fontSize: "0.85rem", lineHeight: 1.55, margin: 0 }}>
+                    Manage VIPs, track staff, and sync your schedule - all from your Discord server.
+                  </p>
+                  <a
+                    href="https://discord.com/oauth2/authorize?client_id=1224902245821321338"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    style={{
+                      display: "inline-flex",
+                      alignItems: "center",
+                      gap: 6,
+                      marginTop: 10,
+                      fontSize: "0.85rem",
+                      fontWeight: 500,
+                      color: "var(--xiv-blue)",
+                    }}
+                  >
+                    Install Frogge <ExternalLink style={{ width: 14, height: 14 }} />
+                  </a>
+                </div>
               </>
             )}
           </div>
