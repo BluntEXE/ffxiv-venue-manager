@@ -1,7 +1,7 @@
 "use client"
 
 import { useEffect, useState } from "react"
-import { Area, AreaChart, ResponsiveContainer, Tooltip, XAxis, YAxis, CartesianGrid } from "recharts"
+import { Area, AreaChart, ResponsiveContainer, Tooltip, XAxis, YAxis, CartesianGrid, TooltipContentProps } from "recharts"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Users } from "lucide-react"
 
@@ -127,7 +127,7 @@ export function EventAttendanceChart({ venueId, eventId, className }: EventAtten
                 domain={[0, "auto"]}
               />
               <Tooltip
-                content={({ active, payload, label }) => {
+                content={({ active, payload, label }: TooltipContentProps) => {
                   if (active && payload && payload.length) {
                     return (
                       <div className="rounded-lg border bg-background p-2 shadow-sm">

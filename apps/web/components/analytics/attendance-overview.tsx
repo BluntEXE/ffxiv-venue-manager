@@ -1,6 +1,6 @@
 "use client"
 
-import { Area, AreaChart, ResponsiveContainer, Tooltip, XAxis, YAxis, CartesianGrid } from "recharts"
+import { Area, AreaChart, ResponsiveContainer, Tooltip, XAxis, YAxis, CartesianGrid, TooltipContentProps } from "recharts"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Clock } from "lucide-react"
 
@@ -39,7 +39,7 @@ export function AttendanceOverview({ data }: AttendanceOverviewProps) {
               <XAxis dataKey="time" stroke="#9399b2" fontSize={12} tickLine={false} axisLine={false} minTickGap={30} />
               <YAxis stroke="#9399b2" fontSize={12} tickLine={false} axisLine={false} />
               <Tooltip
-                content={({ active, payload, label }) => {
+                content={({ active, payload, label }: TooltipContentProps) => {
                   if (active && payload && payload.length) {
                     return (
                       <div className="rounded-lg border bg-[#0a0f1e] p-2 shadow-lg border-[rgba(0,180,255,0.25)]">
