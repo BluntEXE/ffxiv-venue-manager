@@ -267,12 +267,6 @@ export default async function VenueProfilePage({ params }: { params: Promise<{ s
       {liveEvent && (
         <div className="live-strip bg-[var(--card)] border-b border-[var(--blue-008)]">
           <div className="max-w-[1080px] mx-auto px-8 py-[14px] flex items-center gap-4 flex-wrap">
-            <span className="lb inline-flex items-center gap-2 text-[0.72rem] font-bold tracking-[0.12em] uppercase text-[var(--success-text)]">
-              <span className="d w-2 h-2 rounded-full bg-[var(--success-text)] relative">
-                <span className="absolute inset-[-4px] rounded-full bg-[var(--success-text)] opacity-50 animate-ping" />
-              </span>
-              Happening now
-            </span>
             <span className="text-[0.92rem]">
               <strong>{liveEvent.title}</strong>
               {" · "}open until {liveEvent.endTime ? <LocalTime date={liveEvent.endTime} formatStr="time" /> : "late"}
