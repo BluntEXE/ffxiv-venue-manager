@@ -54,6 +54,7 @@ jobs:
               "GHSA-v2hh-gcrm-f6hx",  # fast-uri, via prisma dev-mode tooling
               "GHSA-7p8r-x3mc-p8w7",  # fast-uri, via prisma dev-mode tooling
               "GHSA-4c8g-83qw-93j6",  # fast-uri, via prisma dev-mode tooling
+              "GHSA-ggr8-5vv4-36mx",  # deepmerge-ts, via prisma config chain (DoS only, no attacker-controlled input)
           }
 
           failures = []
