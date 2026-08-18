@@ -93,3 +93,4 @@ graphify-out/
 docs/superpowers/brainstorm/
 .superpowers/
 docker/minio/data/
+docs/superpowers/templates/architecture-notes-template.html
