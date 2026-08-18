@@ -11,6 +11,7 @@ const updateServiceSchema = z.object({
   name: validators.serviceName.optional(),
   description: validators.serviceDescription,
   price: z.number().min(0).optional(),
+  category: validators.serviceCategory,
   roleIds: z.array(z.string()).optional(),
   isActive: z.boolean().optional(),
   linkedItemId: z.number().int().positive().nullable().optional(),

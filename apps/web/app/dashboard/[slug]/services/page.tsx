@@ -14,6 +14,13 @@ import { Badge } from "@/components/ui/badge"
 import { RoleBadge } from "@/components/role-badge"
 import { Switch } from "@/components/ui/switch"
 import { Checkbox } from "@/components/ui/checkbox"
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu"
+import { ChevronDown, Check } from "lucide-react"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { StatReadout } from "@/components/ui/stat-readout"
 import {
@@ -79,6 +86,7 @@ export default function ServicesPage({ params }: { params: Promise<{ slug: strin
     name: "",
     description: "",
     price: "",
+    category: "",
     selectedRoleIds: [] as string[],
     isActive: true,
     linkedItem: null as { itemId: number; name: string; iconId: number | null } | null,
@@ -86,6 +94,7 @@ export default function ServicesPage({ params }: { params: Promise<{ slug: strin
   })
   const [formError, setFormError] = useState("")
   const [categoryFilter, setCategoryFilter] = useState("All")
+  const [roleFilter, setRoleFilter] = useState("All")
   const [search, setSearch] = useState("")
   const [isSubmitting, setIsSubmitting] = useState(false)
 
@@ -157,6 +166,7 @@ export default function ServicesPage({ params }: { params: Promise<{ slug: strin
           name: formData.name,
           description: formData.description || undefined,
           price: parseFloat(formData.price),
+          category: formData.category || undefined,
           roleIds: formData.selectedRoleIds,
           isActive: formData.isActive,
           linkedItemId: formData.linkedItem?.itemId ?? null,
@@ -178,6 +188,7 @@ export default function ServicesPage({ params }: { params: Promise<{ slug: strin
         name: "",
         description: "",
         price: "",
+        category: "",
         selectedRoleIds: [] as string[],
         isActive: true,
         linkedItem: null,
@@ -207,6 +218,7 @@ export default function ServicesPage({ params }: { params: Promise<{ slug: strin
           name: formData.name,
           description: formData.description || undefined,
           price: parseFloat(formData.price),
+          category: formData.category || undefined,
           roleIds: formData.selectedRoleIds,
           isActive: formData.isActive,
           linkedItemId: formData.linkedItem?.itemId ?? null,
@@ -229,6 +241,7 @@ export default function ServicesPage({ params }: { params: Promise<{ slug: strin
         name: "",
         description: "",
         price: "",
+        category: "",
         selectedRoleIds: [] as string[],
         isActive: true,
         linkedItem: null,
@@ -279,6 +292,7 @@ export default function ServicesPage({ params }: { params: Promise<{ slug: strin
       name: service.name,
       description: service.description || "",
       price: service.price.toString(),
+      category: service.category ?? "",
       selectedRoleIds: service.roles?.map((r) => r.id) || [],
       isActive: service.isActive,
       linkedItem: service.linkedItemId
@@ -295,6 +309,7 @@ export default function ServicesPage({ params }: { params: Promise<{ slug: strin
       name: "",
       description: "",
       price: "",
+      category: "",
       selectedRoleIds: [] as string[],
       isActive: true,
       linkedItem: null,
@@ -421,7 +436,7 @@ export default function ServicesPage({ params }: { params: Promise<{ slug: strin
           </Card>
         ) : (
           <div>
-            {/* Category filter tabs + search — matches prototype .filters pattern */}
+            {/* Category filter tabs + role filter + search */}
             <div className="flex items-center gap-3 mb-5 flex-wrap">
               <div className="flex gap-1 bg-[var(--card)] border border-[var(--blue-015)] rounded-full p-1">
                 {["All", ...Array.from(new Set(services.map((s) => s.category).filter(Boolean) as string[]))].map(
@@ -436,6 +451,39 @@ export default function ServicesPage({ params }: { params: Promise<{ slug: strin
                   )
                 )}
               </div>
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <button className="flex items-center gap-2 h-9 px-3 rounded-full border border-[var(--blue-015)] bg-[var(--card)] text-sm font-medium text-foreground hover:border-[var(--blue-035)] hover:bg-[var(--blue-007)] transition-colors flex-shrink-0">
+                    <span className="max-w-[120px] truncate">
+                      {roleFilter === "All" ? "All Roles" : roles.find((r) => r.id === roleFilter)?.name ?? "All Roles"}
+                    </span>
+                    <ChevronDown className="w-3.5 h-3.5 text-[var(--fg-faint)] flex-shrink-0" />
+                  </button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="start" className="w-[200px]">
+                  <DropdownMenuItem
+                    onClick={() => setRoleFilter("All")}
+                    className={`flex items-center justify-between gap-2 cursor-pointer ${roleFilter === "All" ? "text-[var(--xiv-blue)]" : ""}`}
+                  >
+                    <span>All Roles</span>
+                    {roleFilter === "All" && <Check className="w-3.5 h-3.5 flex-shrink-0" />}
+                  </DropdownMenuItem>
+                  {roles.map((role) => {
+                    const count = services.filter((s) => s.roles?.some((r) => r.id === role.id)).length
+                    return (
+                      <DropdownMenuItem
+                        key={role.id}
+                        onClick={() => setRoleFilter(role.id)}
+                        className={`flex items-center justify-between gap-2 cursor-pointer ${roleFilter === role.id ? "text-[var(--xiv-blue)]" : ""}`}
+                      >
+                        <RoleBadge role={role.name} color={role.color} />
+                        <span className="text-[0.68rem] text-[var(--fg-faint)]">{count}</span>
+                        {roleFilter === role.id && <Check className="w-3.5 h-3.5 flex-shrink-0" />}
+                      </DropdownMenuItem>
+                    )
+                  })}
+                </DropdownMenuContent>
+              </DropdownMenu>
               <div className="search">
                 <svg
                   xmlns="http://www.w3.org/2000/svg"
@@ -454,6 +502,7 @@ export default function ServicesPage({ params }: { params: Promise<{ slug: strin
             {/* Service catalogue — auto-fill 3-col grid matching prototype svc-grid */}
             <div className="grid gap-4" style={{ gridTemplateColumns: "repeat(auto-fill, minmax(264px, 1fr))" }}>
               {services
+                .filter((s) => roleFilter === "All" || s.roles?.some((r) => r.id === roleFilter))
                 .filter((s) => categoryFilter === "All" || s.category === categoryFilter)
                 .filter(
                   (s) =>
@@ -494,6 +543,14 @@ export default function ServicesPage({ params }: { params: Promise<{ slug: strin
                         </Badge>
                       )}
                     </div>
+                    {/* Roles */}
+                    {service.roles && service.roles.length > 0 && (
+                      <div className="flex flex-wrap gap-1.5">
+                        {service.roles.map((role) => (
+                          <RoleBadge key={role.id} role={role.name} color={role.color} />
+                        ))}
+                      </div>
+                    )}
                     {/* Description */}
                     {service.description ? (
                       <p className="text-[0.82rem] text-muted-foreground leading-relaxed flex-1">
@@ -622,6 +679,16 @@ export default function ServicesPage({ params }: { params: Promise<{ slug: strin
                 />
               </div>
               <div className="space-y-2">
+                <Label htmlFor="create-category">Category</Label>
+                <Input
+                  id="create-category"
+                  placeholder="e.g., Food & Drink, VIP, Entertainment"
+                  value={formData.category}
+                  onChange={(e) => setFormData({ ...formData, category: e.target.value })}
+                  disabled={isSubmitting}
+                />
+              </div>
+              <div className="space-y-2">
                 <Label>Roles (who can provide this service)</Label>
                 {roles.length === 0 ? (
                   <p className="text-sm text-muted-foreground">No roles yet. Create roles first to assign services.</p>
@@ -724,6 +791,16 @@ export default function ServicesPage({ params }: { params: Promise<{ slug: strin
                   step="1"
                   value={formData.price}
                   onChange={(e) => setFormData({ ...formData, price: e.target.value })}
+                  disabled={isSubmitting}
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="edit-category">Category</Label>
+                <Input
+                  id="edit-category"
+                  placeholder="e.g., Food & Drink, VIP, Entertainment"
+                  value={formData.category}
+                  onChange={(e) => setFormData({ ...formData, category: e.target.value })}
                   disabled={isSubmitting}
                 />
               </div>
