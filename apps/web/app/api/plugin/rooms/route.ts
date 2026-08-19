@@ -24,7 +24,15 @@ export async function GET(request: NextRequest) {
 
     const rooms = await prisma.room.findMany({
       where: { venueId },
-      select: { id: true, name: true, isOccupied: true, note: true },
+      select: {
+        id: true,
+        name: true,
+        isOccupied: true,
+        note: true,
+        locked: true,
+        disabled: true,
+        roomNumber: true,
+      },
       orderBy: { name: "asc" },
     })
 

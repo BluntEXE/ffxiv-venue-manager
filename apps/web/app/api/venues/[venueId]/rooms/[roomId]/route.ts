@@ -6,8 +6,16 @@ import { z } from "zod"
 import { withRateLimit } from "@/lib/middleware/with-rate-limit"
 
 const renameRoomSchema = z.object({
-  name: z.string().trim().min(1).max(100),
+  name: z.string().trim().min(1).max(100).optional(),
+  roomNumber: z.number().int().min(0).max(999).nullable().optional(),
+  locked: z.boolean().optional(),
+  disabled: z.boolean().optional(),
+  imageUrl: z.string().url().nullable().optional(),
 })
+
+type VenueSettings = {
+  roomManagerRoleIds?: string[]
+}
 
 async function requireManager(session: { user?: { id?: string } } | null, venueId: string) {
   if (!session?.user?.id) {
@@ -20,10 +28,23 @@ async function requireManager(session: { user?: { id?: string } } | null, venueI
   const membership = await prisma.membership.findFirst({
     where: { userId: session.user.id, venueId: venue.id, status: "active" },
   })
-  if (!membership || !["OWNER", "MANAGER"].includes(membership.role)) {
-    return { error: NextResponse.json({ error: "Owner or Manager role required" }, { status: 403 }) }
+  if (!membership) {
+    return { error: NextResponse.json({ error: "Not an active member" }, { status: 403 }) }
   }
-  return { venue }
+
+  // OWNER/MANAGER always allowed
+  if (["OWNER", "MANAGER"].includes(membership.role)) {
+    return { venue }
+  }
+
+  // Check custom room manager roles
+  const settings = (venue.settings as VenueSettings) ?? {}
+  const allowedRoleIds = settings.roomManagerRoleIds ?? []
+  if (allowedRoleIds.length > 0 && membership.roleId && allowedRoleIds.includes(membership.roleId)) {
+    return { venue }
+  }
+
+  return { error: NextResponse.json({ error: "Owner, Manager, or designated Room Manager role required" }, { status: 403 }) }
 }
 
 export const PATCH = withRateLimit<{
@@ -42,7 +63,7 @@ export const PATCH = withRateLimit<{
       if (gate.error) return gate.error
 
       const body = await request.json()
-      const { name } = renameRoomSchema.parse(body)
+      const parsed = renameRoomSchema.parse(body)
 
       const room = await prisma.room.findFirst({
         where: { id: roomId, venueId: gate.venue!.id },
@@ -52,12 +73,26 @@ export const PATCH = withRateLimit<{
         return NextResponse.json({ error: "Room not found in this venue" }, { status: 404 })
       }
 
+      const data: { name?: string; roomNumber?: number | null; locked?: boolean; disabled?: boolean; imageUrl?: string | null } = {}
+      if (parsed.name !== undefined) data.name = parsed.name
+      if (parsed.roomNumber !== undefined) data.roomNumber = parsed.roomNumber
+      if (parsed.locked !== undefined) data.locked = parsed.locked
+      if (parsed.disabled !== undefined) data.disabled = parsed.disabled
+      if (parsed.imageUrl !== undefined) data.imageUrl = parsed.imageUrl
+
       const updated = await prisma.room.update({
         where: { id: roomId },
-        data: { name },
+        data,
       })
 
-      return NextResponse.json({ id: updated.id, name: updated.name })
+      return NextResponse.json({
+        id: updated.id,
+        name: updated.name,
+        roomNumber: updated.roomNumber,
+        locked: updated.locked,
+        disabled: updated.disabled,
+        imageUrl: updated.imageUrl,
+      })
     } catch (err: any) {
       if (err instanceof z.ZodError) {
         return NextResponse.json({ error: "Invalid request", details: err.flatten() }, { status: 400 })

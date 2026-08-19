@@ -187,6 +187,9 @@ model Venue {
   ffxivVenueLinkedAt DateTime?
   ffxivVenueLinkedBy String?
 
+  // Frogge Bot Integration
+  froggeVenueId String? @unique
+
   // Discord Integration (deprecated - kept for migration)
   discordWebhookUrl String?
   discordServerId   String?
@@ -545,6 +548,15 @@ model Room {
   name        String
   isOccupied  Boolean  @default(false)
   note        String?
+  imageUrl    String?
+
+  // Frogge integration
+  froggeRoomId Int?
+  roomNumber   Int?
+  locked       Boolean   @default(false)
+  disabled     Boolean   @default(false)
+  lastSyncedAt DateTime?
+
   updatedAt   DateTime @updatedAt
   updatedById String?
 
