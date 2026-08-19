@@ -24,7 +24,7 @@ function derivedStatus(room: RoomItem): { label: string; className: string } {
   return { label: "Available", className: "vip" }
 }
 
-export function RoomsBoard({ venueId, canManage, rooms }: { venueId: string; canManage: boolean; rooms: RoomItem[] }) {
+export function RoomsBoard({ venueId, canManage, rooms, froggeConnected }: { venueId: string; canManage: boolean; rooms: RoomItem[]; froggeConnected?: boolean }) {
   const [localRooms, setLocalRooms] = useState(rooms)
   const [pendingIds, setPendingIds] = useState<Set<string>>(new Set())
   const [editingNoteId, setEditingNoteId] = useState<string | null>(null)
@@ -36,6 +36,7 @@ export function RoomsBoard({ venueId, canManage, rooms }: { venueId: string; can
   const [editingRoomNumberId, setEditingRoomNumberId] = useState<string | null>(null)
   const [roomNumberInput, setRoomNumberInput] = useState("")
   const [uploadingImageId, setUploadingImageId] = useState<string | null>(null)
+  const [postingDiscord, setPostingDiscord] = useState(false)
 
   // Live sync via SSE — same bus/stream route the Live Mode page uses.
   useEffect(() => {
@@ -292,6 +293,22 @@ export function RoomsBoard({ venueId, canManage, rooms }: { venueId: string; can
         return next
       })
       setUploadingImageId(null)
+    }
+  }
+
+  async function postToDiscord() {
+    setPostingDiscord(true)
+    try {
+      const res = await fetch(`/api/venues/${venueId}/rooms/post`, { method: "POST" })
+      if (!res.ok) {
+        const err = await res.json()
+        throw new Error(err.error ?? "Failed to post")
+      }
+      alert("Rooms posted to Discord.")
+    } catch (e) {
+      alert(e instanceof Error ? e.message : "Failed to post rooms.")
+    } finally {
+      setPostingDiscord(false)
     }
   }
 
@@ -553,6 +570,18 @@ export function RoomsBoard({ venueId, canManage, rooms }: { venueId: string; can
           <Button type="button" size="sm" disabled={!newRoomName.trim() || adding} onClick={addRoom}>
             {adding ? "Adding…" : "Add Room"}
           </Button>
+          {froggeConnected && (
+            <Button
+              type="button"
+              size="sm"
+              variant="outline-blue"
+              disabled={postingDiscord}
+              onClick={postToDiscord}
+              className="ml-auto"
+            >
+              {postingDiscord ? "Posting…" : "Post to Discord"}
+            </Button>
+          )}
         </div>
       )}
     </div>
