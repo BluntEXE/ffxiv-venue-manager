@@ -79,6 +79,8 @@ const updateSettingsSchema = z.object({
       cachedGuildIconUrl: z.string().optional(),
     })
     .optional(),
+  // Room manager roles
+  roomManagerRoleIds: z.array(z.string()).optional(),
 })
 
 export const GET = withRateLimit<{ params: Promise<{ venueId: string }> }>(
@@ -159,7 +161,7 @@ export const PUT = withRateLimit<{ params: Promise<{ venueId: string }> }>(
       const { params } = context
       const { venueId } = await params
 
-      // Check if user has permission to update settings (OWNER only)
+      // Check if user has permission to update settings
       const membership = await prisma.membership.findFirst({
         where: {
           userId: session.user.id,
@@ -168,12 +170,21 @@ export const PUT = withRateLimit<{ params: Promise<{ venueId: string }> }>(
         },
       })
 
-      if (!membership || membership.role !== "OWNER") {
-        return NextResponse.json({ error: "Only venue owners can update settings" }, { status: 403 })
+      if (!membership) {
+        return NextResponse.json({ error: "Not a member of this venue" }, { status: 403 })
       }
 
       const body = await request.json()
       const validatedData = updateSettingsSchema.parse(body)
+
+      // Only OWNER can update most settings, but MANAGER can update roomManagerRoleIds
+      const isOwner = membership.role === "OWNER"
+      const isManager = membership.role === "MANAGER"
+      const onlyRoomManagerRoles = Object.keys(validatedData).every(k => k === "roomManagerRoleIds")
+
+      if (!isOwner && !(isManager && onlyRoomManagerRoles)) {
+        return NextResponse.json({ error: "Only venue owners can update settings" }, { status: 403 })
+      }
 
       // Get current settings
       const venue = await prisma.venue.findUnique({

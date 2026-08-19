@@ -13,6 +13,10 @@ const renameRoomSchema = z.object({
   imageUrl: z.string().url().nullable().optional(),
 })
 
+type VenueSettings = {
+  roomManagerRoleIds?: string[]
+}
+
 async function requireManager(session: { user?: { id?: string } } | null, venueId: string) {
   if (!session?.user?.id) {
     return { error: NextResponse.json({ error: "Unauthorized" }, { status: 401 }) }
@@ -24,10 +28,23 @@ async function requireManager(session: { user?: { id?: string } } | null, venueI
   const membership = await prisma.membership.findFirst({
     where: { userId: session.user.id, venueId: venue.id, status: "active" },
   })
-  if (!membership || !["OWNER", "MANAGER"].includes(membership.role)) {
-    return { error: NextResponse.json({ error: "Owner or Manager role required" }, { status: 403 }) }
+  if (!membership) {
+    return { error: NextResponse.json({ error: "Not an active member" }, { status: 403 }) }
   }
-  return { venue }
+
+  // OWNER/MANAGER always allowed
+  if (["OWNER", "MANAGER"].includes(membership.role)) {
+    return { venue }
+  }
+
+  // Check custom room manager roles
+  const settings = (venue.settings as VenueSettings) ?? {}
+  const allowedRoleIds = settings.roomManagerRoleIds ?? []
+  if (allowedRoleIds.length > 0 && membership.roleId && allowedRoleIds.includes(membership.roleId)) {
+    return { venue }
+  }
+
+  return { error: NextResponse.json({ error: "Owner, Manager, or designated Room Manager role required" }, { status: 403 }) }
 }
 
 export const PATCH = withRateLimit<{

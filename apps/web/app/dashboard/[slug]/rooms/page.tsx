@@ -4,6 +4,7 @@ import { redirect, notFound } from "next/navigation"
 import { prisma } from "@/lib/prisma"
 import { VenueLayout } from "@/components/venue-layout"
 import { RoomsBoard } from "@/components/rooms-board"
+import { RoomManagerRoles } from "@/components/room-manager-roles"
 
 export default async function RoomsPage({ params }: { params: Promise<{ slug: string }> }) {
   const session = await getServerSession(authOptions)
@@ -27,6 +28,9 @@ export default async function RoomsPage({ params }: { params: Promise<{ slug: st
     include: { updatedBy: { select: { id: true, name: true } } },
     orderBy: { name: "asc" },
   })
+
+  const settings = (venue.settings as { roomManagerRoleIds?: string[] }) ?? {}
+  const roomManagerRoleIds = settings.roomManagerRoleIds ?? []
 
   return (
     <VenueLayout venueSlug={venue.slug} venueName={venue.name} userRole={userRole}>
@@ -55,6 +59,12 @@ export default async function RoomsPage({ params }: { params: Promise<{ slug: st
             roomNumber: r.roomNumber,
             imageUrl: r.imageUrl,
           }))}
+        />
+
+        <RoomManagerRoles
+          venueId={venue.id}
+          canManage={["OWNER", "MANAGER"].includes(userRole)}
+          initialRoleIds={roomManagerRoleIds}
         />
       </div>
     </VenueLayout>
