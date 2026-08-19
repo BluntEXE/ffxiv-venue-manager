@@ -50,6 +50,9 @@ export default async function RoomsPage({ params }: { params: Promise<{ slug: st
             isOccupied: r.isOccupied,
             note: r.note,
             updatedByName: r.updatedBy?.name ?? null,
+            locked: r.locked,
+            disabled: r.disabled,
+            roomNumber: r.roomNumber,
           }))}
         />
       </div>

@@ -11,6 +11,16 @@ export type RoomItem = {
   isOccupied: boolean
   note: string | null
   updatedByName: string | null
+  locked: boolean
+  disabled: boolean
+  roomNumber: number | null
+}
+
+function derivedStatus(room: RoomItem): { label: string; className: string } {
+  if (room.disabled) return { label: "Disabled", className: "neutral" }
+  if (room.locked) return { label: "Locked", className: "warning" }
+  if (room.isOccupied) return { label: "Occupied", className: "danger" }
+  return { label: "Available", className: "vip" }
 }
 
 export function RoomsBoard({ venueId, canManage, rooms }: { venueId: string; canManage: boolean; rooms: RoomItem[] }) {
@@ -22,6 +32,8 @@ export function RoomsBoard({ venueId, canManage, rooms }: { venueId: string; can
   const [renameInput, setRenameInput] = useState("")
   const [newRoomName, setNewRoomName] = useState("")
   const [adding, setAdding] = useState(false)
+  const [editingRoomNumberId, setEditingRoomNumberId] = useState<string | null>(null)
+  const [roomNumberInput, setRoomNumberInput] = useState("")
 
   // Live sync via SSE — same bus/stream route the Live Mode page uses.
   useEffect(() => {
@@ -46,12 +58,12 @@ export function RoomsBoard({ venueId, canManage, rooms }: { venueId: string; can
     if (pendingIds.has(room.id)) return
     const nextOccupied = !room.isOccupied
     setPendingIds((prev) => new Set(prev).add(room.id))
-    setLocalRooms((prev) => prev.map((r) => (r.id === room.id ? { ...r, isOccupied: nextOccupied } : r)))
+    setLocalRooms((prev) => prev.map((r) => (r.id === room.id ? { ...r, isOccupied: nextOccupied, note: nextOccupied ? r.note : null } : r)))
     try {
       const res = await fetch(`/api/venues/${venueId}/rooms/${room.id}/status`, {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ isOccupied: nextOccupied, note: room.note ?? undefined }),
+        body: JSON.stringify({ isOccupied: nextOccupied, note: nextOccupied ? room.note ?? "" : "" }),
       })
       if (!res.ok) throw new Error("request failed")
       const updated = await res.json()
@@ -117,7 +129,16 @@ export function RoomsBoard({ venueId, canManage, rooms }: { venueId: string; can
       const created = await res.json()
       setLocalRooms((prev) => [
         ...prev,
-        { id: created.id, name: created.name, isOccupied: false, note: null, updatedByName: null },
+        {
+          id: created.id,
+          name: created.name,
+          isOccupied: false,
+          note: null,
+          updatedByName: null,
+          locked: false,
+          disabled: false,
+          roomNumber: null,
+        },
       ])
       setNewRoomName("")
     } catch {
@@ -154,6 +175,39 @@ export function RoomsBoard({ venueId, canManage, rooms }: { venueId: string; can
     }
   }
 
+  async function saveRoomNumber(room: RoomItem) {
+    setEditingRoomNumberId(null)
+    if (pendingIds.has(room.id)) return
+    const raw = roomNumberInput.trim()
+    setRoomNumberInput("")
+    const roomNumber = raw === "" ? null : parseInt(raw, 10)
+    if (raw !== "" && (isNaN(roomNumber!) || roomNumber! < 0 || roomNumber! > 999)) {
+      alert("Room number must be 0–999.")
+      return
+    }
+    if (roomNumber === room.roomNumber) return
+    setPendingIds((prev) => new Set(prev).add(room.id))
+    const prevNumber = room.roomNumber
+    setLocalRooms((prev) => prev.map((r) => (r.id === room.id ? { ...r, roomNumber } : r)))
+    try {
+      const res = await fetch(`/api/venues/${venueId}/rooms/${room.id}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ roomNumber }),
+      })
+      if (!res.ok) throw new Error("request failed")
+    } catch {
+      setLocalRooms((prev) => prev.map((r) => (r.id === room.id ? { ...r, roomNumber: prevNumber } : r)))
+      alert("Failed to update room number.")
+    } finally {
+      setPendingIds((prev) => {
+        const next = new Set(prev)
+        next.delete(room.id)
+        return next
+      })
+    }
+  }
+
   async function deleteRoom(room: RoomItem) {
     if (!confirm(`Delete "${room.name}"? This can't be undone.`)) return
     const prevList = localRooms
@@ -173,6 +227,7 @@ export function RoomsBoard({ venueId, canManage, rooms }: { venueId: string; can
         <DataTable
           columns={[
             { label: "Room" },
+            { label: "Room #", hideOnMobile: true },
             { label: "Status" },
             { label: "Note" },
             { label: "Last updated by", hideOnMobile: true },
@@ -208,22 +263,67 @@ export function RoomsBoard({ venueId, canManage, rooms }: { venueId: string; can
                     </button>
                   </div>
                 ) : (
-                  room.name
+                  <>
+                    {room.name}
+                    {room.roomNumber != null && (
+                      <span className="t-muted" style={{ marginLeft: 6, fontSize: "0.75rem" }}>
+                        #{room.roomNumber}
+                      </span>
+                    )}
+                  </>
+                )}
+              </td>
+              <td className="hide">
+                {canManage ? (
+                  editingRoomNumberId === room.id ? (
+                    <div style={{ display: "flex", gap: 4 }}>
+                      <input
+                        type="number"
+                        min={0}
+                        max={999}
+                        value={roomNumberInput}
+                        onChange={(e) => setRoomNumberInput(e.target.value)}
+                        placeholder="—"
+                        style={{ fontSize: "0.85rem", padding: "2px 6px", width: 60 }}
+                        autoFocus
+                      />
+                      <button type="button" className="tag neutral" onClick={() => saveRoomNumber(room)}>
+                        Save
+                      </button>
+                      <button
+                        type="button"
+                        className="tag neutral"
+                        onClick={() => {
+                          setEditingRoomNumberId(null)
+                          setRoomNumberInput("")
+                        }}
+                      >
+                        Cancel
+                      </button>
+                    </div>
+                  ) : (
+                    <span
+                      onClick={() => {
+                        setEditingRoomNumberId(room.id)
+                        setRoomNumberInput(room.roomNumber?.toString() ?? "")
+                      }}
+                      style={{ cursor: "pointer" }}
+                      className={room.roomNumber != null ? "" : "t-muted"}
+                    >
+                      {room.roomNumber != null ? `#${room.roomNumber}` : "Set #…"}
+                    </span>
+                  )
+                ) : (
+                  <span className="t-muted">{room.roomNumber != null ? `#${room.roomNumber}` : "—"}</span>
                 )}
               </td>
               <td>
-                <button
-                  type="button"
-                  onClick={() => toggleStatus(room)}
-                  disabled={pendingIds.has(room.id)}
-                  className={`tag ${room.isOccupied ? "danger" : "vip"}`}
-                  style={{
-                    cursor: pendingIds.has(room.id) ? "default" : "pointer",
-                    opacity: pendingIds.has(room.id) ? 0.6 : 1,
-                  }}
-                >
-                  {room.isOccupied ? "Occupied" : "Free"}
-                </button>
+                {(() => {
+                  const status = derivedStatus(room)
+                  return (
+                    <span className={`tag ${status.className}`}>{status.label}</span>
+                  )
+                })()}
               </td>
               <td>
                 {editingNoteId === room.id ? (
@@ -265,23 +365,35 @@ export function RoomsBoard({ venueId, canManage, rooms }: { venueId: string; can
               </td>
               <td className="hide t-muted">{room.updatedByName ?? "—"}</td>
               <td>
-                {canManage && (
-                  <div style={{ display: "flex", gap: 6 }}>
+                <div style={{ display: "flex", gap: 6 }}>
+                  {room.isOccupied && (
                     <button
                       type="button"
-                      className="tag neutral"
-                      onClick={() => {
-                        setRenamingId(room.id)
-                        setRenameInput(room.name)
-                      }}
+                      className="tag vip"
+                      disabled={pendingIds.has(room.id)}
+                      onClick={() => toggleStatus(room)}
                     >
-                      Rename
+                      Release
                     </button>
-                    <button type="button" className="tag danger" onClick={() => deleteRoom(room)}>
-                      Delete
-                    </button>
-                  </div>
-                )}
+                  )}
+                  {canManage && (
+                    <>
+                      <button
+                        type="button"
+                        className="tag neutral"
+                        onClick={() => {
+                          setRenamingId(room.id)
+                          setRenameInput(room.name)
+                        }}
+                      >
+                        Rename
+                      </button>
+                      <button type="button" className="tag danger" onClick={() => deleteRoom(room)}>
+                        Delete
+                      </button>
+                    </>
+                  )}
+                </div>
               </td>
             </tr>
           ))}

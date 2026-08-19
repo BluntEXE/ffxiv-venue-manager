@@ -6,7 +6,8 @@ import { z } from "zod"
 import { withRateLimit } from "@/lib/middleware/with-rate-limit"
 
 const renameRoomSchema = z.object({
-  name: z.string().trim().min(1).max(100),
+  name: z.string().trim().min(1).max(100).optional(),
+  roomNumber: z.number().int().min(0).max(999).nullable().optional(),
 })
 
 async function requireManager(session: { user?: { id?: string } } | null, venueId: string) {
@@ -42,7 +43,7 @@ export const PATCH = withRateLimit<{
       if (gate.error) return gate.error
 
       const body = await request.json()
-      const { name } = renameRoomSchema.parse(body)
+      const parsed = renameRoomSchema.parse(body)
 
       const room = await prisma.room.findFirst({
         where: { id: roomId, venueId: gate.venue!.id },
@@ -52,12 +53,16 @@ export const PATCH = withRateLimit<{
         return NextResponse.json({ error: "Room not found in this venue" }, { status: 404 })
       }
 
+      const data: { name?: string; roomNumber?: number | null } = {}
+      if (parsed.name !== undefined) data.name = parsed.name
+      if (parsed.roomNumber !== undefined) data.roomNumber = parsed.roomNumber
+
       const updated = await prisma.room.update({
         where: { id: roomId },
-        data: { name },
+        data,
       })
 
-      return NextResponse.json({ id: updated.id, name: updated.name })
+      return NextResponse.json({ id: updated.id, name: updated.name, roomNumber: updated.roomNumber })
     } catch (err: any) {
       if (err instanceof z.ZodError) {
         return NextResponse.json({ error: "Invalid request", details: err.flatten() }, { status: 400 })
