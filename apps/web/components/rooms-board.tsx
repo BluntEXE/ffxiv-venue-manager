@@ -4,6 +4,17 @@ import { useState, useEffect } from "react"
 import { DataTable } from "@/components/ui/data-table"
 import { Input } from "@/components/ui/input"
 import { Button } from "@/components/ui/button"
+import { Alert, AlertDescription } from "@/components/ui/alert"
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog"
 
 export type RoomItem = {
   id: string
@@ -15,6 +26,14 @@ export type RoomItem = {
   disabled: boolean
   roomNumber: number | null
   imageUrl: string | null
+  ownerDiscordId: string | null
+}
+
+interface GuildMember {
+  id: string
+  username: string
+  display_name?: string
+  avatar?: string
 }
 
 function derivedStatus(room: RoomItem): { label: string; className: string } {
@@ -37,8 +56,25 @@ export function RoomsBoard({ venueId, canManage, rooms, froggeConnected }: { ven
   const [roomNumberInput, setRoomNumberInput] = useState("")
   const [uploadingImageId, setUploadingImageId] = useState<string | null>(null)
   const [postingDiscord, setPostingDiscord] = useState(false)
+  const [members, setMembers] = useState<GuildMember[]>([])
+  const [membersLoaded, setMembersLoaded] = useState(false)
+  const [editingOwnerId, setEditingOwnerId] = useState<string | null>(null)
+  const [ownerSearch, setOwnerSearch] = useState("")
+  const [error, setError] = useState<string | null>(null)
+  const [success, setSuccess] = useState<string | null>(null)
+  const [deleteTarget, setDeleteTarget] = useState<RoomItem | null>(null)
 
-  // Live sync via SSE — same bus/stream route the Live Mode page uses.
+  useEffect(() => {
+    if (!froggeConnected || membersLoaded) return
+    fetch(`/api/venues/${venueId}/frogge/members`)
+      .then((r) => (r.ok ? r.json() : []))
+      .then((data: GuildMember[]) => {
+        setMembers(data)
+        setMembersLoaded(true)
+      })
+      .catch(() => setMembersLoaded(true))
+  }, [froggeConnected, membersLoaded, venueId])
+
   useEffect(() => {
     const es = new EventSource("/api/stream/" + venueId)
     es.onmessage = (e) => {
@@ -56,6 +92,16 @@ export function RoomsBoard({ venueId, canManage, rooms, froggeConnected }: { ven
     }
     return () => es.close()
   }, [venueId])
+
+  useEffect(() => {
+    if (error || success) {
+      const timer = setTimeout(() => {
+        setError(null)
+        setSuccess(null)
+      }, 4000)
+      return () => clearTimeout(timer)
+    }
+  }, [error, success])
 
   async function toggleStatus(room: RoomItem) {
     if (pendingIds.has(room.id)) return
@@ -75,6 +121,7 @@ export function RoomsBoard({ venueId, canManage, rooms, froggeConnected }: { ven
       )
     } catch {
       setLocalRooms((prev) => prev.map((r) => (r.id === room.id ? { ...r, isOccupied: room.isOccupied } : r)))
+      setError("Failed to update room status")
     } finally {
       setPendingIds((prev) => {
         const next = new Set(prev)
@@ -105,6 +152,7 @@ export function RoomsBoard({ venueId, canManage, rooms, froggeConnected }: { ven
       )
     } catch {
       setLocalRooms((prev) => prev.map((r) => (r.id === room.id ? { ...r, note: prevNote } : r)))
+      setError("Failed to save note")
     } finally {
       setPendingIds((prev) => {
         const next = new Set(prev)
@@ -118,6 +166,7 @@ export function RoomsBoard({ venueId, canManage, rooms, froggeConnected }: { ven
     const name = newRoomName.trim()
     if (!name || adding) return
     setAdding(true)
+    setError(null)
     try {
       const res = await fetch(`/api/venues/${venueId}/rooms`, {
         method: "POST",
@@ -126,7 +175,7 @@ export function RoomsBoard({ venueId, canManage, rooms, froggeConnected }: { ven
       })
       if (!res.ok) {
         const body = await res.json().catch(() => ({}))
-        alert(body.error || "Failed to add room")
+        setError(body.error || "Failed to add room")
         return
       }
       const created = await res.json()
@@ -142,11 +191,13 @@ export function RoomsBoard({ venueId, canManage, rooms, froggeConnected }: { ven
           disabled: false,
           roomNumber: null,
           imageUrl: null,
+          ownerDiscordId: null,
         },
       ])
       setNewRoomName("")
+      setSuccess("Room added")
     } catch {
-      alert("Network error adding room.")
+      setError("Network error adding room")
     } finally {
       setAdding(false)
     }
@@ -169,7 +220,7 @@ export function RoomsBoard({ venueId, canManage, rooms, froggeConnected }: { ven
       if (!res.ok) throw new Error("request failed")
     } catch {
       setLocalRooms((prev) => prev.map((r) => (r.id === room.id ? { ...r, name: prevName } : r)))
-      alert("Failed to rename room.")
+      setError("Failed to rename room")
     } finally {
       setPendingIds((prev) => {
         const next = new Set(prev)
@@ -186,7 +237,7 @@ export function RoomsBoard({ venueId, canManage, rooms, froggeConnected }: { ven
     setRoomNumberInput("")
     const roomNumber = raw === "" ? null : parseInt(raw, 10)
     if (raw !== "" && (isNaN(roomNumber!) || roomNumber! < 0 || roomNumber! > 999)) {
-      alert("Room number must be 0–999.")
+      setError("Room number must be 0–999")
       return
     }
     if (roomNumber === room.roomNumber) return
@@ -202,7 +253,7 @@ export function RoomsBoard({ venueId, canManage, rooms, froggeConnected }: { ven
       if (!res.ok) throw new Error("request failed")
     } catch {
       setLocalRooms((prev) => prev.map((r) => (r.id === room.id ? { ...r, roomNumber: prevNumber } : r)))
-      alert("Failed to update room number.")
+      setError("Failed to update room number")
     } finally {
       setPendingIds((prev) => {
         const next = new Set(prev)
@@ -226,7 +277,7 @@ export function RoomsBoard({ venueId, canManage, rooms, froggeConnected }: { ven
       if (!res.ok) throw new Error("request failed")
     } catch {
       setLocalRooms((prev) => prev.map((r) => (r.id === room.id ? { ...r, locked: room.locked } : r)))
-      alert("Failed to update lock status.")
+      setError("Failed to update lock status")
     } finally {
       setPendingIds((prev) => {
         const next = new Set(prev)
@@ -250,7 +301,7 @@ export function RoomsBoard({ venueId, canManage, rooms, froggeConnected }: { ven
       if (!res.ok) throw new Error("request failed")
     } catch {
       setLocalRooms((prev) => prev.map((r) => (r.id === room.id ? { ...r, disabled: room.disabled } : r)))
-      alert("Failed to update disabled status.")
+      setError("Failed to update disabled status")
     } finally {
       setPendingIds((prev) => {
         const next = new Set(prev)
@@ -284,8 +335,9 @@ export function RoomsBoard({ venueId, canManage, rooms, froggeConnected }: { ven
       })
       if (!patch.ok) throw new Error("Failed to save image")
       setLocalRooms((prev) => prev.map((r) => (r.id === room.id ? { ...r, imageUrl: storedUrl } : r)))
+      setSuccess("Image uploaded")
     } catch (e) {
-      alert(e instanceof Error ? e.message : "Failed to upload image.")
+      setError(e instanceof Error ? e.message : "Failed to upload image")
     } finally {
       setPendingIds((prev) => {
         const next = new Set(prev)
@@ -298,35 +350,76 @@ export function RoomsBoard({ venueId, canManage, rooms, froggeConnected }: { ven
 
   async function postToDiscord() {
     setPostingDiscord(true)
+    setError(null)
     try {
       const res = await fetch(`/api/venues/${venueId}/rooms/post`, { method: "POST" })
       if (!res.ok) {
         const err = await res.json()
         throw new Error(err.error ?? "Failed to post")
       }
-      alert("Rooms posted to Discord.")
+      setSuccess("Rooms posted to Discord")
     } catch (e) {
-      alert(e instanceof Error ? e.message : "Failed to post rooms.")
+      setError(e instanceof Error ? e.message : "Failed to post rooms")
     } finally {
       setPostingDiscord(false)
     }
   }
 
-  async function deleteRoom(room: RoomItem) {
-    if (!confirm(`Delete "${room.name}"? This can't be undone.`)) return
+  async function saveOwner(room: RoomItem, discordId: string | null) {
+    if (pendingIds.has(room.id)) return
+    setPendingIds((prev) => new Set(prev).add(room.id))
+    const prevOwner = room.ownerDiscordId
+    setLocalRooms((prev) => prev.map((r) => (r.id === room.id ? { ...r, ownerDiscordId: discordId } : r)))
+    setEditingOwnerId(null)
+    setOwnerSearch("")
+    try {
+      const res = await fetch(`/api/venues/${venueId}/rooms/${room.id}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ ownerDiscordId: discordId }),
+      })
+      if (!res.ok) throw new Error("Failed to update owner")
+    } catch {
+      setLocalRooms((prev) => prev.map((r) => (r.id === room.id ? { ...r, ownerDiscordId: prevOwner } : r)))
+      setError("Failed to update owner")
+    } finally {
+      setPendingIds((prev) => {
+        const next = new Set(prev)
+        next.delete(room.id)
+        return next
+      })
+    }
+  }
+
+  async function confirmDelete() {
+    if (!deleteTarget) return
+    const room = deleteTarget
+    setDeleteTarget(null)
     const prevList = localRooms
     setLocalRooms((prev) => prev.filter((r) => r.id !== room.id))
     try {
       const res = await fetch(`/api/venues/${venueId}/rooms/${room.id}`, { method: "DELETE" })
       if (!res.ok) throw new Error("request failed")
+      setSuccess("Room deleted")
     } catch {
       setLocalRooms(prevList)
-      alert("Failed to delete room.")
+      setError("Failed to delete room")
     }
   }
 
   return (
     <div>
+      {error && (
+        <Alert className="mb-4 bg-destructive/10 border-destructive/20">
+          <AlertDescription className="text-destructive">{error}</AlertDescription>
+        </Alert>
+      )}
+      {success && (
+        <Alert className="mb-4 bg-emerald-500/10 border-emerald-500/20">
+          <AlertDescription className="text-emerald-400">{success}</AlertDescription>
+        </Alert>
+      )}
+
       <div className="panel">
         <DataTable
           columns={[
@@ -334,6 +427,7 @@ export function RoomsBoard({ venueId, canManage, rooms, froggeConnected }: { ven
             { label: "Room" },
             { label: "Room #", hideOnMobile: true },
             { label: "Status" },
+            { label: "Owner" },
             { label: "Note" },
             { label: "Last updated by", hideOnMobile: true },
             { label: "" },
@@ -382,26 +476,27 @@ export function RoomsBoard({ venueId, canManage, rooms, froggeConnected }: { ven
               <td className="t-name">
                 {renamingId === room.id ? (
                   <div style={{ display: "flex", gap: 4 }}>
-                    <input
+                    <Input
                       type="text"
                       value={renameInput}
                       onChange={(e) => setRenameInput(e.target.value)}
-                      style={{ fontSize: "0.85rem", padding: "2px 6px", width: 140 }}
+                      style={{ width: 140 }}
                       autoFocus
                     />
-                    <button type="button" className="tag neutral" onClick={() => saveRename(room)}>
+                    <Button type="button" size="sm" variant="outline" onClick={() => saveRename(room)}>
                       Save
-                    </button>
-                    <button
+                    </Button>
+                    <Button
                       type="button"
-                      className="tag neutral"
+                      size="sm"
+                      variant="ghost"
                       onClick={() => {
                         setRenamingId(null)
                         setRenameInput("")
                       }}
                     >
                       Cancel
-                    </button>
+                    </Button>
                   </div>
                 ) : (
                   <>
@@ -418,29 +513,30 @@ export function RoomsBoard({ venueId, canManage, rooms, froggeConnected }: { ven
                 {canManage ? (
                   editingRoomNumberId === room.id ? (
                     <div style={{ display: "flex", gap: 4 }}>
-                      <input
+                      <Input
                         type="number"
                         min={0}
                         max={999}
                         value={roomNumberInput}
                         onChange={(e) => setRoomNumberInput(e.target.value)}
                         placeholder="—"
-                        style={{ fontSize: "0.85rem", padding: "2px 6px", width: 60 }}
+                        style={{ width: 60 }}
                         autoFocus
                       />
-                      <button type="button" className="tag neutral" onClick={() => saveRoomNumber(room)}>
+                      <Button type="button" size="sm" variant="outline" onClick={() => saveRoomNumber(room)}>
                         Save
-                      </button>
-                      <button
+                      </Button>
+                      <Button
                         type="button"
-                        className="tag neutral"
+                        size="sm"
+                        variant="ghost"
                         onClick={() => {
                           setEditingRoomNumberId(null)
                           setRoomNumberInput("")
                         }}
                       >
                         Cancel
-                      </button>
+                      </Button>
                     </div>
                   ) : (
                     <span
@@ -467,29 +563,96 @@ export function RoomsBoard({ venueId, canManage, rooms, froggeConnected }: { ven
                 })()}
               </td>
               <td>
+                {froggeConnected && canManage ? (
+                  editingOwnerId === room.id ? (
+                    <div style={{ display: "flex", gap: 4 }}>
+                      <Input
+                        type="text"
+                        value={ownerSearch}
+                        onChange={(e) => setOwnerSearch(e.target.value)}
+                        placeholder="Search member…"
+                        style={{ width: 140 }}
+                        autoFocus
+                        list={`members-${room.id}`}
+                      />
+                      <datalist id={`members-${room.id}`}>
+                        {members
+                          .filter((m) =>
+                            m.username.toLowerCase().includes(ownerSearch.toLowerCase()) ||
+                            (m.display_name ?? "").toLowerCase().includes(ownerSearch.toLowerCase())
+                          )
+                          .map((m) => (
+                            <option key={m.id} value={m.id}>
+                              {m.display_name ?? m.username}
+                            </option>
+                          ))}
+                      </datalist>
+                      <Button
+                        type="button"
+                        size="sm"
+                        variant="outline"
+                        onClick={() => {
+                          const member = members.find((m) => m.id === ownerSearch)
+                          saveOwner(room, member?.id ?? null)
+                        }}
+                      >
+                        Save
+                      </Button>
+                      <Button
+                        type="button"
+                        size="sm"
+                        variant="ghost"
+                        onClick={() => {
+                          setEditingOwnerId(null)
+                          setOwnerSearch("")
+                        }}
+                      >
+                        Cancel
+                      </Button>
+                    </div>
+                  ) : (
+                    <span
+                      onClick={() => {
+                        setEditingOwnerId(room.id)
+                        setOwnerSearch(room.ownerDiscordId ?? "")
+                      }}
+                      style={{ cursor: "pointer" }}
+                      className={room.ownerDiscordId ? "" : "t-muted"}
+                    >
+                      {members.find((m) => m.id === room.ownerDiscordId)?.display_name ?? room.ownerDiscordId ?? "Set owner…"}
+                    </span>
+                  )
+                ) : room.ownerDiscordId ? (
+                  <span>{members.find((m) => m.id === room.ownerDiscordId)?.display_name ?? room.ownerDiscordId}</span>
+                ) : (
+                  <span className="t-muted">—</span>
+                )}
+              </td>
+              <td>
                 {editingNoteId === room.id ? (
                   <div style={{ display: "flex", gap: 4 }}>
-                    <input
+                    <Input
                       type="text"
                       value={noteInput}
                       onChange={(e) => setNoteInput(e.target.value)}
                       placeholder="Note…"
-                      style={{ fontSize: "0.85rem", padding: "2px 6px", width: 160 }}
+                      style={{ width: 160 }}
                       autoFocus
                     />
-                    <button type="button" className="tag neutral" onClick={() => saveNote(room)}>
+                    <Button type="button" size="sm" variant="outline" onClick={() => saveNote(room)}>
                       Save
-                    </button>
-                    <button
+                    </Button>
+                    <Button
                       type="button"
-                      className="tag neutral"
+                      size="sm"
+                      variant="ghost"
                       onClick={() => {
                         setEditingNoteId(null)
                         setNoteInput("")
                       }}
                     >
                       Cancel
-                    </button>
+                    </Button>
                   </div>
                 ) : (
                   <span
@@ -508,46 +671,55 @@ export function RoomsBoard({ venueId, canManage, rooms, froggeConnected }: { ven
               <td>
                 <div style={{ display: "flex", gap: 6 }}>
                   {room.isOccupied && (
-                    <button
+                    <Button
                       type="button"
-                      className="tag vip"
+                      size="sm"
+                      variant="outline-blue"
                       disabled={pendingIds.has(room.id)}
                       onClick={() => toggleStatus(room)}
                     >
                       Release
-                    </button>
+                    </Button>
                   )}
                   {canManage && (
                     <>
-                      <button
+                      <Button
                         type="button"
-                        className={`tag ${room.locked ? "warning" : "neutral"}`}
+                        size="sm"
+                        variant={room.locked ? "outline" : "ghost"}
                         disabled={pendingIds.has(room.id)}
                         onClick={() => toggleLocked(room)}
                       >
                         {room.locked ? "Unlock" : "Lock"}
-                      </button>
-                      <button
+                      </Button>
+                      <Button
                         type="button"
-                        className={`tag ${room.disabled ? "warning" : "neutral"}`}
+                        size="sm"
+                        variant={room.disabled ? "outline" : "ghost"}
                         disabled={pendingIds.has(room.id)}
                         onClick={() => toggleDisabled(room)}
                       >
                         {room.disabled ? "Enable" : "Disable"}
-                      </button>
-                      <button
+                      </Button>
+                      <Button
                         type="button"
-                        className="tag neutral"
+                        size="sm"
+                        variant="ghost"
                         onClick={() => {
                           setRenamingId(room.id)
                           setRenameInput(room.name)
                         }}
                       >
                         Rename
-                      </button>
-                      <button type="button" className="tag danger" onClick={() => deleteRoom(room)}>
+                      </Button>
+                      <Button
+                        type="button"
+                        size="sm"
+                        variant="destructive"
+                        onClick={() => setDeleteTarget(room)}
+                      >
                         Delete
-                      </button>
+                      </Button>
                     </>
                   )}
                 </div>
@@ -584,6 +756,19 @@ export function RoomsBoard({ venueId, canManage, rooms, froggeConnected }: { ven
           )}
         </div>
       )}
+
+      <AlertDialog open={!!deleteTarget} onOpenChange={(open) => !open && setDeleteTarget(null)}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Delete "{deleteTarget?.name}"?</AlertDialogTitle>
+            <AlertDialogDescription>This cannot be undone.</AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction onClick={confirmDelete}>Delete</AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   )
 }

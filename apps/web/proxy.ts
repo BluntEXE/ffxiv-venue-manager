@@ -11,7 +11,7 @@ function buildCsp(nonce: string): string {
     // including one causes browsers to ignore 'unsafe-inline' per spec,
     // blocking every style={{...}} in the app (e.g. /stats progress bars).
     "style-src 'self' 'unsafe-inline'",
-    `img-src 'self' data: blob: https://cdn.discordapp.com https://raw.githubusercontent.com https://cdn.partake.gg${process.env.MINIO_PUBLIC_URL ? ` ${process.env.MINIO_PUBLIC_URL}` : ""}`,
+    `img-src 'self' data: blob: https://cdn.discordapp.com https://raw.githubusercontent.com https://cdn.partake.gg https://*.frogge.gg${process.env.MINIO_PUBLIC_URL ? ` ${process.env.MINIO_PUBLIC_URL}` : ""}`,
     "font-src 'self' data:",
     `connect-src 'self' https://discord.com https://api.github.com https://qstash.upstash.io https://errors.xivvenuemanager.com${process.env.MINIO_PUBLIC_URL ? ` ${process.env.MINIO_PUBLIC_URL}` : ""}`,
     "frame-ancestors 'none'",
@@ -72,6 +72,6 @@ export async function proxy(req: NextRequest) {
 
 export const config = {
   matcher: [
-    "/((?!api/auth|api/cron|api/plugin|api/discord|api/bot|api/stats|api/homepage|api/diag|_next/static|_next/image|favicon.ico|.*\\.png|.*\\.jpg|.*\\.svg|.*\\.webp).*)",
+    "/((?!api/auth|api/cron|api/plugin|api/discord|api/bot|api/stats|api/homepage|api/diag|api/webhooks|_next/static|_next/image|favicon.ico|.*\\.png|.*\\.jpg|.*\\.svg|.*\\.webp).*)",
   ],
 }
