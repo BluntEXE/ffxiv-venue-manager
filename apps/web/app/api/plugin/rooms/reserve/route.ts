@@ -43,7 +43,7 @@ export async function POST(request: NextRequest) {
       where: { id: roomId },
       data: {
         isOccupied: true,
-        note: `Reserved by plugin — ${durationMinutes}min`,
+        note: `Reserved by plugin - ${durationMinutes}min`,
         updatedById: auth.userId,
       },
       include: { updatedBy: { select: { name: true } } },
