@@ -85,7 +85,7 @@ export async function POST(request: NextRequest) {
 
     return NextResponse.json({
       success: true,
-      message: result.deduped ? "Duplicate suppressed (within 60s window)" : "Patron visit logged",
+      message: result.deduped ? "Duplicate suppressed (state already matches)" : "Patron visit logged",
       data: {
         id: result.id,
         characterName,
