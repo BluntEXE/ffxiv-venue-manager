@@ -121,6 +121,7 @@ export const GET = withRateLimit<{ params: Promise<{ venueId: string }> }>(
           venueType: true,
           ffxivVenueId: true,
           ffxivVenueLinkedAt: true,
+          froggeToken: true,
           venueSchedule: { select: { syncedAt: true } },
         },
       })
@@ -136,6 +137,7 @@ export const GET = withRateLimit<{ params: Promise<{ venueId: string }> }>(
         venueType: venue.venueType,
         ffxivVenueId: venue.ffxivVenueId,
         ffxivVenueLinkedAt: venue.ffxivVenueLinkedAt,
+        froggeToken: venue.froggeToken,
         ffxivVenueSyncedAt: venue.venueSchedule?.syncedAt ?? null,
       })
     } catch (error) {
