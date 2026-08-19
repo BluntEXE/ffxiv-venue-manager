@@ -53,6 +53,7 @@ export default async function RoomsPage({ params }: { params: Promise<{ slug: st
             locked: r.locked,
             disabled: r.disabled,
             roomNumber: r.roomNumber,
+            imageUrl: r.imageUrl,
           }))}
         />
       </div>
