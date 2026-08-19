@@ -11,6 +11,7 @@ const renameRoomSchema = z.object({
   locked: z.boolean().optional(),
   disabled: z.boolean().optional(),
   imageUrl: z.string().url().nullable().optional(),
+  ownerDiscordId: z.string().nullable().optional(),
 })
 
 type VenueSettings = {
@@ -73,12 +74,13 @@ export const PATCH = withRateLimit<{
         return NextResponse.json({ error: "Room not found in this venue" }, { status: 404 })
       }
 
-      const data: { name?: string; roomNumber?: number | null; locked?: boolean; disabled?: boolean; imageUrl?: string | null } = {}
+      const data: { name?: string; roomNumber?: number | null; locked?: boolean; disabled?: boolean; imageUrl?: string | null; ownerDiscordId?: string | null } = {}
       if (parsed.name !== undefined) data.name = parsed.name
       if (parsed.roomNumber !== undefined) data.roomNumber = parsed.roomNumber
       if (parsed.locked !== undefined) data.locked = parsed.locked
       if (parsed.disabled !== undefined) data.disabled = parsed.disabled
       if (parsed.imageUrl !== undefined) data.imageUrl = parsed.imageUrl
+      if (parsed.ownerDiscordId !== undefined) data.ownerDiscordId = parsed.ownerDiscordId
 
       const updated = await prisma.room.update({
         where: { id: roomId },
@@ -92,6 +94,7 @@ export const PATCH = withRateLimit<{
         locked: updated.locked,
         disabled: updated.disabled,
         imageUrl: updated.imageUrl,
+        ownerDiscordId: updated.ownerDiscordId,
       })
     } catch (err: any) {
       if (err instanceof z.ZodError) {

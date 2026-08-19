@@ -58,6 +58,7 @@ export default async function RoomsPage({ params }: { params: Promise<{ slug: st
             disabled: r.disabled,
             roomNumber: r.roomNumber,
             imageUrl: r.imageUrl,
+            ownerDiscordId: r.ownerDiscordId,
           }))}
           froggeConnected={!!venue.froggeToken}
         />

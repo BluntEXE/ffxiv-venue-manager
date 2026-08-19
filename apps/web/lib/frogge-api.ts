@@ -93,6 +93,17 @@ export async function postRoomsToDiscord(froggeVenueId: string, bearerToken?: st
   await froggeFetch(`/v2/venues/${froggeVenueId}/rooms/post`, { method: "POST" }, bearerToken)
 }
 
+export interface GuildMember {
+  id: string
+  username: string
+  display_name?: string
+  avatar?: string
+}
+
+export async function getGuildMembers(bearerToken: string): Promise<GuildMember[]> {
+  return froggeFetch<GuildMember[]>("/guild/members", {}, bearerToken)
+}
+
 // ── Local cache helpers ────────────────────────────────────────
 
 export async function getRoomsWithFallback(venueId: string): Promise<FroggeRoom[]> {

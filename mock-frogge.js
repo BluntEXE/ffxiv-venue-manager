@@ -53,6 +53,17 @@ const server = http.createServer((req, res) => {
     } else if (req.method === 'POST' && req.url?.includes('/post')) {
       res.writeHead(204);
       res.end();
+    } else if (req.method === 'GET' && req.url === '/guild/members') {
+      res.writeHead(200, { 'Content-Type': 'application/json' });
+      res.end(
+        JSON.stringify([
+          { id: '111111111', username: 'alice', display_name: 'Alice' },
+          { id: '222222222', username: 'bob', display_name: 'Bob' },
+          { id: '333333333', username: 'charlie', display_name: 'Charlie' },
+          { id: '444444444', username: 'diana', display_name: 'Diana' },
+          { id: '555555555', username: 'eve', display_name: 'Eve' },
+        ])
+      );
     } else {
       res.writeHead(404, { 'Content-Type': 'application/json' });
       res.end(JSON.stringify({ error: 'Not found' }));

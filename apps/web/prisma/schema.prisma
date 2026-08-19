@@ -554,11 +554,12 @@ model Room {
   imageUrl    String?
 
   // Frogge integration
-  froggeRoomId Int?
-  roomNumber   Int?
-  locked       Boolean   @default(false)
-  disabled     Boolean   @default(false)
-  lastSyncedAt DateTime?
+  froggeRoomId    Int?
+  roomNumber      Int?
+  locked          Boolean   @default(false)
+  disabled        Boolean   @default(false)
+  ownerDiscordId  String?
+  lastSyncedAt    DateTime?
 
   updatedAt   DateTime @updatedAt
   updatedById String?
