@@ -838,6 +838,25 @@
   background: var(--blue-035);
 }
 
+/* Rooms board table scroll */
+.rooms-table-scroll {
+  scrollbar-width: thin;
+  scrollbar-color: var(--blue-015) transparent;
+}
+.rooms-table-scroll::-webkit-scrollbar {
+  height: 6px;
+}
+.rooms-table-scroll::-webkit-scrollbar-track {
+  background: transparent;
+}
+.rooms-table-scroll::-webkit-scrollbar-thumb {
+  background: var(--blue-015);
+  border-radius: 999px;
+}
+.rooms-table-scroll:hover::-webkit-scrollbar-thumb {
+  background: var(--blue-035);
+}
+
 /* Sidebar group label */
 .grp-label {
   font-size: 0.64rem;

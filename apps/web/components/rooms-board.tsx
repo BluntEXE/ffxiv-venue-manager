@@ -408,7 +408,7 @@ export function RoomsBoard({ venueId, canManage, rooms, froggeConnected }: { ven
   }
 
   return (
-    <div>
+    <div style={{ minWidth: 0 }}>
       {error && (
         <Alert className="mb-4 bg-destructive/10 border-destructive/20">
           <AlertDescription className="text-destructive">{error}</AlertDescription>
@@ -420,7 +420,7 @@ export function RoomsBoard({ venueId, canManage, rooms, froggeConnected }: { ven
         </Alert>
       )}
 
-      <div className="panel">
+      <div className="panel rooms-table-scroll" style={{ overflowX: "auto" }}>
         <DataTable
           columns={[
             { label: "Image", hideOnMobile: true },
@@ -565,50 +565,89 @@ export function RoomsBoard({ venueId, canManage, rooms, froggeConnected }: { ven
               <td>
                 {froggeConnected && canManage ? (
                   editingOwnerId === room.id ? (
-                    <div style={{ display: "flex", gap: 4 }}>
+                    <div style={{ position: "relative", width: 200 }}>
                       <Input
                         type="text"
                         value={ownerSearch}
                         onChange={(e) => setOwnerSearch(e.target.value)}
                         placeholder="Search member…"
-                        style={{ width: 140 }}
                         autoFocus
-                        list={`members-${room.id}`}
+                        style={{ width: "100%" }}
                       />
-                      <datalist id={`members-${room.id}`}>
-                        {members
-                          .filter((m) =>
+                      {ownerSearch.length > 0 && (
+                        <div
+                          style={{
+                            position: "absolute",
+                            top: "100%",
+                            left: 0,
+                            right: 0,
+                            zIndex: 50,
+                            marginTop: 4,
+                            maxHeight: 200,
+                            overflowY: "auto",
+                            background: "rgba(10,15,30,0.97)",
+                            backdropFilter: "blur(20px)",
+                            border: "1px solid var(--blue-018)",
+                            borderRadius: 8,
+                            boxShadow: "0 8px 32px rgba(0,0,0,0.6)",
+                          }}
+                        >
+                          {members
+                            .filter((m) =>
+                              m.username.toLowerCase().includes(ownerSearch.toLowerCase()) ||
+                              (m.display_name ?? "").toLowerCase().includes(ownerSearch.toLowerCase())
+                            )
+                            .slice(0, 10)
+                            .map((m) => (
+                              <div
+                                key={m.id}
+                                onClick={() => saveOwner(room, m.id)}
+                                style={{
+                                  padding: "8px 12px",
+                                  cursor: "pointer",
+                                  fontSize: "0.85rem",
+                                  borderBottom: "1px solid var(--blue-008)",
+                                }}
+                                onMouseEnter={(e) => (e.currentTarget.style.background = "var(--blue-007)")}
+                                onMouseLeave={(e) => (e.currentTarget.style.background = "transparent")}
+                              >
+                                {m.display_name ?? m.username}
+                              </div>
+                            ))}
+                          {members.filter((m) =>
                             m.username.toLowerCase().includes(ownerSearch.toLowerCase()) ||
                             (m.display_name ?? "").toLowerCase().includes(ownerSearch.toLowerCase())
-                          )
-                          .map((m) => (
-                            <option key={m.id} value={m.id}>
-                              {m.display_name ?? m.username}
-                            </option>
-                          ))}
-                      </datalist>
-                      <Button
-                        type="button"
-                        size="sm"
-                        variant="outline"
-                        onClick={() => {
-                          const member = members.find((m) => m.id === ownerSearch)
-                          saveOwner(room, member?.id ?? null)
-                        }}
-                      >
-                        Save
-                      </Button>
-                      <Button
-                        type="button"
-                        size="sm"
-                        variant="ghost"
-                        onClick={() => {
-                          setEditingOwnerId(null)
-                          setOwnerSearch("")
-                        }}
-                      >
-                        Cancel
-                      </Button>
+                          ).length === 0 && (
+                            <div style={{ padding: "8px 12px", fontSize: "0.85rem", color: "var(--muted-foreground)" }}>
+                              No members found
+                            </div>
+                          )}
+                        </div>
+                      )}
+                      <div style={{ display: "flex", gap: 4, marginTop: 4 }}>
+                        <Button
+                          type="button"
+                          size="sm"
+                          variant="outline"
+                          onClick={() => {
+                            const member = members.find((m) => m.id === ownerSearch)
+                            saveOwner(room, member?.id ?? null)
+                          }}
+                        >
+                          Save
+                        </Button>
+                        <Button
+                          type="button"
+                          size="sm"
+                          variant="ghost"
+                          onClick={() => {
+                            setEditingOwnerId(null)
+                            setOwnerSearch("")
+                          }}
+                        >
+                          Cancel
+                        </Button>
+                      </div>
                     </div>
                   ) : (
                     <span
