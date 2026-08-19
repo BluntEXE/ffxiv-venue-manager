@@ -259,6 +259,42 @@ export function RoomsBoard({ venueId, canManage, rooms }: { venueId: string; can
     }
   }
 
+  async function uploadRoomImage(room: RoomItem, file: File) {
+    if (pendingIds.has(room.id)) return
+    setPendingIds((prev) => new Set(prev).add(room.id))
+    setUploadingImageId(room.id)
+    try {
+      const res = await fetch("/api/upload", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ filename: file.name, contentType: file.type, size: file.size }),
+      })
+      if (!res.ok) {
+        const d = await res.json()
+        throw new Error(d.error || "Failed to get upload URL")
+      }
+      const { uploadUrl, storedUrl } = await res.json()
+      const put = await fetch(uploadUrl, { method: "PUT", body: file, headers: { "Content-Type": file.type } })
+      if (!put.ok) throw new Error("Upload failed")
+      const patch = await fetch(`/api/venues/${venueId}/rooms/${room.id}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ imageUrl: storedUrl }),
+      })
+      if (!patch.ok) throw new Error("Failed to save image")
+      setLocalRooms((prev) => prev.map((r) => (r.id === room.id ? { ...r, imageUrl: storedUrl } : r)))
+    } catch (e) {
+      alert(e instanceof Error ? e.message : "Failed to upload image.")
+    } finally {
+      setPendingIds((prev) => {
+        const next = new Set(prev)
+        next.delete(room.id)
+        return next
+      })
+      setUploadingImageId(null)
+    }
+  }
+
   async function deleteRoom(room: RoomItem) {
     if (!confirm(`Delete "${room.name}"? This can't be undone.`)) return
     const prevList = localRooms
@@ -277,6 +313,7 @@ export function RoomsBoard({ venueId, canManage, rooms }: { venueId: string; can
       <div className="panel">
         <DataTable
           columns={[
+            { label: "Image", hideOnMobile: true },
             { label: "Room" },
             { label: "Room #", hideOnMobile: true },
             { label: "Status" },
@@ -289,6 +326,42 @@ export function RoomsBoard({ venueId, canManage, rooms }: { venueId: string; can
         >
           {localRooms.map((room) => (
             <tr key={room.id}>
+              <td className="hide">
+                {room.imageUrl ? (
+                  <img
+                    src={room.imageUrl}
+                    alt={room.name}
+                    style={{ width: 48, height: 48, objectFit: "cover", borderRadius: 4 }}
+                  />
+                ) : canManage ? (
+                  <label
+                    style={{
+                      display: "flex",
+                      alignItems: "center",
+                      justifyContent: "center",
+                      width: 48,
+                      height: 48,
+                      border: "1px dashed var(--xiv-border)",
+                      borderRadius: 4,
+                      cursor: "pointer",
+                      fontSize: "0.7rem",
+                      color: "var(--xiv-subtext0)",
+                    }}
+                  >
+                    <input
+                      type="file"
+                      accept="image/*"
+                      style={{ display: "none" }}
+                      disabled={uploadingImageId === room.id}
+                      onChange={(e) => {
+                        const file = e.target.files?.[0]
+                        if (file) uploadRoomImage(room, file)
+                      }}
+                    />
+                    {uploadingImageId === room.id ? "..." : "+"}
+                  </label>
+                ) : null}
+              </td>
               <td className="t-name">
                 {renamingId === room.id ? (
                   <div style={{ display: "flex", gap: 4 }}>
