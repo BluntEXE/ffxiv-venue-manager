@@ -2,8 +2,12 @@ import { prisma } from "@/lib/prisma"
 
 const FROGGE_API_URL = process.env.FROGGE_API_URL ?? "https://api.frogge.gg"
 const FROGGE_CLIENT_ID = process.env.FROGGE_CLIENT_ID ?? "xvm"
-const FROGGE_SECRET = process.env.FROGGE_SECRET ?? ""
 const USER_AGENT = "XIV-Venue-Manager/1.0"
+
+export interface RedeemResult {
+  token: string
+  froggeVenueId: string
+}
 
 // ── Types ──────────────────────────────────────────────────────
 
@@ -33,16 +37,18 @@ export interface FroggeReservation {
 
 // ── Internal fetch helper ──────────────────────────────────────
 
-async function froggeFetch<T>(path: string, options: RequestInit = {}): Promise<T> {
+async function froggeFetch<T>(path: string, options: RequestInit = {}, bearerToken?: string): Promise<T> {
+  const headers: Record<string, string> = {
+    "Content-Type": "application/json",
+    "User-Agent": USER_AGENT,
+    "X-Frogge-Client-Id": FROGGE_CLIENT_ID,
+  }
+  if (bearerToken) {
+    headers["Authorization"] = `Bearer ${bearerToken}`
+  }
   const res = await fetch(`${FROGGE_API_URL}${path}`, {
     ...options,
-    headers: {
-      "Content-Type": "application/json",
-      "User-Agent": USER_AGENT,
-      "X-Frogge-Client-Id": FROGGE_CLIENT_ID,
-      "X-Frogge-Secret": FROGGE_SECRET,
-      ...options.headers,
-    },
+    headers: { ...headers, ...options.headers },
   })
   if (!res.ok) {
     const body = await res.text()
@@ -51,33 +57,40 @@ async function froggeFetch<T>(path: string, options: RequestInit = {}): Promise<
   return res.status === 204 ? (null as T) : res.json()
 }
 
+// ── Auth ───────────────────────────────────────────────────────
+
+export async function redeemCode(code: string): Promise<RedeemResult> {
+  return froggeFetch<RedeemResult>("/plugin-auth/redeem", {
+    method: "POST",
+    body: JSON.stringify({ code }),
+  })
+}
+
 // ── Public API ─────────────────────────────────────────────────
 
-export async function getRooms(froggeVenueId: string): Promise<FroggeRoom[]> {
-  return froggeFetch<FroggeRoom[]>(`/v2/venues/${froggeVenueId}/rooms`)
+export async function getRooms(froggeVenueId: string, bearerToken?: string): Promise<FroggeRoom[]> {
+  return froggeFetch<FroggeRoom[]>(`/v2/venues/${froggeVenueId}/rooms`, {}, bearerToken)
 }
 
 export async function reserveRoom(
   froggeVenueId: string,
   froggeRoomId: number,
-  durationMinutes: number
+  durationMinutes: number,
+  bearerToken?: string
 ): Promise<void> {
-  await froggeFetch(`/v2/venues/${froggeVenueId}/rooms/${froggeRoomId}/reserve`, {
-    method: "POST",
-    body: JSON.stringify({ duration_minutes: durationMinutes }),
-  })
+  await froggeFetch(
+    `/v2/venues/${froggeVenueId}/rooms/${froggeRoomId}/reserve`,
+    { method: "POST", body: JSON.stringify({ duration_minutes: durationMinutes }) },
+    bearerToken
+  )
 }
 
-export async function releaseRoom(froggeVenueId: string, froggeRoomId: number): Promise<void> {
-  await froggeFetch(`/v2/venues/${froggeVenueId}/rooms/${froggeRoomId}/release`, {
-    method: "POST",
-  })
+export async function releaseRoom(froggeVenueId: string, froggeRoomId: number, bearerToken?: string): Promise<void> {
+  await froggeFetch(`/v2/venues/${froggeVenueId}/rooms/${froggeRoomId}/release`, { method: "POST" }, bearerToken)
 }
 
-export async function postRoomsToDiscord(froggeVenueId: string): Promise<void> {
-  await froggeFetch(`/v2/venues/${froggeVenueId}/rooms/post`, {
-    method: "POST",
-  })
+export async function postRoomsToDiscord(froggeVenueId: string, bearerToken?: string): Promise<void> {
+  await froggeFetch(`/v2/venues/${froggeVenueId}/rooms/post`, { method: "POST" }, bearerToken)
 }
 
 // ── Local cache helpers ────────────────────────────────────────
@@ -86,14 +99,14 @@ export async function getRoomsWithFallback(venueId: string): Promise<FroggeRoom[
   try {
     const venue = await prisma.venue.findUnique({
       where: { id: venueId },
-      select: { froggeVenueId: true },
+      select: { froggeVenueId: true, froggeToken: true },
     })
 
     if (!venue?.froggeVenueId) {
       return getLocalRooms(venueId)
     }
 
-    const rooms = await getRooms(venue.froggeVenueId)
+    const rooms = await getRooms(venue.froggeVenueId, venue.froggeToken ?? undefined)
     await syncLocalCache(venueId, rooms)
     return rooms
   } catch (error) {
@@ -134,6 +147,7 @@ async function syncLocalCache(venueId: string, rooms: FroggeRoom[]): Promise<voi
         locked: room.locked,
         disabled: room.disabled,
         isOccupied: room.reservations.some((r) => !r.end_at || new Date(r.end_at) > new Date()),
+        imageUrl: room.images[0]?.image_url ?? null,
         lastSyncedAt: new Date(),
       },
       create: {
@@ -144,6 +158,7 @@ async function syncLocalCache(venueId: string, rooms: FroggeRoom[]): Promise<voi
         locked: room.locked,
         disabled: room.disabled,
         isOccupied: room.reservations.some((r) => !r.end_at || new Date(r.end_at) > new Date()),
+        imageUrl: room.images[0]?.image_url ?? null,
         lastSyncedAt: new Date(),
       },
     })
