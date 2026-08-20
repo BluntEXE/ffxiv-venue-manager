@@ -32,6 +32,7 @@ export async function GET(request: NextRequest) {
         locked: true,
         disabled: true,
         roomNumber: true,
+        ownerDiscordId: true,
       },
       orderBy: { name: "asc" },
     })

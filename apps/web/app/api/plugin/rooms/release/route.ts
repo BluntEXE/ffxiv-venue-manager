@@ -56,6 +56,8 @@ export async function POST(request: NextRequest) {
       },
     })
 
+    syncFroggeRelease(venueId, roomId)
+
     return NextResponse.json({ success: true })
   } catch (error) {
     if (error instanceof z.ZodError) {
@@ -63,5 +65,24 @@ export async function POST(request: NextRequest) {
     }
     console.error("[Plugin API] Error releasing room:", error)
     return NextResponse.json({ error: "Internal server error" }, { status: 500 })
+  }
+}
+
+async function syncFroggeRelease(venueId: string, roomId: string) {
+  try {
+    const venue = await prisma.venue.findUnique({
+      where: { id: venueId },
+      select: { froggeToken: true, froggeVenueId: true },
+    })
+    if (!venue?.froggeToken || !venue.froggeVenueId) return
+    const room = await prisma.room.findUnique({
+      where: { id: roomId },
+      select: { froggeRoomId: true },
+    })
+    if (!room?.froggeRoomId) return
+    const { releaseRoom } = await import("@/lib/frogge-api")
+    await releaseRoom(venue.froggeVenueId, room.froggeRoomId, venue.froggeToken)
+  } catch (error) {
+    console.error("[Plugin API] Frogge release sync failed:", error)
   }
 }

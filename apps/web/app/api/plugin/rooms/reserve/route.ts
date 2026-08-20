@@ -63,6 +63,8 @@ export async function POST(request: NextRequest) {
       },
     })
 
+    syncFroggeReserve(venueId, roomId, durationMinutes)
+
     return NextResponse.json({ success: true, endAt: endAt.toISOString() })
   } catch (error) {
     if (error instanceof z.ZodError) {
@@ -70,5 +72,24 @@ export async function POST(request: NextRequest) {
     }
     console.error("[Plugin API] Error reserving room:", error)
     return NextResponse.json({ error: "Internal server error" }, { status: 500 })
+  }
+}
+
+async function syncFroggeReserve(venueId: string, roomId: string, durationMinutes: number) {
+  try {
+    const venue = await prisma.venue.findUnique({
+      where: { id: venueId },
+      select: { froggeToken: true, froggeVenueId: true },
+    })
+    if (!venue?.froggeToken || !venue.froggeVenueId) return
+    const room = await prisma.room.findUnique({
+      where: { id: roomId },
+      select: { froggeRoomId: true },
+    })
+    if (!room?.froggeRoomId) return
+    const { reserveRoom } = await import("@/lib/frogge-api")
+    await reserveRoom(venue.froggeVenueId, room.froggeRoomId, durationMinutes, venue.froggeToken)
+  } catch (error) {
+    console.error("[Plugin API] Frogge reserve sync failed:", error)
   }
 }
