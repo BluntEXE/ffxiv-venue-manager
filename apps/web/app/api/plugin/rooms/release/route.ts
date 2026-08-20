@@ -56,7 +56,7 @@ export async function POST(request: NextRequest) {
       },
     })
 
-    syncFroggeRelease(venueId, roomId)
+    await syncFroggeRelease(venueId, roomId)
 
     return NextResponse.json({ success: true })
   } catch (error) {

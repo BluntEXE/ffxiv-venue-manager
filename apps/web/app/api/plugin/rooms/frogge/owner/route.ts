@@ -28,7 +28,7 @@ export async function POST(request: NextRequest) {
 
     const venue = await prisma.venue.findUnique({
       where: { id: venueId },
-      select: { froggeToken: true },
+      select: { froggeToken: true, froggeVenueId: true },
     })
     if (!venue?.froggeToken) {
       return NextResponse.json({ error: "Frogge not connected" }, { status: 400 })
@@ -43,6 +43,15 @@ export async function POST(request: NextRequest) {
       where: { id: roomId },
       data: { ownerDiscordId: ownerDiscordId || null },
     })
+
+    if (venue.froggeVenueId && room.froggeRoomId) {
+      try {
+        const { setRoomOwner } = await import("@/lib/frogge-api")
+        await setRoomOwner(venue.froggeVenueId, room.froggeRoomId, ownerDiscordId || null, venue.froggeToken)
+      } catch (error) {
+        console.error("[Plugin API] Frogge owner sync failed:", error)
+      }
+    }
 
     return NextResponse.json({ success: true })
   } catch (error) {

@@ -1,25 +1,31 @@
 import { prisma } from "@/lib/prisma"
 
-const FROGGE_API_URL = process.env.FROGGE_API_URL ?? "https://api.frogge.gg"
+const FROGGE_API_URL = process.env.FROGGE_API_URL ?? "https://api.frogge.tech"
 const FROGGE_CLIENT_ID = process.env.FROGGE_CLIENT_ID ?? "xvm"
 const USER_AGENT = "XIV-Venue-Manager/1.0"
 
 export interface RedeemResult {
   token: string
-  froggeVenueId: string
+  discord_user_id: string
+  discord_username: string
+  client: string
+  scopes: string[]
+  froggeVenueId?: string
 }
 
 // ── Types ──────────────────────────────────────────────────────
 
 export interface FroggeRoom {
-  id: number
+  id: string
   name: string | null
   room_number: number
   locked: boolean
   disabled: boolean
+  status: string
   owner_discord_id: string | null
   images: FroggeRoomImage[]
-  reservations: FroggeReservation[]
+  current_reservation: FroggeReservation | null
+  reservations?: FroggeReservation[]
 }
 
 interface FroggeRoomImage {
@@ -28,11 +34,18 @@ interface FroggeRoomImage {
 }
 
 export interface FroggeReservation {
-  id: number
-  owner_discord_id: string
-  room_id: number
+  id: string
+  reserved_discord_id: string
+  room_id: string
   start_at: string
   end_at: string | null
+  source: string
+}
+
+export interface FroggeVenue {
+  id: string
+  name: string
+  discord_guild_id?: string
 }
 
 // ── Internal fetch helper ──────────────────────────────────────
@@ -66,27 +79,75 @@ export async function redeemCode(code: string): Promise<RedeemResult> {
   })
 }
 
+export async function getVenues(bearerToken: string): Promise<FroggeVenue[]> {
+  return froggeFetch<FroggeVenue[]>("/v2/venues", {}, bearerToken)
+}
+
 // ── Public API ─────────────────────────────────────────────────
 
 export async function getRooms(froggeVenueId: string, bearerToken?: string): Promise<FroggeRoom[]> {
   return froggeFetch<FroggeRoom[]>(`/v2/venues/${froggeVenueId}/rooms`, {}, bearerToken)
 }
 
-export async function reserveRoom(
+export async function walkInReserve(
   froggeVenueId: string,
-  froggeRoomId: number,
-  durationMinutes: number,
+  froggeRoomId: string,
+  discordUserId: string,
   bearerToken?: string
 ): Promise<void> {
   await froggeFetch(
     `/v2/venues/${froggeVenueId}/rooms/${froggeRoomId}/reserve`,
-    { method: "POST", body: JSON.stringify({ duration_minutes: durationMinutes }) },
+    { method: "POST", body: JSON.stringify({ discord_user_id: discordUserId }) },
     bearerToken
   )
 }
 
-export async function releaseRoom(froggeVenueId: string, froggeRoomId: number, bearerToken?: string): Promise<void> {
+export async function createReservation(
+  froggeVenueId: string,
+  froggeRoomId: string,
+  params: { reserved_discord_id: string; start_at: string; end_at: string; source: string },
+  bearerToken?: string
+): Promise<void> {
+  await froggeFetch(
+    `/v2/venues/${froggeVenueId}/rooms/${froggeRoomId}/reservations`,
+    { method: "POST", body: JSON.stringify(params) },
+    bearerToken
+  )
+}
+
+export async function releaseRoom(
+  froggeVenueId: string,
+  froggeRoomId: string,
+  bearerToken?: string
+): Promise<void> {
   await froggeFetch(`/v2/venues/${froggeVenueId}/rooms/${froggeRoomId}/release`, { method: "POST" }, bearerToken)
+}
+
+export async function pushRoomImage(
+  froggeVenueId: string,
+  froggeRoomId: string,
+  imageUrl: string,
+  sortOrder: number,
+  bearerToken?: string
+): Promise<void> {
+  await froggeFetch(
+    `/v2/venues/${froggeVenueId}/rooms/${froggeRoomId}/images`,
+    { method: "POST", body: JSON.stringify({ image_url: imageUrl, sort_order: sortOrder }) },
+    bearerToken
+  )
+}
+
+export async function setRoomOwner(
+  froggeVenueId: string,
+  froggeRoomId: string,
+  ownerDiscordId: string | null,
+  bearerToken?: string
+): Promise<void> {
+  await froggeFetch(
+    `/v2/venues/${froggeVenueId}/rooms/${froggeRoomId}`,
+    { method: "PATCH", body: JSON.stringify({ owner_discord_id: ownerDiscordId }) },
+    bearerToken
+  )
 }
 
 export async function postRoomsToDiscord(froggeVenueId: string, bearerToken?: string): Promise<void> {
@@ -105,6 +166,10 @@ export async function getGuildMembers(bearerToken: string): Promise<GuildMember[
 }
 
 // ── Local cache helpers ────────────────────────────────────────
+
+function computeOccupancy(status: string | undefined): boolean {
+  return status === "reserved"
+}
 
 export async function getRoomsWithFallback(venueId: string): Promise<FroggeRoom[]> {
   try {
@@ -133,45 +198,42 @@ async function getLocalRooms(venueId: string): Promise<FroggeRoom[]> {
   })
 
   return localRooms.map((r) => ({
-    id: r.froggeRoomId ?? 0,
+    id: r.froggeRoomId ?? "",
     name: r.name,
     room_number: r.roomNumber ?? 0,
     locked: r.locked,
     disabled: r.disabled,
-    owner_discord_id: null,
+    status: r.disabled ? "disabled" : r.locked ? "locked" : r.isOccupied ? "reserved" : "available",
+    owner_discord_id: r.ownerDiscordId,
     images: [],
-    reservations: r.isOccupied
-      ? [{ id: 0, owner_discord_id: "unknown", start_at: "", end_at: null, room_id: r.froggeRoomId ?? 0 }]
-      : [],
+    current_reservation: null,
   }))
 }
 
 async function syncLocalCache(venueId: string, rooms: FroggeRoom[]): Promise<void> {
   for (const room of rooms) {
-    await prisma.room.upsert({
-      where: {
-        venueId_name: { venueId, name: room.name ?? `Room ${room.room_number}` },
-      },
-      update: {
-        froggeRoomId: room.id,
-        roomNumber: room.room_number,
-        locked: room.locked,
-        disabled: room.disabled,
-        isOccupied: room.reservations.some((r) => !r.end_at || new Date(r.end_at) > new Date()),
-        imageUrl: room.images[0]?.image_url ?? null,
-        lastSyncedAt: new Date(),
-      },
-      create: {
-        venueId,
-        name: room.name ?? `Room ${room.room_number}`,
-        froggeRoomId: room.id,
-        roomNumber: room.room_number,
-        locked: room.locked,
-        disabled: room.disabled,
-        isOccupied: room.reservations.some((r) => !r.end_at || new Date(r.end_at) > new Date()),
-        imageUrl: room.images[0]?.image_url ?? null,
-        lastSyncedAt: new Date(),
-      },
-    })
+    const existing = await prisma.room.findFirst({ where: { venueId, froggeRoomId: room.id } })
+
+    const data = {
+      name: room.name ?? `Room ${room.room_number}`,
+      roomNumber: room.room_number,
+      locked: room.locked,
+      disabled: room.disabled,
+      isOccupied: computeOccupancy(room.status),
+      imageUrl: room.images?.[0]?.image_url ?? null,
+      lastSyncedAt: new Date(),
+    }
+
+    if (existing) {
+      await prisma.room.update({ where: { id: existing.id }, data })
+    } else {
+      await prisma.room.create({
+        data: {
+          venueId,
+          froggeRoomId: room.id,
+          ...data,
+        },
+      })
+    }
   }
 }

@@ -87,6 +87,24 @@ export const PATCH = withRateLimit<{
         data,
       })
 
+      if (parsed.imageUrl !== undefined && gate.venue!.froggeVenueId) {
+        try {
+          const froggeRoom = await prisma.room.findUnique({ where: { id: roomId }, select: { froggeRoomId: true } })
+          if (froggeRoom?.froggeRoomId) {
+            const venueWithToken = await prisma.venue.findUnique({
+              where: { id: venueId },
+              select: { froggeToken: true, froggeVenueId: true },
+            })
+            if (venueWithToken?.froggeToken && venueWithToken.froggeVenueId) {
+              const { pushRoomImage } = await import("@/lib/frogge-api")
+              await pushRoomImage(venueWithToken.froggeVenueId, froggeRoom.froggeRoomId, updated.imageUrl ?? "", 0, venueWithToken.froggeToken)
+            }
+          }
+        } catch (error) {
+          console.error("[rooms/:id] Frogge image sync failed:", error)
+        }
+      }
+
       return NextResponse.json({
         id: updated.id,
         name: updated.name,

@@ -555,7 +555,7 @@ model Room {
   imageUrl    String?
 
   // Frogge integration
-  froggeRoomId    Int?
+  froggeRoomId    String?
   roomNumber      Int?
   locked          Boolean   @default(false)
   disabled        Boolean   @default(false)

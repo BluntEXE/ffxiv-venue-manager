@@ -63,7 +63,7 @@ export async function POST(request: NextRequest) {
       },
     })
 
-    syncFroggeReserve(venueId, roomId, durationMinutes)
+    await syncFroggeReserve(venueId, roomId, durationMinutes, auth.userId)
 
     return NextResponse.json({ success: true, endAt: endAt.toISOString() })
   } catch (error) {
@@ -75,7 +75,12 @@ export async function POST(request: NextRequest) {
   }
 }
 
-async function syncFroggeReserve(venueId: string, roomId: string, durationMinutes: number) {
+async function syncFroggeReserve(
+  venueId: string,
+  roomId: string,
+  durationMinutes: number,
+  userId: string
+) {
   try {
     const venue = await prisma.venue.findUnique({
       where: { id: venueId },
@@ -87,8 +92,26 @@ async function syncFroggeReserve(venueId: string, roomId: string, durationMinute
       select: { froggeRoomId: true },
     })
     if (!room?.froggeRoomId) return
-    const { reserveRoom } = await import("@/lib/frogge-api")
-    await reserveRoom(venue.froggeVenueId, room.froggeRoomId, durationMinutes, venue.froggeToken)
+    const user = await prisma.user.findUnique({
+      where: { id: userId },
+      select: { discordId: true },
+    })
+    if (!user?.discordId) return
+
+    const { createReservation } = await import("@/lib/frogge-api")
+    const now = new Date()
+    const endAt = new Date(now.getTime() + durationMinutes * 60 * 1000)
+    await createReservation(
+      venue.froggeVenueId,
+      room.froggeRoomId,
+      {
+        reserved_discord_id: user.discordId,
+        start_at: now.toISOString(),
+        end_at: endAt.toISOString(),
+        source: "plugin_manual",
+      },
+      venue.froggeToken
+    )
   } catch (error) {
     console.error("[Plugin API] Frogge reserve sync failed:", error)
   }
