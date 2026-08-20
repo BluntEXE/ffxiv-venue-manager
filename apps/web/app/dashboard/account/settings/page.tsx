@@ -4,7 +4,7 @@ import { useEffect, useState } from "react"
 import { useSession, signOut } from "next-auth/react"
 import { useRouter } from "next/navigation"
 import Link from "next/link"
-import { ArrowLeft, Save, LogOut, Trash2 } from "lucide-react"
+import { ArrowLeft, Save, LogOut, Trash2, Bell, Key } from "lucide-react"
 import {
   AlertDialog,
   AlertDialogAction,
@@ -16,6 +16,16 @@ import {
   AlertDialogTitle,
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog"
+import { LocalTime } from "@/components/server-time"
+
+interface ApiKey {
+  id: string
+  key: string
+  name: string
+  createdAt: string
+  lastUsedAt: string | null
+  venue: { id: string; name: string; slug: string } | null
+}
 
 export default function AccountSettingsPage() {
   const { data: session } = useSession()
@@ -26,9 +36,55 @@ export default function AccountSettingsPage() {
   const [saved, setSaved] = useState(false)
   const [error, setError] = useState("")
 
+  const [notifications, setNotifications] = useState({
+    newFollower: false,
+    eventRsvp: false,
+    lowStaffCoverage: false,
+    dailySummary: false,
+  })
+
+  const [apiKeys, setApiKeys] = useState<ApiKey[]>([])
+  const [newKeyName, setNewKeyName] = useState("")
+  const [loadingKeys, setLoadingKeys] = useState(true)
+
   useEffect(() => {
     if (session?.user?.name) setDisplayName(session.user.name)
   }, [session])
+
+  useEffect(() => {
+    const loadProfile = async () => {
+      try {
+        const res = await fetch("/api/user/profile")
+        if (res.ok) {
+          const data = await res.json()
+          const settings = data.settings as { notifications?: Record<string, boolean> } | undefined
+          if (settings?.notifications) {
+            setNotifications((prev) => ({ ...prev, ...settings.notifications }))
+          }
+        }
+      } catch {
+        // Profile load failed, use defaults
+      }
+    }
+    loadProfile()
+  }, [])
+
+  useEffect(() => {
+    const loadKeys = async () => {
+      try {
+        const res = await fetch("/api/plugin/keys")
+        if (res.ok) {
+          const data = await res.json()
+          setApiKeys(data.keys ?? [])
+        }
+      } catch {
+        // Keys load failed
+      } finally {
+        setLoadingKeys(false)
+      }
+    }
+    loadKeys()
+  }, [])
 
   const save = async () => {
     setSaving(true)
@@ -37,7 +93,10 @@ export default function AccountSettingsPage() {
       const res = await fetch("/api/user/profile", {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ displayName: displayName.trim() }),
+        body: JSON.stringify({
+          displayName: displayName.trim(),
+          notifications,
+        }),
       })
       if (!res.ok) {
         const d = await res.json()
@@ -49,6 +108,35 @@ export default function AccountSettingsPage() {
       setError(e instanceof Error ? e.message : "Failed to save")
     } finally {
       setSaving(false)
+    }
+  }
+
+  const createKey = async () => {
+    if (!newKeyName.trim()) return
+    try {
+      const res = await fetch("/api/plugin/keys", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ name: newKeyName.trim() }),
+      })
+      if (res.ok) {
+        const data = await res.json()
+        setApiKeys((prev) => [{ ...data, venue: data.venue ?? null }, ...prev])
+        setNewKeyName("")
+      }
+    } catch {
+      // Create failed
+    }
+  }
+
+  const revokeKey = async (keyId: string) => {
+    try {
+      const res = await fetch(`/api/plugin/keys/${keyId}`, { method: "DELETE" })
+      if (res.ok) {
+        setApiKeys((prev) => prev.filter((k) => k.id !== keyId))
+      }
+    } catch {
+      // Revoke failed
     }
   }
 
@@ -107,6 +195,107 @@ export default function AccountSettingsPage() {
             <Save className="w-4 h-4" />
             {saving ? "Saving…" : saved ? "Saved!" : "Save changes"}
           </button>
+        </div>
+      </div>
+
+      {/* Notifications */}
+      <div className="vcard overflow-hidden mt-6">
+        <div className="flex items-center gap-2 px-[22px] py-[13px] border-b border-[var(--blue-008)] font-semibold text-sm">
+          <Bell className="w-4 h-4" />
+          Notifications
+        </div>
+        <div className="pbody space-y-1">
+          {[
+            { key: "newFollower" as const, title: "New follower", desc: "When someone follows your venue." },
+            { key: "eventRsvp" as const, title: "Event RSVPs", desc: "When a patron RSVPs to an event." },
+            {
+              key: "lowStaffCoverage" as const,
+              title: "Low staff coverage",
+              desc: "When an open shift is unfilled within 24h.",
+            },
+            { key: "dailySummary" as const, title: "Daily summary", desc: "A nightly recap of sales and attendance." },
+          ].map(({ key, title, desc }) => (
+            <div key={key} className="flex items-center justify-between py-3 px-1">
+              <div>
+                <div className="text-sm font-medium">{title}</div>
+                <div className="text-xs text-[var(--fg-faint)]">{desc}</div>
+              </div>
+              <button
+                type="button"
+                onClick={() => setNotifications((prev) => ({ ...prev, [key]: !prev[key] }))}
+                className={`w-10 h-[22px] rounded-full transition-colors relative ${
+                  notifications[key] ? "bg-[var(--xiv-blue)]" : "bg-[var(--blue-018)]"
+                }`}
+              >
+                <span
+                  className={`absolute top-[3px] w-4 h-4 rounded-full bg-white transition-transform ${
+                    notifications[key] ? "left-[22px]" : "left-[3px]"
+                  }`}
+                />
+              </button>
+            </div>
+          ))}
+          <button
+            onClick={save}
+            disabled={saving}
+            className="xiv-btn-shimmer xiv-cta flex items-center gap-2 px-5 py-2.5 rounded-lg text-sm font-semibold disabled:opacity-50 disabled:cursor-not-allowed mt-4"
+          >
+            <Save className="w-4 h-4" />
+            {saving ? "Saving…" : saved ? "Saved!" : "Save changes"}
+          </button>
+        </div>
+      </div>
+
+      {/* API Keys */}
+      <div className="vcard overflow-hidden mt-6">
+        <div className="flex items-center gap-2 px-[22px] py-[13px] border-b border-[var(--blue-008)] font-semibold text-sm">
+          <Key className="w-4 h-4" />
+          My API Keys
+        </div>
+        <div className="pbody space-y-4">
+          {loadingKeys ? (
+            <p className="text-sm text-[var(--fg-faint)]">Loading…</p>
+          ) : apiKeys.length === 0 ? (
+            <p className="text-sm text-[var(--fg-faint)]">No API keys yet. Create one for the Dalamud plugin.</p>
+          ) : (
+            <div className="space-y-2">
+              {apiKeys.map((key) => (
+                <div key={key.id} className="flex items-center justify-between p-3 rounded-lg border border-[var(--blue-015)]">
+                  <div>
+                    <div className="text-sm font-medium">{key.name}</div>
+                    <div className="text-xs text-[var(--fg-faint)]">
+                      {key.venue?.name ?? "All venues"} · Last used{" "}
+                      {key.lastUsedAt ? <LocalTime date={key.lastUsedAt} /> : "never"}
+                    </div>
+                  </div>
+                  <button
+                    onClick={() => revokeKey(key.id)}
+                    className="text-xs font-medium text-[var(--support-pink)] hover:underline"
+                  >
+                    Revoke
+                  </button>
+                </div>
+              ))}
+            </div>
+          )}
+          <div className="flex gap-2">
+            <input
+              placeholder="Key name"
+              value={newKeyName}
+              onChange={(e) => setNewKeyName(e.target.value)}
+              className="flex-1 bg-background border border-[var(--blue-015)] rounded-[var(--radius-md)] px-[13px] py-[10px] text-[0.88rem] text-foreground outline-none focus:border-[var(--blue-035)] transition-colors"
+            />
+            <button
+              onClick={createKey}
+              disabled={!newKeyName.trim()}
+              className="xiv-btn-shimmer xiv-cta px-5 py-2.5 rounded-lg text-sm font-semibold disabled:opacity-50 disabled:cursor-not-allowed"
+            >
+              Create Key
+            </button>
+          </div>
+          <Link href="/dashboard/api-keys" className="text-xs text-[var(--xiv-blue)] hover:underline">
+            Full key management →
+          </Link>
         </div>
       </div>
 

@@ -22,6 +22,7 @@ model User {
   image         String?
   discordId     String?   @unique
   displayName   String?
+  settings      Json?
   isAdmin       Boolean   @default(false)
   createdAt     DateTime  @default(now())
   updatedAt     DateTime  @updatedAt

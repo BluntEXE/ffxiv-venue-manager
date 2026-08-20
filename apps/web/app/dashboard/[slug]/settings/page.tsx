@@ -1288,8 +1288,27 @@ export default function SettingsPage({ params }: { params: Promise<{ slug: strin
                   Connected
                 </span>
               </div>
+            </section>
 
-              {/* Discord Shift Bot */}
+            {/* ── Discord Shift Bot ── */}
+            <section className="panel">
+              <div className="ph">
+                <span className="pt">
+                  <svg
+                    xmlns="http://www.w3.org/2000/svg"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    strokeWidth="2"
+                  >
+                    <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2" />
+                    <circle cx="9" cy="7" r="4" />
+                    <path d="M23 21v-2a4 4 0 0 0-3-3.87" />
+                    <path d="M16 3.13a4 4 0 0 1 0 7.75" />
+                  </svg>
+                  Discord Shift Bot
+                </span>
+              </div>
               <div className="introw" style={{ flexWrap: "wrap", gap: 14 }}>
                 <span className="iconbadge ii" style={{ width: 40, height: 40 }}>
                   <svg
@@ -1462,7 +1481,7 @@ export default function SettingsPage({ params }: { params: Promise<{ slug: strin
               </div>
             </section>
 
-            {/* ── Pot Payroll ── */}
+            {/* ── Operations ── */}
             <section className="panel">
               <div className="ph">
                 <span className="pt">
@@ -1477,9 +1496,11 @@ export default function SettingsPage({ params }: { params: Promise<{ slug: strin
                     <path d="M12 8v8" />
                     <path d="M9 10.5a2.5 2.5 0 0 1 2.5-2.5h1a2.5 2.5 0 0 1 0 5h-1a2.5 2.5 0 0 0 0 5h1a2.5 2.5 0 0 0 2.5-2.5" />
                   </svg>
-                  Pot Payroll
+                  Operations
                 </span>
               </div>
+
+              {/* Pot Payroll */}
               <div className="introw" style={{ flexWrap: "wrap", gap: 14 }}>
                 <span className="iconbadge ii" style={{ width: 40, height: 40 }}>
                   <svg
@@ -1542,25 +1563,8 @@ export default function SettingsPage({ params }: { params: Promise<{ slug: strin
                   </div>
                 )}
               </div>
-            </section>
 
-            {/* ── Bar Inventory Tracking ── */}
-            <section className="panel">
-              <div className="ph">
-                <span className="pt">
-                  <svg
-                    xmlns="http://www.w3.org/2000/svg"
-                    viewBox="0 0 24 24"
-                    fill="none"
-                    stroke="currentColor"
-                    strokeWidth="2"
-                  >
-                    <path d="M8 2h8" />
-                    <path d="M9 2v6.5L4.5 18a2 2 0 0 0 1.8 3h11.4a2 2 0 0 0 1.8-3L15 8.5V2" />
-                  </svg>
-                  Bar Inventory Tracking
-                </span>
-              </div>
+              {/* Bar Inventory */}
               <div className="introw" style={{ flexWrap: "wrap", gap: 14 }}>
                 <span className="iconbadge ii" style={{ width: 40, height: 40 }}>
                   <svg
@@ -1823,59 +1827,6 @@ export default function SettingsPage({ params }: { params: Promise<{ slug: strin
                   </div>
                 ))}
               </div>
-            </section>
-
-            {/* ── Notifications ── */}
-            <section className="panel">
-              <div className="ph">
-                <span className="pt">
-                  <svg
-                    xmlns="http://www.w3.org/2000/svg"
-                    viewBox="0 0 24 24"
-                    fill="none"
-                    stroke="currentColor"
-                    strokeWidth="2"
-                  >
-                    <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9" />
-                    <path d="M13.73 21a2 2 0 0 1-3.46 0" />
-                  </svg>
-                  Notifications
-                </span>
-              </div>
-              {[
-                { key: "newFollower", title: "New follower", desc: "When someone follows your venue." },
-                { key: "eventRsvp", title: "Event RSVPs", desc: "When a patron RSVPs to an event." },
-                {
-                  key: "lowStaffCoverage",
-                  title: "Low staff coverage",
-                  desc: "When an open shift is unfilled within 24h.",
-                },
-                { key: "dailySummary", title: "Daily summary", desc: "A nightly recap of sales and attendance." },
-              ].map(({ key, title, desc }) => {
-                const val = (settings.notifications as Record<string, boolean> | undefined)?.[key] ?? false
-                return (
-                  <div key={key} className="setrow">
-                    <div className="sinfo">
-                      <div className="stitle">{title}</div>
-                      <div className="sdesc">{desc}</div>
-                    </div>
-                    <button
-                      type="button"
-                      onClick={() =>
-                        setSettings({
-                          ...settings,
-                          notifications: {
-                            ...((settings.notifications as Record<string, boolean>) ?? {}),
-                            [key]: !val,
-                          },
-                        })
-                      }
-                      disabled={isSaving}
-                      className={`toggle${val ? " on" : ""}`}
-                    />
-                  </div>
-                )
-              })}
             </section>
 
             {/* ── Danger zone ── */}

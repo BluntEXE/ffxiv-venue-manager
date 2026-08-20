@@ -106,8 +106,6 @@ export interface VenueSettings {
   defaultHours?: string // e.g. "10PM–2AM"
   openNights?: string // e.g. "Fri & Sat"
   isAdult?: boolean // 18+ venue
-  /** Web notification preferences (key = notification type, value = enabled) */
-  notifications?: Record<string, boolean>
   /** Discord shift bot configuration */
   shiftBot?: ShiftBotSettings
 }

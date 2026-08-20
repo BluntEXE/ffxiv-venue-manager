@@ -11,7 +11,13 @@ interface CreateNotificationInput {
   link?: string
 }
 
-/** Notify all owners (and optionally managers) of a venue */
+const NOTIFICATION_PREF_MAP: Record<NotificationType, string> = {
+  NEW_FOLLOWER: "newFollower",
+  STAFF_JOINED: "lowStaffCoverage",
+  TASK_ASSIGNED: "lowStaffCoverage",
+  TASK_COMPLETED: "lowStaffCoverage",
+}
+
 export async function notifyVenueOwners(
   venueId: string,
   input: Omit<CreateNotificationInput, "userId">,
@@ -19,11 +25,22 @@ export async function notifyVenueOwners(
 ): Promise<void> {
   const members = await prisma.membership.findMany({
     where: { venueId, role: { in: roles }, status: "active", userId: { not: null } },
-    select: { userId: true },
+    select: { userId: true, user: { select: { settings: true } } },
   })
   if (members.length === 0) return
+
+  const prefKey = NOTIFICATION_PREF_MAP[input.type]
+  const eligible = members.filter((m) => {
+    if (!prefKey) return true
+    const settings = (m.user?.settings as Record<string, unknown>) ?? {}
+    const notifications = (settings.notifications as Record<string, boolean>) ?? {}
+    return notifications[prefKey] !== false
+  })
+
+  if (eligible.length === 0) return
+
   await prisma.notification.createMany({
-    data: members.map((m) => ({ ...input, userId: m.userId! })),
+    data: eligible.map((m) => ({ ...input, userId: m.userId! })),
     skipDuplicates: true,
   })
 }

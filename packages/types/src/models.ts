@@ -17,6 +17,15 @@ import type {
   ShiftStatus,
 } from "./enums"
 
+export type UserSettings = {
+  notifications?: {
+    newFollower?: boolean
+    eventRsvp?: boolean
+    lowStaffCoverage?: boolean
+    dailySummary?: boolean
+  }
+}
+
 export type User = {
   id: string
   name: string | null
