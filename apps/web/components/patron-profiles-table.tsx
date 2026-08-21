@@ -2,7 +2,7 @@
 
 import { useState } from "react"
 import { formatLocalTime } from "@/components/server-time"
-import { History, Repeat, UserPlus, Crown } from "lucide-react"
+import { History, Repeat, UserPlus } from "lucide-react"
 import { DataTable } from "@/components/ui/data-table"
 
 export type PatronProfile = {
@@ -12,59 +12,32 @@ export type PatronProfile = {
   visits: number
   lastSeen: string // ISO
   totalSpent?: number
-  isVip: boolean
   isBanned: boolean
   banReason: string | null
 }
 
-export function patronTag(visits: number, isVip: boolean): "vip" | "regular" | "new" {
-  if (isVip) return "vip"
+export function patronTag(visits: number): "regular" | "new" {
   if (visits >= 3) return "regular"
   return "new"
 }
 
-type TabKey = "all" | "vip" | "regular" | "new"
+type TabKey = "all" | "regular" | "new"
 
 export function PatronProfilesTable({
   profiles,
   venueId,
-  canSetVip,
+  canModerate,
 }: {
   profiles: PatronProfile[]
   venueId: string
-  canSetVip: boolean
+  canModerate: boolean
 }) {
   const [activeTab, setActiveTab] = useState<TabKey>("all")
   const [search, setSearch] = useState("")
   const [localProfiles, setLocalProfiles] = useState(profiles)
-  const [pendingVipIds, setPendingVipIds] = useState<Set<string>>(new Set())
   const [banningId, setBanningId] = useState<string | null>(null) // row currently showing the reason input
   const [banReasonInput, setBanReasonInput] = useState("")
   const [pendingBanIds, setPendingBanIds] = useState<Set<string>>(new Set())
-
-  async function toggleVip(patron: PatronProfile) {
-    if (!canSetVip || !patron.id || pendingVipIds.has(patron.id)) return
-    const nextIsVip = !patron.isVip
-    setPendingVipIds((prev) => new Set(prev).add(patron.id))
-    setLocalProfiles((prev) => prev.map((p) => (p.id === patron.id ? { ...p, isVip: nextIsVip } : p)))
-    try {
-      const res = await fetch(`/api/venues/${venueId}/patrons/${patron.id}/vip`, {
-        method: "PATCH",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ isVip: nextIsVip }),
-      })
-      if (!res.ok) throw new Error("request failed")
-    } catch {
-      // Roll back on failure
-      setLocalProfiles((prev) => prev.map((p) => (p.id === patron.id ? { ...p, isVip: patron.isVip } : p)))
-    } finally {
-      setPendingVipIds((prev) => {
-        const next = new Set(prev)
-        next.delete(patron.id)
-        return next
-      })
-    }
-  }
 
   async function setBan(patron: PatronProfile, isBanned: boolean, reason?: string) {
     if (!patron.id || pendingBanIds.has(patron.id)) return
@@ -98,13 +71,12 @@ export function PatronProfilesTable({
 
   const counts = {
     all: localProfiles.length,
-    vip: localProfiles.filter((p) => patronTag(p.visits, p.isVip) === "vip").length,
-    regular: localProfiles.filter((p) => patronTag(p.visits, p.isVip) === "regular").length,
-    new: localProfiles.filter((p) => patronTag(p.visits, p.isVip) === "new").length,
+    regular: localProfiles.filter((p) => patronTag(p.visits) === "regular").length,
+    new: localProfiles.filter((p) => patronTag(p.visits) === "new").length,
   }
 
   const visible = localProfiles.filter((p) => {
-    if (activeTab !== "all" && patronTag(p.visits, p.isVip) !== activeTab) return false
+    if (activeTab !== "all" && patronTag(p.visits) !== activeTab) return false
     if (
       search &&
       !p.characterName.toLowerCase().includes(search.toLowerCase()) &&
@@ -117,7 +89,6 @@ export function PatronProfilesTable({
   const tabs: { key: TabKey; label: string }[] = [
     { key: "all", label: "All" },
     { key: "regular", label: "Regulars" },
-    { key: "vip", label: "VIPs" },
     { key: "new", label: "New" },
   ]
 
@@ -155,16 +126,6 @@ export function PatronProfilesTable({
           <div className="v">{counts.new}</div>
           <div className="delta flat">1–2 visits</div>
         </div>
-        <div className="stat">
-          <div className="top">
-            <span className="sb am">
-              <Crown />
-            </span>
-          </div>
-          <div className="k">VIPs</div>
-          <div className="v">{counts.vip}</div>
-          <div className="delta flat">staff-flagged</div>
-        </div>
       </div>
 
       {/* Filters */}
@@ -201,7 +162,7 @@ export function PatronProfilesTable({
           emptyMessage="No patrons found."
         >
           {visible.map((p) => {
-            const t = patronTag(p.visits, p.isVip)
+            const t = patronTag(p.visits)
             const initials = p.characterName
               .split(" ")
               .map((n) => n[0])
@@ -233,22 +194,7 @@ export function PatronProfilesTable({
                         Banned
                       </span>
                     )}
-                    {t === "vip" && <span className="tag vip">VIP</span>}
-                    {canSetVip && p.id && (
-                      <button
-                        type="button"
-                        onClick={() => toggleVip(p)}
-                        disabled={pendingVipIds.has(p.id)}
-                        className="tag neutral"
-                        style={{
-                          cursor: pendingVipIds.has(p.id) ? "default" : "pointer",
-                          opacity: pendingVipIds.has(p.id) ? 0.6 : 1,
-                        }}
-                      >
-                        {t === "vip" ? "Unmark VIP" : "Mark VIP"}
-                      </button>
-                    )}
-                    {canSetVip && p.id && !p.isBanned && banningId !== p.id && (
+                    {canModerate && p.id && !p.isBanned && banningId !== p.id && (
                       <button
                         type="button"
                         onClick={() => {
@@ -261,7 +207,7 @@ export function PatronProfilesTable({
                         Ban
                       </button>
                     )}
-                    {canSetVip && p.id && p.isBanned && (
+                    {canModerate && p.id && p.isBanned && (
                       <button
                         type="button"
                         onClick={() => setBan(p, false)}
@@ -275,7 +221,7 @@ export function PatronProfilesTable({
                         Unban
                       </button>
                     )}
-                    {canSetVip && p.id && banningId === p.id && (
+                    {canModerate && p.id && banningId === p.id && (
                       <div style={{ display: "flex", gap: 4, alignItems: "center" }}>
                         <input
                           type="text"
@@ -313,7 +259,7 @@ export function PatronProfilesTable({
                         </button>
                       </div>
                     )}
-                    {(t === "vip" || t === "regular") && <span className="tag neutral">Regular</span>}
+                    {t === "regular" && <span className="tag neutral">Regular</span>}
                     {t === "new" && <span className="tag em">New</span>}
                   </div>
                 </td>
