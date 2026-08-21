@@ -6,30 +6,38 @@ const WEBHOOK_SECRET = process.env.FROGGE_WEBHOOK_SECRET
 
 function verifyWebhookSignature(
   body: string,
-  headers: { "svix-id": string | null; "svix-timestamp": string | null; "svix-signature": string | null }
+  headers: { id: string | null; timestamp: string | null; signature: string | null }
 ): boolean {
-  if (!WEBHOOK_SECRET) return true
-  const { "svix-id": svixId, "svix-timestamp": svixTimestamp, "svix-signature": svixSignature } = headers
-  if (!svixId || !svixTimestamp || !svixSignature) return false
-  const toSign = `${svixId}.${svixTimestamp}.${body}`
-  const signature = crypto.createHmac("sha256", WEBHOOK_SECRET).update(toSign).digest("base64")
-  return svixSignature.split(" ").some((s) => {
+  if (!WEBHOOK_SECRET) return false
+  const { id, timestamp, signature } = headers
+  if (!id || !timestamp || !signature) return false
+  const toSign = `${id}.${timestamp}.${body}`
+  const expected = crypto.createHmac("sha256", WEBHOOK_SECRET).update(toSign).digest("base64")
+  return signature.split(" ").some((s) => {
     const [version, sig] = s.split(",")
-    return version === "v1" && sig === signature
+    if (version !== "v1" || !sig) return false
+    const a = Buffer.from(expected)
+    const b = Buffer.from(sig)
+    if (a.length !== b.length) return false
+    return crypto.timingSafeEqual(a, b)
   })
+}
+
+function readSignatureHeaders(request: NextRequest) {
+  return {
+    id: request.headers.get("webhook-id") ?? request.headers.get("svix-id"),
+    timestamp: request.headers.get("webhook-timestamp") ?? request.headers.get("svix-timestamp"),
+    signature: request.headers.get("webhook-signature") ?? request.headers.get("svix-signature"),
+  }
 }
 
 export async function POST(request: NextRequest) {
   try {
     const body = await request.text()
-    const isDev = process.env.NODE_ENV === "development" || request.headers.get("x-dev-bypass") === "true"
+    const isDev = process.env.NODE_ENV === "development"
 
     if (!isDev) {
-      const isValid = verifyWebhookSignature(body, {
-        "svix-id": request.headers.get("svix-id"),
-        "svix-timestamp": request.headers.get("svix-timestamp"),
-        "svix-signature": request.headers.get("svix-signature"),
-      })
+      const isValid = verifyWebhookSignature(body, readSignatureHeaders(request))
       if (!isValid) return NextResponse.json({ error: "Invalid signature" }, { status: 401 })
     }
 
@@ -50,12 +58,13 @@ export async function POST(request: NextRequest) {
 
     const roomData = data.room || data
     const roomId = roomData?.id
+    if (!roomId) {
+      return NextResponse.json({ error: "Missing room ID" }, { status: 400 })
+    }
 
     if (type === "room.created" || type === "room.updated" || type === "room.reserved" || type === "room.released") {
-      if (!roomId) return NextResponse.json({ error: "Missing room ID" }, { status: 400 })
-
-      const reservations = roomData.reservations || []
-      const isOccupied = reservations.some((r: any) => !r.end_at || new Date(r.end_at) > new Date())
+      const froggeStatus = roomData.status as string | undefined
+      const isOccupied = froggeStatus ? froggeStatus === "reserved" : false
 
       const existing = await prisma.room.findFirst({ where: { venueId: venue.id, froggeRoomId: roomId } })
 
@@ -90,9 +99,7 @@ export async function POST(request: NextRequest) {
         })
       }
     } else if (type === "room.deleted") {
-      if (roomId) {
-        await prisma.room.deleteMany({ where: { venueId: venue.id, froggeRoomId: roomId } })
-      }
+      await prisma.room.deleteMany({ where: { venueId: venue.id, froggeRoomId: roomId } })
     }
 
     return NextResponse.json({ received: true })

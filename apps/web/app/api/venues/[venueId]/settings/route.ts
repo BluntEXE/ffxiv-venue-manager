@@ -57,8 +57,6 @@ const updateSettingsSchema = z.object({
   defaultHours: z.string().max(100).optional(),
   openNights: z.string().max(100).optional(),
   isAdult: z.boolean().optional(),
-  // Notification preferences
-  notifications: z.record(z.string(), z.boolean()).optional(),
   // Discord Shift Bot
   shiftBot: z
     .object({

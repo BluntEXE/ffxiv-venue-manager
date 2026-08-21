@@ -11,14 +11,6 @@ const roomStatusSchema = z.object({
   note: z.string().max(500, "Note too long (max 500 characters)").optional(),
 })
 
-/**
- * POST /api/plugin/rooms/status
- *
- * Toggle a room's status from the plugin's Rooms tab. Any active
- * staff member (via checkPermission's 'toggle_room' action) — not
- * OWNER/MANAGER only, unlike the ban write endpoint. Also broadcasts
- * to the dashboard's live SSE feed, same as the web status route.
- */
 export async function POST(request: NextRequest) {
   try {
     const gate = await pluginAuthGate(request, "write")
@@ -46,8 +38,6 @@ export async function POST(request: NextRequest) {
       where: { id: roomId },
       data: {
         isOccupied,
-        // Preserve room.note when `note` is omitted from the request;
-        // only clear it when the caller sends an explicit empty string.
         note: note !== undefined ? note.trim() || null : room.note,
         updatedById: auth.userId,
       },
@@ -68,6 +58,8 @@ export async function POST(request: NextRequest) {
       },
     })
 
+    await syncFroggeStatus(venueId, roomId, isOccupied, auth.userId)
+
     return NextResponse.json({ success: true })
   } catch (error) {
     if (error instanceof z.ZodError) {
@@ -75,5 +67,39 @@ export async function POST(request: NextRequest) {
     }
     console.error("[Plugin API] Error setting room status:", error)
     return NextResponse.json({ error: "Internal server error" }, { status: 500 })
+  }
+}
+
+async function syncFroggeStatus(
+  venueId: string,
+  roomId: string,
+  isOccupied: boolean,
+  userId: string
+) {
+  try {
+    const venue = await prisma.venue.findUnique({
+      where: { id: venueId },
+      select: { froggeToken: true, froggeVenueId: true },
+    })
+    if (!venue?.froggeToken || !venue.froggeVenueId) return
+    const room = await prisma.room.findUnique({
+      where: { id: roomId },
+      select: { froggeRoomId: true },
+    })
+    if (!room?.froggeRoomId) return
+
+    const { walkInReserve, releaseRoom } = await import("@/lib/frogge-api")
+    if (isOccupied) {
+      const user = await prisma.user.findUnique({
+        where: { id: userId },
+        select: { discordId: true },
+      })
+      if (!user?.discordId) return
+      await walkInReserve(venue.froggeVenueId, room.froggeRoomId, user.discordId, venue.froggeToken)
+    } else {
+      await releaseRoom(venue.froggeVenueId, room.froggeRoomId, venue.froggeToken)
+    }
+  } catch (error) {
+    console.error("[Plugin API] Frogge status sync failed:", error)
   }
 }

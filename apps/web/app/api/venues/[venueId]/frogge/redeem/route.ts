@@ -2,7 +2,7 @@ import { NextResponse } from "next/server"
 import { getServerSession } from "next-auth"
 import { authOptions } from "@/lib/auth"
 import { prisma } from "@/lib/prisma"
-import { redeemCode } from "@/lib/frogge-api"
+import { redeemCode, getVenues } from "@/lib/frogge-api"
 
 export async function POST(request: Request, { params }: { params: Promise<{ venueId: string }> }) {
   try {
@@ -35,11 +35,21 @@ export async function POST(request: Request, { params }: { params: Promise<{ ven
 
     const result = await redeemCode(code)
 
+    let froggeVenueId: string | undefined = result.froggeVenueId
+    if (!froggeVenueId) {
+      try {
+        const venues = await getVenues(result.token)
+        froggeVenueId = venues[0]?.id
+      } catch {
+        froggeVenueId = undefined
+      }
+    }
+
     await prisma.venue.update({
       where: { id: venueId },
       data: {
         froggeToken: result.token,
-        froggeVenueId: result.froggeVenueId,
+        froggeVenueId,
         froggeConnectedAt: new Date(),
         froggeConnectedBy: session.user.id,
       },
