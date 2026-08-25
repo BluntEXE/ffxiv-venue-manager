@@ -1,0 +1,21 @@
+name: deploy-dev
+
+on:
+  push:
+    branches: [dev]
+
+permissions:
+  contents: read
+
+jobs:
+  deploy:
+    runs-on: self-hosted
+    timeout-minutes: 15
+    steps:
+      - name: Pull latest dev and rebuild
+        run: |
+          cd /home/server/xiv-app-dev
+          git fetch origin dev
+          git reset --hard origin/dev
+          cd /home/server/xiv-app
+          docker compose --profile dev up -d --build venue-manager-dev
