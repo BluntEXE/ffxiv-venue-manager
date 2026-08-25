@@ -40,8 +40,8 @@ export default function InviteStaffPage({ params }: { params: Promise<{ slug: st
         const venues = await venueResponse.json()
         const venue = venues.find((v: { slug: string }) => v.slug === slug)
 
-        if (venue?.membership?.role) {
-          setCurrentUserRole(venue.membership.role)
+        if (venue?.memberships?.[0]?.role) {
+          setCurrentUserRole(venue.memberships[0].role)
         }
       } catch (err) {
         console.error("Failed to fetch user role:", err)
