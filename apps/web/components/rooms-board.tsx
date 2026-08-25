@@ -175,7 +175,7 @@ export function RoomsBoard({ venueId, canManage, rooms, froggeConnected }: { ven
       })
       if (!res.ok) {
         const body = await res.json().catch(() => ({}))
-        setError(body.error || "Failed to add room")
+        setError(body.error || body.detail || "Failed to add room")
         return
       }
       const created = await res.json()
@@ -355,7 +355,7 @@ export function RoomsBoard({ venueId, canManage, rooms, froggeConnected }: { ven
       const res = await fetch(`/api/venues/${venueId}/rooms/post`, { method: "POST" })
       if (!res.ok) {
         const err = await res.json()
-        throw new Error(err.error ?? "Failed to post")
+        throw new Error(err.error ?? err.detail ?? "Failed to post")
       }
       setSuccess("Rooms posted to Discord")
     } catch (e) {
