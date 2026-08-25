@@ -4,7 +4,7 @@ import * as Sentry from "@sentry/nextjs"
 
 Sentry.init({
   dsn: process.env.SENTRY_DSN,
-  environment: process.env.NODE_ENV,
+  environment: process.env.SENTRY_ENVIRONMENT ?? process.env.NODE_ENV,
   // Errors only — performance tracing and session replay are disabled by
   // default. Re-enable selectively if/when traffic justifies the volume.
   tracesSampleRate: 0,

@@ -5,7 +5,7 @@ import * as Sentry from "@sentry/nextjs"
 
 Sentry.init({
   dsn: process.env.NEXT_PUBLIC_SENTRY_DSN,
-  environment: process.env.NODE_ENV,
+  environment: process.env.NEXT_PUBLIC_SENTRY_ENVIRONMENT ?? process.env.NODE_ENV,
   tracesSampleRate: 0,
   // No session replay. Privacy-first default; venue dashboards contain
   // sensitive financial-adjacent data we do not want recorded.
