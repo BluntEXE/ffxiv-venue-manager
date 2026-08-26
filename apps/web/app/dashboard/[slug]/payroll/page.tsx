@@ -194,19 +194,6 @@ export default function PayrollPage() {
 
   const venueId = params?.slug as string
 
-  useEffect(() => {
-    if (status === "unauthenticated") {
-      router.push("/auth/signin")
-    }
-  }, [status, router])
-
-  useEffect(() => {
-    if (session && slug) {
-      fetchPayrollEntries()
-      fetchStaff()
-    }
-  }, [session, slug, filter, dateFrom, dateTo])
-
   const fetchPayrollEntries = async () => {
     try {
       const isPaidQuery = filter === "paid" ? "true" : filter === "unpaid" ? "false" : ""
@@ -267,6 +254,19 @@ export default function PayrollPage() {
       console.error("Error fetching staff:", error)
     }
   }
+
+  useEffect(() => {
+    if (status === "unauthenticated") {
+      router.push("/auth/signin")
+    }
+  }, [status, router])
+
+  useEffect(() => {
+    if (session && slug) {
+      fetchPayrollEntries()
+      fetchStaff()
+    }
+  }, [session, slug, filter, dateFrom, dateTo])
 
   const handleCreatePayroll = async () => {
     setIsCreating(true)

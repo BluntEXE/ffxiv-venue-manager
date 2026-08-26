@@ -74,18 +74,6 @@ export default function AdminFeedbackPage() {
   const [editStatus, setEditStatus] = useState<string>("")
   const [editNotes, setEditNotes] = useState<string>("")
 
-  useEffect(() => {
-    if (status === "unauthenticated") {
-      router.push("/auth/signin")
-    }
-  }, [status, router])
-
-  useEffect(() => {
-    if (session) {
-      fetchFeedback()
-    }
-  }, [session, filterStatus, filterCategory])
-
   const fetchFeedback = async () => {
     try {
       const params = new URLSearchParams()
@@ -111,6 +99,18 @@ export default function AdminFeedbackPage() {
       setLoading(false)
     }
   }
+
+  useEffect(() => {
+    if (status === "unauthenticated") {
+      router.push("/auth/signin")
+    }
+  }, [status, router])
+
+  useEffect(() => {
+    if (session) {
+      fetchFeedback()
+    }
+  }, [session, filterStatus, filterCategory])
 
   const startEditing = (item: Feedback) => {
     setEditingId(item.id)

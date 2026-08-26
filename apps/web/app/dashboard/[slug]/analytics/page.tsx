@@ -82,10 +82,6 @@ export default function AnalyticsPage() {
   const [error, setError] = useState<string | null>(null)
   const [period, setPeriod] = useState<"30d" | "90d" | "all">("30d")
 
-  useEffect(() => {
-    if (slug) fetchAnalytics(period)
-  }, [slug, period])
-
   const fetchAnalytics = async (p = period) => {
     try {
       setError(null)
@@ -106,6 +102,10 @@ export default function AnalyticsPage() {
       setIsLoading(false)
     }
   }
+
+  useEffect(() => {
+    if (slug) fetchAnalytics(period)
+  }, [slug, period])
 
   const exportToCSV = () => {
     if (!analyticsData) return

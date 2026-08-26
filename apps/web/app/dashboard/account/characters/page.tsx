@@ -26,16 +26,6 @@ export default function CharactersPage() {
   const [error, setError] = useState("")
   const [success, setSuccess] = useState("")
 
-  useEffect(() => {
-    fetchCharacters()
-  }, [])
-
-  useEffect(() => {
-    if (!success) return
-    const t = setTimeout(() => setSuccess(""), 3000)
-    return () => clearTimeout(t)
-  }, [success])
-
   async function fetchCharacters() {
     setIsLoading(true)
     setError("")
@@ -53,6 +43,16 @@ export default function CharactersPage() {
       setIsLoading(false)
     }
   }
+
+  useEffect(() => {
+    fetchCharacters()
+  }, [])
+
+  useEffect(() => {
+    if (!success) return
+    const t = setTimeout(() => setSuccess(""), 3000)
+    return () => clearTimeout(t)
+  }, [success])
 
   async function addCharacter() {
     const trimmedName = name.trim()

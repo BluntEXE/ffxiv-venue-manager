@@ -84,18 +84,6 @@ export default function EventTemplatesPage() {
     defaultEndTime: "22:00",
   })
 
-  useEffect(() => {
-    if (status === "unauthenticated") {
-      router.push("/auth/signin")
-    }
-  }, [status, router])
-
-  useEffect(() => {
-    if (session && slug) {
-      fetchTemplates()
-    }
-  }, [session, slug])
-
   const fetchTemplates = async () => {
     try {
       const response = await fetch(`/api/venues/${slug}/event-templates`)
@@ -109,6 +97,18 @@ export default function EventTemplatesPage() {
       setLoading(false)
     }
   }
+
+  useEffect(() => {
+    if (status === "unauthenticated") {
+      router.push("/auth/signin")
+    }
+  }, [status, router])
+
+  useEffect(() => {
+    if (session && slug) {
+      fetchTemplates()
+    }
+  }, [session, slug])
 
   const handleCreate = async () => {
     setIsSubmitting(true)

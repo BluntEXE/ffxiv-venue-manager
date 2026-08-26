@@ -49,16 +49,6 @@ export default function UnifiedApiKeysPage() {
   const [error, setError] = useState("")
   const [success, setSuccess] = useState("")
 
-  useEffect(() => {
-    fetchData()
-  }, [])
-
-  useEffect(() => {
-    if (!success) return
-    const t = setTimeout(() => setSuccess(""), 3000)
-    return () => clearTimeout(t)
-  }, [success])
-
   async function fetchData() {
     setIsLoading(true)
     setError("")
@@ -82,6 +72,16 @@ export default function UnifiedApiKeysPage() {
       setIsLoading(false)
     }
   }
+
+  useEffect(() => {
+    fetchData()
+  }, [])
+
+  useEffect(() => {
+    if (!success) return
+    const t = setTimeout(() => setSuccess(""), 3000)
+    return () => clearTimeout(t)
+  }, [success])
 
   async function createApiKey() {
     if (!newKeyName.trim()) {

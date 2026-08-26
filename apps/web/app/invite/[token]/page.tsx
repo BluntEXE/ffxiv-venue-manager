@@ -33,37 +33,6 @@ export default function InvitePage({ params }: { params: Promise<{ token: string
   const [error, setError] = useState<string | null>(null)
   const [success, setSuccess] = useState(false)
 
-  // Fetch invite details
-  useEffect(() => {
-    async function fetchInviteDetails() {
-      try {
-        const response = await fetch(`/api/invites/${unwrappedParams.token}`)
-        if (!response.ok) {
-          const data = await response.json()
-          setError(data.error || "Invalid or expired invite")
-          setLoading(false)
-          return
-        }
-        const data = await response.json()
-        setInviteDetails(data.invite)
-        setLoading(false)
-      } catch (err) {
-        console.error("Error fetching invite:", err)
-        setError("Failed to load invite details")
-        setLoading(false)
-      }
-    }
-
-    fetchInviteDetails()
-  }, [unwrappedParams.token])
-
-  // Auto-accept if user is already logged in
-  useEffect(() => {
-    if (session && inviteDetails && !accepting && !success && !error) {
-      handleAcceptInvite()
-    }
-  }, [session, inviteDetails])
-
   async function handleAcceptInvite() {
     setAccepting(true)
     setError(null)
@@ -98,6 +67,37 @@ export default function InvitePage({ params }: { params: Promise<{ token: string
       setAccepting(false)
     }
   }
+
+  // Fetch invite details
+  useEffect(() => {
+    async function fetchInviteDetails() {
+      try {
+        const response = await fetch(`/api/invites/${unwrappedParams.token}`)
+        if (!response.ok) {
+          const data = await response.json()
+          setError(data.error || "Invalid or expired invite")
+          setLoading(false)
+          return
+        }
+        const data = await response.json()
+        setInviteDetails(data.invite)
+        setLoading(false)
+      } catch (err) {
+        console.error("Error fetching invite:", err)
+        setError("Failed to load invite details")
+        setLoading(false)
+      }
+    }
+
+    fetchInviteDetails()
+  }, [unwrappedParams.token])
+
+  // Auto-accept if user is already logged in
+  useEffect(() => {
+    if (session && inviteDetails && !accepting && !success && !error) {
+      handleAcceptInvite()
+    }
+  }, [session, inviteDetails])
 
   async function handleDiscordSignIn() {
     // Sign in with Discord and return to this page
