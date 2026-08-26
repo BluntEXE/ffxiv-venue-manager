@@ -47,7 +47,9 @@ export default function AccountSettingsPage() {
   const [newKeyName, setNewKeyName] = useState("")
   const [loadingKeys, setLoadingKeys] = useState(true)
 
+  // session loads asynchronously; seed the editable displayName field once it's available.
   useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     if (session?.user?.name) setDisplayName(session.user.name)
   }, [session])
 

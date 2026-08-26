@@ -90,13 +90,6 @@ export default function ManageStaffMemberPage({ params }: { params: Promise<{ sl
     })
   }, [params])
 
-  // Strip primary custom role out of additional roles if duplicated
-  useEffect(() => {
-    if (selectedCustomRole) {
-      setSelectedAdditionalRoleIds((prev) => prev.filter((id) => id !== selectedCustomRole))
-    }
-  }, [selectedCustomRole])
-
   // Fetch staff member and custom roles
   useEffect(() => {
     if (!slug || !membershipId) return
@@ -173,7 +166,7 @@ export default function ManageStaffMemberPage({ params }: { params: Promise<{ sl
         body: JSON.stringify({
           role: selectedRole,
           roleId: selectedCustomRole,
-          additionalRoleIds: selectedAdditionalRoleIds,
+          additionalRoleIds: selectedAdditionalRoleIds.filter((id) => id !== selectedCustomRole),
         }),
       })
 

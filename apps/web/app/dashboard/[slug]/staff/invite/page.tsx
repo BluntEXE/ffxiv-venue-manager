@@ -25,8 +25,9 @@ export default function InviteStaffPage({ params }: { params: Promise<{ slug: st
   const [canShare, setCanShare] = useState(false)
   const [currentUserRole, setCurrentUserRole] = useState<string>("")
 
-  // Check if Web Share API is available
+  // Check if Web Share API is available; must run post-mount to avoid a server/client hydration mismatch on `navigator`.
   useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     setCanShare(typeof navigator !== "undefined" && !!navigator.share)
   }, [])
 

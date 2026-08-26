@@ -78,6 +78,8 @@ export function VenueProvider({ children }: VenueProviderProps) {
   // edge) and pollutes the console.
   useEffect(() => {
     if (status === "authenticated" && !hasFetched) {
+      // Genuine data fetch (sets loading/error/venues state), not derivable from props/state during render.
+      // eslint-disable-next-line react-hooks/set-state-in-effect
       fetchVenues()
     }
   }, [status, hasFetched, fetchVenues])
