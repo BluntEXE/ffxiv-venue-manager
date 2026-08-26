@@ -108,6 +108,8 @@ export default function AdminFeedbackPage() {
 
   useEffect(() => {
     if (session) {
+      // Genuine data fetch (sets feedback/loading state), not derivable from props/state during render.
+      // eslint-disable-next-line react-hooks/set-state-in-effect
       fetchFeedback()
     }
   }, [session, filterStatus, filterCategory])

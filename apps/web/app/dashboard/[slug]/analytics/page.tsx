@@ -104,6 +104,8 @@ export default function AnalyticsPage() {
   }
 
   useEffect(() => {
+    // Genuine data fetch (sets analyticsData/loading/error state), not derivable from props/state during render.
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     if (slug) fetchAnalytics(period)
   }, [slug, period])
 

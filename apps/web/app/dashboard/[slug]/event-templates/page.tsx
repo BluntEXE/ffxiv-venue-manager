@@ -106,6 +106,8 @@ export default function EventTemplatesPage() {
 
   useEffect(() => {
     if (session && slug) {
+      // Genuine data fetch (sets templates/loading state), not derivable from props/state during render.
+      // eslint-disable-next-line react-hooks/set-state-in-effect
       fetchTemplates()
     }
   }, [session, slug])

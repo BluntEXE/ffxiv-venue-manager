@@ -74,6 +74,8 @@ export default function UnifiedApiKeysPage() {
   }
 
   useEffect(() => {
+    // Genuine data fetch (sets venues/keys/loading state), not derivable from props/state during render.
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     fetchData()
   }, [])
 

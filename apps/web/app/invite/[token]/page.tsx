@@ -95,6 +95,8 @@ export default function InvitePage({ params }: { params: Promise<{ token: string
   // Auto-accept if user is already logged in
   useEffect(() => {
     if (session && inviteDetails && !accepting && !success && !error) {
+      // Genuine post-mount side effect: auto-accepts for an already-logged-in user, not derivable at render time.
+      // eslint-disable-next-line react-hooks/set-state-in-effect
       handleAcceptInvite()
     }
   }, [session, inviteDetails])

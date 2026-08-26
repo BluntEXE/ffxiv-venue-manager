@@ -263,6 +263,8 @@ export default function PayrollPage() {
 
   useEffect(() => {
     if (session && slug) {
+      // Genuine data fetch (sets payroll/staff/loading state), not derivable from props/state during render.
+      // eslint-disable-next-line react-hooks/set-state-in-effect
       fetchPayrollEntries()
       fetchStaff()
     }

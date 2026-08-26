@@ -45,6 +45,8 @@ export default function CharactersPage() {
   }
 
   useEffect(() => {
+    // Genuine data fetch (sets characters/loading state), not derivable from props/state during render.
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     fetchCharacters()
   }, [])
 
