@@ -914,6 +914,8 @@ model XvmApiCredential {
   expiresAt    DateTime
   createdAt    DateTime @default(now())
   updatedAt    DateTime @updatedAt
+
+  @@map("xvm_api_credentials")
 }
 
 // ============================================
