@@ -119,7 +119,7 @@ export default function ManageStaffMemberPage({ params }: { params: Promise<{ sl
         if (!staffResponse.ok) throw new Error("Failed to fetch staff")
 
         const staffData = await staffResponse.json()
-        const member = staffData.find((s: any) => s.id === membershipId)
+        const member = staffData.find((s: StaffMember) => s.id === membershipId)
 
         if (!member) {
           throw new Error("Staff member not found")

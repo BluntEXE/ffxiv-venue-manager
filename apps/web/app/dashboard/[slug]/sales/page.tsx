@@ -11,6 +11,8 @@ import { SalesLogDialog } from "@/components/sales-log-dialog"
 import { TransactionsList } from "@/components/transactions-list"
 import { Alert, AlertDescription } from "@/components/ui/alert"
 import { resolveDisplayName } from "@/lib/display-name"
+import { parseVenueSettings } from "@/lib/types/venue-settings"
+import { Prisma } from "@/generated/prisma/client"
 
 interface PageProps {
   params: Promise<{ slug: string }>
@@ -63,10 +65,10 @@ export default async function SalesPage({ params }: PageProps) {
     )
   }
 
-  const venueSettings = venue.settings as any
+  const venueSettings = parseVenueSettings(venue.settings)
 
   // Check sales visibility for STAFF members
-  if (membership.role === "STAFF" && venueSettings?.salesVisibility) {
+  if (membership.role === "STAFF" && venueSettings.salesVisibility) {
     const salesVisibility = venueSettings.salesVisibility
 
     if (salesVisibility === "none") {
@@ -85,10 +87,10 @@ export default async function SalesPage({ params }: PageProps) {
   }
 
   // Build where clause for transactions
-  const where: any = { venueId: venue.id }
+  const where: Prisma.TransactionWhereInput = { venueId: venue.id }
 
   // Apply sales visibility settings for STAFF members
-  if (membership.role === "STAFF" && venueSettings?.salesVisibility === "own") {
+  if (membership.role === "STAFF" && venueSettings.salesVisibility === "own") {
     where.staffId = session.user.id
   }
 

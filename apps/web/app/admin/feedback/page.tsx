@@ -6,7 +6,8 @@ import { useRouter } from "next/navigation"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
-import { Badge } from "@/components/ui/badge"
+import { Badge, badgeVariants } from "@/components/ui/badge"
+import type { VariantProps } from "class-variance-authority"
 import { Textarea } from "@/components/ui/textarea"
 import { Label } from "@/components/ui/label"
 import { format } from "date-fns"
@@ -36,14 +37,16 @@ interface Feedback {
   } | null
 }
 
-const categoryColors: Record<string, string> = {
+type BadgeVariant = VariantProps<typeof badgeVariants>["variant"]
+
+const categoryColors: Record<string, BadgeVariant> = {
   BUG_REPORT: "destructive",
   FEATURE_REQUEST: "default",
   IMPROVEMENT: "secondary",
   GENERAL: "outline",
 }
 
-const statusColors: Record<string, string> = {
+const statusColors: Record<string, BadgeVariant> = {
   NEW: "default",
   UNDER_REVIEW: "secondary",
   PLANNED: "default",
@@ -252,8 +255,8 @@ export default function AdminFeedbackPage() {
                 <div className="flex items-start justify-between">
                   <div className="flex-1">
                     <div className="flex items-center gap-2 mb-2">
-                      <Badge variant={categoryColors[item.category] as any}>{categoryLabels[item.category]}</Badge>
-                      <Badge variant={statusColors[item.status] as any}>{item.status.replace("_", " ")}</Badge>
+                      <Badge variant={categoryColors[item.category]}>{categoryLabels[item.category]}</Badge>
+                      <Badge variant={statusColors[item.status]}>{item.status.replace("_", " ")}</Badge>
                     </div>
                     <CardTitle className="text-xl mb-1">{item.subject}</CardTitle>
                     <CardDescription>

@@ -1,18 +1,79 @@
 "use client"
 
 import { useState, useEffect, useCallback, useRef } from "react"
+import type { MembershipRole } from "@/generated/prisma/client"
 import { formatServerTime } from "@/lib/server-time"
 import { formatLocalTime, LocalTime } from "@/components/server-time"
 import { Button } from "@/components/ui/button"
 
 type TimelineFilter = "all" | "sales" | "patrons" | "staff"
 
-interface TimelineItem {
-  id: string
-  type: "sale" | "patron_enter" | "patron_exit" | "shift_start" | "shift_end"
-  timestamp: string
-  data: Record<string, any>
+interface TimelinePatronData {
+  characterName: string | null
+  world: string | null
+  action: string
+  countChange: number | null
+  event: { id: string; title: string } | null
+  loggedBy: { id: string; name: string | null } | null
 }
+
+interface TimelineShiftData {
+  staffName: string
+  roleName: string
+  shiftId: string
+}
+
+interface TimelineSaleStaff {
+  id: string
+  name: string
+  displayName: string | null
+  image: string | null
+  characters: { characterName: string }[]
+  memberships: {
+    nickname: string | null
+    role: MembershipRole
+    customRole: { name: string; color: string } | null
+  }[]
+}
+
+export type TimelineItem =
+  | {
+      id: string
+      type: "sale"
+      timestamp: string
+      data: {
+        amount: number
+        customerName: string | null
+        notes: string | null
+        service: { id: string; name: string } | null
+        event: { id: string; title: string } | null
+        staff: TimelineSaleStaff | null
+      }
+    }
+  | {
+      id: string
+      type: "patron_enter"
+      timestamp: string
+      data: TimelinePatronData
+    }
+  | {
+      id: string
+      type: "patron_exit"
+      timestamp: string
+      data: TimelinePatronData
+    }
+  | {
+      id: string
+      type: "shift_start"
+      timestamp: string
+      data: TimelineShiftData
+    }
+  | {
+      id: string
+      type: "shift_end"
+      timestamp: string
+      data: TimelineShiftData
+    }
 
 interface TimelineFeedProps {
   venueId: string
@@ -201,15 +262,14 @@ function TimelineRow({ item, isLast }: { item: TimelineItem; isLast: boolean }) 
         <div className="tl-node em">
           <div className="tl-title">
             <strong>Sale logged</strong>
-            {service && <> — {(service as { name: string }).name}</>}{" "}
-            <span className="gil">{Number(amount).toLocaleString()} gil</span>
+            {service && <> — {service.name}</>} <span className="gil">{Number(amount).toLocaleString()} gil</span>
           </div>
-          {(customerName || (staff && (staff as { name?: string }).name)) && (
+          {(customerName || staff?.name) && (
             <div className="tl-desc">
-              {customerName && <>{String(customerName)}</>}
-              {staff && (staff as { name?: string }).name && (
+              {customerName && <>{customerName}</>}
+              {staff?.name && (
                 <>
-                  {customerName ? " · " : ""}by {(staff as { name: string }).name}
+                  {customerName ? " · " : ""}by {staff.name}
                 </>
               )}
             </div>
@@ -228,8 +288,8 @@ function TimelineRow({ item, isLast }: { item: TimelineItem; isLast: boolean }) 
         <div className="tl-time">{timeEl}</div>
         <div className="tl-node">
           <div className="tl-title">
-            <strong>{String(staffName ?? "Staff")}</strong> {isStart ? "clocked in" : "clocked out"}
-            {roleName ? <span className="text-muted-foreground font-normal"> — {String(roleName)}</span> : null}
+            <strong>{staffName ?? "Staff"}</strong> {isStart ? "clocked in" : "clocked out"}
+            {roleName ? <span className="text-muted-foreground font-normal"> — {roleName}</span> : null}
           </div>
         </div>
       </div>

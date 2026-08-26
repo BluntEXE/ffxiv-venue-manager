@@ -10,6 +10,7 @@ import { StatReadout } from "@/components/ui/stat-readout"
 import { Coins, UserPlus, UserMinus, Users, Clock, StopCircle, Terminal, Radio } from "lucide-react"
 import { formatDistanceToNowStrict } from "date-fns"
 import { useRouter } from "next/navigation"
+import type { TimelineItem } from "@/components/timeline-feed"
 
 function formatDuration(ms: number): string {
   const s = Math.floor(ms / 1000)
@@ -131,18 +132,21 @@ export function LiveDashboard({
       .then((data) => {
         if (!Array.isArray(data.items)) return
         setActivity(
-          data.items
-            .filter((item: any) => item.type !== "unknown")
-            .map((item: any) => ({
+          (data.items as TimelineItem[])
+            .filter(
+              (item): item is Extract<TimelineItem, { type: "sale" | "patron_enter" | "patron_exit" }> =>
+                item.type === "sale" || item.type === "patron_enter" || item.type === "patron_exit"
+            )
+            .map((item) => ({
               id: item.id,
-              type: item.type as ActivityItem["type"],
+              type: item.type,
               timestamp: item.timestamp,
               text:
                 item.type === "sale"
-                  ? `${item.data?.service?.name ? item.data.service.name + " · " : ""}${item.data?.customerName || "Someone"} — ${Number(item.data?.amount || 0).toLocaleString()} gil${item.data?.staff?.name ? " · " + item.data.staff.name : ""}`
+                  ? `${item.data.service?.name ? item.data.service.name + " · " : ""}${item.data.customerName || "Someone"} — ${Number(item.data.amount || 0).toLocaleString()} gil${item.data.staff?.name ? " · " + item.data.staff.name : ""}`
                   : item.type === "patron_enter"
-                    ? `${item.data?.characterName || "Unknown"} entered`
-                    : `${item.data?.characterName || "Unknown"} left`,
+                    ? `${item.data.characterName || "Unknown"} entered`
+                    : `${item.data.characterName || "Unknown"} left`,
             }))
         )
       })

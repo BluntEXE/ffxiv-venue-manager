@@ -53,7 +53,7 @@ interface Role {
   name: string
   responsibilities: string | null
   color: string | null
-  permissions: any
+  permissions: Record<string, boolean> | null
   hourlyRate: string | null
   potPayoutMode: "STANDARD" | "POT" | "CONTRACTOR"
   contractorSharesPot: boolean
