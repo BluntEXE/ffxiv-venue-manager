@@ -96,11 +96,10 @@ export default function SettingsPage({ params }: { params: Promise<{ slug: strin
   const [ffxivPreviewError, setFfxivPreviewError] = useState<string | null>(null)
   const [ffxivSyncing, setFfxivSyncing] = useState(false)
   const [ffxivUnlinking, setFfxivUnlinking] = useState(false)
-  const [froggeConnected, setFroggeConnected] = useState(false)
-  const [froggeCode, setFroggeCode] = useState("")
-  const [froggeConnecting, setFroggeConnecting] = useState(false)
-  const [froggeError, setFroggeError] = useState<string | null>(null)
-  const [froggeDisconnecting, setFroggeDisconnecting] = useState(false)
+  const [xvmApiVenueId, setXvmApiVenueId] = useState<string | null>(null)
+  const [xvmApiVenueLinkedAt, setXvmApiVenueLinkedAt] = useState<string | null>(null)
+  const [xvmConnecting, setXvmConnecting] = useState(false)
+  const [xvmConnectError, setXvmConnectError] = useState<string | null>(null)
   const [shiftBotEnabled, setShiftBotEnabled] = useState(false)
   const [shiftBotChannelId, setShiftBotChannelId] = useState("")
   const [shiftBotDaysBefore, setShiftBotDaysBefore] = useState(3)
@@ -157,6 +156,8 @@ export default function SettingsPage({ params }: { params: Promise<{ slug: strin
         setGalleryImages(venue.galleryImages ?? [])
         setBannerUrl(venue.bannerUrl ?? null)
         setLogoUrl(venue.logoUrl ?? null)
+        setXvmApiVenueId(venue.xvmApiVenueId ?? null)
+        setXvmApiVenueLinkedAt(venue.xvmApiVenueLinkedAt ?? null)
         if (venue.memberships?.[0]) {
           setUserRole(venue.memberships[0].role)
         }
@@ -190,7 +191,6 @@ export default function SettingsPage({ params }: { params: Promise<{ slug: strin
           setFfxivVenueId(settingsData.ffxivVenueId ?? null)
           setFfxivVenueLinkedAt(settingsData.ffxivVenueLinkedAt ?? null)
           setFfxivVenueSyncedAt(settingsData.ffxivVenueSyncedAt ?? null)
-          setFroggeConnected(!!settingsData.froggeToken)
           setShiftBotEnabled(settingsData.shiftBot?.enabled ?? false)
           setShiftBotChannelId(settingsData.shiftBot?.channelId ?? "")
           setShiftBotDaysBefore(settingsData.shiftBot?.daysBeforeEvent ?? 3)
@@ -478,38 +478,22 @@ export default function SettingsPage({ params }: { params: Promise<{ slug: strin
     }
   }
 
-  async function handleFroggeConnect() {
-    if (!froggeCode.trim()) return
-    setFroggeConnecting(true)
-    setFroggeError(null)
+  async function handleXvmConnect() {
+    setXvmConnecting(true)
+    setXvmConnectError(null)
     try {
-      const res = await fetch(`/api/venues/${venueId}/frogge/redeem`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ code: froggeCode.trim() }),
-      })
+      const res = await fetch(`/api/venues/${venueId}/xvm-connect`, { method: "POST" })
       if (!res.ok) {
         const err = await res.json()
         throw new Error(err.error ?? "Failed to connect")
       }
-      setFroggeConnected(true)
-      setFroggeCode("")
+      const result = await res.json()
+      setXvmApiVenueId(result.id)
+      setXvmApiVenueLinkedAt(new Date().toISOString())
     } catch (e) {
-      setFroggeError(e instanceof Error ? e.message : "Failed to connect")
+      setXvmConnectError(e instanceof Error ? e.message : "Failed to connect")
     } finally {
-      setFroggeConnecting(false)
-    }
-  }
-
-  async function handleFroggeDisconnect() {
-    if (!confirm("Disconnect Frogge? Room sync and Discord posting will stop.")) return
-    setFroggeDisconnecting(true)
-    try {
-      const res = await fetch(`/api/venues/${venueId}/frogge/disconnect`, { method: "POST" })
-      if (!res.ok) throw new Error("Failed to disconnect")
-      setFroggeConnected(false)
-    } finally {
-      setFroggeDisconnecting(false)
+      setXvmConnecting(false)
     }
   }
 
@@ -1193,78 +1177,60 @@ export default function SettingsPage({ params }: { params: Promise<{ slug: strin
                 </div>
               </div>
 
-              {/* Frogge Bot */}
-              <div className="introw" style={{ flexWrap: "wrap", gap: 14 }}>
-                <span className="iconbadge ii" style={{ width: 40, height: 40 }}>
-                  <svg
-                    xmlns="http://www.w3.org/2000/svg"
-                    viewBox="0 0 24 24"
-                    fill="none"
-                    stroke="currentColor"
-                    strokeWidth="2"
-                  >
-                    <path d="M12 2L2 7l10 5 10-5-10-5z" />
-                    <path d="M2 17l10 5 10-5" />
-                    <path d="M2 12l10 5 10-5" />
-                  </svg>
-                </span>
-                <div className="iinfo">
-                  <div className="iname">Frogge Bot</div>
-                  <div className="idesc">Room sync, ownership, and Discord posting</div>
-                </div>
-                {froggeConnected && (
-                  <span className="status open">
-                    <span className="dot" />
-                    Connected
+              {/* xvm-api */}
+              {userRole === "OWNER" && (
+                <div className="introw" style={{ flexWrap: "wrap", gap: 14 }}>
+                  <span className="iconbadge ii" style={{ width: 40, height: 40 }}>
+                    <svg
+                      xmlns="http://www.w3.org/2000/svg"
+                      viewBox="0 0 24 24"
+                      fill="none"
+                      stroke="currentColor"
+                      strokeWidth="2"
+                    >
+                      <circle cx="12" cy="12" r="10" />
+                      <path d="M9 12l2 2 4-4" />
+                    </svg>
                   </span>
-                )}
-                <div className="w-full pl-[54px] space-y-3">
-                  {froggeConnected ? (
-                    <>
+                  <div className="iinfo">
+                    <div className="iname">xvm-api</div>
+                    <div className="idesc">Required for Rooms and other live venue features</div>
+                  </div>
+                  {xvmApiVenueId && (
+                    <span className="status open">
+                      <span className="dot" />
+                      Connected
+                    </span>
+                  )}
+                  <div className="w-full pl-[54px] space-y-3">
+                    {xvmApiVenueId ? (
                       <p className="text-xs text-[var(--fg-faint)]">
-                        Connected. Rooms sync automatically. Use the Rooms page to post to Discord.
+                        Connected
+                        {xvmApiVenueLinkedAt && (
+                          <>
+                            {" "}
+                            on <LocalTime date={xvmApiVenueLinkedAt} />
+                          </>
+                        )}
+                        .
                       </p>
-                      <Button
-                        type="button"
-                        variant="destructive"
-                        size="sm"
-                        onClick={handleFroggeDisconnect}
-                        disabled={froggeDisconnecting}
-                      >
-                        {froggeDisconnecting ? "Disconnecting…" : "Disconnect"}
-                      </Button>
-                    </>
-                  ) : (
-                    <>
-                      <div className="flex gap-2">
-                        <input
-                          type="text"
-                          placeholder="8-character code from Frogge"
-                          value={froggeCode}
-                          onChange={(e) => setFroggeCode(e.target.value)}
-                          onKeyDown={(e) => e.key === "Enter" && handleFroggeConnect()}
-                          maxLength={8}
-                          className="flex-1 rounded-[var(--radius-sm)] border border-[var(--blue-015)] bg-background px-3 py-1.5 text-sm font-mono uppercase tracking-wider focus:border-[var(--blue-035)] focus:outline-none"
-                        />
+                    ) : (
+                      <>
                         <Button
                           type="button"
                           variant="outline-blue"
                           size="sm"
-                          onClick={handleFroggeConnect}
-                          disabled={froggeConnecting || !froggeCode.trim()}
+                          onClick={handleXvmConnect}
+                          disabled={xvmConnecting}
                         >
-                          {froggeConnecting ? "Connecting…" : "Connect"}
+                          {xvmConnecting ? "Connecting…" : "Connect to xvm-api"}
                         </Button>
-                      </div>
-                      {froggeError && <p className="text-xs text-red-400">{froggeError}</p>}
-                      <p className="text-xs text-[var(--fg-faint)]">
-                        Get a code from your Discord: <strong>/admin menu → Settings → Integrations → Connect XIV Venue Manager</strong>.
-                        Codes expire in 5 minutes.
-                      </p>
-                    </>
-                  )}
+                        {xvmConnectError && <p className="text-xs text-red-400">{xvmConnectError}</p>}
+                      </>
+                    )}
+                  </div>
                 </div>
-              </div>
+              )}
 
               {/* Discord */}
               <div className="introw">
