@@ -85,3 +85,38 @@ docker compose -f docker-compose.local.yml up -d
 
 Then re-run `pnpm db:push` (with `dotenv-cli` as above) to rebuild the
 schema.
+
+## xvm-api (dashboard token exchange)
+
+The dashboard talks to `xvm-api` (repo `xiv-venue-manager/xvm-api`, `dev`
+branch) for the API token exchange. Run it locally rather than pointing at
+prod:
+
+1. Clone it outside this monorepo, e.g. `~/xvm-api`:
+   ```bash
+   git clone -b dev git@github.com:xiv-venue-manager/xvm-api.git ~/xvm-api
+   ```
+2. Install deps and apply migrations (SQLite by default, no Postgres
+   needed):
+   ```bash
+   cd ~/xvm-api
+   uv sync --group dev
+   uv run alembic upgrade head   # creates apiv2.db, needed before first run
+   ```
+3. Run it:
+   ```bash
+   uv run apiv2
+   ```
+   Serves on `http://127.0.0.1:8000`. Confirm with `curl
+   http://127.0.0.1:8000/health` (expect `{"status":"ok"}`) and `curl
+   http://127.0.0.1:8000/health/deep` (also round-trips the DB).
+4. Mint a dashboard service credential against the local instance:
+   ```bash
+   uv run python -m api.scripts.issue_credential --kind service --client dashboard --name "Dashboard dev"
+   ```
+   The `secret` is shown once — copy it, the server only keeps the hash.
+5. Set it in `apps/web/.env` (untracked, not committed):
+   ```
+   XVM_API_BASE_URL=http://127.0.0.1:8000
+   XVM_API_DASHBOARD_SERVICE_TOKEN=<the secret from step 4>
+   ```
