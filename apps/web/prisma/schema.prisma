@@ -54,6 +54,7 @@ model User {
   notifications             Notification[]
   announcementDismissals    AnnouncementDismissal[]
   announcements             Announcement[]
+  xvmApiCredential          XvmApiCredential?
 
   @@map("users")
 }
@@ -902,6 +903,19 @@ model ApiKey {
   @@index([userId])
   @@index([keyHash])
   @@map("api_keys")
+}
+
+model XvmApiCredential {
+  id           String   @id @default(cuid())
+  userId       String   @unique
+  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  token        String
+  credentialId Int
+  expiresAt    DateTime
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  @@map("xvm_api_credentials")
 }
 
 // ============================================
