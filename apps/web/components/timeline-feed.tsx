@@ -106,7 +106,9 @@ export function TimelineFeed({ venueId, initialFilter = "all" }: TimelineFeedPro
   const [liveCount, setLiveCount] = useState(0)
   const mounted = useMounted()
   const filterRef = useRef(filter)
-  filterRef.current = filter
+  useEffect(() => {
+    filterRef.current = filter
+  }, [filter])
 
   const fetchItems = useCallback(
     async (cursor?: string) => {
@@ -122,6 +124,8 @@ export function TimelineFeed({ venueId, initialFilter = "all" }: TimelineFeedPro
   )
 
   useEffect(() => {
+    // Resets the spinner/live-count for the in-flight fetchItems() call below, not derivable from props/state during render.
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     setLoading(true)
     setLiveCount(0)
     fetchItems().then((data) => {
