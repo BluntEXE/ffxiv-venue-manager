@@ -30,13 +30,15 @@ import {
   type LucideIcon,
 } from "lucide-react"
 
+type VenueOption = { id: string; name: string; slug: string; dataCenter?: string; world?: string }
+
 interface VenueSidebarProps {
   venueSlug: string
   venueName: string
   userRole: string
   userName?: string
   userEmail?: string
-  venues?: Array<{ id: string; name: string; slug: string; dataCenter?: string; world?: string }>
+  venues?: VenueOption[]
   livePatronCount?: number
 }
 
@@ -53,6 +55,7 @@ interface NavGroup {
   items: NavItem[]
 }
 
+// Root dashboard needs exact match to avoid every sub-page matching the prefix; child paths use prefix match so /dashboard/venue/events/new highlights /dashboard/venue/events.
 const isActiveHref = (pathname: string, venueSlug: string, href: string) =>
   href === `/dashboard/${venueSlug}` ? pathname === href : pathname.startsWith(href)
 
@@ -61,7 +64,7 @@ const filterItems = (items: NavItem[], userRole: string) =>
 
 interface NavContentProps {
   venueSlug: string
-  venues: Array<{ id: string; name: string; slug: string; dataCenter?: string; world?: string }>
+  venues: VenueOption[]
   navGroups: NavGroup[]
   pathname: string
   userRole: string
