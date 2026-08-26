@@ -25,16 +25,6 @@ export default function XvmCredentialsPage() {
   const [success, setSuccess] = useState("")
   const fetchIdRef = useRef(0)
 
-  useEffect(() => {
-    fetchCredentials()
-  }, [])
-
-  useEffect(() => {
-    if (!success) return
-    const t = setTimeout(() => setSuccess(""), 3000)
-    return () => clearTimeout(t)
-  }, [success])
-
   async function fetchCredentials() {
     const fetchId = ++fetchIdRef.current
     setIsLoading(true)
@@ -54,6 +44,18 @@ export default function XvmCredentialsPage() {
       if (fetchId === fetchIdRef.current) setIsLoading(false)
     }
   }
+
+  useEffect(() => {
+    // Resets loading/error/credentials for this mount's fetch, not derivable from props/state during render.
+    // eslint-disable-next-line react-hooks/set-state-in-effect
+    fetchCredentials()
+  }, [])
+
+  useEffect(() => {
+    if (!success) return
+    const t = setTimeout(() => setSuccess(""), 3000)
+    return () => clearTimeout(t)
+  }, [success])
 
   async function revoke(id: number) {
     if (!confirm("Revoke this credential? This cannot be undone.")) return
