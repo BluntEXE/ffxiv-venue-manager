@@ -113,6 +113,15 @@ export interface RoomImageCreate {
 
 // ── Internal fetch helper ──────────────────────────────────────
 
+// Carries the upstream HTTP status so callers can distinguish "xvm-api
+// rejected this request" (4xx to forward as-is) from "our token is bad"
+// (401, handled by invalidating the stored credential).
+export class XvmApiError extends Error {
+  constructor(public status: number, public body: string) {
+    super(`xvm-api ${status}: ${body}`)
+  }
+}
+
 async function xvmFetch<T>(path: string, options: RequestInit = {}, bearerToken?: string): Promise<T> {
   const headers: Record<string, string> = {
     "Content-Type": "application/json",
@@ -126,7 +135,7 @@ async function xvmFetch<T>(path: string, options: RequestInit = {}, bearerToken?
   })
   if (!res.ok) {
     const body = await res.text()
-    throw new Error(`xvm-api ${path} → ${res.status}: ${body}`)
+    throw new XvmApiError(res.status, body)
   }
   return res.status === 204 ? (null as T) : res.json()
 }

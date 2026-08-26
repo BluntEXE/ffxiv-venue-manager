@@ -1,15 +1,40 @@
-import { NextRequest, NextResponse } from "next/server"
+import { NextResponse } from "next/server"
 import { getServerSession } from "next-auth"
 import { authOptions } from "@/lib/auth"
-import { prisma } from "@/lib/prisma"
 import { z } from "zod"
 import { withRateLimit } from "@/lib/middleware/with-rate-limit"
 import { venueEventBus } from "@/lib/sse/venue-events"
+import { getValidXvmApiToken, invalidateXvmApiCredential } from "@/lib/api/xvm-api-store"
+import { createReservation, releaseRoom, getRoom, XvmApiError, type Room } from "@/lib/api/xvm-api"
 
-const setStatusSchema = z.object({
-  isOccupied: z.boolean(),
-  note: z.string().trim().max(200).optional(),
-})
+// Action-discriminated body: xvm-api has no isOccupied flag, occupying a
+// room means creating a reservation and vacating means releasing it.
+const setStatusSchema = z.discriminatedUnion("action", [
+  z.object({
+    action: z.literal("reserve"),
+    reserved_character_name: z.string().trim().min(1).max(100).optional(),
+    reserved_world: z.string().trim().min(1).max(50).optional(),
+    reserved_person_id: z.number().int().optional(),
+  }),
+  z.object({
+    action: z.literal("release"),
+  }),
+])
+
+function emitRoomStatus(venueId: string, room: Room) {
+  venueEventBus.emit(venueId, {
+    id: `room-${room.id}-${room.updated_at}`,
+    type: "room_status",
+    venueId,
+    timestamp: room.updated_at,
+    data: {
+      roomId: room.id,
+      name: room.name,
+      isOccupied: room.current_reservation !== null,
+      status: room.status,
+    },
+  })
+}
 
 export const PATCH = withRateLimit<{
   params: Promise<{ venueId: string; roomId: string }>
@@ -19,70 +44,57 @@ export const PATCH = withRateLimit<{
       return NextResponse.json({ error: "Invalid request" }, { status: 400 })
     }
 
+    const session = await getServerSession(authOptions)
+    if (!session?.user?.id) {
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
+    }
+
+    const token = await getValidXvmApiToken(session.user.id)
+    if (!token) {
+      return NextResponse.json({ error: "xvm-api link not established yet" }, { status: 503 })
+    }
+
+    const { venueId, roomId } = await context.params
+    const id = Number(roomId)
+    if (!Number.isInteger(id)) {
+      return NextResponse.json({ error: "Invalid room id" }, { status: 400 })
+    }
+
+    let parsed: z.infer<typeof setStatusSchema>
     try {
-      const session = await getServerSession(authOptions)
-      if (!session?.user?.id) {
-        return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
-      }
-
-      const { venueId, roomId } = await context.params
-
-      const venue = await prisma.venue.findUnique({ where: { id: venueId } })
-      if (!venue) {
-        return NextResponse.json({ error: "Venue not found" }, { status: 404 })
-      }
-
-      // Any active member can toggle room status — matches how patron-visit
-      // logging and the transactions POST route already work (no OWNER/MANAGER
-      // gate), unlike VIP/ban which are moderation actions.
-      const membership = await prisma.membership.findFirst({
-        where: { userId: session.user.id, venueId: venue.id, status: "active" },
-      })
-      if (!membership) {
-        return NextResponse.json({ error: "Not an active member of this venue" }, { status: 403 })
-      }
-
-      const body = await request.json()
-      const { isOccupied, note } = setStatusSchema.parse(body)
-
-      const room = await prisma.room.findFirst({
-        where: { id: roomId, venueId: venue.id },
-      })
-      if (!room) {
-        return NextResponse.json({ error: "Room not found in this venue" }, { status: 404 })
-      }
-
-      const updated = await prisma.room.update({
-        where: { id: roomId },
-        data: {
-          isOccupied,
-          note: note !== undefined ? note || null : room.note,
-          updatedById: session.user.id,
-        },
-        include: { updatedBy: { select: { name: true } } },
-      })
-
-      venueEventBus.emit(venue.id, {
-        id: `room-${updated.id}-${updated.updatedAt.getTime()}`,
-        type: "room_status",
-        venueId: venue.id,
-        timestamp: updated.updatedAt.toISOString(),
-        data: {
-          roomId: updated.id,
-          name: updated.name,
-          isOccupied: updated.isOccupied,
-          note: updated.note,
-          updatedByName: updated.updatedBy?.name ?? null,
-        },
-      })
-
-      return NextResponse.json({ id: updated.id, isOccupied: updated.isOccupied, note: updated.note })
+      parsed = setStatusSchema.parse(await request.json())
     } catch (err) {
       if (err instanceof z.ZodError) {
         return NextResponse.json({ error: "Invalid request", details: err.flatten() }, { status: 400 })
       }
+      return NextResponse.json({ error: "Invalid request" }, { status: 400 })
+    }
+
+    try {
+      let room: Room
+      if (parsed.action === "reserve") {
+        await createReservation(token, venueId, id, {
+          reserved_person_id: parsed.reserved_person_id ?? null,
+          reserved_character_name: parsed.reserved_character_name ?? null,
+          reserved_world: parsed.reserved_world ?? null,
+          start_at: new Date().toISOString(),
+          source: "dashboard",
+        })
+        // createReservation returns a Reservation, not the room — re-fetch
+        // the room so the response/SSE payload carries the full current state.
+        room = await getRoom(token, venueId, id)
+      } else {
+        room = await releaseRoom(token, venueId, id)
+      }
+      emitRoomStatus(venueId, room)
+      return NextResponse.json(room)
+    } catch (err) {
+      if (err instanceof XvmApiError && err.status !== 401) {
+        return NextResponse.json({ error: err.body || err.message }, { status: err.status })
+      }
       console.error("[rooms/:id/status] error:", err)
-      return NextResponse.json({ error: "Internal server error" }, { status: 500 })
+      await invalidateXvmApiCredential(session.user.id)
+      return NextResponse.json({ error: "xvm-api link needs to be refreshed" }, { status: 503 })
     }
   },
   { requests: 60, window: "1 m" }
