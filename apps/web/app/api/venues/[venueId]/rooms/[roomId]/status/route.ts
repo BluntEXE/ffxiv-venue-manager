@@ -5,7 +5,7 @@ import { z } from "zod"
 import { withRateLimit } from "@/lib/middleware/with-rate-limit"
 import { venueEventBus } from "@/lib/sse/venue-events"
 import { getValidXvmApiToken, invalidateXvmApiCredential } from "@/lib/api/xvm-api-store"
-import { createReservation, releaseRoom, getRoom, XvmApiError, type Room } from "@/lib/api/xvm-api"
+import { createReservation, releaseRoom, getRoom, XvmApiError, xvmErrorMessage, type Room } from "@/lib/api/xvm-api"
 
 // Action-discriminated body: xvm-api has no isOccupied flag, occupying a
 // room means creating a reservation and vacating means releasing it.
@@ -90,7 +90,7 @@ export const PATCH = withRateLimit<{
       return NextResponse.json(room)
     } catch (err) {
       if (err instanceof XvmApiError && err.status !== 401) {
-        return NextResponse.json({ error: err.body || err.message }, { status: err.status })
+        return NextResponse.json({ error: xvmErrorMessage(err) }, { status: err.status })
       }
       console.error("[rooms/:id/status] error:", err)
       await invalidateXvmApiCredential(session.user.id)

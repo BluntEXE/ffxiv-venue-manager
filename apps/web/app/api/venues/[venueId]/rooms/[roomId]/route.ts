@@ -4,7 +4,7 @@ import { authOptions } from "@/lib/auth"
 import { z } from "zod"
 import { withRateLimit } from "@/lib/middleware/with-rate-limit"
 import { getValidXvmApiToken, invalidateXvmApiCredential } from "@/lib/api/xvm-api-store"
-import { getRoom, updateRoom, deleteRoom, XvmApiError } from "@/lib/api/xvm-api"
+import { getRoom, updateRoom, deleteRoom, XvmApiError, xvmErrorMessage } from "@/lib/api/xvm-api"
 
 const updateRoomSchema = z.object({
   name: z.string().trim().min(1).max(100).optional(),
@@ -54,7 +54,7 @@ export const GET = withRateLimit<{
       return NextResponse.json(room)
     } catch (err) {
       if (err instanceof XvmApiError && err.status !== 401) {
-        return NextResponse.json({ error: err.body || err.message }, { status: err.status })
+        return NextResponse.json({ error: xvmErrorMessage(err) }, { status: err.status })
       }
       console.error("[rooms/:id] GET error:", err)
       await invalidateXvmApiCredential(session.user.id)
@@ -109,7 +109,7 @@ export const PATCH = withRateLimit<{
       return NextResponse.json(room)
     } catch (err) {
       if (err instanceof XvmApiError && err.status !== 401) {
-        return NextResponse.json({ error: err.body || err.message }, { status: err.status })
+        return NextResponse.json({ error: xvmErrorMessage(err) }, { status: err.status })
       }
       console.error("[rooms/:id] PATCH error:", err)
       await invalidateXvmApiCredential(session.user.id)
@@ -146,7 +146,7 @@ export const DELETE = withRateLimit<{
       return NextResponse.json({ success: true })
     } catch (err) {
       if (err instanceof XvmApiError && err.status !== 401) {
-        return NextResponse.json({ error: err.body || err.message }, { status: err.status })
+        return NextResponse.json({ error: xvmErrorMessage(err) }, { status: err.status })
       }
       console.error("[rooms/:id] DELETE error:", err)
       await invalidateXvmApiCredential(session.user.id)

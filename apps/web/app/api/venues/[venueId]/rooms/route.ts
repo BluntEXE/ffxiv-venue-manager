@@ -4,7 +4,7 @@ import { authOptions } from "@/lib/auth"
 import { z } from "zod"
 import { withRateLimit } from "@/lib/middleware/with-rate-limit"
 import { getValidXvmApiToken, invalidateXvmApiCredential } from "@/lib/api/xvm-api-store"
-import { listRooms, createRoom, XvmApiError } from "@/lib/api/xvm-api"
+import { listRooms, createRoom, XvmApiError, xvmErrorMessage } from "@/lib/api/xvm-api"
 
 const createRoomSchema = z.object({
   name: z.string().trim().min(1).max(100),
@@ -33,7 +33,7 @@ export const GET = withRateLimit<{ params: Promise<{ venueId: string }> }>(
       return NextResponse.json(rooms)
     } catch (err) {
       if (err instanceof XvmApiError && err.status !== 401) {
-        return NextResponse.json({ error: err.body || err.message }, { status: err.status })
+        return NextResponse.json({ error: xvmErrorMessage(err) }, { status: err.status })
       }
       console.error("[rooms] GET error:", err)
       await invalidateXvmApiCredential(session.user.id)
@@ -77,7 +77,7 @@ export const POST = withRateLimit<{ params: Promise<{ venueId: string }> }>(
       return NextResponse.json(room)
     } catch (err) {
       if (err instanceof XvmApiError && err.status !== 401) {
-        return NextResponse.json({ error: err.body || err.message }, { status: err.status })
+        return NextResponse.json({ error: xvmErrorMessage(err) }, { status: err.status })
       }
       console.error("[rooms] POST error:", err)
       await invalidateXvmApiCredential(session.user.id)
