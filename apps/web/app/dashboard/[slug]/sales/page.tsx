@@ -59,7 +59,7 @@ export default async function SalesPage({ params }: PageProps) {
     return (
       <div className="page-inner">
         <Alert className="bg-destructive/10 border-destructive/20">
-          <AlertDescription className="text-destructive">You don't have access to this venue</AlertDescription>
+          <AlertDescription className="text-destructive">You don&apos;t have access to this venue</AlertDescription>
         </Alert>
       </div>
     )
@@ -77,7 +77,7 @@ export default async function SalesPage({ params }: PageProps) {
           <div className="page-inner">
             <Alert className="bg-destructive/10 border-destructive/20">
               <AlertDescription className="text-destructive">
-                You don't have permission to view sales data
+                You don&apos;t have permission to view sales data
               </AlertDescription>
             </Alert>
           </div>

@@ -180,7 +180,7 @@ export default function AdminFeedbackPage() {
               <SelectItem value="PLANNED">Planned</SelectItem>
               <SelectItem value="IN_PROGRESS">In Progress</SelectItem>
               <SelectItem value="COMPLETED">Completed</SelectItem>
-              <SelectItem value="WONT_FIX">Won't Fix</SelectItem>
+              <SelectItem value="WONT_FIX">Won&apos;t Fix</SelectItem>
             </SelectContent>
           </Select>
         </div>
@@ -317,7 +317,7 @@ export default function AdminFeedbackPage() {
                               <SelectItem value="PLANNED">Planned</SelectItem>
                               <SelectItem value="IN_PROGRESS">In Progress</SelectItem>
                               <SelectItem value="COMPLETED">Completed</SelectItem>
-                              <SelectItem value="WONT_FIX">Won't Fix</SelectItem>
+                              <SelectItem value="WONT_FIX">Won&apos;t Fix</SelectItem>
                             </SelectContent>
                           </Select>
                         </div>

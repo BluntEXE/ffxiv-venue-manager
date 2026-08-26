@@ -42,13 +42,13 @@ export default function PrivacyPage() {
                 other information you add to the dashboard.
               </li>
               <li>
-                <strong>Patron visit data:</strong> Character names and world names of players who visit your venue's
+                <strong>Patron visit data:</strong> Character names and world names of players who visit your venue&apos;s
                 housing plot, captured by the Dalamud plugin when it is running. Only staff with active shifts are
                 excluded.
               </li>
               <li>
                 <strong>Plugin API calls:</strong> Timestamps of when the Dalamud plugin last synced with the server
-                (used to show "Plugin synced" status).
+                (used to show &quot;Plugin synced&quot; status).
               </li>
               <li>
                 <strong>Error reports:</strong> Application errors are sent to a self-hosted GlitchTip instance. These

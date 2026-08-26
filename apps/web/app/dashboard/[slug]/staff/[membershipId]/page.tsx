@@ -350,7 +350,7 @@ export default function ManageStaffMemberPage({ params }: { params: Promise<{ sl
         <Card className="mb-6">
           <CardHeader>
             <CardTitle>Role Management</CardTitle>
-            <CardDescription>Update this staff member's base role and custom role</CardDescription>
+            <CardDescription>Update this staff member&apos;s base role and custom role</CardDescription>
           </CardHeader>
           <CardContent className="space-y-6">
             {/* Base Role */}
@@ -463,7 +463,7 @@ export default function ManageStaffMemberPage({ params }: { params: Promise<{ sl
           <Card className="mb-6">
             <CardHeader>
               <CardTitle>Tip Pooling</CardTitle>
-              <CardDescription>Pool tips into the venue's pot, or keep them individually.</CardDescription>
+              <CardDescription>Pool tips into the venue&apos;s pot, or keep them individually.</CardDescription>
             </CardHeader>
             <CardContent>
               <label className="flex items-center gap-2 cursor-pointer">

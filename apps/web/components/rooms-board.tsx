@@ -799,7 +799,7 @@ export function RoomsBoard({ venueId, canManage, rooms, froggeConnected }: { ven
       <AlertDialog open={!!deleteTarget} onOpenChange={(open) => !open && setDeleteTarget(null)}>
         <AlertDialogContent>
           <AlertDialogHeader>
-            <AlertDialogTitle>Delete "{deleteTarget?.name}"?</AlertDialogTitle>
+            <AlertDialogTitle>Delete &quot;{deleteTarget?.name}&quot;?</AlertDialogTitle>
             <AlertDialogDescription>This cannot be undone.</AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>

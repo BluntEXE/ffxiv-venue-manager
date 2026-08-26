@@ -175,11 +175,11 @@ export default function EventsGuidePage() {
             night, whether the guest performer brought anyone new.
           </p>
           <p className="text-muted-foreground leading-relaxed">
-            Note the date, the format, peak patron count, and the night's revenue. After three or four events you will
+            Note the date, the format, peak patron count, and the night&apos;s revenue. After three or four events you will
             see which formats pull well on your world and whether certain days perform better.
           </p>
           <p className="text-muted-foreground leading-relaxed">
-            Track revenue for payouts too. Staff working an event shift expect a share of the night's tips. Without a
+            Track revenue for payouts too. Staff working an event shift expect a share of the night&apos;s tips. Without a
             record of what came in, that calculation is a guess or a dispute.
           </p>
         </section>

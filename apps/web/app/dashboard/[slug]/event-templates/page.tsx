@@ -449,7 +449,7 @@ export default function EventTemplatesPage() {
             <AlertDialogHeader>
               <AlertDialogTitle>Delete Template</AlertDialogTitle>
               <AlertDialogDescription>
-                Are you sure you want to delete "{deletingTemplate?.name}"? This action cannot be undone.
+                Are you sure you want to delete &quot;{deletingTemplate?.name}&quot;? This action cannot be undone.
               </AlertDialogDescription>
             </AlertDialogHeader>
             <AlertDialogFooter>

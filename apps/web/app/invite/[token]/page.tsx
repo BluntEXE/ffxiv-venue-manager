@@ -183,7 +183,7 @@ export default function InvitePage({ params }: { params: Promise<{ token: string
                 />
               </div>
             )}
-            <CardTitle>You've been invited!</CardTitle>
+            <CardTitle>You&apos;ve been invited!</CardTitle>
             <CardDescription>
               <strong>{inviteDetails.invitedBy.name || "A venue manager"}</strong> has invited you to join{" "}
               <strong>{inviteDetails.venue.name}</strong> as <strong>{inviteDetails.role.toLowerCase()}</strong>.

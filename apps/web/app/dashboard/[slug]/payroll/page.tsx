@@ -801,8 +801,8 @@ export default function PayrollPage() {
                               onChange={(e) => setGenRateOverride(e.target.value)}
                             />
                             <p className="text-xs text-muted-foreground">
-                              By default, pay is resolved per shift (a shift's tagged role rate, then the staff member's
-                              own rate, then their primary role's rate). Setting a value here overrides all of that and
+                              By default, pay is resolved per shift (a shift&apos;s tagged role rate, then the staff member&apos;s
+                              own rate, then their primary role&apos;s rate). Setting a value here overrides all of that and
                               pays every hour in this period at this one flat rate.
                             </p>
                           </div>
@@ -858,7 +858,7 @@ export default function PayrollPage() {
                             <p className="text-xs text-amber-500">
                               {genPreview.summary.unresolvedShiftCount} shift
                               {genPreview.summary.unresolvedShiftCount !== 1 ? "s" : ""} skipped — no rate could be
-                              resolved (no role rate on the shift, no personal rate, no primary role rate). They'll stay
+                              resolved (no role rate on the shift, no personal rate, no primary role rate). They&apos;ll stay
                               eligible for a future payroll run once a rate exists.
                             </p>
                           )}

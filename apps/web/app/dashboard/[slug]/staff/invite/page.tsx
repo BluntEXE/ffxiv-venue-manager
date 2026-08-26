@@ -222,10 +222,10 @@ export default function InviteStaffPage({ params }: { params: Promise<{ slug: st
                 2. <strong>Send it to your staff member</strong> via Discord DM or other secure method
               </p>
               <p>
-                3. <strong>They'll sign in with Discord</strong> and be automatically added to your venue
+                3. <strong>They&apos;ll sign in with Discord</strong> and be automatically added to your venue
               </p>
               <p>
-                4. <strong>Check pending invites</strong> on the staff page to see who hasn't accepted yet
+                4. <strong>Check pending invites</strong> on the staff page to see who hasn&apos;t accepted yet
               </p>
             </CardContent>
           </Card>
@@ -355,7 +355,7 @@ export default function InviteStaffPage({ params }: { params: Promise<{ slug: st
               3. <strong>Discord Sign-In:</strong> They click the link and sign in with Discord
             </p>
             <p>
-              4. <strong>Auto-Accept:</strong> They're automatically added to your venue
+              4. <strong>Auto-Accept:</strong> They&apos;re automatically added to your venue
             </p>
             <p className="pt-2 text-xs">Links expire after 7 days and can only be used once.</p>
           </CardContent>
