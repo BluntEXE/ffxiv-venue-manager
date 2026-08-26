@@ -1,6 +1,6 @@
 "use client"
 
-import { useEffect, useState } from "react"
+import { useEffect, useRef, useState } from "react"
 import Link from "next/link"
 import { Breadcrumb } from "@/components/breadcrumb"
 import { Button } from "@/components/ui/button"
@@ -23,6 +23,7 @@ export default function XvmCredentialsPage() {
   const [isLoading, setIsLoading] = useState(true)
   const [error, setError] = useState("")
   const [success, setSuccess] = useState("")
+  const fetchIdRef = useRef(0)
 
   useEffect(() => {
     fetchCredentials()
@@ -35,10 +36,12 @@ export default function XvmCredentialsPage() {
   }, [success])
 
   async function fetchCredentials() {
+    const fetchId = ++fetchIdRef.current
     setIsLoading(true)
     setError("")
     try {
       const res = await fetch("/api/xvm-api/credentials")
+      if (fetchId !== fetchIdRef.current) return // superseded by a newer call
       if (res.ok) {
         setCredentials(await res.json())
       } else {
@@ -46,9 +49,9 @@ export default function XvmCredentialsPage() {
         setError(data.error || "Failed to load credentials")
       }
     } catch {
-      setError("Failed to load credentials")
+      if (fetchId === fetchIdRef.current) setError("Failed to load credentials")
     } finally {
-      setIsLoading(false)
+      if (fetchId === fetchIdRef.current) setIsLoading(false)
     }
   }
 
