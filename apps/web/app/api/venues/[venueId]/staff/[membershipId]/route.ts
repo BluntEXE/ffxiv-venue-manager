@@ -101,9 +101,9 @@ export const PUT = withRateLimit<{ params: Promise<{ venueId: string; membership
           return NextResponse.json({ error: "You don't have permission to update staff" }, { status: 403 })
         }
 
-        // Managers cannot modify owners
-        if (userMembership.role === "MANAGER" && targetMembership.role === "OWNER") {
-          return NextResponse.json({ error: "Managers cannot modify owners" }, { status: 403 })
+        // Managers can only modify staff, not peer managers or owners
+        if (userMembership.role === "MANAGER" && targetMembership.role !== "STAFF") {
+          return NextResponse.json({ error: "Managers can only modify staff" }, { status: 403 })
         }
       }
 
@@ -237,9 +237,9 @@ export const DELETE = withRateLimit<{ params: Promise<{ venueId: string; members
         return NextResponse.json({ error: "Staff member not found" }, { status: 404 })
       }
 
-      // Managers cannot remove owners
-      if (userMembership.role === "MANAGER" && targetMembership.role === "OWNER") {
-        return NextResponse.json({ error: "Managers cannot remove owners" }, { status: 403 })
+      // Managers can only remove staff, not peer managers or owners
+      if (userMembership.role === "MANAGER" && targetMembership.role !== "STAFF") {
+        return NextResponse.json({ error: "Managers can only remove staff" }, { status: 403 })
       }
 
       // Cannot remove the venue owner
