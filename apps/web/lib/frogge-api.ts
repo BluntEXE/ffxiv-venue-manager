@@ -1,5 +1,3 @@
-import { prisma } from "@/lib/prisma"
-
 const FROGGE_API_URL = process.env.FROGGE_API_URL ?? "https://api.frogge.tech"
 const FROGGE_CLIENT_ID = process.env.FROGGE_CLIENT_ID ?? "xvm"
 const USER_AGENT = "XIV-Venue-Manager/1.0"
@@ -163,77 +161,4 @@ export interface GuildMember {
 
 export async function getGuildMembers(bearerToken: string): Promise<GuildMember[]> {
   return froggeFetch<GuildMember[]>("/guild/members", {}, bearerToken)
-}
-
-// ── Local cache helpers ────────────────────────────────────────
-
-function computeOccupancy(status: string | undefined): boolean {
-  return status === "reserved"
-}
-
-export async function getRoomsWithFallback(venueId: string): Promise<FroggeRoom[]> {
-  try {
-    const venue = await prisma.venue.findUnique({
-      where: { id: venueId },
-      select: { froggeVenueId: true, froggeToken: true },
-    })
-
-    if (!venue?.froggeVenueId) {
-      return getLocalRooms(venueId)
-    }
-
-    const rooms = await getRooms(venue.froggeVenueId, venue.froggeToken ?? undefined)
-    await syncLocalCache(venueId, rooms)
-    return rooms
-  } catch (error) {
-    console.warn("Frogge API unavailable, using local cache:", error)
-    return getLocalRooms(venueId)
-  }
-}
-
-async function getLocalRooms(venueId: string): Promise<FroggeRoom[]> {
-  const localRooms = await prisma.room.findMany({
-    where: { venueId },
-    orderBy: { roomNumber: "asc" },
-  })
-
-  return localRooms.map((r) => ({
-    id: r.froggeRoomId ?? "",
-    name: r.name,
-    room_number: r.roomNumber ?? 0,
-    locked: r.locked,
-    disabled: r.disabled,
-    status: r.disabled ? "disabled" : r.locked ? "locked" : r.isOccupied ? "reserved" : "available",
-    owner_discord_id: r.ownerDiscordId,
-    images: [],
-    current_reservation: null,
-  }))
-}
-
-async function syncLocalCache(venueId: string, rooms: FroggeRoom[]): Promise<void> {
-  for (const room of rooms) {
-    const existing = await prisma.room.findFirst({ where: { venueId, froggeRoomId: room.id } })
-
-    const data = {
-      name: room.name ?? `Room ${room.room_number}`,
-      roomNumber: room.room_number,
-      locked: room.locked,
-      disabled: room.disabled,
-      isOccupied: computeOccupancy(room.status),
-      imageUrl: room.images?.[0]?.image_url ?? null,
-      lastSyncedAt: new Date(),
-    }
-
-    if (existing) {
-      await prisma.room.update({ where: { id: existing.id }, data })
-    } else {
-      await prisma.room.create({
-        data: {
-          venueId,
-          froggeRoomId: room.id,
-          ...data,
-        },
-      })
-    }
-  }
 }
