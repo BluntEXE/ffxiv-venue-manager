@@ -44,7 +44,6 @@ model User {
   patronLogsWorking         PatronLog[]             @relation("PatronLogWorking")
   patronLogsReclassified    PatronLog[]             @relation("PatronLogReclassifier")
   bannedPatronsSet          Patron[]                @relation("PatronBannedBy")
-  roomsUpdated              Room[]
   characters                UserCharacter[]
   apiKeys                   ApiKey[]
   pendingNotifications      PendingNotification[]
@@ -217,7 +216,6 @@ model Venue {
   shifts                 Shift[]
   patronLogs             PatronLog[]
   patrons                Patron[]
-  rooms                  Room[]
   apiKeys                ApiKey[]
   follows                VenueFollow[]
   scheduleEntries        VenueScheduleEntry[]
@@ -541,32 +539,6 @@ model Patron {
   @@map("patrons")
 }
 
-model Room {
-  id          String   @id @default(cuid())
-  venueId     String
-  name        String
-  isOccupied  Boolean  @default(false)
-  note        String?
-  imageUrl    String?
-
-  // Frogge integration
-  froggeRoomId    String?
-  roomNumber      Int?
-  locked          Boolean   @default(false)
-  disabled        Boolean   @default(false)
-  ownerDiscordId  String?
-  lastSyncedAt    DateTime?
-
-  updatedAt   DateTime @updatedAt
-  updatedById String?
-
-  venue     Venue @relation(fields: [venueId], references: [id], onDelete: Cascade)
-  updatedBy User? @relation(fields: [updatedById], references: [id], onDelete: SetNull)
-
-  @@unique([venueId, name])
-  @@index([venueId])
-  @@map("rooms")
-}
 
 // ============================================
 // SERVICES & TRANSACTIONS

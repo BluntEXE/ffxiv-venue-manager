@@ -3,8 +3,10 @@ import { authOptions } from "@/lib/auth"
 import { redirect, notFound } from "next/navigation"
 import { prisma } from "@/lib/prisma"
 import { VenueLayout } from "@/components/venue-layout"
-import { RoomsBoard } from "@/components/rooms-board"
+import { RoomsBoard, type RoomItem } from "@/components/rooms-board"
 import { RoomManagerRoles } from "@/components/room-manager-roles"
+import { getValidXvmApiToken, invalidateXvmApiCredential } from "@/lib/api/xvm-api-store"
+import { listRooms, XvmApiError } from "@/lib/api/xvm-api"
 
 export default async function RoomsPage({ params }: { params: Promise<{ slug: string }> }) {
   const session = await getServerSession(authOptions)
@@ -23,11 +25,20 @@ export default async function RoomsPage({ params }: { params: Promise<{ slug: st
 
   const userRole = venue.memberships[0].role
 
-  const rooms = await prisma.room.findMany({
-    where: { venueId: venue.id },
-    include: { updatedBy: { select: { id: true, name: true } } },
-    orderBy: { name: "asc" },
-  })
+  let rooms: RoomItem[] = []
+  const token = await getValidXvmApiToken(session.user.id)
+  if (token) {
+    try {
+      rooms = await listRooms(token, venue.id)
+    } catch (err) {
+      if (err instanceof XvmApiError && err.status !== 401) {
+        console.error("[rooms page] listRooms error:", err)
+      } else {
+        console.error("[rooms page] listRooms error:", err)
+        await invalidateXvmApiCredential(session.user.id)
+      }
+    }
+  }
 
   const settings = (venue.settings as { roomManagerRoleIds?: string[] }) ?? {}
   const roomManagerRoleIds = settings.roomManagerRoleIds ?? []
@@ -48,19 +59,7 @@ export default async function RoomsPage({ params }: { params: Promise<{ slug: st
         <RoomsBoard
           venueId={venue.id}
           canManage={["OWNER", "MANAGER"].includes(userRole)}
-          rooms={rooms.map((r) => ({
-            id: r.id,
-            name: r.name,
-            isOccupied: r.isOccupied,
-            note: r.note,
-            updatedByName: r.updatedBy?.name ?? null,
-            locked: r.locked,
-            disabled: r.disabled,
-            roomNumber: r.roomNumber,
-            imageUrl: r.imageUrl,
-            ownerDiscordId: r.ownerDiscordId,
-          }))}
-          froggeConnected={!!venue.froggeToken}
+          rooms={rooms}
         />
 
         <RoomManagerRoles

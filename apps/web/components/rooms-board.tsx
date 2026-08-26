@@ -15,65 +15,54 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog"
+import type { Room } from "@/lib/api/xvm-api"
 
-export type RoomItem = {
-  id: string
-  name: string
-  isOccupied: boolean
-  note: string | null
-  updatedByName: string | null
-  locked: boolean
-  disabled: boolean
-  roomNumber: number | null
-  imageUrl: string | null
-  ownerDiscordId: string | null
+export type RoomItem = Room
+
+function statusBadge(status: string): { label: string; className: string } {
+  switch (status) {
+    case "disabled":
+      return { label: "Disabled", className: "neutral" }
+    case "locked":
+      return { label: "Locked", className: "warning" }
+    case "occupied":
+      return { label: "Occupied", className: "danger" }
+    case "available":
+      return { label: "Available", className: "vip" }
+    default:
+      return { label: status, className: "neutral" }
+  }
 }
 
-interface GuildMember {
-  id: string
-  username: string
-  display_name?: string
-  avatar?: string
+// owner_membership_id / reserved_person_id are opaque ids with no name
+// resolution endpoint yet - fall back to a numeric label instead of
+// pretending we can look up a display name.
+function reserverLabel(room: Room): string {
+  const res = room.current_reservation
+  if (res?.is_current) {
+    if (res.reserved_character_name) {
+      return res.reserved_world ? `${res.reserved_character_name} @ ${res.reserved_world}` : res.reserved_character_name
+    }
+    if (res.reserved_person_id != null) return `Member #${res.reserved_person_id}`
+  }
+  if (room.owner_membership_id != null) return `Member #${room.owner_membership_id}`
+  return "—"
 }
 
-function derivedStatus(room: RoomItem): { label: string; className: string } {
-  if (room.disabled) return { label: "Disabled", className: "neutral" }
-  if (room.locked) return { label: "Locked", className: "warning" }
-  if (room.isOccupied) return { label: "Occupied", className: "danger" }
-  return { label: "Available", className: "vip" }
-}
-
-export function RoomsBoard({ venueId, canManage, rooms, froggeConnected }: { venueId: string; canManage: boolean; rooms: RoomItem[]; froggeConnected?: boolean }) {
+export function RoomsBoard({ venueId, canManage, rooms }: { venueId: string; canManage: boolean; rooms: RoomItem[] }) {
   const [localRooms, setLocalRooms] = useState(rooms)
-  const [pendingIds, setPendingIds] = useState<Set<string>>(new Set())
-  const [editingNoteId, setEditingNoteId] = useState<string | null>(null)
+  const [pendingIds, setPendingIds] = useState<Set<number>>(new Set())
+  const [editingNoteId, setEditingNoteId] = useState<number | null>(null)
   const [noteInput, setNoteInput] = useState("")
-  const [renamingId, setRenamingId] = useState<string | null>(null)
+  const [renamingId, setRenamingId] = useState<number | null>(null)
   const [renameInput, setRenameInput] = useState("")
   const [newRoomName, setNewRoomName] = useState("")
   const [adding, setAdding] = useState(false)
-  const [editingRoomNumberId, setEditingRoomNumberId] = useState<string | null>(null)
+  const [editingRoomNumberId, setEditingRoomNumberId] = useState<number | null>(null)
   const [roomNumberInput, setRoomNumberInput] = useState("")
-  const [uploadingImageId, setUploadingImageId] = useState<string | null>(null)
-  const [postingDiscord, setPostingDiscord] = useState(false)
-  const [members, setMembers] = useState<GuildMember[]>([])
-  const [membersLoaded, setMembersLoaded] = useState(false)
-  const [editingOwnerId, setEditingOwnerId] = useState<string | null>(null)
-  const [ownerSearch, setOwnerSearch] = useState("")
   const [error, setError] = useState<string | null>(null)
   const [success, setSuccess] = useState<string | null>(null)
   const [deleteTarget, setDeleteTarget] = useState<RoomItem | null>(null)
-
-  useEffect(() => {
-    if (!froggeConnected || membersLoaded) return
-    fetch(`/api/venues/${venueId}/frogge/members`)
-      .then((r) => (r.ok ? r.json() : []))
-      .then((data: GuildMember[]) => {
-        setMembers(data)
-        setMembersLoaded(true)
-      })
-      .catch(() => setMembersLoaded(true))
-  }, [froggeConnected, membersLoaded, venueId])
 
   useEffect(() => {
     const es = new EventSource("/api/stream/" + venueId)
@@ -81,11 +70,10 @@ export function RoomsBoard({ venueId, canManage, rooms, froggeConnected }: { ven
       try {
         const msg = JSON.parse(e.data)
         if (msg.type !== "room_status") return
+        const d = msg.data as { roomId: number; name: string; isOccupied: boolean; status: string }
         setLocalRooms((prev) =>
           prev.map((r) =>
-            r.id === msg.data.roomId
-              ? { ...r, isOccupied: msg.data.isOccupied, note: msg.data.note, updatedByName: msg.data.updatedByName }
-              : r
+            r.id === d.roomId ? { ...r, status: d.status, current_reservation: d.isOccupied ? r.current_reservation : null } : r
           )
         )
       } catch {}
@@ -103,25 +91,43 @@ export function RoomsBoard({ venueId, canManage, rooms, froggeConnected }: { ven
     }
   }, [error, success])
 
-  async function toggleStatus(room: RoomItem) {
+  async function reserveRoom(room: RoomItem) {
     if (pendingIds.has(room.id)) return
-    const nextOccupied = !room.isOccupied
     setPendingIds((prev) => new Set(prev).add(room.id))
-    setLocalRooms((prev) => prev.map((r) => (r.id === room.id ? { ...r, isOccupied: nextOccupied, note: nextOccupied ? r.note : null } : r)))
     try {
       const res = await fetch(`/api/venues/${venueId}/rooms/${room.id}/status`, {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ isOccupied: nextOccupied, note: nextOccupied ? room.note ?? "" : "" }),
+        body: JSON.stringify({ action: "reserve" }),
       })
       if (!res.ok) throw new Error("request failed")
-      const updated = await res.json()
-      setLocalRooms((prev) =>
-        prev.map((r) => (r.id === room.id ? { ...r, isOccupied: updated.isOccupied, note: updated.note } : r))
-      )
+      const updated: Room = await res.json()
+      setLocalRooms((prev) => prev.map((r) => (r.id === room.id ? updated : r)))
     } catch {
-      setLocalRooms((prev) => prev.map((r) => (r.id === room.id ? { ...r, isOccupied: room.isOccupied } : r)))
-      setError("Failed to update room status")
+      setError("Failed to reserve room")
+    } finally {
+      setPendingIds((prev) => {
+        const next = new Set(prev)
+        next.delete(room.id)
+        return next
+      })
+    }
+  }
+
+  async function releaseRoomAction(room: RoomItem) {
+    if (pendingIds.has(room.id)) return
+    setPendingIds((prev) => new Set(prev).add(room.id))
+    try {
+      const res = await fetch(`/api/venues/${venueId}/rooms/${room.id}/status`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ action: "release" }),
+      })
+      if (!res.ok) throw new Error("request failed")
+      const updated: Room = await res.json()
+      setLocalRooms((prev) => prev.map((r) => (r.id === room.id ? updated : r)))
+    } catch {
+      setError("Failed to release room")
     } finally {
       setPendingIds((prev) => {
         const next = new Set(prev)
@@ -136,22 +142,21 @@ export function RoomsBoard({ venueId, canManage, rooms, froggeConnected }: { ven
     setEditingNoteId(null)
     setNoteInput("")
     if (pendingIds.has(room.id)) return
+    if (trimmed === (room.notes ?? "")) return
     setPendingIds((prev) => new Set(prev).add(room.id))
-    const prevNote = room.note
-    setLocalRooms((prev) => prev.map((r) => (r.id === room.id ? { ...r, note: trimmed || null } : r)))
+    const prevNotes = room.notes
+    setLocalRooms((prev) => prev.map((r) => (r.id === room.id ? { ...r, notes: trimmed || null } : r)))
     try {
-      const res = await fetch(`/api/venues/${venueId}/rooms/${room.id}/status`, {
+      const res = await fetch(`/api/venues/${venueId}/rooms/${room.id}`, {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ isOccupied: room.isOccupied, note: trimmed }),
+        body: JSON.stringify({ notes: trimmed || null }),
       })
       if (!res.ok) throw new Error("request failed")
-      const updated = await res.json()
-      setLocalRooms((prev) =>
-        prev.map((r) => (r.id === room.id ? { ...r, isOccupied: updated.isOccupied, note: updated.note } : r))
-      )
+      const updated: Room = await res.json()
+      setLocalRooms((prev) => prev.map((r) => (r.id === room.id ? updated : r)))
     } catch {
-      setLocalRooms((prev) => prev.map((r) => (r.id === room.id ? { ...r, note: prevNote } : r)))
+      setLocalRooms((prev) => prev.map((r) => (r.id === room.id ? { ...r, notes: prevNotes } : r)))
       setError("Failed to save note")
     } finally {
       setPendingIds((prev) => {
@@ -178,22 +183,8 @@ export function RoomsBoard({ venueId, canManage, rooms, froggeConnected }: { ven
         setError(body.error || body.detail || "Failed to add room")
         return
       }
-      const created = await res.json()
-      setLocalRooms((prev) => [
-        ...prev,
-        {
-          id: created.id,
-          name: created.name,
-          isOccupied: false,
-          note: null,
-          updatedByName: null,
-          locked: false,
-          disabled: false,
-          roomNumber: null,
-          imageUrl: null,
-          ownerDiscordId: null,
-        },
-      ])
+      const created: Room = await res.json()
+      setLocalRooms((prev) => [...prev, created])
       setNewRoomName("")
       setSuccess("Room added")
     } catch {
@@ -240,10 +231,10 @@ export function RoomsBoard({ venueId, canManage, rooms, froggeConnected }: { ven
       setError("Room number must be 0–999")
       return
     }
-    if (roomNumber === room.roomNumber) return
+    if (roomNumber === room.room_number) return
     setPendingIds((prev) => new Set(prev).add(room.id))
-    const prevNumber = room.roomNumber
-    setLocalRooms((prev) => prev.map((r) => (r.id === room.id ? { ...r, roomNumber } : r)))
+    const prevNumber = room.room_number
+    setLocalRooms((prev) => prev.map((r) => (r.id === room.id ? { ...r, room_number: roomNumber } : r)))
     try {
       const res = await fetch(`/api/venues/${venueId}/rooms/${room.id}`, {
         method: "PATCH",
@@ -252,7 +243,7 @@ export function RoomsBoard({ venueId, canManage, rooms, froggeConnected }: { ven
       })
       if (!res.ok) throw new Error("request failed")
     } catch {
-      setLocalRooms((prev) => prev.map((r) => (r.id === room.id ? { ...r, roomNumber: prevNumber } : r)))
+      setLocalRooms((prev) => prev.map((r) => (r.id === room.id ? { ...r, room_number: prevNumber } : r)))
       setError("Failed to update room number")
     } finally {
       setPendingIds((prev) => {
@@ -311,86 +302,6 @@ export function RoomsBoard({ venueId, canManage, rooms, froggeConnected }: { ven
     }
   }
 
-  async function uploadRoomImage(room: RoomItem, file: File) {
-    if (pendingIds.has(room.id)) return
-    setPendingIds((prev) => new Set(prev).add(room.id))
-    setUploadingImageId(room.id)
-    try {
-      const res = await fetch("/api/upload", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ filename: file.name, contentType: file.type, size: file.size }),
-      })
-      if (!res.ok) {
-        const d = await res.json()
-        throw new Error(d.error || "Failed to get upload URL")
-      }
-      const { uploadUrl, storedUrl } = await res.json()
-      const put = await fetch(uploadUrl, { method: "PUT", body: file, headers: { "Content-Type": file.type } })
-      if (!put.ok) throw new Error("Upload failed")
-      const patch = await fetch(`/api/venues/${venueId}/rooms/${room.id}`, {
-        method: "PATCH",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ imageUrl: storedUrl }),
-      })
-      if (!patch.ok) throw new Error("Failed to save image")
-      setLocalRooms((prev) => prev.map((r) => (r.id === room.id ? { ...r, imageUrl: storedUrl } : r)))
-      setSuccess("Image uploaded")
-    } catch (e) {
-      setError(e instanceof Error ? e.message : "Failed to upload image")
-    } finally {
-      setPendingIds((prev) => {
-        const next = new Set(prev)
-        next.delete(room.id)
-        return next
-      })
-      setUploadingImageId(null)
-    }
-  }
-
-  async function postToDiscord() {
-    setPostingDiscord(true)
-    setError(null)
-    try {
-      const res = await fetch(`/api/venues/${venueId}/rooms/post`, { method: "POST" })
-      if (!res.ok) {
-        const err = await res.json()
-        throw new Error(err.error ?? err.detail ?? "Failed to post")
-      }
-      setSuccess("Rooms posted to Discord")
-    } catch (e) {
-      setError(e instanceof Error ? e.message : "Failed to post rooms")
-    } finally {
-      setPostingDiscord(false)
-    }
-  }
-
-  async function saveOwner(room: RoomItem, discordId: string | null) {
-    if (pendingIds.has(room.id)) return
-    setPendingIds((prev) => new Set(prev).add(room.id))
-    const prevOwner = room.ownerDiscordId
-    setLocalRooms((prev) => prev.map((r) => (r.id === room.id ? { ...r, ownerDiscordId: discordId } : r)))
-    setEditingOwnerId(null)
-    setOwnerSearch("")
-    try {
-      const res = await fetch(`/api/venues/${venueId}/rooms/${room.id}`, {
-        method: "PATCH",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ ownerDiscordId: discordId }),
-      })
-      if (!res.ok) throw new Error("Failed to update owner")
-    } catch {
-      setLocalRooms((prev) => prev.map((r) => (r.id === room.id ? { ...r, ownerDiscordId: prevOwner } : r)))
-      setError("Failed to update owner")
-    } finally {
-      setPendingIds((prev) => {
-        const next = new Set(prev)
-        next.delete(room.id)
-        return next
-      })
-    }
-  }
-
   async function confirmDelete() {
     if (!deleteTarget) return
     const room = deleteTarget
@@ -435,95 +346,31 @@ export function RoomsBoard({ venueId, canManage, rooms, froggeConnected }: { ven
           isEmpty={localRooms.length === 0}
           emptyMessage="No rooms yet."
         >
-          {localRooms.map((room) => (
-            <tr key={room.id}>
-              <td className="hide">
-                {room.imageUrl ? (
-                  <img
-                    src={room.imageUrl}
-                    alt={room.name}
-                    style={{ width: 48, height: 48, objectFit: "cover", borderRadius: 4 }}
-                  />
-                ) : canManage ? (
-                  <label
-                    style={{
-                      display: "flex",
-                      alignItems: "center",
-                      justifyContent: "center",
-                      width: 48,
-                      height: 48,
-                      border: "1px dashed var(--xiv-border)",
-                      borderRadius: 4,
-                      cursor: "pointer",
-                      fontSize: "0.7rem",
-                      color: "var(--xiv-subtext0)",
-                    }}
-                  >
-                    <input
-                      type="file"
-                      accept="image/*"
-                      style={{ display: "none" }}
-                      disabled={uploadingImageId === room.id}
-                      onChange={(e) => {
-                        const file = e.target.files?.[0]
-                        if (file) uploadRoomImage(room, file)
-                      }}
+          {localRooms.map((room) => {
+            const status = statusBadge(room.status)
+            const image = room.images?.[0]?.image_url ?? null
+            return (
+              <tr key={room.id}>
+                <td className="hide">
+                  {image ? (
+                    <img
+                      src={image}
+                      alt={room.name ?? "Room"}
+                      style={{ width: 48, height: 48, objectFit: "cover", borderRadius: 4 }}
                     />
-                    {uploadingImageId === room.id ? "..." : "+"}
-                  </label>
-                ) : null}
-              </td>
-              <td className="t-name">
-                {renamingId === room.id ? (
-                  <div style={{ display: "flex", gap: 4 }}>
-                    <Input
-                      type="text"
-                      value={renameInput}
-                      onChange={(e) => setRenameInput(e.target.value)}
-                      style={{ width: 140 }}
-                      autoFocus
-                    />
-                    <Button type="button" size="sm" variant="outline" onClick={() => saveRename(room)}>
-                      Save
-                    </Button>
-                    <Button
-                      type="button"
-                      size="sm"
-                      variant="ghost"
-                      onClick={() => {
-                        setRenamingId(null)
-                        setRenameInput("")
-                      }}
-                    >
-                      Cancel
-                    </Button>
-                  </div>
-                ) : (
-                  <>
-                    {room.name}
-                    {room.roomNumber != null && (
-                      <span className="t-muted" style={{ marginLeft: 6, fontSize: "0.75rem" }}>
-                        #{room.roomNumber}
-                      </span>
-                    )}
-                  </>
-                )}
-              </td>
-              <td className="hide">
-                {canManage ? (
-                  editingRoomNumberId === room.id ? (
+                  ) : null}
+                </td>
+                <td className="t-name">
+                  {renamingId === room.id ? (
                     <div style={{ display: "flex", gap: 4 }}>
                       <Input
-                        type="number"
-                        min={0}
-                        max={999}
-                        value={roomNumberInput}
-                        onChange={(e) => setRoomNumberInput(e.target.value)}
-                        placeholder="—"
-                        style={{ width: 60 }}
+                        type="text"
+                        value={renameInput}
+                        onChange={(e) => setRenameInput(e.target.value)}
+                        style={{ width: 140 }}
                         autoFocus
                       />
-                      <Button type="button" size="sm" variant="outline" onClick={() => saveRoomNumber(room)}>
+                      <Button type="button" size="sm" variant="outline" onClick={() => saveRename(room)}>
                         Save
                       </Button>
                       <Button
@@ -531,8 +378,99 @@ export function RoomsBoard({ venueId, canManage, rooms, froggeConnected }: { ven
                         size="sm"
                         variant="ghost"
                         onClick={() => {
-                          setEditingRoomNumberId(null)
-                          setRoomNumberInput("")
+                          setRenamingId(null)
+                          setRenameInput("")
+                        }}
+                      >
+                        Cancel
+                      </Button>
+                    </div>
+                  ) : (
+                    <>
+                      {room.name ?? "Unnamed room"}
+                      {room.room_number != null && (
+                        <span className="t-muted" style={{ marginLeft: 6, fontSize: "0.75rem" }}>
+                          #{room.room_number}
+                        </span>
+                      )}
+                    </>
+                  )}
+                </td>
+                <td className="hide">
+                  {canManage ? (
+                    editingRoomNumberId === room.id ? (
+                      <div style={{ display: "flex", gap: 4 }}>
+                        <Input
+                          type="number"
+                          min={0}
+                          max={999}
+                          value={roomNumberInput}
+                          onChange={(e) => setRoomNumberInput(e.target.value)}
+                          placeholder="—"
+                          style={{ width: 60 }}
+                          autoFocus
+                        />
+                        <Button type="button" size="sm" variant="outline" onClick={() => saveRoomNumber(room)}>
+                          Save
+                        </Button>
+                        <Button
+                          type="button"
+                          size="sm"
+                          variant="ghost"
+                          onClick={() => {
+                            setEditingRoomNumberId(null)
+                            setRoomNumberInput("")
+                          }}
+                        >
+                          Cancel
+                        </Button>
+                      </div>
+                    ) : (
+                      <span
+                        onClick={() => {
+                          setEditingRoomNumberId(room.id)
+                          setRoomNumberInput(room.room_number?.toString() ?? "")
+                        }}
+                        style={{ cursor: "pointer" }}
+                        className={room.room_number != null ? "" : "t-muted"}
+                      >
+                        {room.room_number != null ? `#${room.room_number}` : "Set #…"}
+                      </span>
+                    )
+                  ) : (
+                    <span className="t-muted">{room.room_number != null ? `#${room.room_number}` : "—"}</span>
+                  )}
+                </td>
+                <td>
+                  <span className={`tag ${status.className}`}>{status.label}</span>
+                </td>
+                <td>
+                  {(() => {
+                    const label = reserverLabel(room)
+                    return <span className={label === "—" ? "t-muted" : ""}>{label}</span>
+                  })()}
+                </td>
+                <td>
+                  {editingNoteId === room.id ? (
+                    <div style={{ display: "flex", gap: 4 }}>
+                      <Input
+                        type="text"
+                        value={noteInput}
+                        onChange={(e) => setNoteInput(e.target.value)}
+                        placeholder="Note…"
+                        style={{ width: 160 }}
+                        autoFocus
+                      />
+                      <Button type="button" size="sm" variant="outline" onClick={() => saveNote(room)}>
+                        Save
+                      </Button>
+                      <Button
+                        type="button"
+                        size="sm"
+                        variant="ghost"
+                        onClick={() => {
+                          setEditingNoteId(null)
+                          setNoteInput("")
                         }}
                       >
                         Cancel
@@ -541,230 +479,89 @@ export function RoomsBoard({ venueId, canManage, rooms, froggeConnected }: { ven
                   ) : (
                     <span
                       onClick={() => {
-                        setEditingRoomNumberId(room.id)
-                        setRoomNumberInput(room.roomNumber?.toString() ?? "")
+                        setEditingNoteId(room.id)
+                        setNoteInput(room.notes ?? "")
                       }}
                       style={{ cursor: "pointer" }}
-                      className={room.roomNumber != null ? "" : "t-muted"}
+                      className={room.notes ? "" : "t-muted"}
                     >
-                      {room.roomNumber != null ? `#${room.roomNumber}` : "Set #…"}
+                      {room.notes || "Add note…"}
                     </span>
-                  )
-                ) : (
-                  <span className="t-muted">{room.roomNumber != null ? `#${room.roomNumber}` : "—"}</span>
-                )}
-              </td>
-              <td>
-                {(() => {
-                  const status = derivedStatus(room)
-                  return (
-                    <span className={`tag ${status.className}`}>{status.label}</span>
-                  )
-                })()}
-              </td>
-              <td>
-                {froggeConnected && canManage ? (
-                  editingOwnerId === room.id ? (
-                    <div style={{ position: "relative", width: 200 }}>
-                      <Input
-                        type="text"
-                        value={ownerSearch}
-                        onChange={(e) => setOwnerSearch(e.target.value)}
-                        placeholder="Search member…"
-                        autoFocus
-                        style={{ width: "100%" }}
-                      />
-                      {ownerSearch.length > 0 && (
-                        <div
-                          style={{
-                            position: "absolute",
-                            top: "100%",
-                            left: 0,
-                            right: 0,
-                            zIndex: 50,
-                            marginTop: 4,
-                            maxHeight: 200,
-                            overflowY: "auto",
-                            background: "rgba(10,15,30,0.97)",
-                            backdropFilter: "blur(20px)",
-                            border: "1px solid var(--blue-018)",
-                            borderRadius: 8,
-                            boxShadow: "0 8px 32px rgba(0,0,0,0.6)",
-                          }}
-                        >
-                          {members
-                            .filter((m) =>
-                              m.username.toLowerCase().includes(ownerSearch.toLowerCase()) ||
-                              (m.display_name ?? "").toLowerCase().includes(ownerSearch.toLowerCase())
-                            )
-                            .slice(0, 10)
-                            .map((m) => (
-                              <div
-                                key={m.id}
-                                onClick={() => saveOwner(room, m.id)}
-                                style={{
-                                  padding: "8px 12px",
-                                  cursor: "pointer",
-                                  fontSize: "0.85rem",
-                                  borderBottom: "1px solid var(--blue-008)",
-                                }}
-                                onMouseEnter={(e) => (e.currentTarget.style.background = "var(--blue-007)")}
-                                onMouseLeave={(e) => (e.currentTarget.style.background = "transparent")}
-                              >
-                                {m.display_name ?? m.username}
-                              </div>
-                            ))}
-                          {members.filter((m) =>
-                            m.username.toLowerCase().includes(ownerSearch.toLowerCase()) ||
-                            (m.display_name ?? "").toLowerCase().includes(ownerSearch.toLowerCase())
-                          ).length === 0 && (
-                            <div style={{ padding: "8px 12px", fontSize: "0.85rem", color: "var(--muted-foreground)" }}>
-                              No members found
-                            </div>
-                          )}
-                        </div>
-                      )}
-                      <div style={{ display: "flex", gap: 4, marginTop: 4 }}>
+                  )}
+                </td>
+                <td className="hide t-muted">
+                  {room.updated_by_person_id != null ? `Member #${room.updated_by_person_id}` : "—"}
+                </td>
+                <td>
+                  <div style={{ display: "flex", gap: 6 }}>
+                    {room.status === "occupied" && (
+                      <Button
+                        type="button"
+                        size="sm"
+                        variant="outline-blue"
+                        disabled={pendingIds.has(room.id)}
+                        onClick={() => releaseRoomAction(room)}
+                      >
+                        Release
+                      </Button>
+                    )}
+                    {room.status === "available" && (
+                      <Button
+                        type="button"
+                        size="sm"
+                        variant="outline-blue"
+                        disabled={pendingIds.has(room.id)}
+                        onClick={() => reserveRoom(room)}
+                      >
+                        Reserve
+                      </Button>
+                    )}
+                    {canManage && (
+                      <>
                         <Button
                           type="button"
                           size="sm"
-                          variant="outline"
-                          onClick={() => {
-                            const member = members.find((m) => m.id === ownerSearch)
-                            saveOwner(room, member?.id ?? null)
-                          }}
+                          variant={room.locked ? "outline" : "ghost"}
+                          disabled={pendingIds.has(room.id)}
+                          onClick={() => toggleLocked(room)}
                         >
-                          Save
+                          {room.locked ? "Unlock" : "Lock"}
+                        </Button>
+                        <Button
+                          type="button"
+                          size="sm"
+                          variant={room.disabled ? "outline" : "ghost"}
+                          disabled={pendingIds.has(room.id)}
+                          onClick={() => toggleDisabled(room)}
+                        >
+                          {room.disabled ? "Enable" : "Disable"}
                         </Button>
                         <Button
                           type="button"
                           size="sm"
                           variant="ghost"
                           onClick={() => {
-                            setEditingOwnerId(null)
-                            setOwnerSearch("")
+                            setRenamingId(room.id)
+                            setRenameInput(room.name ?? "")
                           }}
                         >
-                          Cancel
+                          Rename
                         </Button>
-                      </div>
-                    </div>
-                  ) : (
-                    <span
-                      onClick={() => {
-                        setEditingOwnerId(room.id)
-                        setOwnerSearch(room.ownerDiscordId ?? "")
-                      }}
-                      style={{ cursor: "pointer" }}
-                      className={room.ownerDiscordId ? "" : "t-muted"}
-                    >
-                      {members.find((m) => m.id === room.ownerDiscordId)?.display_name ?? room.ownerDiscordId ?? "Set owner…"}
-                    </span>
-                  )
-                ) : room.ownerDiscordId ? (
-                  <span>{members.find((m) => m.id === room.ownerDiscordId)?.display_name ?? room.ownerDiscordId}</span>
-                ) : (
-                  <span className="t-muted">—</span>
-                )}
-              </td>
-              <td>
-                {editingNoteId === room.id ? (
-                  <div style={{ display: "flex", gap: 4 }}>
-                    <Input
-                      type="text"
-                      value={noteInput}
-                      onChange={(e) => setNoteInput(e.target.value)}
-                      placeholder="Note…"
-                      style={{ width: 160 }}
-                      autoFocus
-                    />
-                    <Button type="button" size="sm" variant="outline" onClick={() => saveNote(room)}>
-                      Save
-                    </Button>
-                    <Button
-                      type="button"
-                      size="sm"
-                      variant="ghost"
-                      onClick={() => {
-                        setEditingNoteId(null)
-                        setNoteInput("")
-                      }}
-                    >
-                      Cancel
-                    </Button>
+                        <Button
+                          type="button"
+                          size="sm"
+                          variant="destructive"
+                          onClick={() => setDeleteTarget(room)}
+                        >
+                          Delete
+                        </Button>
+                      </>
+                    )}
                   </div>
-                ) : (
-                  <span
-                    onClick={() => {
-                      setEditingNoteId(room.id)
-                      setNoteInput(room.note ?? "")
-                    }}
-                    style={{ cursor: "pointer" }}
-                    className={room.note ? "" : "t-muted"}
-                  >
-                    {room.note || "Add note…"}
-                  </span>
-                )}
-              </td>
-              <td className="hide t-muted">{room.updatedByName ?? "—"}</td>
-              <td>
-                <div style={{ display: "flex", gap: 6 }}>
-                  {room.isOccupied && (
-                    <Button
-                      type="button"
-                      size="sm"
-                      variant="outline-blue"
-                      disabled={pendingIds.has(room.id)}
-                      onClick={() => toggleStatus(room)}
-                    >
-                      Release
-                    </Button>
-                  )}
-                  {canManage && (
-                    <>
-                      <Button
-                        type="button"
-                        size="sm"
-                        variant={room.locked ? "outline" : "ghost"}
-                        disabled={pendingIds.has(room.id)}
-                        onClick={() => toggleLocked(room)}
-                      >
-                        {room.locked ? "Unlock" : "Lock"}
-                      </Button>
-                      <Button
-                        type="button"
-                        size="sm"
-                        variant={room.disabled ? "outline" : "ghost"}
-                        disabled={pendingIds.has(room.id)}
-                        onClick={() => toggleDisabled(room)}
-                      >
-                        {room.disabled ? "Enable" : "Disable"}
-                      </Button>
-                      <Button
-                        type="button"
-                        size="sm"
-                        variant="ghost"
-                        onClick={() => {
-                          setRenamingId(room.id)
-                          setRenameInput(room.name)
-                        }}
-                      >
-                        Rename
-                      </Button>
-                      <Button
-                        type="button"
-                        size="sm"
-                        variant="destructive"
-                        onClick={() => setDeleteTarget(room)}
-                      >
-                        Delete
-                      </Button>
-                    </>
-                  )}
-                </div>
-              </td>
-            </tr>
-          ))}
+                </td>
+              </tr>
+            )
+          })}
         </DataTable>
       </div>
 
@@ -781,25 +578,13 @@ export function RoomsBoard({ venueId, canManage, rooms, froggeConnected }: { ven
           <Button type="button" size="sm" disabled={!newRoomName.trim() || adding} onClick={addRoom}>
             {adding ? "Adding…" : "Add Room"}
           </Button>
-          {froggeConnected && (
-            <Button
-              type="button"
-              size="sm"
-              variant="outline-blue"
-              disabled={postingDiscord}
-              onClick={postToDiscord}
-              className="ml-auto"
-            >
-              {postingDiscord ? "Posting…" : "Post to Discord"}
-            </Button>
-          )}
         </div>
       )}
 
       <AlertDialog open={!!deleteTarget} onOpenChange={(open) => !open && setDeleteTarget(null)}>
         <AlertDialogContent>
           <AlertDialogHeader>
-            <AlertDialogTitle>Delete &quot;{deleteTarget?.name}&quot;?</AlertDialogTitle>
+            <AlertDialogTitle>Delete &quot;{deleteTarget?.name ?? "this room"}&quot;?</AlertDialogTitle>
             <AlertDialogDescription>This cannot be undone.</AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
