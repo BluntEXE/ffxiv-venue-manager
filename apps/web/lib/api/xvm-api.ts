@@ -63,6 +63,8 @@ async function xvmFetch<T>(path: string, options: RequestInit = {}, bearerToken?
 // ── Auth ───────────────────────────────────────────────────────
 
 export async function exchangeToken(externalId: string, displayName: string): Promise<CredentialIssued> {
+  if (!process.env.XVM_API_BASE_URL) throw new Error("XVM_API_BASE_URL is not set")
+  if (!process.env.XVM_API_DASHBOARD_SERVICE_TOKEN) throw new Error("XVM_API_DASHBOARD_SERVICE_TOKEN is not set")
   return xvmFetch<CredentialIssued>(
     "/internal/tokens/exchange",
     {
@@ -76,13 +78,16 @@ export async function exchangeToken(externalId: string, displayName: string): Pr
 // ── Person API ─────────────────────────────────────────────────
 
 export async function getMe(personToken: string): Promise<Me> {
+  if (!process.env.XVM_API_BASE_URL) throw new Error("XVM_API_BASE_URL is not set")
   return xvmFetch<Me>("/me", {}, personToken)
 }
 
 export async function listMyCredentials(personToken: string): Promise<Credential[]> {
+  if (!process.env.XVM_API_BASE_URL) throw new Error("XVM_API_BASE_URL is not set")
   return xvmFetch<Credential[]>("/me/credentials", {}, personToken)
 }
 
 export async function revokeCredential(personToken: string, credentialId: number): Promise<Credential> {
+  if (!process.env.XVM_API_BASE_URL) throw new Error("XVM_API_BASE_URL is not set")
   return xvmFetch<Credential>(`/me/credentials/${credentialId}/revoke`, { method: "POST" }, personToken)
 }
