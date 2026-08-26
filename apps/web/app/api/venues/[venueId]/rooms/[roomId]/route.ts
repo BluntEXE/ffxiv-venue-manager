@@ -2,6 +2,7 @@ import { NextResponse } from "next/server"
 import { getServerSession } from "next-auth"
 import { authOptions } from "@/lib/auth"
 import { z } from "zod"
+import { prisma } from "@/lib/prisma"
 import { withRateLimit } from "@/lib/middleware/with-rate-limit"
 import { getValidXvmApiToken, invalidateXvmApiCredential } from "@/lib/api/xvm-api-store"
 import { getRoom, updateRoom, deleteRoom, XvmApiError, xvmErrorMessage } from "@/lib/api/xvm-api"
@@ -20,6 +21,19 @@ async function requireToken(userId: string) {
     return { error: NextResponse.json({ error: "xvm-api link not established yet" }, { status: 503 }) }
   }
   return { token }
+}
+
+async function requireXvmVenueId(venueId: string) {
+  const venue = await prisma.venue.findUnique({ where: { id: venueId }, select: { xvmApiVenueId: true } })
+  if (!venue?.xvmApiVenueId) {
+    return {
+      error: NextResponse.json(
+        { error: "not_connected", message: "This venue hasn't been connected to xvm-api yet." },
+        { status: 409 }
+      ),
+    }
+  }
+  return { xvmApiVenueId: venue.xvmApiVenueId }
 }
 
 function parseRoomId(roomId: string) {
@@ -49,8 +63,11 @@ export const GET = withRateLimit<{
       return NextResponse.json({ error: "Invalid room id" }, { status: 400 })
     }
 
+    const venueGate = await requireXvmVenueId(venueId)
+    if (venueGate.error) return venueGate.error
+
     try {
-      const room = await getRoom(gate.token!, venueId, id)
+      const room = await getRoom(gate.token!, venueGate.xvmApiVenueId!, id)
       return NextResponse.json(room)
     } catch (err) {
       if (err instanceof XvmApiError && err.status !== 401) {
@@ -86,6 +103,9 @@ export const PATCH = withRateLimit<{
       return NextResponse.json({ error: "Invalid room id" }, { status: 400 })
     }
 
+    const venueGate = await requireXvmVenueId(venueId)
+    if (venueGate.error) return venueGate.error
+
     let data: Parameters<typeof updateRoom>[3]
     try {
       const body = await request.json()
@@ -105,7 +125,7 @@ export const PATCH = withRateLimit<{
     }
 
     try {
-      const room = await updateRoom(gate.token!, venueId, id, data)
+      const room = await updateRoom(gate.token!, venueGate.xvmApiVenueId!, id, data)
       return NextResponse.json(room)
     } catch (err) {
       if (err instanceof XvmApiError && err.status !== 401) {
@@ -141,8 +161,11 @@ export const DELETE = withRateLimit<{
       return NextResponse.json({ error: "Invalid room id" }, { status: 400 })
     }
 
+    const venueGate = await requireXvmVenueId(venueId)
+    if (venueGate.error) return venueGate.error
+
     try {
-      await deleteRoom(gate.token!, venueId, id)
+      await deleteRoom(gate.token!, venueGate.xvmApiVenueId!, id)
       return NextResponse.json({ success: true })
     } catch (err) {
       if (err instanceof XvmApiError && err.status !== 401) {

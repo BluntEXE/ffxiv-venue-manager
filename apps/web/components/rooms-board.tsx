@@ -19,6 +19,14 @@ import type { Room } from "@/lib/api/xvm-api"
 
 export type RoomItem = Room
 
+const NOT_CONNECTED_MESSAGE = "Ask the venue owner to connect this venue to xvm-api first."
+
+async function describeError(res: Response, fallback: string): Promise<string> {
+  const body = await res.json().catch(() => ({}))
+  if (body?.error === "not_connected") return NOT_CONNECTED_MESSAGE
+  return body?.error || body?.detail || fallback
+}
+
 function statusBadge(status: string): { label: string; className: string } {
   switch (status) {
     case "disabled":
@@ -100,7 +108,10 @@ export function RoomsBoard({ venueId, canManage, rooms }: { venueId: string; can
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ action: "reserve" }),
       })
-      if (!res.ok) throw new Error("request failed")
+      if (!res.ok) {
+        setError(await describeError(res, "Failed to reserve room"))
+        return
+      }
       const updated: Room = await res.json()
       setLocalRooms((prev) => prev.map((r) => (r.id === room.id ? updated : r)))
     } catch {
@@ -123,7 +134,10 @@ export function RoomsBoard({ venueId, canManage, rooms }: { venueId: string; can
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ action: "release" }),
       })
-      if (!res.ok) throw new Error("request failed")
+      if (!res.ok) {
+        setError(await describeError(res, "Failed to release room"))
+        return
+      }
       const updated: Room = await res.json()
       setLocalRooms((prev) => prev.map((r) => (r.id === room.id ? updated : r)))
     } catch {
@@ -152,7 +166,11 @@ export function RoomsBoard({ venueId, canManage, rooms }: { venueId: string; can
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ notes: trimmed || null }),
       })
-      if (!res.ok) throw new Error("request failed")
+      if (!res.ok) {
+        setLocalRooms((prev) => prev.map((r) => (r.id === room.id ? { ...r, notes: prevNotes } : r)))
+        setError(await describeError(res, "Failed to save note"))
+        return
+      }
       const updated: Room = await res.json()
       setLocalRooms((prev) => prev.map((r) => (r.id === room.id ? updated : r)))
     } catch {
@@ -179,8 +197,7 @@ export function RoomsBoard({ venueId, canManage, rooms }: { venueId: string; can
         body: JSON.stringify({ name }),
       })
       if (!res.ok) {
-        const body = await res.json().catch(() => ({}))
-        setError(body.error || body.detail || "Failed to add room")
+        setError(await describeError(res, "Failed to add room"))
         return
       }
       const created: Room = await res.json()
@@ -208,7 +225,11 @@ export function RoomsBoard({ venueId, canManage, rooms }: { venueId: string; can
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ name }),
       })
-      if (!res.ok) throw new Error("request failed")
+      if (!res.ok) {
+        setLocalRooms((prev) => prev.map((r) => (r.id === room.id ? { ...r, name: prevName } : r)))
+        setError(await describeError(res, "Failed to rename room"))
+        return
+      }
     } catch {
       setLocalRooms((prev) => prev.map((r) => (r.id === room.id ? { ...r, name: prevName } : r)))
       setError("Failed to rename room")
@@ -241,7 +262,11 @@ export function RoomsBoard({ venueId, canManage, rooms }: { venueId: string; can
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ roomNumber }),
       })
-      if (!res.ok) throw new Error("request failed")
+      if (!res.ok) {
+        setLocalRooms((prev) => prev.map((r) => (r.id === room.id ? { ...r, room_number: prevNumber } : r)))
+        setError(await describeError(res, "Failed to update room number"))
+        return
+      }
     } catch {
       setLocalRooms((prev) => prev.map((r) => (r.id === room.id ? { ...r, room_number: prevNumber } : r)))
       setError("Failed to update room number")
@@ -265,7 +290,11 @@ export function RoomsBoard({ venueId, canManage, rooms }: { venueId: string; can
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ locked: nextLocked }),
       })
-      if (!res.ok) throw new Error("request failed")
+      if (!res.ok) {
+        setLocalRooms((prev) => prev.map((r) => (r.id === room.id ? { ...r, locked: room.locked } : r)))
+        setError(await describeError(res, "Failed to update lock status"))
+        return
+      }
     } catch {
       setLocalRooms((prev) => prev.map((r) => (r.id === room.id ? { ...r, locked: room.locked } : r)))
       setError("Failed to update lock status")
@@ -289,7 +318,11 @@ export function RoomsBoard({ venueId, canManage, rooms }: { venueId: string; can
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ disabled: nextDisabled }),
       })
-      if (!res.ok) throw new Error("request failed")
+      if (!res.ok) {
+        setLocalRooms((prev) => prev.map((r) => (r.id === room.id ? { ...r, disabled: room.disabled } : r)))
+        setError(await describeError(res, "Failed to update disabled status"))
+        return
+      }
     } catch {
       setLocalRooms((prev) => prev.map((r) => (r.id === room.id ? { ...r, disabled: room.disabled } : r)))
       setError("Failed to update disabled status")
@@ -310,7 +343,11 @@ export function RoomsBoard({ venueId, canManage, rooms }: { venueId: string; can
     setLocalRooms((prev) => prev.filter((r) => r.id !== room.id))
     try {
       const res = await fetch(`/api/venues/${venueId}/rooms/${room.id}`, { method: "DELETE" })
-      if (!res.ok) throw new Error("request failed")
+      if (!res.ok) {
+        setLocalRooms(prevList)
+        setError(await describeError(res, "Failed to delete room"))
+        return
+      }
       setSuccess("Room deleted")
     } catch {
       setLocalRooms(prevList)
