@@ -3,6 +3,7 @@ import { getServerSession } from "next-auth"
 import { authOptions } from "@/lib/auth"
 import { prisma } from "@/lib/prisma"
 import { withRateLimit } from "@/lib/middleware/with-rate-limit"
+import { invalidateCache, cacheKeys } from "@/lib/redis-cache"
 import { getValidXvmApiToken, invalidateXvmApiCredential } from "@/lib/api/xvm-api-store"
 import { createVenue, XvmApiError, xvmErrorMessage } from "@/lib/api/xvm-api"
 
@@ -64,6 +65,12 @@ export const POST = withRateLimit<{ params: Promise<{ venueId: string }> }>(
           xvmApiVenueLinkedBy: session.user.id,
         },
       })
+
+      await Promise.all([
+        invalidateCache(cacheKeys.userVenues(session.user.id)),
+        invalidateCache(cacheKeys.venue(venueId)),
+        invalidateCache(cacheKeys.venueBySlug(venue.slug)),
+      ])
 
       return NextResponse.json(result)
     } catch (err) {
