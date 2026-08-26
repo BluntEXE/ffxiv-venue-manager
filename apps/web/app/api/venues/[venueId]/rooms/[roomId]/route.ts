@@ -4,6 +4,7 @@ import { authOptions } from "@/lib/auth"
 import { prisma } from "@/lib/prisma"
 import { z } from "zod"
 import { withRateLimit } from "@/lib/middleware/with-rate-limit"
+import { Prisma } from "@/generated/prisma/client"
 
 const renameRoomSchema = z.object({
   name: z.string().trim().min(1).max(100).optional(),
@@ -114,11 +115,11 @@ export const PATCH = withRateLimit<{
         imageUrl: updated.imageUrl,
         ownerDiscordId: updated.ownerDiscordId,
       })
-    } catch (err: any) {
+    } catch (err) {
       if (err instanceof z.ZodError) {
         return NextResponse.json({ error: "Invalid request", details: err.flatten() }, { status: 400 })
       }
-      if (err?.code === "P2002") {
+      if (err instanceof Prisma.PrismaClientKnownRequestError && err.code === "P2002") {
         return NextResponse.json({ error: "A room with this name already exists" }, { status: 409 })
       }
       console.error("[rooms/:id] PATCH error:", err)
