@@ -97,7 +97,7 @@ export const authOptions: NextAuthOptions = {
         }
       : undefined,
   // Trust the host header (important for proxies like Vercel)
-  // @ts-ignore - trustHost is valid in NextAuth v4 but might be missing in type definitions
+  // @ts-expect-error - trustHost is valid in NextAuth v4 but might be missing in type definitions
   trustHost: true,
   // Debug must be explicitly opted into. NODE_ENV is untrusted in prod
   // containers and can leak verbose auth logs if set wrong.

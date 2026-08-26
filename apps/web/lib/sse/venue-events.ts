@@ -8,7 +8,7 @@ export interface VenueEvent {
   type: "sale" | "patron_enter" | "patron_exit" | "room_status"
   venueId: string
   timestamp: string
-  data: Record<string, any>
+  data: Record<string, unknown>
 }
 
 class VenueEventBus extends EventEmitter {

@@ -1,9 +1,9 @@
 "use client"
 
-import { useEffect, useState } from "react"
 import type { FfxivVenueData } from "@/lib/ffxivvenues"
 import { LocalTime } from "@/components/server-time"
 import { utcWeeklyToLocal, formatHHMM } from "@/lib/schedule-utils"
+import { useMounted } from "@/lib/use-mounted"
 
 const DAY_NAMES = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"]
 
@@ -13,8 +13,7 @@ type Props = {
 }
 
 export function FfxivvenuesScheduleDisplay({ data, syncedAt }: Props) {
-  const [mounted, setMounted] = useState(false)
-  useEffect(() => setMounted(true), [])
+  const mounted = useMounted()
 
   const schedule = data.schedule ?? []
   const todayDay = mounted ? new Date().getDay() : new Date().getUTCDay()

@@ -1,6 +1,6 @@
 "use client"
 
-import { useEffect, useState } from "react"
+import { useMounted } from "@/lib/use-mounted"
 import {
   DAY_NAMES,
   DAY_SHORT,
@@ -17,8 +17,7 @@ type Props = {
 }
 
 export function VenueScheduleDisplay({ entries, compact = false }: Props) {
-  const [mounted, setMounted] = useState(false)
-  useEffect(() => setMounted(true), [])
+  const mounted = useMounted()
 
   if (entries.length === 0) {
     return (

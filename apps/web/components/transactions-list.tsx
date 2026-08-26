@@ -90,6 +90,8 @@ export function TransactionsList({
   // page's cursor (which always points to right after page 1) - leave
   // those alone once pagination has started.
   useEffect(() => {
+    // Re-syncs local state with fresh server props on router.refresh(); merge logic above explains why this can't be a plain derivation.
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     setTransactions((prev) => {
       const freshIds = new Set(initialTransactions.map((t) => t.id))
       const extras = prev.filter((t) => !freshIds.has(t.id))
