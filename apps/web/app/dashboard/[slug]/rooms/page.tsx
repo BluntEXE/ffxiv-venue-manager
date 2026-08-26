@@ -31,7 +31,9 @@ export default async function RoomsPage({ params }: { params: Promise<{ slug: st
     try {
       rooms = await listRooms(token, venue.id)
     } catch (err) {
-      if (!(err instanceof XvmApiError)) {
+      if (err instanceof XvmApiError && err.status !== 401) {
+        console.error("[rooms page] listRooms error:", err)
+      } else {
         console.error("[rooms page] listRooms error:", err)
         await invalidateXvmApiCredential(session.user.id)
       }
