@@ -2,6 +2,7 @@ import { nanoid } from "nanoid"
 import crypto from "crypto"
 import { NextRequest, NextResponse } from "next/server"
 import { prisma } from "@/lib/prisma"
+import type { User } from "@/generated/prisma/client"
 import { venueEventBus } from "@/lib/sse/venue-events"
 import { enforcePluginIpRateLimit, enforcePluginRateLimit } from "@/lib/api/plugin-rate-limit"
 
@@ -46,7 +47,7 @@ export async function generateApiKey(userId: string, name?: string, venueId?: st
  */
 export async function validateApiKey(apiKey: string): Promise<{
   userId: string | null
-  user: any | null
+  user: User | null
   venues: string[]
 } | null> {
   if (!apiKey || !apiKey.startsWith("vm_")) {
