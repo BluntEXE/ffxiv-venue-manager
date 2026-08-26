@@ -111,6 +111,23 @@ export interface RoomImageCreate {
   image_url: string
 }
 
+// ── Venues API ─────────────────────────────────────────────────
+
+export interface VenueCreate {
+  name: string
+  slug?: string | null
+  data_center: string
+  world: string
+}
+
+export interface VenueRow {
+  id: string
+  name: string
+  slug: string
+  data_center: string
+  world: string
+}
+
 // ── Internal fetch helper ──────────────────────────────────────
 
 // Carries the upstream HTTP status so callers can distinguish "xvm-api
@@ -276,4 +293,9 @@ export async function deleteRoomImage(
 ): Promise<void> {
   if (!process.env.XVM_API_BASE_URL) throw new Error("XVM_API_BASE_URL is not set")
   return xvmFetch<void>(`/venues/${venueId}/rooms/${roomId}/images/${imageId}`, { method: "DELETE" }, personToken)
+}
+
+export async function createVenue(personToken: string, data: VenueCreate): Promise<VenueRow> {
+  if (!process.env.XVM_API_BASE_URL) throw new Error("XVM_API_BASE_URL is not set")
+  return xvmFetch<VenueRow>("/venues", { method: "POST", body: JSON.stringify(data) }, personToken)
 }
