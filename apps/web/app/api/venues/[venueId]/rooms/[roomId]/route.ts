@@ -27,16 +27,6 @@ function parseRoomId(roomId: string) {
   return Number.isInteger(id) ? id : null
 }
 
-function handleXvmError(err: unknown, userId: string, label: string) {
-  if (err instanceof XvmApiError && err.status !== 401) {
-    return NextResponse.json({ error: err.body || err.message }, { status: err.status })
-  }
-  console.error(`[rooms/:id] ${label} error:`, err)
-  return invalidateXvmApiCredential(userId).then(() =>
-    NextResponse.json({ error: "xvm-api link needs to be refreshed" }, { status: 503 })
-  )
-}
-
 export const GET = withRateLimit<{
   params: Promise<{ venueId: string; roomId: string }>
 }>(
@@ -63,7 +53,12 @@ export const GET = withRateLimit<{
       const room = await getRoom(gate.token!, venueId, id)
       return NextResponse.json(room)
     } catch (err) {
-      return handleXvmError(err, session.user.id, "GET")
+      if (err instanceof XvmApiError && err.status !== 401) {
+        return NextResponse.json({ error: err.body || err.message }, { status: err.status })
+      }
+      console.error("[rooms/:id] GET error:", err)
+      await invalidateXvmApiCredential(session.user.id)
+      return NextResponse.json({ error: "xvm-api link needs to be refreshed" }, { status: 503 })
     }
   },
   { requests: 60, window: "1 m" }
@@ -113,7 +108,12 @@ export const PATCH = withRateLimit<{
       const room = await updateRoom(gate.token!, venueId, id, data)
       return NextResponse.json(room)
     } catch (err) {
-      return handleXvmError(err, session.user.id, "PATCH")
+      if (err instanceof XvmApiError && err.status !== 401) {
+        return NextResponse.json({ error: err.body || err.message }, { status: err.status })
+      }
+      console.error("[rooms/:id] PATCH error:", err)
+      await invalidateXvmApiCredential(session.user.id)
+      return NextResponse.json({ error: "xvm-api link needs to be refreshed" }, { status: 503 })
     }
   },
   { requests: 30, window: "1 m" }
@@ -145,7 +145,12 @@ export const DELETE = withRateLimit<{
       await deleteRoom(gate.token!, venueId, id)
       return NextResponse.json({ success: true })
     } catch (err) {
-      return handleXvmError(err, session.user.id, "DELETE")
+      if (err instanceof XvmApiError && err.status !== 401) {
+        return NextResponse.json({ error: err.body || err.message }, { status: err.status })
+      }
+      console.error("[rooms/:id] DELETE error:", err)
+      await invalidateXvmApiCredential(session.user.id)
+      return NextResponse.json({ error: "xvm-api link needs to be refreshed" }, { status: 503 })
     }
   },
   { requests: 30, window: "1 m" }
