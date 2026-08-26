@@ -5,6 +5,7 @@ import type { MembershipRole } from "@/generated/prisma/client"
 import { formatServerTime } from "@/lib/server-time"
 import { formatLocalTime, LocalTime } from "@/components/server-time"
 import { Button } from "@/components/ui/button"
+import { useMounted } from "@/lib/use-mounted"
 
 type TimelineFilter = "all" | "sales" | "patrons" | "staff"
 
@@ -103,8 +104,7 @@ export function TimelineFeed({ venueId, initialFilter = "all" }: TimelineFeedPro
   const [loading, setLoading] = useState(true)
   const [loadingMore, setLoadingMore] = useState(false)
   const [liveCount, setLiveCount] = useState(0)
-  const [mounted, setMounted] = useState(false)
-  useEffect(() => setMounted(true), [])
+  const mounted = useMounted()
   const filterRef = useRef(filter)
   filterRef.current = filter
 

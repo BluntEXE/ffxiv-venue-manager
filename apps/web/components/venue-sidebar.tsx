@@ -2,12 +2,12 @@
 
 import Link from "next/link"
 import { usePathname } from "next/navigation"
-import { useEffect, useState } from "react"
 import { Button } from "@/components/ui/button"
 import { VenueSwitcher } from "./venue-switcher"
 import { FeedbackDialog } from "./feedback-dialog"
 import { useSidebar } from "./sidebar-context"
 import { cn } from "@/lib/utils"
+import { useMounted } from "@/lib/use-mounted"
 import {
   Heart,
   Home,
@@ -64,8 +64,7 @@ export function VenueSidebar({
 }: VenueSidebarProps) {
   const pathname = usePathname()
   const { open, setOpen } = useSidebar()
-  const [mounted, setMounted] = useState(false)
-  useEffect(() => setMounted(true), [])
+  const mounted = useMounted()
 
   const navGroups: NavGroup[] = [
     {
