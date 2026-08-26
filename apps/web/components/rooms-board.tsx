@@ -348,7 +348,7 @@ export function RoomsBoard({ venueId, canManage, rooms }: { venueId: string; can
         >
           {localRooms.map((room) => {
             const status = statusBadge(room.status)
-            const image = room.images[0]?.image_url ?? null
+            const image = room.images?.[0]?.image_url ?? null
             return (
               <tr key={room.id}>
                 <td className="hide">
