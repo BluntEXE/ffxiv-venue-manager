@@ -299,6 +299,19 @@ export default function AccountSettingsPage() {
         </div>
       </div>
 
+      {/* xvm-api credentials */}
+      <div className="vcard overflow-hidden mt-6">
+        <div className="flex items-center gap-2 px-[22px] py-[13px] border-b border-[var(--blue-008)] font-semibold text-sm">
+          <Key className="w-4 h-4" />
+          xvm-api Credentials
+        </div>
+        <div className="pbody">
+          <Link href="/dashboard/account/xvm-credentials" className="text-xs text-[var(--xiv-blue)] hover:underline">
+            Manage xvm-api credentials →
+          </Link>
+        </div>
+      </div>
+
       {/* Sign out */}
       <div className="vcard overflow-hidden mt-6">
         <div className="flex items-center gap-2 px-[22px] py-[13px] border-b border-[var(--blue-008)] font-semibold text-sm">
