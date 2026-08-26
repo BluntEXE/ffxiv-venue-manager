@@ -2,6 +2,8 @@ import { NextAuthOptions } from "next-auth"
 import { PrismaAdapter } from "@next-auth/prisma-adapter"
 import DiscordProvider from "next-auth/providers/discord"
 import { prisma } from "@/lib/prisma"
+import { exchangeToken } from "@/lib/api/xvm-api"
+import { upsertXvmApiCredential, getValidXvmApiToken } from "@/lib/api/xvm-api-store"
 
 export const authOptions: NextAuthOptions = {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -47,6 +49,35 @@ export const authOptions: NextAuthOptions = {
       if (account) {
         token.accessToken = account.access_token
         token.provider = account.provider
+      }
+      // Mint an xvm-api person token on first sign-in. This is additive, not a
+      // hard dependency for login, so xvm-api being down must never fail the
+      // dashboard's own sign-in.
+      if (user && account?.provider === "discord" && account.providerAccountId) {
+        try {
+          const issued = await exchangeToken(account.providerAccountId, user.name ?? "Unknown")
+          await upsertXvmApiCredential(user.id, issued)
+        } catch (err) {
+          console.error("xvm-api token exchange failed:", err)
+        }
+      }
+      // Refresh the xvm-api token on every callback invocation if it's missing
+      // or near expiry. Same non-fatal handling as above.
+      if (token.id && !(user && account?.provider === "discord" && account.providerAccountId)) {
+        try {
+          const existing = await getValidXvmApiToken(token.id as string)
+          if (!existing) {
+            const discordAccount = await prisma.account.findFirst({
+              where: { userId: token.id as string, provider: "discord" },
+            })
+            if (discordAccount) {
+              const issued = await exchangeToken(discordAccount.providerAccountId, (token.name as string) ?? "Unknown")
+              await upsertXvmApiCredential(token.id as string, issued)
+            }
+          }
+        } catch (err) {
+          console.error("xvm-api token refresh failed:", err)
+        }
       }
       return token
     },
