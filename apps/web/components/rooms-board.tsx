@@ -57,7 +57,17 @@ function reserverLabel(room: Room): string {
   return "—"
 }
 
-export function RoomsBoard({ venueId, canManage, rooms }: { venueId: string; canManage: boolean; rooms: RoomItem[] }) {
+export function RoomsBoard({
+  venueId,
+  canManage,
+  rooms,
+  notConnected,
+}: {
+  venueId: string
+  canManage: boolean
+  rooms: RoomItem[]
+  notConnected?: boolean
+}) {
   const [localRooms, setLocalRooms] = useState(rooms)
   const [pendingIds, setPendingIds] = useState<Set<number>>(new Set())
   const [editingNoteId, setEditingNoteId] = useState<number | null>(null)
@@ -381,7 +391,7 @@ export function RoomsBoard({ venueId, canManage, rooms }: { venueId: string; can
             { label: "" },
           ]}
           isEmpty={localRooms.length === 0}
-          emptyMessage="No rooms yet."
+          emptyMessage={notConnected ? NOT_CONNECTED_MESSAGE : "No rooms yet."}
         >
           {localRooms.map((room) => {
             const status = statusBadge(room.status)
