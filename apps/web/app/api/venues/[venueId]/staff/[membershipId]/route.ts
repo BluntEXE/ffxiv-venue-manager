@@ -224,8 +224,8 @@ export const DELETE = withRateLimit<{ params: Promise<{ venueId: string; members
         },
       })
 
-      if (!userMembership || userMembership.role !== "OWNER") {
-        return NextResponse.json({ error: "Only owners can remove staff" }, { status: 403 })
+      if (!userMembership || !["OWNER", "MANAGER"].includes(userMembership.role)) {
+        return NextResponse.json({ error: "You don't have permission to remove staff" }, { status: 403 })
       }
 
       // Get the membership being deleted
@@ -235,6 +235,11 @@ export const DELETE = withRateLimit<{ params: Promise<{ venueId: string; members
 
       if (!targetMembership) {
         return NextResponse.json({ error: "Staff member not found" }, { status: 404 })
+      }
+
+      // Managers cannot remove owners
+      if (userMembership.role === "MANAGER" && targetMembership.role === "OWNER") {
+        return NextResponse.json({ error: "Managers cannot remove owners" }, { status: 403 })
       }
 
       // Cannot remove the venue owner
