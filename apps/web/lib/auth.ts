@@ -53,9 +53,12 @@ export const authOptions: NextAuthOptions = {
       // Mint an xvm-api person token on first sign-in. This is additive, not a
       // hard dependency for login, so xvm-api being down must never fail the
       // dashboard's own sign-in.
-      if (user && account?.provider === "discord" && account.providerAccountId) {
+      const isFirstDiscordSignIn = Boolean(
+        user && account?.provider === "discord" && account.providerAccountId
+      )
+      if (isFirstDiscordSignIn) {
         try {
-          const issued = await exchangeToken(account.providerAccountId, user.name ?? "Unknown")
+          const issued = await exchangeToken(account?.providerAccountId!, user.name ?? "Unknown")
           await upsertXvmApiCredential(user.id, issued)
         } catch (err) {
           console.error("xvm-api token exchange failed:", err)
@@ -63,7 +66,7 @@ export const authOptions: NextAuthOptions = {
       }
       // Refresh the xvm-api token on every callback invocation if it's missing
       // or near expiry. Same non-fatal handling as above.
-      if (token.id && !(user && account?.provider === "discord" && account.providerAccountId)) {
+      if (token.id && !isFirstDiscordSignIn) {
         try {
           const existing = await getValidXvmApiToken(token.id as string)
           if (!existing) {
