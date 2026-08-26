@@ -166,8 +166,8 @@ export default function ManageStaffMemberPage({ params }: { params: Promise<{ sl
         body: JSON.stringify({
           role: selectedRole,
           roleId: selectedCustomRole,
-          // Excludes only the current primary role, not a running history of past selections —
-          // recomputing from final state avoids the old effect's cumulative stripping across selection changes.
+          // Excludes only the current primary role, not a running history of past selections.
+          // Recomputing from final state avoids the old effect's cumulative stripping across selection changes.
           additionalRoleIds: selectedAdditionalRoleIds.filter((id) => id !== selectedCustomRole),
         }),
       })
