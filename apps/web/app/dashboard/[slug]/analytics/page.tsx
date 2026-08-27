@@ -83,10 +83,6 @@ export default function AnalyticsPage() {
   const [error, setError] = useState<string | null>(null)
   const [period, setPeriod] = useState<"30d" | "90d" | "all">("30d")
 
-  useEffect(() => {
-    if (slug) fetchAnalytics(period)
-  }, [slug, period])
-
   const fetchAnalytics = async (p = period) => {
     try {
       setError(null)
@@ -111,6 +107,12 @@ export default function AnalyticsPage() {
       setIsLoading(false)
     }
   }
+
+  useEffect(() => {
+    // Genuine data fetch (sets analyticsData/loading/error state), not derivable from props/state during render.
+    // eslint-disable-next-line react-hooks/set-state-in-effect
+    if (slug) fetchAnalytics(period)
+  }, [slug, period])
 
   const exportToCSV = () => {
     if (!analyticsData) return

@@ -87,18 +87,6 @@ export default function EventTemplatesPage() {
     defaultEndTime: "22:00",
   })
 
-  useEffect(() => {
-    if (status === "unauthenticated") {
-      router.push("/auth/signin")
-    }
-  }, [status, router])
-
-  useEffect(() => {
-    if (session && slug) {
-      fetchTemplates()
-    }
-  }, [session, slug])
-
   const fetchTemplates = async () => {
     try {
       const venueResponse = await fetch(`/api/venues`)
@@ -123,6 +111,20 @@ export default function EventTemplatesPage() {
       setLoading(false)
     }
   }
+
+  useEffect(() => {
+    if (status === "unauthenticated") {
+      router.push("/auth/signin")
+    }
+  }, [status, router])
+
+  useEffect(() => {
+    if (session && slug) {
+      // Genuine data fetch (sets templates/loading state), not derivable from props/state during render.
+      // eslint-disable-next-line react-hooks/set-state-in-effect
+      fetchTemplates()
+    }
+  }, [session, slug])
 
   const handleCreate = async () => {
     setIsSubmitting(true)
@@ -469,7 +471,7 @@ export default function EventTemplatesPage() {
             <AlertDialogHeader>
               <AlertDialogTitle>Delete Template</AlertDialogTitle>
               <AlertDialogDescription>
-                Are you sure you want to delete "{deletingTemplate?.name}"? This action cannot be undone.
+                Are you sure you want to delete &quot;{deletingTemplate?.name}&quot;? This action cannot be undone.
               </AlertDialogDescription>
             </AlertDialogHeader>
             <AlertDialogFooter>

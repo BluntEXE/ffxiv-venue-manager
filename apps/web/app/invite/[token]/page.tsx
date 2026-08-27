@@ -33,37 +33,6 @@ export default function InvitePage({ params }: { params: Promise<{ token: string
   const [error, setError] = useState<string | null>(null)
   const [success, setSuccess] = useState(false)
 
-  // Fetch invite details
-  useEffect(() => {
-    async function fetchInviteDetails() {
-      try {
-        const response = await fetch(`/api/invites/${unwrappedParams.token}`)
-        if (!response.ok) {
-          const data = await response.json()
-          setError(data.error || "Invalid or expired invite")
-          setLoading(false)
-          return
-        }
-        const data = await response.json()
-        setInviteDetails(data.invite)
-        setLoading(false)
-      } catch (err) {
-        console.error("Error fetching invite:", err)
-        setError("Failed to load invite details")
-        setLoading(false)
-      }
-    }
-
-    fetchInviteDetails()
-  }, [unwrappedParams.token])
-
-  // Auto-accept if user is already logged in
-  useEffect(() => {
-    if (session && inviteDetails && !accepting && !success && !error) {
-      handleAcceptInvite()
-    }
-  }, [session, inviteDetails])
-
   async function handleAcceptInvite() {
     setAccepting(true)
     setError(null)
@@ -98,6 +67,39 @@ export default function InvitePage({ params }: { params: Promise<{ token: string
       setAccepting(false)
     }
   }
+
+  // Fetch invite details
+  useEffect(() => {
+    async function fetchInviteDetails() {
+      try {
+        const response = await fetch(`/api/invites/${unwrappedParams.token}`)
+        if (!response.ok) {
+          const data = await response.json()
+          setError(data.error || "Invalid or expired invite")
+          setLoading(false)
+          return
+        }
+        const data = await response.json()
+        setInviteDetails(data.invite)
+        setLoading(false)
+      } catch (err) {
+        console.error("Error fetching invite:", err)
+        setError("Failed to load invite details")
+        setLoading(false)
+      }
+    }
+
+    fetchInviteDetails()
+  }, [unwrappedParams.token])
+
+  // Auto-accept if user is already logged in
+  useEffect(() => {
+    if (session && inviteDetails && !accepting && !success && !error) {
+      // Genuine post-mount side effect: auto-accepts for an already-logged-in user, not derivable at render time.
+      // eslint-disable-next-line react-hooks/set-state-in-effect
+      handleAcceptInvite()
+    }
+  }, [session, inviteDetails])
 
   async function handleDiscordSignIn() {
     // Sign in with Discord and return to this page
@@ -183,7 +185,7 @@ export default function InvitePage({ params }: { params: Promise<{ token: string
                 />
               </div>
             )}
-            <CardTitle>You've been invited!</CardTitle>
+            <CardTitle>You&apos;ve been invited!</CardTitle>
             <CardDescription>
               <strong>{inviteDetails.invitedBy.name || "A venue manager"}</strong> has invited you to join{" "}
               <strong>{inviteDetails.venue.name}</strong> as <strong>{inviteDetails.role.toLowerCase()}</strong>.

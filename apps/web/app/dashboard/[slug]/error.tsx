@@ -20,7 +20,7 @@ export default function VenueError({ error, reset }: { error: Error & { digest?:
           </div>
           <CardTitle>Error Loading Venue</CardTitle>
           <CardDescription>
-            We couldn't load this venue's data. Please try again or return to your venues list.
+            We couldn&apos;t load this venue&apos;s data. Please try again or return to your venues list.
           </CardDescription>
         </CardHeader>
         <CardContent className="flex flex-col gap-4">

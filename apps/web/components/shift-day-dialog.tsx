@@ -1,7 +1,6 @@
 // apps/web/components/shift-day-dialog.tsx
 "use client"
 
-import { useEffect, useState } from "react"
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
@@ -22,6 +21,7 @@ import {
   type RoleOption,
 } from "@/lib/shift-format"
 import { browserTimeZone, localTimeInput } from "@/lib/local-day"
+import { useMounted } from "@/lib/use-mounted"
 
 interface ShiftDayDialogProps {
   date: Date | null
@@ -46,8 +46,7 @@ export function ShiftDayDialog({
   staffForDialog,
   roles,
 }: ShiftDayDialogProps) {
-  const [mounted, setMounted] = useState(false)
-  useEffect(() => setMounted(true), [])
+  const mounted = useMounted()
   const timeZone = mounted ? browserTimeZone() : null
 
   const open = date !== null

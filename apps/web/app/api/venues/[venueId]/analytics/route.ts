@@ -27,7 +27,7 @@ export const GET = withRateLimit<{ params: Promise<{ venueId: string }> }>(
       const { venueId } = await params
 
       // Look up venue by slug or ID
-      let venue = await prisma.venue.findFirst({
+      const venue = await prisma.venue.findFirst({
         where: {
           OR: [{ id: venueId }, { slug: venueId }],
         },

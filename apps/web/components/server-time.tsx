@@ -1,6 +1,6 @@
 "use client"
 
-import { useEffect, useMemo, useState } from "react"
+import { useMemo } from "react"
 import {
   formatServerTime,
   formatServerTimeRange,
@@ -9,6 +9,7 @@ import {
   SERVER_TIME_LABEL,
   type ServerTimeKind,
 } from "@/lib/server-time"
+import { useMounted } from "@/lib/use-mounted"
 
 // Re-exports so existing client-side imports (e.g. recharts tick formatters)
 // keep working without churning their import paths.
@@ -62,8 +63,7 @@ export function LocalTimeRange({
   end: string | Date
   className?: string
 }) {
-  const [mounted, setMounted] = useState(false)
-  useEffect(() => setMounted(true), [])
+  const mounted = useMounted()
   const formatted = useMemo(
     () => (mounted ? formatLocalTimeRange(start, end) : formatServerTimeRange(start, end)),
     [mounted, start, end]
@@ -80,8 +80,7 @@ export function LocalTime({
   formatStr?: ServerTimeKind
   className?: string
 }) {
-  const [mounted, setMounted] = useState(false)
-  useEffect(() => setMounted(true), [])
+  const mounted = useMounted()
   const formatted = useMemo(
     () => (mounted ? formatLocalTime(date, formatStr) : formatServerTime(date, formatStr)),
     [mounted, date, formatStr]

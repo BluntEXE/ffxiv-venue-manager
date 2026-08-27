@@ -137,7 +137,7 @@ export async function GET(request: NextRequest, { params }: { params: Promise<{ 
     if (cursor) shiftWhere.actualStart = { lt: new Date(cursor), not: null }
 
     const shifts = await prisma.shift.findMany({
-      where: shiftWhere as any,
+      where: shiftWhere,
       include: {
         membership: {
           include: {

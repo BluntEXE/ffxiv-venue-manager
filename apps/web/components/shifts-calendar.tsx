@@ -1,13 +1,14 @@
 // apps/web/components/shifts-calendar.tsx
 "use client"
 
-import { useEffect, useState } from "react"
+import { useState } from "react"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent } from "@/components/ui/card"
 import { ChevronLeft, ChevronRight } from "lucide-react"
 import { dayKeyFor, hourLabelFor, type CalendarShift, type StaffMember, type RoleOption } from "@/lib/shift-format"
 import { browserTimeZone } from "@/lib/local-day"
 import { ShiftDayDialog } from "@/components/shift-day-dialog"
+import { useMounted } from "@/lib/use-mounted"
 
 interface ShiftsCalendarProps {
   shifts: CalendarShift[]
@@ -50,8 +51,7 @@ export function ShiftsCalendar({
 }: ShiftsCalendarProps) {
   const [monthCursor, setMonthCursor] = useState(() => utcMonthStart(new Date()))
   const [selectedDate, setSelectedDate] = useState<Date | null>(null)
-  const [mounted, setMounted] = useState(false)
-  useEffect(() => setMounted(true), [])
+  const mounted = useMounted()
   const timeZone = mounted ? browserTimeZone() : null
 
   const todayKey = mounted ? dayKeyFor(new Date(), timeZone) : todayKeyST

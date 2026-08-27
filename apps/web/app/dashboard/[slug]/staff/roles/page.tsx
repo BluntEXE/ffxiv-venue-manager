@@ -54,7 +54,7 @@ interface Role {
   name: string
   responsibilities: string | null
   color: string | null
-  permissions: any
+  permissions: Record<string, boolean> | null
   hourlyRate: string | null
   potPayoutMode: "STANDARD" | "POT" | "CONTRACTOR"
   contractorSharesPot: boolean
@@ -365,7 +365,7 @@ export default function RolesPage({ params }: { params: Promise<{ slug: string }
                           <AlertDialogHeader>
                             <AlertDialogTitle>Delete Role?</AlertDialogTitle>
                             <AlertDialogDescription>
-                              Are you sure you want to delete "{role.name}"? This action cannot be undone.
+                              Are you sure you want to delete &quot;{role.name}&quot;? This action cannot be undone.
                             </AlertDialogDescription>
                           </AlertDialogHeader>
                           <AlertDialogFooter>

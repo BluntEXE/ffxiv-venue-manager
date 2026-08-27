@@ -97,6 +97,10 @@ export default function SettingsPage({ params }: { params: Promise<{ slug: strin
   const [ffxivPreviewError, setFfxivPreviewError] = useState<string | null>(null)
   const [ffxivSyncing, setFfxivSyncing] = useState(false)
   const [ffxivUnlinking, setFfxivUnlinking] = useState(false)
+  const [xvmApiVenueId, setXvmApiVenueId] = useState<string | null>(null)
+  const [xvmApiVenueLinkedAt, setXvmApiVenueLinkedAt] = useState<string | null>(null)
+  const [xvmConnecting, setXvmConnecting] = useState(false)
+  const [xvmConnectError, setXvmConnectError] = useState<string | null>(null)
   const [froggeConnected, setFroggeConnected] = useState(false)
   const [froggeCode, setFroggeCode] = useState("")
   const [froggeConnecting, setFroggeConnecting] = useState(false)
@@ -158,6 +162,8 @@ export default function SettingsPage({ params }: { params: Promise<{ slug: strin
         setGalleryImages(venue.galleryImages ?? [])
         setBannerUrl(venue.bannerUrl ?? null)
         setLogoUrl(venue.logoUrl ?? null)
+        setXvmApiVenueId(venue.xvmApiVenueId ?? null)
+        setXvmApiVenueLinkedAt(venue.xvmApiVenueLinkedAt ?? null)
         if (venue.memberships?.[0]) {
           setUserRole(venue.memberships[0].role)
         }
@@ -482,6 +488,25 @@ export default function SettingsPage({ params }: { params: Promise<{ slug: strin
       setFfxivVenueSyncedAt(null)
     } finally {
       setFfxivUnlinking(false)
+    }
+  }
+
+  async function handleXvmConnect() {
+    setXvmConnecting(true)
+    setXvmConnectError(null)
+    try {
+      const res = await fetch(`/api/venues/${venueId}/xvm-connect`, { method: "POST" })
+      if (!res.ok) {
+        const err = await res.json()
+        throw new Error(err.error ?? "Failed to connect")
+      }
+      const result = await res.json()
+      setXvmApiVenueId(result.id)
+      setXvmApiVenueLinkedAt(new Date().toISOString())
+    } catch (e) {
+      setXvmConnectError(e instanceof Error ? e.message : "Failed to connect")
+    } finally {
+      setXvmConnecting(false)
     }
   }
 
@@ -1200,6 +1225,61 @@ export default function SettingsPage({ params }: { params: Promise<{ slug: strin
                 </div>
               </div>
 
+              {/* xvm-api */}
+              {userRole === "OWNER" && (
+                <div className="introw" style={{ flexWrap: "wrap", gap: 14 }}>
+                  <span className="iconbadge ii" style={{ width: 40, height: 40 }}>
+                    <svg
+                      xmlns="http://www.w3.org/2000/svg"
+                      viewBox="0 0 24 24"
+                      fill="none"
+                      stroke="currentColor"
+                      strokeWidth="2"
+                    >
+                      <circle cx="12" cy="12" r="10" />
+                      <path d="M9 12l2 2 4-4" />
+                    </svg>
+                  </span>
+                  <div className="iinfo">
+                    <div className="iname">xvm-api</div>
+                    <div className="idesc">Required for Rooms and other live venue features</div>
+                  </div>
+                  {xvmApiVenueId && (
+                    <span className="status open">
+                      <span className="dot" />
+                      Connected
+                    </span>
+                  )}
+                  <div className="w-full pl-[54px] space-y-3">
+                    {xvmApiVenueId ? (
+                      <p className="text-xs text-[var(--fg-faint)]">
+                        Connected
+                        {xvmApiVenueLinkedAt && (
+                          <>
+                            {" "}
+                            on <LocalTime date={xvmApiVenueLinkedAt} />
+                          </>
+                        )}
+                        .
+                      </p>
+                    ) : (
+                      <>
+                        <Button
+                          type="button"
+                          variant="outline-blue"
+                          size="sm"
+                          onClick={handleXvmConnect}
+                          disabled={xvmConnecting}
+                        >
+                          {xvmConnecting ? "Connecting…" : "Connect to xvm-api"}
+                        </Button>
+                        {xvmConnectError && <p className="text-xs text-red-400">{xvmConnectError}</p>}
+                      </>
+                    )}
+                  </div>
+                </div>
+              )}
+
               {/* Frogge Bot */}
               <div className="introw" style={{ flexWrap: "wrap", gap: 14 }}>
                 <span className="iconbadge ii" style={{ width: 40, height: 40 }}>
@@ -1217,7 +1297,7 @@ export default function SettingsPage({ params }: { params: Promise<{ slug: strin
                 </span>
                 <div className="iinfo">
                   <div className="iname">Frogge Bot</div>
-                  <div className="idesc">Room sync, ownership, and Discord posting</div>
+                  <div className="idesc">Discord posting</div>
                 </div>
                 {froggeConnected && (
                   <span className="status open">
@@ -1229,7 +1309,7 @@ export default function SettingsPage({ params }: { params: Promise<{ slug: strin
                   {froggeConnected ? (
                     <>
                       <p className="text-xs text-[var(--fg-faint)]">
-                        Connected. Rooms sync automatically. Use the Rooms page to post to Discord.
+                        Connected. Use the Rooms page to post to Discord.
                       </p>
                       <Button
                         type="button"

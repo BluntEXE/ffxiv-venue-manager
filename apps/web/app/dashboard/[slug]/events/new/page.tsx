@@ -147,6 +147,8 @@ export default function NewEventPage() {
 
         // Apply duration to the new start time
         const end = new Date(startTime.getTime() + durationMinutes * 60000)
+        // Recomputes the default endTime after startTime changes; endTime stays independently editable via its own DateTimePicker after this.
+        // eslint-disable-next-line react-hooks/set-state-in-effect
         setEndTime(end)
       }
     }

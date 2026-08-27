@@ -1,10 +1,10 @@
 import { NextRequest, NextResponse } from "next/server"
-import { getServerSession } from "next-auth"
+import { getServerSession, type Session } from "next-auth"
 import { authOptions } from "@/lib/auth"
 import { prisma } from "@/lib/prisma"
 import { withRateLimit } from "@/lib/middleware/with-rate-limit"
 
-async function requireAdmin(session: any) {
+async function requireAdmin(session: Session | null) {
   if (!session?.user?.id) return false
   const user = await prisma.user.findUnique({
     where: { id: session.user.id },

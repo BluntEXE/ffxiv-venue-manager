@@ -230,7 +230,7 @@ export function CreateShiftDialog({
                   )}
                 </div>
                 <p className="text-xs text-muted-foreground">
-                  Tags this shift with a role for pay purposes. The role's rate is used instead of the staff member's
+                  Tags this shift with a role for pay purposes. The role&apos;s rate is used instead of the staff member&apos;s
                   own rate when payroll is generated.
                 </p>
               </div>

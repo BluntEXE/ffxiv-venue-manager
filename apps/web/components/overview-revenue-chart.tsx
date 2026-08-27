@@ -1,6 +1,6 @@
 "use client"
 
-import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, Cell } from "recharts"
+import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, Cell, type TooltipContentProps } from "recharts"
 
 interface EventRevenue {
   label: string
@@ -8,12 +8,12 @@ interface EventRevenue {
   isToday: boolean
 }
 
-function TooltipBox({ active, payload, label }: any) {
+function TooltipBox({ active, payload, label }: Partial<TooltipContentProps<number, string>>) {
   if (!active || !payload?.length) return null
   return (
     <div className="rounded-lg border border-[var(--blue-020)] bg-[#0a0f1e] px-3 py-2 shadow-xl text-sm">
       <p className="text-muted-foreground mb-0.5">{label}</p>
-      <p className="text-[var(--xiv-blue)] font-semibold">{payload[0].value.toLocaleString()} gil</p>
+      <p className="text-[var(--xiv-blue)] font-semibold">{Number(payload[0].value).toLocaleString()} gil</p>
     </div>
   )
 }
