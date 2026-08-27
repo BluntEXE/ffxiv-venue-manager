@@ -11,6 +11,8 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Alert, AlertDescription } from "@/components/ui/alert"
 import { CheckCircle2, Copy, Link as LinkIcon, Share2 } from "lucide-react"
 import { VenueLayoutClient } from "@/components/venue-layout-client"
+import { canManageVenue } from "@/lib/roles"
+import { PageLoading } from "@/components/ui/loading-spinner"
 
 export default function InviteStaffPage({ params }: { params: Promise<{ slug: string }> }) {
   const { slug } = use(params)
@@ -24,6 +26,7 @@ export default function InviteStaffPage({ params }: { params: Promise<{ slug: st
   const [copied, setCopied] = useState(false)
   const [canShare, setCanShare] = useState(false)
   const [currentUserRole, setCurrentUserRole] = useState<string>("")
+  const [roleChecked, setRoleChecked] = useState(false)
 
   // Check if Web Share API is available
   useEffect(() => {
@@ -45,11 +48,19 @@ export default function InviteStaffPage({ params }: { params: Promise<{ slug: st
         }
       } catch (err) {
         console.error("Failed to fetch user role:", err)
+      } finally {
+        setRoleChecked(true)
       }
     }
 
     fetchUserRole()
   }, [slug])
+
+  useEffect(() => {
+    if (roleChecked && !canManageVenue(currentUserRole)) {
+      router.replace(`/dashboard/${slug}/staff`)
+    }
+  }, [roleChecked, currentUserRole, slug, router])
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -229,6 +240,16 @@ export default function InviteStaffPage({ params }: { params: Promise<{ slug: st
               </p>
             </CardContent>
           </Card>
+        </div>
+      </VenueLayoutClient>
+    )
+  }
+
+  if (!roleChecked || !canManageVenue(currentUserRole)) {
+    return (
+      <VenueLayoutClient slug={slug}>
+        <div className="page-inner">
+          <PageLoading />
         </div>
       </VenueLayoutClient>
     )
