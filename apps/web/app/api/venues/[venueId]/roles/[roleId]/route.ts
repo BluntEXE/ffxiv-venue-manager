@@ -50,6 +50,7 @@ export const GET = withRateLimit<{ params: Promise<{ venueId: string; roleId: st
           _count: {
             select: {
               memberships: true,
+              additionalFor: true,
             },
           },
         },
@@ -59,7 +60,10 @@ export const GET = withRateLimit<{ params: Promise<{ venueId: string; roleId: st
         return NextResponse.json({ error: "Role not found" }, { status: 404 })
       }
 
-      return NextResponse.json(role)
+      return NextResponse.json({
+        ...role,
+        _count: { memberships: role._count.memberships + role._count.additionalFor },
+      })
     } catch (error) {
       console.error("Error fetching role:", error)
       return NextResponse.json({ error: "Internal server error" }, { status: 500 })
@@ -130,12 +134,16 @@ export const PUT = withRateLimit<{ params: Promise<{ venueId: string; roleId: st
           _count: {
             select: {
               memberships: true,
+              additionalFor: true,
             },
           },
         },
       })
 
-      return NextResponse.json(updatedRole)
+      return NextResponse.json({
+        ...updatedRole,
+        _count: { memberships: updatedRole._count.memberships + updatedRole._count.additionalFor },
+      })
     } catch (error) {
       if (error instanceof z.ZodError) {
         return NextResponse.json({ error: "Validation error", details: error.issues }, { status: 400 })
@@ -183,6 +191,7 @@ export const DELETE = withRateLimit<{ params: Promise<{ venueId: string; roleId:
           _count: {
             select: {
               memberships: true,
+              additionalFor: true,
             },
           },
         },
@@ -192,11 +201,12 @@ export const DELETE = withRateLimit<{ params: Promise<{ venueId: string; roleId:
         return NextResponse.json({ error: "Role not found" }, { status: 404 })
       }
 
-      // Check if role is assigned to any staff members
-      if (role._count.memberships > 0) {
+      // Check if role is assigned to any staff members, as their primary role or a sub-role
+      const assignedCount = role._count.memberships + role._count.additionalFor
+      if (assignedCount > 0) {
         return NextResponse.json(
           {
-            error: `Cannot delete role. It is assigned to ${role._count.memberships} staff member(s)`,
+            error: `Cannot delete role. It is assigned to ${assignedCount} staff member(s)`,
           },
           { status: 400 }
         )

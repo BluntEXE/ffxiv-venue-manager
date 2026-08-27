@@ -51,6 +51,7 @@ export const GET = withRateLimit<{ params: Promise<{ venueId: string }> }>(
           _count: {
             select: {
               memberships: true,
+              additionalFor: true,
             },
           },
         },
@@ -59,7 +60,13 @@ export const GET = withRateLimit<{ params: Promise<{ venueId: string }> }>(
         },
       })
 
-      return NextResponse.json(roles)
+      // A membership can hold a role as its primary role or as a sub-role; both count as "assigned."
+      const rolesWithCombinedCount = roles.map((role) => ({
+        ...role,
+        _count: { memberships: role._count.memberships + role._count.additionalFor },
+      }))
+
+      return NextResponse.json(rolesWithCombinedCount)
     } catch (error) {
       console.error("Error fetching roles:", error)
       return NextResponse.json({ error: "Internal server error" }, { status: 500 })
