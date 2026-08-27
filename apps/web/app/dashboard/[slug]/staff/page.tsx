@@ -82,6 +82,8 @@ export default async function StaffPage({ params }: { params: Promise<{ slug: st
 
   const canManageStaff = ["OWNER", "MANAGER"].includes(userRole)
 
+  // Server Component: evaluated once per request, not a re-rendering client component that would need memoization.
+  // eslint-disable-next-line react-hooks/purity
   const weekAgo = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000)
 
   // Active shifts + weekly stats

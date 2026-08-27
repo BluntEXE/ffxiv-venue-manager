@@ -3,6 +3,7 @@ import { getServerSession } from "next-auth"
 import { z } from "zod"
 import { authOptions } from "@/lib/auth"
 import { prisma } from "@/lib/prisma"
+import { Prisma } from "@/generated/prisma/client"
 import { withRateLimit } from "@/lib/middleware/with-rate-limit"
 import { validators } from "@/lib/validation"
 
@@ -39,7 +40,7 @@ export const PATCH = withRateLimit<{ params: Promise<{ feedbackId: string }> }>(
       const { status, adminNotes } = updateSchema.parse(body)
 
       // Update the feedback
-      const updateData: any = {}
+      const updateData: Prisma.FeedbackUncheckedUpdateInput = {}
       if (status) {
         updateData.status = status
         updateData.reviewedBy = session.user.id

@@ -45,6 +45,8 @@ export function NavbarClient({ session, venues }: NavbarClientProps) {
   // Poll plugin sync status every 30s when on a venue page
   useEffect(() => {
     if (!isVenuePage || !currentVenue?.id) {
+      // Resets the sync pill when leaving a venue page, not derivable from props/state during render.
+      // eslint-disable-next-line react-hooks/set-state-in-effect
       setPluginSynced(false)
       return
     }

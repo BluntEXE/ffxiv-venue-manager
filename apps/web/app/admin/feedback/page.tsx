@@ -6,7 +6,8 @@ import { useRouter } from "next/navigation"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
-import { Badge } from "@/components/ui/badge"
+import { Badge, badgeVariants } from "@/components/ui/badge"
+import type { VariantProps } from "class-variance-authority"
 import { Textarea } from "@/components/ui/textarea"
 import { Label } from "@/components/ui/label"
 import { format } from "date-fns"
@@ -36,14 +37,16 @@ interface Feedback {
   } | null
 }
 
-const categoryColors: Record<string, string> = {
+type BadgeVariant = VariantProps<typeof badgeVariants>["variant"]
+
+const categoryColors: Record<string, BadgeVariant> = {
   BUG_REPORT: "destructive",
   FEATURE_REQUEST: "default",
   IMPROVEMENT: "secondary",
   GENERAL: "outline",
 }
 
-const statusColors: Record<string, string> = {
+const statusColors: Record<string, BadgeVariant> = {
   NEW: "default",
   UNDER_REVIEW: "secondary",
   PLANNED: "default",
@@ -71,18 +74,6 @@ export default function AdminFeedbackPage() {
   const [editStatus, setEditStatus] = useState<string>("")
   const [editNotes, setEditNotes] = useState<string>("")
 
-  useEffect(() => {
-    if (status === "unauthenticated") {
-      router.push("/auth/signin")
-    }
-  }, [status, router])
-
-  useEffect(() => {
-    if (session) {
-      fetchFeedback()
-    }
-  }, [session, filterStatus, filterCategory])
-
   const fetchFeedback = async () => {
     try {
       const params = new URLSearchParams()
@@ -108,6 +99,20 @@ export default function AdminFeedbackPage() {
       setLoading(false)
     }
   }
+
+  useEffect(() => {
+    if (status === "unauthenticated") {
+      router.push("/auth/signin")
+    }
+  }, [status, router])
+
+  useEffect(() => {
+    if (session) {
+      // Genuine data fetch (sets feedback/loading state), not derivable from props/state during render.
+      // eslint-disable-next-line react-hooks/set-state-in-effect
+      fetchFeedback()
+    }
+  }, [session, filterStatus, filterCategory])
 
   const startEditing = (item: Feedback) => {
     setEditingId(item.id)
@@ -177,7 +182,7 @@ export default function AdminFeedbackPage() {
               <SelectItem value="PLANNED">Planned</SelectItem>
               <SelectItem value="IN_PROGRESS">In Progress</SelectItem>
               <SelectItem value="COMPLETED">Completed</SelectItem>
-              <SelectItem value="WONT_FIX">Won't Fix</SelectItem>
+              <SelectItem value="WONT_FIX">Won&apos;t Fix</SelectItem>
             </SelectContent>
           </Select>
         </div>
@@ -252,8 +257,8 @@ export default function AdminFeedbackPage() {
                 <div className="flex items-start justify-between">
                   <div className="flex-1">
                     <div className="flex items-center gap-2 mb-2">
-                      <Badge variant={categoryColors[item.category] as any}>{categoryLabels[item.category]}</Badge>
-                      <Badge variant={statusColors[item.status] as any}>{item.status.replace("_", " ")}</Badge>
+                      <Badge variant={categoryColors[item.category]}>{categoryLabels[item.category]}</Badge>
+                      <Badge variant={statusColors[item.status]}>{item.status.replace("_", " ")}</Badge>
                     </div>
                     <CardTitle className="text-xl mb-1">{item.subject}</CardTitle>
                     <CardDescription>
@@ -314,7 +319,7 @@ export default function AdminFeedbackPage() {
                               <SelectItem value="PLANNED">Planned</SelectItem>
                               <SelectItem value="IN_PROGRESS">In Progress</SelectItem>
                               <SelectItem value="COMPLETED">Completed</SelectItem>
-                              <SelectItem value="WONT_FIX">Won't Fix</SelectItem>
+                              <SelectItem value="WONT_FIX">Won&apos;t Fix</SelectItem>
                             </SelectContent>
                           </Select>
                         </div>

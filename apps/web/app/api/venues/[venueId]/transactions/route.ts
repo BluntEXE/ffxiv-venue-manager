@@ -5,6 +5,7 @@ import { prisma } from "@/lib/prisma"
 import { z } from "zod"
 import { withRateLimit } from "@/lib/middleware/with-rate-limit"
 import { createTransaction, createTransactionSchema, InsufficientStockError } from "@/lib/api/transactions"
+import { Prisma } from "@/generated/prisma/client"
 
 export const GET = withRateLimit<{ params: Promise<{ venueId: string }> }>(
   async (request, context) => {
@@ -72,7 +73,7 @@ export const GET = withRateLimit<{ params: Promise<{ venueId: string }> }>(
         select: { settings: true },
       })
 
-      const venueSettings = venue?.settings as any
+      const venueSettings = venue?.settings as Record<string, unknown> | undefined
 
       // Check sales visibility for STAFF members
       if (membership.role === "STAFF" && venueSettings?.salesVisibility) {
@@ -85,7 +86,7 @@ export const GET = withRateLimit<{ params: Promise<{ venueId: string }> }>(
       }
 
       // Build where clause
-      const where: any = { venueId }
+      const where: Prisma.TransactionWhereInput = { venueId }
       if (eventId) where.eventId = eventId
       if (serviceId) where.serviceId = serviceId
       if (startDate || endDate) {

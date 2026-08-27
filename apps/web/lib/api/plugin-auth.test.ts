@@ -1,5 +1,6 @@
 import { describe, it, expect, vi, beforeEach } from "vitest"
-import { NextRequest } from "next/server"
+import { NextRequest, NextResponse } from "next/server"
+import type { ApiKey, Membership, User } from "@/generated/prisma/client"
 
 vi.mock("@/lib/prisma", () => ({
   prisma: {
@@ -26,7 +27,7 @@ beforeEach(() => {
 
 describe("pluginAuthGate", () => {
   it("returns 429 without checking the API key when IP-limited", async () => {
-    vi.mocked(enforcePluginIpRateLimit).mockResolvedValueOnce(new Response(null, { status: 429 }) as any)
+    vi.mocked(enforcePluginIpRateLimit).mockResolvedValueOnce(new NextResponse(null, { status: 429 }))
     const result = await pluginAuthGate(makeRequest({ "x-api-key": "vm_x" }), "read")
     expect(result.ok).toBe(false)
     if (!result.ok) expect(result.response.status).toBe(429)
@@ -60,9 +61,9 @@ describe("pluginAuthGate", () => {
       userId: "u1",
       venueId: null,
       user: { id: "u1" },
-    } as any)
-    vi.mocked(prisma.membership.findMany).mockResolvedValueOnce([{ venueId: "v1" }] as any)
-    vi.mocked(enforcePluginRateLimit).mockResolvedValueOnce(new Response(null, { status: 429 }) as any)
+    } as unknown as ApiKey & { user: User })
+    vi.mocked(prisma.membership.findMany).mockResolvedValueOnce([{ venueId: "v1" }] as unknown as Membership[])
+    vi.mocked(enforcePluginRateLimit).mockResolvedValueOnce(new NextResponse(null, { status: 429 }))
     const result = await pluginAuthGate(makeRequest({ "x-api-key": "vm_ok" }), "write")
     expect(result.ok).toBe(false)
     if (!result.ok) expect(result.response.status).toBe(429)
@@ -75,8 +76,10 @@ describe("pluginAuthGate", () => {
       userId: "u1",
       venueId: null,
       user: { id: "u1", name: "Test" },
-    } as any)
-    vi.mocked(prisma.membership.findMany).mockResolvedValueOnce([{ venueId: "v1" }, { venueId: "v2" }] as any)
+    } as unknown as ApiKey & { user: User })
+    vi.mocked(prisma.membership.findMany).mockResolvedValueOnce(
+      [{ venueId: "v1" }, { venueId: "v2" }] as unknown as Membership[]
+    )
     const result = await pluginAuthGate(makeRequest({ "x-api-key": "vm_ok" }), "read")
     expect(result.ok).toBe(true)
     if (result.ok) {
