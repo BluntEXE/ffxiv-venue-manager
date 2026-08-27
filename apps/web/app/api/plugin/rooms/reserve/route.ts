@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from "next/server"
 import { z } from "zod"
 import { prisma } from "@/lib/prisma"
 import { pluginAuthGate, checkPermission } from "@/lib/api/plugin-auth"
-import { getValidXvmApiToken, invalidateXvmApiCredential } from "@/lib/api/xvm-api-store"
+import { getValidXvmApiToken, getValidXvmApiPersonId, invalidateXvmApiCredential } from "@/lib/api/xvm-api-store"
 import { createReservation, XvmApiError, xvmErrorMessage } from "@/lib/api/xvm-api"
 import { parsePluginRoomId } from "@/lib/api/plugin-rooms"
 
@@ -60,10 +60,19 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: "xvm-api link not established yet" }, { status: 503 })
     }
 
+    // xvm-api requires a holder (reserved_person_id or reserved_character_name) on
+    // every reservation - the plugin doesn't send a specific in-game character for
+    // this ad-hoc flow, so the acting dashboard user's own person id fills that role.
+    const personId = await getValidXvmApiPersonId(auth.userId)
+    if (personId === null) {
+      return NextResponse.json({ error: "xvm-api link needs to be refreshed" }, { status: 503 })
+    }
+
     try {
       const startAt = new Date()
       const endAt = new Date(startAt.getTime() + durationMinutes * 60_000)
       const reservation = await createReservation(token, venue.xvmApiVenueId, id, {
+        reserved_person_id: personId,
         start_at: startAt.toISOString(),
         end_at: endAt.toISOString(),
         source: "plugin_auto",

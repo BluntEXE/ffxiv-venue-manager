@@ -888,6 +888,7 @@ model XvmApiCredential {
   user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
   token        String
   credentialId Int
+  personId     Int?
   expiresAt    DateTime
   createdAt    DateTime @default(now())
   updatedAt    DateTime @updatedAt

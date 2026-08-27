@@ -10,7 +10,9 @@ export function toPluginRoom(room: Room) {
   return {
     id: String(room.id),
     name: room.name ?? "",
-    isOccupied: room.status === "occupied",
+    // xvm-api's status vocabulary is disabled/reserved/locked/available -
+    // "reserved" is the live-hold state, there's no "occupied".
+    isOccupied: room.status === "reserved",
     note: room.notes,
     locked: room.locked,
     disabled: room.disabled,
