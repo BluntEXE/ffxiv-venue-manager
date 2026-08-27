@@ -6,6 +6,17 @@ import { LocalTime } from "@/components/server-time"
 import { Card, CardContent } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from "@/components/ui/alert-dialog"
 import { StatReadout } from "@/components/ui/stat-readout"
 import { Coins, UserPlus, UserMinus, Users, Clock, StopCircle, Terminal, Radio } from "lucide-react"
 import { formatDistanceToNowStrict } from "date-fns"
@@ -90,7 +101,6 @@ export function LiveDashboard({
   const [ending, setEnding] = useState(false)
 
   async function handleEndEvent() {
-    if (!confirm(`End "${event.title}" now?`)) return
     setEnding(true)
     try {
       const res = await fetch(`/api/venues/${venueId}/events/${event.id}`, {
@@ -251,15 +261,30 @@ export function LiveDashboard({
             Started <LocalTime date={event.startTime} formatStr="time" />
             {!isUpcoming && canManage && (
               <div className="flex gap-2 ml-4">
-                <Button
-                  variant="destructive"
-                  size="sm"
-                  className="opacity-80 hover:opacity-100"
-                  onClick={handleEndEvent}
-                  disabled={ending}
-                >
-                  <StopCircle className="h-3.5 w-3.5" /> {ending ? "Ending…" : "End"}
-                </Button>
+                <AlertDialog>
+                  <AlertDialogTrigger asChild>
+                    <Button
+                      variant="destructive"
+                      size="sm"
+                      className="opacity-80 hover:opacity-100"
+                      disabled={ending}
+                    >
+                      <StopCircle className="h-3.5 w-3.5" /> {ending ? "Ending…" : "End"}
+                    </Button>
+                  </AlertDialogTrigger>
+                  <AlertDialogContent>
+                    <AlertDialogHeader>
+                      <AlertDialogTitle>End &quot;{event.title}&quot; now?</AlertDialogTitle>
+                      <AlertDialogDescription>
+                        Marks it Completed and locks in attendance/revenue from what&apos;s logged so far.
+                      </AlertDialogDescription>
+                    </AlertDialogHeader>
+                    <AlertDialogFooter>
+                      <AlertDialogCancel>Cancel</AlertDialogCancel>
+                      <AlertDialogAction onClick={handleEndEvent}>End event</AlertDialogAction>
+                    </AlertDialogFooter>
+                  </AlertDialogContent>
+                </AlertDialog>
               </div>
             )}
           </div>

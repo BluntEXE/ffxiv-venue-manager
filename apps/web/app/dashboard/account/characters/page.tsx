@@ -8,6 +8,17 @@ import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Badge } from "@/components/ui/badge"
 import { Alert, AlertDescription } from "@/components/ui/alert"
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from "@/components/ui/alert-dialog"
 
 interface UserCharacter {
   id: string
@@ -95,15 +106,7 @@ export default function CharactersPage() {
     }
   }
 
-  async function removeCharacter(id: string, charName: string) {
-    if (
-      !confirm(
-        `Unlink ${charName}? Past visits attributed to this character will remain as history, but new visits will be logged as patron (not staff) unless you re-link.`
-      )
-    ) {
-      return
-    }
-
+  async function removeCharacter(id: string) {
     try {
       const res = await fetch(`/api/user-characters/${id}`, {
         method: "DELETE",
@@ -221,9 +224,26 @@ export default function CharactersPage() {
                       </Badge>
                     )}
                   </div>
-                  <Button variant="outline" size="sm" onClick={() => removeCharacter(c.id, c.characterName)}>
-                    Unlink
-                  </Button>
+                  <AlertDialog>
+                    <AlertDialogTrigger asChild>
+                      <Button variant="outline" size="sm">
+                        Unlink
+                      </Button>
+                    </AlertDialogTrigger>
+                    <AlertDialogContent>
+                      <AlertDialogHeader>
+                        <AlertDialogTitle>Unlink {c.characterName}?</AlertDialogTitle>
+                        <AlertDialogDescription>
+                          Past visits attributed to this character will remain as history, but new visits will be
+                          logged as patron (not staff) unless you re-link.
+                        </AlertDialogDescription>
+                      </AlertDialogHeader>
+                      <AlertDialogFooter>
+                        <AlertDialogCancel>Cancel</AlertDialogCancel>
+                        <AlertDialogAction onClick={() => removeCharacter(c.id)}>Unlink</AlertDialogAction>
+                      </AlertDialogFooter>
+                    </AlertDialogContent>
+                  </AlertDialog>
                 </li>
               ))}
             </ul>

@@ -28,6 +28,17 @@ import { format } from "date-fns"
 import { Plus, DollarSign, Clock, CheckCircle2, XCircle, Zap, Trash2, Users } from "lucide-react"
 import { PageLoading } from "@/components/ui/loading-spinner"
 import { resolveDisplayName } from "@/lib/display-name"
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from "@/components/ui/alert-dialog"
 
 interface PayrollEntry {
   id: string
@@ -346,12 +357,7 @@ export default function PayrollPage() {
     }
   }
 
-  const handleDeleteEntry = async (payrollId: string, isPaid: boolean) => {
-    const msg = isPaid
-      ? "This payroll entry is marked PAID. Deleting it removes the record of that payment. Continue?"
-      : "Delete this payroll entry? This cannot be undone."
-    if (!confirm(msg)) return
-
+  const handleDeleteEntry = async (payrollId: string) => {
     setUpdatingId(payrollId)
     try {
       const response = await fetch(`/api/venues/${slug}/payroll/${payrollId}`, {
@@ -1312,16 +1318,35 @@ export default function PayrollPage() {
                             >
                               {updatingId === entry.id ? "…" : entry.isPaid ? "Mark unpaid" : "Mark paid"}
                             </Button>
-                            <Button
-                              variant="ghost"
-                              size="sm"
-                              className="text-[var(--fg-faint)] hover:text-destructive"
-                              onClick={() => handleDeleteEntry(entry.id, entry.isPaid)}
-                              disabled={updatingId === entry.id}
-                              aria-label="Delete"
-                            >
-                              <Trash2 className="h-4 w-4" />
-                            </Button>
+                            <AlertDialog>
+                              <AlertDialogTrigger asChild>
+                                <Button
+                                  variant="ghost"
+                                  size="sm"
+                                  className="text-[var(--fg-faint)] hover:text-destructive"
+                                  disabled={updatingId === entry.id}
+                                  aria-label="Delete"
+                                >
+                                  <Trash2 className="h-4 w-4" />
+                                </Button>
+                              </AlertDialogTrigger>
+                              <AlertDialogContent>
+                                <AlertDialogHeader>
+                                  <AlertDialogTitle>Delete this payroll entry?</AlertDialogTitle>
+                                  <AlertDialogDescription>
+                                    {entry.isPaid
+                                      ? "This entry is marked PAID. Deleting it removes the record of that payment."
+                                      : "This cannot be undone."}
+                                  </AlertDialogDescription>
+                                </AlertDialogHeader>
+                                <AlertDialogFooter>
+                                  <AlertDialogCancel>Cancel</AlertDialogCancel>
+                                  <AlertDialogAction onClick={() => handleDeleteEntry(entry.id)}>
+                                    Delete
+                                  </AlertDialogAction>
+                                </AlertDialogFooter>
+                              </AlertDialogContent>
+                            </AlertDialog>
                           </div>
                         </td>
                       </tr>
