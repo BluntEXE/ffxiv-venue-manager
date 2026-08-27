@@ -11,6 +11,7 @@ import { VenueLayout } from "@/components/venue-layout"
 import { LocalTime } from "@/components/server-time"
 import { format } from "date-fns"
 import { SyncPartakeButton } from "@/components/sync-partake-button"
+import { canManageVenue } from "@/lib/roles"
 
 const statusColors = {
   DRAFT: "bg-zinc-500",
@@ -107,7 +108,7 @@ export default async function EventsPage({
           </div>
           <div className="flex items-center gap-2 self-start flex-wrap">
             {venue.partakeTeamId && <SyncPartakeButton venueId={venue.id} />}
-            {["OWNER", "MANAGER"].includes(userRole) && (
+            {canManageVenue(userRole) && (
               <Button asChild size="sm">
                 <Link href={`/dashboard/${slug}/events/new`}>
                   <span className="hidden sm:inline">Create Event</span>

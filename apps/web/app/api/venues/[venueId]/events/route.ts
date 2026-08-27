@@ -6,6 +6,7 @@ import { z } from "zod"
 import { withRateLimit } from "@/lib/middleware/with-rate-limit"
 import { generateOccurrences, type RecurrenceRule } from "@/lib/recurrence"
 import { validators } from "@/lib/validation"
+import { canManageVenue } from "@/lib/roles"
 
 const eventSchema = z.object({
   title: validators.eventTitle,
@@ -41,7 +42,7 @@ export const POST = withRateLimit<{ params: Promise<{ venueId: string }> }>(
         },
       })
 
-      if (!membership || !["OWNER", "MANAGER"].includes(membership.role)) {
+      if (!membership || !canManageVenue(membership.role)) {
         return NextResponse.json({ error: "You don't have permission to create events" }, { status: 403 })
       }
 

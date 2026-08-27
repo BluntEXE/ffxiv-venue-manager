@@ -10,6 +10,7 @@ import { Textarea } from "@/components/ui/textarea"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { DateTimePicker } from "@/components/ui/date-time-picker"
 import { VenueLayoutClient } from "@/components/venue-layout-client"
+import { canManageVenue } from "@/lib/roles"
 
 interface EventTemplate {
   id: string
@@ -73,7 +74,7 @@ export default function NewEventPage() {
             (v: { slug: string; partakeTeamId: string | null; memberships: { role: string }[] }) => v.slug === slug
           )
           if (venue?.partakeTeamId) setHasPartake(true)
-          setAuthorized(["OWNER", "MANAGER"].includes(venue?.memberships?.[0]?.role))
+          setAuthorized(canManageVenue(venue?.memberships?.[0]?.role))
         } else {
           setAuthorized(false)
         }
