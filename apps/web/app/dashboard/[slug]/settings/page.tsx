@@ -475,7 +475,6 @@ export default function SettingsPage({ params }: { params: Promise<{ slug: strin
   }
 
   async function handleFfxivUnlink() {
-    if (!confirm("Unlink ffxivvenues.com? The synced schedule will be removed from your profile.")) return
     setFfxivUnlinking(true)
     try {
       await fetch(`/api/venues/${venueId}/settings`, {
@@ -534,7 +533,6 @@ export default function SettingsPage({ params }: { params: Promise<{ slug: strin
   }
 
   async function handleFroggeDisconnect() {
-    if (!confirm("Disconnect Frogge? Room sync and Discord posting will stop.")) return
     setFroggeDisconnecting(true)
     try {
       const res = await fetch(`/api/venues/${venueId}/frogge/disconnect`, { method: "POST" })
@@ -1074,15 +1072,25 @@ export default function SettingsPage({ params }: { params: Promise<{ slug: strin
                         >
                           {ffxivSyncing ? "Syncing…" : "Sync now"}
                         </Button>
-                        <Button
-                          type="button"
-                          variant="destructive"
-                          size="sm"
-                          onClick={handleFfxivUnlink}
-                          disabled={ffxivUnlinking}
-                        >
-                          {ffxivUnlinking ? "Unlinking…" : "Unlink"}
-                        </Button>
+                        <AlertDialog>
+                          <AlertDialogTrigger asChild>
+                            <Button type="button" variant="destructive" size="sm" disabled={ffxivUnlinking}>
+                              {ffxivUnlinking ? "Unlinking…" : "Unlink"}
+                            </Button>
+                          </AlertDialogTrigger>
+                          <AlertDialogContent>
+                            <AlertDialogHeader>
+                              <AlertDialogTitle>Unlink ffxivvenues.com?</AlertDialogTitle>
+                              <AlertDialogDescription>
+                                The synced schedule will be removed from your profile.
+                              </AlertDialogDescription>
+                            </AlertDialogHeader>
+                            <AlertDialogFooter>
+                              <AlertDialogCancel>Cancel</AlertDialogCancel>
+                              <AlertDialogAction onClick={handleFfxivUnlink}>Unlink</AlertDialogAction>
+                            </AlertDialogFooter>
+                          </AlertDialogContent>
+                        </AlertDialog>
                       </div>
                     </>
                   ) : ffxivPreview ? (
@@ -1311,15 +1319,23 @@ export default function SettingsPage({ params }: { params: Promise<{ slug: strin
                       <p className="text-xs text-[var(--fg-faint)]">
                         Connected. Use the Rooms page to post to Discord.
                       </p>
-                      <Button
-                        type="button"
-                        variant="destructive"
-                        size="sm"
-                        onClick={handleFroggeDisconnect}
-                        disabled={froggeDisconnecting}
-                      >
-                        {froggeDisconnecting ? "Disconnecting…" : "Disconnect"}
-                      </Button>
+                      <AlertDialog>
+                        <AlertDialogTrigger asChild>
+                          <Button type="button" variant="destructive" size="sm" disabled={froggeDisconnecting}>
+                            {froggeDisconnecting ? "Disconnecting…" : "Disconnect"}
+                          </Button>
+                        </AlertDialogTrigger>
+                        <AlertDialogContent>
+                          <AlertDialogHeader>
+                            <AlertDialogTitle>Disconnect Frogge?</AlertDialogTitle>
+                            <AlertDialogDescription>Room sync and Discord posting will stop.</AlertDialogDescription>
+                          </AlertDialogHeader>
+                          <AlertDialogFooter>
+                            <AlertDialogCancel>Cancel</AlertDialogCancel>
+                            <AlertDialogAction onClick={handleFroggeDisconnect}>Disconnect</AlertDialogAction>
+                          </AlertDialogFooter>
+                        </AlertDialogContent>
+                      </AlertDialog>
                     </>
                   ) : (
                     <>
