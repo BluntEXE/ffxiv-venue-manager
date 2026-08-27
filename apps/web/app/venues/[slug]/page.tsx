@@ -170,7 +170,7 @@ export default async function VenueProfilePage({ params }: { params: Promise<{ s
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: safeJsonLd }} />
 
       {/* ── Hero banner ── */}
-      <section className="profile-hero relative mt-[60px] h-[340px] overflow-hidden border-b border-[var(--blue-008)]">
+      <section className="profile-hero relative h-[340px] overflow-hidden border-b border-[var(--blue-008)]">
         {/* BG */}
         {venue.bannerUrl ? (
           // eslint-disable-next-line @next/next/no-img-element
@@ -194,7 +194,7 @@ export default async function VenueProfilePage({ params }: { params: Promise<{ s
         <div className="absolute top-5 left-6 z-10">
           <Link
             href="/discover"
-            className="inline-flex items-center gap-1.5 text-[0.88rem] font-medium text-muted-foreground hover:text-foreground hover:bg-[var(--blue-007)] px-3 py-2 rounded-[var(--radius-md)] transition-colors"
+            className="inline-flex items-center gap-1.5 text-[0.88rem] font-medium text-foreground bg-[rgba(7,11,20,0.55)] hover:bg-[var(--blue-007)] px-3 py-2 rounded-[var(--radius-md)] transition-colors"
           >
             <ChevronLeft className="w-4 h-4" /> Discover
           </Link>
@@ -251,16 +251,18 @@ export default async function VenueProfilePage({ params }: { params: Promise<{ s
                 {session ? (
                   <VenueFollowButton venueId={venue.id} isFollowing={isFollowing} followCount={venue._count.follows} />
                 ) : (
-                  <Link
-                    href="/auth/signin"
-                    className="btn btn-follow flex items-center gap-2 px-5 py-[10px] rounded-[var(--radius-md)] bg-[var(--blue-010)] text-[var(--xiv-blue)] border border-[var(--blue-035)] hover:bg-[var(--blue-012)] transition-colors font-semibold text-[0.9rem]"
-                  >
-                    <Heart className="w-4 h-4" /> Follow
-                  </Link>
+                  <>
+                    <Link
+                      href="/auth/signin"
+                      className="btn btn-follow flex items-center gap-2 px-5 py-[10px] rounded-[var(--radius-md)] bg-[var(--blue-010)] text-[var(--xiv-blue)] border border-[var(--blue-035)] hover:bg-[var(--blue-012)] transition-colors font-semibold text-[0.9rem]"
+                    >
+                      <Heart className="w-4 h-4" /> Follow
+                    </Link>
+                    <div className="text-[0.8rem] text-muted-foreground mt-2 text-right">
+                      <strong className="text-foreground">{venue._count.follows.toLocaleString()}</strong> following
+                    </div>
+                  </>
                 )}
-                <div className="text-[0.8rem] text-muted-foreground mt-2 text-right">
-                  <strong className="text-foreground">{venue._count.follows.toLocaleString()}</strong> following
-                </div>
               </div>
             </div>
           </div>
