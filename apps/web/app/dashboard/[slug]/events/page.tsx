@@ -11,6 +11,7 @@ import { VenueLayout } from "@/components/venue-layout"
 import { LocalTime } from "@/components/server-time"
 import { format } from "date-fns"
 import { SyncPartakeButton } from "@/components/sync-partake-button"
+import { EndEventButton } from "@/components/end-event-button"
 
 const statusColors = {
   DRAFT: "bg-zinc-500",
@@ -226,35 +227,42 @@ export default async function EventsPage({
                         </div>
                         <div className="panel">
                           {monthEvents.map((event: (typeof pastEvents)[number]) => (
-                            <Link
+                            <div
                               key={event.id}
-                              href={`/dashboard/${slug}/events/${event.id}`}
-                              className="block border-b border-[var(--blue-008)] last:border-b-0 hover:bg-[var(--blue-004)] transition-colors"
+                              className="border-b border-[var(--blue-008)] last:border-b-0 hover:bg-[var(--blue-004)] transition-colors"
                             >
                               <div className="event-row opacity-75 hover:opacity-100 transition-opacity">
-                                <div className="datebox off">
-                                  <div className="mo">
-                                    <LocalTime date={event.startTime} formatStr="monthShort" />
+                                <Link
+                                  href={`/dashboard/${slug}/events/${event.id}`}
+                                  className="flex items-center gap-[18px] flex-1 min-w-0"
+                                >
+                                  <div className="datebox off">
+                                    <div className="mo">
+                                      <LocalTime date={event.startTime} formatStr="monthShort" />
+                                    </div>
+                                    <div className="dy">
+                                      <LocalTime date={event.startTime} formatStr="dayOfMonth" />
+                                    </div>
                                   </div>
-                                  <div className="dy">
-                                    <LocalTime date={event.startTime} formatStr="dayOfMonth" />
+                                  <div className="ev-mid">
+                                    <div className="ev-title">{event.title}</div>
+                                    <div className="ev-sub">
+                                      <span className="meta">
+                                        <LocalTime date={event.startTime} formatStr="time" />
+                                      </span>
+                                    </div>
                                   </div>
-                                </div>
-                                <div className="ev-mid">
-                                  <div className="ev-title">{event.title}</div>
-                                  <div className="ev-sub">
-                                    <span className="meta">
-                                      <LocalTime date={event.startTime} formatStr="time" />
-                                    </span>
-                                  </div>
-                                </div>
+                                </Link>
                                 <div className="ev-right">
                                   <Badge className={statusColors[event.status as keyof typeof statusColors]}>
                                     {event.status}
                                   </Badge>
+                                  {event.status === "ACTIVE" && ["OWNER", "MANAGER"].includes(userRole) && (
+                                    <EndEventButton venueId={venue.id} eventId={event.id} />
+                                  )}
                                 </div>
                               </div>
-                            </Link>
+                            </div>
                           ))}
                         </div>
                       </div>
@@ -329,6 +337,9 @@ export default async function EventsPage({
                         </div>
                       </div>
                       <div className="ev-right">
+                        {event.status === "ACTIVE" && ["OWNER", "MANAGER"].includes(userRole) && (
+                          <EndEventButton venueId={venue.id} eventId={event.id} />
+                        )}
                         <Button asChild variant="outline" size="sm">
                           <Link href={`/dashboard/${slug}/events/${event.id}`}>View</Link>
                         </Button>
