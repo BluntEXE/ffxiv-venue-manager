@@ -34,6 +34,7 @@ import type { ScheduleEntry } from "@/lib/schedule-utils"
 import { DAY_NAMES, formatEntryTime, formatIntervalLabel } from "@/lib/schedule-utils"
 import { Plus, Trash2 } from "lucide-react"
 import { FFXIV_DISTRICTS } from "@/lib/venue-location"
+import { canManageVenue } from "@/lib/roles"
 
 export default function SettingsPage({ params }: { params: Promise<{ slug: string }> }) {
   const router = useRouter()
@@ -240,6 +241,12 @@ export default function SettingsPage({ params }: { params: Promise<{ slug: strin
 
     fetchSettings()
   }, [slug])
+
+  useEffect(() => {
+    if (!isLoading && !canManageVenue(userRole)) {
+      router.replace(`/dashboard/${slug}`)
+    }
+  }, [isLoading, userRole, slug, router])
 
   useEffect(() => {
     if (!settingsReadyRef.current) return
@@ -538,7 +545,7 @@ export default function SettingsPage({ params }: { params: Promise<{ slug: strin
     }
   }
 
-  if (!slug) {
+  if (!slug || (isLoading && !userRole) || !canManageVenue(userRole)) {
     return (
       <div className="container mx-auto p-8">
         <PageLoading />
