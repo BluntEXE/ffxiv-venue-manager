@@ -57,14 +57,19 @@ export const POST = withRateLimit<{ params: Promise<{ venueId: string }> }>(
         world: venue.world,
       })
 
-      await prisma.venue.update({
-        where: { id: venueId },
+      const updated = await prisma.venue.updateMany({
+        where: { id: venueId, xvmApiVenueId: null },
         data: {
           xvmApiVenueId: result.id,
           xvmApiVenueLinkedAt: new Date(),
           xvmApiVenueLinkedBy: session.user.id,
         },
       })
+
+      if (updated.count === 0) {
+        console.error(`[xvm-connect] lost the connect race; orphaned xvm-api venue ${result.id}`)
+        return NextResponse.json({ error: "Already connected" }, { status: 409 })
+      }
 
       await Promise.all([
         invalidateCache(cacheKeys.userVenues(session.user.id)),
