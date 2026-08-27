@@ -1,6 +1,7 @@
 "use client"
 
 import Link from "next/link"
+import Image from "next/image"
 import { usePathname } from "next/navigation"
 import { Button } from "@/components/ui/button"
 import { VenueSwitcher } from "./venue-switcher"
@@ -158,10 +159,19 @@ function NavContent({ venueSlug, venues, navGroups, pathname, userRole, onNaviga
       </div>
 
       {/* Footer */}
-      <div className="px-4 pb-[14px] pt-[12px] border-t border-[var(--blue-008)]">
+      <div className="px-4 pb-[14px] pt-[12px] border-t border-[var(--blue-008)] space-y-2">
         <p className="text-[0.62rem] leading-[1.5] text-[var(--fg-faint)]">
           XIV Venue Manager is not affiliated with SQUARE ENIX CO., LTD.
         </p>
+        <a
+          href="https://frogge.tech/"
+          target="_blank"
+          rel="noopener noreferrer"
+          className="flex items-center gap-1.5 text-[0.68rem] text-muted-foreground hover:text-foreground transition-colors"
+        >
+          <Image src="/frogge-icon.png" alt="" width={14} height={14} className="rounded-sm" />
+          Powered by Frogge
+        </a>
       </div>
     </div>
   )
