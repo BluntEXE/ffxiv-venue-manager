@@ -1,10 +1,12 @@
 import { describe, it, expect, vi, beforeEach } from "vitest"
+import type { User, Membership, Shift } from "@/generated/prisma/client"
 
 vi.mock("@/lib/prisma", () => ({
   prisma: {
     user: { findFirst: vi.fn() },
     membership: { findFirst: vi.fn() },
-    shift: { findFirst: vi.fn(), findMany: vi.fn() },
+    shift: { findFirst: vi.fn(), findMany: vi.fn(), update: vi.fn() },
+    shiftSignupEmbed: { findUnique: vi.fn(), update: vi.fn() },
   },
 }))
 vi.mock("@/lib/discord-bot", () => ({
@@ -20,13 +22,16 @@ import { handleShiftDecline, handleShiftMaybe } from "./shift-bot"
 const baseEmbed = {
   id: "embed-1",
   venueId: "venue-1",
+  eventId: "event-1",
   templateName: "Bartender",
+  discordMessageId: "msg-1",
+  channelId: "chan-1",
   scheduledStart: new Date("2026-08-11T19:00:00Z"),
   scheduledEnd: new Date("2026-08-11T23:00:00Z"),
   slots: 2,
   waitlist: [],
-  channelId: "chan-1",
-  discordMessageId: "msg-1",
+  postedAt: new Date("2026-08-01T00:00:00Z"),
+  cancelledAt: null,
   event: { title: "Grand Opening" },
   venue: { name: "Velvet Rift", settings: { shiftBot: { thumbnailUrl: "https://example.com/icon.png" } } },
 }
@@ -37,8 +42,7 @@ beforeEach(() => {
 
 describe("resolveMembershipAndShift (via handleShiftDecline/handleShiftMaybe)", () => {
   it("short-circuits without querying membership/shift when no matching user", async () => {
-    vi.mocked(prisma.shiftSignupEmbed?.findUnique ?? vi.fn())
-    ;(prisma as any).shiftSignupEmbed = { findUnique: vi.fn().mockResolvedValue(baseEmbed) }
+    vi.mocked(prisma.shiftSignupEmbed.findUnique).mockResolvedValueOnce(baseEmbed)
     vi.mocked(prisma.user.findFirst).mockResolvedValueOnce(null)
 
     const result = await handleShiftDecline("embed-1", "discord-999")
@@ -49,8 +53,8 @@ describe("resolveMembershipAndShift (via handleShiftDecline/handleShiftMaybe)", 
   })
 
   it("short-circuits without querying shift when no active membership", async () => {
-    ;(prisma as any).shiftSignupEmbed = { findUnique: vi.fn().mockResolvedValue(baseEmbed) }
-    vi.mocked(prisma.user.findFirst).mockResolvedValueOnce({ id: "user-1" } as any)
+    vi.mocked(prisma.shiftSignupEmbed.findUnique).mockResolvedValueOnce(baseEmbed)
+    vi.mocked(prisma.user.findFirst).mockResolvedValueOnce({ id: "user-1" } as unknown as User)
     vi.mocked(prisma.membership.findFirst).mockResolvedValueOnce(null)
 
     const result = await handleShiftDecline("embed-1", "discord-1")
@@ -60,19 +64,15 @@ describe("resolveMembershipAndShift (via handleShiftDecline/handleShiftMaybe)", 
   })
 
   it("cancels the shift and refreshes the embed when a matching shift exists", async () => {
-    ;(prisma as any).shiftSignupEmbed = {
-      findUnique: vi.fn().mockResolvedValue(baseEmbed),
-      update: vi.fn(),
-    }
-    ;(prisma as any).shift.update = vi.fn()
-    vi.mocked(prisma.user.findFirst).mockResolvedValueOnce({ id: "user-1" } as any)
-    vi.mocked(prisma.membership.findFirst).mockResolvedValueOnce({ id: "membership-1" } as any)
-    vi.mocked(prisma.shift.findFirst).mockResolvedValueOnce({ id: "shift-1" } as any)
+    vi.mocked(prisma.shiftSignupEmbed.findUnique).mockResolvedValueOnce(baseEmbed)
+    vi.mocked(prisma.user.findFirst).mockResolvedValueOnce({ id: "user-1" } as unknown as User)
+    vi.mocked(prisma.membership.findFirst).mockResolvedValueOnce({ id: "membership-1" } as unknown as Membership)
+    vi.mocked(prisma.shift.findFirst).mockResolvedValueOnce({ id: "shift-1" } as unknown as Shift)
     vi.mocked(prisma.shift.findMany).mockResolvedValueOnce([])
 
     const result = await handleShiftDecline("embed-1", "discord-1")
 
-    expect((prisma as any).shift.update).toHaveBeenCalledWith({
+    expect(prisma.shift.update).toHaveBeenCalledWith({
       where: { id: "shift-1" },
       data: { status: "CANCELLED" },
     })
@@ -83,10 +83,7 @@ describe("resolveMembershipAndShift (via handleShiftDecline/handleShiftMaybe)", 
 
 describe("refreshEmbedFromRecord (via handleShiftMaybe)", () => {
   it("derives eventTitle/venueName/thumbnailUrl from the embed's relations when refreshing", async () => {
-    ;(prisma as any).shiftSignupEmbed = {
-      findUnique: vi.fn().mockResolvedValue(baseEmbed),
-      update: vi.fn(),
-    }
+    vi.mocked(prisma.shiftSignupEmbed.findUnique).mockResolvedValueOnce(baseEmbed)
     vi.mocked(prisma.user.findFirst).mockResolvedValueOnce(null)
     vi.mocked(prisma.shift.findMany).mockResolvedValueOnce([])
 

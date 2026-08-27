@@ -11,6 +11,8 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Alert, AlertDescription } from "@/components/ui/alert"
 import { CheckCircle2, Copy, Link as LinkIcon, Share2 } from "lucide-react"
 import { VenueLayoutClient } from "@/components/venue-layout-client"
+import { canManageVenue } from "@/lib/roles"
+import { PageLoading } from "@/components/ui/loading-spinner"
 
 export default function InviteStaffPage({ params }: { params: Promise<{ slug: string }> }) {
   const { slug } = use(params)
@@ -24,9 +26,11 @@ export default function InviteStaffPage({ params }: { params: Promise<{ slug: st
   const [copied, setCopied] = useState(false)
   const [canShare, setCanShare] = useState(false)
   const [currentUserRole, setCurrentUserRole] = useState<string>("")
+  const [roleChecked, setRoleChecked] = useState(false)
 
-  // Check if Web Share API is available
+  // Check if Web Share API is available; must run post-mount to avoid a server/client hydration mismatch on `navigator`.
   useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     setCanShare(typeof navigator !== "undefined" && !!navigator.share)
   }, [])
 
@@ -45,11 +49,19 @@ export default function InviteStaffPage({ params }: { params: Promise<{ slug: st
         }
       } catch (err) {
         console.error("Failed to fetch user role:", err)
+      } finally {
+        setRoleChecked(true)
       }
     }
 
     fetchUserRole()
   }, [slug])
+
+  useEffect(() => {
+    if (roleChecked && !canManageVenue(currentUserRole)) {
+      router.replace(`/dashboard/${slug}/staff`)
+    }
+  }, [roleChecked, currentUserRole, slug, router])
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -222,13 +234,23 @@ export default function InviteStaffPage({ params }: { params: Promise<{ slug: st
                 2. <strong>Send it to your staff member</strong> via Discord DM or other secure method
               </p>
               <p>
-                3. <strong>They'll sign in with Discord</strong> and be automatically added to your venue
+                3. <strong>They&apos;ll sign in with Discord</strong> and be automatically added to your venue
               </p>
               <p>
-                4. <strong>Check pending invites</strong> on the staff page to see who hasn't accepted yet
+                4. <strong>Check pending invites</strong> on the staff page to see who hasn&apos;t accepted yet
               </p>
             </CardContent>
           </Card>
+        </div>
+      </VenueLayoutClient>
+    )
+  }
+
+  if (!roleChecked || !canManageVenue(currentUserRole)) {
+    return (
+      <VenueLayoutClient slug={slug}>
+        <div className="page-inner">
+          <PageLoading />
         </div>
       </VenueLayoutClient>
     )
@@ -355,7 +377,7 @@ export default function InviteStaffPage({ params }: { params: Promise<{ slug: st
               3. <strong>Discord Sign-In:</strong> They click the link and sign in with Discord
             </p>
             <p>
-              4. <strong>Auto-Accept:</strong> They're automatically added to your venue
+              4. <strong>Auto-Accept:</strong> They&apos;re automatically added to your venue
             </p>
             <p className="pt-2 text-xs">Links expire after 7 days and can only be used once.</p>
           </CardContent>

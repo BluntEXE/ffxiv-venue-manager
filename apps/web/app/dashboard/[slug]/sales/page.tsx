@@ -11,6 +11,8 @@ import { SalesLogDialog } from "@/components/sales-log-dialog"
 import { TransactionsList } from "@/components/transactions-list"
 import { Alert, AlertDescription } from "@/components/ui/alert"
 import { resolveDisplayName } from "@/lib/display-name"
+import { parseVenueSettings } from "@/lib/types/venue-settings"
+import { Prisma } from "@/generated/prisma/client"
 
 interface PageProps {
   params: Promise<{ slug: string }>
@@ -57,16 +59,16 @@ export default async function SalesPage({ params }: PageProps) {
     return (
       <div className="page-inner">
         <Alert className="bg-destructive/10 border-destructive/20">
-          <AlertDescription className="text-destructive">You don't have access to this venue</AlertDescription>
+          <AlertDescription className="text-destructive">You don&apos;t have access to this venue</AlertDescription>
         </Alert>
       </div>
     )
   }
 
-  const venueSettings = venue.settings as any
+  const venueSettings = parseVenueSettings(venue.settings)
 
   // Check sales visibility for STAFF members
-  if (membership.role === "STAFF" && venueSettings?.salesVisibility) {
+  if (membership.role === "STAFF" && venueSettings.salesVisibility) {
     const salesVisibility = venueSettings.salesVisibility
 
     if (salesVisibility === "none") {
@@ -75,7 +77,7 @@ export default async function SalesPage({ params }: PageProps) {
           <div className="page-inner">
             <Alert className="bg-destructive/10 border-destructive/20">
               <AlertDescription className="text-destructive">
-                You don't have permission to view sales data
+                You don&apos;t have permission to view sales data
               </AlertDescription>
             </Alert>
           </div>
@@ -85,10 +87,10 @@ export default async function SalesPage({ params }: PageProps) {
   }
 
   // Build where clause for transactions
-  const where: any = { venueId: venue.id }
+  const where: Prisma.TransactionWhereInput = { venueId: venue.id }
 
   // Apply sales visibility settings for STAFF members
-  if (membership.role === "STAFF" && venueSettings?.salesVisibility === "own") {
+  if (membership.role === "STAFF" && venueSettings.salesVisibility === "own") {
     where.staffId = session.user.id
   }
 
@@ -298,8 +300,7 @@ export default async function SalesPage({ params }: PageProps) {
             {transactions.length === 0 ? (
               <Card className="text-center py-12">
                 <CardContent>
-                  <p className="text-muted-foreground mb-4">No sales recorded yet.</p>
-                  <SalesLogDialog venueId={venue.id} services={servicesWithNumberPrices} events={activeEvents} />
+                  <p className="text-muted-foreground">No sales recorded yet.</p>
                 </CardContent>
               </Card>
             ) : (

@@ -16,6 +16,7 @@ import { StaffTable } from "@/components/staff-table"
 import { VenueLayout } from "@/components/venue-layout"
 
 import { RoleBadge } from "@/components/role-badge"
+import { StaffVisibilitySettings } from "@/components/staff-visibility-settings"
 
 export default async function StaffPage({ params }: { params: Promise<{ slug: string }> }) {
   const session = await getServerSession(authOptions)
@@ -81,6 +82,8 @@ export default async function StaffPage({ params }: { params: Promise<{ slug: st
 
   const canManageStaff = ["OWNER", "MANAGER"].includes(userRole)
 
+  // Server Component: evaluated once per request, not a re-rendering client component that would need memoization.
+  // eslint-disable-next-line react-hooks/purity
   const weekAgo = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000)
 
   // Active shifts + weekly stats
@@ -240,6 +243,8 @@ export default async function StaffPage({ params }: { params: Promise<{ slug: st
             slug={slug}
             canManageStaff={canManageStaff}
           />
+
+          {canManageStaff && <StaffVisibilitySettings venueId={venue.id} />}
         </div>
       </div>
     </VenueLayout>

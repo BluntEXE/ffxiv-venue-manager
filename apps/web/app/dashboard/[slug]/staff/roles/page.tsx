@@ -33,6 +33,7 @@ import { Alert, AlertDescription } from "@/components/ui/alert"
 import { Badge } from "@/components/ui/badge"
 import { PageLoading } from "@/components/ui/loading-spinner"
 import { VenueLayoutClient } from "@/components/venue-layout-client"
+import { canManageVenue, isVenueOwner } from "@/lib/roles"
 
 // Preset colors for quick selection
 const PRESET_COLORS = [
@@ -53,7 +54,7 @@ interface Role {
   name: string
   responsibilities: string | null
   color: string | null
-  permissions: any
+  permissions: Record<string, boolean> | null
   hourlyRate: string | null
   potPayoutMode: "STANDARD" | "POT" | "CONTRACTOR"
   contractorSharesPot: boolean
@@ -66,6 +67,7 @@ export default function RolesPage({ params }: { params: Promise<{ slug: string }
   const router = useRouter()
   const [slug, setSlug] = useState<string>("")
   const [roles, setRoles] = useState<Role[]>([])
+  const [userRole, setUserRole] = useState<string | null>(null)
   const [isLoading, setIsLoading] = useState(true)
   const [error, setError] = useState("")
   const [potModeEnabled, setPotModeEnabled] = useState(false)
@@ -104,8 +106,9 @@ export default function RolesPage({ params }: { params: Promise<{ slug: string }
         if (!venueResponse.ok) throw new Error("Failed to fetch venue")
 
         const venues = await venueResponse.json()
-        const venue = venues.find((v: { slug: string }) => v.slug === slug)
+        const venue = venues.find((v: { slug: string; memberships: { role: string }[] }) => v.slug === slug)
         if (!venue) throw new Error("Venue not found")
+        setUserRole(venue.memberships?.[0]?.role ?? null)
 
         // Get roles
         const rolesResponse = await fetch(`/api/venues/${venue.id}/roles`)
@@ -295,7 +298,7 @@ export default function RolesPage({ params }: { params: Promise<{ slug: string }
             <Button variant="outline" asChild>
               <Link href={`/dashboard/${slug}/staff`}>← Back to Staff</Link>
             </Button>
-            <Button onClick={openCreateDialog}>Create Role</Button>
+            {canManageVenue(userRole) && <Button onClick={openCreateDialog}>Create Role</Button>}
           </div>
         </div>
 
@@ -312,8 +315,7 @@ export default function RolesPage({ params }: { params: Promise<{ slug: string }
         ) : roles.length === 0 ? (
           <Card className="text-center py-12">
             <CardContent>
-              <p className="text-muted-foreground mb-4">No custom roles yet. Create one to organize your staff!</p>
-              <Button onClick={openCreateDialog}>Create Your First Role</Button>
+              <p className="text-muted-foreground">No custom roles yet.</p>
             </CardContent>
           </Card>
         ) : (
@@ -346,30 +348,34 @@ export default function RolesPage({ params }: { params: Promise<{ slug: string }
                 </CardHeader>
                 <CardContent>
                   <div className="flex gap-2">
-                    <Button variant="outline" size="sm" onClick={() => openEditDialog(role)}>
-                      Edit
-                    </Button>
-                    <AlertDialog>
-                      <AlertDialogTrigger asChild>
-                        <Button variant="outline" size="sm" disabled={(role._count?.memberships || 0) > 0}>
-                          Delete
-                        </Button>
-                      </AlertDialogTrigger>
-                      <AlertDialogContent>
-                        <AlertDialogHeader>
-                          <AlertDialogTitle>Delete Role?</AlertDialogTitle>
-                          <AlertDialogDescription>
-                            Are you sure you want to delete "{role.name}"? This action cannot be undone.
-                          </AlertDialogDescription>
-                        </AlertDialogHeader>
-                        <AlertDialogFooter>
-                          <AlertDialogCancel>Cancel</AlertDialogCancel>
-                          <AlertDialogAction onClick={() => handleDeleteRole(role)}>Delete</AlertDialogAction>
-                        </AlertDialogFooter>
-                      </AlertDialogContent>
-                    </AlertDialog>
+                    {canManageVenue(userRole) && (
+                      <Button variant="outline" size="sm" onClick={() => openEditDialog(role)}>
+                        Edit
+                      </Button>
+                    )}
+                    {isVenueOwner(userRole) && (
+                      <AlertDialog>
+                        <AlertDialogTrigger asChild>
+                          <Button variant="outline" size="sm" disabled={(role._count?.memberships || 0) > 0}>
+                            Delete
+                          </Button>
+                        </AlertDialogTrigger>
+                        <AlertDialogContent>
+                          <AlertDialogHeader>
+                            <AlertDialogTitle>Delete Role?</AlertDialogTitle>
+                            <AlertDialogDescription>
+                              Are you sure you want to delete &quot;{role.name}&quot;? This action cannot be undone.
+                            </AlertDialogDescription>
+                          </AlertDialogHeader>
+                          <AlertDialogFooter>
+                            <AlertDialogCancel>Cancel</AlertDialogCancel>
+                            <AlertDialogAction onClick={() => handleDeleteRole(role)}>Delete</AlertDialogAction>
+                          </AlertDialogFooter>
+                        </AlertDialogContent>
+                      </AlertDialog>
+                    )}
                   </div>
-                  {(role._count?.memberships || 0) > 0 && (
+                  {isVenueOwner(userRole) && (role._count?.memberships || 0) > 0 && (
                     <p className="text-xs text-muted-foreground mt-2">Cannot delete: Role is assigned to staff</p>
                   )}
                 </CardContent>

@@ -177,12 +177,15 @@ export const PUT = withRateLimit<{ params: Promise<{ venueId: string }> }>(
       const body = await request.json()
       const validatedData = updateSettingsSchema.parse(body)
 
-      // Only OWNER can update most settings, but MANAGER can update roomManagerRoleIds
+      // Only OWNER can update most settings; MANAGER can update roomManagerRoleIds and the
+      // operational staff-visibility fields. Revenue visibility stays owner-only - it's a
+      // financial-disclosure policy call, not day-to-day staff coordination like the other three.
       const isOwner = membership.role === "OWNER"
       const isManager = membership.role === "MANAGER"
-      const onlyRoomManagerRoles = Object.keys(validatedData).every(k => k === "roomManagerRoleIds")
+      const managerAllowedKeys = new Set(["roomManagerRoleIds", "taskVisibility", "salesVisibility", "eventVisibility"])
+      const onlyManagerAllowedFields = Object.keys(validatedData).every((k) => managerAllowedKeys.has(k))
 
-      if (!isOwner && !(isManager && onlyRoomManagerRoles)) {
+      if (!isOwner && !(isManager && onlyManagerAllowedFields)) {
         return NextResponse.json({ error: "Only venue owners can update settings" }, { status: 403 })
       }
 

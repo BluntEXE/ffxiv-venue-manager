@@ -15,7 +15,7 @@ const buttonVariants = cva(
         "outline-blue":
           "border border-[var(--blue-020)] bg-transparent text-[var(--xiv-blue)] hover:bg-[var(--blue-007)] hover:border-[var(--blue-035)] transition-all",
         destructive:
-          "bg-destructive text-white hover:bg-destructive/90 focus-visible:ring-destructive/20 dark:focus-visible:ring-destructive/40 dark:bg-destructive/60",
+          "bg-destructive text-white hover:bg-destructive/90 focus-visible:ring-destructive/20 dark:focus-visible:ring-destructive/40",
         outline:
           "border border-[var(--blue-020)] bg-[var(--card)] text-foreground hover:border-[var(--blue-035)] hover:bg-[var(--blue-007)] transition-all",
         secondary: "bg-secondary text-secondary-foreground hover:bg-secondary/80",

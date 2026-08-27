@@ -32,6 +32,7 @@ import { Textarea } from "@/components/ui/textarea"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Alert, AlertDescription } from "@/components/ui/alert"
 import { Clock, Trash2, Edit, Plus, ClipboardList } from "lucide-react"
+import { canManageVenue } from "@/lib/roles"
 
 interface EventTemplate {
   id: string
@@ -66,6 +67,8 @@ export default function EventTemplatesPage() {
   const slug = params?.slug as string
 
   const [templates, setTemplates] = useState<EventTemplate[]>([])
+  const [venueId, setVenueId] = useState<string>("")
+  const [userRole, setUserRole] = useState<string | null>(null)
   const [loading, setLoading] = useState(true)
   const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false)
   const [editingTemplate, setEditingTemplate] = useState<EventTemplate | null>(null)
@@ -84,21 +87,20 @@ export default function EventTemplatesPage() {
     defaultEndTime: "22:00",
   })
 
-  useEffect(() => {
-    if (status === "unauthenticated") {
-      router.push("/auth/signin")
-    }
-  }, [status, router])
-
-  useEffect(() => {
-    if (session && slug) {
-      fetchTemplates()
-    }
-  }, [session, slug])
-
   const fetchTemplates = async () => {
     try {
-      const response = await fetch(`/api/venues/${slug}/event-templates`)
+      const venueResponse = await fetch(`/api/venues`)
+      if (!venueResponse.ok) throw new Error("Failed to fetch venue")
+
+      const venues = await venueResponse.json()
+      const venue = venues.find(
+        (v: { slug: string; memberships: { role: string }[] }) => v.slug === slug
+      )
+      if (!venue) throw new Error("Venue not found")
+      setVenueId(venue.id)
+      setUserRole(venue.memberships?.[0]?.role ?? null)
+
+      const response = await fetch(`/api/venues/${venue.id}/event-templates`)
       if (response.ok) {
         const data = await response.json()
         setTemplates(data)
@@ -110,12 +112,26 @@ export default function EventTemplatesPage() {
     }
   }
 
+  useEffect(() => {
+    if (status === "unauthenticated") {
+      router.push("/auth/signin")
+    }
+  }, [status, router])
+
+  useEffect(() => {
+    if (session && slug) {
+      // Genuine data fetch (sets templates/loading state), not derivable from props/state during render.
+      // eslint-disable-next-line react-hooks/set-state-in-effect
+      fetchTemplates()
+    }
+  }, [session, slug])
+
   const handleCreate = async () => {
     setIsSubmitting(true)
     setError("")
 
     try {
-      const response = await fetch(`/api/venues/${slug}/event-templates`, {
+      const response = await fetch(`/api/venues/${venueId}/event-templates`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(formData),
@@ -143,7 +159,7 @@ export default function EventTemplatesPage() {
     setError("")
 
     try {
-      const response = await fetch(`/api/venues/${slug}/event-templates/${editingTemplate.id}`, {
+      const response = await fetch(`/api/venues/${venueId}/event-templates/${editingTemplate.id}`, {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(formData),
@@ -168,7 +184,7 @@ export default function EventTemplatesPage() {
     if (!deletingTemplate) return
 
     try {
-      const response = await fetch(`/api/venues/${slug}/event-templates/${deletingTemplate.id}`, {
+      const response = await fetch(`/api/venues/${venueId}/event-templates/${deletingTemplate.id}`, {
         method: "DELETE",
       })
 
@@ -238,10 +254,12 @@ export default function EventTemplatesPage() {
             <VenueEyebrow slug={slug} />
             <h1 className="page-h1">Event Templates</h1>
           </div>
-          <Button onClick={openCreateDialog}>
-            <Plus className="mr-2 h-4 w-4" />
-            New Template
-          </Button>
+          {canManageVenue(userRole) && (
+            <Button onClick={openCreateDialog}>
+              <Plus className="mr-2 h-4 w-4" />
+              New Template
+            </Button>
+          )}
         </div>
 
         {/* Templates Grid */}
@@ -252,10 +270,6 @@ export default function EventTemplatesPage() {
               <p className="font-cinzel font-semibold tracking-wide">No Templates Yet</p>
               <p className="text-sm text-muted-foreground mt-1">Save time by templating your recurring events.</p>
             </div>
-            <Button onClick={openCreateDialog} className="xiv-cta">
-              <Plus className="mr-2 h-4 w-4" />
-              Create Template
-            </Button>
           </div>
         ) : (
           <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
@@ -267,14 +281,16 @@ export default function EventTemplatesPage() {
                       <CardTitle className="text-lg">{template.name}</CardTitle>
                       <CardDescription className="mt-1">{template.title}</CardDescription>
                     </div>
-                    <div className="flex gap-2">
-                      <Button variant="ghost" size="sm" onClick={() => openEditDialog(template)}>
-                        <Edit className="h-4 w-4" />
-                      </Button>
-                      <Button variant="ghost" size="sm" onClick={() => setDeletingTemplate(template)}>
-                        <Trash2 className="h-4 w-4 text-red-500" />
-                      </Button>
-                    </div>
+                    {canManageVenue(userRole) && (
+                      <div className="flex gap-2">
+                        <Button variant="ghost" size="sm" onClick={() => openEditDialog(template)}>
+                          <Edit className="h-4 w-4" />
+                        </Button>
+                        <Button variant="ghost" size="sm" onClick={() => setDeletingTemplate(template)}>
+                          <Trash2 className="h-4 w-4 text-red-500" />
+                        </Button>
+                      </div>
+                    )}
                   </div>
                 </CardHeader>
                 <CardContent>
@@ -449,7 +465,7 @@ export default function EventTemplatesPage() {
             <AlertDialogHeader>
               <AlertDialogTitle>Delete Template</AlertDialogTitle>
               <AlertDialogDescription>
-                Are you sure you want to delete "{deletingTemplate?.name}"? This action cannot be undone.
+                Are you sure you want to delete &quot;{deletingTemplate?.name}&quot;? This action cannot be undone.
               </AlertDialogDescription>
             </AlertDialogHeader>
             <AlertDialogFooter>

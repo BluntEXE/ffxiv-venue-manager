@@ -1,7 +1,7 @@
 "use client"
 
 import { useEffect, useState } from "react"
-import { useParams } from "next/navigation"
+import { useParams, useRouter } from "next/navigation"
 import { VenueLayoutClient } from "@/components/venue-layout-client"
 import { VenueEyebrow } from "@/components/venue-eyebrow"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
@@ -75,16 +75,13 @@ interface AnalyticsData {
 
 export default function AnalyticsPage() {
   const params = useParams()
+  const router = useRouter()
   const slug = params?.slug as string
 
   const [analyticsData, setAnalyticsData] = useState<AnalyticsData | null>(null)
   const [isLoading, setIsLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
   const [period, setPeriod] = useState<"30d" | "90d" | "all">("30d")
-
-  useEffect(() => {
-    if (slug) fetchAnalytics(period)
-  }, [slug, period])
 
   const fetchAnalytics = async (p = period) => {
     try {
@@ -93,6 +90,10 @@ export default function AnalyticsPage() {
       const response = await fetch(`/api/venues/${slug}/analytics?period=${p}`)
 
       if (!response.ok) {
+        if (response.status === 403) {
+          router.replace(`/dashboard/${slug}`)
+          return
+        }
         const data = await response.json()
         throw new Error(data.error || "Failed to fetch analytics")
       }
@@ -106,6 +107,12 @@ export default function AnalyticsPage() {
       setIsLoading(false)
     }
   }
+
+  useEffect(() => {
+    // Genuine data fetch (sets analyticsData/loading/error state), not derivable from props/state during render.
+    // eslint-disable-next-line react-hooks/set-state-in-effect
+    if (slug) fetchAnalytics(period)
+  }, [slug, period])
 
   const exportToCSV = () => {
     if (!analyticsData) return

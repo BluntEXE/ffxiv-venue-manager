@@ -5,6 +5,7 @@ import { prisma } from "@/lib/prisma"
 import { nanoid } from "nanoid"
 import { z } from "zod"
 import { validators } from "@/lib/validation"
+import { Prisma } from "@/generated/prisma/client"
 
 const linkCharacterSchema = z.object({
   characterName: validators.characterName,
@@ -104,9 +105,9 @@ export async function POST(request: NextRequest) {
     })
 
     return NextResponse.json({ character: created })
-  } catch (err: any) {
+  } catch (err) {
     // P2002 = unique constraint violation on (characterName, world)
-    if (err?.code === "P2002") {
+    if (err instanceof Prisma.PrismaClientKnownRequestError && err.code === "P2002") {
       return NextResponse.json(
         {
           error: "That character is already linked to an account. If this is your character, contact support.",
