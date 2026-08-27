@@ -186,7 +186,8 @@ export default async function VenueProfilePage({ params }: { params: Promise<{ s
         <div
           className="absolute inset-0"
           style={{
-            background: "linear-gradient(180deg, rgba(7,11,20,0.3) 0%, rgba(7,11,20,0.65) 55%, var(--background) 100%)",
+            background:
+              "linear-gradient(180deg, rgba(7,11,20,0.85) 0%, rgba(7,11,20,0.75) 30%, rgba(7,11,20,0.65) 55%, var(--background) 100%)",
           }}
         />
 
@@ -194,7 +195,7 @@ export default async function VenueProfilePage({ params }: { params: Promise<{ s
         <div className="absolute top-5 left-6 z-10">
           <Link
             href="/discover"
-            className="inline-flex items-center gap-1.5 text-[0.88rem] font-medium text-foreground bg-[rgba(7,11,20,0.55)] hover:bg-[var(--blue-007)] px-3 py-2 rounded-[var(--radius-md)] transition-colors"
+            className="inline-flex items-center gap-1.5 text-[0.88rem] font-medium text-foreground hover:bg-[var(--blue-007)] px-3 py-2 rounded-[var(--radius-md)] transition-colors"
           >
             <ChevronLeft className="w-4 h-4" /> Discover
           </Link>
