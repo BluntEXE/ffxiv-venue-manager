@@ -43,6 +43,7 @@ export default function NewEventPage() {
 
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [error, setError] = useState("")
+  const [authorized, setAuthorized] = useState<boolean | null>(null)
   const [startTime, setStartTime] = useState<Date>()
   const [endTime, setEndTime] = useState<Date>()
   const [templates, setTemplates] = useState<EventTemplate[]>([])
@@ -68,15 +69,25 @@ export default function NewEventPage() {
         if (templatesRes.ok) setTemplates(await templatesRes.json())
         if (venuesRes.ok) {
           const venues = await venuesRes.json()
-          const venue = venues.find((v: { slug: string; partakeTeamId: string | null }) => v.slug === slug)
+          const venue = venues.find(
+            (v: { slug: string; partakeTeamId: string | null; memberships: { role: string }[] }) => v.slug === slug
+          )
           if (venue?.partakeTeamId) setHasPartake(true)
+          setAuthorized(["OWNER", "MANAGER"].includes(venue?.memberships?.[0]?.role))
+        } else {
+          setAuthorized(false)
         }
       } catch (error) {
         console.error("Error fetching form data:", error)
+        setAuthorized(false)
       }
     }
     fetchData()
   }, [slug])
+
+  useEffect(() => {
+    if (authorized === false) router.replace(`/dashboard/${slug}/events`)
+  }, [authorized, router, slug])
 
   // Handle template selection
   const handleTemplateSelect = (templateId: string) => {
@@ -197,6 +208,10 @@ export default function NewEventPage() {
     } finally {
       setIsSubmitting(false)
     }
+  }
+
+  if (!authorized) {
+    return <VenueLayoutClient slug={slug}>{null}</VenueLayoutClient>
   }
 
   return (

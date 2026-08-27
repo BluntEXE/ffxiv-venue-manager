@@ -107,12 +107,14 @@ export default async function EventsPage({
           </div>
           <div className="flex items-center gap-2 self-start flex-wrap">
             {venue.partakeTeamId && <SyncPartakeButton venueId={venue.id} />}
-            <Button asChild size="sm">
-              <Link href={`/dashboard/${slug}/events/new`}>
-                <span className="hidden sm:inline">Create Event</span>
-                <span className="sm:hidden">New</span>
-              </Link>
-            </Button>
+            {["OWNER", "MANAGER"].includes(userRole) && (
+              <Button asChild size="sm">
+                <Link href={`/dashboard/${slug}/events/new`}>
+                  <span className="hidden sm:inline">Create Event</span>
+                  <span className="sm:hidden">New</span>
+                </Link>
+              </Button>
+            )}
           </div>
         </div>
 
