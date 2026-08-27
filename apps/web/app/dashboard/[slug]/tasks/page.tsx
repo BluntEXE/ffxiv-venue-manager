@@ -64,6 +64,14 @@ interface Role {
 
 const TASK_CATEGORIES = ["Setup", "Cleanup", "Promotional", "Maintenance", "Administrative", "Other"]
 
+// Matches the Discord task-notification embed colors (lib/discord-webhook.ts) so priority reads the same everywhere.
+const PRIORITY_COLORS: Record<string, string> = {
+  URGENT: "#ed4245",
+  HIGH: "#faa61a",
+  MEDIUM: "#3498db",
+  LOW: "#95a5a6",
+}
+
 export default function TasksPage({ params }: { params: Promise<{ slug: string }> }) {
   const [slug, setSlug] = useState<string>("")
   const [tasks, setTasks] = useState<Task[]>([])
@@ -418,7 +426,8 @@ export default function TasksPage({ params }: { params: Promise<{ slug: string }
                         key={task.id}
                         className={`kcard${key === "COMPLETED" ? " done opacity-70" : ""}`}
                         onClick={() => handleStatusUpdate(task.id, next)}
-                        title={`Click to move to ${nextLabel === "Start" ? "In Progress" : nextLabel === "Complete" ? "Done" : "To Do"}`}
+                        title={`Click to move to ${nextLabel === "Start" ? "In Progress" : nextLabel === "Complete" ? "Done" : "To Do"} — ${task.priority.charAt(0) + task.priority.slice(1).toLowerCase()} priority`}
+                        style={{ borderLeftColor: PRIORITY_COLORS[task.priority], borderLeftWidth: "3px" }}
                       >
                         <p className="kt">{task.title}</p>
                         <div className="km">
