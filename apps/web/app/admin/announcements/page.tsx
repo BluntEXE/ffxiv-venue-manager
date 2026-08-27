@@ -8,6 +8,17 @@ import { Input } from "@/components/ui/input"
 import { Textarea } from "@/components/ui/textarea"
 import { Label } from "@/components/ui/label"
 import { PageLoading } from "@/components/ui/loading-spinner"
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from "@/components/ui/alert-dialog"
 import { Megaphone, Trash2, Plus, X } from "lucide-react"
 import { format } from "date-fns"
 
@@ -82,7 +93,6 @@ export default function AdminAnnouncementsPage() {
   }
 
   async function remove(id: string) {
-    if (!confirm("Delete this announcement?")) return
     await fetch(`/api/admin/announcements/${id}`, { method: "DELETE" })
     setAnnouncements((prev) => prev.filter((a) => a.id !== id))
   }
@@ -208,14 +218,29 @@ export default function AdminAnnouncementsPage() {
                   {a.expiresAt && ` · expires ${format(new Date(a.expiresAt), "d MMM yyyy")}`}
                 </p>
               </div>
-              <Button
-                variant="ghost"
-                size="icon"
-                className="shrink-0 text-[var(--fg-faint)] hover:text-red-400"
-                onClick={() => remove(a.id)}
-              >
-                <Trash2 className="h-4 w-4" />
-              </Button>
+              <AlertDialog>
+                <AlertDialogTrigger asChild>
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    className="shrink-0 text-[var(--fg-faint)] hover:text-red-400"
+                  >
+                    <Trash2 className="h-4 w-4" />
+                  </Button>
+                </AlertDialogTrigger>
+                <AlertDialogContent>
+                  <AlertDialogHeader>
+                    <AlertDialogTitle>Delete this announcement?</AlertDialogTitle>
+                    <AlertDialogDescription>
+                      This removes it for everyone immediately. This cannot be undone.
+                    </AlertDialogDescription>
+                  </AlertDialogHeader>
+                  <AlertDialogFooter>
+                    <AlertDialogCancel>Cancel</AlertDialogCancel>
+                    <AlertDialogAction onClick={() => remove(a.id)}>Delete</AlertDialogAction>
+                  </AlertDialogFooter>
+                </AlertDialogContent>
+              </AlertDialog>
             </div>
           ))}
         </div>

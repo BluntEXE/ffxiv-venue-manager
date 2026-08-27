@@ -44,6 +44,7 @@ import {
 } from "@/components/ui/alert-dialog"
 import { PageLoading } from "@/components/ui/loading-spinner"
 import { ItemSearchCombobox } from "@/components/item-search-combobox"
+import { canManageVenue, isVenueOwner } from "@/lib/roles"
 
 interface Role {
   id: string
@@ -72,6 +73,7 @@ export default function ServicesPage({ params }: { params: Promise<{ slug: strin
   const router = useRouter()
   const [slug, setSlug] = useState<string>("")
   const [venueId, setVenueId] = useState<string>("")
+  const [userRole, setUserRole] = useState<string | null>(null)
   const [inventoryEnabled, setInventoryEnabled] = useState(false)
   const [services, setServices] = useState<Service[]>([])
   const [roles, setRoles] = useState<Role[]>([])
@@ -117,9 +119,10 @@ export default function ServicesPage({ params }: { params: Promise<{ slug: strin
         if (!venueResponse.ok) throw new Error("Failed to fetch venue")
 
         const venues = await venueResponse.json()
-        const venue = venues.find((v: { slug: string }) => v.slug === slug)
+        const venue = venues.find((v: { slug: string; memberships: { role: string }[] }) => v.slug === slug)
         if (!venue) throw new Error("Venue not found")
         setVenueId(venue.id)
+        setUserRole(venue.memberships?.[0]?.role ?? null)
 
         // Get services, roles, and inventory settings
         const [servicesResponse, rolesResponse] = await Promise.all([
@@ -349,10 +352,12 @@ export default function ServicesPage({ params }: { params: Promise<{ slug: strin
             <VenueEyebrow slug={slug} />
             <h1 className="page-h1">Services</h1>
           </div>
-          <Button onClick={openCreateDialog} size="sm" className="sm:size-default self-start">
-            <span className="hidden sm:inline">Add Service</span>
-            <span className="sm:hidden">Add</span>
-          </Button>
+          {canManageVenue(userRole) && (
+            <Button onClick={openCreateDialog} size="sm" className="sm:size-default self-start">
+              <span className="hidden sm:inline">Add Service</span>
+              <span className="sm:hidden">Add</span>
+            </Button>
+          )}
         </div>
 
         {/* Stats */}
@@ -572,40 +577,23 @@ export default function ServicesPage({ params }: { params: Promise<{ slug: strin
                         )}
                       </div>
                       <div className="flex items-center gap-1.5">
-                        {/* Toggle */}
-                        <button
-                          onClick={() => handleToggleService(service)}
-                          title={service.isActive ? "Available" : "Unavailable"}
-                          className={`relative w-[38px] h-[22px] rounded-full border transition-all duration-200 flex-shrink-0 ${service.isActive ? "bg-[var(--xiv-blue)] border-[var(--xiv-blue)]" : "bg-[var(--blue-010)] border-[var(--blue-020)]"}`}
-                        >
-                          <span
-                            className={`absolute top-[2px] left-[2px] w-4 h-4 rounded-full transition-all duration-200 ${service.isActive ? "translate-x-4 bg-[var(--xiv-navy)]" : "bg-[var(--fg-faint)]"}`}
-                          />
-                        </button>
-                        {/* Edit */}
-                        <button
-                          onClick={() => openEditDialog(service)}
-                          title="Edit"
-                          className="text-[var(--fg-faint)] hover:text-[var(--xiv-blue)] transition-colors p-1 rounded"
-                        >
-                          <svg
-                            className="w-4 h-4"
-                            xmlns="http://www.w3.org/2000/svg"
-                            viewBox="0 0 24 24"
-                            fill="none"
-                            stroke="currentColor"
-                            strokeWidth="2"
-                          >
-                            <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7" />
-                            <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z" />
-                          </svg>
-                        </button>
-                        {/* Delete */}
-                        <AlertDialog>
-                          <AlertDialogTrigger asChild>
+                        {canManageVenue(userRole) && (
+                          <>
+                            {/* Toggle */}
                             <button
-                              title="Delete"
-                              className="text-[var(--fg-faint)] hover:text-destructive transition-colors p-1 rounded"
+                              onClick={() => handleToggleService(service)}
+                              title={service.isActive ? "Available" : "Unavailable"}
+                              className={`relative w-[38px] h-[22px] rounded-full border transition-all duration-200 flex-shrink-0 ${service.isActive ? "bg-[var(--xiv-blue)] border-[var(--xiv-blue)]" : "bg-[var(--blue-010)] border-[var(--blue-020)]"}`}
+                            >
+                              <span
+                                className={`absolute top-[2px] left-[2px] w-4 h-4 rounded-full transition-all duration-200 ${service.isActive ? "translate-x-4 bg-[var(--xiv-navy)]" : "bg-[var(--fg-faint)]"}`}
+                              />
+                            </button>
+                            {/* Edit */}
+                            <button
+                              onClick={() => openEditDialog(service)}
+                              title="Edit"
+                              className="text-[var(--fg-faint)] hover:text-[var(--xiv-blue)] transition-colors p-1 rounded"
                             >
                               <svg
                                 className="w-4 h-4"
@@ -615,24 +603,49 @@ export default function ServicesPage({ params }: { params: Promise<{ slug: strin
                                 stroke="currentColor"
                                 strokeWidth="2"
                               >
-                                <polyline points="3 6 5 6 21 6" />
-                                <path d="M19 6l-1 14H6L5 6" />
-                                <path d="M10 11v6m4-6v6" />
-                                <path d="M9 6V4h6v2" />
+                                <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7" />
+                                <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z" />
                               </svg>
                             </button>
-                          </AlertDialogTrigger>
-                          <AlertDialogContent>
-                            <AlertDialogHeader>
-                              <AlertDialogTitle>Delete &quot;{service.name}&quot;?</AlertDialogTitle>
-                              <AlertDialogDescription>This cannot be undone.</AlertDialogDescription>
-                            </AlertDialogHeader>
-                            <AlertDialogFooter>
-                              <AlertDialogCancel>Cancel</AlertDialogCancel>
-                              <AlertDialogAction onClick={() => handleDeleteService(service)}>Delete</AlertDialogAction>
-                            </AlertDialogFooter>
+                          </>
+                        )}
+                        {/* Delete — OWNER only, matches the API */}
+                        {isVenueOwner(userRole) && (
+                          <AlertDialog>
+                            <AlertDialogTrigger asChild>
+                              <button
+                                title="Delete"
+                                className="text-[var(--fg-faint)] hover:text-destructive transition-colors p-1 rounded"
+                              >
+                                <svg
+                                  className="w-4 h-4"
+                                  xmlns="http://www.w3.org/2000/svg"
+                                  viewBox="0 0 24 24"
+                                  fill="none"
+                                  stroke="currentColor"
+                                  strokeWidth="2"
+                                >
+                                  <polyline points="3 6 5 6 21 6" />
+                                  <path d="M19 6l-1 14H6L5 6" />
+                                  <path d="M10 11v6m4-6v6" />
+                                  <path d="M9 6V4h6v2" />
+                                </svg>
+                              </button>
+                            </AlertDialogTrigger>
+                            <AlertDialogContent>
+                              <AlertDialogHeader>
+                                <AlertDialogTitle>Delete &quot;{service.name}&quot;?</AlertDialogTitle>
+                                <AlertDialogDescription>This cannot be undone.</AlertDialogDescription>
+                              </AlertDialogHeader>
+                              <AlertDialogFooter>
+                                <AlertDialogCancel>Cancel</AlertDialogCancel>
+                                <AlertDialogAction onClick={() => handleDeleteService(service)}>
+                                  Delete
+                                </AlertDialogAction>
+                              </AlertDialogFooter>
                           </AlertDialogContent>
-                        </AlertDialog>
+                          </AlertDialog>
+                        )}
                       </div>
                     </div>
                   </div>

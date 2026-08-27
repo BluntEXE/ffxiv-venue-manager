@@ -10,6 +10,17 @@ import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Badge } from "@/components/ui/badge"
 import { Alert, AlertDescription } from "@/components/ui/alert"
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from "@/components/ui/alert-dialog"
 import { LocalTime } from "@/components/server-time"
 
 interface ApiKey {
@@ -50,21 +61,6 @@ export default function ApiKeysPage({ params }: { params: Promise<{ slug: string
   const [showKey, setShowKey] = useState<string | null>(null)
   const [error, setError] = useState("")
   const [success, setSuccess] = useState("")
-
-  useEffect(() => {
-    params.then((p) => {
-      setSlug(p.slug)
-      fetchData(p.slug)
-    })
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [params])
-
-  // Auto-dismiss success messages after 3s so they don't stack up.
-  useEffect(() => {
-    if (!success) return
-    const t = setTimeout(() => setSuccess(""), 3000)
-    return () => clearTimeout(t)
-  }, [success])
 
   async function fetchData(venueSlug: string) {
     setIsLoading(true)
@@ -109,6 +105,21 @@ export default function ApiKeysPage({ params }: { params: Promise<{ slug: string
     }
   }
 
+  useEffect(() => {
+    params.then((p) => {
+      setSlug(p.slug)
+      fetchData(p.slug)
+    })
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [params])
+
+  // Auto-dismiss success messages after 3s so they don't stack up.
+  useEffect(() => {
+    if (!success) return
+    const t = setTimeout(() => setSuccess(""), 3000)
+    return () => clearTimeout(t)
+  }, [success])
+
   // Show account-wide keys + keys scoped to this venue.
   const venueKeys = useMemo(() => apiKeys.filter((k) => !k.venue || k.venue.slug === slug), [apiKeys, slug])
 
@@ -150,14 +161,6 @@ export default function ApiKeysPage({ params }: { params: Promise<{ slug: string
   }
 
   async function revokeApiKey(keyId: string) {
-    if (
-      !confirm(
-        "Revoke this API key? Any plugin installation using it will stop working immediately. This cannot be undone."
-      )
-    ) {
-      return
-    }
-
     try {
       const res = await fetch(`/api/plugin/keys/${keyId}`, {
         method: "DELETE",
@@ -438,9 +441,26 @@ export default function ApiKeysPage({ params }: { params: Promise<{ slug: string
                       {key.revokedAt ? (
                         <Badge variant="destructive">Revoked</Badge>
                       ) : (
-                        <Button variant="destructive" size="sm" onClick={() => revokeApiKey(key.id)}>
-                          Revoke
-                        </Button>
+                        <AlertDialog>
+                          <AlertDialogTrigger asChild>
+                            <Button variant="destructive" size="sm">
+                              Revoke
+                            </Button>
+                          </AlertDialogTrigger>
+                          <AlertDialogContent>
+                            <AlertDialogHeader>
+                              <AlertDialogTitle>Revoke this API key?</AlertDialogTitle>
+                              <AlertDialogDescription>
+                                Any plugin installation using it will stop working immediately. This cannot be
+                                undone.
+                              </AlertDialogDescription>
+                            </AlertDialogHeader>
+                            <AlertDialogFooter>
+                              <AlertDialogCancel>Cancel</AlertDialogCancel>
+                              <AlertDialogAction onClick={() => revokeApiKey(key.id)}>Revoke</AlertDialogAction>
+                            </AlertDialogFooter>
+                          </AlertDialogContent>
+                        </AlertDialog>
                       )}
                     </div>
                   </div>

@@ -34,6 +34,7 @@ import type { ScheduleEntry } from "@/lib/schedule-utils"
 import { DAY_NAMES, formatEntryTime, formatIntervalLabel } from "@/lib/schedule-utils"
 import { Plus, Trash2 } from "lucide-react"
 import { FFXIV_DISTRICTS } from "@/lib/venue-location"
+import { canManageVenue } from "@/lib/roles"
 
 export default function SettingsPage({ params }: { params: Promise<{ slug: string }> }) {
   const router = useRouter()
@@ -96,6 +97,10 @@ export default function SettingsPage({ params }: { params: Promise<{ slug: strin
   const [ffxivPreviewError, setFfxivPreviewError] = useState<string | null>(null)
   const [ffxivSyncing, setFfxivSyncing] = useState(false)
   const [ffxivUnlinking, setFfxivUnlinking] = useState(false)
+  const [xvmApiVenueId, setXvmApiVenueId] = useState<string | null>(null)
+  const [xvmApiVenueLinkedAt, setXvmApiVenueLinkedAt] = useState<string | null>(null)
+  const [xvmConnecting, setXvmConnecting] = useState(false)
+  const [xvmConnectError, setXvmConnectError] = useState<string | null>(null)
   const [froggeConnected, setFroggeConnected] = useState(false)
   const [froggeCode, setFroggeCode] = useState("")
   const [froggeConnecting, setFroggeConnecting] = useState(false)
@@ -157,6 +162,8 @@ export default function SettingsPage({ params }: { params: Promise<{ slug: strin
         setGalleryImages(venue.galleryImages ?? [])
         setBannerUrl(venue.bannerUrl ?? null)
         setLogoUrl(venue.logoUrl ?? null)
+        setXvmApiVenueId(venue.xvmApiVenueId ?? null)
+        setXvmApiVenueLinkedAt(venue.xvmApiVenueLinkedAt ?? null)
         if (venue.memberships?.[0]) {
           setUserRole(venue.memberships[0].role)
         }
@@ -234,6 +241,12 @@ export default function SettingsPage({ params }: { params: Promise<{ slug: strin
 
     fetchSettings()
   }, [slug])
+
+  useEffect(() => {
+    if (!isLoading && !canManageVenue(userRole)) {
+      router.replace(`/dashboard/${slug}`)
+    }
+  }, [isLoading, userRole, slug, router])
 
   useEffect(() => {
     if (!settingsReadyRef.current) return
@@ -462,7 +475,6 @@ export default function SettingsPage({ params }: { params: Promise<{ slug: strin
   }
 
   async function handleFfxivUnlink() {
-    if (!confirm("Unlink ffxivvenues.com? The synced schedule will be removed from your profile.")) return
     setFfxivUnlinking(true)
     try {
       await fetch(`/api/venues/${venueId}/settings`, {
@@ -475,6 +487,25 @@ export default function SettingsPage({ params }: { params: Promise<{ slug: strin
       setFfxivVenueSyncedAt(null)
     } finally {
       setFfxivUnlinking(false)
+    }
+  }
+
+  async function handleXvmConnect() {
+    setXvmConnecting(true)
+    setXvmConnectError(null)
+    try {
+      const res = await fetch(`/api/venues/${venueId}/xvm-connect`, { method: "POST" })
+      if (!res.ok) {
+        const err = await res.json()
+        throw new Error(err.error ?? "Failed to connect")
+      }
+      const result = await res.json()
+      setXvmApiVenueId(result.id)
+      setXvmApiVenueLinkedAt(new Date().toISOString())
+    } catch (e) {
+      setXvmConnectError(e instanceof Error ? e.message : "Failed to connect")
+    } finally {
+      setXvmConnecting(false)
     }
   }
 
@@ -502,7 +533,6 @@ export default function SettingsPage({ params }: { params: Promise<{ slug: strin
   }
 
   async function handleFroggeDisconnect() {
-    if (!confirm("Disconnect Frogge? Room sync and Discord posting will stop.")) return
     setFroggeDisconnecting(true)
     try {
       const res = await fetch(`/api/venues/${venueId}/frogge/disconnect`, { method: "POST" })
@@ -513,7 +543,7 @@ export default function SettingsPage({ params }: { params: Promise<{ slug: strin
     }
   }
 
-  if (!slug) {
+  if (!slug || (isLoading && !userRole) || !canManageVenue(userRole)) {
     return (
       <div className="container mx-auto p-8">
         <PageLoading />
@@ -1042,15 +1072,25 @@ export default function SettingsPage({ params }: { params: Promise<{ slug: strin
                         >
                           {ffxivSyncing ? "Syncing…" : "Sync now"}
                         </Button>
-                        <Button
-                          type="button"
-                          variant="destructive"
-                          size="sm"
-                          onClick={handleFfxivUnlink}
-                          disabled={ffxivUnlinking}
-                        >
-                          {ffxivUnlinking ? "Unlinking…" : "Unlink"}
-                        </Button>
+                        <AlertDialog>
+                          <AlertDialogTrigger asChild>
+                            <Button type="button" variant="destructive" size="sm" disabled={ffxivUnlinking}>
+                              {ffxivUnlinking ? "Unlinking…" : "Unlink"}
+                            </Button>
+                          </AlertDialogTrigger>
+                          <AlertDialogContent>
+                            <AlertDialogHeader>
+                              <AlertDialogTitle>Unlink ffxivvenues.com?</AlertDialogTitle>
+                              <AlertDialogDescription>
+                                The synced schedule will be removed from your profile.
+                              </AlertDialogDescription>
+                            </AlertDialogHeader>
+                            <AlertDialogFooter>
+                              <AlertDialogCancel>Cancel</AlertDialogCancel>
+                              <AlertDialogAction onClick={handleFfxivUnlink}>Unlink</AlertDialogAction>
+                            </AlertDialogFooter>
+                          </AlertDialogContent>
+                        </AlertDialog>
                       </div>
                     </>
                   ) : ffxivPreview ? (
@@ -1193,6 +1233,61 @@ export default function SettingsPage({ params }: { params: Promise<{ slug: strin
                 </div>
               </div>
 
+              {/* xvm-api */}
+              {userRole === "OWNER" && (
+                <div className="introw" style={{ flexWrap: "wrap", gap: 14 }}>
+                  <span className="iconbadge ii" style={{ width: 40, height: 40 }}>
+                    <svg
+                      xmlns="http://www.w3.org/2000/svg"
+                      viewBox="0 0 24 24"
+                      fill="none"
+                      stroke="currentColor"
+                      strokeWidth="2"
+                    >
+                      <circle cx="12" cy="12" r="10" />
+                      <path d="M9 12l2 2 4-4" />
+                    </svg>
+                  </span>
+                  <div className="iinfo">
+                    <div className="iname">xvm-api</div>
+                    <div className="idesc">Required for Rooms and other live venue features</div>
+                  </div>
+                  {xvmApiVenueId && (
+                    <span className="status open">
+                      <span className="dot" />
+                      Connected
+                    </span>
+                  )}
+                  <div className="w-full pl-[54px] space-y-3">
+                    {xvmApiVenueId ? (
+                      <p className="text-xs text-[var(--fg-faint)]">
+                        Connected
+                        {xvmApiVenueLinkedAt && (
+                          <>
+                            {" "}
+                            on <LocalTime date={xvmApiVenueLinkedAt} />
+                          </>
+                        )}
+                        .
+                      </p>
+                    ) : (
+                      <>
+                        <Button
+                          type="button"
+                          variant="outline-blue"
+                          size="sm"
+                          onClick={handleXvmConnect}
+                          disabled={xvmConnecting}
+                        >
+                          {xvmConnecting ? "Connecting…" : "Connect to xvm-api"}
+                        </Button>
+                        {xvmConnectError && <p className="text-xs text-red-400">{xvmConnectError}</p>}
+                      </>
+                    )}
+                  </div>
+                </div>
+              )}
+
               {/* Frogge Bot */}
               <div className="introw" style={{ flexWrap: "wrap", gap: 14 }}>
                 <span className="iconbadge ii" style={{ width: 40, height: 40 }}>
@@ -1210,7 +1305,7 @@ export default function SettingsPage({ params }: { params: Promise<{ slug: strin
                 </span>
                 <div className="iinfo">
                   <div className="iname">Frogge Bot</div>
-                  <div className="idesc">Room sync, ownership, and Discord posting</div>
+                  <div className="idesc">Discord posting</div>
                 </div>
                 {froggeConnected && (
                   <span className="status open">
@@ -1222,17 +1317,25 @@ export default function SettingsPage({ params }: { params: Promise<{ slug: strin
                   {froggeConnected ? (
                     <>
                       <p className="text-xs text-[var(--fg-faint)]">
-                        Connected. Rooms sync automatically. Use the Rooms page to post to Discord.
+                        Connected. Use the Rooms page to post to Discord.
                       </p>
-                      <Button
-                        type="button"
-                        variant="destructive"
-                        size="sm"
-                        onClick={handleFroggeDisconnect}
-                        disabled={froggeDisconnecting}
-                      >
-                        {froggeDisconnecting ? "Disconnecting…" : "Disconnect"}
-                      </Button>
+                      <AlertDialog>
+                        <AlertDialogTrigger asChild>
+                          <Button type="button" variant="destructive" size="sm" disabled={froggeDisconnecting}>
+                            {froggeDisconnecting ? "Disconnecting…" : "Disconnect"}
+                          </Button>
+                        </AlertDialogTrigger>
+                        <AlertDialogContent>
+                          <AlertDialogHeader>
+                            <AlertDialogTitle>Disconnect Frogge?</AlertDialogTitle>
+                            <AlertDialogDescription>Room sync and Discord posting will stop.</AlertDialogDescription>
+                          </AlertDialogHeader>
+                          <AlertDialogFooter>
+                            <AlertDialogCancel>Cancel</AlertDialogCancel>
+                            <AlertDialogAction onClick={handleFroggeDisconnect}>Disconnect</AlertDialogAction>
+                          </AlertDialogFooter>
+                        </AlertDialogContent>
+                      </AlertDialog>
                     </>
                   ) : (
                     <>

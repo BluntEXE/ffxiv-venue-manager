@@ -6,10 +6,22 @@ import { LocalTime } from "@/components/server-time"
 import { Card, CardContent } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from "@/components/ui/alert-dialog"
 import { StatReadout } from "@/components/ui/stat-readout"
 import { Coins, UserPlus, UserMinus, Users, Clock, StopCircle, Terminal, Radio } from "lucide-react"
 import { formatDistanceToNowStrict } from "date-fns"
 import { useRouter } from "next/navigation"
+import type { TimelineItem } from "@/components/timeline-feed"
 
 function formatDuration(ms: number): string {
   const s = Math.floor(ms / 1000)
@@ -31,7 +43,7 @@ interface LiveEvent {
 
 interface ActivityItem {
   id: string
-  type: "sale" | "patron_enter" | "patron_exit"
+  type: "sale" | "patron_enter" | "patron_exit" | "shift_start" | "shift_end"
   timestamp: string
   text: string
 }
@@ -90,7 +102,6 @@ export function LiveDashboard({
   const [ending, setEnding] = useState(false)
 
   async function handleEndEvent() {
-    if (!confirm(`End "${event.title}" now?`)) return
     setEnding(true)
     try {
       const res = await fetch(`/api/venues/${venueId}/events/${event.id}`, {
@@ -131,18 +142,32 @@ export function LiveDashboard({
       .then((data) => {
         if (!Array.isArray(data.items)) return
         setActivity(
-          data.items
-            .filter((item: any) => item.type !== "unknown")
-            .map((item: any) => ({
+          (data.items as TimelineItem[])
+            .filter(
+              (
+                item
+              ): item is Extract<
+                TimelineItem,
+                { type: "sale" | "patron_enter" | "patron_exit" | "shift_start" | "shift_end" }
+              > =>
+                item.type === "sale" ||
+                item.type === "patron_enter" ||
+                item.type === "patron_exit" ||
+                item.type === "shift_start" ||
+                item.type === "shift_end"
+            )
+            .map((item) => ({
               id: item.id,
-              type: item.type as ActivityItem["type"],
+              type: item.type,
               timestamp: item.timestamp,
               text:
                 item.type === "sale"
-                  ? `${item.data?.service?.name ? item.data.service.name + " · " : ""}${item.data?.customerName || "Someone"} — ${Number(item.data?.amount || 0).toLocaleString()} gil${item.data?.staff?.name ? " · " + item.data.staff.name : ""}`
+                  ? `${item.data.service?.name ? item.data.service.name + " · " : ""}${item.data.customerName || "Someone"} — ${Number(item.data.amount || 0).toLocaleString()} gil${item.data.staff?.name ? " · " + item.data.staff.name : ""}`
                   : item.type === "patron_enter"
-                    ? `${item.data?.characterName || "Unknown"} entered`
-                    : `${item.data?.characterName || "Unknown"} left`,
+                    ? `${item.data.characterName || "Unknown"} entered`
+                    : item.type === "patron_exit"
+                      ? `${item.data.characterName || "Unknown"} left`
+                      : `${item.data.staffName ?? "Staff"} ${item.type === "shift_start" ? "clocked in" : "clocked out"}`,
             }))
         )
       })
@@ -218,6 +243,22 @@ export function LiveDashboard({
                 ].slice(0, 50)
           )
         }
+        if (data.type === "shift_start" || data.type === "shift_end") {
+          const staffName = data.data.staffName ?? "Staff"
+          setActivity((prev) =>
+            prev.some((a) => a.id === data.id)
+              ? prev
+              : [
+                  {
+                    id: data.id,
+                    type: data.type as "shift_start" | "shift_end",
+                    timestamp: data.timestamp,
+                    text: `${staffName} ${data.type === "shift_start" ? "clocked in" : "clocked out"}`,
+                  },
+                  ...prev,
+                ].slice(0, 50)
+          )
+        }
       } catch {}
     }
     es.onerror = () => setConnected(false)
@@ -229,6 +270,8 @@ export function LiveDashboard({
       return "bg-[var(--success-soft)] border-[rgba(16,185,129,0.25)] text-[var(--success-text)]"
     if (type === "patron_exit") return "bg-[rgba(108,112,134,0.12)] border-[var(--border)] text-[var(--fg-faint)]"
     if (type === "sale") return "bg-[var(--blue-010)] border-[var(--blue-018)] text-[var(--xiv-blue)]"
+    if (type === "shift_start" || type === "shift_end")
+      return "bg-[rgba(249,226,175,0.08)] border-[rgba(249,226,175,0.25)] text-[var(--warning)]"
     return "bg-[var(--blue-010)] border-[var(--blue-018)] text-[var(--xiv-blue)]"
   }
 
@@ -251,15 +294,30 @@ export function LiveDashboard({
             Started <LocalTime date={event.startTime} formatStr="time" />
             {!isUpcoming && canManage && (
               <div className="flex gap-2 ml-4">
-                <Button
-                  variant="destructive"
-                  size="sm"
-                  className="opacity-80 hover:opacity-100"
-                  onClick={handleEndEvent}
-                  disabled={ending}
-                >
-                  <StopCircle className="h-3.5 w-3.5" /> {ending ? "Ending…" : "End"}
-                </Button>
+                <AlertDialog>
+                  <AlertDialogTrigger asChild>
+                    <Button
+                      variant="destructive"
+                      size="sm"
+                      className="opacity-80 hover:opacity-100"
+                      disabled={ending}
+                    >
+                      <StopCircle className="h-3.5 w-3.5" /> {ending ? "Ending…" : "End"}
+                    </Button>
+                  </AlertDialogTrigger>
+                  <AlertDialogContent>
+                    <AlertDialogHeader>
+                      <AlertDialogTitle>End &quot;{event.title}&quot; now?</AlertDialogTitle>
+                      <AlertDialogDescription>
+                        Marks it Completed and locks in attendance/revenue from what&apos;s logged so far.
+                      </AlertDialogDescription>
+                    </AlertDialogHeader>
+                    <AlertDialogFooter>
+                      <AlertDialogCancel>Cancel</AlertDialogCancel>
+                      <AlertDialogAction onClick={handleEndEvent}>End event</AlertDialogAction>
+                    </AlertDialogFooter>
+                  </AlertDialogContent>
+                </AlertDialog>
               </div>
             )}
           </div>
@@ -355,6 +413,8 @@ export function LiveDashboard({
                       <UserPlus className="w-4 h-4" />
                     ) : item.type === "patron_exit" ? (
                       <UserMinus className="w-4 h-4" />
+                    ) : item.type === "shift_start" || item.type === "shift_end" ? (
+                      <Clock className="w-4 h-4" />
                     ) : (
                       <Coins className="w-4 h-4" />
                     )}

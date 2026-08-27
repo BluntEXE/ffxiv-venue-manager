@@ -5,6 +5,7 @@ import { prisma } from "@/lib/prisma"
 import { withRateLimit } from "@/lib/middleware/with-rate-limit"
 import { subDays } from "date-fns"
 import { getRecentEventsFinancialSummary } from "@/lib/financial-calculations"
+import { canManageVenue } from "@/lib/roles"
 
 /**
  * Consolidated Analytics API
@@ -26,7 +27,7 @@ export const GET = withRateLimit<{ params: Promise<{ venueId: string }> }>(
       const { venueId } = await params
 
       // Look up venue by slug or ID
-      let venue = await prisma.venue.findFirst({
+      const venue = await prisma.venue.findFirst({
         where: {
           OR: [{ id: venueId }, { slug: venueId }],
         },
@@ -47,6 +48,10 @@ export const GET = withRateLimit<{ params: Promise<{ venueId: string }> }>(
 
       if (!membership) {
         return NextResponse.json({ error: "You don't have access to this venue" }, { status: 403 })
+      }
+
+      if (!canManageVenue(membership.role)) {
+        return NextResponse.json({ error: "Only owners and managers can view analytics" }, { status: 403 })
       }
 
       const now = new Date()

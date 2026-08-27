@@ -14,6 +14,9 @@ const eslintConfig = defineConfig([
     "out/**",
     "build/**",
     "next-env.d.ts",
+    // Standalone CJS ops scripts (run via `node <file>.js`, not part of ESM bundle):
+    "apply-indexes.js",
+    "clean-pending-owner.js",
   ]),
 ])
 

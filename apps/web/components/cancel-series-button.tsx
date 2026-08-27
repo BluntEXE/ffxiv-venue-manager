@@ -24,9 +24,11 @@ interface CancelSeriesButtonProps {
 export function CancelSeriesButton({ venueId, eventId, venueSlug }: CancelSeriesButtonProps) {
   const router = useRouter()
   const [isPending, setIsPending] = useState(false)
+  const [error, setError] = useState("")
 
   const handleCancel = async () => {
     setIsPending(true)
+    setError("")
     try {
       const response = await fetch(`/api/venues/${venueId}/events/${eventId}/cancel-series`, {
         method: "POST",
@@ -34,9 +36,8 @@ export function CancelSeriesButton({ venueId, eventId, venueSlug }: CancelSeries
       if (!response.ok) throw new Error("Failed to cancel series")
       router.push(`/dashboard/${venueSlug}/events`)
       router.refresh()
-    } catch (error) {
-      console.error("Error cancelling series:", error)
-      alert("Failed to cancel series. Please try again.")
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Failed to cancel series")
       setIsPending(false)
     }
   }
@@ -55,6 +56,7 @@ export function CancelSeriesButton({ venueId, eventId, venueSlug }: CancelSeries
             All future instances of this recurring event will be cancelled. Past and active events are not affected.
           </AlertDialogDescription>
         </AlertDialogHeader>
+        {error && <p className="text-sm text-destructive">{error}</p>}
         <AlertDialogFooter>
           <AlertDialogCancel>Keep series</AlertDialogCancel>
           <AlertDialogAction

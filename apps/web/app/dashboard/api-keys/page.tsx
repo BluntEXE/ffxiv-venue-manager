@@ -9,6 +9,17 @@ import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Badge } from "@/components/ui/badge"
 import { Alert, AlertDescription } from "@/components/ui/alert"
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from "@/components/ui/alert-dialog"
 import { LocalTime } from "@/components/server-time"
 
 interface ApiKey {
@@ -49,16 +60,6 @@ export default function UnifiedApiKeysPage() {
   const [error, setError] = useState("")
   const [success, setSuccess] = useState("")
 
-  useEffect(() => {
-    fetchData()
-  }, [])
-
-  useEffect(() => {
-    if (!success) return
-    const t = setTimeout(() => setSuccess(""), 3000)
-    return () => clearTimeout(t)
-  }, [success])
-
   async function fetchData() {
     setIsLoading(true)
     setError("")
@@ -82,6 +83,18 @@ export default function UnifiedApiKeysPage() {
       setIsLoading(false)
     }
   }
+
+  useEffect(() => {
+    // Genuine data fetch (sets venues/keys/loading state), not derivable from props/state during render.
+    // eslint-disable-next-line react-hooks/set-state-in-effect
+    fetchData()
+  }, [])
+
+  useEffect(() => {
+    if (!success) return
+    const t = setTimeout(() => setSuccess(""), 3000)
+    return () => clearTimeout(t)
+  }, [success])
 
   async function createApiKey() {
     if (!newKeyName.trim()) {
@@ -125,14 +138,6 @@ export default function UnifiedApiKeysPage() {
   }
 
   async function revokeApiKey(keyId: string) {
-    if (
-      !confirm(
-        "Revoke this API key? Any plugin installation using it will stop working immediately. This cannot be undone."
-      )
-    ) {
-      return
-    }
-
     try {
       const res = await fetch(`/api/plugin/keys/${keyId}`, {
         method: "DELETE",
@@ -396,9 +401,26 @@ export default function UnifiedApiKeysPage() {
                         {key.revokedAt ? (
                           <Badge variant="destructive">Revoked</Badge>
                         ) : (
-                          <Button variant="destructive" size="sm" onClick={() => revokeApiKey(key.id)}>
-                            Revoke
-                          </Button>
+                          <AlertDialog>
+                            <AlertDialogTrigger asChild>
+                              <Button variant="destructive" size="sm">
+                                Revoke
+                              </Button>
+                            </AlertDialogTrigger>
+                            <AlertDialogContent>
+                              <AlertDialogHeader>
+                                <AlertDialogTitle>Revoke this API key?</AlertDialogTitle>
+                                <AlertDialogDescription>
+                                  Any plugin installation using it will stop working immediately. This cannot be
+                                  undone.
+                                </AlertDialogDescription>
+                              </AlertDialogHeader>
+                              <AlertDialogFooter>
+                                <AlertDialogCancel>Cancel</AlertDialogCancel>
+                                <AlertDialogAction onClick={() => revokeApiKey(key.id)}>Revoke</AlertDialogAction>
+                              </AlertDialogFooter>
+                            </AlertDialogContent>
+                          </AlertDialog>
                         )}
                       </div>
                     </div>

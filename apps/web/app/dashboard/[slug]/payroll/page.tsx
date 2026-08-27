@@ -28,6 +28,17 @@ import { format } from "date-fns"
 import { Plus, DollarSign, Clock, CheckCircle2, XCircle, Zap, Trash2, Users } from "lucide-react"
 import { PageLoading } from "@/components/ui/loading-spinner"
 import { resolveDisplayName } from "@/lib/display-name"
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from "@/components/ui/alert-dialog"
 
 interface PayrollEntry {
   id: string
@@ -194,19 +205,6 @@ export default function PayrollPage() {
 
   const venueId = params?.slug as string
 
-  useEffect(() => {
-    if (status === "unauthenticated") {
-      router.push("/auth/signin")
-    }
-  }, [status, router])
-
-  useEffect(() => {
-    if (session && slug) {
-      fetchPayrollEntries()
-      fetchStaff()
-    }
-  }, [session, slug, filter, dateFrom, dateTo])
-
   const fetchPayrollEntries = async () => {
     try {
       const isPaidQuery = filter === "paid" ? "true" : filter === "unpaid" ? "false" : ""
@@ -267,6 +265,21 @@ export default function PayrollPage() {
       console.error("Error fetching staff:", error)
     }
   }
+
+  useEffect(() => {
+    if (status === "unauthenticated") {
+      router.push("/auth/signin")
+    }
+  }, [status, router])
+
+  useEffect(() => {
+    if (session && slug) {
+      // Genuine data fetch (sets payroll/staff/loading state), not derivable from props/state during render.
+      // eslint-disable-next-line react-hooks/set-state-in-effect
+      fetchPayrollEntries()
+      fetchStaff()
+    }
+  }, [session, slug, filter, dateFrom, dateTo])
 
   const handleCreatePayroll = async () => {
     setIsCreating(true)
@@ -346,12 +359,7 @@ export default function PayrollPage() {
     }
   }
 
-  const handleDeleteEntry = async (payrollId: string, isPaid: boolean) => {
-    const msg = isPaid
-      ? "This payroll entry is marked PAID. Deleting it removes the record of that payment. Continue?"
-      : "Delete this payroll entry? This cannot be undone."
-    if (!confirm(msg)) return
-
+  const handleDeleteEntry = async (payrollId: string) => {
     setUpdatingId(payrollId)
     try {
       const response = await fetch(`/api/venues/${slug}/payroll/${payrollId}`, {
@@ -801,8 +809,8 @@ export default function PayrollPage() {
                               onChange={(e) => setGenRateOverride(e.target.value)}
                             />
                             <p className="text-xs text-muted-foreground">
-                              By default, pay is resolved per shift (a shift's tagged role rate, then the staff member's
-                              own rate, then their primary role's rate). Setting a value here overrides all of that and
+                              By default, pay is resolved per shift (a shift&apos;s tagged role rate, then the staff member&apos;s
+                              own rate, then their primary role&apos;s rate). Setting a value here overrides all of that and
                               pays every hour in this period at this one flat rate.
                             </p>
                           </div>
@@ -858,7 +866,7 @@ export default function PayrollPage() {
                             <p className="text-xs text-amber-500">
                               {genPreview.summary.unresolvedShiftCount} shift
                               {genPreview.summary.unresolvedShiftCount !== 1 ? "s" : ""} skipped — no rate could be
-                              resolved (no role rate on the shift, no personal rate, no primary role rate). They'll stay
+                              resolved (no role rate on the shift, no personal rate, no primary role rate). They&apos;ll stay
                               eligible for a future payroll run once a rate exists.
                             </p>
                           )}
@@ -1312,16 +1320,35 @@ export default function PayrollPage() {
                             >
                               {updatingId === entry.id ? "…" : entry.isPaid ? "Mark unpaid" : "Mark paid"}
                             </Button>
-                            <Button
-                              variant="ghost"
-                              size="sm"
-                              className="text-[var(--fg-faint)] hover:text-destructive"
-                              onClick={() => handleDeleteEntry(entry.id, entry.isPaid)}
-                              disabled={updatingId === entry.id}
-                              aria-label="Delete"
-                            >
-                              <Trash2 className="h-4 w-4" />
-                            </Button>
+                            <AlertDialog>
+                              <AlertDialogTrigger asChild>
+                                <Button
+                                  variant="ghost"
+                                  size="sm"
+                                  className="text-[var(--fg-faint)] hover:text-destructive"
+                                  disabled={updatingId === entry.id}
+                                  aria-label="Delete"
+                                >
+                                  <Trash2 className="h-4 w-4" />
+                                </Button>
+                              </AlertDialogTrigger>
+                              <AlertDialogContent>
+                                <AlertDialogHeader>
+                                  <AlertDialogTitle>Delete this payroll entry?</AlertDialogTitle>
+                                  <AlertDialogDescription>
+                                    {entry.isPaid
+                                      ? "This entry is marked PAID. Deleting it removes the record of that payment."
+                                      : "This cannot be undone."}
+                                  </AlertDialogDescription>
+                                </AlertDialogHeader>
+                                <AlertDialogFooter>
+                                  <AlertDialogCancel>Cancel</AlertDialogCancel>
+                                  <AlertDialogAction onClick={() => handleDeleteEntry(entry.id)}>
+                                    Delete
+                                  </AlertDialogAction>
+                                </AlertDialogFooter>
+                              </AlertDialogContent>
+                            </AlertDialog>
                           </div>
                         </td>
                       </tr>

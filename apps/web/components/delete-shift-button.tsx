@@ -4,6 +4,17 @@ import { useState } from "react"
 import { Button } from "@/components/ui/button"
 import { useRouter } from "next/navigation"
 import { Trash2, Repeat, Layers } from "lucide-react"
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from "@/components/ui/alert-dialog"
 
 interface DeleteShiftButtonProps {
   venueSlug: string
@@ -23,8 +34,7 @@ export function DeleteShiftButton({
   const router = useRouter()
   const [deleting, setDeleting] = useState(false)
 
-  async function cancelVia(endpoint: "cancel-series" | "cancel-group", confirmText: string) {
-    if (!confirm(confirmText)) return
+  async function cancelVia(endpoint: "cancel-series" | "cancel-group") {
     setDeleting(true)
     try {
       const res = await fetch(`/api/venues/${venueSlug}/shifts/${shiftId}/${endpoint}`, {
@@ -44,19 +54,6 @@ export function DeleteShiftButton({
   }
 
   async function handleDelete() {
-    if (isRecurring) {
-      await cancelVia(
-        "cancel-series",
-        "Cancel this recurring series? All future instances of this slot will be cancelled. This cannot be undone."
-      )
-      return
-    }
-
-    const warning = hasPayroll
-      ? "Delete this shift and its linked payroll entry? This cannot be undone."
-      : "Delete this shift? This cannot be undone."
-    if (!confirm(warning)) return
-
     setDeleting(true)
     try {
       const res = await fetch(`/api/venues/${venueSlug}/shifts/${shiftId}`, {
@@ -77,32 +74,69 @@ export function DeleteShiftButton({
 
   return (
     <>
-      <Button
-        variant="ghost"
-        size="sm"
-        className={isRecurring ? "text-amber-400 hover:text-amber-400" : "text-destructive hover:text-destructive"}
-        onClick={handleDelete}
-        disabled={deleting}
-        aria-label={isRecurring ? "Cancel this slot" : "Delete shift"}
-      >
-        {deleting ? "..." : isRecurring ? <Repeat className="h-4 w-4" /> : <Trash2 className="h-4 w-4" />}
-      </Button>
+      <AlertDialog>
+        <AlertDialogTrigger asChild>
+          <Button
+            variant="ghost"
+            size="sm"
+            className={
+              isRecurring ? "text-amber-400 hover:text-amber-400" : "text-destructive hover:text-destructive"
+            }
+            disabled={deleting}
+            aria-label={isRecurring ? "Cancel this slot" : "Delete shift"}
+          >
+            {deleting ? "..." : isRecurring ? <Repeat className="h-4 w-4" /> : <Trash2 className="h-4 w-4" />}
+          </Button>
+        </AlertDialogTrigger>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>
+              {isRecurring
+                ? "Cancel this recurring series?"
+                : hasPayroll
+                  ? "Delete this shift and its linked payroll entry?"
+                  : "Delete this shift?"}
+            </AlertDialogTitle>
+            <AlertDialogDescription>
+              {isRecurring
+                ? "All future instances of this slot will be cancelled. This cannot be undone."
+                : "This cannot be undone."}
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction onClick={() => (isRecurring ? cancelVia("cancel-series") : handleDelete())}>
+              {isRecurring ? "Cancel series" : "Delete"}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
       {isRecurring && slotGroupId && (
-        <Button
-          variant="ghost"
-          size="sm"
-          className="text-amber-400 hover:text-amber-400"
-          onClick={() =>
-            cancelVia(
-              "cancel-group",
-              "Cancel all slots in this group? All future instances of every slot will be cancelled. This cannot be undone."
-            )
-          }
-          disabled={deleting}
-          aria-label="Cancel all slots"
-        >
-          {deleting ? "..." : <Layers className="h-4 w-4" />}
-        </Button>
+        <AlertDialog>
+          <AlertDialogTrigger asChild>
+            <Button
+              variant="ghost"
+              size="sm"
+              className="text-amber-400 hover:text-amber-400"
+              disabled={deleting}
+              aria-label="Cancel all slots"
+            >
+              {deleting ? "..." : <Layers className="h-4 w-4" />}
+            </Button>
+          </AlertDialogTrigger>
+          <AlertDialogContent>
+            <AlertDialogHeader>
+              <AlertDialogTitle>Cancel all slots in this group?</AlertDialogTitle>
+              <AlertDialogDescription>
+                All future instances of every slot will be cancelled. This cannot be undone.
+              </AlertDialogDescription>
+            </AlertDialogHeader>
+            <AlertDialogFooter>
+              <AlertDialogCancel>Cancel</AlertDialogCancel>
+              <AlertDialogAction onClick={() => cancelVia("cancel-group")}>Cancel all</AlertDialogAction>
+            </AlertDialogFooter>
+          </AlertDialogContent>
+        </AlertDialog>
       )}
     </>
   )

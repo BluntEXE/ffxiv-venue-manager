@@ -31,6 +31,7 @@ import { Alert, AlertDescription } from "@/components/ui/alert"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { format } from "date-fns"
 import { PageLoading } from "@/components/ui/loading-spinner"
+import { canManageVenue } from "@/lib/roles"
 
 interface Task {
   id: string
@@ -63,10 +64,19 @@ interface Role {
 
 const TASK_CATEGORIES = ["Setup", "Cleanup", "Promotional", "Maintenance", "Administrative", "Other"]
 
+// Matches the Discord task-notification embed colors (lib/discord-webhook.ts) so priority reads the same everywhere.
+const PRIORITY_COLORS: Record<string, string> = {
+  URGENT: "#ed4245",
+  HIGH: "#faa61a",
+  MEDIUM: "#3498db",
+  LOW: "#95a5a6",
+}
+
 export default function TasksPage({ params }: { params: Promise<{ slug: string }> }) {
   const [slug, setSlug] = useState<string>("")
   const [tasks, setTasks] = useState<Task[]>([])
   const [roles, setRoles] = useState<Role[]>([])
+  const [userRole, setUserRole] = useState<string | null>(null)
   const [isLoading, setIsLoading] = useState(true)
   const [error, setError] = useState("")
 
@@ -107,8 +117,9 @@ export default function TasksPage({ params }: { params: Promise<{ slug: string }
         if (!venueResponse.ok) throw new Error("Failed to fetch venue")
 
         const venues = await venueResponse.json()
-        const venue = venues.find((v: { slug: string }) => v.slug === slug)
+        const venue = venues.find((v: { slug: string; memberships: { role: string }[] }) => v.slug === slug)
         if (!venue) throw new Error("Venue not found")
+        setUserRole(venue.memberships?.[0]?.role ?? null)
 
         // Get tasks
         const tasksResponse = await fetch(`/api/venues/${venue.id}/tasks`)
@@ -325,10 +336,12 @@ export default function TasksPage({ params }: { params: Promise<{ slug: string }
             <VenueEyebrow slug={slug} />
             <h1 className="page-h1">Tasks</h1>
           </div>
-          <Button onClick={openCreateDialog} size="sm" className="sm:size-default self-start">
-            <span className="hidden sm:inline">Create Task</span>
-            <span className="sm:hidden">New Task</span>
-          </Button>
+          {canManageVenue(userRole) && (
+            <Button onClick={openCreateDialog} size="sm" className="sm:size-default self-start">
+              <span className="hidden sm:inline">Create Task</span>
+              <span className="sm:hidden">New Task</span>
+            </Button>
+          )}
         </div>
 
         {/* Toolbar */}
@@ -413,7 +426,8 @@ export default function TasksPage({ params }: { params: Promise<{ slug: string }
                         key={task.id}
                         className={`kcard${key === "COMPLETED" ? " done opacity-70" : ""}`}
                         onClick={() => handleStatusUpdate(task.id, next)}
-                        title={`Click to move to ${nextLabel === "Start" ? "In Progress" : nextLabel === "Complete" ? "Done" : "To Do"}`}
+                        title={`Click to move to ${nextLabel === "Start" ? "In Progress" : nextLabel === "Complete" ? "Done" : "To Do"} — ${task.priority.charAt(0) + task.priority.slice(1).toLowerCase()} priority`}
+                        style={{ borderLeftColor: PRIORITY_COLORS[task.priority], borderLeftWidth: "3px" }}
                       >
                         <p className="kt">{task.title}</p>
                         <div className="km">
@@ -487,48 +501,52 @@ export default function TasksPage({ params }: { params: Promise<{ slug: string }
                               <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z" />
                             </svg>
                           </button>
-                          <AlertDialog>
-                            <AlertDialogTrigger asChild>
-                              <button
-                                className="text-[var(--fg-faint)] hover:text-destructive transition-colors p-0.5 rounded"
-                                onClick={(e) => e.stopPropagation()}
-                                title="Delete"
-                              >
-                                <svg
-                                  className="w-3.5 h-3.5"
-                                  xmlns="http://www.w3.org/2000/svg"
-                                  viewBox="0 0 24 24"
-                                  fill="none"
-                                  stroke="currentColor"
-                                  strokeWidth="2"
+                          {canManageVenue(userRole) && (
+                            <AlertDialog>
+                              <AlertDialogTrigger asChild>
+                                <button
+                                  className="text-[var(--fg-faint)] hover:text-destructive transition-colors p-0.5 rounded"
+                                  onClick={(e) => e.stopPropagation()}
+                                  title="Delete"
                                 >
-                                  <polyline points="3 6 5 6 21 6" />
-                                  <path d="M19 6l-1 14H6L5 6" />
-                                  <path d="M10 11v6" />
-                                  <path d="M14 11v6" />
-                                  <path d="M9 6V4h6v2" />
-                                </svg>
-                              </button>
-                            </AlertDialogTrigger>
-                            <AlertDialogContent>
-                              <AlertDialogHeader>
-                                <AlertDialogTitle>Delete Task?</AlertDialogTitle>
-                                <AlertDialogDescription>
-                                  Are you sure you want to delete &quot;{task.title}&quot;? This cannot be undone.
-                                </AlertDialogDescription>
-                              </AlertDialogHeader>
-                              <AlertDialogFooter>
-                                <AlertDialogCancel>Cancel</AlertDialogCancel>
-                                <AlertDialogAction onClick={() => handleDeleteTask(task.id)}>Delete</AlertDialogAction>
-                              </AlertDialogFooter>
-                            </AlertDialogContent>
-                          </AlertDialog>
+                                  <svg
+                                    className="w-3.5 h-3.5"
+                                    xmlns="http://www.w3.org/2000/svg"
+                                    viewBox="0 0 24 24"
+                                    fill="none"
+                                    stroke="currentColor"
+                                    strokeWidth="2"
+                                  >
+                                    <polyline points="3 6 5 6 21 6" />
+                                    <path d="M19 6l-1 14H6L5 6" />
+                                    <path d="M10 11v6" />
+                                    <path d="M14 11v6" />
+                                    <path d="M9 6V4h6v2" />
+                                  </svg>
+                                </button>
+                              </AlertDialogTrigger>
+                              <AlertDialogContent>
+                                <AlertDialogHeader>
+                                  <AlertDialogTitle>Delete Task?</AlertDialogTitle>
+                                  <AlertDialogDescription>
+                                    Are you sure you want to delete &quot;{task.title}&quot;? This cannot be undone.
+                                  </AlertDialogDescription>
+                                </AlertDialogHeader>
+                                <AlertDialogFooter>
+                                  <AlertDialogCancel>Cancel</AlertDialogCancel>
+                                  <AlertDialogAction onClick={() => handleDeleteTask(task.id)}>
+                                    Delete
+                                  </AlertDialogAction>
+                                </AlertDialogFooter>
+                              </AlertDialogContent>
+                            </AlertDialog>
+                          )}
                         </div>
                       </div>
                     ))}
 
                     {/* New task shortcut on To Do column */}
-                    {key === "PENDING" && (
+                    {key === "PENDING" && canManageVenue(userRole) && (
                       <button
                         className="w-full text-xs text-[var(--fg-faint)] hover:text-[var(--xiv-blue)] border border-dashed border-[var(--blue-010)] hover:border-[var(--blue-035)] rounded-lg py-2 transition-colors mt-1"
                         onClick={openCreateDialog}
