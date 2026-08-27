@@ -13,6 +13,7 @@ import { LocalTime } from "@/components/server-time"
 import { format } from "date-fns"
 import { SyncPartakeButton } from "@/components/sync-partake-button"
 import { EndEventButton } from "@/components/end-event-button"
+import { canManageVenue } from "@/lib/roles"
 
 const statusColors = {
   DRAFT: "bg-zinc-500",
@@ -109,12 +110,14 @@ export default async function EventsPage({
           </div>
           <div className="flex items-center gap-2 self-start flex-wrap">
             {venue.partakeTeamId && <SyncPartakeButton venueId={venue.id} />}
-            <Button asChild size="sm">
-              <Link href={`/dashboard/${slug}/events/new`}>
-                <span className="hidden sm:inline">Create Event</span>
-                <span className="sm:hidden">New</span>
-              </Link>
-            </Button>
+            {canManageVenue(userRole) && (
+              <Button asChild size="sm">
+                <Link href={`/dashboard/${slug}/events/new`}>
+                  <span className="hidden sm:inline">Create Event</span>
+                  <span className="sm:hidden">New</span>
+                </Link>
+              </Button>
+            )}
           </div>
         </div>
 
@@ -258,7 +261,7 @@ export default async function EventsPage({
                                   <Badge className={statusColors[event.status as keyof typeof statusColors]}>
                                     {event.status}
                                   </Badge>
-                                  {event.status === "ACTIVE" && ["OWNER", "MANAGER"].includes(userRole) && (
+                                  {event.status === "ACTIVE" && canManageVenue(userRole) && (
                                     <EndEventButton venueId={venue.id} eventId={event.id} />
                                   )}
                                 </div>
@@ -338,7 +341,7 @@ export default async function EventsPage({
                         </div>
                       </div>
                       <div className="ev-right">
-                        {event.status === "ACTIVE" && ["OWNER", "MANAGER"].includes(userRole) && (
+                        {event.status === "ACTIVE" && canManageVenue(userRole) && (
                           <EndEventButton venueId={venue.id} eventId={event.id} />
                         )}
                         <Button asChild variant="outline" size="sm">

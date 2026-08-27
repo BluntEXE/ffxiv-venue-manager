@@ -1,7 +1,7 @@
 "use client"
 
 import { useEffect, useState } from "react"
-import { useParams } from "next/navigation"
+import { useParams, useRouter } from "next/navigation"
 import { VenueLayoutClient } from "@/components/venue-layout-client"
 import { VenueEyebrow } from "@/components/venue-eyebrow"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
@@ -75,6 +75,7 @@ interface AnalyticsData {
 
 export default function AnalyticsPage() {
   const params = useParams()
+  const router = useRouter()
   const slug = params?.slug as string
 
   const [analyticsData, setAnalyticsData] = useState<AnalyticsData | null>(null)
@@ -89,6 +90,10 @@ export default function AnalyticsPage() {
       const response = await fetch(`/api/venues/${slug}/analytics?period=${p}`)
 
       if (!response.ok) {
+        if (response.status === 403) {
+          router.replace(`/dashboard/${slug}`)
+          return
+        }
         const data = await response.json()
         throw new Error(data.error || "Failed to fetch analytics")
       }

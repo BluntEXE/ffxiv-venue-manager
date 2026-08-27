@@ -154,7 +154,9 @@
   --accent: var(--ctp-surface1);
   --accent-foreground: var(--ctp-text);
 
-  --destructive: var(--ctp-red);
+  /* Not var(--ctp-red) - that pastel tone fails WCAG AA with white button text (~2.3:1).
+     Using Catppuccin Latte's red instead, ~5.4:1 with white. */
+  --destructive: #d20f39;
   --destructive-foreground: var(--ctp-crust);
 
   --border: var(--ctp-surface0);
