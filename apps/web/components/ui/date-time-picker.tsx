@@ -15,14 +15,30 @@ interface DateTimePickerProps {
   placeholder?: string
 }
 
+/** A native time input reports "" while a segment is mid-entry, never a partial string. */
+function parseTime(value: string): [number, number] | [null, null] {
+  const [hoursStr, minutesStr] = value.split(":")
+  const hours = Number(hoursStr)
+  const minutes = Number(minutesStr)
+  if (!hoursStr || !minutesStr || Number.isNaN(hours) || Number.isNaN(minutes)) {
+    return [null, null]
+  }
+  return [hours, minutes]
+}
+
 export function DateTimePicker({ date, onDateChange, placeholder = "Pick a date and time" }: DateTimePickerProps) {
   const [selectedDate, setSelectedDate] = React.useState<Date | undefined>(date)
   const [time, setTime] = React.useState<string>(date ? format(date, "HH:mm") : "00:00")
 
   const handleDateSelect = (newDate: Date | undefined) => {
     if (newDate) {
-      const [hours, minutes] = time.split(":")
-      newDate.setHours(parseInt(hours), parseInt(minutes))
+      const [hours, minutes] = parseTime(time)
+      if (hours === null || minutes === null) {
+        setSelectedDate(newDate)
+        onDateChange(undefined)
+        return
+      }
+      newDate.setHours(hours, minutes)
       setSelectedDate(newDate)
       onDateChange(newDate)
     }
@@ -31,9 +47,13 @@ export function DateTimePicker({ date, onDateChange, placeholder = "Pick a date 
   const handleTimeChange = (newTime: string) => {
     setTime(newTime)
     if (selectedDate) {
-      const [hours, minutes] = newTime.split(":")
+      const [hours, minutes] = parseTime(newTime)
+      if (hours === null || minutes === null) {
+        onDateChange(undefined)
+        return
+      }
       const updatedDate = new Date(selectedDate)
-      updatedDate.setHours(parseInt(hours), parseInt(minutes))
+      updatedDate.setHours(hours, minutes)
       setSelectedDate(updatedDate)
       onDateChange(updatedDate)
     }
