@@ -22,10 +22,12 @@ interface EndEventButtonProps {
 
 export function EndEventButton({ venueId, eventId }: EndEventButtonProps) {
   const router = useRouter()
+  const [open, setOpen] = useState(false)
   const [isEnding, setIsEnding] = useState(false)
   const [error, setError] = useState("")
 
-  const handleEnd = async () => {
+  const handleEnd = async (e: React.MouseEvent<HTMLButtonElement>) => {
+    e.preventDefault()
     setIsEnding(true)
     setError("")
     try {
@@ -39,14 +41,22 @@ export function EndEventButton({ venueId, eventId }: EndEventButtonProps) {
         throw new Error(data.error || "Failed to end event")
       }
       router.refresh()
+      setOpen(false)
     } catch (err) {
       setError(err instanceof Error ? err.message : "Failed to end event")
+    } finally {
       setIsEnding(false)
     }
   }
 
   return (
-    <AlertDialog>
+    <AlertDialog
+      open={open}
+      onOpenChange={(next) => {
+        setOpen(next)
+        if (!next) setError("")
+      }}
+    >
       <AlertDialogTrigger asChild>
         <Button variant="outline" size="sm">
           End
