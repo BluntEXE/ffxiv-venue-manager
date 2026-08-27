@@ -90,13 +90,6 @@ export default function ManageStaffMemberPage({ params }: { params: Promise<{ sl
     })
   }, [params])
 
-  // Strip primary custom role out of additional roles if duplicated
-  useEffect(() => {
-    if (selectedCustomRole) {
-      setSelectedAdditionalRoleIds((prev) => prev.filter((id) => id !== selectedCustomRole))
-    }
-  }, [selectedCustomRole])
-
   // Fetch staff member and custom roles
   useEffect(() => {
     if (!slug || !membershipId) return
@@ -119,7 +112,7 @@ export default function ManageStaffMemberPage({ params }: { params: Promise<{ sl
         if (!staffResponse.ok) throw new Error("Failed to fetch staff")
 
         const staffData = await staffResponse.json()
-        const member = staffData.find((s: any) => s.id === membershipId)
+        const member = staffData.find((s: StaffMember) => s.id === membershipId)
 
         if (!member) {
           throw new Error("Staff member not found")
@@ -173,7 +166,9 @@ export default function ManageStaffMemberPage({ params }: { params: Promise<{ sl
         body: JSON.stringify({
           role: selectedRole,
           roleId: selectedCustomRole,
-          additionalRoleIds: selectedAdditionalRoleIds,
+          // Excludes only the current primary role, not a running history of past selections.
+          // Recomputing from final state avoids the old effect's cumulative stripping across selection changes.
+          additionalRoleIds: selectedAdditionalRoleIds.filter((id) => id !== selectedCustomRole),
         }),
       })
 
@@ -350,7 +345,7 @@ export default function ManageStaffMemberPage({ params }: { params: Promise<{ sl
         <Card className="mb-6">
           <CardHeader>
             <CardTitle>Role Management</CardTitle>
-            <CardDescription>Update this staff member's base role and custom role</CardDescription>
+            <CardDescription>Update this staff member&apos;s base role and custom role</CardDescription>
           </CardHeader>
           <CardContent className="space-y-6">
             {/* Base Role */}
@@ -463,7 +458,7 @@ export default function ManageStaffMemberPage({ params }: { params: Promise<{ sl
           <Card className="mb-6">
             <CardHeader>
               <CardTitle>Tip Pooling</CardTitle>
-              <CardDescription>Pool tips into the venue's pot, or keep them individually.</CardDescription>
+              <CardDescription>Pool tips into the venue&apos;s pot, or keep them individually.</CardDescription>
             </CardHeader>
             <CardContent>
               <label className="flex items-center gap-2 cursor-pointer">

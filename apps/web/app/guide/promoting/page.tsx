@@ -211,8 +211,8 @@ export default function PromotingGuidePage() {
             where you are.
           </p>
           <p className="text-muted-foreground leading-relaxed">
-            Keep shouts brief. Venue name, type, ward and plot, and a reason to come tonight. A generic "we are open,
-            come visit" loses to a shout that gives patrons a specific reason to show up.
+            Keep shouts brief. Venue name, type, ward and plot, and a reason to come tonight. A generic &quot;we are open,
+            come visit&quot; loses to a shout that gives patrons a specific reason to show up.
           </p>
           <p className="text-muted-foreground leading-relaxed">
             Shout on your home world and, when you have reason to travel, from the aetheryte plaza or residential hubs

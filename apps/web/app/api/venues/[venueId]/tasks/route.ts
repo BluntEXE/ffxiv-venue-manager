@@ -12,6 +12,7 @@ import {
 import { withRateLimit } from "@/lib/middleware/with-rate-limit"
 import type { NotificationType } from "@/lib/notify"
 import { validators } from "@/lib/validation"
+import { Prisma, type TaskStatus, type TaskPriority } from "@/generated/prisma/client"
 
 const createTaskSchema = z.object({
   title: validators.taskTitle,
@@ -61,13 +62,13 @@ export const GET = withRateLimit<{ params: Promise<{ venueId: string }> }>(
         select: { settings: true },
       })
 
-      const venueSettings = venue?.settings as any
+      const venueSettings = venue?.settings as Record<string, unknown> | undefined
 
       // Build where clause
-      const where: any = { venueId }
-      if (status) where.status = status
+      const where: Prisma.TaskWhereInput = { venueId }
+      if (status) where.status = status as TaskStatus
       if (assignedTo) where.assignedTo = assignedTo
-      if (priority) where.priority = priority
+      if (priority) where.priority = priority as TaskPriority
 
       // Apply task visibility settings for STAFF members
       if (membership.role === "STAFF" && venueSettings?.taskVisibility) {
@@ -209,9 +210,10 @@ export const POST = withRateLimit<{ params: Promise<{ venueId: string }> }>(
       })
 
       if (venue) {
+        const venueSettings = venue.settings as Record<string, unknown> | null
         const webhookConfig: VenueWebhookConfig = {
-          discordWebhooks: (venue.settings as any)?.discordWebhooks,
-          webhooks: (venue.settings as any)?.webhooks,
+          discordWebhooks: venueSettings?.discordWebhooks as VenueWebhookConfig["discordWebhooks"],
+          webhooks: venueSettings?.webhooks as VenueWebhookConfig["webhooks"],
           discordWebhookUrl: venue.discordWebhookUrl,
         }
 
