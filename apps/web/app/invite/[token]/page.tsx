@@ -6,8 +6,14 @@ import { useRouter } from "next/navigation"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { LocalTime } from "@/components/server-time"
-import { AlertCircle, CheckCircle2, Loader2, Users } from "lucide-react"
+import { AlertCircle, CheckCircle2, Loader2, Users, BookOpen } from "lucide-react"
 import { Alert, AlertDescription } from "@/components/ui/alert"
+
+const GUIDE_LINK_BY_ROLE: Record<string, { href: string; label: string }> = {
+  OWNER: { href: "/guide/owner", label: "Owner & Manager Guide" },
+  MANAGER: { href: "/guide/owner", label: "Owner & Manager Guide" },
+  STAFF: { href: "/guide/staff", label: "Staff Guide" },
+}
 
 interface InviteDetails {
   venue: {
@@ -32,6 +38,8 @@ export default function InvitePage({ params }: { params: Promise<{ token: string
   const [accepting, setAccepting] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [success, setSuccess] = useState(false)
+  const [acceptedVenueSlug, setAcceptedVenueSlug] = useState<string | null>(null)
+  const [acceptedRole, setAcceptedRole] = useState<string | null>(null)
 
   async function handleAcceptInvite() {
     setAccepting(true)
@@ -50,17 +58,13 @@ export default function InvitePage({ params }: { params: Promise<{ token: string
       }
 
       const data = await response.json()
+      setAcceptedVenueSlug(data.venue.slug)
+      setAcceptedRole(data.membership.role)
       setSuccess(true)
 
-      // Redirect to venue dashboard after 2 seconds
-      // Force router cache refresh to pick up new membership
+      // Refresh now so the dashboard has the new membership ready by the time
+      // the user clicks through - they choose when to leave this screen.
       router.refresh()
-
-      // Redirect to venue dashboard after 1 second
-      setTimeout(() => {
-        router.push(`/dashboard/${data.venue.slug}`)
-        router.refresh() // Refresh again after navigation
-      }, 1000)
     } catch (err) {
       console.error("Error accepting invite:", err)
       setError("Failed to accept invite")
@@ -149,6 +153,8 @@ export default function InvitePage({ params }: { params: Promise<{ token: string
   }
 
   if (success) {
+    const guide = acceptedRole ? GUIDE_LINK_BY_ROLE[acceptedRole] : undefined
+
     return (
       <div className="container flex min-h-screen items-center justify-center">
         <Card className="w-full max-w-md">
@@ -158,13 +164,31 @@ export default function InvitePage({ params }: { params: Promise<{ token: string
               Invite Accepted!
             </CardTitle>
           </CardHeader>
-          <CardContent>
+          <CardContent className="space-y-4">
             <Alert className="bg-green-400/10 border-green-400/20">
               <AlertDescription className="text-emerald-400">
                 You have successfully joined <strong>{inviteDetails?.venue.name}</strong> as{" "}
-                <strong>{inviteDetails?.role.toLowerCase()}</strong>. Redirecting to dashboard...
+                <strong>{inviteDetails?.role.toLowerCase()}</strong>.
               </AlertDescription>
             </Alert>
+
+            {guide && (
+              <a href={guide.href} target="_blank" rel="noopener noreferrer" className="block">
+                <Button variant="outline" className="w-full">
+                  <BookOpen className="mr-2 h-4 w-4" />
+                  Read the {guide.label}
+                </Button>
+              </a>
+            )}
+
+            <Button
+              className="w-full"
+              size="lg"
+              onClick={() => acceptedVenueSlug && router.push(`/dashboard/${acceptedVenueSlug}`)}
+              disabled={!acceptedVenueSlug}
+            >
+              Continue to dashboard
+            </Button>
           </CardContent>
         </Card>
       </div>
