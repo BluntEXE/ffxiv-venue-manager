@@ -139,12 +139,21 @@ export class XvmApiError extends Error {
   }
 }
 
-// xvm-api's ErrorDetail schema is {detail: string} — err.body is the raw response
-// text, so forwarding it as-is renders a JSON blob to the user instead of the message.
+// xvm-api's explicit ErrorDetail schema is {detail: string}, but FastAPI's own
+// 422 validation responses (bad query/body shape, or a Pydantic model_validator
+// raising ValueError) use {detail: [{msg: string, ...}, ...]} instead - err.body
+// is the raw response text either way, so forwarding it as-is renders a JSON
+// blob to the user instead of the message.
 export function xvmErrorMessage(err: XvmApiError): string {
   try {
     const parsed = JSON.parse(err.body)
     if (typeof parsed?.detail === "string") return parsed.detail
+    if (Array.isArray(parsed?.detail)) {
+      const messages = parsed.detail
+        .map((d: unknown) => (d && typeof d === "object" && "msg" in d ? String((d as { msg: unknown }).msg) : null))
+        .filter((m: string | null): m is string => m !== null)
+      if (messages.length > 0) return messages.join("; ")
+    }
   } catch {
     // body wasn't JSON, fall through to the raw text below
   }
