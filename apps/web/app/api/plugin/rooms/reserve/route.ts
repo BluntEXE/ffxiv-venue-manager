@@ -17,7 +17,11 @@ import { parsePluginRoomId } from "@/lib/api/plugin-rooms"
 const bodySchema = z.object({
   venueId: z.string().min(1),
   roomId: z.string().min(1),
-  durationMinutes: z.number().int().positive(),
+  // 480 matches the plugin's own longest dropdown option (8 hr) - this
+  // reservation gets a real end_at, so unlike an open-ended plugin_auto
+  // hold, the maintenance worker's stale-hold sweep can never recover an
+  // oversized one early.
+  durationMinutes: z.number().int().positive().max(480),
 })
 
 export async function POST(request: NextRequest) {
@@ -60,15 +64,18 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: "xvm-api link not established yet" }, { status: 503 })
     }
 
-    // xvm-api requires a holder (reserved_person_id or reserved_character_name) on
-    // every reservation - the plugin doesn't send a specific in-game character for
-    // this ad-hoc flow, so the acting dashboard user's own person id fills that role.
-    const personId = await getValidXvmApiPersonId(auth.userId)
-    if (personId === null) {
-      return NextResponse.json({ error: "xvm-api link needs to be refreshed" }, { status: 503 })
-    }
-
     try {
+      // xvm-api requires a holder (reserved_person_id or reserved_character_name)
+      // on every reservation - the plugin doesn't send a specific in-game character
+      // for this ad-hoc flow, so the acting dashboard user's own person id fills
+      // that role. Fetched inside this try block, not before it: getMe() can throw
+      // the same XvmApiError a stale/expired token throws from createReservation,
+      // and needs the same 503-and-invalidate handling, not the outer 500.
+      const personId = await getValidXvmApiPersonId(auth.userId)
+      if (personId === null) {
+        return NextResponse.json({ error: "xvm-api link needs to be refreshed" }, { status: 503 })
+      }
+
       const startAt = new Date()
       const endAt = new Date(startAt.getTime() + durationMinutes * 60_000)
       const reservation = await createReservation(token, venue.xvmApiVenueId, id, {
