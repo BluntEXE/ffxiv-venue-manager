@@ -107,10 +107,6 @@ export interface ReservationCreate {
   source: ReservationSource
 }
 
-export interface RoomImageCreate {
-  image_url: string
-}
-
 // ── Venues API ─────────────────────────────────────────────────
 
 export interface VenueCreate {
@@ -161,8 +157,11 @@ export function xvmErrorMessage(err: XvmApiError): string {
 }
 
 async function xvmFetch<T>(path: string, options: RequestInit = {}, bearerToken?: string): Promise<T> {
-  const headers: Record<string, string> = {
-    "Content-Type": "application/json",
+  const headers: Record<string, string> = {}
+  // FormData bodies must NOT get an explicit Content-Type - fetch generates the
+  // multipart boundary itself and only does so when it owns the header.
+  if (!(options.body instanceof FormData)) {
+    headers["Content-Type"] = "application/json"
   }
   if (bearerToken) {
     headers["Authorization"] = `Bearer ${bearerToken}`
@@ -280,16 +279,21 @@ export async function cancelReservation(
   )
 }
 
+// xvm-api's gallery POSTs take multipart bytes now (validated, re-encoded to WebP
+// server-side), not a JSON {image_url} - `file` is whatever the browser's <input
+// type="file"> or a drag-drop handler already hands you.
 export async function uploadRoomImage(
   personToken: string,
   venueId: string,
   roomId: number,
-  data: RoomImageCreate
+  file: File | Blob
 ): Promise<RoomImage> {
   if (!process.env.XVM_API_BASE_URL) throw new Error("XVM_API_BASE_URL is not set")
+  const form = new FormData()
+  form.append("file", file)
   return xvmFetch<RoomImage>(
     `/venues/${venueId}/rooms/${roomId}/images`,
-    { method: "POST", body: JSON.stringify(data) },
+    { method: "POST", body: form },
     personToken
   )
 }
