@@ -26,10 +26,11 @@ export default async function RoomsPage({ params }: { params: Promise<{ slug: st
   const userRole = venue.memberships[0].role
 
   let rooms: RoomItem[] = []
+  const notConnected = !venue.xvmApiVenueId
   const token = await getValidXvmApiToken(session.user.id)
-  if (token) {
+  if (token && venue.xvmApiVenueId) {
     try {
-      rooms = await listRooms(token, venue.id)
+      rooms = await listRooms(token, venue.xvmApiVenueId)
     } catch (err) {
       if (err instanceof XvmApiError && err.status !== 401) {
         console.error("[rooms page] listRooms error:", err)
@@ -60,6 +61,7 @@ export default async function RoomsPage({ params }: { params: Promise<{ slug: st
           venueId={venue.id}
           canManage={["OWNER", "MANAGER"].includes(userRole)}
           rooms={rooms}
+          notConnected={notConnected}
         />
 
         <RoomManagerRoles
