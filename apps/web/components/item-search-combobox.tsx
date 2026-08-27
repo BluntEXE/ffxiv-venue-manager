@@ -21,12 +21,11 @@ export function ItemSearchCombobox({ venueId, value, onChange }: ItemSearchCombo
   const [isOpen, setIsOpen] = useState(false)
   const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null)
 
+  const visibleResults = query.trim().length >= 2 ? results : []
+
   useEffect(() => {
     if (debounceRef.current) clearTimeout(debounceRef.current)
-    if (query.trim().length < 2) {
-      setResults([])
-      return
-    }
+    if (query.trim().length < 2) return
     debounceRef.current = setTimeout(async () => {
       const res = await fetch(`/api/venues/${venueId}/inventory/item-search?query=${encodeURIComponent(query)}`)
       if (res.ok) {
@@ -50,9 +49,9 @@ export function ItemSearchCombobox({ venueId, value, onChange }: ItemSearchCombo
         }}
         placeholder="Search FFXIV item…"
       />
-      {isOpen && results.length > 0 && (
+      {isOpen && visibleResults.length > 0 && (
         <div className="absolute z-10 mt-1 w-full max-h-48 overflow-y-auto rounded-md border bg-popover shadow-md">
-          {results.map((item) => (
+          {visibleResults.map((item) => (
             <button
               key={item.itemId}
               type="button"

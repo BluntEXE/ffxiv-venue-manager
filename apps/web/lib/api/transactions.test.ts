@@ -34,7 +34,7 @@ vi.mock("@/lib/discord-webhook", () => ({
 vi.mock("@/lib/redis-cache", () => ({ invalidateCache: vi.fn() }))
 vi.mock("@/lib/display-name", () => ({ resolveDisplayName: vi.fn(() => "Staffer") }))
 
-import { createTransaction, InsufficientStockError } from "./transactions"
+import { createTransaction, InsufficientStockError, type CreateTransactionInput } from "./transactions"
 
 describe("createTransaction stock enforcement", () => {
   beforeEach(() => {
@@ -61,7 +61,7 @@ describe("createTransaction stock enforcement", () => {
       type: "SALE",
       amount: 10,
       customerName: "Bob",
-    } as any)
+    } satisfies CreateTransactionInput)
 
     await expect(call).rejects.toThrow(InsufficientStockError)
     await expect(call).rejects.toThrow("Potion is out of stock")
@@ -78,7 +78,7 @@ describe("createTransaction stock enforcement", () => {
         type: "SALE",
         amount: 10,
         customerName: "Bob",
-      } as any)
+      } satisfies CreateTransactionInput)
     ).resolves.toBeDefined()
 
     expect(mockTransaction.create).toHaveBeenCalled()
@@ -92,7 +92,7 @@ describe("createTransaction stock enforcement", () => {
       type: "SALE",
       amount: 10,
       customerName: "Bob",
-    } as any)
+    } satisfies CreateTransactionInput)
 
     expect(mockTx).toHaveBeenCalled()
     expect(mockTransaction.create).toHaveBeenCalled()
@@ -107,7 +107,7 @@ describe("createTransaction stock enforcement", () => {
         type: "TIP",
         amount: 10,
         customerName: "Bob",
-      } as any)
+      } satisfies CreateTransactionInput)
     ).resolves.toBeDefined()
 
     expect(mockService.findUnique).not.toHaveBeenCalled()

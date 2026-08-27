@@ -5,6 +5,7 @@ import { prisma } from "@/lib/prisma"
 import { z } from "zod"
 import { withRateLimit } from "@/lib/middleware/with-rate-limit"
 import { validators } from "@/lib/validation"
+import { Prisma } from "@/generated/prisma/client"
 
 const updateStaffSchema = z.object({
   role: z.enum(["OWNER", "MANAGER", "STAFF"]).optional(),
@@ -100,9 +101,9 @@ export const PUT = withRateLimit<{ params: Promise<{ venueId: string; membership
           return NextResponse.json({ error: "You don't have permission to update staff" }, { status: 403 })
         }
 
-        // Managers cannot modify owners
-        if (userMembership.role === "MANAGER" && targetMembership.role === "OWNER") {
-          return NextResponse.json({ error: "Managers cannot modify owners" }, { status: 403 })
+        // Managers can only modify staff, not peer managers or owners
+        if (userMembership.role === "MANAGER" && targetMembership.role !== "STAFF") {
+          return NextResponse.json({ error: "Managers can only modify staff" }, { status: 403 })
         }
       }
 
@@ -122,7 +123,7 @@ export const PUT = withRateLimit<{ params: Promise<{ venueId: string; membership
       }
 
       // Prepare update data, converting date strings to Date objects
-      const updateData: any = {}
+      const updateData: Prisma.MembershipUncheckedUpdateInput = {}
       if (validatedData.role !== undefined) updateData.role = validatedData.role
       if (validatedData.roleId !== undefined) updateData.roleId = validatedData.roleId
       if (validatedData.status !== undefined) updateData.status = validatedData.status
@@ -223,8 +224,8 @@ export const DELETE = withRateLimit<{ params: Promise<{ venueId: string; members
         },
       })
 
-      if (!userMembership || userMembership.role !== "OWNER") {
-        return NextResponse.json({ error: "Only owners can remove staff" }, { status: 403 })
+      if (!userMembership || !["OWNER", "MANAGER"].includes(userMembership.role)) {
+        return NextResponse.json({ error: "You don't have permission to remove staff" }, { status: 403 })
       }
 
       // Get the membership being deleted
@@ -234,6 +235,11 @@ export const DELETE = withRateLimit<{ params: Promise<{ venueId: string; members
 
       if (!targetMembership) {
         return NextResponse.json({ error: "Staff member not found" }, { status: 404 })
+      }
+
+      // Managers can only remove staff, not peer managers or owners
+      if (userMembership.role === "MANAGER" && targetMembership.role !== "STAFF") {
+        return NextResponse.json({ error: "Managers can only remove staff" }, { status: 403 })
       }
 
       // Cannot remove the venue owner
@@ -279,8 +285,8 @@ export const DELETE = withRateLimit<{ params: Promise<{ venueId: string; members
               timeout: 5000,
             }
           )
-        } catch (txError: any) {
-          if (txError.message === "LAST_OWNER") {
+        } catch (txError) {
+          if (txError instanceof Error && txError.message === "LAST_OWNER") {
             return NextResponse.json(
               { error: "Cannot remove the last owner. Promote another member to owner first." },
               { status: 400 }

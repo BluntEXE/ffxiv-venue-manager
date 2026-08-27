@@ -62,21 +62,6 @@ export default function ApiKeysPage({ params }: { params: Promise<{ slug: string
   const [error, setError] = useState("")
   const [success, setSuccess] = useState("")
 
-  useEffect(() => {
-    params.then((p) => {
-      setSlug(p.slug)
-      fetchData(p.slug)
-    })
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [params])
-
-  // Auto-dismiss success messages after 3s so they don't stack up.
-  useEffect(() => {
-    if (!success) return
-    const t = setTimeout(() => setSuccess(""), 3000)
-    return () => clearTimeout(t)
-  }, [success])
-
   async function fetchData(venueSlug: string) {
     setIsLoading(true)
     setError("")
@@ -119,6 +104,21 @@ export default function ApiKeysPage({ params }: { params: Promise<{ slug: string
       setIsLoading(false)
     }
   }
+
+  useEffect(() => {
+    params.then((p) => {
+      setSlug(p.slug)
+      fetchData(p.slug)
+    })
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [params])
+
+  // Auto-dismiss success messages after 3s so they don't stack up.
+  useEffect(() => {
+    if (!success) return
+    const t = setTimeout(() => setSuccess(""), 3000)
+    return () => clearTimeout(t)
+  }, [success])
 
   // Show account-wide keys + keys scoped to this venue.
   const venueKeys = useMemo(() => apiKeys.filter((k) => !k.venue || k.venue.slug === slug), [apiKeys, slug])
