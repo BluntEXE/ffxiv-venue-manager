@@ -430,8 +430,7 @@ export default function ServicesPage({ params }: { params: Promise<{ slug: strin
         ) : services.length === 0 ? (
           <Card className="text-center py-12">
             <CardContent>
-              <p className="text-muted-foreground mb-4">No services configured yet.</p>
-              <Button onClick={openCreateDialog}>Add Your First Service</Button>
+              <p className="text-muted-foreground">No services configured yet.</p>
             </CardContent>
           </Card>
         ) : (

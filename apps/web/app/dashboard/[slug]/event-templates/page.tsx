@@ -252,10 +252,6 @@ export default function EventTemplatesPage() {
               <p className="font-cinzel font-semibold tracking-wide">No Templates Yet</p>
               <p className="text-sm text-muted-foreground mt-1">Save time by templating your recurring events.</p>
             </div>
-            <Button onClick={openCreateDialog} className="xiv-cta">
-              <Plus className="mr-2 h-4 w-4" />
-              Create Template
-            </Button>
           </div>
         ) : (
           <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
