@@ -58,7 +58,8 @@ export function ClockShiftButton({ venueSlug, shiftId, action, staffName }: Cloc
           size="sm"
           className={isClockIn ? "text-emerald-500 hover:text-emerald-400" : "text-amber-500 hover:text-amber-400"}
           disabled={loading}
-          aria-label={isClockIn ? "Clock in staff" : "Clock out staff"}
+          aria-label={`${label} ${staffName}`}
+          title={`${label} ${staffName}`}
         >
           {loading ? "..." : isClockIn ? <LogIn className="h-4 w-4" /> : <LogOut className="h-4 w-4" />}
         </Button>
