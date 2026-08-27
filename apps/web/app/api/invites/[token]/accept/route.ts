@@ -101,9 +101,10 @@ export async function POST(request: Request, { params }: { params: Promise<{ tok
     }).catch(() => {})
 
     // Send Discord webhook notification if configured
+    const venueSettings = membership.venue.settings as Record<string, unknown> | null
     const webhookConfig: VenueWebhookConfig = {
-      discordWebhooks: (membership.venue.settings as any)?.discordWebhooks,
-      webhooks: (membership.venue.settings as any)?.webhooks,
+      discordWebhooks: venueSettings?.discordWebhooks as VenueWebhookConfig["discordWebhooks"],
+      webhooks: venueSettings?.webhooks as VenueWebhookConfig["webhooks"],
       discordWebhookUrl: membership.venue.discordWebhookUrl,
     }
 

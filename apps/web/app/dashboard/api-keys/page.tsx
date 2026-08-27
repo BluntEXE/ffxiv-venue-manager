@@ -49,16 +49,6 @@ export default function UnifiedApiKeysPage() {
   const [error, setError] = useState("")
   const [success, setSuccess] = useState("")
 
-  useEffect(() => {
-    fetchData()
-  }, [])
-
-  useEffect(() => {
-    if (!success) return
-    const t = setTimeout(() => setSuccess(""), 3000)
-    return () => clearTimeout(t)
-  }, [success])
-
   async function fetchData() {
     setIsLoading(true)
     setError("")
@@ -82,6 +72,18 @@ export default function UnifiedApiKeysPage() {
       setIsLoading(false)
     }
   }
+
+  useEffect(() => {
+    // Genuine data fetch (sets venues/keys/loading state), not derivable from props/state during render.
+    // eslint-disable-next-line react-hooks/set-state-in-effect
+    fetchData()
+  }, [])
+
+  useEffect(() => {
+    if (!success) return
+    const t = setTimeout(() => setSuccess(""), 3000)
+    return () => clearTimeout(t)
+  }, [success])
 
   async function createApiKey() {
     if (!newKeyName.trim()) {

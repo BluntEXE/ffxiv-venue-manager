@@ -1,6 +1,6 @@
 "use client"
 
-import { Fragment, useEffect, useState } from "react"
+import { Fragment } from "react"
 import { Copy } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
@@ -13,6 +13,7 @@ import { DeleteShiftButton } from "@/components/delete-shift-button"
 import { ClockShiftButton } from "@/components/clock-shift-button"
 import { localDayKey, localHourLabel, browserTimeZone, localTimeInput } from "@/lib/local-day"
 import { staffNameOf, type ShiftRow } from "@/lib/shift-format"
+import { useMounted } from "@/lib/use-mounted"
 
 const ST_TZ = "Etc/UTC"
 
@@ -70,8 +71,7 @@ export interface ShiftsWeekViewProps {
 }
 
 export function ShiftsWeekView(props: ShiftsWeekViewProps) {
-  const [mounted, setMounted] = useState(false)
-  useEffect(() => setMounted(true), [])
+  const mounted = useMounted()
   const timeZone = mounted ? browserTimeZone() : ST_TZ
   const dayKeyOf = (d: Date | string) => (mounted ? localDayKey(d, timeZone) : utcDayKey(new Date(d)))
   const hourLabelOf = (d: Date | string) =>

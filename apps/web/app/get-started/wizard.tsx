@@ -504,7 +504,7 @@ export function GetStartedWizard({ userName }: { userName: string }) {
                   </div>
                 ))}
                 <p style={{ color: "var(--muted-foreground)", fontSize: "0.9rem", marginTop: 16, lineHeight: 1.55 }}>
-                  Ready? We'll create your venue and take you straight to the dashboard. Install the Dalamud plugin to
+                  Ready? We&apos;ll create your venue and take you straight to the dashboard. Install the Dalamud plugin to
                   start capturing patrons and logging sales.
                 </p>
                 <div
