@@ -315,8 +315,7 @@ export default function RolesPage({ params }: { params: Promise<{ slug: string }
         ) : roles.length === 0 ? (
           <Card className="text-center py-12">
             <CardContent>
-              <p className="text-muted-foreground mb-4">No custom roles yet. Create one to organize your staff!</p>
-              {canManageVenue(userRole) && <Button onClick={openCreateDialog}>Create Your First Role</Button>}
+              <p className="text-muted-foreground">No custom roles yet.</p>
             </CardContent>
           </Card>
         ) : (

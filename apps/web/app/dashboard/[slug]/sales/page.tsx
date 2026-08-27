@@ -300,8 +300,7 @@ export default async function SalesPage({ params }: PageProps) {
             {transactions.length === 0 ? (
               <Card className="text-center py-12">
                 <CardContent>
-                  <p className="text-muted-foreground mb-4">No sales recorded yet.</p>
-                  <SalesLogDialog venueId={venue.id} services={servicesWithNumberPrices} events={activeEvents} />
+                  <p className="text-muted-foreground">No sales recorded yet.</p>
                 </CardContent>
               </Card>
             ) : (
