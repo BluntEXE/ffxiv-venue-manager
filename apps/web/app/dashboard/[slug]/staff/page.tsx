@@ -16,6 +16,7 @@ import { StaffTable } from "@/components/staff-table"
 import { VenueLayout } from "@/components/venue-layout"
 
 import { RoleBadge } from "@/components/role-badge"
+import { StaffVisibilitySettings } from "@/components/staff-visibility-settings"
 
 export default async function StaffPage({ params }: { params: Promise<{ slug: string }> }) {
   const session = await getServerSession(authOptions)
@@ -240,6 +241,8 @@ export default async function StaffPage({ params }: { params: Promise<{ slug: st
             slug={slug}
             canManageStaff={canManageStaff}
           />
+
+          {canManageStaff && <StaffVisibilitySettings venueId={venue.id} />}
         </div>
       </div>
     </VenueLayout>
