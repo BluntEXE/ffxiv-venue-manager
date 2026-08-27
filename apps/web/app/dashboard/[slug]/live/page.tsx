@@ -7,6 +7,7 @@ import { prisma } from "@/lib/prisma"
 import { VenueLayout } from "@/components/venue-layout"
 import { LiveDashboard } from "@/components/live-dashboard"
 import { resolveDisplayName } from "@/lib/display-name"
+import { parseVenueSettings } from "@/lib/types/venue-settings"
 
 export default async function LivePage({ params }: { params: Promise<{ slug: string }> }) {
   const session = await getServerSession(authOptions)
@@ -27,7 +28,7 @@ export default async function LivePage({ params }: { params: Promise<{ slug: str
 
   const userRole = venue.memberships[0].role
   const canManage = ["OWNER", "MANAGER"].includes(userRole)
-  const settings = (venue.settings as any) ?? {}
+  const settings = parseVenueSettings(venue.settings)
   const showRevenue = canManage || settings.revenueVisibility === "all" || settings.revenueVisibility === "own"
 
   // Find the currently active event (or the next upcoming one)

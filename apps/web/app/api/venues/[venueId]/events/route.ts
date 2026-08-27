@@ -6,6 +6,7 @@ import { z } from "zod"
 import { withRateLimit } from "@/lib/middleware/with-rate-limit"
 import { generateOccurrences, type RecurrenceRule } from "@/lib/recurrence"
 import { validators } from "@/lib/validation"
+import { Prisma, type EventStatus } from "@/generated/prisma/client"
 
 const eventSchema = z.object({
   title: validators.eventTitle,
@@ -122,7 +123,7 @@ export const GET = withRateLimit<{ params: Promise<{ venueId: string }> }>(
         select: { settings: true },
       })
 
-      const venueSettings = venue?.settings as any
+      const venueSettings = venue?.settings as Record<string, unknown> | undefined
 
       // Get query parameters for filtering
       const searchParams = request.nextUrl.searchParams
@@ -130,7 +131,7 @@ export const GET = withRateLimit<{ params: Promise<{ venueId: string }> }>(
       const startDate = searchParams.get("startDate")
       const endDate = searchParams.get("endDate")
 
-      const where: any = { venueId }
+      const where: Prisma.EventWhereInput = { venueId }
 
       // Apply event visibility settings for STAFF members
       if (membership.role === "STAFF" && venueSettings?.eventVisibility === "published") {
@@ -139,7 +140,7 @@ export const GET = withRateLimit<{ params: Promise<{ venueId: string }> }>(
       }
 
       if (status) {
-        where.status = status
+        where.status = status as EventStatus
       }
 
       if (startDate && endDate) {

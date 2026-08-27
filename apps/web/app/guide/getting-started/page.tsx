@@ -126,7 +126,7 @@ export default function GettingStartedPage() {
             event schedule, and patrons who expect consistency, and the spreadsheet stops working.
           </p>
           <p className="text-muted-foreground leading-relaxed">
-            The coordination layer is what grows fastest: who is rostered when, what happened to last week's tips,
+            The coordination layer is what grows fastest: who is rostered when, what happened to last week&apos;s tips,
             whether the Partake listing matches the actual schedule.
           </p>
         </section>

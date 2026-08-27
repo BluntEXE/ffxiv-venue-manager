@@ -1,4 +1,5 @@
 import { prisma } from "@/lib/prisma"
+import type { EventType } from "@/generated/prisma/client"
 
 const PARTAKE_API = "https://api.partake.gg/"
 const USER_AGENT = "XIV-Venue-Manager/1.0"
@@ -52,7 +53,7 @@ interface PartakeEvent {
 /**
  * Map Partake tags to our EventType enum.
  */
-function mapEventType(tags: string[]): string {
+function mapEventType(tags: string[]): EventType {
   const tagStr = tags.join(" ").toLowerCase()
   if (tagStr.includes("nightlife") || tagStr.includes("entertainment")) return "SOCIAL"
   if (tagStr.includes("performance") || tagStr.includes("music") || tagStr.includes("concert")) return "PERFORMANCE"
@@ -110,7 +111,7 @@ export async function syncVenuePartakeEvents(venue: { id: string; ownerId: strin
       title: pe.title,
       description: pe.description || null,
       location: locationStr,
-      eventType: mapEventType(pe.tags) as any,
+      eventType: mapEventType(pe.tags),
       status: "PUBLISHED" as const,
       startTime: new Date(pe.startsAt),
       endTime: new Date(pe.endsAt),

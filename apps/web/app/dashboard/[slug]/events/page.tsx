@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { prisma } from "@/lib/prisma"
+import { Prisma, EventStatus } from "@/generated/prisma/client"
 import { EventsCalendar } from "@/components/events-calendar"
 import { VenueLayout } from "@/components/venue-layout"
 import { LocalTime } from "@/components/server-time"
@@ -63,11 +64,11 @@ export default async function EventsPage({
   }
 
   // Build where clause — drafts view filters by DRAFT status
-  const where: any = { venueId: venue.id }
+  const where: Prisma.EventWhereInput = { venueId: venue.id }
   if (view === "drafts") {
-    where.status = "DRAFT"
+    where.status = EventStatus.DRAFT
   } else if (status) {
-    where.status = status
+    where.status = status as EventStatus
   }
 
   // Get events

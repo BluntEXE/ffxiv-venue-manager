@@ -1,6 +1,6 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useMemo } from "react"
 import Link from "next/link"
 import { MapPin, ArrowRight, Heart, Radio, Moon, Building2, Users } from "lucide-react"
 import { VenueFollowButton } from "@/components/venue-follow-button"
@@ -53,7 +53,8 @@ export function DiscoverClient({
     return true
   })
 
-  const daySeed = Math.floor(Date.now() / 86_400_000)
+  // eslint-disable-next-line react-hooks/purity
+  const daySeed = useMemo(() => Math.floor(Date.now() / 86_400_000), [])
   const featured = filtered.find((v) => v.isOpenNow || v.isTonightOpen) ?? filtered[daySeed % filtered.length]
   const rest = filtered.filter((v) => v.id !== featured?.id)
   const restOpen = rest.filter((v) => v.isOpenNow).length

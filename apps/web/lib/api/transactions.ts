@@ -10,6 +10,7 @@ import {
 } from "@/lib/discord-webhook"
 import { invalidateCache } from "@/lib/redis-cache"
 import { resolveDisplayName } from "@/lib/display-name"
+import { parseVenueSettings } from "@/lib/types/venue-settings"
 
 /**
  * Shared validation schema for transaction creation. Used by both the
@@ -182,9 +183,10 @@ export async function createTransaction(venueId: string, staffUserId: string, in
   })
 
   if (venue) {
+    const venueSettings = parseVenueSettings(venue.settings)
     const webhookConfig: VenueWebhookConfig = {
-      discordWebhooks: (venue.settings as any)?.discordWebhooks,
-      webhooks: (venue.settings as any)?.webhooks,
+      discordWebhooks: venueSettings.discordWebhooks,
+      webhooks: venueSettings.webhooks,
       discordWebhookUrl: venue.discordWebhookUrl,
     }
 

@@ -48,10 +48,10 @@ export async function GET(request: Request) {
     const perVenue: Array<{ venue: string; posted: number; patched: number; cancelled: number; reminded: number }> = []
 
     for (const venue of venues) {
-      const settings = (venue.settings as any) || {}
+      const venueSettings = (venue.settings as Record<string, unknown> | null) ?? {}
       const webhookConfig: VenueWebhookConfig = {
-        discordWebhooks: settings.discordWebhooks,
-        webhooks: settings.webhooks,
+        discordWebhooks: venueSettings.discordWebhooks as VenueWebhookConfig["discordWebhooks"],
+        webhooks: venueSettings.webhooks as VenueWebhookConfig["webhooks"],
         discordWebhookUrl: venue.discordWebhookUrl,
       }
       const webhookUrl = getWebhookUrlForType(webhookConfig, "partakeEvent")
