@@ -11,6 +11,7 @@ import {
 } from "@/lib/discord-webhook"
 import { withRateLimit } from "@/lib/middleware/with-rate-limit"
 import { validators } from "@/lib/validation"
+import { Prisma } from "@/generated/prisma/client"
 
 const updateTaskSchema = z.object({
   title: validators.taskTitle.optional(),
@@ -149,7 +150,7 @@ export const PUT = withRateLimit<{ params: Promise<{ venueId: string; taskId: st
       const validatedData = updateTaskSchema.parse(body)
 
       // Prepare update data
-      const updateData: any = {}
+      const updateData: Prisma.TaskUncheckedUpdateInput = {}
       if (validatedData.title !== undefined) updateData.title = validatedData.title
       if (validatedData.description !== undefined) updateData.description = validatedData.description
       if (validatedData.status !== undefined) {
@@ -210,9 +211,10 @@ export const PUT = withRateLimit<{ params: Promise<{ venueId: string; taskId: st
         })
 
         if (venue) {
+          const venueSettings = venue.settings as Record<string, unknown> | null
           const webhookConfig: VenueWebhookConfig = {
-            discordWebhooks: (venue.settings as any)?.discordWebhooks,
-            webhooks: (venue.settings as any)?.webhooks,
+            discordWebhooks: venueSettings?.discordWebhooks as VenueWebhookConfig["discordWebhooks"],
+            webhooks: venueSettings?.webhooks as VenueWebhookConfig["webhooks"],
             discordWebhookUrl: venue.discordWebhookUrl,
           }
 

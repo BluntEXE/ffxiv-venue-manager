@@ -44,7 +44,6 @@ model User {
   patronLogsWorking         PatronLog[]             @relation("PatronLogWorking")
   patronLogsReclassified    PatronLog[]             @relation("PatronLogReclassifier")
   bannedPatronsSet          Patron[]                @relation("PatronBannedBy")
-  roomsUpdated              Room[]
   characters                UserCharacter[]
   apiKeys                   ApiKey[]
   pendingNotifications      PendingNotification[]
@@ -54,6 +53,7 @@ model User {
   notifications             Notification[]
   announcementDismissals    AnnouncementDismissal[]
   announcements             Announcement[]
+  xvmApiCredential          XvmApiCredential?
 
   @@map("users")
 }
@@ -187,6 +187,11 @@ model Venue {
   ffxivVenueLinkedAt DateTime?
   ffxivVenueLinkedBy String?
 
+  // xvm-api Integration
+  xvmApiVenueId       String?   @unique
+  xvmApiVenueLinkedAt DateTime?
+  xvmApiVenueLinkedBy String?
+
   // Frogge Bot Integration
   froggeVenueId     String?   @unique
   froggeToken       String?
@@ -216,7 +221,6 @@ model Venue {
   shifts                 Shift[]
   patronLogs             PatronLog[]
   patrons                Patron[]
-  rooms                  Room[]
   apiKeys                ApiKey[]
   follows                VenueFollow[]
   scheduleEntries        VenueScheduleEntry[]
@@ -540,32 +544,6 @@ model Patron {
   @@map("patrons")
 }
 
-model Room {
-  id          String   @id @default(cuid())
-  venueId     String
-  name        String
-  isOccupied  Boolean  @default(false)
-  note        String?
-  imageUrl    String?
-
-  // Frogge integration
-  froggeRoomId    String?
-  roomNumber      Int?
-  locked          Boolean   @default(false)
-  disabled        Boolean   @default(false)
-  ownerDiscordId  String?
-  lastSyncedAt    DateTime?
-
-  updatedAt   DateTime @updatedAt
-  updatedById String?
-
-  venue     Venue @relation(fields: [venueId], references: [id], onDelete: Cascade)
-  updatedBy User? @relation(fields: [updatedById], references: [id], onDelete: SetNull)
-
-  @@unique([venueId, name])
-  @@index([venueId])
-  @@map("rooms")
-}
 
 // ============================================
 // SERVICES & TRANSACTIONS
@@ -902,6 +880,19 @@ model ApiKey {
   @@index([userId])
   @@index([keyHash])
   @@map("api_keys")
+}
+
+model XvmApiCredential {
+  id           String   @id @default(cuid())
+  userId       String   @unique
+  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  token        String
+  credentialId Int
+  expiresAt    DateTime
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  @@map("xvm_api_credentials")
 }
 
 // ============================================

@@ -1,7 +1,7 @@
 "use client"
 
-import { useEffect, useState } from "react"
 import { formatLocalTime, formatServerTime } from "@/components/server-time"
+import { useMounted } from "@/lib/use-mounted"
 
 /**
  * "Tuesday, 15 Aug" header label in the viewer's local time.
@@ -19,7 +19,6 @@ import { formatLocalTime, formatServerTime } from "@/components/server-time"
  * like every other formatter in this file already assumes.
  */
 export function TodayDateLabel({ now }: { now: Date }) {
-  const [mounted, setMounted] = useState(false)
-  useEffect(() => setMounted(true), [])
+  const mounted = useMounted()
   return <>{mounted ? formatLocalTime(now, "dayheader") : formatServerTime(now, "dayheader")}</>
 }

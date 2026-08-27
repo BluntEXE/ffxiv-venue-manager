@@ -47,6 +47,10 @@ export default async function VenueProfilePage({ params }: { params: Promise<{ s
   const session = await getServerSession(authOptions)
   const { slug } = await params
 
+  // Server Component: evaluated once per request, not a re-rendering client component that would need memoization.
+  // eslint-disable-next-line react-hooks/purity
+  const cutoff = new Date(Date.now() - 2 * 60 * 60 * 1000)
+
   const venue = await prisma.venue.findUnique({
     where: { slug, isActive: true },
     include: {
@@ -54,7 +58,7 @@ export default async function VenueProfilePage({ params }: { params: Promise<{ s
       events: {
         where: {
           status: { in: ["ACTIVE", "PUBLISHED"] },
-          startTime: { gte: new Date(Date.now() - 2 * 60 * 60 * 1000) },
+          startTime: { gte: cutoff },
         },
         orderBy: { startTime: "asc" },
         take: 5,
