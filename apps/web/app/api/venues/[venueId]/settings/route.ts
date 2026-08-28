@@ -6,6 +6,8 @@ import { Prisma } from "@/generated/prisma/client"
 import { z } from "zod"
 import { withRateLimit } from "@/lib/middleware/with-rate-limit"
 import { VenueSettings, parseVenueSettings } from "@/lib/types/venue-settings"
+import { getValidXvmApiToken, invalidateXvmApiCredential } from "@/lib/api/xvm-api-store"
+import { getVenue, updateVenue, XvmApiError, xvmErrorMessage, type VenueUpdate } from "@/lib/api/xvm-api"
 
 const webhookSettingsSchema = z.object({
   taskCreated: z.boolean().optional(),
@@ -120,6 +122,7 @@ export const GET = withRateLimit<{ params: Promise<{ venueId: string }> }>(
           ffxivVenueId: true,
           ffxivVenueLinkedAt: true,
           froggeToken: true,
+          xvmApiVenueId: true,
           venueSchedule: { select: { syncedAt: true } },
         },
       })
@@ -128,7 +131,7 @@ export const GET = withRateLimit<{ params: Promise<{ venueId: string }> }>(
         return NextResponse.json({ error: "Venue not found" }, { status: 404 })
       }
 
-      return NextResponse.json({
+      const responseBody: Record<string, unknown> = {
         ...parseVenueSettings(venue.settings),
         discordWebhookUrl: venue.discordWebhookUrl,
         partakeTeamId: venue.partakeTeamId,
@@ -137,7 +140,26 @@ export const GET = withRateLimit<{ params: Promise<{ venueId: string }> }>(
         ffxivVenueLinkedAt: venue.ffxivVenueLinkedAt,
         froggeToken: venue.froggeToken,
         ffxivVenueSyncedAt: venue.venueSchedule?.syncedAt ?? null,
-      })
+      }
+
+      // Visibility settings are being migrated to xvm-api - it's the source of truth
+      // for connected venues, Prisma's copy is a stale leftover for unconnected ones.
+      if (venue.xvmApiVenueId) {
+        const token = await getValidXvmApiToken(session.user.id)
+        if (token) {
+          try {
+            const detail = await getVenue(token, venue.xvmApiVenueId)
+            responseBody.taskVisibility = detail.task_visibility
+            responseBody.salesVisibility = detail.sales_visibility
+            responseBody.revenueVisibility = detail.revenue_visibility
+            responseBody.eventVisibility = detail.event_visibility
+          } catch (err) {
+            console.error("[settings] getVenue error:", err)
+          }
+        }
+      }
+
+      return NextResponse.json(responseBody)
     } catch (error) {
       console.error("Error fetching venue settings:", error)
       return NextResponse.json({ error: "Internal server error" }, { status: 500 })
@@ -192,15 +214,57 @@ export const PUT = withRateLimit<{ params: Promise<{ venueId: string }> }>(
       // Get current settings
       const venue = await prisma.venue.findUnique({
         where: { id: venueId },
-        select: { settings: true },
+        select: { settings: true, xvmApiVenueId: true },
       })
 
       if (!venue) {
         return NextResponse.json({ error: "Venue not found" }, { status: 404 })
       }
 
-      // Extract top-level venue columns from validated data
-      const { discordWebhookUrl, partakeTeamId, venueType, ffxivVenueId, ...settingsData } = validatedData
+      // Extract top-level venue columns and xvm-api-owned visibility fields from validated data
+      const {
+        discordWebhookUrl,
+        partakeTeamId,
+        venueType,
+        ffxivVenueId,
+        taskVisibility,
+        salesVisibility,
+        revenueVisibility,
+        eventVisibility,
+        ...settingsData
+      } = validatedData
+
+      // Visibility settings are being migrated to xvm-api - it owns these now, Prisma's
+      // settings JSON stops receiving updates to them for connected venues.
+      const visibilityUpdate: VenueUpdate = {}
+      if (taskVisibility !== undefined) visibilityUpdate.task_visibility = taskVisibility
+      if (salesVisibility !== undefined) visibilityUpdate.sales_visibility = salesVisibility
+      if (revenueVisibility !== undefined) visibilityUpdate.revenue_visibility = revenueVisibility
+      if (eventVisibility !== undefined) visibilityUpdate.event_visibility = eventVisibility
+
+      let xvmVenueDetail = null
+      if (Object.keys(visibilityUpdate).length > 0) {
+        if (!venue.xvmApiVenueId) {
+          return NextResponse.json(
+            { error: "not_connected", message: "Connect this venue to xvm-api before changing visibility settings." },
+            { status: 409 }
+          )
+        }
+        const token = await getValidXvmApiToken(session.user.id)
+        if (!token) {
+          return NextResponse.json({ error: "xvm-api link not established yet" }, { status: 503 })
+        }
+        try {
+          xvmVenueDetail = await updateVenue(token, venue.xvmApiVenueId, visibilityUpdate)
+        } catch (err) {
+          if (err instanceof XvmApiError && err.status !== 401) {
+            return NextResponse.json({ error: xvmErrorMessage(err) }, { status: err.status })
+          }
+          console.error("[settings] updateVenue error:", err)
+          await invalidateXvmApiCredential(session.user.id)
+          return NextResponse.json({ error: "xvm-api link needs to be refreshed" }, { status: 503 })
+        }
+      }
 
       // Merge new settings with existing settings (type-safe)
       const currentSettings = parseVenueSettings(venue.settings)
@@ -249,6 +313,12 @@ export const PUT = withRateLimit<{ params: Promise<{ venueId: string }> }>(
         partakeTeamId: updatedVenue.partakeTeamId,
         venueType: updatedVenue.venueType,
         ffxivVenueId: updatedVenue.ffxivVenueId,
+        ...(xvmVenueDetail && {
+          taskVisibility: xvmVenueDetail.task_visibility,
+          salesVisibility: xvmVenueDetail.sales_visibility,
+          revenueVisibility: xvmVenueDetail.revenue_visibility,
+          eventVisibility: xvmVenueDetail.event_visibility,
+        }),
       })
     } catch (error) {
       if (error instanceof z.ZodError) {

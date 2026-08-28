@@ -177,6 +177,73 @@ export interface VenueRow {
   world: string
 }
 
+export interface VenueImageRow {
+  id: number
+  image_url: string
+  sort_order: number
+}
+
+export interface VenueLinkRow {
+  id: number
+  provider: string
+  external_id: string
+  linked_at: string
+  linked_by_person_id: number | null
+  last_synced_at: string | null
+  unlinked_at: string | null
+}
+
+export interface VenueDetail {
+  id: string
+  name: string
+  slug: string
+  description: string | null
+  logo_url: string | null
+  banner_url: string | null
+  venue_type: string | null
+  data_center: string
+  world: string
+  district: string | null
+  ward: number | null
+  plot: number | null
+  apartment: number | null
+  room: number | null
+  subdivision: boolean | null
+  timezone: string
+  currency_name: string
+  task_visibility: string
+  sales_visibility: string
+  revenue_visibility: string
+  event_visibility: string
+  is_active: boolean
+  created_at: string
+  updated_at: string
+  images: VenueImageRow[]
+  external_links: VenueLinkRow[]
+}
+
+export interface VenueUpdate {
+  name?: string
+  description?: string | null
+  logo_url?: string | null
+  banner_url?: string | null
+  venue_type?: string | null
+  data_center?: string
+  world?: string
+  district?: string | null
+  ward?: number | null
+  plot?: number | null
+  apartment?: number | null
+  room?: number | null
+  subdivision?: boolean | null
+  timezone?: string
+  currency_name?: string
+  task_visibility?: string
+  sales_visibility?: string
+  revenue_visibility?: string
+  event_visibility?: string
+}
+
 // ── Internal fetch helper ──────────────────────────────────────
 
 // Carries the upstream HTTP status so callers can distinguish "xvm-api
@@ -364,6 +431,16 @@ export async function deleteRoomImage(
 export async function createVenue(personToken: string, data: VenueCreate): Promise<VenueRow> {
   if (!process.env.XVM_API_BASE_URL) throw new Error("XVM_API_BASE_URL is not set")
   return xvmFetch<VenueRow>("/venues", { method: "POST", body: JSON.stringify(data) }, personToken)
+}
+
+export async function getVenue(personToken: string, venueId: string): Promise<VenueDetail> {
+  if (!process.env.XVM_API_BASE_URL) throw new Error("XVM_API_BASE_URL is not set")
+  return xvmFetch<VenueDetail>(`/venues/${venueId}`, {}, personToken)
+}
+
+export async function updateVenue(personToken: string, venueId: string, data: VenueUpdate): Promise<VenueDetail> {
+  if (!process.env.XVM_API_BASE_URL) throw new Error("XVM_API_BASE_URL is not set")
+  return xvmFetch<VenueDetail>(`/venues/${venueId}`, { method: "PATCH", body: JSON.stringify(data) }, personToken)
 }
 
 // ── Venue Hours API ────────────────────────────────────────────
