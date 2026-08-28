@@ -107,6 +107,59 @@ export interface ReservationCreate {
   source: ReservationSource
 }
 
+export interface RuleRow {
+  interval: string
+  weekday: number | null
+  day_of_month: number | null
+  week_of_month: number | null
+  start_minute_of_day: number
+  duration_minutes: number
+  timezone: string
+  anchor_date: string
+  ends_on: string | null
+  ends_after_count: number | null
+  enabled: boolean
+}
+
+export interface HoursRow {
+  id: number
+  label: string | null
+  source: string
+  rule: RuleRow
+}
+
+export interface HoursCreate {
+  label?: string | null
+  interval: string
+  weekday?: number | null
+  day_of_month?: number | null
+  week_of_month?: number | null
+  start_minute_of_day: number
+  duration_minutes: number
+  timezone?: string | null
+  anchor_date: string
+  ends_on?: string | null
+  ends_after_count?: number | null
+}
+
+export interface HoursUpdate {
+  label?: string | null
+  enabled?: boolean | null
+}
+
+export interface OpeningRow {
+  hours_id: number
+  label: string | null
+  starts_at: string
+  ends_at: string
+}
+
+export interface OpenNow {
+  open: boolean
+  current: OpeningRow | null
+  next: OpeningRow | null
+}
+
 // ── Venues API ─────────────────────────────────────────────────
 
 export interface VenueCreate {
@@ -311,4 +364,50 @@ export async function deleteRoomImage(
 export async function createVenue(personToken: string, data: VenueCreate): Promise<VenueRow> {
   if (!process.env.XVM_API_BASE_URL) throw new Error("XVM_API_BASE_URL is not set")
   return xvmFetch<VenueRow>("/venues", { method: "POST", body: JSON.stringify(data) }, personToken)
+}
+
+// ── Venue Hours API ────────────────────────────────────────────
+
+export async function listHours(personToken: string, venueId: string): Promise<HoursRow[]> {
+  if (!process.env.XVM_API_BASE_URL) throw new Error("XVM_API_BASE_URL is not set")
+  return xvmFetch<HoursRow[]>(`/venues/${venueId}/hours`, {}, personToken)
+}
+
+export async function createHours(personToken: string, venueId: string, data: HoursCreate): Promise<HoursRow> {
+  if (!process.env.XVM_API_BASE_URL) throw new Error("XVM_API_BASE_URL is not set")
+  return xvmFetch<HoursRow>(`/venues/${venueId}/hours`, { method: "POST", body: JSON.stringify(data) }, personToken)
+}
+
+export async function updateHours(
+  personToken: string,
+  venueId: string,
+  hoursId: number,
+  data: HoursUpdate
+): Promise<HoursRow> {
+  if (!process.env.XVM_API_BASE_URL) throw new Error("XVM_API_BASE_URL is not set")
+  return xvmFetch<HoursRow>(`/venues/${venueId}/hours/${hoursId}`, { method: "PATCH", body: JSON.stringify(data) }, personToken)
+}
+
+export async function deleteHours(personToken: string, venueId: string, hoursId: number): Promise<void> {
+  if (!process.env.XVM_API_BASE_URL) throw new Error("XVM_API_BASE_URL is not set")
+  return xvmFetch<void>(`/venues/${venueId}/hours/${hoursId}`, { method: "DELETE" }, personToken)
+}
+
+// from/to are ISO instants; the API caps the window at 60 days and 400s on an
+// inverted or oversized range.
+export async function listOpenings(
+  personToken: string,
+  venueId: string,
+  from: string,
+  to: string
+): Promise<OpeningRow[]> {
+  if (!process.env.XVM_API_BASE_URL) throw new Error("XVM_API_BASE_URL is not set")
+  const params = new URLSearchParams({ from, to })
+  return xvmFetch<OpeningRow[]>(`/venues/${venueId}/hours/openings?${params}`, {}, personToken)
+}
+
+export async function getOpenNow(personToken: string, venueId: string, at?: string): Promise<OpenNow> {
+  if (!process.env.XVM_API_BASE_URL) throw new Error("XVM_API_BASE_URL is not set")
+  const params = at ? `?${new URLSearchParams({ at })}` : ""
+  return xvmFetch<OpenNow>(`/venues/${venueId}/hours/now${params}`, {}, personToken)
 }
