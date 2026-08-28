@@ -47,7 +47,7 @@ function describeRule(row: HoursRow): string {
     case "biweekly":
       return `Every other ${WEEKDAY_NAMES[rule.weekday ?? 0]}, ${time}`
     case "monthly_by_date":
-      return `Monthly on the ${rule.day_of_month}${rule.day_of_month === 1 ? "st" : rule.day_of_month === 2 ? "nd" : rule.day_of_month === 3 ? "rd" : "th"}, ${time}`
+      return `Monthly on the ${ordinal(rule.day_of_month ?? 1)}, ${time}`
     case "monthly_by_weekday":
       return `${WEEK_OF_MONTH_NAMES[rule.week_of_month ?? 1] ?? rule.week_of_month} ${WEEKDAY_NAMES[rule.weekday ?? 0]} of the month, ${time}`
     default:
@@ -55,22 +55,44 @@ function describeRule(row: HoursRow): string {
   }
 }
 
-function todayIso(): string {
-  return new Date().toISOString().slice(0, 10)
+function ordinal(n: number): string {
+  const mod100 = n % 100
+  if (mod100 >= 11 && mod100 <= 13) return `${n}th`
+  switch (n % 10) {
+    case 1:
+      return `${n}st`
+    case 2:
+      return `${n}nd`
+    case 3:
+      return `${n}rd`
+    default:
+      return `${n}th`
+  }
 }
 
-const emptyDraft: HoursCreate = {
-  label: "",
-  interval: "weekly",
-  weekday: 0,
-  day_of_month: null,
-  week_of_month: null,
-  start_minute_of_day: 19 * 60,
-  duration_minutes: 180,
-  timezone: null,
-  anchor_date: todayIso(),
-  ends_on: null,
-  ends_after_count: null,
+// Local date, not UTC - toISOString() is off by a day for anyone west of
+// Greenwich in the evening, and for biweekly rules the anchor decides which
+// of the two weeks the series lands on, so that slip silently flips parity.
+function localDateIso(): string {
+  const d = new Date()
+  const offsetMs = d.getTimezoneOffset() * 60000
+  return new Date(d.getTime() - offsetMs).toISOString().slice(0, 10)
+}
+
+function makeEmptyDraft(): HoursCreate {
+  return {
+    label: "",
+    interval: "weekly",
+    weekday: 0,
+    day_of_month: null,
+    week_of_month: 1,
+    start_minute_of_day: 19 * 60,
+    duration_minutes: 180,
+    timezone: null,
+    anchor_date: localDateIso(),
+    ends_on: null,
+    ends_after_count: null,
+  }
 }
 
 export function HoursBoard({
@@ -78,12 +100,14 @@ export function HoursBoard({
   canManage,
   hours,
   notConnected,
+  loadFailed,
   venueTimezone,
 }: {
   venueId: string
   canManage: boolean
   hours: HoursRow[]
   notConnected?: boolean
+  loadFailed?: boolean
   venueTimezone: string
 }) {
   const [localHours, setLocalHours] = useState(hours)
@@ -93,7 +117,7 @@ export function HoursBoard({
   const [deleteTarget, setDeleteTarget] = useState<HoursRow | null>(null)
   const [adding, setAdding] = useState(false)
   const [showAddForm, setShowAddForm] = useState(false)
-  const [draft, setDraft] = useState<HoursCreate>(emptyDraft)
+  const [draft, setDraft] = useState<HoursCreate>(makeEmptyDraft)
 
   useEffect(() => {
     if (error || success) {
@@ -184,7 +208,7 @@ export function HoursBoard({
       }
       const created: HoursRow = await res.json()
       setLocalHours((prev) => [...prev, created])
-      setDraft(emptyDraft)
+      setDraft(makeEmptyDraft())
       setShowAddForm(false)
       setSuccess("Entry added")
     } catch {
@@ -198,6 +222,14 @@ export function HoursBoard({
     return (
       <Alert>
         <AlertDescription>{NOT_CONNECTED_MESSAGE}</AlertDescription>
+      </Alert>
+    )
+  }
+
+  if (loadFailed) {
+    return (
+      <Alert variant="destructive">
+        <AlertDescription>Couldn&apos;t load hours right now. Try refreshing the page.</AlertDescription>
       </Alert>
     )
   }
@@ -249,7 +281,14 @@ export function HoursBoard({
       {canManage && (
         <div className="xiv-card rounded-2xl p-4">
           {!showAddForm ? (
-            <Button onClick={() => setShowAddForm(true)}>Add Hours Entry</Button>
+            <Button
+              onClick={() => {
+                setDraft(makeEmptyDraft())
+                setShowAddForm(true)
+              }}
+            >
+              Add Hours Entry
+            </Button>
           ) : (
             <div className="space-y-3">
               <Input
@@ -337,6 +376,11 @@ export function HoursBoard({
                 value={draft.anchor_date}
                 onChange={(e) => setDraft((d) => ({ ...d, anchor_date: e.target.value }))}
               />
+
+              <p className="text-muted-foreground text-xs">
+                Anchor date: the first date this pattern applies from. For &quot;every other week&quot;, it also
+                decides which week the series lands on.
+              </p>
 
               <p className="text-muted-foreground text-xs">
                 Timezone defaults to the venue&apos;s own ({venueTimezone}).

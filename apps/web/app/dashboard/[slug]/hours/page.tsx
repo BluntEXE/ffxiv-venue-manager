@@ -25,12 +25,14 @@ export default async function HoursPage({ params }: { params: Promise<{ slug: st
   const userRole = venue.memberships[0].role
 
   let hours: HoursRow[] = []
+  let loadFailed = false
   const notConnected = !venue.xvmApiVenueId
   const token = await getValidXvmApiToken(session.user.id)
   if (token && venue.xvmApiVenueId) {
     try {
       hours = await listHours(token, venue.xvmApiVenueId)
     } catch (err) {
+      loadFailed = true
       if (err instanceof XvmApiError && err.status !== 401) {
         console.error("[hours page] listHours error:", err)
       } else {
@@ -38,6 +40,8 @@ export default async function HoursPage({ params }: { params: Promise<{ slug: st
         await invalidateXvmApiCredential(session.user.id)
       }
     }
+  } else if (!notConnected) {
+    loadFailed = true
   }
 
   return (
@@ -58,6 +62,7 @@ export default async function HoursPage({ params }: { params: Promise<{ slug: st
           canManage={["OWNER", "MANAGER"].includes(userRole)}
           hours={hours}
           notConnected={notConnected}
+          loadFailed={loadFailed}
           venueTimezone={venue.timezone}
         />
       </div>
