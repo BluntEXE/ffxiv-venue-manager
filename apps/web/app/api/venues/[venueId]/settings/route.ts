@@ -6,6 +6,8 @@ import { Prisma } from "@/generated/prisma/client"
 import { z } from "zod"
 import { withRateLimit } from "@/lib/middleware/with-rate-limit"
 import { VenueSettings, parseVenueSettings } from "@/lib/types/venue-settings"
+import { getValidXvmApiToken, invalidateXvmApiCredential } from "@/lib/api/xvm-api-store"
+import { getVenue, updateVenue, XvmApiError, xvmErrorMessage, type VenueUpdate } from "@/lib/api/xvm-api"
 
 const webhookSettingsSchema = z.object({
   taskCreated: z.boolean().optional(),
@@ -120,6 +122,7 @@ export const GET = withRateLimit<{ params: Promise<{ venueId: string }> }>(
           ffxivVenueId: true,
           ffxivVenueLinkedAt: true,
           froggeToken: true,
+          xvmApiVenueId: true,
           venueSchedule: { select: { syncedAt: true } },
         },
       })
@@ -128,7 +131,7 @@ export const GET = withRateLimit<{ params: Promise<{ venueId: string }> }>(
         return NextResponse.json({ error: "Venue not found" }, { status: 404 })
       }
 
-      return NextResponse.json({
+      const responseBody: Record<string, unknown> = {
         ...parseVenueSettings(venue.settings),
         discordWebhookUrl: venue.discordWebhookUrl,
         partakeTeamId: venue.partakeTeamId,
@@ -137,7 +140,43 @@ export const GET = withRateLimit<{ params: Promise<{ venueId: string }> }>(
         ffxivVenueLinkedAt: venue.ffxivVenueLinkedAt,
         froggeToken: venue.froggeToken,
         ffxivVenueSyncedAt: venue.venueSchedule?.syncedAt ?? null,
-      })
+      }
+
+      // Visibility settings and venue type are being migrated to xvm-api - it's the
+      // source of truth for connected venues, Prisma's copy is a stale leftover for
+      // unconnected ones. On any failure to reach xvm-api, omit these keys entirely
+      // (rather than silently serving the stale Prisma copy as current) and flag it,
+      // so a page applying this response doesn't snap its controls back to wrong values.
+      if (venue.xvmApiVenueId) {
+        const token = await getValidXvmApiToken(session.user.id)
+        let degraded = true
+        if (token) {
+          try {
+            const detail = await getVenue(token, venue.xvmApiVenueId)
+            responseBody.taskVisibility = detail.task_visibility
+            responseBody.salesVisibility = detail.sales_visibility
+            responseBody.revenueVisibility = detail.revenue_visibility
+            responseBody.eventVisibility = detail.event_visibility
+            responseBody.venueType = detail.venue_type
+            degraded = false
+          } catch (err) {
+            if (err instanceof XvmApiError && err.status === 401) {
+              await invalidateXvmApiCredential(session.user.id)
+            }
+            console.error("[settings] getVenue error:", err)
+          }
+        }
+        if (degraded) {
+          delete responseBody.taskVisibility
+          delete responseBody.salesVisibility
+          delete responseBody.revenueVisibility
+          delete responseBody.eventVisibility
+          delete responseBody.venueType
+          responseBody.visibilityDegraded = true
+        }
+      }
+
+      return NextResponse.json(responseBody)
     } catch (error) {
       console.error("Error fetching venue settings:", error)
       return NextResponse.json({ error: "Internal server error" }, { status: 500 })
@@ -192,15 +231,58 @@ export const PUT = withRateLimit<{ params: Promise<{ venueId: string }> }>(
       // Get current settings
       const venue = await prisma.venue.findUnique({
         where: { id: venueId },
-        select: { settings: true },
+        select: { settings: true, xvmApiVenueId: true, venueType: true },
       })
 
       if (!venue) {
         return NextResponse.json({ error: "Venue not found" }, { status: 404 })
       }
 
-      // Extract top-level venue columns from validated data
-      const { discordWebhookUrl, partakeTeamId, venueType, ffxivVenueId, ...settingsData } = validatedData
+      // Extract top-level venue columns and xvm-api-owned visibility fields from validated data
+      const {
+        discordWebhookUrl,
+        partakeTeamId,
+        venueType,
+        ffxivVenueId,
+        taskVisibility,
+        salesVisibility,
+        revenueVisibility,
+        eventVisibility,
+        ...settingsData
+      } = validatedData
+
+      // Visibility settings and venue type are being migrated to xvm-api - it owns these
+      // now, Prisma's settings JSON/column stop receiving updates to them for connected venues.
+      const xvmUpdate: VenueUpdate = {}
+      if (taskVisibility !== undefined) xvmUpdate.task_visibility = taskVisibility
+      if (salesVisibility !== undefined) xvmUpdate.sales_visibility = salesVisibility
+      if (revenueVisibility !== undefined) xvmUpdate.revenue_visibility = revenueVisibility
+      if (eventVisibility !== undefined) xvmUpdate.event_visibility = eventVisibility
+      if (venueType !== undefined) xvmUpdate.venue_type = venueType
+
+      let xvmVenueDetail = null
+      if (Object.keys(xvmUpdate).length > 0) {
+        if (!venue.xvmApiVenueId) {
+          return NextResponse.json(
+            { error: "not_connected", message: "Connect this venue to xvm-api before changing these settings." },
+            { status: 409 }
+          )
+        }
+        const token = await getValidXvmApiToken(session.user.id)
+        if (!token) {
+          return NextResponse.json({ error: "xvm-api link not established yet" }, { status: 503 })
+        }
+        try {
+          xvmVenueDetail = await updateVenue(token, venue.xvmApiVenueId, xvmUpdate)
+        } catch (err) {
+          if (err instanceof XvmApiError && err.status !== 401) {
+            return NextResponse.json({ error: xvmErrorMessage(err) }, { status: err.status })
+          }
+          console.error("[settings] updateVenue error:", err)
+          await invalidateXvmApiCredential(session.user.id)
+          return NextResponse.json({ error: "xvm-api link needs to be refreshed" }, { status: 503 })
+        }
+      }
 
       // Merge new settings with existing settings (type-safe)
       const currentSettings = parseVenueSettings(venue.settings)
@@ -220,9 +302,6 @@ export const PUT = withRateLimit<{ params: Promise<{ venueId: string }> }>(
           ...(partakeTeamId !== undefined && {
             partakeTeamId: partakeTeamId,
           }),
-          ...(venueType !== undefined && {
-            venueType: venueType,
-          }),
           ...(ffxivVenueId !== undefined && {
             ffxivVenueId: ffxivVenueId,
             ffxivVenueLinkedAt: ffxivVenueId ? new Date() : null,
@@ -233,7 +312,6 @@ export const PUT = withRateLimit<{ params: Promise<{ venueId: string }> }>(
           settings: true,
           discordWebhookUrl: true,
           partakeTeamId: true,
-          venueType: true,
           ffxivVenueId: true,
         },
       })
@@ -243,13 +321,33 @@ export const PUT = withRateLimit<{ params: Promise<{ venueId: string }> }>(
         await prisma.venueSchedule.deleteMany({ where: { venueId } })
       }
 
-      return NextResponse.json({
+      const putResponseBody: Record<string, unknown> = {
         ...parseVenueSettings(updatedVenue.settings),
         discordWebhookUrl: updatedVenue.discordWebhookUrl,
         partakeTeamId: updatedVenue.partakeTeamId,
-        venueType: updatedVenue.venueType,
         ffxivVenueId: updatedVenue.ffxivVenueId,
-      })
+        venueType: venue.venueType,
+      }
+
+      // xvm-api owns these for connected venues. parseVenueSettings above still spreads
+      // in the frozen legacy values sitting in Prisma's settings JSON - delete them
+      // outright rather than risk serving stale data as current, unless this PUT gave
+      // us fresh values to overwrite them with.
+      if (xvmVenueDetail) {
+        putResponseBody.taskVisibility = xvmVenueDetail.task_visibility
+        putResponseBody.salesVisibility = xvmVenueDetail.sales_visibility
+        putResponseBody.revenueVisibility = xvmVenueDetail.revenue_visibility
+        putResponseBody.eventVisibility = xvmVenueDetail.event_visibility
+        putResponseBody.venueType = xvmVenueDetail.venue_type
+      } else if (venue.xvmApiVenueId) {
+        delete putResponseBody.taskVisibility
+        delete putResponseBody.salesVisibility
+        delete putResponseBody.revenueVisibility
+        delete putResponseBody.eventVisibility
+        delete putResponseBody.venueType
+      }
+
+      return NextResponse.json(putResponseBody)
     } catch (error) {
       if (error instanceof z.ZodError) {
         return NextResponse.json({ error: "Validation error", details: error.issues }, { status: 400 })
