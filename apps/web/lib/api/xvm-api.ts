@@ -193,6 +193,11 @@ export interface VenueLinkRow {
   unlinked_at: string | null
 }
 
+export type TaskVisibility = "all" | "assigned" | "assigned_unassigned"
+export type SalesVisibility = "all" | "own" | "none"
+export type RevenueVisibility = "all" | "hide" | "own"
+export type EventVisibility = "all" | "published"
+
 export interface VenueDetail {
   id: string
   name: string
@@ -211,10 +216,10 @@ export interface VenueDetail {
   subdivision: boolean | null
   timezone: string
   currency_name: string
-  task_visibility: string
-  sales_visibility: string
-  revenue_visibility: string
-  event_visibility: string
+  task_visibility: TaskVisibility
+  sales_visibility: SalesVisibility
+  revenue_visibility: RevenueVisibility
+  event_visibility: EventVisibility
   is_active: boolean
   created_at: string
   updated_at: string
@@ -238,10 +243,10 @@ export interface VenueUpdate {
   subdivision?: boolean | null
   timezone?: string
   currency_name?: string
-  task_visibility?: string
-  sales_visibility?: string
-  revenue_visibility?: string
-  event_visibility?: string
+  task_visibility?: TaskVisibility
+  sales_visibility?: SalesVisibility
+  revenue_visibility?: RevenueVisibility
+  event_visibility?: EventVisibility
 }
 
 // ── Internal fetch helper ──────────────────────────────────────
