@@ -175,6 +175,18 @@ export const DELETE = withRateLimit<{ params: Promise<{ venueId: string; roleId:
     if (gate.error) return gate.error
 
     try {
+      const positions = await listPositions(token, gate.xvmApiVenueId!)
+      const position = positions.find((p) => p.id === positionId)
+      if (!position) {
+        return NextResponse.json({ error: "Role not found" }, { status: 404 })
+      }
+      if (position.member_ids.length > 0) {
+        return NextResponse.json(
+          { error: `Cannot delete role. It is assigned to ${position.member_ids.length} staff member(s)` },
+          { status: 400 }
+        )
+      }
+
       await deletePosition(token, gate.xvmApiVenueId!, positionId)
       return NextResponse.json({ success: true })
     } catch (err) {
