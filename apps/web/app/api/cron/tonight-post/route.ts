@@ -17,10 +17,10 @@ export async function GET(request: Request) {
     where: {
       isActive: true,
       venueType: { not: "TEST_VENUE" },
-      shifts: {
+      events: {
         some: {
-          status: { in: ["SCHEDULED", "ACTIVE"] },
-          scheduledStart: { gte: startOfDay, lte: endOfDay },
+          status: { in: ["PUBLISHED", "ACTIVE"] },
+          startTime: { gte: startOfDay, lte: endOfDay },
         },
       },
     },
@@ -32,13 +32,13 @@ export async function GET(request: Request) {
       district: true,
       ward: true,
       plot: true,
-      shifts: {
+      events: {
         where: {
-          status: { in: ["SCHEDULED", "ACTIVE"] },
-          scheduledStart: { gte: startOfDay, lte: endOfDay },
+          status: { in: ["PUBLISHED", "ACTIVE"] },
+          startTime: { gte: startOfDay, lte: endOfDay },
         },
-        select: { scheduledStart: true, scheduledEnd: true },
-        orderBy: { scheduledStart: "asc" },
+        select: { startTime: true, endTime: true },
+        orderBy: { startTime: "asc" },
         take: 1,
       },
     },
@@ -58,8 +58,8 @@ export async function GET(request: Request) {
     district: v.district,
     ward: v.ward,
     plot: v.plot,
-    scheduledStart: v.shifts[0].scheduledStart,
-    scheduledEnd: v.shifts[0].scheduledEnd,
+    scheduledStart: v.events[0].startTime,
+    scheduledEnd: v.events[0].endTime,
   }))
 
   postTonightList(payload)
