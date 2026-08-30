@@ -493,3 +493,100 @@ export async function getOpenNow(personToken: string, venueId: string, at?: stri
   const params = at ? `?${new URLSearchParams({ at })}` : ""
   return xvmFetch<OpenNow>(`/venues/${venueId}/hours/now${params}`, {}, personToken)
 }
+
+// ── Positions API ──────────────────────────────────────────────
+
+export interface PositionCreate {
+  name: string
+  color?: number | null
+  responsibilities?: string | null
+  hourly_rate_minor?: number | null
+  discord_role_id?: number | null
+}
+
+export interface PositionUpdate {
+  name?: string | null
+  color?: number | null
+  responsibilities?: string | null
+  hourly_rate_minor?: number | null
+  discord_role_id?: number | null
+}
+
+export interface PositionRow {
+  id: number
+  name: string
+  color: number | null
+  responsibilities: string | null
+  hourly_rate_minor: number | null
+  pot_payout_mode: string
+  contractor_shares_pot: boolean
+  discord_role_id: number | null
+  member_ids: number[]
+}
+
+export async function listPositions(personToken: string, venueId: string): Promise<PositionRow[]> {
+  if (!process.env.XVM_API_BASE_URL) throw new Error("XVM_API_BASE_URL is not set")
+  return xvmFetch<PositionRow[]>(`/venues/${venueId}/positions`, {}, personToken)
+}
+
+export async function createPosition(
+  personToken: string,
+  venueId: string,
+  data: PositionCreate
+): Promise<PositionRow> {
+  if (!process.env.XVM_API_BASE_URL) throw new Error("XVM_API_BASE_URL is not set")
+  return xvmFetch<PositionRow>(
+    `/venues/${venueId}/positions`,
+    { method: "POST", body: JSON.stringify(data) },
+    personToken
+  )
+}
+
+export async function updatePosition(
+  personToken: string,
+  venueId: string,
+  positionId: number,
+  data: PositionUpdate
+): Promise<PositionRow> {
+  if (!process.env.XVM_API_BASE_URL) throw new Error("XVM_API_BASE_URL is not set")
+  return xvmFetch<PositionRow>(
+    `/venues/${venueId}/positions/${positionId}`,
+    { method: "PATCH", body: JSON.stringify(data) },
+    personToken
+  )
+}
+
+export async function assignPositionMember(
+  personToken: string,
+  venueId: string,
+  positionId: number,
+  membershipId: number
+): Promise<void> {
+  if (!process.env.XVM_API_BASE_URL) throw new Error("XVM_API_BASE_URL is not set")
+  return xvmFetch<void>(
+    `/venues/${venueId}/positions/${positionId}/members`,
+    { method: "POST", body: JSON.stringify({ membership_id: membershipId }) },
+    personToken
+  )
+}
+
+// ── Memberships API ────────────────────────────────────────────
+
+export interface MembershipPerson {
+  id: number
+  display_name: string
+}
+
+export interface MembershipRow {
+  id: number
+  person: MembershipPerson
+  nickname: string | null
+  tier: string
+  effective_tier: string
+  is_employed: boolean
+}
+
+export async function listMemberships(personToken: string, venueId: string): Promise<MembershipRow[]> {
+  if (!process.env.XVM_API_BASE_URL) throw new Error("XVM_API_BASE_URL is not set")
+  return xvmFetch<MembershipRow[]>(`/venues/${venueId}/memberships`, {}, personToken)
+}
