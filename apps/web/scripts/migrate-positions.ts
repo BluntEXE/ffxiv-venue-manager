@@ -14,12 +14,40 @@ import {
   createPosition,
   assignPositionMember,
   listMemberships,
+  getMe,
 } from "../lib/api/xvm-api"
-import { getValidXvmApiPersonId, getValidXvmApiToken } from "../lib/api/xvm-api-store"
 import { hexColorToInt, dollarsToMinorUnits } from "../lib/api/position-convert"
 
 const adapter = new PrismaPg({ connectionString: process.env.DATABASE_URL! })
 const prisma = new PrismaClient({ adapter })
+
+// Inlined from lib/api/xvm-api-store.ts, backed by this script's own local
+// `prisma` client instead of the app's shared singleton (lib/prisma.ts) —
+// routing through that singleton would open a second Postgres pool that
+// never gets disconnected. Same refresh margin and caching behavior as the
+// originals.
+const REFRESH_MARGIN_MS = 24 * 60 * 60 * 1000 // 1 day
+
+async function getValidXvmApiToken(userId: string): Promise<string | null> {
+  const row = await prisma.xvmApiCredential.findUnique({ where: { userId } })
+  if (!row) return null
+  if (row.expiresAt.getTime() - Date.now() < REFRESH_MARGIN_MS) return null
+  return row.token
+}
+
+async function getValidXvmApiPersonId(userId: string): Promise<number | null> {
+  const token = await getValidXvmApiToken(userId)
+  if (!token) return null
+
+  const row = await prisma.xvmApiCredential.findUnique({ where: { userId }, select: { personId: true } })
+  if (row?.personId != null) return row.personId
+
+  const me = await getMe(token)
+  if (!me.person) return null
+
+  await prisma.xvmApiCredential.update({ where: { userId }, data: { personId: me.person.id } })
+  return me.person.id
+}
 
 async function main() {
   const [venueId, ...flags] = process.argv.slice(2)
@@ -79,8 +107,18 @@ async function main() {
   const existingPositions = await listPositions(token, venue.xvmApiVenueId)
   const existingMemberships = await listMemberships(token, venue.xvmApiVenueId)
 
+  const seenRoleNames = new Set<string>()
   for (const role of roles) {
-    const existing = existingPositions.find((p) => p.name.toLowerCase() === role.name.toLowerCase())
+    const lowerName = role.name.toLowerCase()
+    if (seenRoleNames.has(lowerName)) {
+      console.warn(
+        `  [warn] Multiple roles named "${role.name}" (case-insensitive) exist for this venue in Prisma — skipping to avoid merging their assignments. Resolve the duplicate manually.`
+      )
+      continue
+    }
+    seenRoleNames.add(lowerName)
+
+    const existing = existingPositions.find((p) => p.name.toLowerCase() === lowerName)
 
     let positionId: number
     if (existing) {
