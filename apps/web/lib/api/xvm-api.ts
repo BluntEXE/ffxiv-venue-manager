@@ -570,6 +570,11 @@ export async function assignPositionMember(
   )
 }
 
+export async function deletePosition(personToken: string, venueId: string, positionId: number): Promise<void> {
+  if (!process.env.XVM_API_BASE_URL) throw new Error("XVM_API_BASE_URL is not set")
+  return xvmFetch<void>(`/venues/${venueId}/positions/${positionId}`, { method: "DELETE" }, personToken)
+}
+
 // ── Memberships API ────────────────────────────────────────────
 
 export interface MembershipPerson {
