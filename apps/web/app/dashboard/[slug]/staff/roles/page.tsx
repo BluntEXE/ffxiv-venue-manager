@@ -50,7 +50,7 @@ const PRESET_COLORS = [
 ]
 
 interface Role {
-  id: string
+  id: number
   name: string
   responsibilities: string | null
   color: string | null
@@ -440,7 +440,7 @@ export default function RolesPage({ params }: { params: Promise<{ slug: string }
                       onValueChange={(v) =>
                         setFormData({ ...formData, potPayoutMode: v as typeof formData.potPayoutMode })
                       }
-                      disabled={isSubmitting}
+                      disabled
                     >
                       <SelectTrigger id="create-payout-mode">
                         <SelectValue />
@@ -451,6 +451,7 @@ export default function RolesPage({ params }: { params: Promise<{ slug: string }
                         <SelectItem value="CONTRACTOR">Contractor (own priced services)</SelectItem>
                       </SelectContent>
                     </Select>
+                    <p className="text-xs text-muted-foreground">Pot payout settings aren&apos;t available yet</p>
                   </div>
                   {formData.potPayoutMode === "CONTRACTOR" && (
                     <div className="flex items-center gap-2">
@@ -459,7 +460,7 @@ export default function RolesPage({ params }: { params: Promise<{ slug: string }
                         id="create-contractor-shares-pot"
                         checked={formData.contractorSharesPot}
                         onChange={(e) => setFormData({ ...formData, contractorSharesPot: e.target.checked })}
-                        disabled={isSubmitting}
+                        disabled
                       />
                       <Label htmlFor="create-contractor-shares-pot">Also shares in the pot split</Label>
                     </div>
@@ -585,7 +586,7 @@ export default function RolesPage({ params }: { params: Promise<{ slug: string }
                       onValueChange={(v) =>
                         setFormData({ ...formData, potPayoutMode: v as typeof formData.potPayoutMode })
                       }
-                      disabled={isSubmitting}
+                      disabled
                     >
                       <SelectTrigger id="edit-payout-mode">
                         <SelectValue />
@@ -596,6 +597,7 @@ export default function RolesPage({ params }: { params: Promise<{ slug: string }
                         <SelectItem value="CONTRACTOR">Contractor (own priced services)</SelectItem>
                       </SelectContent>
                     </Select>
+                    <p className="text-xs text-muted-foreground">Pot payout settings aren&apos;t available yet</p>
                   </div>
                   {formData.potPayoutMode === "CONTRACTOR" && (
                     <div className="flex items-center gap-2">
@@ -604,7 +606,7 @@ export default function RolesPage({ params }: { params: Promise<{ slug: string }
                         id="edit-contractor-shares-pot"
                         checked={formData.contractorSharesPot}
                         onChange={(e) => setFormData({ ...formData, contractorSharesPot: e.target.checked })}
-                        disabled={isSubmitting}
+                        disabled
                       />
                       <Label htmlFor="edit-contractor-shares-pot">Also shares in the pot split</Label>
                     </div>
