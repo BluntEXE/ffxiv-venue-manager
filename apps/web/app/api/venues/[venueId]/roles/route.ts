@@ -112,10 +112,17 @@ export const POST = withRateLimit<{ params: Promise<{ venueId: string }> }>(
       return NextResponse.json({ error: "Invalid request" }, { status: 400 })
     }
 
+    let color: number | null
+    try {
+      color = data.color ? hexColorToInt(data.color) : null
+    } catch {
+      return NextResponse.json({ error: "Invalid color format" }, { status: 400 })
+    }
+
     try {
       const position = await createPosition(token, gate.xvmApiVenueId!, {
         name: data.name,
-        color: data.color ? hexColorToInt(data.color) : null,
+        color,
         responsibilities: data.responsibilities ?? null,
         hourly_rate_minor: dollarsToMinorUnits(data.hourlyRate ?? null),
       })

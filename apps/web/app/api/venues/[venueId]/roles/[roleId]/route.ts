@@ -129,10 +129,17 @@ export const PUT = withRateLimit<{ params: Promise<{ venueId: string; roleId: st
       return NextResponse.json({ error: "Invalid request" }, { status: 400 })
     }
 
+    let color: number | null | undefined
+    try {
+      color = data.color !== undefined ? (data.color ? hexColorToInt(data.color) : null) : undefined
+    } catch {
+      return NextResponse.json({ error: "Invalid color format" }, { status: 400 })
+    }
+
     try {
       const position = await updatePosition(token, gate.xvmApiVenueId!, positionId, {
         name: data.name,
-        color: data.color !== undefined ? hexColorToInt(data.color) : undefined,
+        color,
         responsibilities: data.responsibilities,
         hourly_rate_minor: data.hourlyRate !== undefined ? dollarsToMinorUnits(data.hourlyRate) : undefined,
       })
