@@ -1,20 +1,49 @@
-import { NextRequest, NextResponse } from "next/server"
+import { NextResponse } from "next/server"
 import { getServerSession } from "next-auth"
 import { authOptions } from "@/lib/auth"
-import { prisma } from "@/lib/prisma"
 import { z } from "zod"
+import { prisma } from "@/lib/prisma"
 import { withRateLimit } from "@/lib/middleware/with-rate-limit"
+import { getValidXvmApiToken, invalidateXvmApiCredential } from "@/lib/api/xvm-api-store"
+import { listPositions, createPosition, XvmApiError, xvmErrorMessage, type PositionRow } from "@/lib/api/xvm-api"
+import { hexColorToInt, intColorToHex, dollarsToMinorUnits, minorUnitsToDollars } from "@/lib/api/position-convert"
 import { validators } from "@/lib/validation"
 
 const createRoleSchema = z.object({
   name: validators.roleName,
   responsibilities: validators.roleDescription,
   color: z.string().optional(),
-  permissions: z.record(z.string(), z.boolean()).optional(),
   hourlyRate: z.number().positive().nullable().optional(),
-  potPayoutMode: z.enum(["STANDARD", "POT", "CONTRACTOR"]).optional(),
-  contractorSharesPot: z.boolean().optional(),
 })
+
+// Matches the shape staff/roles/page.tsx already expects, so the page needs
+// no logic changes — just its TypeScript types (id: string -> number).
+function toRoleShape(position: PositionRow) {
+  return {
+    id: position.id,
+    name: position.name,
+    color: intColorToHex(position.color),
+    responsibilities: position.responsibilities,
+    hourlyRate: minorUnitsToDollars(position.hourly_rate_minor),
+    potPayoutMode: position.pot_payout_mode,
+    contractorSharesPot: position.contractor_shares_pot,
+    permissions: null,
+    _count: { memberships: position.member_ids.length },
+  }
+}
+
+async function requireXvmVenueId(venueId: string) {
+  const venue = await prisma.venue.findUnique({ where: { id: venueId }, select: { xvmApiVenueId: true } })
+  if (!venue?.xvmApiVenueId) {
+    return {
+      error: NextResponse.json(
+        { error: "not_connected", message: "This venue hasn't been connected to xvm-api yet." },
+        { status: 409 }
+      ),
+    }
+  }
+  return { xvmApiVenueId: venue.xvmApiVenueId }
+}
 
 export const GET = withRateLimit<{ params: Promise<{ venueId: string }> }>(
   async (request, context) => {
@@ -22,54 +51,31 @@ export const GET = withRateLimit<{ params: Promise<{ venueId: string }> }>(
       return NextResponse.json({ error: "Invalid request" }, { status: 400 })
     }
 
+    const session = await getServerSession(authOptions)
+    if (!session?.user?.id) {
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
+    }
+
+    const token = await getValidXvmApiToken(session.user.id)
+    if (!token) {
+      return NextResponse.json({ error: "xvm-api link not established yet" }, { status: 503 })
+    }
+
+    const { venueId } = await context.params
+
+    const gate = await requireXvmVenueId(venueId)
+    if (gate.error) return gate.error
+
     try {
-      const session = await getServerSession(authOptions)
-      if (!session?.user?.id) {
-        return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
+      const positions = await listPositions(token, gate.xvmApiVenueId!)
+      return NextResponse.json(positions.map(toRoleShape))
+    } catch (err) {
+      if (err instanceof XvmApiError && err.status !== 401) {
+        return NextResponse.json({ error: xvmErrorMessage(err) }, { status: err.status })
       }
-
-      const { params } = context
-      const { venueId } = await params
-
-      // Check if user has access to this venue
-      const membership = await prisma.membership.findFirst({
-        where: {
-          userId: session.user.id,
-          venueId,
-          status: "active",
-        },
-      })
-
-      if (!membership) {
-        return NextResponse.json({ error: "You don't have access to this venue" }, { status: 403 })
-      }
-
-      // Get all custom roles for this venue
-      const roles = await prisma.role.findMany({
-        where: { venueId },
-        include: {
-          _count: {
-            select: {
-              memberships: true,
-              additionalFor: true,
-            },
-          },
-        },
-        orderBy: {
-          createdAt: "desc",
-        },
-      })
-
-      // A membership can hold a role as its primary role or as a sub-role; both count as "assigned."
-      const rolesWithCombinedCount = roles.map((role) => ({
-        ...role,
-        _count: { memberships: role._count.memberships + role._count.additionalFor },
-      }))
-
-      return NextResponse.json(rolesWithCombinedCount)
-    } catch (error) {
-      console.error("Error fetching roles:", error)
-      return NextResponse.json({ error: "Internal server error" }, { status: 500 })
+      console.error("[roles] GET error:", err)
+      await invalidateXvmApiCredential(session.user.id)
+      return NextResponse.json({ error: "xvm-api link needs to be refreshed" }, { status: 503 })
     }
   },
   { requests: 60, window: "1 m" }
@@ -81,64 +87,53 @@ export const POST = withRateLimit<{ params: Promise<{ venueId: string }> }>(
       return NextResponse.json({ error: "Invalid request" }, { status: 400 })
     }
 
+    const session = await getServerSession(authOptions)
+    if (!session?.user?.id) {
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
+    }
+
+    const token = await getValidXvmApiToken(session.user.id)
+    if (!token) {
+      return NextResponse.json({ error: "xvm-api link not established yet" }, { status: 503 })
+    }
+
+    const { venueId } = await context.params
+
+    const gate = await requireXvmVenueId(venueId)
+    if (gate.error) return gate.error
+
+    let data: z.infer<typeof createRoleSchema>
     try {
-      const session = await getServerSession(authOptions)
-      if (!session?.user?.id) {
-        return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
+      data = createRoleSchema.parse(await request.json())
+    } catch (err) {
+      if (err instanceof z.ZodError) {
+        return NextResponse.json({ error: "Invalid request", details: err.flatten() }, { status: 400 })
       }
+      return NextResponse.json({ error: "Invalid request" }, { status: 400 })
+    }
 
-      const { params } = context
-      const { venueId } = await params
+    let color: number | null
+    try {
+      color = data.color ? hexColorToInt(data.color) : null
+    } catch {
+      return NextResponse.json({ error: "Invalid color format" }, { status: 400 })
+    }
 
-      // Check if user has permission to manage roles
-      const membership = await prisma.membership.findFirst({
-        where: {
-          userId: session.user.id,
-          venueId,
-          status: "active",
-        },
+    try {
+      const position = await createPosition(token, gate.xvmApiVenueId!, {
+        name: data.name,
+        color,
+        responsibilities: data.responsibilities ?? null,
+        hourly_rate_minor: dollarsToMinorUnits(data.hourlyRate ?? null),
       })
-
-      if (!membership || !["OWNER", "MANAGER"].includes(membership.role)) {
-        return NextResponse.json({ error: "You don't have permission to create roles" }, { status: 403 })
+      return NextResponse.json(toRoleShape(position), { status: 201 })
+    } catch (err) {
+      if (err instanceof XvmApiError && err.status !== 401) {
+        return NextResponse.json({ error: xvmErrorMessage(err) }, { status: err.status })
       }
-
-      const body = await request.json()
-      const validatedData = createRoleSchema.parse(body)
-
-      // Check if role name already exists for this venue
-      const existingRole = await prisma.role.findFirst({
-        where: {
-          venueId,
-          name: validatedData.name,
-        },
-      })
-
-      if (existingRole) {
-        return NextResponse.json({ error: "A role with this name already exists" }, { status: 400 })
-      }
-
-      const newRole = await prisma.role.create({
-        data: {
-          venueId,
-          name: validatedData.name,
-          responsibilities: validatedData.responsibilities,
-          color: validatedData.color,
-          permissions: validatedData.permissions || {},
-          hourlyRate: validatedData.hourlyRate,
-          potPayoutMode: validatedData.potPayoutMode,
-          contractorSharesPot: validatedData.contractorSharesPot,
-        },
-      })
-
-      return NextResponse.json(newRole, { status: 201 })
-    } catch (error) {
-      if (error instanceof z.ZodError) {
-        return NextResponse.json({ error: "Validation error", details: error.issues }, { status: 400 })
-      }
-
-      console.error("Error creating role:", error)
-      return NextResponse.json({ error: "Internal server error" }, { status: 500 })
+      console.error("[roles] POST error:", err)
+      await invalidateXvmApiCredential(session.user.id)
+      return NextResponse.json({ error: "xvm-api link needs to be refreshed" }, { status: 503 })
     }
   },
   { requests: 10, window: "1 m" }
