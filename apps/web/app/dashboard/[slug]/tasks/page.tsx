@@ -197,7 +197,7 @@ export default function TasksPage({ params }: { params: Promise<{ slug: string }
 
   const handleStatusUpdate = async (taskId: number, newStatus: Task["status"]) => {
     if (newStatus === "PENDING") {
-      setError("Reopening a completed or cancelled task isn't supported - create a new task instead.")
+      alert("Reopening a completed or cancelled task isn't supported - create a new task instead.")
       return
     }
 
