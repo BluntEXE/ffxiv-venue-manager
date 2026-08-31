@@ -595,3 +595,25 @@ export async function listMemberships(personToken: string, venueId: string): Pro
   if (!process.env.XVM_API_BASE_URL) throw new Error("XVM_API_BASE_URL is not set")
   return xvmFetch<MembershipRow[]>(`/venues/${venueId}/memberships`, {}, personToken)
 }
+
+// ── Tasks API ──────────────────────────────────────────────────
+
+export interface CategoryRow {
+  id: number
+  name: string
+  sort_order: number
+}
+
+export async function listTaskCategories(personToken: string, venueId: string): Promise<CategoryRow[]> {
+  if (!process.env.XVM_API_BASE_URL) throw new Error("XVM_API_BASE_URL is not set")
+  return xvmFetch<CategoryRow[]>(`/venues/${venueId}/tasks/categories`, {}, personToken)
+}
+
+export async function createTaskCategory(personToken: string, venueId: string, name: string): Promise<CategoryRow> {
+  if (!process.env.XVM_API_BASE_URL) throw new Error("XVM_API_BASE_URL is not set")
+  return xvmFetch<CategoryRow>(
+    `/venues/${venueId}/tasks/categories`,
+    { method: "POST", body: JSON.stringify({ name, sort_order: 0 }) },
+    personToken
+  )
+}
