@@ -15,6 +15,8 @@ import {
   listPositions,
   listTaskCategories,
   listMemberships,
+  XvmApiError,
+  xvmErrorMessage,
   type TaskRow,
   type PositionRow,
   type MembershipRow,
@@ -198,10 +200,28 @@ export const PUT = withRateLimit<{ params: Promise<{ venueId: string; taskId: st
       })
 
       if (data.assignedRoleId !== undefined) {
-        task = await assignTask(token, gate.xvmApiVenueId!, id, {
-          position_id: data.assignedRoleId,
-          membership_id: null,
-        })
+        try {
+          task = await assignTask(token, gate.xvmApiVenueId!, id, {
+            position_id: data.assignedRoleId,
+            membership_id: null,
+          })
+        } catch (assignErr) {
+          // The descriptive edit above already landed - a blanket error here
+          // would hide that from the caller. Surface it as a partial success
+          // instead, but only for a real xvm-api rejection (a genuine 401 or
+          // network failure still needs the outer catch's classification).
+          if (assignErr instanceof XvmApiError && assignErr.status !== 401) {
+            return NextResponse.json(
+              {
+                ...(await shapeAfterFetch(token, gate.xvmApiVenueId!, task)),
+                partial: true,
+                error: xvmErrorMessage(assignErr),
+              },
+              { status: 200 }
+            )
+          }
+          throw assignErr
+        }
       }
 
       return NextResponse.json(await shapeAfterFetch(token, gate.xvmApiVenueId!, task))

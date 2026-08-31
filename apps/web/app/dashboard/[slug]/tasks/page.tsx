@@ -313,6 +313,12 @@ export default function TasksPage({ params }: { params: Promise<{ slug: string }
 
       const updatedTask = await response.json()
       setTasks(tasks.map((t) => (t.id === updatedTask.id ? updatedTask : t)))
+      if (updatedTask.partial) {
+        // The descriptive edit landed but reassignment didn't - leave the
+        // dialog open so the failure is visible instead of reading as success.
+        setFormError(`Task details saved, but reassignment failed: ${updatedTask.error}`)
+        return
+      }
       setIsEditDialogOpen(false)
       setEditingTask(null)
     } catch (error: unknown) {
