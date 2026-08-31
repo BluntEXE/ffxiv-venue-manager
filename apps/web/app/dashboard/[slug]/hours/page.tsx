@@ -4,8 +4,8 @@ import { redirect, notFound } from "next/navigation"
 import { prisma } from "@/lib/prisma"
 import { VenueLayout } from "@/components/venue-layout"
 import { HoursBoard } from "@/components/hours-board"
-import { getValidXvmApiToken, invalidateXvmApiCredential } from "@/lib/api/xvm-api-store"
-import { listHours, XvmApiError, type HoursRow } from "@/lib/api/xvm-api"
+import { getValidXvmApiToken, invalidateXvmApiCredential, isXvmAuthFailure } from "@/lib/api/xvm-api-store"
+import { listHours, type HoursRow } from "@/lib/api/xvm-api"
 
 export default async function HoursPage({ params }: { params: Promise<{ slug: string }> }) {
   const session = await getServerSession(authOptions)
@@ -33,10 +33,8 @@ export default async function HoursPage({ params }: { params: Promise<{ slug: st
       hours = await listHours(token, venue.xvmApiVenueId)
     } catch (err) {
       loadFailed = true
-      if (err instanceof XvmApiError && err.status !== 401) {
-        console.error("[hours page] listHours error:", err)
-      } else {
-        console.error("[hours page] listHours error:", err)
+      console.error("[hours page] listHours error:", err)
+      if (isXvmAuthFailure(err)) {
         await invalidateXvmApiCredential(session.user.id)
       }
     }

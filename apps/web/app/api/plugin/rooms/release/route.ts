@@ -2,8 +2,8 @@ import { NextRequest, NextResponse } from "next/server"
 import { z } from "zod"
 import { prisma } from "@/lib/prisma"
 import { pluginAuthGate, checkPermission } from "@/lib/api/plugin-auth"
-import { getValidXvmApiToken, invalidateXvmApiCredential } from "@/lib/api/xvm-api-store"
-import { releaseRoom, XvmApiError, xvmErrorMessage } from "@/lib/api/xvm-api"
+import { getValidXvmApiToken, xvmApiErrorResponse } from "@/lib/api/xvm-api-store"
+import { releaseRoom } from "@/lib/api/xvm-api"
 import { parsePluginRoomId } from "@/lib/api/plugin-rooms"
 
 /**
@@ -61,12 +61,7 @@ export async function POST(request: NextRequest) {
       const room = await releaseRoom(token, venue.xvmApiVenueId, id)
       return NextResponse.json({ success: true, room })
     } catch (err) {
-      if (err instanceof XvmApiError && err.status !== 401) {
-        return NextResponse.json({ error: xvmErrorMessage(err) }, { status: err.status })
-      }
-      console.error("[plugin/rooms/release] error:", err)
-      await invalidateXvmApiCredential(auth.userId)
-      return NextResponse.json({ error: "xvm-api link needs to be refreshed" }, { status: 503 })
+      return xvmApiErrorResponse(err, auth.userId, "[plugin/rooms/release] error")
     }
   } catch (err) {
     console.error("[plugin/rooms/release] unexpected error:", err)

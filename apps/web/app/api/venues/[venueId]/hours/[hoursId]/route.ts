@@ -4,8 +4,8 @@ import { authOptions } from "@/lib/auth"
 import { z } from "zod"
 import { prisma } from "@/lib/prisma"
 import { withRateLimit } from "@/lib/middleware/with-rate-limit"
-import { getValidXvmApiToken, invalidateXvmApiCredential } from "@/lib/api/xvm-api-store"
-import { updateHours, deleteHours, XvmApiError, xvmErrorMessage } from "@/lib/api/xvm-api"
+import { getValidXvmApiToken, xvmApiErrorResponse } from "@/lib/api/xvm-api-store"
+import { updateHours, deleteHours } from "@/lib/api/xvm-api"
 
 const updateHoursSchema = z
   .object({
@@ -64,12 +64,7 @@ export const PATCH = withRateLimit<Context>(
       const hours = await updateHours(token, gate.xvmApiVenueId!, Number(hoursId), data)
       return NextResponse.json(hours)
     } catch (err) {
-      if (err instanceof XvmApiError && err.status !== 401) {
-        return NextResponse.json({ error: xvmErrorMessage(err) }, { status: err.status })
-      }
-      console.error("[hours] PATCH error:", err)
-      await invalidateXvmApiCredential(session.user.id)
-      return NextResponse.json({ error: "xvm-api link needs to be refreshed" }, { status: 503 })
+      return xvmApiErrorResponse(err, session.user.id, "[hours] PATCH error")
     }
   },
   { requests: 30, window: "1 m" }
@@ -100,12 +95,7 @@ export const DELETE = withRateLimit<Context>(
       await deleteHours(token, gate.xvmApiVenueId!, Number(hoursId))
       return new NextResponse(null, { status: 204 })
     } catch (err) {
-      if (err instanceof XvmApiError && err.status !== 401) {
-        return NextResponse.json({ error: xvmErrorMessage(err) }, { status: err.status })
-      }
-      console.error("[hours] DELETE error:", err)
-      await invalidateXvmApiCredential(session.user.id)
-      return NextResponse.json({ error: "xvm-api link needs to be refreshed" }, { status: 503 })
+      return xvmApiErrorResponse(err, session.user.id, "[hours] DELETE error")
     }
   },
   { requests: 30, window: "1 m" }

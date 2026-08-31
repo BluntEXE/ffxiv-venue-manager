@@ -2,8 +2,8 @@ import { NextRequest, NextResponse } from "next/server"
 import { z } from "zod"
 import { prisma } from "@/lib/prisma"
 import { pluginAuthGate, checkPermission } from "@/lib/api/plugin-auth"
-import { getValidXvmApiToken, getValidXvmApiPersonId, invalidateXvmApiCredential } from "@/lib/api/xvm-api-store"
-import { createReservation, XvmApiError, xvmErrorMessage } from "@/lib/api/xvm-api"
+import { getValidXvmApiToken, getValidXvmApiPersonId, xvmApiErrorResponse } from "@/lib/api/xvm-api-store"
+import { createReservation } from "@/lib/api/xvm-api"
 import { parsePluginRoomId } from "@/lib/api/plugin-rooms"
 
 /**
@@ -86,12 +86,7 @@ export async function POST(request: NextRequest) {
       })
       return NextResponse.json({ success: true, reservation })
     } catch (err) {
-      if (err instanceof XvmApiError && err.status !== 401) {
-        return NextResponse.json({ error: xvmErrorMessage(err) }, { status: err.status })
-      }
-      console.error("[plugin/rooms/reserve] error:", err)
-      await invalidateXvmApiCredential(auth.userId)
-      return NextResponse.json({ error: "xvm-api link needs to be refreshed" }, { status: 503 })
+      return xvmApiErrorResponse(err, auth.userId, "[plugin/rooms/reserve] error")
     }
   } catch (err) {
     console.error("[plugin/rooms/reserve] unexpected error:", err)

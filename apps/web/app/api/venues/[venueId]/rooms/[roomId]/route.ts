@@ -5,8 +5,8 @@ import { z } from "zod"
 import { prisma } from "@/lib/prisma"
 import { withRateLimit } from "@/lib/middleware/with-rate-limit"
 import { pluginAuthGate } from "@/lib/api/plugin-auth"
-import { getValidXvmApiToken, invalidateXvmApiCredential } from "@/lib/api/xvm-api-store"
-import { getRoom, updateRoom, deleteRoom, XvmApiError, xvmErrorMessage } from "@/lib/api/xvm-api"
+import { getValidXvmApiToken, xvmApiErrorResponse } from "@/lib/api/xvm-api-store"
+import { getRoom, updateRoom, deleteRoom } from "@/lib/api/xvm-api"
 
 /**
  * Resolves the acting userId from either a browser session (web dashboard)
@@ -92,12 +92,7 @@ export const GET = withRateLimit<{
       const room = await getRoom(gate.token!, venueGate.xvmApiVenueId!, id)
       return NextResponse.json(room)
     } catch (err) {
-      if (err instanceof XvmApiError && err.status !== 401) {
-        return NextResponse.json({ error: xvmErrorMessage(err) }, { status: err.status })
-      }
-      console.error("[rooms/:id] GET error:", err)
-      await invalidateXvmApiCredential(session.user.id)
-      return NextResponse.json({ error: "xvm-api link needs to be refreshed" }, { status: 503 })
+      return xvmApiErrorResponse(err, session.user.id, "[rooms/:id] GET error")
     }
   },
   { requests: 60, window: "1 m" }
@@ -149,12 +144,7 @@ export const PATCH = withRateLimit<{
       const room = await updateRoom(gate.token!, venueGate.xvmApiVenueId!, id, data)
       return NextResponse.json(room)
     } catch (err) {
-      if (err instanceof XvmApiError && err.status !== 401) {
-        return NextResponse.json({ error: xvmErrorMessage(err) }, { status: err.status })
-      }
-      console.error("[rooms/:id] PATCH error:", err)
-      await invalidateXvmApiCredential(userId)
-      return NextResponse.json({ error: "xvm-api link needs to be refreshed" }, { status: 503 })
+      return xvmApiErrorResponse(err, userId, "[rooms/:id] PATCH error")
     }
   },
   { requests: 30, window: "1 m" }
@@ -189,12 +179,7 @@ export const DELETE = withRateLimit<{
       await deleteRoom(gate.token!, venueGate.xvmApiVenueId!, id)
       return NextResponse.json({ success: true })
     } catch (err) {
-      if (err instanceof XvmApiError && err.status !== 401) {
-        return NextResponse.json({ error: xvmErrorMessage(err) }, { status: err.status })
-      }
-      console.error("[rooms/:id] DELETE error:", err)
-      await invalidateXvmApiCredential(session.user.id)
-      return NextResponse.json({ error: "xvm-api link needs to be refreshed" }, { status: 503 })
+      return xvmApiErrorResponse(err, session.user.id, "[rooms/:id] DELETE error")
     }
   },
   { requests: 30, window: "1 m" }

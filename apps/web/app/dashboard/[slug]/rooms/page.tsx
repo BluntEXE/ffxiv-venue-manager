@@ -5,8 +5,8 @@ import { prisma } from "@/lib/prisma"
 import { VenueLayout } from "@/components/venue-layout"
 import { RoomsBoard, type RoomItem } from "@/components/rooms-board"
 import { RoomManagerRoles } from "@/components/room-manager-roles"
-import { getValidXvmApiToken, invalidateXvmApiCredential } from "@/lib/api/xvm-api-store"
-import { listRooms, XvmApiError } from "@/lib/api/xvm-api"
+import { getValidXvmApiToken, invalidateXvmApiCredential, isXvmAuthFailure } from "@/lib/api/xvm-api-store"
+import { listRooms } from "@/lib/api/xvm-api"
 
 export default async function RoomsPage({ params }: { params: Promise<{ slug: string }> }) {
   const session = await getServerSession(authOptions)
@@ -32,10 +32,8 @@ export default async function RoomsPage({ params }: { params: Promise<{ slug: st
     try {
       rooms = await listRooms(token, venue.xvmApiVenueId)
     } catch (err) {
-      if (err instanceof XvmApiError && err.status !== 401) {
-        console.error("[rooms page] listRooms error:", err)
-      } else {
-        console.error("[rooms page] listRooms error:", err)
+      console.error("[rooms page] listRooms error:", err)
+      if (isXvmAuthFailure(err)) {
         await invalidateXvmApiCredential(session.user.id)
       }
     }

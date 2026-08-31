@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server"
 import { getServerSession } from "next-auth"
 import { authOptions } from "@/lib/auth"
-import { getValidXvmApiToken, invalidateXvmApiCredential } from "@/lib/api/xvm-api-store"
+import { getValidXvmApiToken, xvmApiErrorResponse } from "@/lib/api/xvm-api-store"
 import { revokeCredential } from "@/lib/api/xvm-api"
 
 export async function POST(_request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
@@ -20,10 +20,7 @@ export async function POST(_request: NextRequest, { params }: { params: Promise<
   try {
     const credential = await revokeCredential(token, Number(id))
     return NextResponse.json(credential)
-  } catch {
-    // Same simplification as GET /api/xvm-api/credentials: any failure
-    // invalidates the stored token so the next sign-in re-mints one.
-    await invalidateXvmApiCredential(session.user.id)
-    return NextResponse.json({ error: "xvm-api link needs to be refreshed" }, { status: 503 })
+  } catch (err) {
+    return xvmApiErrorResponse(err, session.user.id, "[xvm-api/credentials/:id/revoke] POST error")
   }
 }

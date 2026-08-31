@@ -1,6 +1,7 @@
+import { NextResponse } from "next/server"
 import { prisma } from "@/lib/prisma"
 import type { CredentialIssued } from "@/lib/api/xvm-api"
-import { getMe } from "@/lib/api/xvm-api"
+import { getMe, XvmApiError, xvmErrorMessage } from "@/lib/api/xvm-api"
 
 const REFRESH_MARGIN_MS = 24 * 60 * 60 * 1000 // 1 day
 
@@ -25,6 +26,35 @@ export async function getValidXvmApiToken(userId: string): Promise<string | null
 
 export async function invalidateXvmApiCredential(userId: string): Promise<void> {
   await prisma.xvmApiCredential.deleteMany({ where: { userId } })
+}
+
+/**
+ * True only for a genuine "xvm-api rejected this token" failure - a network
+ * blip, timeout, or any other exception must never invalidate a credential
+ * that might still be perfectly valid.
+ */
+export function isXvmAuthFailure(err: unknown): err is XvmApiError {
+  return err instanceof XvmApiError && err.status === 401
+}
+
+/**
+ * Standard catch-block response for a failed xvm-api call in a route handler:
+ * a non-401 XvmApiError passes its status/message through as-is, a 401
+ * invalidates the stored credential (the only case that should), and
+ * anything else (network blip, DNS failure, etc.) logs and returns a
+ * generic 503 without touching the credential.
+ */
+export async function xvmApiErrorResponse(err: unknown, userId: string, logLabel: string): Promise<NextResponse> {
+  if (err instanceof XvmApiError && err.status !== 401) {
+    return NextResponse.json({ error: xvmErrorMessage(err) }, { status: err.status })
+  }
+  if (isXvmAuthFailure(err)) {
+    console.error(`${logLabel}:`, err)
+    await invalidateXvmApiCredential(userId)
+    return NextResponse.json({ error: "xvm-api link needs to be refreshed" }, { status: 503 })
+  }
+  console.error(`${logLabel}:`, err)
+  return NextResponse.json({ error: "xvm-api request failed" }, { status: 503 })
 }
 
 /**
