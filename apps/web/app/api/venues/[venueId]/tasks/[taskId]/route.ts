@@ -1,27 +1,88 @@
-import { NextRequest, NextResponse } from "next/server"
+import { NextResponse } from "next/server"
 import { getServerSession } from "next-auth"
 import { authOptions } from "@/lib/auth"
-import { prisma } from "@/lib/prisma"
 import { z } from "zod"
-import {
-  sendDiscordWebhook,
-  formatTaskCompletedEmbed,
-  getWebhookUrlForType,
-  type VenueWebhookConfig,
-} from "@/lib/discord-webhook"
+import { prisma } from "@/lib/prisma"
 import { withRateLimit } from "@/lib/middleware/with-rate-limit"
+import { getValidXvmApiToken, invalidateXvmApiCredential } from "@/lib/api/xvm-api-store"
+import {
+  listTasks,
+  updateTask,
+  assignTask,
+  startTask,
+  completeTask,
+  cancelTask,
+  listPositions,
+  listTaskCategories,
+  XvmApiError,
+  xvmErrorMessage,
+  type TaskRow,
+  type PositionRow,
+} from "@/lib/api/xvm-api"
+import { priorityToInt, intToPriority, resolveCategoryId } from "@/lib/api/task-convert"
 import { validators } from "@/lib/validation"
-import { Prisma } from "@/generated/prisma/client"
 
 const updateTaskSchema = z.object({
   title: validators.taskTitle.optional(),
   description: validators.taskDescription,
-  status: z.enum(["PENDING", "IN_PROGRESS", "COMPLETED", "CANCELLED"]).optional(),
   priority: z.enum(["LOW", "MEDIUM", "HIGH", "URGENT"]).optional(),
   category: z.string().nullable().optional(),
-  assignedRoleId: z.string().nullable().optional(), // Role-based assignment
+  assignedRoleId: z.number().nullable().optional(),
   dueDate: z.string().nullable().optional(),
 })
+
+// Both null unassigns, matching xvm-api's TaskAssign contract.
+const transitionSchema = z.object({
+  action: z.enum(["start", "complete", "cancel"]),
+  reason: z.string().optional(), // only meaningful for "cancel"
+})
+
+function deriveStatus(task: TaskRow): "PENDING" | "IN_PROGRESS" | "COMPLETED" | "CANCELLED" {
+  if (task.cancelled_at) return "CANCELLED"
+  if (task.completed_at) return "COMPLETED"
+  if (task.started_at) return "IN_PROGRESS"
+  return "PENDING"
+}
+
+function toTaskShape(task: TaskRow, positionsById: Map<number, PositionRow>, categoryName: string | null) {
+  const position = task.assigned_position_id ? positionsById.get(task.assigned_position_id) : null
+  return {
+    id: task.id,
+    title: task.title,
+    description: task.description,
+    status: deriveStatus(task),
+    priority: intToPriority(task.priority),
+    category: categoryName,
+    dueDate: task.due_at,
+    completedAt: task.completed_at,
+    createdAt: task.created_at,
+    assignee: null,
+    assignedRole: position ? { id: position.id, name: position.name, color: position.color } : null,
+  }
+}
+
+async function requireXvmVenueId(venueId: string) {
+  const venue = await prisma.venue.findUnique({ where: { id: venueId }, select: { xvmApiVenueId: true } })
+  if (!venue?.xvmApiVenueId) {
+    return {
+      error: NextResponse.json(
+        { error: "not_connected", message: "This venue hasn't been connected to xvm-api yet." },
+        { status: 409 }
+      ),
+    }
+  }
+  return { xvmApiVenueId: venue.xvmApiVenueId }
+}
+
+async function shapeAfterFetch(token: string, xvmApiVenueId: string, task: TaskRow) {
+  const [positions, categories] = await Promise.all([
+    listPositions(token, xvmApiVenueId),
+    listTaskCategories(token, xvmApiVenueId),
+  ])
+  const positionsById = new Map(positions.map((p) => [p.id, p]))
+  const categoryName = task.category_id !== null ? categories.find((c) => c.id === task.category_id)?.name ?? null : null
+  return toTaskShape(task, positionsById, categoryName)
+}
 
 export const GET = withRateLimit<{ params: Promise<{ venueId: string; taskId: string }> }>(
   async (request, context) => {
@@ -29,62 +90,44 @@ export const GET = withRateLimit<{ params: Promise<{ venueId: string; taskId: st
       return NextResponse.json({ error: "Invalid request" }, { status: 400 })
     }
 
+    const session = await getServerSession(authOptions)
+    if (!session?.user?.id) {
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
+    }
+
+    const token = await getValidXvmApiToken(session.user.id)
+    if (!token) {
+      return NextResponse.json({ error: "xvm-api link not established yet" }, { status: 503 })
+    }
+
+    const { venueId, taskId } = await context.params
+    const id = Number(taskId)
+    if (!Number.isInteger(id)) {
+      return NextResponse.json({ error: "Task not found" }, { status: 404 })
+    }
+
+    const gate = await requireXvmVenueId(venueId)
+    if (gate.error) return gate.error
+
     try {
-      const session = await getServerSession(authOptions)
-      if (!session?.user?.id) {
-        return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
-      }
-
-      const { params } = context
-      const { venueId, taskId } = await params
-
-      // Check permissions
-      const membership = await prisma.membership.findFirst({
-        where: {
-          userId: session.user.id,
-          venueId,
-          status: "active",
-        },
-      })
-
-      if (!membership) {
-        return NextResponse.json({ error: "You don't have access to this venue" }, { status: 403 })
-      }
-
-      const task = await prisma.task.findUnique({
-        where: { id: taskId, venueId },
-        include: {
-          assignee: {
-            select: {
-              id: true,
-              name: true,
-              image: true,
-            },
-          },
-          assignedRole: {
-            select: {
-              id: true,
-              name: true,
-              color: true,
-            },
-          },
-          completer: {
-            select: {
-              id: true,
-              name: true,
-            },
-          },
-        },
-      })
-
+      // No get-one endpoint is needed here - list+find matches the Roles
+      // cutover's precedent (roles/[roleId]/route.ts does the same, since
+      // xvm-api's Positions module also lacks a get-one; Tasks does have
+      // GET /{task_id} on xvm-api, but reusing list+find keeps this route
+      // consistent with the sibling cutover rather than mixing both styles).
+      const tasks = await listTasks(token, gate.xvmApiVenueId!, { includeCompleted: true, includeCancelled: true })
+      const task = tasks.find((t) => t.id === id)
       if (!task) {
         return NextResponse.json({ error: "Task not found" }, { status: 404 })
       }
-
-      return NextResponse.json(task)
-    } catch (error) {
-      console.error("Error fetching task:", error)
-      return NextResponse.json({ error: "Internal server error" }, { status: 500 })
+      return NextResponse.json(await shapeAfterFetch(token, gate.xvmApiVenueId!, task))
+    } catch (err) {
+      if (err instanceof XvmApiError && err.status !== 401) {
+        return NextResponse.json({ error: xvmErrorMessage(err) }, { status: err.status })
+      }
+      console.error("[tasks] GET one error:", err)
+      await invalidateXvmApiCredential(session.user.id)
+      return NextResponse.json({ error: "xvm-api link needs to be refreshed" }, { status: 503 })
     }
   },
   { requests: 60, window: "1 m" }
@@ -96,201 +139,172 @@ export const PUT = withRateLimit<{ params: Promise<{ venueId: string; taskId: st
       return NextResponse.json({ error: "Invalid request" }, { status: 400 })
     }
 
+    const session = await getServerSession(authOptions)
+    if (!session?.user?.id) {
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
+    }
+
+    const token = await getValidXvmApiToken(session.user.id)
+    if (!token) {
+      return NextResponse.json({ error: "xvm-api link not established yet" }, { status: 503 })
+    }
+
+    const { venueId, taskId } = await context.params
+    const id = Number(taskId)
+    if (!Number.isInteger(id)) {
+      return NextResponse.json({ error: "Task not found" }, { status: 404 })
+    }
+
+    const gate = await requireXvmVenueId(venueId)
+    if (gate.error) return gate.error
+
+    let data: z.infer<typeof updateTaskSchema>
     try {
-      const session = await getServerSession(authOptions)
-      if (!session?.user?.id) {
-        return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
+      data = updateTaskSchema.parse(await request.json())
+    } catch (err) {
+      if (err instanceof z.ZodError) {
+        return NextResponse.json({ error: "Invalid request", details: err.flatten() }, { status: 400 })
+      }
+      return NextResponse.json({ error: "Invalid request" }, { status: 400 })
+    }
+
+    try {
+      let categoryId: number | null | undefined
+      if (data.category !== undefined) {
+        categoryId = data.category ? await resolveCategoryId(token, gate.xvmApiVenueId!, data.category) : null
       }
 
-      const { params } = context
-      const { venueId, taskId } = await params
-
-      // Check permissions
-      const membership = await prisma.membership.findFirst({
-        where: {
-          userId: session.user.id,
-          venueId,
-          status: "active",
-        },
+      // xvm-api splits descriptive edits (PATCH) from reassignment (/assign) -
+      // sequence both if assignedRoleId was included, since the dashboard
+      // still exposes them as one form submission (see Task C6).
+      let task = await updateTask(token, gate.xvmApiVenueId!, id, {
+        title: data.title,
+        description: data.description,
+        priority: data.priority ? priorityToInt(data.priority) : undefined,
+        due_at: data.dueDate,
+        category_id: categoryId,
       })
 
-      if (!membership) {
-        return NextResponse.json({ error: "You don't have access to this venue" }, { status: 403 })
-      }
-
-      const task = await prisma.task.findUnique({
-        where: { id: taskId, venueId },
-      })
-
-      if (!task) {
-        return NextResponse.json({ error: "Task not found" }, { status: 404 })
-      }
-
-      // Check if user can update this task
-      // OWNER/MANAGER can always update, OR users with the assigned role
-      let canUpdate = ["OWNER", "MANAGER"].includes(membership.role)
-
-      // If task is assigned to a role, check if user has that role
-      if (!canUpdate && task.assignedRoleId) {
-        const userHasRole = await prisma.membership.findFirst({
-          where: {
-            userId: session.user.id,
-            venueId,
-            roleId: task.assignedRoleId,
-          },
+      if (data.assignedRoleId !== undefined) {
+        task = await assignTask(token, gate.xvmApiVenueId!, id, {
+          position_id: data.assignedRoleId,
+          membership_id: null,
         })
-        canUpdate = !!userHasRole
       }
 
-      if (!canUpdate) {
-        return NextResponse.json({ error: "You don't have permission to update this task" }, { status: 403 })
+      return NextResponse.json(await shapeAfterFetch(token, gate.xvmApiVenueId!, task))
+    } catch (err) {
+      if (err instanceof XvmApiError && err.status !== 401) {
+        return NextResponse.json({ error: xvmErrorMessage(err) }, { status: err.status })
       }
-
-      const body = await request.json()
-      const validatedData = updateTaskSchema.parse(body)
-
-      // Prepare update data
-      const updateData: Prisma.TaskUncheckedUpdateInput = {}
-      if (validatedData.title !== undefined) updateData.title = validatedData.title
-      if (validatedData.description !== undefined) updateData.description = validatedData.description
-      if (validatedData.status !== undefined) {
-        updateData.status = validatedData.status
-        // If marking as completed, set completion time and user
-        if (validatedData.status === "COMPLETED" && task.status !== "COMPLETED") {
-          updateData.completedAt = new Date()
-          updateData.completedBy = session.user.id
-        }
-        // If changing from completed to something else, clear completion data
-        if (validatedData.status !== "COMPLETED" && task.status === "COMPLETED") {
-          updateData.completedAt = null
-          updateData.completedBy = null
-        }
-      }
-      if (validatedData.priority !== undefined) updateData.priority = validatedData.priority
-      if (validatedData.category !== undefined) updateData.category = validatedData.category
-      if (validatedData.assignedRoleId !== undefined) updateData.assignedRoleId = validatedData.assignedRoleId
-      if (validatedData.dueDate !== undefined) {
-        updateData.dueDate = validatedData.dueDate ? new Date(validatedData.dueDate) : null
-      }
-
-      const updatedTask = await prisma.task.update({
-        where: { id: taskId, venueId },
-        data: updateData,
-        include: {
-          assignee: {
-            select: {
-              id: true,
-              name: true,
-              image: true,
-            },
-          },
-          assignedRole: {
-            select: {
-              id: true,
-              name: true,
-              color: true,
-            },
-          },
-          completer: {
-            select: {
-              id: true,
-              name: true,
-            },
-          },
-        },
-      })
-
-      // Send Discord webhook notification if task was marked as completed
-      if (validatedData.status === "COMPLETED" && task.status !== "COMPLETED") {
-        const venue = await prisma.venue.findUnique({
-          where: { id: venueId },
-          select: {
-            discordWebhookUrl: true,
-            settings: true,
-          },
-        })
-
-        if (venue) {
-          const venueSettings = venue.settings as Record<string, unknown> | null
-          const webhookConfig: VenueWebhookConfig = {
-            discordWebhooks: venueSettings?.discordWebhooks as VenueWebhookConfig["discordWebhooks"],
-            webhooks: venueSettings?.webhooks as VenueWebhookConfig["webhooks"],
-            discordWebhookUrl: venue.discordWebhookUrl,
-          }
-
-          const webhookUrl = getWebhookUrlForType(webhookConfig, "taskCompleted")
-          if (webhookUrl) {
-            const embed = formatTaskCompletedEmbed({
-              title: updatedTask.title,
-              priority: updatedTask.priority,
-              completer: updatedTask.completer,
-            })
-
-            // Send webhook asynchronously (don't wait for response)
-            sendDiscordWebhook(webhookUrl, { embeds: [embed] }).catch((error) =>
-              console.error("Failed to send Discord webhook:", error)
-            )
-          }
-        }
-      }
-
-      return NextResponse.json(updatedTask)
-    } catch (error) {
-      if (error instanceof z.ZodError) {
-        return NextResponse.json({ error: "Validation error", details: error.issues }, { status: 400 })
-      }
-
-      console.error("Error updating task:", error)
-      return NextResponse.json({ error: "Internal server error" }, { status: 500 })
+      console.error("[tasks] PUT error:", err)
+      await invalidateXvmApiCredential(session.user.id)
+      return NextResponse.json({ error: "xvm-api link needs to be refreshed" }, { status: 503 })
     }
   },
   { requests: 20, window: "1 m" }
 )
 
+// Replaces the old flat status-field write. One endpoint for all three
+// transitions rather than three route files, since the frontend only ever
+// fires one at a time (see Task C6) - matches this route file's existing
+// one-file-per-resource shape better than adding start/complete/cancel as
+// sibling [taskId] subpaths would.
+export const POST = withRateLimit<{ params: Promise<{ venueId: string; taskId: string }> }>(
+  async (request, context) => {
+    if (!context?.params) {
+      return NextResponse.json({ error: "Invalid request" }, { status: 400 })
+    }
+
+    const session = await getServerSession(authOptions)
+    if (!session?.user?.id) {
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
+    }
+
+    const token = await getValidXvmApiToken(session.user.id)
+    if (!token) {
+      return NextResponse.json({ error: "xvm-api link not established yet" }, { status: 503 })
+    }
+
+    const { venueId, taskId } = await context.params
+    const id = Number(taskId)
+    if (!Number.isInteger(id)) {
+      return NextResponse.json({ error: "Task not found" }, { status: 404 })
+    }
+
+    const gate = await requireXvmVenueId(venueId)
+    if (gate.error) return gate.error
+
+    let data: z.infer<typeof transitionSchema>
+    try {
+      data = transitionSchema.parse(await request.json())
+    } catch (err) {
+      if (err instanceof z.ZodError) {
+        return NextResponse.json({ error: "Invalid request", details: err.flatten() }, { status: 400 })
+      }
+      return NextResponse.json({ error: "Invalid request" }, { status: 400 })
+    }
+
+    try {
+      const task =
+        data.action === "start"
+          ? await startTask(token, gate.xvmApiVenueId!, id)
+          : data.action === "complete"
+            ? await completeTask(token, gate.xvmApiVenueId!, id)
+            : await cancelTask(token, gate.xvmApiVenueId!, id, data.reason ?? null)
+
+      return NextResponse.json(await shapeAfterFetch(token, gate.xvmApiVenueId!, task))
+    } catch (err) {
+      if (err instanceof XvmApiError && err.status !== 401) {
+        return NextResponse.json({ error: xvmErrorMessage(err) }, { status: err.status })
+      }
+      console.error("[tasks] transition error:", err)
+      await invalidateXvmApiCredential(session.user.id)
+      return NextResponse.json({ error: "xvm-api link needs to be refreshed" }, { status: 503 })
+    }
+  },
+  { requests: 20, window: "1 m" }
+)
+
+// Delete->cancel decision: xvm-api has no hard delete, only an audited
+// soft-cancel. No reason field is collected from this call site today - the
+// dashboard has no UI for entering one yet (out of scope here, a future
+// "why was this cancelled" UI is a follow-up).
 export const DELETE = withRateLimit<{ params: Promise<{ venueId: string; taskId: string }> }>(
   async (request, context) => {
     if (!context?.params) {
       return NextResponse.json({ error: "Invalid request" }, { status: 400 })
     }
 
+    const session = await getServerSession(authOptions)
+    if (!session?.user?.id) {
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
+    }
+
+    const token = await getValidXvmApiToken(session.user.id)
+    if (!token) {
+      return NextResponse.json({ error: "xvm-api link not established yet" }, { status: 503 })
+    }
+
+    const { venueId, taskId } = await context.params
+    const id = Number(taskId)
+    if (!Number.isInteger(id)) {
+      return NextResponse.json({ error: "Task not found" }, { status: 404 })
+    }
+
+    const gate = await requireXvmVenueId(venueId)
+    if (gate.error) return gate.error
+
     try {
-      const session = await getServerSession(authOptions)
-      if (!session?.user?.id) {
-        return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
-      }
-
-      const { params } = context
-      const { venueId, taskId } = await params
-
-      // Check permissions
-      const membership = await prisma.membership.findFirst({
-        where: {
-          userId: session.user.id,
-          venueId,
-          status: "active",
-        },
-      })
-
-      if (!membership || !["OWNER", "MANAGER"].includes(membership.role)) {
-        return NextResponse.json({ error: "Only owners and managers can delete tasks" }, { status: 403 })
-      }
-
-      const task = await prisma.task.findUnique({
-        where: { id: taskId, venueId },
-      })
-
-      if (!task) {
-        return NextResponse.json({ error: "Task not found" }, { status: 404 })
-      }
-
-      await prisma.task.delete({
-        where: { id: taskId, venueId },
-      })
-
+      await cancelTask(token, gate.xvmApiVenueId!, id, null)
       return NextResponse.json({ success: true })
-    } catch (error) {
-      console.error("Error deleting task:", error)
-      return NextResponse.json({ error: "Internal server error" }, { status: 500 })
+    } catch (err) {
+      if (err instanceof XvmApiError && err.status !== 401) {
+        return NextResponse.json({ error: xvmErrorMessage(err) }, { status: err.status })
+      }
+      console.error("[tasks] DELETE error:", err)
+      await invalidateXvmApiCredential(session.user.id)
+      return NextResponse.json({ error: "xvm-api link needs to be refreshed" }, { status: 503 })
     }
   },
   { requests: 5, window: "1 m" }
