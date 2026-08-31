@@ -505,7 +505,11 @@ export interface PublicHours {
 export async function getPublicHours(venueId: string, days?: number): Promise<PublicHours> {
   if (!process.env.XVM_API_BASE_URL) throw new Error("XVM_API_BASE_URL is not set")
   const params = days !== undefined ? `?${new URLSearchParams({ days: String(days) })}` : ""
-  return xvmFetch<PublicHours>(`/public/venues/${venueId}/hours${params}`)
+  // Cached and revalidated rather than fetched fresh on every render - this
+  // endpoint's 30 req/min/IP budget is shared across every public venue page
+  // view site-wide via the dashboard server's one outbound IP, and hours data
+  // changes rarely enough that a short revalidation window is unnoticeable.
+  return xvmFetch<PublicHours>(`/public/venues/${venueId}/hours${params}`, { next: { revalidate: 60 } })
 }
 
 // ── Positions API ──────────────────────────────────────────────
