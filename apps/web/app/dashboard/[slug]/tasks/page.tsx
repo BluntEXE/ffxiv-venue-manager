@@ -44,10 +44,8 @@ interface Task {
   completedAt: string | null
   createdAt: string
   assignee: {
-    id: string
+    id: number
     name: string | null
-    email: string | null
-    image: string | null
   } | null
   completer: {
     id: string

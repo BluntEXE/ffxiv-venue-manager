@@ -23,11 +23,10 @@ export function intToPriority(value: number): TaskPriorityLabel {
   return label
 }
 
-// Find-or-create by case-insensitive name, same idempotency pattern the
-// Roles→Positions migration uses for name matching (not yet on this branch -
-// lands via the merged Roles cutover PR). A 409 from createTaskCategory means
-// another request created it first between our list and create calls -
-// refetch and use the now-existing one rather than
+// Find-or-create by case-insensitive name, same idempotency pattern
+// migrate-positions.ts uses for Role/Position name matching. A 409 from
+// createTaskCategory means another request created it first between our
+// list and create calls - refetch and use the now-existing one rather than
 // treating it as a real error.
 export async function resolveCategoryId(personToken: string, venueId: string, name: string): Promise<number> {
   const existing = await listTaskCategories(personToken, venueId)

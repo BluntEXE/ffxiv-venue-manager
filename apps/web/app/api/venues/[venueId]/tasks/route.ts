@@ -10,10 +10,12 @@ import {
   createTask,
   listPositions,
   listTaskCategories,
+  listMemberships,
   XvmApiError,
   xvmErrorMessage,
   type TaskRow,
   type PositionRow,
+  type MembershipRow,
 } from "@/lib/api/xvm-api"
 import { priorityToInt, intToPriority, resolveCategoryId } from "@/lib/api/task-convert"
 import { validators } from "@/lib/validation"
@@ -43,8 +45,9 @@ function deriveStatus(task: TaskRow): "PENDING" | "IN_PROGRESS" | "COMPLETED" | 
   return "PENDING"
 }
 
-function toTaskShape(task: TaskRow, positionsById: Map<number, PositionRow>) {
+function toTaskShape(task: TaskRow, positionsById: Map<number, PositionRow>, membershipsById: Map<number, MembershipRow>) {
   const position = task.assigned_position_id ? positionsById.get(task.assigned_position_id) : null
+  const membership = task.assigned_membership_id ? membershipsById.get(task.assigned_membership_id) : null
   return {
     id: task.id,
     title: task.title,
@@ -56,7 +59,10 @@ function toTaskShape(task: TaskRow, positionsById: Map<number, PositionRow>) {
     dueDate: task.due_at,
     completedAt: task.completed_at,
     createdAt: task.created_at,
-    assignee: null, // direct membership-based assignment isn't wired in the UI (see plan notes) - always null for now
+    // A membership assignment is xvm-api's record of who actually claimed the
+    // task (set by start()'s self-assign, or a future direct-assign path) -
+    // distinct from assignedRole, which is who the task was handed to as a pool.
+    assignee: membership ? { id: membership.id, name: membership.person.display_name } : null,
     assignedRole: position ? { id: position.id, name: position.name, color: position.color } : null,
   }
 }
@@ -101,15 +107,17 @@ export const GET = withRateLimit<{ params: Promise<{ venueId: string }> }>(
     if (gate.error) return gate.error
 
     try {
-      const [tasks, positions, categories] = await Promise.all([
+      const [tasks, positions, categories, memberships] = await Promise.all([
         listTasks(token, gate.xvmApiVenueId!, { includeCompleted: true, includeCancelled }),
         listPositions(token, gate.xvmApiVenueId!),
         listTaskCategories(token, gate.xvmApiVenueId!),
+        listMemberships(token, gate.xvmApiVenueId!),
       ])
       const positionsById = new Map(positions.map((p) => [p.id, p]))
       const categoriesById = new Map(categories.map((c) => [c.id, c.name]))
+      const membershipsById = new Map(memberships.map((m) => [m.id, m]))
       const shaped = tasks.map((t) => {
-        const shape = toTaskShape(t, positionsById)
+        const shape = toTaskShape(t, positionsById, membershipsById)
         return { ...shape, category: t.category_id !== null ? (categoriesById.get(t.category_id) ?? null) : null }
       })
       return NextResponse.json(shaped)
@@ -172,7 +180,9 @@ export const POST = withRateLimit<{ params: Promise<{ venueId: string }> }>(
 
       const positions = data.assignedRoleId ? await listPositions(token, gate.xvmApiVenueId!) : []
       const positionsById = new Map(positions.map((p) => [p.id, p]))
-      const shape = toTaskShape(task, positionsById)
+      // A brand-new task never has assigned_membership_id set - create() only
+      // ever assigns a position, never a person - so no memberships fetch needed here.
+      const shape = toTaskShape(task, positionsById, new Map())
 
       const venue = await prisma.venue.findUnique({
         where: { id: venueId },

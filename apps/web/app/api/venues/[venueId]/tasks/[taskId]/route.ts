@@ -14,10 +14,12 @@ import {
   cancelTask,
   listPositions,
   listTaskCategories,
+  listMemberships,
   XvmApiError,
   xvmErrorMessage,
   type TaskRow,
   type PositionRow,
+  type MembershipRow,
 } from "@/lib/api/xvm-api"
 import { priorityToInt, intToPriority, resolveCategoryId } from "@/lib/api/task-convert"
 import { validators } from "@/lib/validation"
@@ -50,8 +52,14 @@ function deriveStatus(task: TaskRow): "PENDING" | "IN_PROGRESS" | "COMPLETED" | 
   return "PENDING"
 }
 
-function toTaskShape(task: TaskRow, positionsById: Map<number, PositionRow>, categoryName: string | null) {
+function toTaskShape(
+  task: TaskRow,
+  positionsById: Map<number, PositionRow>,
+  membershipsById: Map<number, MembershipRow>,
+  categoryName: string | null
+) {
   const position = task.assigned_position_id ? positionsById.get(task.assigned_position_id) : null
+  const membership = task.assigned_membership_id ? membershipsById.get(task.assigned_membership_id) : null
   return {
     id: task.id,
     title: task.title,
@@ -62,7 +70,10 @@ function toTaskShape(task: TaskRow, positionsById: Map<number, PositionRow>, cat
     dueDate: task.due_at,
     completedAt: task.completed_at,
     createdAt: task.created_at,
-    assignee: null,
+    // A membership assignment is xvm-api's record of who actually claimed the
+    // task (set by start()'s self-assign, or a future direct-assign path) -
+    // distinct from assignedRole, which is who the task was handed to as a pool.
+    assignee: membership ? { id: membership.id, name: membership.person.display_name } : null,
     assignedRole: position ? { id: position.id, name: position.name, color: position.color } : null,
   }
 }
@@ -81,13 +92,15 @@ async function requireXvmVenueId(venueId: string) {
 }
 
 async function shapeAfterFetch(token: string, xvmApiVenueId: string, task: TaskRow) {
-  const [positions, categories] = await Promise.all([
+  const [positions, categories, memberships] = await Promise.all([
     listPositions(token, xvmApiVenueId),
     listTaskCategories(token, xvmApiVenueId),
+    listMemberships(token, xvmApiVenueId),
   ])
   const positionsById = new Map(positions.map((p) => [p.id, p]))
+  const membershipsById = new Map(memberships.map((m) => [m.id, m]))
   const categoryName = task.category_id !== null ? categories.find((c) => c.id === task.category_id)?.name ?? null : null
-  return toTaskShape(task, positionsById, categoryName)
+  return toTaskShape(task, positionsById, membershipsById, categoryName)
 }
 
 export const GET = withRateLimit<{ params: Promise<{ venueId: string; taskId: string }> }>(
