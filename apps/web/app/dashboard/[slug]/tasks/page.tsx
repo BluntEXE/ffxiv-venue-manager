@@ -34,7 +34,7 @@ import { PageLoading } from "@/components/ui/loading-spinner"
 import { canManageVenue } from "@/lib/roles"
 
 interface Task {
-  id: string
+  id: number
   title: string
   description: string | null
   status: "PENDING" | "IN_PROGRESS" | "COMPLETED" | "CANCELLED"
@@ -57,7 +57,7 @@ interface Task {
 }
 
 interface Role {
-  id: string
+  id: number
   name: string
   color: string
 }
@@ -167,7 +167,7 @@ export default function TasksPage({ params }: { params: Promise<{ slug: string }
           description: formData.description || undefined,
           priority: formData.priority,
           category: formData.category || undefined,
-          assignedRoleId: formData.selectedRoleId || undefined,
+          assignedRoleId: formData.selectedRoleId ? Number(formData.selectedRoleId) : undefined,
           dueDate: formData.dueDate || undefined,
         }),
       })
@@ -195,17 +195,23 @@ export default function TasksPage({ params }: { params: Promise<{ slug: string }
     }
   }
 
-  const handleStatusUpdate = async (taskId: string, newStatus: Task["status"]) => {
+  const handleStatusUpdate = async (taskId: number, newStatus: Task["status"]) => {
+    if (newStatus === "PENDING") {
+      setError("Reopening a completed or cancelled task isn't supported - create a new task instead.")
+      return
+    }
+
     try {
       // Get venue ID
       const venueResponse = await fetch(`/api/venues?slug=${slug}`)
       const venues = await venueResponse.json()
       const venue = venues.find((v: { slug: string }) => v.slug === slug)
 
+      const action = newStatus === "IN_PROGRESS" ? "start" : newStatus === "COMPLETED" ? "complete" : "cancel"
       const response = await fetch(`/api/venues/${venue.id}/tasks/${taskId}`, {
-        method: "PUT",
+        method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ status: newStatus }),
+        body: JSON.stringify({ action }),
       })
 
       if (!response.ok) {
@@ -220,7 +226,7 @@ export default function TasksPage({ params }: { params: Promise<{ slug: string }
     }
   }
 
-  const handleDeleteTask = async (taskId: string) => {
+  const handleDeleteTask = async (taskId: number) => {
     try {
       // Get venue ID
       const venueResponse = await fetch(`/api/venues?slug=${slug}`)
@@ -262,7 +268,7 @@ export default function TasksPage({ params }: { params: Promise<{ slug: string }
       description: task.description || "",
       priority: task.priority,
       category: task.category || "none",
-      selectedRoleId: task.assignedRole?.id || "unassigned",
+      selectedRoleId: task.assignedRole ? String(task.assignedRole.id) : "unassigned",
       dueDate: task.dueDate ? new Date(task.dueDate).toISOString().split("T")[0] : "",
     })
     setFormError("")
@@ -291,7 +297,7 @@ export default function TasksPage({ params }: { params: Promise<{ slug: string }
         description: formData.description || null,
         priority: formData.priority,
         category: formData.category === "none" ? null : formData.category,
-        assignedRoleId: formData.selectedRoleId === "unassigned" ? null : formData.selectedRoleId,
+        assignedRoleId: formData.selectedRoleId === "unassigned" ? null : Number(formData.selectedRoleId),
         dueDate: formData.dueDate || null,
       }
 
@@ -397,8 +403,8 @@ export default function TasksPage({ params }: { params: Promise<{ slug: string }
                   key: "COMPLETED",
                   label: "Done",
                   dot: "var(--success-text)",
-                  next: "PENDING" as const,
-                  nextLabel: "Reopen",
+                  next: undefined as "IN_PROGRESS" | "COMPLETED" | undefined,
+                  nextLabel: undefined as "Start" | "Complete" | undefined,
                 },
               ] as const
             ).map(({ key, label, dot, next, nextLabel }) => {
@@ -425,8 +431,12 @@ export default function TasksPage({ params }: { params: Promise<{ slug: string }
                       <div
                         key={task.id}
                         className={`kcard${key === "COMPLETED" ? " done opacity-70" : ""}`}
-                        onClick={() => handleStatusUpdate(task.id, next)}
-                        title={`Click to move to ${nextLabel === "Start" ? "In Progress" : nextLabel === "Complete" ? "Done" : "To Do"} — ${task.priority.charAt(0) + task.priority.slice(1).toLowerCase()} priority`}
+                        onClick={next ? () => handleStatusUpdate(task.id, next) : undefined}
+                        title={
+                          next
+                            ? `Click to move to ${nextLabel === "Start" ? "In Progress" : "Done"} — ${task.priority.charAt(0) + task.priority.slice(1).toLowerCase()} priority`
+                            : undefined
+                        }
                         style={{ borderLeftColor: PRIORITY_COLORS[task.priority], borderLeftWidth: "3px" }}
                       >
                         <p className="kt">{task.title}</p>
@@ -657,7 +667,7 @@ export default function TasksPage({ params }: { params: Promise<{ slug: string }
                       </SelectItem>
                     ) : (
                       roles.map((role) => (
-                        <SelectItem key={role.id} value={role.id}>
+                        <SelectItem key={role.id} value={String(role.id)}>
                           {role.name}
                         </SelectItem>
                       ))
@@ -775,7 +785,7 @@ export default function TasksPage({ params }: { params: Promise<{ slug: string }
                   <SelectContent>
                     <SelectItem value="unassigned">Unassigned</SelectItem>
                     {roles.map((role) => (
-                      <SelectItem key={role.id} value={role.id}>
+                      <SelectItem key={role.id} value={String(role.id)}>
                         {role.name}
                       </SelectItem>
                     ))}
