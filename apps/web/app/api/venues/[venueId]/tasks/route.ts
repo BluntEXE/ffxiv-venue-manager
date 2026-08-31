@@ -4,15 +4,13 @@ import { authOptions } from "@/lib/auth"
 import { z } from "zod"
 import { prisma } from "@/lib/prisma"
 import { withRateLimit } from "@/lib/middleware/with-rate-limit"
-import { getValidXvmApiToken, invalidateXvmApiCredential } from "@/lib/api/xvm-api-store"
+import { getValidXvmApiToken, xvmApiErrorResponse } from "@/lib/api/xvm-api-store"
 import {
   listTasks,
   createTask,
   listPositions,
   listTaskCategories,
   listMemberships,
-  XvmApiError,
-  xvmErrorMessage,
   type TaskRow,
   type PositionRow,
   type MembershipRow,
@@ -122,12 +120,7 @@ export const GET = withRateLimit<{ params: Promise<{ venueId: string }> }>(
       })
       return NextResponse.json(shaped)
     } catch (err) {
-      if (err instanceof XvmApiError && err.status !== 401) {
-        return NextResponse.json({ error: xvmErrorMessage(err) }, { status: err.status })
-      }
-      console.error("[tasks] GET error:", err)
-      await invalidateXvmApiCredential(session.user.id)
-      return NextResponse.json({ error: "xvm-api link needs to be refreshed" }, { status: 503 })
+      return xvmApiErrorResponse(err, session.user.id, "[tasks] GET error")
     }
   },
   { requests: 60, window: "1 m" }
@@ -212,12 +205,7 @@ export const POST = withRateLimit<{ params: Promise<{ venueId: string }> }>(
 
       return NextResponse.json({ ...shape, category: data.category ?? null }, { status: 201 })
     } catch (err) {
-      if (err instanceof XvmApiError && err.status !== 401) {
-        return NextResponse.json({ error: xvmErrorMessage(err) }, { status: err.status })
-      }
-      console.error("[tasks] POST error:", err)
-      await invalidateXvmApiCredential(session.user.id)
-      return NextResponse.json({ error: "xvm-api link needs to be refreshed" }, { status: 503 })
+      return xvmApiErrorResponse(err, session.user.id, "[tasks] POST error")
     }
   },
   { requests: 10, window: "1 m" }
