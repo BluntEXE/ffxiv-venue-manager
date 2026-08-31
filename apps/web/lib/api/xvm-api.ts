@@ -494,6 +494,20 @@ export async function getOpenNow(personToken: string, venueId: string, at?: stri
   return xvmFetch<OpenNow>(`/venues/${venueId}/hours/now${params}`, {}, personToken)
 }
 
+// Unauthenticated - no bearerToken param, matching the endpoint's own
+// unauthenticated public/venues/{id}/hours contract for anonymous page renders.
+export interface PublicHours {
+  open_now: OpenNow
+  rules: HoursRow[]
+  upcoming: OpeningRow[]
+}
+
+export async function getPublicHours(venueId: string, days?: number): Promise<PublicHours> {
+  if (!process.env.XVM_API_BASE_URL) throw new Error("XVM_API_BASE_URL is not set")
+  const params = days !== undefined ? `?${new URLSearchParams({ days: String(days) })}` : ""
+  return xvmFetch<PublicHours>(`/public/venues/${venueId}/hours${params}`)
+}
+
 // ── Positions API ──────────────────────────────────────────────
 
 export interface PositionCreate {

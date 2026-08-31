@@ -41,7 +41,8 @@ import { SiteFooter } from "@/components/site-footer"
 import { VenueScheduleDisplay } from "@/components/venue-schedule-display"
 import { FfxivvenuesScheduleDisplay } from "@/components/ffxivvenues-schedule-display"
 import type { FfxivVenueData } from "@/lib/ffxivvenues"
-import { isVenueOpenNow } from "@/lib/schedule-utils"
+import { isVenueOpenNow, xvmHoursToScheduleEntries } from "@/lib/schedule-utils"
+import { getPublicHours, type PublicHours } from "@/lib/api/xvm-api"
 
 export default async function VenueProfilePage({ params }: { params: Promise<{ slug: string }> }) {
   const session = await getServerSession(authOptions)
@@ -73,6 +74,20 @@ export default async function VenueProfilePage({ params }: { params: Promise<{ s
 
   if (!venue) notFound()
 
+  // xvm-api is the source of truth for a connected venue's hours - the Prisma
+  // scheduleEntries above stay as the fallback for venues not yet connected,
+  // or if the request fails (non-fatal, matches this page's existing style of
+  // never hard-failing the render over an optional signal).
+  let xvmHours: PublicHours | null = null
+  if (venue.xvmApiVenueId) {
+    try {
+      xvmHours = await getPublicHours(venue.xvmApiVenueId)
+    } catch {
+      xvmHours = null
+    }
+  }
+  const scheduleEntries = xvmHours ? xvmHoursToScheduleEntries(xvmHours.rules) : venue.scheduleEntries
+
   const [owner, isFollowing] = await Promise.all([
     prisma.user.findUnique({
       where: { id: venue.ownerId },
@@ -85,11 +100,18 @@ export default async function VenueProfilePage({ params }: { params: Promise<{ s
 
   const liveEvent = venue.events.find((e) => e.status === "ACTIVE")
   const upcomingEvents = venue.events.filter((e) => e.status === "PUBLISHED")
-  const isOpen = isVenueOpenNow({
-    hasActiveEvent: !!liveEvent,
-    scheduleEntries: venue.scheduleEntries,
-    ffxivSchedule: venue.venueSchedule?.data,
-  })
+  // xvm-api's own open_now.open is authoritative when available - it accounts
+  // for monthly_by_date rules that xvmHoursToScheduleEntries can't represent
+  // and so would otherwise miss when recomputing from the adapted entries.
+  const ffxivIsNow =
+    (venue.venueSchedule?.data as { resolution?: { isNow?: boolean } } | null)?.resolution?.isNow === true
+  const isOpen = xvmHours
+    ? !!liveEvent || xvmHours.open_now.open || ffxivIsNow
+    : isVenueOpenNow({
+        hasActiveEvent: !!liveEvent,
+        scheduleEntries: venue.scheduleEntries,
+        ffxivSchedule: venue.venueSchedule?.data,
+      })
   const tzLabel = getServerTimeLabel(venue.dataCenter)
   const todayUTCDay = new Date().getUTCDay()
   const DAY_NAMES = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"]
@@ -378,8 +400,8 @@ export default async function VenueProfilePage({ params }: { params: Promise<{ s
                     <div className="dh">
                       <Clock /> Hours
                     </div>
-                    {venue.scheduleEntries.length > 0 ? (
-                      <VenueScheduleDisplay entries={venue.scheduleEntries} />
+                    {scheduleEntries.length > 0 ? (
+                      <VenueScheduleDisplay entries={scheduleEntries} />
                     ) : openDays ? (
                       DAY_NAMES.map((day, i) => {
                         const isDayOpen = openDays.has(i)
