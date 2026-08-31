@@ -1,5 +1,6 @@
 import { describe, it, expect, afterEach, vi } from "vitest"
-import { utcWeeklyToLocal, localDayOf, formatLocalEntryTime, type ScheduleEntry } from "./schedule-utils"
+import { utcWeeklyToLocal, localDayOf, formatLocalEntryTime, xvmHoursToScheduleEntries, type ScheduleEntry } from "./schedule-utils"
+import type { HoursRow, RuleRow } from "@/lib/api/xvm-api"
 
 const originalTZ = process.env.TZ
 
@@ -97,5 +98,66 @@ describe("formatLocalEntryTime", () => {
       label: null,
     }
     expect(formatLocalEntryTime(entry)).toBe("12 AM – 2 AM")
+  })
+})
+
+describe("xvmHoursToScheduleEntries", () => {
+  function row(rule: Partial<RuleRow>): HoursRow {
+    return {
+      id: 1,
+      label: null,
+      source: "manual",
+      rule: {
+        interval: "weekly",
+        weekday: 0,
+        day_of_month: null,
+        week_of_month: null,
+        start_minute_of_day: 0,
+        duration_minutes: 60,
+        timezone: "UTC",
+        anchor_date: "2026-01-01",
+        ends_on: null,
+        ends_after_count: null,
+        enabled: true,
+        ...rule,
+      },
+    }
+  }
+
+  it("converts weekday: xvm-api Monday(0) to ScheduleEntry Sunday-indexed day(1)", () => {
+    const [entry] = xvmHoursToScheduleEntries([row({ weekday: 0 })])
+    expect(entry.day).toBe(1)
+  })
+
+  it("converts weekday: xvm-api Sunday(6) to ScheduleEntry day(0)", () => {
+    const [entry] = xvmHoursToScheduleEntries([row({ weekday: 6 })])
+    expect(entry.day).toBe(0)
+  })
+
+  it("derives crossing-midnight start/end from start_minute_of_day + duration_minutes", () => {
+    const [entry] = xvmHoursToScheduleEntries([row({ start_minute_of_day: 1380, duration_minutes: 120 })])
+    expect(entry.startHour).toBe(23)
+    expect(entry.startMin).toBe(0)
+    expect(entry.endHour).toBe(1)
+    expect(entry.endMin).toBe(0)
+    expect(entry.crossesMidnight).toBe(true)
+  })
+
+  it("filters out monthly_by_date rules - no day-of-month field on ScheduleEntry to hold them", () => {
+    const entries = xvmHoursToScheduleEntries([row({ interval: "monthly_by_date", day_of_month: 15 }), row({})])
+    expect(entries).toHaveLength(1)
+  })
+
+  it("maps known intervals to the display's uppercase labels, falls back to uppercase for unknown ones", () => {
+    const [weekly, biweekly, monthlyByWeekday, unknown] = xvmHoursToScheduleEntries([
+      row({ interval: "weekly" }),
+      row({ interval: "biweekly" }),
+      row({ interval: "monthly_by_weekday", week_of_month: 2 }),
+      row({ interval: "some_future_interval" }),
+    ])
+    expect(weekly.interval).toBe("WEEKLY")
+    expect(biweekly.interval).toBe("BIWEEKLY")
+    expect(monthlyByWeekday.interval).toBe("MONTHLY")
+    expect(unknown.interval).toBe("SOME_FUTURE_INTERVAL")
   })
 })
