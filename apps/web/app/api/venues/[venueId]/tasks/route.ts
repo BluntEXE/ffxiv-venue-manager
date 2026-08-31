@@ -17,6 +17,12 @@ import {
 } from "@/lib/api/xvm-api"
 import { priorityToInt, intToPriority, resolveCategoryId } from "@/lib/api/task-convert"
 import { validators } from "@/lib/validation"
+import {
+  sendDiscordWebhook,
+  formatTaskCreatedEmbed,
+  getWebhookUrlForType,
+  type VenueWebhookConfig,
+} from "@/lib/discord-webhook"
 
 const createTaskSchema = z.object({
   title: validators.taskTitle,
@@ -167,6 +173,33 @@ export const POST = withRateLimit<{ params: Promise<{ venueId: string }> }>(
       const positions = data.assignedRoleId ? await listPositions(token, gate.xvmApiVenueId!) : []
       const positionsById = new Map(positions.map((p) => [p.id, p]))
       const shape = toTaskShape(task, positionsById)
+
+      const venue = await prisma.venue.findUnique({
+        where: { id: venueId },
+        select: { discordWebhookUrl: true, settings: true },
+      })
+      if (venue) {
+        const venueSettings = venue.settings as Record<string, unknown> | null
+        const webhookConfig: VenueWebhookConfig = {
+          discordWebhooks: venueSettings?.discordWebhooks as VenueWebhookConfig["discordWebhooks"],
+          webhooks: venueSettings?.webhooks as VenueWebhookConfig["webhooks"],
+          discordWebhookUrl: venue.discordWebhookUrl,
+        }
+        const webhookUrl = getWebhookUrlForType(webhookConfig, "taskCreated")
+        if (webhookUrl) {
+          const embed = formatTaskCreatedEmbed({
+            title: task.title,
+            description: task.description,
+            priority: data.priority,
+            dueDate: task.due_at ? new Date(task.due_at) : null,
+            assignee: null,
+          })
+          sendDiscordWebhook(webhookUrl, { embeds: [embed] }).catch((error) =>
+            console.error("[Task Created] webhook error:", error)
+          )
+        }
+      }
+
       return NextResponse.json({ ...shape, category: data.category ?? null }, { status: 201 })
     } catch (err) {
       if (err instanceof XvmApiError && err.status !== 401) {
