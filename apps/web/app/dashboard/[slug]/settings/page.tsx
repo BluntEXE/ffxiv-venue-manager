@@ -29,10 +29,6 @@ import {
 import { PageLoading } from "@/components/ui/loading-spinner"
 import { LocalTime } from "@/components/server-time"
 import type { VenueSettings } from "@xiv-venue-manager/types"
-import { ScheduleEntryForm } from "@/components/schedule-entry-form"
-import type { ScheduleEntry } from "@/lib/schedule-utils"
-import { DAY_NAMES, formatEntryTime, formatIntervalLabel } from "@/lib/schedule-utils"
-import { Plus, Trash2 } from "lucide-react"
 import { FFXIV_DISTRICTS } from "@/lib/venue-location"
 import { canManageVenue } from "@/lib/roles"
 
@@ -85,9 +81,6 @@ export default function SettingsPage({ params }: { params: Promise<{ slug: strin
   const [galleryImages, setGalleryImages] = useState<string[]>([])
   const [bannerUrl, setBannerUrl] = useState<string | null>(null)
   const [logoUrl, setLogoUrl] = useState<string | null>(null)
-  const [scheduleEntries, setScheduleEntries] = useState<ScheduleEntry[]>([])
-  const [scheduleLoaded, setScheduleLoaded] = useState(false)
-  const [showAddEntry, setShowAddEntry] = useState(false)
   const [ffxivVenueId, setFfxivVenueId] = useState<string | null>(null)
   const [ffxivVenueLinkedAt, setFfxivVenueLinkedAt] = useState<string | null>(null)
   const [ffxivVenueSyncedAt, setFfxivVenueSyncedAt] = useState<string | null>(null)
@@ -204,14 +197,6 @@ export default function SettingsPage({ params }: { params: Promise<{ slug: strin
           setShiftBotThumbnailUrl(settingsData.shiftBot?.thumbnailUrl ?? "")
           setShiftBotTemplates(settingsData.shiftBot?.templates ?? [])
         }
-
-        fetch(`/api/venues/${venue.id}/schedule`)
-          .then((r) => r.json())
-          .then((data: ScheduleEntry[]) => {
-            setScheduleEntries(data)
-            setScheduleLoaded(true)
-          })
-          .catch(() => setScheduleLoaded(true))
 
         fetch(`/api/venues/${venue.id}/pot-settings`)
           .then((r) => (r.ok ? r.json() : null))
@@ -382,34 +367,6 @@ export default function SettingsPage({ params }: { params: Promise<{ slug: strin
       setError(error instanceof Error ? error.message : "Failed to delete venue")
       setIsDeleting(false)
     }
-  }
-
-  async function handleAddEntry(data: {
-    day: number
-    startHour: number
-    startMin: number
-    endHour: number | null
-    endMin: number | null
-    crossesMidnight: boolean
-    interval: string
-    weekOfMonth: number | null
-    commencing: string | null
-    label: string | null
-  }) {
-    const res = await fetch(`/api/venues/${venueId}/schedule`, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(data),
-    })
-    if (!res.ok) throw new Error("Failed to save")
-    const created: ScheduleEntry = await res.json()
-    setScheduleEntries((prev) => [...prev, created])
-  }
-
-  async function handleDeleteEntry(id: string) {
-    const res = await fetch(`/api/venues/${venueId}/schedule/${id}`, { method: "DELETE" })
-    if (!res.ok) throw new Error("Failed to delete")
-    setScheduleEntries((prev) => prev.filter((e) => e.id !== id))
   }
 
   async function handleFfxivPreview() {
@@ -758,48 +715,13 @@ export default function SettingsPage({ params }: { params: Promise<{ slug: strin
 
               <div className="px-5 py-4 space-y-3">
                 <p className="text-[0.82rem] text-[var(--fg-faint)]">
-                  Set your regular opening days and times. All times in Server Time (ST = UTC).
+                  Opening hours moved to their own page.{" "}
+                  <Link href={`/dashboard/${slug}/hours`} className="text-[var(--xiv-blue)] hover:opacity-80">
+                    Manage opening hours
+                  </Link>
+                  .
                 </p>
-
-                {scheduleLoaded && scheduleEntries.length > 0 && (
-                  <div className="divide-y divide-[var(--blue-008)] rounded-[var(--radius-md)] border border-[var(--blue-015)] overflow-hidden">
-                    {scheduleEntries.map((entry) => (
-                      <div key={entry.id} className="flex items-center justify-between px-4 py-3 bg-[var(--blue-005)]">
-                        <div>
-                          <span className="font-medium text-sm">{DAY_NAMES[entry.day]}</span>
-                          <span className="text-[var(--fg-faint)] text-sm ml-2">{formatEntryTime(entry)}</span>
-                          {entry.interval !== "WEEKLY" && (
-                            <span className="ml-2 text-[0.72rem] text-[var(--xiv-blue)]">
-                              {formatIntervalLabel(entry)}
-                            </span>
-                          )}
-                          {entry.label && (
-                            <span className="ml-2 text-[0.72rem] text-[var(--fg-faint)]">{entry.label}</span>
-                          )}
-                        </div>
-                        <button
-                          type="button"
-                          onClick={() => handleDeleteEntry(entry.id)}
-                          className="text-[var(--fg-faint)] hover:text-red-400 transition-colors p-1"
-                          aria-label="Remove entry"
-                        >
-                          <Trash2 className="w-4 h-4" />
-                        </button>
-                      </div>
-                    ))}
-                  </div>
-                )}
-
-                <button
-                  type="button"
-                  onClick={() => setShowAddEntry(true)}
-                  className="flex items-center gap-2 text-[0.85rem] text-[var(--xiv-blue)] hover:opacity-80 transition-opacity"
-                >
-                  <Plus className="w-4 h-4" /> Add opening time
-                </button>
               </div>
-
-              <ScheduleEntryForm open={showAddEntry} onClose={() => setShowAddEntry(false)} onSave={handleAddEntry} />
             </section>
 
             {/* ── Location & hours ── */}
