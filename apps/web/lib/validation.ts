@@ -21,7 +21,7 @@ export const validators = {
   serviceCategory: z.string().max(50, "Category too long (max 50 characters)").optional(),
   roleName: z.string().min(1, "Name is required").max(50, "Name too long (max 50 characters)"),
   roleDescription: z.string().max(500, "Description too long (max 500 characters)").optional(),
-  taskTitle: z.string().min(1, "Title is required").max(200, "Title too long (max 200 characters)"),
+  taskTitle: z.string().min(1, "Title is required").max(100, "Title too long (max 100 characters)"),
   taskDescription: z.string().max(2000, "Description too long (max 2000 characters)").optional().nullable(),
   taskNotes: z.string().max(1000, "Notes too long (max 1000 characters)").optional(),
   payrollNotes: z.string().max(500, "Notes too long (max 500 characters)").optional(),
