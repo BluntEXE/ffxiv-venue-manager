@@ -4,8 +4,8 @@ import { authOptions } from "@/lib/auth"
 import { z } from "zod"
 import { prisma } from "@/lib/prisma"
 import { withRateLimit } from "@/lib/middleware/with-rate-limit"
-import { getValidXvmApiToken, invalidateXvmApiCredential } from "@/lib/api/xvm-api-store"
-import { listRooms, createRoom, XvmApiError, xvmErrorMessage } from "@/lib/api/xvm-api"
+import { getValidXvmApiToken, xvmApiErrorResponse } from "@/lib/api/xvm-api-store"
+import { listRooms, createRoom } from "@/lib/api/xvm-api"
 
 const createRoomSchema = z.object({
   name: z.string().trim().min(1).max(100),
@@ -49,12 +49,7 @@ export const GET = withRateLimit<{ params: Promise<{ venueId: string }> }>(
       const rooms = await listRooms(token, gate.xvmApiVenueId!)
       return NextResponse.json(rooms)
     } catch (err) {
-      if (err instanceof XvmApiError && err.status !== 401) {
-        return NextResponse.json({ error: xvmErrorMessage(err) }, { status: err.status })
-      }
-      console.error("[rooms] GET error:", err)
-      await invalidateXvmApiCredential(session.user.id)
-      return NextResponse.json({ error: "xvm-api link needs to be refreshed" }, { status: 503 })
+      return xvmApiErrorResponse(err, session.user.id, "[rooms] GET error")
     }
   },
   { requests: 30, window: "1 m" }
@@ -96,12 +91,7 @@ export const POST = withRateLimit<{ params: Promise<{ venueId: string }> }>(
       const room = await createRoom(token, gate.xvmApiVenueId!, { name })
       return NextResponse.json(room)
     } catch (err) {
-      if (err instanceof XvmApiError && err.status !== 401) {
-        return NextResponse.json({ error: xvmErrorMessage(err) }, { status: err.status })
-      }
-      console.error("[rooms] POST error:", err)
-      await invalidateXvmApiCredential(session.user.id)
-      return NextResponse.json({ error: "xvm-api link needs to be refreshed" }, { status: 503 })
+      return xvmApiErrorResponse(err, session.user.id, "[rooms] POST error")
     }
   },
   { requests: 30, window: "1 m" }

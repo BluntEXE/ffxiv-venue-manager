@@ -4,8 +4,8 @@ import { authOptions } from "@/lib/auth"
 import { prisma } from "@/lib/prisma"
 import { withRateLimit } from "@/lib/middleware/with-rate-limit"
 import { invalidateCache, cacheKeys } from "@/lib/redis-cache"
-import { getValidXvmApiToken, invalidateXvmApiCredential } from "@/lib/api/xvm-api-store"
-import { createVenue, XvmApiError, xvmErrorMessage } from "@/lib/api/xvm-api"
+import { getValidXvmApiToken, xvmApiErrorResponse } from "@/lib/api/xvm-api-store"
+import { createVenue } from "@/lib/api/xvm-api"
 
 export const POST = withRateLimit<{ params: Promise<{ venueId: string }> }>(
   async (request, context) => {
@@ -79,12 +79,7 @@ export const POST = withRateLimit<{ params: Promise<{ venueId: string }> }>(
 
       return NextResponse.json(result)
     } catch (err) {
-      if (err instanceof XvmApiError && err.status !== 401) {
-        return NextResponse.json({ error: xvmErrorMessage(err) }, { status: err.status })
-      }
-      console.error("[xvm-connect] POST error:", err)
-      await invalidateXvmApiCredential(session.user.id)
-      return NextResponse.json({ error: "xvm-api link needs to be refreshed" }, { status: 503 })
+      return xvmApiErrorResponse(err, session.user.id, "[xvm-connect] POST error")
     }
   },
   { requests: 10, window: "1 m" }

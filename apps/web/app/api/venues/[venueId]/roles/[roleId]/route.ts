@@ -4,15 +4,8 @@ import { authOptions } from "@/lib/auth"
 import { z } from "zod"
 import { prisma } from "@/lib/prisma"
 import { withRateLimit } from "@/lib/middleware/with-rate-limit"
-import { getValidXvmApiToken, invalidateXvmApiCredential } from "@/lib/api/xvm-api-store"
-import {
-  listPositions,
-  updatePosition,
-  deletePosition,
-  XvmApiError,
-  xvmErrorMessage,
-  type PositionRow,
-} from "@/lib/api/xvm-api"
+import { getValidXvmApiToken, xvmApiErrorResponse } from "@/lib/api/xvm-api-store"
+import { listPositions, updatePosition, deletePosition, type PositionRow } from "@/lib/api/xvm-api"
 import { hexColorToInt, intColorToHex, dollarsToMinorUnits, minorUnitsToDollars } from "@/lib/api/position-convert"
 import { validators } from "@/lib/validation"
 
@@ -83,12 +76,7 @@ export const GET = withRateLimit<{ params: Promise<{ venueId: string; roleId: st
       }
       return NextResponse.json(toRoleShape(position))
     } catch (err) {
-      if (err instanceof XvmApiError && err.status !== 401) {
-        return NextResponse.json({ error: xvmErrorMessage(err) }, { status: err.status })
-      }
-      console.error("[roles] GET one error:", err)
-      await invalidateXvmApiCredential(session.user.id)
-      return NextResponse.json({ error: "xvm-api link needs to be refreshed" }, { status: 503 })
+      return xvmApiErrorResponse(err, session.user.id, "[roles] GET one error")
     }
   },
   { requests: 60, window: "1 m" }
@@ -145,12 +133,7 @@ export const PUT = withRateLimit<{ params: Promise<{ venueId: string; roleId: st
       })
       return NextResponse.json(toRoleShape(position))
     } catch (err) {
-      if (err instanceof XvmApiError && err.status !== 401) {
-        return NextResponse.json({ error: xvmErrorMessage(err) }, { status: err.status })
-      }
-      console.error("[roles] PUT error:", err)
-      await invalidateXvmApiCredential(session.user.id)
-      return NextResponse.json({ error: "xvm-api link needs to be refreshed" }, { status: 503 })
+      return xvmApiErrorResponse(err, session.user.id, "[roles] PUT error")
     }
   },
   { requests: 20, window: "1 m" }
@@ -197,12 +180,7 @@ export const DELETE = withRateLimit<{ params: Promise<{ venueId: string; roleId:
       await deletePosition(token, gate.xvmApiVenueId!, positionId)
       return NextResponse.json({ success: true })
     } catch (err) {
-      if (err instanceof XvmApiError && err.status !== 401) {
-        return NextResponse.json({ error: xvmErrorMessage(err) }, { status: err.status })
-      }
-      console.error("[roles] DELETE error:", err)
-      await invalidateXvmApiCredential(session.user.id)
-      return NextResponse.json({ error: "xvm-api link needs to be refreshed" }, { status: 503 })
+      return xvmApiErrorResponse(err, session.user.id, "[roles] DELETE error")
     }
   },
   { requests: 5, window: "1 m" }

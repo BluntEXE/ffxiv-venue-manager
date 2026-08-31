@@ -5,8 +5,8 @@ import { z } from "zod"
 import { prisma } from "@/lib/prisma"
 import { withRateLimit } from "@/lib/middleware/with-rate-limit"
 import { venueEventBus } from "@/lib/sse/venue-events"
-import { getValidXvmApiToken, invalidateXvmApiCredential } from "@/lib/api/xvm-api-store"
-import { createReservation, releaseRoom, getRoom, XvmApiError, xvmErrorMessage, type Room } from "@/lib/api/xvm-api"
+import { getValidXvmApiToken, xvmApiErrorResponse } from "@/lib/api/xvm-api-store"
+import { createReservation, releaseRoom, getRoom, type Room } from "@/lib/api/xvm-api"
 
 async function requireXvmVenueId(venueId: string) {
   const venue = await prisma.venue.findUnique({ where: { id: venueId }, select: { xvmApiVenueId: true } })
@@ -106,12 +106,7 @@ export const PATCH = withRateLimit<{
       emitRoomStatus(venueId, room)
       return NextResponse.json(room)
     } catch (err) {
-      if (err instanceof XvmApiError && err.status !== 401) {
-        return NextResponse.json({ error: xvmErrorMessage(err) }, { status: err.status })
-      }
-      console.error("[rooms/:id/status] error:", err)
-      await invalidateXvmApiCredential(session.user.id)
-      return NextResponse.json({ error: "xvm-api link needs to be refreshed" }, { status: 503 })
+      return xvmApiErrorResponse(err, session.user.id, "[rooms/:id/status] error")
     }
   },
   { requests: 60, window: "1 m" }

@@ -1,8 +1,8 @@
 import { NextRequest, NextResponse } from "next/server"
 import { prisma } from "@/lib/prisma"
 import { pluginAuthGate } from "@/lib/api/plugin-auth"
-import { getValidXvmApiToken, invalidateXvmApiCredential } from "@/lib/api/xvm-api-store"
-import { listRooms, XvmApiError, xvmErrorMessage } from "@/lib/api/xvm-api"
+import { getValidXvmApiToken, xvmApiErrorResponse } from "@/lib/api/xvm-api-store"
+import { listRooms } from "@/lib/api/xvm-api"
 import { toPluginRoom } from "@/lib/api/plugin-rooms"
 
 /**
@@ -40,12 +40,7 @@ export async function GET(request: NextRequest) {
       const rooms = await listRooms(token, venue.xvmApiVenueId)
       return NextResponse.json({ rooms: rooms.map(toPluginRoom) })
     } catch (err) {
-      if (err instanceof XvmApiError && err.status !== 401) {
-        return NextResponse.json({ error: xvmErrorMessage(err) }, { status: err.status })
-      }
-      console.error("[plugin/rooms] GET error:", err)
-      await invalidateXvmApiCredential(auth.userId)
-      return NextResponse.json({ error: "xvm-api link needs to be refreshed" }, { status: 503 })
+      return xvmApiErrorResponse(err, auth.userId, "[plugin/rooms] GET error")
     }
   } catch (err) {
     console.error("[plugin/rooms] GET unexpected error:", err)

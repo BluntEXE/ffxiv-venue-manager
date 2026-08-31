@@ -6,8 +6,8 @@ import { Prisma } from "@/generated/prisma/client"
 import { z } from "zod"
 import { withRateLimit } from "@/lib/middleware/with-rate-limit"
 import { VenueSettings, parseVenueSettings } from "@/lib/types/venue-settings"
-import { getValidXvmApiToken, invalidateXvmApiCredential } from "@/lib/api/xvm-api-store"
-import { getVenue, updateVenue, XvmApiError, xvmErrorMessage, type VenueUpdate } from "@/lib/api/xvm-api"
+import { getValidXvmApiToken, invalidateXvmApiCredential, isXvmAuthFailure, xvmApiErrorResponse } from "@/lib/api/xvm-api-store"
+import { getVenue, updateVenue, type VenueUpdate } from "@/lib/api/xvm-api"
 
 const webhookSettingsSchema = z.object({
   taskCreated: z.boolean().optional(),
@@ -160,7 +160,7 @@ export const GET = withRateLimit<{ params: Promise<{ venueId: string }> }>(
             responseBody.venueType = detail.venue_type
             degraded = false
           } catch (err) {
-            if (err instanceof XvmApiError && err.status === 401) {
+            if (isXvmAuthFailure(err)) {
               await invalidateXvmApiCredential(session.user.id)
             }
             console.error("[settings] getVenue error:", err)
@@ -275,12 +275,7 @@ export const PUT = withRateLimit<{ params: Promise<{ venueId: string }> }>(
         try {
           xvmVenueDetail = await updateVenue(token, venue.xvmApiVenueId, xvmUpdate)
         } catch (err) {
-          if (err instanceof XvmApiError && err.status !== 401) {
-            return NextResponse.json({ error: xvmErrorMessage(err) }, { status: err.status })
-          }
-          console.error("[settings] updateVenue error:", err)
-          await invalidateXvmApiCredential(session.user.id)
-          return NextResponse.json({ error: "xvm-api link needs to be refreshed" }, { status: 503 })
+          return xvmApiErrorResponse(err, session.user.id, "[settings] updateVenue error")
         }
       }
 

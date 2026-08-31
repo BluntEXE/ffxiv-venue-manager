@@ -4,8 +4,8 @@ import { authOptions } from "@/lib/auth"
 import { z } from "zod"
 import { prisma } from "@/lib/prisma"
 import { withRateLimit } from "@/lib/middleware/with-rate-limit"
-import { getValidXvmApiToken, invalidateXvmApiCredential } from "@/lib/api/xvm-api-store"
-import { listPositions, createPosition, XvmApiError, xvmErrorMessage, type PositionRow } from "@/lib/api/xvm-api"
+import { getValidXvmApiToken, xvmApiErrorResponse } from "@/lib/api/xvm-api-store"
+import { listPositions, createPosition, type PositionRow } from "@/lib/api/xvm-api"
 import { hexColorToInt, intColorToHex, dollarsToMinorUnits, minorUnitsToDollars } from "@/lib/api/position-convert"
 import { validators } from "@/lib/validation"
 
@@ -70,12 +70,7 @@ export const GET = withRateLimit<{ params: Promise<{ venueId: string }> }>(
       const positions = await listPositions(token, gate.xvmApiVenueId!)
       return NextResponse.json(positions.map(toRoleShape))
     } catch (err) {
-      if (err instanceof XvmApiError && err.status !== 401) {
-        return NextResponse.json({ error: xvmErrorMessage(err) }, { status: err.status })
-      }
-      console.error("[roles] GET error:", err)
-      await invalidateXvmApiCredential(session.user.id)
-      return NextResponse.json({ error: "xvm-api link needs to be refreshed" }, { status: 503 })
+      return xvmApiErrorResponse(err, session.user.id, "[roles] GET error")
     }
   },
   { requests: 60, window: "1 m" }
@@ -128,12 +123,7 @@ export const POST = withRateLimit<{ params: Promise<{ venueId: string }> }>(
       })
       return NextResponse.json(toRoleShape(position), { status: 201 })
     } catch (err) {
-      if (err instanceof XvmApiError && err.status !== 401) {
-        return NextResponse.json({ error: xvmErrorMessage(err) }, { status: err.status })
-      }
-      console.error("[roles] POST error:", err)
-      await invalidateXvmApiCredential(session.user.id)
-      return NextResponse.json({ error: "xvm-api link needs to be refreshed" }, { status: 503 })
+      return xvmApiErrorResponse(err, session.user.id, "[roles] POST error")
     }
   },
   { requests: 10, window: "1 m" }
