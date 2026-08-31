@@ -120,16 +120,27 @@ async function main() {
 
     const existing = existingPositions.find((p) => p.name.toLowerCase() === lowerName)
 
+    if (role.permissions && Object.keys(role.permissions as object).length > 0) {
+      console.warn(`  [warn] Role "${role.name}" has non-empty permissions — this field is dropped by the migration.`)
+    }
+
     let positionId: number
     if (existing) {
       console.log(`  [skip-create] Position "${role.name}" already exists (id ${existing.id})`)
       positionId = existing.id
     } else {
+      let color: number | null
+      try {
+        color = hexColorToInt(role.color)
+      } catch {
+        console.warn(`  [warn] Role "${role.name}" has a malformed color ("${role.color}") — migrating with color: null`)
+        color = null
+      }
       const payload = {
         name: role.name,
-        color: hexColorToInt(role.color),
+        color,
         responsibilities: role.responsibilities,
-        hourly_rate_minor: dollarsToMinorUnits(role.hourlyRate ? Number(role.hourlyRate) : null),
+        hourly_rate_minor: dollarsToMinorUnits(role.hourlyRate != null ? Number(role.hourlyRate) : null),
       }
       console.log(`  [create] Position "${role.name}"`, apply ? "" : "(dry run, not sent)", payload)
       if (apply) {
