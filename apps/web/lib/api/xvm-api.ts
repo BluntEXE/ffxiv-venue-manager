@@ -617,3 +617,93 @@ export async function createTaskCategory(personToken: string, venueId: string, n
     personToken
   )
 }
+
+export interface TaskRow {
+  id: number
+  title: string
+  description: string | null
+  priority: number
+  due_at: string | null
+  category_id: number | null
+  assigned_membership_id: number | null
+  assigned_position_id: number | null
+  started_at: string | null
+  completed_at: string | null
+  completed_by_person_id: number | null
+  cancelled_at: string | null
+  cancel_reason: string | null
+  created_by_person_id: number | null
+  created_at: string
+  updated_at: string
+}
+
+export interface TaskCreateData {
+  title: string
+  description?: string | null
+  priority?: number
+  due_at?: string | null
+  category_id?: number | null
+  assigned_membership_id?: number | null
+  assigned_position_id?: number | null
+}
+
+export interface TaskUpdateData {
+  title?: string
+  description?: string | null
+  priority?: number
+  due_at?: string | null
+  category_id?: number | null
+}
+
+export interface TaskAssignData {
+  membership_id?: number | null
+  position_id?: number | null
+}
+
+export async function listTasks(
+  personToken: string,
+  venueId: string,
+  options: { includeCompleted?: boolean; includeCancelled?: boolean; categoryId?: number } = {}
+): Promise<TaskRow[]> {
+  if (!process.env.XVM_API_BASE_URL) throw new Error("XVM_API_BASE_URL is not set")
+  const params = new URLSearchParams()
+  if (options.includeCompleted) params.set("include_completed", "true")
+  if (options.includeCancelled) params.set("include_cancelled", "true")
+  if (options.categoryId !== undefined) params.set("category_id", String(options.categoryId))
+  const query = params.toString() ? `?${params}` : ""
+  return xvmFetch<TaskRow[]>(`/venues/${venueId}/tasks${query}`, {}, personToken)
+}
+
+export async function createTask(personToken: string, venueId: string, data: TaskCreateData): Promise<TaskRow> {
+  if (!process.env.XVM_API_BASE_URL) throw new Error("XVM_API_BASE_URL is not set")
+  return xvmFetch<TaskRow>(`/venues/${venueId}/tasks`, { method: "POST", body: JSON.stringify(data) }, personToken)
+}
+
+export async function updateTask(personToken: string, venueId: string, taskId: number, data: TaskUpdateData): Promise<TaskRow> {
+  if (!process.env.XVM_API_BASE_URL) throw new Error("XVM_API_BASE_URL is not set")
+  return xvmFetch<TaskRow>(`/venues/${venueId}/tasks/${taskId}`, { method: "PATCH", body: JSON.stringify(data) }, personToken)
+}
+
+export async function assignTask(personToken: string, venueId: string, taskId: number, data: TaskAssignData): Promise<TaskRow> {
+  if (!process.env.XVM_API_BASE_URL) throw new Error("XVM_API_BASE_URL is not set")
+  return xvmFetch<TaskRow>(`/venues/${venueId}/tasks/${taskId}/assign`, { method: "POST", body: JSON.stringify(data) }, personToken)
+}
+
+export async function startTask(personToken: string, venueId: string, taskId: number): Promise<TaskRow> {
+  if (!process.env.XVM_API_BASE_URL) throw new Error("XVM_API_BASE_URL is not set")
+  return xvmFetch<TaskRow>(`/venues/${venueId}/tasks/${taskId}/start`, { method: "POST" }, personToken)
+}
+
+export async function completeTask(personToken: string, venueId: string, taskId: number): Promise<TaskRow> {
+  if (!process.env.XVM_API_BASE_URL) throw new Error("XVM_API_BASE_URL is not set")
+  return xvmFetch<TaskRow>(`/venues/${venueId}/tasks/${taskId}/complete`, { method: "POST" }, personToken)
+}
+
+export async function cancelTask(personToken: string, venueId: string, taskId: number, reason?: string | null): Promise<TaskRow> {
+  if (!process.env.XVM_API_BASE_URL) throw new Error("XVM_API_BASE_URL is not set")
+  return xvmFetch<TaskRow>(
+    `/venues/${venueId}/tasks/${taskId}/cancel`,
+    { method: "POST", body: JSON.stringify({ reason: reason ?? null }) },
+    personToken
+  )
+}
