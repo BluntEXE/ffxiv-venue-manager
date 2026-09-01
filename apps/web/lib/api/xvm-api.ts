@@ -745,6 +745,35 @@ export async function listShifts(
   return xvmFetch<ShiftRow[]>(`/venues/${venueId}/shifts?${params}`, {}, personToken)
 }
 
+// xvm-api rejects a from/to window over 60 days (400, "Windows are capped at
+// 60 days"). Callers wanting a wider range (the shifts calendar's 6-month
+// rolling window) chunk through this instead of listShifts directly.
+export const LIST_SHIFTS_MAX_WINDOW_DAYS = 60
+
+export async function listShiftsChunked(
+  personToken: string,
+  venueId: string,
+  opts: { from: string; to: string; openOnly?: boolean; mine?: boolean; includeCancelled?: boolean }
+): Promise<ShiftRow[]> {
+  const from = new Date(opts.from)
+  const to = new Date(opts.to)
+  const chunks: { from: string; to: string }[] = []
+  let chunkStart = from
+  while (chunkStart < to) {
+    const chunkEnd = new Date(
+      Math.min(chunkStart.getTime() + (LIST_SHIFTS_MAX_WINDOW_DAYS - 1) * 24 * 60 * 60 * 1000, to.getTime())
+    )
+    chunks.push({ from: chunkStart.toISOString(), to: chunkEnd.toISOString() })
+    chunkStart = chunkEnd
+  }
+  const results = await Promise.all(
+    chunks.map((c) => listShifts(personToken, venueId, { ...opts, from: c.from, to: c.to }))
+  )
+  const byId = new Map<number, ShiftRow>()
+  for (const shift of results.flat()) byId.set(shift.id, shift)
+  return [...byId.values()]
+}
+
 export async function getShift(personToken: string, venueId: string, shiftId: number): Promise<ShiftRow> {
   if (!process.env.XVM_API_BASE_URL) throw new Error("XVM_API_BASE_URL is not set")
   return xvmFetch<ShiftRow>(`/venues/${venueId}/shifts/${shiftId}`, {}, personToken)

@@ -8,7 +8,7 @@ import { CreateShiftDialog } from "@/components/create-shift-dialog"
 import { ShiftsCalendar } from "@/components/shifts-calendar"
 import { ShiftsWeekView } from "@/components/shifts-week-view"
 import { getValidXvmApiToken } from "@/lib/api/xvm-api-store"
-import { listShifts, listShiftStaffAndRoles, listMemberships, listPositions } from "@/lib/api/xvm-api"
+import { listShifts, listShiftsChunked, listShiftStaffAndRoles, listMemberships, listPositions } from "@/lib/api/xvm-api"
 import { toShiftRow, type ShiftRow, type StaffNameLookup } from "@/lib/shift-format"
 
 // Week start = Monday in UTC (FFXIV server time = UTC)
@@ -143,7 +143,7 @@ export default async function ShiftsPage({
   const calendarShifts: ShiftRow[] =
     view === "calendar"
       ? (
-          await listShifts(token, xvmApiVenueId, {
+          await listShiftsChunked(token, xvmApiVenueId, {
             from: new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth() - 3, 1)).toISOString(),
             to: new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth() + 4, 1)).toISOString(),
             includeCancelled: true,
