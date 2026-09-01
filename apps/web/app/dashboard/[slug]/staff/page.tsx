@@ -15,10 +15,62 @@ import { PendingInvites } from "@/components/pending-invites"
 import { StaffTable, type StaffMember } from "@/components/staff-table"
 import { VenueLayout } from "@/components/venue-layout"
 import { getValidXvmApiToken, invalidateXvmApiCredential, isXvmAuthFailure } from "@/lib/api/xvm-api-store"
-import { listMemberships, listPositions, listInvites } from "@/lib/api/xvm-api"
+import {
+  listMemberships,
+  listPositions,
+  listInvites,
+  type MembershipRow,
+  type PositionRow,
+  type InviteRow,
+} from "@/lib/api/xvm-api"
 
 import { RoleBadge } from "@/components/role-badge"
 import { StaffVisibilitySettings } from "@/components/staff-visibility-settings"
+
+// Mirrors staff/route.ts's toStaffShape (duplicated per this codebase's
+// per-file convention - the route files don't share it with each other either).
+function toStaffShape(member: MembershipRow, positionsById: Map<number, PositionRow>, venueId: string): StaffMember {
+  return {
+    id: member.id,
+    role: member.effective_tier.toUpperCase() as "OWNER" | "MANAGER" | "STAFF",
+    additionalRoles: member.position_ids
+      .map((id) => positionsById.get(id))
+      .filter((p): p is PositionRow => Boolean(p))
+      .map((p) => ({ name: p.name, color: p.color })),
+    joinedAt: null,
+    isOnShift: false,
+    nickname: member.nickname,
+    user: {
+      id: member.person.id,
+      name: member.person.display_name,
+      displayName: member.person.display_name,
+      image: null,
+      characterName: null,
+    },
+    venueId,
+  }
+}
+
+type PendingInviteShape = {
+  id: number
+  role: string
+  invitedName: string | null
+  inviteToken: string | null
+  inviteExpiresAt: Date | null
+}
+
+// list_invites returns no token (xvm-api only ever hands one out once, at
+// creation) - the "Invite Link" section in PendingInvites just won't render
+// for these, gracefully, via its existing invite.inviteToken guard.
+function toPendingInviteShape(invite: InviteRow): PendingInviteShape {
+  return {
+    id: invite.id,
+    role: invite.tier.toUpperCase(),
+    invitedName: invite.person.display_name,
+    inviteToken: null,
+    inviteExpiresAt: new Date(invite.expires_at),
+  }
+}
 
 export default async function StaffPage({ params }: { params: Promise<{ slug: string }> }) {
   const session = await getServerSession(authOptions)
@@ -51,13 +103,7 @@ export default async function StaffPage({ params }: { params: Promise<{ slug: st
   // tables/endpoints, unlike Prisma's unified Membership row with a
   // status: "pending" filter - a real structural change, not a field rename.
   let activeStaff: StaffMember[] = []
-  let pendingInvites: {
-    id: number
-    role: string
-    invitedName: string | null
-    inviteToken: string | null
-    inviteExpiresAt: Date | null
-  }[] = []
+  let pendingInvites: PendingInviteShape[] = []
 
   const token = await getValidXvmApiToken(session.user.id)
   if (token && venue.xvmApiVenueId) {
@@ -68,35 +114,8 @@ export default async function StaffPage({ params }: { params: Promise<{ slug: st
         listInvites(token, venue.xvmApiVenueId),
       ])
       const positionsById = new Map(positions.map((p) => [p.id, p]))
-      activeStaff = memberships.map((m) => ({
-        id: m.id,
-        role: m.effective_tier.toUpperCase() as "OWNER" | "MANAGER" | "STAFF",
-        additionalRoles: m.position_ids
-          .map((id) => positionsById.get(id))
-          .filter((p): p is NonNullable<typeof p> => Boolean(p))
-          .map((p) => ({ name: p.name, color: p.color })),
-        joinedAt: null,
-        isOnShift: false,
-        nickname: m.nickname,
-        user: {
-          id: m.person.id,
-          name: m.person.display_name,
-          displayName: m.person.display_name,
-          image: null,
-          characterName: null,
-        },
-        venueId: slug,
-      }))
-      // list_invites returns no token (xvm-api only ever hands one out once,
-      // at creation) - the "Invite Link" section in PendingInvites just won't
-      // render for these, gracefully, via its existing invite.inviteToken guard.
-      pendingInvites = invites.map((invite) => ({
-        id: invite.id,
-        role: invite.tier.toUpperCase(),
-        invitedName: invite.person.display_name,
-        inviteToken: null,
-        inviteExpiresAt: new Date(invite.expires_at),
-      }))
+      activeStaff = memberships.map((m) => toStaffShape(m, positionsById, slug))
+      pendingInvites = invites.map(toPendingInviteShape)
     } catch (err) {
       console.error("[staff page] xvm-api fetch error:", err)
       if (isXvmAuthFailure(err)) {
@@ -115,7 +134,7 @@ export default async function StaffPage({ params }: { params: Promise<{ slug: st
   const [activeShifts, weeklyShifts, weeklyTips] = await Promise.all([
     prisma.shift.findMany({
       where: { venueId: venue.id, status: "ACTIVE" },
-      select: { membershipId: true },
+      select: { id: true },
     }),
     prisma.shift.findMany({
       where: { venueId: venue.id, scheduledStart: { gte: weekAgo }, status: { in: ["COMPLETED", "ACTIVE"] } },
