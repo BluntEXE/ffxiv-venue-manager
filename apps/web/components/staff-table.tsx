@@ -16,6 +16,7 @@ import {
 } from "@/components/ui/dropdown-menu"
 import { ChevronDown, Check, Pencil, X } from "lucide-react"
 import { resolveDisplayName } from "@/lib/display-name"
+import { intColorToHex } from "@/lib/api/position-convert"
 import { DataTable } from "@/components/ui/data-table"
 
 export type StaffMember = {
@@ -49,10 +50,10 @@ function memberDisplayName(member: Pick<StaffMember, "nickname" | "user">): stri
   })
 }
 
-const DEFAULT_ROLE_COLOR = 0x6c7086
+const DEFAULT_ROLE_COLOR = "#6c7086"
 
 function rolePillStyle(color: number | null): CSSProperties {
-  const hex = "#" + (color ?? DEFAULT_ROLE_COLOR).toString(16).padStart(6, "0")
+  const hex = intColorToHex(color) ?? DEFAULT_ROLE_COLOR
   return { color: hex, borderColor: hex + "55", background: hex + "18" }
 }
 
