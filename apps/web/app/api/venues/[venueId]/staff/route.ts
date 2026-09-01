@@ -41,7 +41,7 @@ function toStaffShape(member: MembershipRow, positionsById: Map<number, Position
     additionalRoles: member.position_ids
       .map((id) => positionsById.get(id))
       .filter((p): p is PositionRow => Boolean(p))
-      .map((p) => ({ name: p.name, color: p.color })),
+      .map((p) => ({ id: p.id, name: p.name, color: p.color })),
     joinedAt: null,
     isOnShift: false,
     nickname: member.nickname,
