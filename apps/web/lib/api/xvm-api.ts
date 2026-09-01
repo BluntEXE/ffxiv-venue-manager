@@ -512,6 +512,35 @@ export async function getPublicHours(venueId: string, days?: number): Promise<Pu
   return xvmFetch<PublicHours>(`/public/venues/${venueId}/hours${params}`, { next: { revalidate: 60 } })
 }
 
+export interface PublicHoursBatch {
+  venues: Record<string, PublicHours>
+}
+
+export async function getPublicHoursBatch(venueIds: string[], days?: number): Promise<PublicHoursBatch> {
+  if (!process.env.XVM_API_BASE_URL) throw new Error("XVM_API_BASE_URL is not set")
+  if (venueIds.length === 0) return { venues: {} }
+  const params = new URLSearchParams({ ids: venueIds.join(",") })
+  if (days !== undefined) params.set("days", String(days))
+  return xvmFetch<PublicHoursBatch>(`/public/venues/hours?${params}`, { next: { revalidate: 60 } })
+}
+
+// xvm-api caps one batch read at PUBLIC_HOURS_BATCH_MAX ids - this wraps
+// getPublicHoursBatch with chunking and merging so callers with more ids
+// (Following is unbounded) don't silently lose venues past the first batch.
+export const PUBLIC_HOURS_BATCH_MAX = 50
+
+export async function getPublicHoursForVenues(
+  venueIds: string[],
+  days?: number
+): Promise<Record<string, PublicHours>> {
+  const merged: Record<string, PublicHours> = {}
+  for (let i = 0; i < venueIds.length; i += PUBLIC_HOURS_BATCH_MAX) {
+    const batch = await getPublicHoursBatch(venueIds.slice(i, i + PUBLIC_HOURS_BATCH_MAX), days)
+    Object.assign(merged, batch.venues)
+  }
+  return merged
+}
+
 // ── Positions API ──────────────────────────────────────────────
 
 export interface PositionCreate {

@@ -11,6 +11,7 @@ import { prisma } from "@/lib/prisma"
 import { FollowingClient } from "@/components/following-client"
 import { ExploreLayout } from "@/components/explore-layout"
 import { isVenueOpenNow } from "@/lib/schedule-utils"
+import { getPublicHoursForVenues, type PublicHours } from "@/lib/api/xvm-api"
 
 export const dynamic = "force-dynamic"
 
@@ -33,6 +34,7 @@ export default async function FollowingPage() {
           plot: true,
           apartment: true,
           location: true,
+          xvmApiVenueId: true,
           _count: { select: { follows: true } },
           events: {
             where: { status: "ACTIVE" },
@@ -47,25 +49,45 @@ export default async function FollowingPage() {
     orderBy: { createdAt: "desc" },
   })
 
-  const venues = follows.map((f) => ({
-    id: f.venue.id,
-    name: f.venue.name,
-    slug: f.venue.slug,
-    dataCenter: f.venue.dataCenter,
-    world: f.venue.world,
-    district: f.venue.district,
-    ward: f.venue.ward,
-    plot: f.venue.plot,
-    apartment: f.venue.apartment,
-    location: f.venue.location,
-    followCount: f.venue._count.follows,
-    isOpenNow: isVenueOpenNow({
-      hasActiveEvent: f.venue.events.length > 0,
-      scheduleEntries: f.venue.scheduleEntries,
-      ffxivSchedule: f.venue.venueSchedule?.data,
-    }),
-    activeEvent: f.venue.events[0] ?? null,
-  }))
+  // xvm-api is the source of truth for a connected venue's hours. Following is
+  // unbounded (no take cap), so getPublicHoursForVenues chunks the ids into
+  // batches of 50 and merges them - one request per 50 followed venues rather
+  // than one per venue. Non-fatal: unconnected venues and failed reads fall
+  // back to the Prisma scheduleEntries computation per venue.
+  const xvmVenueIds = follows.map((f) => f.venue.xvmApiVenueId).filter((id): id is string => id !== null)
+  let hoursByVenue: Record<string, PublicHours> = {}
+  if (xvmVenueIds.length > 0) {
+    try {
+      hoursByVenue = await getPublicHoursForVenues(xvmVenueIds)
+    } catch {
+      hoursByVenue = {}
+    }
+  }
+
+  const venues = follows.map((f) => {
+    const xvmHoursEntry = f.venue.xvmApiVenueId ? hoursByVenue[f.venue.xvmApiVenueId] : undefined
+    return {
+      id: f.venue.id,
+      name: f.venue.name,
+      slug: f.venue.slug,
+      dataCenter: f.venue.dataCenter,
+      world: f.venue.world,
+      district: f.venue.district,
+      ward: f.venue.ward,
+      plot: f.venue.plot,
+      apartment: f.venue.apartment,
+      location: f.venue.location,
+      followCount: f.venue._count.follows,
+      isOpenNow: xvmHoursEntry
+        ? f.venue.events.length > 0 || xvmHoursEntry.open_now.open
+        : isVenueOpenNow({
+            hasActiveEvent: f.venue.events.length > 0,
+            scheduleEntries: f.venue.scheduleEntries,
+            ffxivSchedule: f.venue.venueSchedule?.data,
+          }),
+      activeEvent: f.venue.events[0] ?? null,
+    }
+  })
 
   return (
     <ExploreLayout>

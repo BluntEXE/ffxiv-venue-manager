@@ -5,6 +5,7 @@ import { prisma } from "@/lib/prisma"
 import { DiscoverClient, type DiscoverVenue } from "@/components/discover-client"
 import { ExploreLayout } from "@/components/explore-layout"
 import { isVenueOpenNow } from "@/lib/schedule-utils"
+import { getPublicHoursBatch, type PublicHours } from "@/lib/api/xvm-api"
 
 export const metadata: Metadata = {
   title: "Discover Venues",
@@ -55,9 +56,24 @@ export default async function DiscoverPage() {
       ).map((f) => f.venueId)
     : []
 
+  // xvm-api is the source of truth for a connected venue's hours - one batched
+  // read for the whole page (take: 50 above stays within the batch cap) rather
+  // than one request per venue. Non-fatal: unconnected venues and failed reads
+  // fall back to the Prisma scheduleEntries computation per venue.
+  const xvmVenueIds = venues.map((v) => v.xvmApiVenueId).filter((id): id is string => id !== null)
+  let hoursByVenue: Record<string, PublicHours> = {}
+  if (xvmVenueIds.length > 0) {
+    try {
+      hoursByVenue = (await getPublicHoursBatch(xvmVenueIds)).venues
+    } catch {
+      hoursByVenue = {}
+    }
+  }
+
   const cards: DiscoverVenue[] = venues.map((v) => {
     const activeEvent = v.events.find((e) => e.status === "ACTIVE") ?? null
     const upcomingEvent = v.events.find((e) => e.status !== "ACTIVE") ?? null
+    const xvmHoursEntry = v.xvmApiVenueId ? hoursByVenue[v.xvmApiVenueId] : undefined
     return {
       id: v.id,
       name: v.name,
@@ -72,11 +88,13 @@ export default async function DiscoverPage() {
       description: v.description,
       followCount: v._count.follows,
       isFollowed: followedIds.includes(v.id),
-      isOpenNow: isVenueOpenNow({
-        hasActiveEvent: activeEvent !== null,
-        scheduleEntries: v.scheduleEntries,
-        ffxivSchedule: v.venueSchedule?.data,
-      }),
+      isOpenNow: xvmHoursEntry
+        ? activeEvent !== null || xvmHoursEntry.open_now.open
+        : isVenueOpenNow({
+            hasActiveEvent: activeEvent !== null,
+            scheduleEntries: v.scheduleEntries,
+            ffxivSchedule: v.venueSchedule?.data,
+          }),
       isTonightOpen: v.events.length > 0,
       activeEvent: activeEvent ? { title: activeEvent.title } : null,
       upcomingEvent: upcomingEvent
