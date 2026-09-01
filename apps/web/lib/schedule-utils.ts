@@ -78,10 +78,6 @@ export function formatIntervalLabel(entry: ScheduleEntry): string {
   return entry.interval
 }
 
-export function isOpenNow(entries: ScheduleEntry[]): boolean {
-  return entries.some(isEntryActiveNow)
-}
-
 // xvm-api's Interval vocabulary is lowercase and includes monthly_by_date,
 // which ScheduleEntry has no field for (only weekOfMonth, used by
 // monthly_by_weekday) - those rules are filtered out of the display rather
@@ -161,31 +157,6 @@ export function resolveUpcomingOccurrences(
 
   results.sort((a, b) => a.start.localeCompare(b.start))
   return results.slice(0, limit)
-}
-
-function isEntryActiveNow(entry: ScheduleEntry): boolean {
-  const now = new Date()
-  const todayDay = now.getUTCDay()
-  const currentMin = now.getUTCHours() * 60 + now.getUTCMinutes()
-  const startMin = entry.startHour * 60 + entry.startMin
-  const endMin = entry.endHour != null ? entry.endHour * 60 + (entry.endMin ?? 0) : null
-
-  if (!matchesInterval(entry, now)) return false
-
-  // Direct day match
-  if (entry.day === todayDay) {
-    if (endMin == null) return currentMin >= startMin
-    if (!entry.crossesMidnight) return currentMin >= startMin && currentMin < endMin
-    return currentMin >= startMin // crosses midnight: today's portion is start → midnight
-  }
-
-  // Crosses-midnight: are we in the "after midnight" window (next calendar day)?
-  if (entry.crossesMidnight && endMin != null) {
-    const prevDay = (todayDay + 6) % 7
-    if (entry.day === prevDay) return currentMin < endMin
-  }
-
-  return false
 }
 
 function matchesInterval(entry: ScheduleEntry, now: Date): boolean {
