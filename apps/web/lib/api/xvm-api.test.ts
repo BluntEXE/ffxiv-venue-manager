@@ -1,6 +1,19 @@
 import { describe, it, expect, vi, beforeEach } from "vitest"
 
-import { listTasks, createTask, updateTask, assignTask, startTask, completeTask, cancelTask, type TaskRow } from "./xvm-api"
+import {
+  listTasks,
+  createTask,
+  updateTask,
+  assignTask,
+  startTask,
+  completeTask,
+  cancelTask,
+  getPublicHoursBatch,
+  getPublicHoursForVenues,
+  PUBLIC_HOURS_BATCH_MAX,
+  type TaskRow,
+  type PublicHours,
+} from "./xvm-api"
 
 function mockFetchOnce({ ok, status, body }: { ok: boolean; status: number; body: unknown }) {
   ;(fetch as ReturnType<typeof vi.fn>).mockResolvedValueOnce({
@@ -85,5 +98,57 @@ describe("Tasks API", () => {
     const [url, options] = (fetch as ReturnType<typeof vi.fn>).mock.calls[0]
     expect(url).toContain("/tasks/1/cancel")
     expect(JSON.parse(options.body)).toEqual({ reason: "No longer needed" })
+  })
+})
+
+describe("Public hours batch", () => {
+  function publicHours(open: boolean): PublicHours {
+    return { open_now: { open, current: null, next: null }, rules: [], upcoming: [] }
+  }
+
+  it("getPublicHoursBatch GETs /public/venues/hours with comma-separated ids", async () => {
+    mockFetchOnce({ ok: true, status: 200, body: { venues: { vn_a: publicHours(true), vn_b: publicHours(false) } } })
+    const result = await getPublicHoursBatch(["vn_a", "vn_b"])
+    expect(result.venues.vn_a.open_now.open).toBe(true)
+    expect(result.venues.vn_b.open_now.open).toBe(false)
+    const [url] = (fetch as ReturnType<typeof vi.fn>).mock.calls[0]
+    expect(decodeURIComponent(url)).toContain("/public/venues/hours?ids=vn_a,vn_b")
+  })
+
+  it("getPublicHoursBatch returns an empty map without fetching for zero ids", async () => {
+    const result = await getPublicHoursBatch([])
+    expect(result).toEqual({ venues: {} })
+    expect(fetch).not.toHaveBeenCalled()
+  })
+
+  it("getPublicHoursBatch forwards the days window when provided", async () => {
+    mockFetchOnce({ ok: true, status: 200, body: { venues: {} } })
+    await getPublicHoursBatch(["vn_a"], 7)
+    const [url] = (fetch as ReturnType<typeof vi.fn>).mock.calls[0]
+    expect(decodeURIComponent(url)).toContain("ids=vn_a")
+    expect(decodeURIComponent(url)).toContain("days=7")
+  })
+
+  it("getPublicHoursForVenues issues one request per 50-id chunk and merges the maps", async () => {
+    const ids = Array.from({ length: PUBLIC_HOURS_BATCH_MAX * 2 + 3 }, (_, i) => `vn_${i}`)
+    for (let chunk = 0; chunk < 3; chunk++) {
+      const venues: Record<string, PublicHours> = {}
+      for (let i = chunk * PUBLIC_HOURS_BATCH_MAX; i < Math.min((chunk + 1) * PUBLIC_HOURS_BATCH_MAX, ids.length); i++) {
+        venues[`vn_${i}`] = publicHours(i % 2 === 0)
+      }
+      mockFetchOnce({ ok: true, status: 200, body: { venues } })
+    }
+
+    const result = await getPublicHoursForVenues(ids)
+
+    const calls = (fetch as ReturnType<typeof vi.fn>).mock.calls
+    expect(calls).toHaveLength(3)
+    const chunkSizes = calls.map(([url]) => decodeURIComponent(String(url)).split("ids=")[1].split("&")[0].split(",").length)
+    expect(chunkSizes).toEqual([PUBLIC_HOURS_BATCH_MAX, PUBLIC_HOURS_BATCH_MAX, 3])
+
+    expect(Object.keys(result)).toHaveLength(ids.length)
+    expect(result.vn_0).toEqual(publicHours(true))
+    expect(result.vn_1).toEqual(publicHours(false))
+    expect(result[`vn_${ids.length - 1}`]).toEqual(publicHours((ids.length - 1) % 2 === 0))
   })
 })
