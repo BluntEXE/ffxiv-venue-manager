@@ -18,7 +18,6 @@ export default function InviteStaffPage({ params }: { params: Promise<{ slug: st
   const { slug } = use(params)
   const router = useRouter()
   const [name, setName] = useState("")
-  const [email, setEmail] = useState("")
   const [role, setRole] = useState<"STAFF" | "MANAGER" | "OWNER">("STAFF")
   const [isLoading, setIsLoading] = useState(false)
   const [error, setError] = useState("")
@@ -70,21 +69,8 @@ export default function InviteStaffPage({ params }: { params: Promise<{ slug: st
     setInviteUrl("")
 
     try {
-      // Get venue ID from slug
-      const venueResponse = await fetch(`/api/venues?slug=${slug}`)
-      if (!venueResponse.ok) {
-        throw new Error("Failed to fetch venue")
-      }
-
-      const venues = await venueResponse.json()
-      const venue = venues.find((v: { slug: string }) => v.slug === slug)
-
-      if (!venue) {
-        throw new Error("Venue not found")
-      }
-
-      // Create invite
-      const response = await fetch(`/api/venues/${venue.id}/staff/invite`, {
+      // Create invite - the route resolves slug-or-id itself, no separate lookup needed.
+      const response = await fetch(`/api/venues/${slug}/staff/invite`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -92,7 +78,6 @@ export default function InviteStaffPage({ params }: { params: Promise<{ slug: st
         body: JSON.stringify({
           role,
           invitedName: name || null,
-          invitedEmail: email || null,
         }),
       })
 
@@ -134,7 +119,6 @@ export default function InviteStaffPage({ params }: { params: Promise<{ slug: st
 
   const handleCreateAnother = () => {
     setName("")
-    setEmail("")
     setRole("STAFF")
     setInviteUrl("")
     setError("")
@@ -198,11 +182,6 @@ export default function InviteStaffPage({ params }: { params: Promise<{ slug: st
                 {name && (
                   <p>
                     <strong>Name:</strong> {name}
-                  </p>
-                )}
-                {email && (
-                  <p>
-                    <strong>Email (for reference):</strong> {email}
                   </p>
                 )}
               </div>
@@ -294,24 +273,6 @@ export default function InviteStaffPage({ params }: { params: Promise<{ slug: st
                   disabled={isLoading}
                 />
                 <p className="text-sm text-muted-foreground">For your reference. Helps you identify pending invites.</p>
-              </div>
-
-              {/* Email Input (Optional - Display Only) */}
-              <div className="space-y-2">
-                <Label htmlFor="email">
-                  Email <span className="text-muted-foreground">(optional, for reference only)</span>
-                </Label>
-                <Input
-                  id="email"
-                  type="email"
-                  placeholder="staff@example.com"
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
-                  disabled={isLoading}
-                />
-                <p className="text-sm text-muted-foreground">
-                  Not used for authentication. Only stored for your records.
-                </p>
               </div>
 
               {/* Role Selection */}
