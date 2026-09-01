@@ -82,7 +82,7 @@ export const GET = withRateLimit<{ params: Promise<{ venueId: string }> }>(
         listPositions(token, gate.xvmApiVenueId!),
       ])
       const positionsById = new Map(positions.map((p) => [p.id, p]))
-      const shaped = memberships.map((m) => toStaffShape(m, positionsById, gate.xvmApiVenueId!))
+      const shaped = memberships.map((m) => toStaffShape(m, positionsById, venueId))
       return NextResponse.json(shaped)
     } catch (err) {
       return xvmApiErrorResponse(err, session.user.id, "[staff] GET error")
