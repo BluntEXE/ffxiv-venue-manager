@@ -1,8 +1,7 @@
 // apps/web/lib/shift-format.ts
 
-import { Prisma } from "@/generated/prisma/client"
 import { localDayKey, localHourLabel } from "./local-day"
-import { resolveDisplayName } from "./display-name"
+import type { ShiftRow as ApiShiftRow, ShiftApiStatus } from "./api/xvm-api"
 
 // FFXIV server time = UTC (see apps/web/app/dashboard/[slug]/shifts/page.tsx).
 // These mirror that page's private utcDayKey/fmtHour helpers so the calendar
@@ -34,96 +33,75 @@ export function hourLabelFor(d: Date | string, timeZone: string | null): string 
   return timeZone ? localHourLabel(d, timeZone) : fmtHour(d)
 }
 
+export type ShiftUiStatus =
+  | "OPEN"
+  | "CLAIMED"
+  | "SCHEDULED"
+  | "ACTIVE"
+  | "COMPLETED"
+  | "CANCELLED"
+  | "MISSED"
+  | "UNFILLED"
+
+export const SHIFT_STATUS_SHAPE: Record<ShiftApiStatus, ShiftUiStatus> = {
+  open: "OPEN",
+  pending_approval: "CLAIMED",
+  scheduled: "SCHEDULED",
+  active: "ACTIVE",
+  completed: "COMPLETED",
+  cancelled: "CANCELLED",
+  missed: "MISSED",
+  unfilled: "UNFILLED",
+}
+
 export const statusBadgeClass: Record<string, string> = {
   SCHEDULED: "bg-[rgba(0,180,255,0.12)] text-[var(--xiv-blue)] border-[rgba(0,180,255,0.35)]",
   ACTIVE: "bg-emerald-500/10 text-emerald-500 border-emerald-500/20",
   COMPLETED: "bg-zinc-500/10 text-zinc-400 border-zinc-500/20",
   MISSED: "bg-amber-500/10 text-amber-500 border-amber-500/20",
+  UNFILLED: "bg-amber-500/10 text-amber-500 border-amber-500/20",
   CANCELLED: "bg-red-500/10 text-red-400 border-red-500/20",
 }
 
-export interface StaffMember {
-  id: string
-  name: string
-  image: string | null
-}
+// One membership/name lookup, built once per page render and threaded through
+// props, so every row can resolve a name without its own network call.
+export type StaffNameLookup = Map<number, string>
 
-export interface RoleOption {
-  id: string
-  name: string
-}
-
-// Explicit select (not include) for the shifts week grid — passed whole into
-// a client component (ShiftsWeekView). Prisma's Decimal fields (e.g.
-// Shift.hoursWorked, Membership.hourlyRate) can't cross the server/client
-// boundary and hourlyRate is also pay data non-managers shouldn't receive in
-// the RSC payload, so only the fields ShiftsWeekView actually reads are
-// selected here — same constraint/pattern as CalendarShift above.
-export const shiftSelect = {
-  id: true,
-  membershipId: true,
-  roleId: true,
-  payrollEntryId: true,
-  scheduledStart: true,
-  scheduledEnd: true,
-  status: true,
-  notes: true,
-  recurrenceRule: true,
-  parentShiftId: true,
-  slotGroupId: true,
-  membership: {
-    select: {
-      nickname: true,
-      user: {
-        select: {
-          id: true,
-          name: true,
-          displayName: true,
-          image: true,
-          characters: {
-            orderBy: [{ isPrimary: "desc" }, { createdAt: "asc" }],
-            take: 1,
-            select: { characterName: true },
-          },
-        },
-      },
-    },
-  },
-  role: { select: { name: true } },
-} satisfies Prisma.ShiftSelect
-
-export type ShiftRow = Prisma.ShiftGetPayload<{ select: typeof shiftSelect }>
-
-export interface CalendarShift {
-  id: string
-  membershipId: string | null
-  roleId: string | null
-  payrollEntryId: string | null
-  scheduledStart: Date
-  scheduledEnd: Date
-  status: string
+export interface ShiftRow {
+  id: number
+  membershipId: number | null
+  roleId: number | null
+  roleName: string | null
+  payrollEntryId: number | null
+  scheduledStart: string
+  scheduledEnd: string
+  status: ShiftUiStatus
   notes: string | null
-  recurrenceRule: string | null
-  parentShiftId: string | null
-  slotGroupId: string | null
-  membership: {
-    nickname: string | null
-    user: {
-      id: string
-      name: string | null
-      displayName: string | null
-      image: string | null
-      characters: { characterName: string }[]
-    } | null
-  } | null
-  role: { name: string } | null
 }
 
-export function staffNameOf(membership: CalendarShift["membership"]): string {
-  return resolveDisplayName({
-    characterName: membership?.user?.characters?.[0]?.characterName,
-    nickname: membership?.nickname,
-    displayName: membership?.user?.displayName,
-    discordName: membership?.user?.name,
-  })
+export type CalendarShift = ShiftRow
+
+export function toShiftRow(shift: ApiShiftRow, roleName: string | null): ShiftRow {
+  return {
+    id: shift.id,
+    membershipId: shift.membership_id,
+    roleId: shift.position_id,
+    roleName,
+    payrollEntryId: shift.payroll_entry_id,
+    scheduledStart: shift.scheduled_start ?? shift.actual_start ?? new Date().toISOString(),
+    scheduledEnd: shift.scheduled_end ?? shift.actual_end ?? new Date().toISOString(),
+    status: SHIFT_STATUS_SHAPE[shift.status],
+    notes: shift.notes,
+  }
+}
+
+// xvm-api's MembershipPerson only carries display_name - no FFXIV character
+// name, no nickname layering like the old Prisma resolveDisplayName chain
+// had. Ships with the Discord display name only; swap this one function once
+// xvm-api exposes external_id on MembershipPerson and a character-name bridge
+// exists (see docs/superpowers/plans/2026-09-01-shifts-page-xvm-api-cutover.md
+// for the tracked ask).
+export function staffNameOf(membershipId: number | null, names: StaffNameLookup): string {
+  if (membershipId === null) return "Unassigned"
+  return names.get(membershipId) ?? "Unknown"
 }
