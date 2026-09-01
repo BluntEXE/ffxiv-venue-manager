@@ -260,11 +260,11 @@ export default function ManageStaffMemberPage({ params }: { params: Promise<{ sl
                 <Badge className={roleColors[staffMember.role]}>{staffMember.role}</Badge>
               </div>
             </div>
-            {staffMember.joinedAt && (
-              <div className="mt-4 pt-4 border-t">
-                <p className="text-sm text-muted-foreground">Joined {format(new Date(staffMember.joinedAt), "PPP")}</p>
-              </div>
-            )}
+            <div className="mt-4 pt-4 border-t">
+              <p className="text-sm text-muted-foreground">
+                Joined {staffMember.joinedAt ? format(new Date(staffMember.joinedAt), "PPP") : "—"}
+              </p>
+            </div>
           </CardContent>
         </Card>
 
