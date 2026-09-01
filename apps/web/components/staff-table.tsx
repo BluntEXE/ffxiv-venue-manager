@@ -107,8 +107,8 @@ export function StaffTable({
 
   // Extract unique position names for additional filter tabs - xvm-api has
   // no primary/secondary distinction, so this is the union of every
-  // assigned position across all members, not just a "custom role".
-  const customRoleNames = Array.from(new Set(members.flatMap((m) => m.additionalRoles.map((r) => r.name)))).sort()
+  // position assigned across all members, not a single "custom role".
+  const positionNames = Array.from(new Set(members.flatMap((m) => m.additionalRoles.map((r) => r.name)))).sort()
 
   const counts = {
     all: members.length,
@@ -116,7 +116,7 @@ export function StaffTable({
     manager: members.filter((m) => m.role === "MANAGER").length,
     staff: members.filter((m) => m.role === "STAFF").length,
     ...Object.fromEntries(
-      customRoleNames.map((name) => [
+      positionNames.map((name) => [
         name,
         members.filter((m) => m.additionalRoles.some((r) => r.name === name)).length,
       ])
@@ -129,7 +129,7 @@ export function StaffTable({
       if (filter === "manager" && m.role !== "MANAGER") return false
       if (filter === "staff" && m.role !== "STAFF") return false
       // Position filter
-      if (customRoleNames.includes(filter) && !m.additionalRoles.some((r) => r.name === filter)) return false
+      if (positionNames.includes(filter) && !m.additionalRoles.some((r) => r.name === filter)) return false
       if (search) {
         const q = search.toLowerCase()
         // Match on every name this member could be known by, not just the
@@ -153,8 +153,8 @@ export function StaffTable({
     { key: "owner", label: "Owners" },
     { key: "manager", label: "Managers" },
     { key: "staff", label: "Staff" },
-    // Add custom role tabs matching prototype (Hosts, Bar, DJ, etc.)
-    ...customRoleNames.map((name) => ({ key: name as Filter, label: name })),
+    // Add position tabs matching prototype (Hosts, Bar, DJ, etc.)
+    ...positionNames.map((name) => ({ key: name as Filter, label: name })),
   ]
 
   return (
@@ -184,7 +184,7 @@ export function StaffTable({
                   {filter === key && <Check className="w-3.5 h-3.5 flex-shrink-0" />}
                 </DropdownMenuItem>
               ))}
-            {/* Custom roles — only shown if any exist */}
+            {/* Positions — only shown if any exist */}
             {tabs.some((t) => !["all", "owner", "manager", "staff"].includes(t.key)) && (
               <>
                 <DropdownMenuSeparator className="bg-[var(--blue-008)]" />
