@@ -7,8 +7,9 @@ import { VenueLayout } from "@/components/venue-layout"
 import { CreateShiftDialog } from "@/components/create-shift-dialog"
 import { ShiftsCalendar } from "@/components/shifts-calendar"
 import { ShiftsWeekView } from "@/components/shifts-week-view"
-import { resolveDisplayName } from "@/lib/display-name"
-import { shiftSelect } from "@/lib/shift-format"
+import { getValidXvmApiToken } from "@/lib/api/xvm-api-store"
+import { listShifts, listShiftStaffAndRoles, listMemberships, listPositions } from "@/lib/api/xvm-api"
+import { toShiftRow, type ShiftRow, type StaffNameLookup } from "@/lib/shift-format"
 
 // Week start = Monday in UTC (FFXIV server time = UTC)
 function getWeekMonday(base: Date): Date {
@@ -60,10 +61,44 @@ export default async function ShiftsPage({
   })
 
   if (!venue || venue.memberships.length === 0) notFound()
+  if (!venue.xvmApiVenueId) {
+    return (
+      <VenueLayout venueSlug={venue.slug} venueName={venue.name} userRole={venue.memberships[0].role}>
+        <div className="page-inner">
+          <h1 className="page-h1">Shifts</h1>
+          <p className="text-muted-foreground mt-4">
+            This venue hasn&apos;t been connected to xvm-api yet - shifts aren&apos;t available until it is.
+          </p>
+        </div>
+      </VenueLayout>
+    )
+  }
 
-  const userRole = venue.memberships[0].role
-  const currentMembershipId = venue.memberships[0].id
-  const canManage = ["OWNER", "MANAGER"].includes(userRole)
+  const xvmApiVenueId = venue.xvmApiVenueId
+  const token = await getValidXvmApiToken(session.user.id)
+  if (!token) {
+    redirect("/auth/signin")
+  }
+
+  const [memberships, positions] = await Promise.all([
+    listMemberships(token, xvmApiVenueId),
+    listPositions(token, xvmApiVenueId),
+  ])
+  const currentMembership = memberships.find((m) => m.person.display_name === session.user.name) ?? null
+  // NOTE: matching by display_name is a stopgap - xvm-api's /me endpoint
+  // returns the caller's own memberships directly and should be used here
+  // instead once this page is wired to it (out of scope for this plan, which
+  // only covers the shift data itself). Flag this line in review.
+  const userRole =
+    currentMembership?.effective_tier === "owner"
+      ? "OWNER"
+      : currentMembership?.effective_tier === "manager"
+        ? "MANAGER"
+        : "STAFF"
+  const currentMembershipId = currentMembership?.id ?? -1
+  const canManage = userRole === "OWNER" || userRole === "MANAGER"
+  const roleNameById = new Map(positions.map((p) => [p.id, p.name]))
+  const staffNames: StaffNameLookup = new Map(memberships.map((m) => [m.id, m.person.display_name]))
 
   // Single "now" for this request — every other date derived below reuses
   // it, so nothing here can disagree with anything else in the same render.
@@ -86,109 +121,37 @@ export default async function ShiftsPage({
   const nextWeekParam = utcDayKey(addUTCDays(weekStart, 7))
 
   // Fetch shifts for this week + count of active shifts (may have started before this week)
-  const [weekShifts, activeCount] = await Promise.all([
-    prisma.shift.findMany({
-      where: {
-        venueId: venue.id,
-        scheduledStart: { gte: fetchWindowStart, lt: fetchWindowEnd },
-      },
-      select: shiftSelect,
-      orderBy: { scheduledStart: "asc" },
+  const [weekShiftsRaw, nowShifts] = await Promise.all([
+    listShifts(token, xvmApiVenueId, {
+      from: fetchWindowStart.toISOString(),
+      to: fetchWindowEnd.toISOString(),
+      includeCancelled: true,
     }),
-    prisma.shift.count({
-      where: { venueId: venue.id, status: "ACTIVE" },
+    listShifts(token, xvmApiVenueId, {
+      from: new Date(now.getTime() - 24 * 60 * 60 * 1000).toISOString(),
+      to: new Date(now.getTime() + 24 * 60 * 60 * 1000).toISOString(),
     }),
   ])
+  const weekShifts: ShiftRow[] = weekShiftsRaw.map((s) =>
+    toShiftRow(s, s.position_id ? (roleNameById.get(s.position_id) ?? null) : null)
+  )
+  const activeCount = nowShifts.filter((s) => s.status === "active").length
 
   // Calendar view only: 6-month rolling window (3 back, 3 forward), independent
   // of the week grid's ?w= offset. Only fetched when actually viewing the
   // calendar tab, to avoid pulling months of shift history on every page load.
-  const calendarShifts =
+  const calendarShifts: ShiftRow[] =
     view === "calendar"
-      ? await prisma.shift.findMany({
-          where: {
-            venueId: venue.id,
-            scheduledStart: {
-              gte: new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth() - 3, 1)),
-              lt: new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth() + 4, 1)),
-            },
-          },
-          // Explicit select (not include) — this array is passed whole into a
-          // client component (ShiftsCalendar). Prisma's Decimal fields (e.g.
-          // hoursWorked) can't cross the server/client boundary, so only the
-          // fields CalendarShift (lib/shift-format.ts) actually declares are
-          // selected here.
-          select: {
-            id: true,
-            membershipId: true,
-            roleId: true,
-            payrollEntryId: true,
-            scheduledStart: true,
-            scheduledEnd: true,
-            status: true,
-            notes: true,
-            recurrenceRule: true,
-            parentShiftId: true,
-            slotGroupId: true,
-            membership: {
-              select: {
-                nickname: true,
-                user: {
-                  select: {
-                    id: true,
-                    name: true,
-                    displayName: true,
-                    image: true,
-                    characters: {
-                      orderBy: [{ isPrimary: "desc" }, { createdAt: "asc" }],
-                      take: 1,
-                      select: { characterName: true },
-                    },
-                  },
-                },
-              },
-            },
-            role: { select: { name: true } },
-          },
-          orderBy: { scheduledStart: "asc" },
-        })
+      ? (
+          await listShifts(token, xvmApiVenueId, {
+            from: new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth() - 3, 1)).toISOString(),
+            to: new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth() + 4, 1)).toISOString(),
+            includeCancelled: true,
+          })
+        ).map((s) => toShiftRow(s, s.position_id ? (roleNameById.get(s.position_id) ?? null) : null))
       : []
 
-  // Staff list for create dialog
-  const activeStaff = await prisma.membership.findMany({
-    where: { venueId: venue.id, status: "active", userId: { not: null } },
-    include: {
-      user: {
-        select: {
-          id: true,
-          name: true,
-          displayName: true,
-          image: true,
-          characters: {
-            orderBy: [{ isPrimary: "desc" }, { createdAt: "asc" }],
-            take: 1,
-            select: { characterName: true },
-          },
-        },
-      },
-    },
-  })
-  const staffForDialog = activeStaff.map((m) => ({
-    id: m.id,
-    name: resolveDisplayName({
-      characterName: m.user?.characters?.[0]?.characterName,
-      nickname: m.nickname,
-      displayName: m.user?.displayName,
-      discordName: m.user?.name,
-    }),
-    image: m.user?.image ?? null,
-  }))
-
-  const venueRoles = await prisma.role.findMany({
-    where: { venueId: venue.id },
-    select: { id: true, name: true },
-    orderBy: { name: "asc" },
-  })
+  const { staff: staffForDialog, roles: venueRoles } = await listShiftStaffAndRoles(token, xvmApiVenueId)
 
   const venuePotSettings = await prisma.venuePotSettings.findUnique({
     where: { venueId: venue.id },
@@ -263,6 +226,7 @@ export default async function ShiftsPage({
             venueId={venue.id}
             staffForDialog={staffForDialog}
             roles={venueRoles}
+            staffNames={staffNames}
             todayKeyST={todayKeyST}
           />
         ) : (
@@ -331,6 +295,7 @@ export default async function ShiftsPage({
               canManage={canManage}
               staffForDialog={staffForDialog}
               venueRoles={venueRoles}
+              staffNames={staffNames}
               potModeEnabled={potModeEnabled}
               eventsForDialog={eventsForDialog}
             />
