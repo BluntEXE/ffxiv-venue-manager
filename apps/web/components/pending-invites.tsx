@@ -25,7 +25,6 @@ interface PendingInvite {
   invitedName: string | null
   inviteToken: string | null
   inviteExpiresAt: Date | null
-  createdAt: Date
 }
 
 interface PendingInvitesProps {
