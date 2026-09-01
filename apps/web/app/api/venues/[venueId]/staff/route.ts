@@ -3,9 +3,58 @@ import { getServerSession } from "next-auth"
 import { authOptions } from "@/lib/auth"
 import { prisma } from "@/lib/prisma"
 import { withRateLimit } from "@/lib/middleware/with-rate-limit"
+import { getValidXvmApiToken, xvmApiErrorResponse } from "@/lib/api/xvm-api-store"
+import { listMemberships, listPositions, type MembershipRow, type PositionRow } from "@/lib/api/xvm-api"
 
 // Old email-based invitation system has been replaced
 // Use POST /api/venues/[venueId]/staff/invite instead
+
+async function requireXvmVenueId(venueId: string) {
+  // Callers pass either a venue id or a slug (e.g. payroll/page.tsx uses slug,
+  // staff/[membershipId]/page.tsx uses id) - unlike tasks/route.ts, this route
+  // needs to accept both.
+  const venue = await prisma.venue.findFirst({
+    where: { OR: [{ id: venueId }, { slug: venueId }] },
+    select: { xvmApiVenueId: true },
+  })
+  if (!venue?.xvmApiVenueId) {
+    return {
+      error: NextResponse.json(
+        { error: "not_connected", message: "This venue hasn't been connected to xvm-api yet." },
+        { status: 409 }
+      ),
+    }
+  }
+  return { xvmApiVenueId: venue.xvmApiVenueId }
+}
+
+// Maps a MembershipRow onto the shape staff-table.tsx currently expects (the
+// pre-cutover Prisma shape) so a later task's component update has less
+// surface area to change. Fields with no xvm-api equivalent (joinedAt,
+// isOnShift, per-position color) are left as best-effort placeholders - see
+// PR description for the known gaps.
+function toStaffShape(member: MembershipRow, positionsById: Map<number, PositionRow>, venueId: string) {
+  return {
+    id: member.id,
+    role: member.effective_tier.toUpperCase(),
+    customRole: null,
+    additionalRoles: member.position_ids
+      .map((id) => positionsById.get(id))
+      .filter((p): p is PositionRow => Boolean(p))
+      .map((p) => ({ name: p.name, color: p.color })),
+    joinedAt: null,
+    isOnShift: false,
+    nickname: member.nickname,
+    user: {
+      id: member.person.id,
+      name: member.person.display_name,
+      displayName: member.person.display_name,
+      image: null,
+      characterName: null,
+    },
+    venueId,
+  }
+}
 
 export const GET = withRateLimit<{ params: Promise<{ venueId: string }> }>(
   async (request, context) => {
@@ -13,73 +62,30 @@ export const GET = withRateLimit<{ params: Promise<{ venueId: string }> }>(
       return NextResponse.json({ error: "Invalid request" }, { status: 400 })
     }
 
+    const session = await getServerSession(authOptions)
+    if (!session?.user?.id) {
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
+    }
+
+    const token = await getValidXvmApiToken(session.user.id)
+    if (!token) {
+      return NextResponse.json({ error: "xvm-api link not established yet" }, { status: 503 })
+    }
+
+    const { venueId } = await context.params
+    const gate = await requireXvmVenueId(venueId)
+    if (gate.error) return gate.error
+
     try {
-      const session = await getServerSession(authOptions)
-      if (!session?.user?.id) {
-        return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
-      }
-
-      const { params } = context
-      const { venueId } = await params
-
-      // Look up venue by slug or ID
-      const venue = await prisma.venue.findFirst({
-        where: {
-          OR: [{ id: venueId }, { slug: venueId }],
-        },
-      })
-
-      if (!venue) {
-        return NextResponse.json({ error: "Venue not found" }, { status: 404 })
-      }
-
-      // Check if user has access to this venue
-      const membership = await prisma.membership.findFirst({
-        where: {
-          userId: session.user.id,
-          venueId: venue.id,
-          status: "active",
-        },
-      })
-
-      if (!membership) {
-        return NextResponse.json({ error: "You don't have access to this venue" }, { status: 403 })
-      }
-
-      // Get all staff members (active with user accounts)
-      const staff = await prisma.membership.findMany({
-        where: {
-          venueId: venue.id,
-          status: "active", // Only active members
-          userId: { not: null }, // Only members with linked Discord accounts
-        },
-        include: {
-          user: {
-            select: {
-              id: true,
-              name: true,
-              image: true,
-              discordId: true,
-              displayName: true,
-              characters: {
-                orderBy: [{ isPrimary: "desc" }, { createdAt: "asc" }],
-                take: 1,
-                select: { characterName: true },
-              },
-            },
-          },
-          customRole: true,
-          additionalRoles: { include: { role: true } },
-        },
-        orderBy: {
-          createdAt: "asc",
-        },
-      })
-
-      return NextResponse.json(staff)
-    } catch (error) {
-      console.error("Error fetching staff:", error)
-      return NextResponse.json({ error: "Internal server error" }, { status: 500 })
+      const [memberships, positions] = await Promise.all([
+        listMemberships(token, gate.xvmApiVenueId!),
+        listPositions(token, gate.xvmApiVenueId!),
+      ])
+      const positionsById = new Map(positions.map((p) => [p.id, p]))
+      const shaped = memberships.map((m) => toStaffShape(m, positionsById, gate.xvmApiVenueId!))
+      return NextResponse.json(shaped)
+    } catch (err) {
+      return xvmApiErrorResponse(err, session.user.id, "[staff] GET error")
     }
   },
   { requests: 60, window: "1 m" }
