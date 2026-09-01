@@ -14,6 +14,8 @@ import {
   listTasks,
   assignTask,
   listPositions,
+  XvmApiError,
+  xvmErrorMessage,
   type MembershipRow,
   type PositionRow,
 } from "@/lib/api/xvm-api"
@@ -107,15 +109,31 @@ export const PUT = withRateLimit<{ params: Promise<{ venueId: string; membership
 
     try {
       let current: MembershipRow | undefined
-
-      if (data.nickname !== undefined) {
-        current = await setNickname(token, gate.xvmApiVenueId!, id, data.nickname)
-      }
-      if (data.role !== undefined) {
-        current = await setTier(token, gate.xvmApiVenueId!, id, data.role.toLowerCase() as "owner" | "manager" | "staff")
-      }
-      if (data.additionalRoleIds !== undefined) {
-        current = await setMembershipPositions(token, gate.xvmApiVenueId!, id, data.additionalRoleIds)
+      // nickname/role/positions are three independent xvm-api calls for what the
+      // dashboard still submits as one form. If a later call fails after an
+      // earlier one already landed, a blanket error would hide that partial
+      // success from the caller - surface it instead, matching the pattern
+      // tasks/[taskId]/route.ts uses for its own descriptive-edit + assign split.
+      try {
+        if (data.nickname !== undefined) {
+          current = await setNickname(token, gate.xvmApiVenueId!, id, data.nickname)
+        }
+        if (data.role !== undefined) {
+          current = await setTier(token, gate.xvmApiVenueId!, id, data.role.toLowerCase() as "owner" | "manager" | "staff")
+        }
+        if (data.additionalRoleIds !== undefined) {
+          current = await setMembershipPositions(token, gate.xvmApiVenueId!, id, data.additionalRoleIds)
+        }
+      } catch (stepErr) {
+        if (current && stepErr instanceof XvmApiError && stepErr.status !== 401) {
+          const positions = await listPositions(token, gate.xvmApiVenueId!)
+          const positionsById = new Map(positions.map((p) => [p.id, p]))
+          return NextResponse.json(
+            { ...toStaffShape(current, positionsById, venueId), partial: true, error: xvmErrorMessage(stepErr) },
+            { status: 200 }
+          )
+        }
+        throw stepErr
       }
 
       if (!current) {
