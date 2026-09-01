@@ -643,6 +643,189 @@ export async function listMemberships(personToken: string, venueId: string): Pro
   return xvmFetch<MembershipRow[]>(`/venues/${venueId}/memberships`, {}, personToken)
 }
 
+export interface ShiftStaffOption {
+  id: number
+  name: string
+  image: string | null
+}
+
+export interface ShiftRoleOption {
+  id: number
+  name: string
+}
+
+// Bridges the two lists CreateShiftDialog/page.tsx need for its staff/role
+// pickers into the shape those components already expect. Character-name
+// resolution is intentionally not attempted here - MembershipPerson only
+// carries display_name, see shift-format.ts's staffNameOf for the same
+// constraint on the read side.
+export async function listShiftStaffAndRoles(
+  personToken: string,
+  venueId: string
+): Promise<{ staff: ShiftStaffOption[]; roles: ShiftRoleOption[] }> {
+  const [memberships, positions] = await Promise.all([
+    listMemberships(personToken, venueId),
+    listPositions(personToken, venueId),
+  ])
+  return {
+    staff: memberships
+      .filter((m) => m.is_employed)
+      .map((m) => ({ id: m.person.id, name: m.person.display_name, image: null })),
+    roles: positions.map((p) => ({ id: p.id, name: p.name })),
+  }
+}
+
+// ── Shifts API ─────────────────────────────────────────────────
+// Recurrence (recurrence_rule_id) is schema-only on xvm-api right now - no series/pattern
+// endpoints exist yet, so this client only covers one-off shifts.
+
+export type ShiftApiStatus =
+  | "open"
+  | "pending_approval"
+  | "scheduled"
+  | "active"
+  | "completed"
+  | "cancelled"
+  | "missed"
+  | "unfilled"
+
+export interface ShiftRow {
+  id: number
+  membership_id: number | null
+  position_id: number | null
+  event_id: number | null
+  recurrence_rule_id: number | null
+  slot_index: number
+  scheduled_start: string | null
+  scheduled_end: string | null
+  actual_start: string | null
+  actual_end: string | null
+  auto_closed_at: string | null
+  claimed_at: string | null
+  approved_at: string | null
+  approved_by_person_id: number | null
+  cancelled_at: string | null
+  cancel_reason: string | null
+  notes: string | null
+  payroll_entry_id: number | null
+  worked_minutes: number | null
+  status: ShiftApiStatus
+  created_at: string
+  updated_at: string
+}
+
+export interface ShiftCreate {
+  scheduled_start: string
+  scheduled_end: string
+  position_id?: number | null
+  membership_id?: number | null
+  event_id?: number | null
+  notes?: string | null
+}
+
+export interface ShiftAuditRow {
+  id: number
+  action: string
+  actor_person_id: number | null
+  source: string
+  note: string | null
+  created_at: string
+}
+
+export async function listShifts(
+  personToken: string,
+  venueId: string,
+  opts: { from: string; to: string; openOnly?: boolean; mine?: boolean; includeCancelled?: boolean }
+): Promise<ShiftRow[]> {
+  if (!process.env.XVM_API_BASE_URL) throw new Error("XVM_API_BASE_URL is not set")
+  const params = new URLSearchParams({ from: opts.from, to: opts.to })
+  if (opts.openOnly) params.set("open_only", "true")
+  if (opts.mine) params.set("mine", "true")
+  if (opts.includeCancelled) params.set("include_cancelled", "true")
+  return xvmFetch<ShiftRow[]>(`/venues/${venueId}/shifts?${params}`, {}, personToken)
+}
+
+export async function getShift(personToken: string, venueId: string, shiftId: number): Promise<ShiftRow> {
+  if (!process.env.XVM_API_BASE_URL) throw new Error("XVM_API_BASE_URL is not set")
+  return xvmFetch<ShiftRow>(`/venues/${venueId}/shifts/${shiftId}`, {}, personToken)
+}
+
+export async function createShift(personToken: string, venueId: string, data: ShiftCreate): Promise<ShiftRow> {
+  if (!process.env.XVM_API_BASE_URL) throw new Error("XVM_API_BASE_URL is not set")
+  return xvmFetch<ShiftRow>(`/venues/${venueId}/shifts`, { method: "POST", body: JSON.stringify(data) }, personToken)
+}
+
+export async function claimShift(personToken: string, venueId: string, shiftId: number): Promise<ShiftRow> {
+  if (!process.env.XVM_API_BASE_URL) throw new Error("XVM_API_BASE_URL is not set")
+  return xvmFetch<ShiftRow>(`/venues/${venueId}/shifts/${shiftId}/claim`, { method: "POST" }, personToken)
+}
+
+export async function approveShift(personToken: string, venueId: string, shiftId: number): Promise<ShiftRow> {
+  if (!process.env.XVM_API_BASE_URL) throw new Error("XVM_API_BASE_URL is not set")
+  return xvmFetch<ShiftRow>(`/venues/${venueId}/shifts/${shiftId}/approve`, { method: "POST" }, personToken)
+}
+
+export async function rejectShift(
+  personToken: string,
+  venueId: string,
+  shiftId: number,
+  note?: string | null
+): Promise<ShiftRow> {
+  if (!process.env.XVM_API_BASE_URL) throw new Error("XVM_API_BASE_URL is not set")
+  return xvmFetch<ShiftRow>(
+    `/venues/${venueId}/shifts/${shiftId}/reject`,
+    { method: "POST", body: JSON.stringify({ note: note ?? null }) },
+    personToken
+  )
+}
+
+export async function assignShift(
+  personToken: string,
+  venueId: string,
+  shiftId: number,
+  membershipId: number
+): Promise<ShiftRow> {
+  if (!process.env.XVM_API_BASE_URL) throw new Error("XVM_API_BASE_URL is not set")
+  return xvmFetch<ShiftRow>(
+    `/venues/${venueId}/shifts/${shiftId}/assign`,
+    { method: "POST", body: JSON.stringify({ membership_id: membershipId }) },
+    personToken
+  )
+}
+
+export async function clockInShift(personToken: string, venueId: string, shiftId: number): Promise<ShiftRow> {
+  if (!process.env.XVM_API_BASE_URL) throw new Error("XVM_API_BASE_URL is not set")
+  return xvmFetch<ShiftRow>(`/venues/${venueId}/shifts/${shiftId}/clock-in`, { method: "POST" }, personToken)
+}
+
+export async function clockOutShift(personToken: string, venueId: string, shiftId: number): Promise<ShiftRow> {
+  if (!process.env.XVM_API_BASE_URL) throw new Error("XVM_API_BASE_URL is not set")
+  return xvmFetch<ShiftRow>(`/venues/${venueId}/shifts/${shiftId}/clock-out`, { method: "POST" }, personToken)
+}
+
+export async function cancelShift(
+  personToken: string,
+  venueId: string,
+  shiftId: number,
+  reason?: string | null
+): Promise<ShiftRow> {
+  if (!process.env.XVM_API_BASE_URL) throw new Error("XVM_API_BASE_URL is not set")
+  return xvmFetch<ShiftRow>(
+    `/venues/${venueId}/shifts/${shiftId}/cancel`,
+    { method: "POST", body: JSON.stringify({ reason: reason ?? null }) },
+    personToken
+  )
+}
+
+export async function getShiftAudit(
+  personToken: string,
+  venueId: string,
+  shiftId: number
+): Promise<ShiftAuditRow[]> {
+  if (!process.env.XVM_API_BASE_URL) throw new Error("XVM_API_BASE_URL is not set")
+  return xvmFetch<ShiftAuditRow[]>(`/venues/${venueId}/shifts/${shiftId}/audit`, {}, personToken)
+}
+
 // ── Tasks API ──────────────────────────────────────────────────
 
 export interface CategoryRow {
