@@ -5,8 +5,6 @@ import { Card, CardContent } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import { Avatar, AvatarFallback } from "@/components/ui/avatar"
-import { Input } from "@/components/ui/input"
-import { Label } from "@/components/ui/label"
 import {
   AlertDialog,
   AlertDialogAction,
@@ -18,23 +16,13 @@ import {
   AlertDialogTitle,
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog"
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-  DialogTrigger,
-} from "@/components/ui/dialog"
-import { Check, Copy, Trash2, Pencil } from "lucide-react"
+import { Check, Copy, Trash2 } from "lucide-react"
 import { LocalTime } from "@/components/server-time"
 
 interface PendingInvite {
-  id: string
+  id: number
   role: string
   invitedName: string | null
-  invitedEmail: string | null
   inviteToken: string | null
   inviteExpiresAt: Date | null
   createdAt: Date
@@ -48,13 +36,8 @@ interface PendingInvitesProps {
 
 export function PendingInvites({ invites, slug, canManageStaff }: PendingInvitesProps) {
   const [pendingInvites, setPendingInvites] = useState(invites)
-  const [copiedId, setCopiedId] = useState<string | null>(null)
-  const [deletingId, setDeletingId] = useState<string | null>(null)
-  const [editingInvite, setEditingInvite] = useState<PendingInvite | null>(null)
-  const [isEditDialogOpen, setIsEditDialogOpen] = useState(false)
-  const [editForm, setEditForm] = useState({ name: "", email: "" })
-  const [isUpdating, setIsUpdating] = useState(false)
-  const [editError, setEditError] = useState("")
+  const [copiedId, setCopiedId] = useState<number | null>(null)
+  const [deletingId, setDeletingId] = useState<number | null>(null)
 
   const getInviteUrl = (token: string) => {
     if (typeof window === "undefined") return ""
@@ -70,67 +53,7 @@ export function PendingInvites({ invites, slug, canManageStaff }: PendingInvites
     setTimeout(() => setCopiedId(null), 2000)
   }
 
-  const openEditDialog = (invite: PendingInvite) => {
-    setEditingInvite(invite)
-    setEditForm({
-      name: invite.invitedName || "",
-      email: invite.invitedEmail || "",
-    })
-    setEditError("")
-    setIsEditDialogOpen(true)
-  }
-
-  const updateInvite = async () => {
-    if (!editingInvite) return
-
-    setIsUpdating(true)
-    setEditError("")
-
-    try {
-      // Get venue ID first
-      const venueResponse = await fetch(`/api/venues?slug=${slug}`)
-      const venues = await venueResponse.json()
-      const venue = venues.find((v: { slug: string }) => v.slug === slug)
-
-      const response = await fetch(`/api/venues/${venue.id}/staff/${editingInvite.id}`, {
-        method: "PUT",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          invitedName: editForm.name || null,
-          invitedEmail: editForm.email || null,
-        }),
-      })
-
-      if (!response.ok) {
-        const data = await response.json()
-        throw new Error(data.error || "Failed to update invite")
-      }
-
-      const updatedInvite = await response.json()
-
-      // Update local state
-      setPendingInvites((prev) =>
-        prev.map((inv) =>
-          inv.id === editingInvite.id
-            ? {
-                ...inv,
-                invitedName: updatedInvite.invitedName,
-                invitedEmail: updatedInvite.invitedEmail,
-              }
-            : inv
-        )
-      )
-
-      setIsEditDialogOpen(false)
-      setEditingInvite(null)
-    } catch (error: unknown) {
-      setEditError(error instanceof Error ? error.message : "Failed to update invite")
-    } finally {
-      setIsUpdating(false)
-    }
-  }
-
-  const deleteInvite = async (inviteId: string) => {
+  const deleteInvite = async (inviteId: number) => {
     setDeletingId(inviteId)
     try {
       // Get venue ID first
@@ -138,7 +61,7 @@ export function PendingInvites({ invites, slug, canManageStaff }: PendingInvites
       const venues = await venueResponse.json()
       const venue = venues.find((v: { slug: string }) => v.slug === slug)
 
-      const response = await fetch(`/api/venues/${venue.id}/staff/${inviteId}`, {
+      const response = await fetch(`/api/venues/${venue.id}/staff/invites/${inviteId}`, {
         method: "DELETE",
       })
 
@@ -178,7 +101,6 @@ export function PendingInvites({ invites, slug, canManageStaff }: PendingInvites
                   </Avatar>
                   <div className="flex-1 min-w-0">
                     <p className="font-semibold">{invite.invitedName || "Unnamed Invite"}</p>
-                    {invite.invitedEmail && <p className="text-xs text-muted-foreground">{invite.invitedEmail}</p>}
                     <p className="text-xs text-muted-foreground mt-1">
                       Expires:{" "}
                       {invite.inviteExpiresAt ? (
@@ -230,14 +152,6 @@ export function PendingInvites({ invites, slug, canManageStaff }: PendingInvites
 
                   {canManageStaff && (
                     <div className="flex gap-2">
-                      <Button
-                        size="sm"
-                        variant="outline"
-                        onClick={() => openEditDialog(invite)}
-                        disabled={deletingId === invite.id}
-                      >
-                        <Pencil className="h-4 w-4" />
-                      </Button>
                       <AlertDialog>
                         <AlertDialogTrigger asChild>
                           <Button
@@ -277,58 +191,6 @@ export function PendingInvites({ invites, slug, canManageStaff }: PendingInvites
           </Card>
         ))}
       </div>
-
-      {/* Edit Invite Dialog */}
-      <Dialog open={isEditDialogOpen} onOpenChange={setIsEditDialogOpen}>
-        <DialogContent>
-          <DialogHeader>
-            <DialogTitle>Edit Invite Details</DialogTitle>
-            <DialogDescription>
-              Update the name and email for this pending invitation. This helps you track who the invite is for.
-            </DialogDescription>
-          </DialogHeader>
-          <div className="space-y-4 py-4">
-            {editError && (
-              <div className="bg-destructive/10 border border-destructive/20 text-destructive px-4 py-2 rounded text-sm">
-                {editError}
-              </div>
-            )}
-            <div className="space-y-2">
-              <Label htmlFor="edit-name">Name</Label>
-              <Input
-                id="edit-name"
-                placeholder="e.g., John Doe"
-                value={editForm.name}
-                onChange={(e) => setEditForm({ ...editForm, name: e.target.value })}
-                disabled={isUpdating}
-              />
-              <p className="text-xs text-muted-foreground">Optional: Add a name to help identify this invite</p>
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="edit-email">Email</Label>
-              <Input
-                id="edit-email"
-                type="email"
-                placeholder="e.g., john@example.com"
-                value={editForm.email}
-                onChange={(e) => setEditForm({ ...editForm, email: e.target.value })}
-                disabled={isUpdating}
-              />
-              <p className="text-xs text-muted-foreground">
-                Optional: Add an email for reference (not used for authentication)
-              </p>
-            </div>
-          </div>
-          <DialogFooter>
-            <Button variant="outline" onClick={() => setIsEditDialogOpen(false)} disabled={isUpdating}>
-              Cancel
-            </Button>
-            <Button onClick={updateInvite} disabled={isUpdating}>
-              {isUpdating ? "Updating..." : "Update Invite"}
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
     </div>
   )
 }
