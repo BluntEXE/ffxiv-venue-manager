@@ -8,7 +8,7 @@ import { CreateShiftDialog } from "@/components/create-shift-dialog"
 import { ShiftsCalendar } from "@/components/shifts-calendar"
 import { ShiftsWeekView } from "@/components/shifts-week-view"
 import { getValidXvmApiToken } from "@/lib/api/xvm-api-store"
-import { listShifts, listShiftsChunked, listShiftStaffAndRoles, listMemberships, listPositions } from "@/lib/api/xvm-api"
+import { listShifts, listShiftsChunked, listShiftStaffAndRoles, listMemberships, listPositions, getMe } from "@/lib/api/xvm-api"
 import { toShiftRow, type ShiftRow, type StaffNameLookup } from "@/lib/shift-format"
 
 // Week start = Monday in UTC (FFXIV server time = UTC)
@@ -80,15 +80,15 @@ export default async function ShiftsPage({
     redirect("/auth/signin")
   }
 
-  const [memberships, positions] = await Promise.all([
+  const [memberships, positions, me] = await Promise.all([
     listMemberships(token, xvmApiVenueId),
     listPositions(token, xvmApiVenueId),
+    getMe(token),
   ])
-  const currentMembership = memberships.find((m) => m.person.display_name === session.user.name) ?? null
-  // NOTE: matching by display_name is a stopgap - xvm-api's /me endpoint
-  // returns the caller's own memberships directly and should be used here
-  // instead once this page is wired to it (out of scope for this plan, which
-  // only covers the shift data itself). Flag this line in review.
+  // Matching by person id (via /me), not display_name - a rename or two
+  // same-named members would otherwise hand canManage/currentMembershipId to
+  // the wrong row, a privilege question rather than cosmetics.
+  const currentMembership = memberships.find((m) => m.person.id === me.person?.id) ?? null
   const userRole =
     currentMembership?.effective_tier === "owner"
       ? "OWNER"

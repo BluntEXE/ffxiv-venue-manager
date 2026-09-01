@@ -644,6 +644,9 @@ export async function listMemberships(personToken: string, venueId: string): Pro
 }
 
 export interface ShiftStaffOption {
+  // A membership id, not a person id - ShiftCreate.membership_id validates
+  // against the venue's memberships, and person/membership ids can collide
+  // (both are separate autoincrement sequences).
   id: number
   name: string
   image: string | null
@@ -670,7 +673,7 @@ export async function listShiftStaffAndRoles(
   return {
     staff: memberships
       .filter((m) => m.is_employed)
-      .map((m) => ({ id: m.person.id, name: m.person.display_name, image: null })),
+      .map((m) => ({ id: m.id, name: m.person.display_name, image: null })),
     roles: positions.map((p) => ({ id: p.id, name: p.name })),
   }
 }

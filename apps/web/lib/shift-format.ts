@@ -88,8 +88,16 @@ export function toShiftRow(shift: ApiShiftRow, roleName: string | null): ShiftRo
     roleId: shift.position_id,
     roleName,
     payrollEntryId: shift.payroll_entry_id,
+    // An unscheduled shift only exists because somebody clocked in, so
+    // actual_start covers scheduledStart's fallback for real. scheduledEnd's
+    // fallback is different: an open-ended walk-in has no end at all, and
+    // `new Date()` here would draw the block ending at render time - visibly
+    // drifting on every request. Falling back to the resolved start instead
+    // keeps it a stable zero-width block rather than one that grows every
+    // render; the ideal fix (a nullable end rendered as "no end" through the
+    // whole component chain) is a bigger ripple than this one function.
     scheduledStart: shift.scheduled_start ?? shift.actual_start ?? new Date().toISOString(),
-    scheduledEnd: shift.scheduled_end ?? shift.actual_end ?? new Date().toISOString(),
+    scheduledEnd: shift.scheduled_end ?? shift.actual_end ?? shift.scheduled_start ?? shift.actual_start ?? new Date().toISOString(),
     status: SHIFT_STATUS_SHAPE[shift.status],
     notes: shift.notes,
   }
