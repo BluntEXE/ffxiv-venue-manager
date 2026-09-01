@@ -18,7 +18,7 @@ import {
 
 interface DeleteShiftButtonProps {
   venueSlug: string
-  shiftId: string
+  shiftId: number
   hasPayroll: boolean
   isRecurring?: boolean
   slotGroupId?: string | null

@@ -4,7 +4,7 @@ import { useState } from "react"
 import { useRouter } from "next/navigation"
 
 interface OpenShiftChipProps {
-  shiftId: string
+  shiftId: number
   venueId: string
   timeLabel: string
   canClaim: boolean
