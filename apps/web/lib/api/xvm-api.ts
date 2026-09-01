@@ -760,8 +760,8 @@ export async function acceptInvite(personToken: string, token: string): Promise<
 // venues/{id}/memberships/{id}/positions, {position_ids: [...]} -> MembershipRow.
 // Reconciles server-side under the membership's row lock (add+remove in one
 // transaction, idempotent re-save, all-or-nothing on a bad set). Use this for
-// Task 4/9. The two per-pair functions below are for single-toggle call sites
-// only (they still exist on xvm-api and are unaffected).
+// Task 4/9. For single-toggle call sites, use the existing assignPositionMember
+// (above) and removePositionMemberFromMembership (below) instead.
 export async function setMembershipPositions(
   personToken: string,
   venueId: string,
@@ -772,20 +772,6 @@ export async function setMembershipPositions(
   return xvmFetch<MembershipRow>(
     `/venues/${venueId}/memberships/${membershipId}/positions`,
     { method: "PUT", body: JSON.stringify({ position_ids: positionIds }) },
-    personToken
-  )
-}
-
-export async function addPositionMember(
-  personToken: string,
-  venueId: string,
-  positionId: number,
-  membershipId: number
-): Promise<void> {
-  if (!process.env.XVM_API_BASE_URL) throw new Error("XVM_API_BASE_URL is not set")
-  return xvmFetch<void>(
-    `/venues/${venueId}/positions/${positionId}/members`,
-    { method: "POST", body: JSON.stringify({ membership_id: membershipId }) },
     personToken
   )
 }
