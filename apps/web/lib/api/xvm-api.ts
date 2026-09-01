@@ -636,11 +636,172 @@ export interface MembershipRow {
   tier: string
   effective_tier: string
   is_employed: boolean
+  position_ids: number[]
 }
 
 export async function listMemberships(personToken: string, venueId: string): Promise<MembershipRow[]> {
   if (!process.env.XVM_API_BASE_URL) throw new Error("XVM_API_BASE_URL is not set")
   return xvmFetch<MembershipRow[]>(`/venues/${venueId}/memberships`, {}, personToken)
+}
+
+export interface InviteRow {
+  id: number
+  person: MembershipPerson
+  tier: string
+  expires_at: string
+  invited_by_person_id: number | null
+}
+
+export interface InviteIssued extends InviteRow {
+  token: string
+}
+
+export async function setNickname(
+  personToken: string,
+  venueId: string,
+  membershipId: number,
+  nickname: string | null
+): Promise<MembershipRow> {
+  if (!process.env.XVM_API_BASE_URL) throw new Error("XVM_API_BASE_URL is not set")
+  return xvmFetch<MembershipRow>(
+    `/venues/${venueId}/memberships/${membershipId}/nickname`,
+    { method: "PATCH", body: JSON.stringify({ nickname }) },
+    personToken
+  )
+}
+
+export async function setTier(
+  personToken: string,
+  venueId: string,
+  membershipId: number,
+  tier: "owner" | "manager" | "staff"
+): Promise<MembershipRow> {
+  if (!process.env.XVM_API_BASE_URL) throw new Error("XVM_API_BASE_URL is not set")
+  return xvmFetch<MembershipRow>(
+    `/venues/${venueId}/memberships/${membershipId}/tier`,
+    { method: "PUT", body: JSON.stringify({ tier }) },
+    personToken
+  )
+}
+
+export async function terminateMembership(
+  personToken: string,
+  venueId: string,
+  membershipId: number,
+  reason?: string | null
+): Promise<MembershipRow> {
+  if (!process.env.XVM_API_BASE_URL) throw new Error("XVM_API_BASE_URL is not set")
+  return xvmFetch<MembershipRow>(
+    `/venues/${venueId}/memberships/${membershipId}/terminate`,
+    { method: "POST", body: JSON.stringify({ reason: reason ?? null }) },
+    personToken
+  )
+}
+
+export async function rehireMembership(
+  personToken: string,
+  venueId: string,
+  membershipId: number
+): Promise<MembershipRow> {
+  if (!process.env.XVM_API_BASE_URL) throw new Error("XVM_API_BASE_URL is not set")
+  return xvmFetch<MembershipRow>(
+    `/venues/${venueId}/memberships/${membershipId}/rehire`,
+    { method: "POST" },
+    personToken
+  )
+}
+
+export async function createInvite(
+  personToken: string,
+  venueId: string,
+  data: { display_name: string; tier: "owner" | "manager" | "staff"; external_id?: string | null }
+): Promise<InviteIssued> {
+  if (!process.env.XVM_API_BASE_URL) throw new Error("XVM_API_BASE_URL is not set")
+  return xvmFetch<InviteIssued>(
+    `/venues/${venueId}/invites`,
+    { method: "POST", body: JSON.stringify({ provider: "discord", ...data }) },
+    personToken
+  )
+}
+
+export async function listInvites(personToken: string, venueId: string): Promise<InviteRow[]> {
+  if (!process.env.XVM_API_BASE_URL) throw new Error("XVM_API_BASE_URL is not set")
+  return xvmFetch<InviteRow[]>(`/venues/${venueId}/invites`, {}, personToken)
+}
+
+export async function rescindInvite(personToken: string, venueId: string, inviteId: number): Promise<void> {
+  if (!process.env.XVM_API_BASE_URL) throw new Error("XVM_API_BASE_URL is not set")
+  return xvmFetch<void>(`/venues/${venueId}/invites/${inviteId}`, { method: "DELETE" }, personToken)
+}
+
+export interface InvitePreview {
+  venue: { name: string; slug: string }
+  tier: string
+  invited_name: string
+  invited_by_name: string | null
+  expires_at: string
+}
+
+// Public, unauthenticated - no bearer token, matches xvm-api's unlocked
+// preview lookup for the pre-signin invite screen.
+export async function getInvitePreview(token: string): Promise<InvitePreview> {
+  if (!process.env.XVM_API_BASE_URL) throw new Error("XVM_API_BASE_URL is not set")
+  return xvmFetch<InvitePreview>(`/invites/${token}`)
+}
+
+// Not venue-scoped - the invitee isn't a member yet, so this takes a bare
+// person token rather than the venue-narrowed one other membership calls use.
+export async function acceptInvite(personToken: string, token: string): Promise<MembershipRow> {
+  if (!process.env.XVM_API_BASE_URL) throw new Error("XVM_API_BASE_URL is not set")
+  return xvmFetch<MembershipRow>("/invites/accept", { method: "POST", body: JSON.stringify({ token }) }, personToken)
+}
+
+// setMembershipPositions wraps the atomic PUT (xvm-api PR #56, merged 2026-09-01):
+// venues/{id}/memberships/{id}/positions, {position_ids: [...]} -> MembershipRow.
+// Reconciles server-side under the membership's row lock (add+remove in one
+// transaction, idempotent re-save, all-or-nothing on a bad set). Use this for
+// Task 4/9. The two per-pair functions below are for single-toggle call sites
+// only (they still exist on xvm-api and are unaffected).
+export async function setMembershipPositions(
+  personToken: string,
+  venueId: string,
+  membershipId: number,
+  positionIds: number[]
+): Promise<MembershipRow> {
+  if (!process.env.XVM_API_BASE_URL) throw new Error("XVM_API_BASE_URL is not set")
+  return xvmFetch<MembershipRow>(
+    `/venues/${venueId}/memberships/${membershipId}/positions`,
+    { method: "PUT", body: JSON.stringify({ position_ids: positionIds }) },
+    personToken
+  )
+}
+
+export async function addPositionMember(
+  personToken: string,
+  venueId: string,
+  positionId: number,
+  membershipId: number
+): Promise<void> {
+  if (!process.env.XVM_API_BASE_URL) throw new Error("XVM_API_BASE_URL is not set")
+  return xvmFetch<void>(
+    `/venues/${venueId}/positions/${positionId}/members`,
+    { method: "POST", body: JSON.stringify({ membership_id: membershipId }) },
+    personToken
+  )
+}
+
+export async function removePositionMemberFromMembership(
+  personToken: string,
+  venueId: string,
+  positionId: number,
+  membershipId: number
+): Promise<void> {
+  if (!process.env.XVM_API_BASE_URL) throw new Error("XVM_API_BASE_URL is not set")
+  return xvmFetch<void>(
+    `/venues/${venueId}/positions/${positionId}/members/${membershipId}`,
+    { method: "DELETE" },
+    personToken
+  )
 }
 
 export interface ShiftStaffOption {
