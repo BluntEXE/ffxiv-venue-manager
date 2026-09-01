@@ -5,19 +5,21 @@ import { useState } from "react"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent } from "@/components/ui/card"
 import { ChevronLeft, ChevronRight } from "lucide-react"
-import { dayKeyFor, hourLabelFor, type CalendarShift, type StaffMember, type RoleOption } from "@/lib/shift-format"
+import { dayKeyFor, hourLabelFor, type CalendarShift, type StaffNameLookup } from "@/lib/shift-format"
+import type { ShiftStaffOption, ShiftRoleOption } from "@/lib/api/xvm-api"
 import { browserTimeZone } from "@/lib/local-day"
 import { ShiftDayDialog } from "@/components/shift-day-dialog"
 import { useMounted } from "@/lib/use-mounted"
 
 interface ShiftsCalendarProps {
   shifts: CalendarShift[]
-  currentMembershipId: string
+  currentMembershipId: number
   canManage: boolean
   venueSlug: string
   venueId: string
-  staffForDialog: StaffMember[]
-  roles: RoleOption[]
+  staffForDialog: ShiftStaffOption[]
+  roles: ShiftRoleOption[]
+  staffNames: StaffNameLookup
   todayKeyST: string
 }
 
@@ -47,6 +49,7 @@ export function ShiftsCalendar({
   venueId,
   staffForDialog,
   roles,
+  staffNames,
   todayKeyST,
 }: ShiftsCalendarProps) {
   const [monthCursor, setMonthCursor] = useState(() => utcMonthStart(new Date()))
@@ -176,6 +179,7 @@ export function ShiftsCalendar({
         venueId={venueId}
         staffForDialog={staffForDialog}
         roles={roles}
+        staffNames={staffNames}
       />
     </div>
   )
