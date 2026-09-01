@@ -82,23 +82,6 @@ export function isOpenNow(entries: ScheduleEntry[]): boolean {
   return entries.some(isEntryActiveNow)
 }
 
-/**
- * Canonical "is this venue open right now" check, combining every signal a
- * venue can be open from. Used to keep the venue detail page, Discover, and
- * Following in agreement — each previously computed this differently
- * (Discover/Following ignored the schedule entirely; only the detail page
- * combined all three signals).
- */
-export function isVenueOpenNow(opts: {
-  hasActiveEvent: boolean
-  scheduleEntries: ScheduleEntry[]
-  ffxivSchedule?: unknown
-}): boolean {
-  const ffxivIsNow =
-    (opts.ffxivSchedule as { resolution?: { isNow?: boolean } } | null | undefined)?.resolution?.isNow === true
-  return opts.hasActiveEvent || isOpenNow(opts.scheduleEntries) || ffxivIsNow
-}
-
 // xvm-api's Interval vocabulary is lowercase and includes monthly_by_date,
 // which ScheduleEntry has no field for (only weekOfMonth, used by
 // monthly_by_weekday) - those rules are filtered out of the display rather

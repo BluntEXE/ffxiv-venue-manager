@@ -10,7 +10,6 @@ export const metadata: Metadata = {
 import { prisma } from "@/lib/prisma"
 import { FollowingClient } from "@/components/following-client"
 import { ExploreLayout } from "@/components/explore-layout"
-import { isVenueOpenNow } from "@/lib/schedule-utils"
 import { getPublicHoursForVenues, type PublicHours } from "@/lib/api/xvm-api"
 
 export const dynamic = "force-dynamic"
@@ -41,8 +40,6 @@ export default async function FollowingPage() {
             take: 1,
             select: { title: true },
           },
-          scheduleEntries: true,
-          venueSchedule: { select: { data: true } },
         },
       },
     },
@@ -52,8 +49,8 @@ export default async function FollowingPage() {
   // xvm-api is the source of truth for a connected venue's hours. Following is
   // unbounded (no take cap), so getPublicHoursForVenues chunks the ids into
   // batches of 50 and merges them - one request per 50 followed venues rather
-  // than one per venue. Non-fatal: unconnected venues and failed reads fall
-  // back to the Prisma scheduleEntries computation per venue.
+  // than one per venue. Unconnected venues and failed reads show closed
+  // (unless a live event is running) - Prisma no longer computes hours.
   const xvmVenueIds = follows.map((f) => f.venue.xvmApiVenueId).filter((id): id is string => id !== null)
   let hoursByVenue: Record<string, PublicHours> = {}
   if (xvmVenueIds.length > 0) {
@@ -78,13 +75,7 @@ export default async function FollowingPage() {
       apartment: f.venue.apartment,
       location: f.venue.location,
       followCount: f.venue._count.follows,
-      isOpenNow: xvmHoursEntry
-        ? f.venue.events.length > 0 || xvmHoursEntry.open_now.open
-        : isVenueOpenNow({
-            hasActiveEvent: f.venue.events.length > 0,
-            scheduleEntries: f.venue.scheduleEntries,
-            ffxivSchedule: f.venue.venueSchedule?.data,
-          }),
+      isOpenNow: f.venue.events.length > 0 || (xvmHoursEntry?.open_now.open ?? false),
       activeEvent: f.venue.events[0] ?? null,
     }
   })

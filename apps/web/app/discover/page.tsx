@@ -4,7 +4,6 @@ import { authOptions } from "@/lib/auth"
 import { prisma } from "@/lib/prisma"
 import { DiscoverClient, type DiscoverVenue } from "@/components/discover-client"
 import { ExploreLayout } from "@/components/explore-layout"
-import { isVenueOpenNow } from "@/lib/schedule-utils"
 import { getPublicHoursBatch, type PublicHours } from "@/lib/api/xvm-api"
 
 export const metadata: Metadata = {
@@ -40,8 +39,6 @@ export default async function DiscoverPage() {
         select: { id: true, title: true, startTime: true, status: true },
         take: 2,
       },
-      scheduleEntries: true,
-      venueSchedule: { select: { data: true } },
     },
     orderBy: { createdAt: "desc" },
     take: 50,
@@ -58,8 +55,8 @@ export default async function DiscoverPage() {
 
   // xvm-api is the source of truth for a connected venue's hours - one batched
   // read for the whole page (take: 50 above stays within the batch cap) rather
-  // than one request per venue. Non-fatal: unconnected venues and failed reads
-  // fall back to the Prisma scheduleEntries computation per venue.
+  // than one request per venue. Unconnected venues and failed reads show
+  // closed (unless a live event is running) - Prisma no longer computes hours.
   const xvmVenueIds = venues.map((v) => v.xvmApiVenueId).filter((id): id is string => id !== null)
   let hoursByVenue: Record<string, PublicHours> = {}
   if (xvmVenueIds.length > 0) {
@@ -88,13 +85,7 @@ export default async function DiscoverPage() {
       description: v.description,
       followCount: v._count.follows,
       isFollowed: followedIds.includes(v.id),
-      isOpenNow: xvmHoursEntry
-        ? activeEvent !== null || xvmHoursEntry.open_now.open
-        : isVenueOpenNow({
-            hasActiveEvent: activeEvent !== null,
-            scheduleEntries: v.scheduleEntries,
-            ffxivSchedule: v.venueSchedule?.data,
-          }),
+      isOpenNow: activeEvent !== null || (xvmHoursEntry?.open_now.open ?? false),
       isTonightOpen: v.events.length > 0,
       activeEvent: activeEvent ? { title: activeEvent.title } : null,
       upcomingEvent: upcomingEvent

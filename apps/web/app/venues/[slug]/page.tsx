@@ -39,9 +39,7 @@ import { VenueFollowButton } from "@/components/venue-follow-button"
 import { CopyAddressButton, CopyAddressInline } from "@/components/copy-address-button"
 import { SiteFooter } from "@/components/site-footer"
 import { VenueScheduleDisplay } from "@/components/venue-schedule-display"
-import { FfxivvenuesScheduleDisplay } from "@/components/ffxivvenues-schedule-display"
-import type { FfxivVenueData } from "@/lib/ffxivvenues"
-import { isVenueOpenNow, xvmHoursToScheduleEntries } from "@/lib/schedule-utils"
+import { xvmHoursToScheduleEntries } from "@/lib/schedule-utils"
 import { getPublicHours, type PublicHours } from "@/lib/api/xvm-api"
 
 export default async function VenueProfilePage({ params }: { params: Promise<{ slug: string }> }) {
@@ -65,19 +63,16 @@ export default async function VenueProfilePage({ params }: { params: Promise<{ s
         take: 5,
         select: { id: true, title: true, startTime: true, endTime: true, status: true, eventType: true },
       },
-      scheduleEntries: {
-        orderBy: [{ day: "asc" }, { startHour: "asc" }],
-      },
-      venueSchedule: true,
     },
   })
 
   if (!venue) notFound()
 
-  // xvm-api is the source of truth for a connected venue's hours - the Prisma
-  // scheduleEntries above stay as the fallback for venues not yet connected,
-  // or if the request fails (non-fatal, matches this page's existing style of
-  // never hard-failing the render over an optional signal).
+  // xvm-api is the source of truth for hours - Prisma's scheduleEntries and
+  // venueSchedule (ffxivvenues sync) tables are retiring and are no longer
+  // read here. A venue not yet connected to xvm-api (or a failed request)
+  // gets no schedule until it's migrated - non-fatal, matches this page's
+  // existing style of never hard-failing the render over an optional signal.
   let xvmHours: PublicHours | null = null
   if (venue.xvmApiVenueId) {
     try {
@@ -86,7 +81,7 @@ export default async function VenueProfilePage({ params }: { params: Promise<{ s
       xvmHours = null
     }
   }
-  const scheduleEntries = xvmHours ? xvmHoursToScheduleEntries(xvmHours.rules) : venue.scheduleEntries
+  const scheduleEntries = xvmHours ? xvmHoursToScheduleEntries(xvmHours.rules) : []
 
   const [owner, isFollowing] = await Promise.all([
     prisma.user.findUnique({
@@ -100,18 +95,7 @@ export default async function VenueProfilePage({ params }: { params: Promise<{ s
 
   const liveEvent = venue.events.find((e) => e.status === "ACTIVE")
   const upcomingEvents = venue.events.filter((e) => e.status === "PUBLISHED")
-  // xvm-api's own open_now.open is authoritative when available - it accounts
-  // for monthly_by_date rules that xvmHoursToScheduleEntries can't represent
-  // and so would otherwise miss when recomputing from the adapted entries.
-  const ffxivIsNow =
-    (venue.venueSchedule?.data as { resolution?: { isNow?: boolean } } | null)?.resolution?.isNow === true
-  const isOpen = xvmHours
-    ? !!liveEvent || xvmHours.open_now.open || ffxivIsNow
-    : isVenueOpenNow({
-        hasActiveEvent: !!liveEvent,
-        scheduleEntries: venue.scheduleEntries,
-        ffxivSchedule: venue.venueSchedule?.data,
-      })
+  const isOpen = !!liveEvent || (xvmHours?.open_now.open ?? false)
   const tzLabel = getServerTimeLabel(venue.dataCenter)
   const todayUTCDay = new Date().getUTCDay()
   const DAY_NAMES = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"]
@@ -433,14 +417,6 @@ export default async function VenueProfilePage({ params }: { params: Promise<{ s
                       <VenueScheduleDisplay entries={[]} />
                     )}
                   </div>
-
-                  {/* ffxivvenues synced schedule */}
-                  {venue.venueSchedule && (
-                    <FfxivvenuesScheduleDisplay
-                      data={venue.venueSchedule.data as FfxivVenueData}
-                      syncedAt={venue.venueSchedule.syncedAt}
-                    />
-                  )}
 
                   {/* Location */}
                   <div className="dcard">
