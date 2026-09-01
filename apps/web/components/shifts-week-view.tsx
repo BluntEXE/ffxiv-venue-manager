@@ -12,7 +12,7 @@ import { OpenShiftChip } from "@/components/open-shift-chip"
 import { DeleteShiftButton } from "@/components/delete-shift-button"
 import { ClockShiftButton } from "@/components/clock-shift-button"
 import { localDayKey, localHourLabel, browserTimeZone, localTimeInput } from "@/lib/local-day"
-import { staffNameOf, type ShiftRow } from "@/lib/shift-format"
+import { staffNameOf, type ShiftRow, type StaffNameLookup } from "@/lib/shift-format"
 import { useMounted } from "@/lib/use-mounted"
 
 const ST_TZ = "Etc/UTC"
@@ -30,13 +30,13 @@ function addDayToKey(key: string): string {
 }
 
 interface StaffOption {
-  id: string
+  id: number
   name: string
   image: string | null
 }
 
 interface RoleOption {
-  id: string
+  id: number
   name: string
 }
 
@@ -50,6 +50,7 @@ const statusBadge: Record<string, string> = {
   ACTIVE: "bg-emerald-500/10 text-emerald-500 border-emerald-500/20",
   COMPLETED: "bg-zinc-500/10 text-zinc-400 border-zinc-500/20",
   MISSED: "bg-amber-500/10 text-amber-500 border-amber-500/20",
+  UNFILLED: "bg-amber-500/10 text-amber-500 border-amber-500/20",
   CANCELLED: "bg-red-500/10 text-red-400 border-red-500/20",
 }
 
@@ -62,10 +63,11 @@ export interface ShiftsWeekViewProps {
   fmtWeekLabelST: string // pre-formatted "Mon 2 Jun" for the ST week label
   slug: string
   venueId: string
-  currentMembershipId: string
+  currentMembershipId: number
   canManage: boolean
   staffForDialog: StaffOption[]
   venueRoles: RoleOption[]
+  staffNames: StaffNameLookup
   potModeEnabled: boolean
   eventsForDialog: EventOption[]
 }
@@ -88,7 +90,7 @@ export function ShiftsWeekView(props: ShiftsWeekViewProps) {
 
   function duplicateShiftDialog(
     shift: ShiftRow,
-    modeField: { mode: "assign"; membershipId: string | undefined } | { mode: "open"; roleId: string | undefined }
+    modeField: { mode: "assign"; membershipId: number | undefined } | { mode: "open"; roleId: number | undefined }
   ) {
     return (
       <CreateShiftDialog
@@ -133,9 +135,9 @@ export function ShiftsWeekView(props: ShiftsWeekViewProps) {
   const todayKey = mounted ? dayKeyOf(new Date()) : props.todayKeyST
 
   const staffMap = new Map<
-    string,
+    number,
     {
-      membershipId: string
+      membershipId: number
       name: string
       cells: Map<string, ShiftRow[]>
     }
@@ -148,7 +150,7 @@ export function ShiftsWeekView(props: ShiftsWeekViewProps) {
     if (!staffMap.has(mid)) {
       staffMap.set(mid, {
         membershipId: mid,
-        name: staffNameOf(shift.membership),
+        name: staffNameOf(mid, props.staffNames),
         cells: new Map(),
       })
     }
@@ -315,7 +317,7 @@ export function ShiftsWeekView(props: ShiftsWeekViewProps) {
                           key={shift.id}
                           shiftId={shift.id}
                           venueId={props.venueId}
-                          timeLabel={`${hourLabelOf(shift.scheduledStart)}–${hourLabelOf(shift.scheduledEnd)}${shift.role?.name ? ` · ${shift.role.name}` : ""}`}
+                          timeLabel={`${hourLabelOf(shift.scheduledStart)}–${hourLabelOf(shift.scheduledEnd)}${shift.roleName ? ` · ${shift.roleName}` : ""}`}
                           canManage={props.canManage}
                         />
                       ) : (
@@ -324,7 +326,7 @@ export function ShiftsWeekView(props: ShiftsWeekViewProps) {
                             className={`shift-chip${shift.status === "ACTIVE" ? " em" : shift.status === "MISSED" ? " am" : ""}`}
                           >
                             {hourLabelOf(shift.scheduledStart)}–{hourLabelOf(shift.scheduledEnd)}
-                            {shift.role?.name ? ` · ${shift.role.name}` : ""}
+                            {shift.roleName ? ` · ${shift.roleName}` : ""}
                           </span>
                           {props.canManage &&
                             duplicateShiftDialog(shift, {
@@ -357,19 +359,13 @@ export function ShiftsWeekView(props: ShiftsWeekViewProps) {
                         <OpenShiftChip
                           shiftId={shift.id}
                           venueId={props.venueId}
-                          timeLabel={`${hourLabelOf(shift.scheduledStart)}–${hourLabelOf(shift.scheduledEnd)}${shift.role?.name ? ` · ${shift.role.name}` : ""}`}
+                          timeLabel={`${hourLabelOf(shift.scheduledStart)}–${hourLabelOf(shift.scheduledEnd)}${shift.roleName ? ` · ${shift.roleName}` : ""}`}
                           canClaim={!props.canManage}
                         />
                         {props.canManage &&
                           duplicateShiftDialog(shift, { mode: "open", roleId: shift.roleId ?? undefined })}
                         {props.canManage && (
-                          <DeleteShiftButton
-                            venueSlug={props.slug}
-                            shiftId={shift.id}
-                            hasPayroll={false}
-                            isRecurring={Boolean(shift.recurrenceRule || shift.parentShiftId)}
-                            slotGroupId={shift.slotGroupId}
-                          />
+                          <DeleteShiftButton venueSlug={props.slug} shiftId={shift.id} hasPayroll={false} />
                         )}
                       </div>
                     ))}
@@ -409,13 +405,15 @@ export function ShiftsWeekView(props: ShiftsWeekViewProps) {
                     <CardContent className="p-3 md:p-4">
                       <div className="flex items-center gap-3">
                         <Avatar className="h-8 w-8 flex-shrink-0">
-                          <AvatarImage src={shift.membership?.user?.image ?? undefined} />
+                          <AvatarImage src={undefined} />
                           <AvatarFallback className="text-[0.65rem] font-bold">
-                            {staffNameOf(shift.membership).slice(0, 2).toUpperCase()}
+                            {staffNameOf(shift.membershipId, props.staffNames).slice(0, 2).toUpperCase()}
                           </AvatarFallback>
                         </Avatar>
                         <div className="flex-1 min-w-0">
-                          <p className="text-sm font-medium truncate">{staffNameOf(shift.membership)}</p>
+                          <p className="text-sm font-medium truncate">
+                            {staffNameOf(shift.membershipId, props.staffNames)}
+                          </p>
                           <p className="text-xs text-muted-foreground">
                             {hourLabelOf(shift.scheduledStart)} — {hourLabelOf(shift.scheduledEnd)}
                           </p>
@@ -429,7 +427,7 @@ export function ShiftsWeekView(props: ShiftsWeekViewProps) {
                               venueSlug={props.slug}
                               shiftId={shift.id}
                               action="clock-in"
-                              staffName={staffNameOf(shift.membership)}
+                              staffName={staffNameOf(shift.membershipId, props.staffNames)}
                             />
                           )}
                           {props.canManage && shift.status === "ACTIVE" && (
@@ -437,7 +435,7 @@ export function ShiftsWeekView(props: ShiftsWeekViewProps) {
                               venueSlug={props.slug}
                               shiftId={shift.id}
                               action="clock-out"
-                              staffName={staffNameOf(shift.membership)}
+                              staffName={staffNameOf(shift.membershipId, props.staffNames)}
                             />
                           )}
                           {!props.canManage &&
