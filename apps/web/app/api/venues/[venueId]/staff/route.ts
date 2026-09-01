@@ -82,7 +82,11 @@ export const GET = withRateLimit<{ params: Promise<{ venueId: string }> }>(
         listPositions(token, gate.xvmApiVenueId!),
       ])
       const positionsById = new Map(positions.map((p) => [p.id, p]))
-      const shaped = memberships.map((m) => toStaffShape(m, positionsById, venueId))
+      // roster() deliberately returns every membership at the venue, employed or
+      // not - xvm-api keeps terminated rows as history rather than deleting them.
+      // This route is the active roster; terminated members belong on a separate
+      // "former staff" view (not built yet), not silently mixed into this one.
+      const shaped = memberships.filter((m) => m.is_employed).map((m) => toStaffShape(m, positionsById, venueId))
       return NextResponse.json(shaped)
     } catch (err) {
       return xvmApiErrorResponse(err, session.user.id, "[staff] GET error")

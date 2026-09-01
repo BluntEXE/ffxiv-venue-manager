@@ -114,7 +114,9 @@ export default async function StaffPage({ params }: { params: Promise<{ slug: st
         listInvites(token, venue.xvmApiVenueId),
       ])
       const positionsById = new Map(positions.map((p) => [p.id, p]))
-      activeStaff = memberships.map((m) => toStaffShape(m, positionsById, slug))
+      // roster() returns every membership regardless of employment status -
+      // this page is the active roster, terminated members don't belong here.
+      activeStaff = memberships.filter((m) => m.is_employed).map((m) => toStaffShape(m, positionsById, slug))
       pendingInvites = invites.map(toPendingInviteShape)
     } catch (err) {
       console.error("[staff page] xvm-api fetch error:", err)

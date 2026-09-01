@@ -104,10 +104,19 @@ export default function ManageStaffMemberPage({ params }: { params: Promise<{ sl
         setSelectedRole(member.role)
         setSelectedPositionIds(member.additionalRoles.map((r) => r.id))
 
-        const positionsResponse = await fetch(`/api/venues/${slug}/roles`)
-        if (positionsResponse.ok) {
-          const positionsData = await positionsResponse.json()
-          setPositions(positionsData)
+        // Unlike the routes this plan rewrote, /roles predates this cutover and
+        // only resolves a plain venue id (no slug-or-id support) - needs the lookup.
+        const venueResponse = await fetch(`/api/venues?slug=${slug}`)
+        if (venueResponse.ok) {
+          const venues = await venueResponse.json()
+          const venue = venues.find((v: { slug: string }) => v.slug === slug)
+          if (venue) {
+            const positionsResponse = await fetch(`/api/venues/${venue.id}/roles`)
+            if (positionsResponse.ok) {
+              const positionsData = await positionsResponse.json()
+              setPositions(positionsData)
+            }
+          }
         }
       } catch (error: unknown) {
         setError(error instanceof Error ? error.message : "Failed to load staff member")
