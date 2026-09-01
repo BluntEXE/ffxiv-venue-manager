@@ -1,231 +1,169 @@
-import { NextRequest, NextResponse } from "next/server"
+import { NextResponse } from "next/server"
 import { getServerSession } from "next-auth"
 import { authOptions } from "@/lib/auth"
 import { prisma } from "@/lib/prisma"
-import { queueShiftReminder } from "@/lib/shift-notifications"
-import { generateOccurrences, occurrencesToFillWindow, type RecurrenceRule } from "@/lib/recurrence"
+import { withRateLimit } from "@/lib/middleware/with-rate-limit"
+import { getValidXvmApiToken, xvmApiErrorResponse } from "@/lib/api/xvm-api-store"
+import { listShifts, createShift, type ShiftRow } from "@/lib/api/xvm-api"
 import { z } from "zod"
+
+// xvm-api has no recurrence/pattern endpoints yet (recurrence_rule_id is schema-only) -
+// this route only covers one-off shifts. Recurring creation stays unsupported until that lands.
+const SHIFT_STATUS_SHAPE: Record<ShiftRow["status"], string> = {
+  open: "OPEN",
+  pending_approval: "CLAIMED",
+  scheduled: "SCHEDULED",
+  active: "ACTIVE",
+  completed: "COMPLETED",
+  cancelled: "CANCELLED",
+  missed: "MISSED",
+  unfilled: "UNFILLED",
+}
+
+function toShiftShape(shift: ShiftRow) {
+  return {
+    id: shift.id,
+    membershipId: shift.membership_id,
+    roleId: shift.position_id,
+    eventId: shift.event_id,
+    scheduledStart: shift.scheduled_start,
+    scheduledEnd: shift.scheduled_end,
+    actualStart: shift.actual_start,
+    actualEnd: shift.actual_end,
+    status: SHIFT_STATUS_SHAPE[shift.status],
+    notes: shift.notes,
+  }
+}
+
+async function requireXvmVenueId(venueId: string) {
+  // Shift routes are called with a venue slug from several client components
+  // (ClockShiftButton, DeleteShiftButton), unlike Roles' id-only convention -
+  // matches the original Prisma route's slug-or-id lookup.
+  const venue = await prisma.venue.findFirst({
+    where: { OR: [{ id: venueId }, { slug: venueId }] },
+    select: { xvmApiVenueId: true },
+  })
+  if (!venue?.xvmApiVenueId) {
+    return {
+      error: NextResponse.json(
+        { error: "not_connected", message: "This venue hasn't been connected to xvm-api yet." },
+        { status: 409 }
+      ),
+    }
+  }
+  return { xvmApiVenueId: venue.xvmApiVenueId }
+}
 
 /**
  * GET /api/venues/[venueId]/shifts
- * List shifts for a venue. Any active member can view.
+ * List shifts for a venue. xvm-api requires an explicit from/to window, capped at 60 days.
  * Query params: from (ISO date), to (ISO date) for date range filtering.
  */
-export async function GET(request: NextRequest, { params }: { params: Promise<{ venueId: string }> }) {
-  try {
+export const GET = withRateLimit<{ params: Promise<{ venueId: string }> }>(
+  async (request, context) => {
+    if (!context?.params) {
+      return NextResponse.json({ error: "Invalid request" }, { status: 400 })
+    }
+
     const session = await getServerSession(authOptions)
     if (!session?.user?.id) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
     }
 
-    const { venueId } = await params
-
-    const venue = await prisma.venue.findFirst({
-      where: { OR: [{ id: venueId }, { slug: venueId }] },
-    })
-    if (!venue) {
-      return NextResponse.json({ error: "Venue not found" }, { status: 404 })
+    const token = await getValidXvmApiToken(session.user.id)
+    if (!token) {
+      return NextResponse.json({ error: "xvm-api link not established yet" }, { status: 503 })
     }
 
-    const membership = await prisma.membership.findFirst({
-      where: { userId: session.user.id, venueId: venue.id, status: "active" },
-    })
-    if (!membership) {
-      return NextResponse.json({ error: "Not a member" }, { status: 403 })
-    }
+    const { venueId } = await context.params
 
-    // Date range filter (default: past 7 days to 30 days ahead)
+    const gate = await requireXvmVenueId(venueId)
+    if (gate.error) return gate.error
+
     const url = request.nextUrl
-    const from = url.searchParams.get("from")
-      ? new Date(url.searchParams.get("from")!)
-      : new Date(Date.now() - 7 * 24 * 60 * 60 * 1000)
-    const to = url.searchParams.get("to")
-      ? new Date(url.searchParams.get("to")!)
-      : new Date(Date.now() + 30 * 24 * 60 * 60 * 1000)
+    const from = url.searchParams.get("from") ?? new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString()
+    const to = url.searchParams.get("to") ?? new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString()
 
-    const shifts = await prisma.shift.findMany({
-      where: {
-        venueId: venue.id,
-        scheduledStart: { gte: from, lte: to },
-      },
-      include: {
-        membership: {
-          include: {
-            user: {
-              select: { id: true, name: true, image: true },
-            },
-          },
-        },
-        role: { select: { id: true, name: true, color: true } },
-      },
-      orderBy: { scheduledStart: "asc" },
-    })
+    try {
+      const shifts = await listShifts(token, gate.xvmApiVenueId!, { from, to, includeCancelled: true })
+      return NextResponse.json({ shifts: shifts.map(toShiftShape) })
+    } catch (err) {
+      return xvmApiErrorResponse(err, session.user.id, "[shifts] GET error")
+    }
+  },
+  { requests: 60, window: "1 m" }
+)
 
-    return NextResponse.json({
-      shifts: shifts.map((s) => ({
-        id: s.id,
-        membershipId: s.membershipId,
-        staffName: s.membership?.user?.name ?? "Unknown",
-        staffImage: s.membership?.user?.image ?? null,
-        roleId: s.roleId,
-        roleName: s.role?.name ?? null,
-        scheduledStart: s.scheduledStart.toISOString(),
-        scheduledEnd: s.scheduledEnd.toISOString(),
-        actualStart: s.actualStart?.toISOString() ?? null,
-        actualEnd: s.actualEnd?.toISOString() ?? null,
-        status: s.status,
-        notes: s.notes,
-      })),
-    })
-  } catch (error) {
-    console.error("Error fetching shifts:", error)
-    return NextResponse.json({ error: "Internal server error" }, { status: 500 })
-  }
-}
-
-/**
- * POST /api/venues/[venueId]/shifts
- * Create a shift. OWNER/MANAGER only.
- */
 const createShiftSchema = z
   .object({
-    membershipId: z.string().min(1).optional(),
-    roleId: z.string().min(1).optional(),
-    eventId: z.string().min(1).optional(),
+    membershipId: z.number().int().optional(),
+    roleId: z.number().int().optional(),
+    eventId: z.number().int().optional(),
     scheduledStart: z.string().datetime(),
     scheduledEnd: z.string().datetime(),
     notes: z.string().max(200, "Notes too long (max 200 characters)").optional(),
     recurrenceRule: z.enum(["WEEKLY", "BIWEEKLY", "MONTHLY"]).optional(),
-    slotGroupId: z.string().optional(),
   })
-  // Cross-field rule (spans membershipId and roleId), so the error is form-level: no single field is "wrong" on its own.
   .refine((data) => Boolean(data.membershipId) || Boolean(data.roleId), {
     message:
       "Provide a staff member (assign now), a role (leave open), or both (assign now with a role tagged for pay)",
   })
 
-export async function POST(request: NextRequest, { params }: { params: Promise<{ venueId: string }> }) {
-  try {
+/**
+ * POST /api/venues/[venueId]/shifts
+ * Create a one-off shift. Manager tier, enforced by xvm-api.
+ */
+export const POST = withRateLimit<{ params: Promise<{ venueId: string }> }>(
+  async (request, context) => {
+    if (!context?.params) {
+      return NextResponse.json({ error: "Invalid request" }, { status: 400 })
+    }
+
     const session = await getServerSession(authOptions)
     if (!session?.user?.id) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
     }
 
-    const { venueId } = await params
-
-    const venue = await prisma.venue.findFirst({
-      where: { OR: [{ id: venueId }, { slug: venueId }] },
-    })
-    if (!venue) {
-      return NextResponse.json({ error: "Venue not found" }, { status: 404 })
+    const token = await getValidXvmApiToken(session.user.id)
+    if (!token) {
+      return NextResponse.json({ error: "xvm-api link not established yet" }, { status: 503 })
     }
 
-    const membership = await prisma.membership.findFirst({
-      where: { userId: session.user.id, venueId: venue.id, status: "active" },
-    })
-    if (!membership || !["OWNER", "MANAGER"].includes(membership.role)) {
-      return NextResponse.json({ error: "Only managers can create shifts" }, { status: 403 })
-    }
+    const { venueId } = await context.params
 
-    const body = await request.json()
-    const parsed = createShiftSchema.safeParse(body)
-    if (!parsed.success) {
-      return NextResponse.json({ error: "Validation error", details: parsed.error.issues }, { status: 400 })
-    }
+    const gate = await requireXvmVenueId(venueId)
+    if (gate.error) return gate.error
 
-    let targetMembership: { userId: string | null } | null = null
-    let verifiedRoleId: string | null = null
-
-    if (parsed.data.membershipId) {
-      // Assigning to a specific person: verify they belong to this venue
-      const member = await prisma.membership.findFirst({
-        where: { id: parsed.data.membershipId, venueId: venue.id, status: "active" },
-        select: { userId: true },
-      })
-      if (!member) {
-        return NextResponse.json({ error: "Staff member not found at this venue" }, { status: 400 })
+    let data: z.infer<typeof createShiftSchema>
+    try {
+      data = createShiftSchema.parse(await request.json())
+    } catch (err) {
+      if (err instanceof z.ZodError) {
+        return NextResponse.json({ error: "Validation error", details: err.issues }, { status: 400 })
       }
-      targetMembership = member
+      return NextResponse.json({ error: "Invalid request" }, { status: 400 })
     }
 
-    // Verified independently of assign/open mode: an assigned shift can optionally
-    // also carry a role (for pay resolution), and an open shift always requires one.
-    if (parsed.data.roleId) {
-      const role = await prisma.role.findFirst({
-        where: { id: parsed.data.roleId, venueId: venue.id },
-        select: { id: true },
+    if (data.recurrenceRule) {
+      return NextResponse.json(
+        { error: "Recurring shifts aren't supported yet - create one-off shifts for now." },
+        { status: 400 }
+      )
+    }
+
+    try {
+      const shift = await createShift(token, gate.xvmApiVenueId!, {
+        scheduled_start: data.scheduledStart,
+        scheduled_end: data.scheduledEnd,
+        position_id: data.roleId ?? null,
+        membership_id: data.membershipId ?? null,
+        event_id: data.eventId ?? null,
+        notes: data.notes ?? null,
       })
-      if (!role) {
-        return NextResponse.json({ error: "Role not found at this venue" }, { status: 400 })
-      }
-      verifiedRoleId = role.id
+      return NextResponse.json({ shift: toShiftShape(shift) }, { status: 201 })
+    } catch (err) {
+      return xvmApiErrorResponse(err, session.user.id, "[shifts] POST error")
     }
-
-    let verifiedEventId: string | null = null
-    if (parsed.data.eventId) {
-      const event = await prisma.event.findFirst({
-        where: { id: parsed.data.eventId, venueId: venue.id },
-        select: { id: true },
-      })
-      if (!event) {
-        return NextResponse.json({ error: "Event not found at this venue" }, { status: 400 })
-      }
-      verifiedEventId = event.id
-    }
-
-    const scheduledStart = new Date(parsed.data.scheduledStart)
-    const scheduledEnd = new Date(parsed.data.scheduledEnd)
-    const recurrenceRule = parsed.data.recurrenceRule
-
-    const shift = await prisma.shift.create({
-      data: {
-        venueId: venue.id,
-        membershipId: parsed.data.membershipId ?? null,
-        roleId: verifiedRoleId,
-        eventId: verifiedEventId,
-        status: parsed.data.membershipId ? "SCHEDULED" : "OPEN",
-        scheduledStart,
-        scheduledEnd,
-        notes: parsed.data.notes ?? null,
-        recurrenceRule: recurrenceRule ?? null,
-        slotGroupId: parsed.data.slotGroupId ?? null,
-      },
-    })
-
-    let childShifts: { id: string; scheduledStart: Date }[] = []
-    if (recurrenceRule) {
-      const count = occurrencesToFillWindow(recurrenceRule as RecurrenceRule, 6)
-      const occurrences = generateOccurrences(scheduledStart, scheduledEnd, recurrenceRule as RecurrenceRule, count)
-      await prisma.shift.createMany({
-        data: occurrences.map((o) => ({
-          venueId: venue.id,
-          membershipId: parsed.data.membershipId ?? null,
-          roleId: verifiedRoleId,
-          eventId: verifiedEventId,
-          status: parsed.data.membershipId ? "SCHEDULED" : "OPEN",
-          scheduledStart: o.startTime,
-          scheduledEnd: o.endTime,
-          notes: parsed.data.notes ?? null,
-          parentShiftId: shift.id,
-        })),
-      })
-      childShifts = await prisma.shift.findMany({
-        where: { parentShiftId: shift.id },
-        select: { id: true, scheduledStart: true },
-      })
-    }
-
-    // Queue shift reminders 1 hour before start for every assigned occurrence (parent + children)
-    if (targetMembership?.userId) {
-      queueShiftReminder(targetMembership.userId, venue.id, venue.name, shift.id, scheduledStart)
-      for (const child of childShifts) {
-        queueShiftReminder(targetMembership.userId, venue.id, venue.name, child.id, child.scheduledStart)
-      }
-    }
-
-    return NextResponse.json({ shift }, { status: 201 })
-  } catch (error) {
-    console.error("Error creating shift:", error)
-    return NextResponse.json({ error: "Internal server error" }, { status: 500 })
-  }
-}
+  },
+  { requests: 10, window: "1 m" }
+)

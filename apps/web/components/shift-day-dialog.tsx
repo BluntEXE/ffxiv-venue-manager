@@ -17,22 +17,23 @@ import {
   statusBadgeClass,
   staffNameOf,
   type CalendarShift,
-  type StaffMember,
-  type RoleOption,
+  type StaffNameLookup,
 } from "@/lib/shift-format"
 import { browserTimeZone, localTimeInput } from "@/lib/local-day"
 import { useMounted } from "@/lib/use-mounted"
+import type { ShiftStaffOption, ShiftRoleOption } from "@/lib/api/xvm-api"
 
 interface ShiftDayDialogProps {
   date: Date | null
   onOpenChange: (open: boolean) => void
   shifts: CalendarShift[]
   canManage: boolean
-  currentMembershipId: string
+  currentMembershipId: number
   venueSlug: string
   venueId: string
-  staffForDialog: StaffMember[]
-  roles: RoleOption[]
+  staffForDialog: ShiftStaffOption[]
+  roles: ShiftRoleOption[]
+  staffNames: StaffNameLookup
 }
 
 export function ShiftDayDialog({
@@ -45,6 +46,7 @@ export function ShiftDayDialog({
   venueId,
   staffForDialog,
   roles,
+  staffNames,
 }: ShiftDayDialogProps) {
   const mounted = useMounted()
   const timeZone = mounted ? browserTimeZone() : null
@@ -87,7 +89,7 @@ export function ShiftDayDialog({
                     </span>
                     <div className="text-sm">
                       <div className="font-medium text-amber-400">
-                        Open{shift.role?.name ? ` · ${shift.role.name}` : ""}
+                        Open{shift.roleName ? ` · ${shift.roleName}` : ""}
                       </div>
                       <div className="text-xs text-muted-foreground">
                         {hourLabelFor(shift.scheduledStart, timeZone)}–{hourLabelFor(shift.scheduledEnd, timeZone)}
@@ -126,13 +128,7 @@ export function ShiftDayDialog({
                       />
                     )}
                     {canManage && (
-                      <DeleteShiftButton
-                        venueSlug={venueSlug}
-                        shiftId={shift.id}
-                        hasPayroll={false}
-                        isRecurring={Boolean(shift.recurrenceRule || shift.parentShiftId)}
-                        slotGroupId={shift.slotGroupId}
-                      />
+                      <DeleteShiftButton venueSlug={venueSlug} shiftId={shift.id} hasPayroll={false} />
                     )}
                   </div>
                 </div>
@@ -147,17 +143,21 @@ export function ShiftDayDialog({
                 <div className="flex items-center gap-2 min-w-0">
                   {canManage && (
                     <Avatar className="h-7 w-7 flex-shrink-0">
-                      <AvatarImage src={shift.membership?.user?.image ?? undefined} />
+                      <AvatarImage src={undefined} />
                       <AvatarFallback className="text-[0.62rem] font-bold">
-                        {staffNameOf(shift.membership).slice(0, 2).toUpperCase()}
+                        {staffNameOf(shift.membershipId, staffNames).slice(0, 2).toUpperCase()}
                       </AvatarFallback>
                     </Avatar>
                   )}
                   <div className="min-w-0">
-                    {canManage && <div className="text-sm font-medium truncate">{staffNameOf(shift.membership)}</div>}
+                    {canManage && (
+                      <div className="text-sm font-medium truncate">
+                        {staffNameOf(shift.membershipId, staffNames)}
+                      </div>
+                    )}
                     <div className="text-xs text-muted-foreground">
                       {hourLabelFor(shift.scheduledStart, timeZone)}–{hourLabelFor(shift.scheduledEnd, timeZone)}
-                      {shift.role?.name ? ` · ${shift.role.name}` : ""}
+                      {shift.roleName ? ` · ${shift.roleName}` : ""}
                     </div>
                   </div>
                 </div>
@@ -179,7 +179,7 @@ export function ShiftDayDialog({
                           venueSlug={venueSlug}
                           shiftId={shift.id}
                           action="clock-in"
-                          staffName={canManage ? staffNameOf(shift.membership) : "yourself"}
+                          staffName={canManage ? staffNameOf(shift.membershipId, staffNames) : "yourself"}
                         />
                       )}
                       {(canManage || shift.membershipId === currentMembershipId) && shift.status === "ACTIVE" && (
@@ -187,7 +187,7 @@ export function ShiftDayDialog({
                           venueSlug={venueSlug}
                           shiftId={shift.id}
                           action="clock-out"
-                          staffName={canManage ? staffNameOf(shift.membership) : "yourself"}
+                          staffName={canManage ? staffNameOf(shift.membershipId, staffNames) : "yourself"}
                         />
                       )}
                       {canManage && (
@@ -195,8 +195,6 @@ export function ShiftDayDialog({
                           venueSlug={venueSlug}
                           shiftId={shift.id}
                           hasPayroll={!!shift.payrollEntryId}
-                          isRecurring={Boolean(shift.recurrenceRule || shift.parentShiftId)}
-                          slotGroupId={shift.slotGroupId}
                         />
                       )}
                     </>

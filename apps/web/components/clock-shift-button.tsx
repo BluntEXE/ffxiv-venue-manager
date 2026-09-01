@@ -17,7 +17,7 @@ import {
 
 interface ClockShiftButtonProps {
   venueSlug: string
-  shiftId: string
+  shiftId: number
   action: "clock-in" | "clock-out"
   staffName: string
 }

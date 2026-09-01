@@ -1,12 +1,58 @@
-import { NextRequest, NextResponse } from "next/server"
+import { NextResponse } from "next/server"
 import { getServerSession } from "next-auth"
 import { authOptions } from "@/lib/auth"
 import { prisma } from "@/lib/prisma"
-import { claimShiftWithMerge } from "@/lib/shift-overlap"
-import { logShiftAudit } from "@/lib/shift-audit"
-import { syncVenueOpenStatus } from "@/lib/venue-status"
-import { formatServerTime } from "@/lib/server-time"
+import { getValidXvmApiToken, xvmApiErrorResponse } from "@/lib/api/xvm-api-store"
+import {
+  claimShift,
+  approveShift,
+  rejectShift,
+  clockInShift,
+  clockOutShift,
+  cancelShift,
+  type ShiftRow,
+} from "@/lib/api/xvm-api"
 import { z } from "zod"
+
+const SHIFT_STATUS_SHAPE: Record<ShiftRow["status"], string> = {
+  open: "OPEN",
+  pending_approval: "CLAIMED",
+  scheduled: "SCHEDULED",
+  active: "ACTIVE",
+  completed: "COMPLETED",
+  cancelled: "CANCELLED",
+  missed: "MISSED",
+  unfilled: "UNFILLED",
+}
+
+function toShiftShape(shift: ShiftRow) {
+  return {
+    id: shift.id,
+    membershipId: shift.membership_id,
+    status: SHIFT_STATUS_SHAPE[shift.status],
+    scheduledStart: shift.scheduled_start,
+    scheduledEnd: shift.scheduled_end,
+    actualStart: shift.actual_start,
+    actualEnd: shift.actual_end,
+    workedMinutes: shift.worked_minutes,
+  }
+}
+
+async function requireXvmVenueId(venueId: string) {
+  const venue = await prisma.venue.findFirst({
+    where: { OR: [{ id: venueId }, { slug: venueId }] },
+    select: { xvmApiVenueId: true },
+  })
+  if (!venue?.xvmApiVenueId) {
+    return {
+      error: NextResponse.json(
+        { error: "not_connected", message: "This venue hasn't been connected to xvm-api yet." },
+        { status: 409 }
+      ),
+    }
+  }
+  return { xvmApiVenueId: venue.xvmApiVenueId }
+}
 
 const patchSchema = z.object({
   action: z.enum(["clock-in", "clock-out", "claim", "approve", "reject"]),
@@ -14,358 +60,96 @@ const patchSchema = z.object({
 
 /**
  * PATCH /api/venues/[venueId]/shifts/[shiftId]
- * Clock a shift in or out.
- * - OWNER/MANAGER: any shift, no time window
- * - STAFF: own shifts only, 30-min-before/60-min-after window for clock-in
+ * Claim/approve/reject/clock a shift. Tier requirements are enforced by xvm-api itself
+ * (claim/clock-in/clock-out need a member; approve/reject need manager tier) - this route
+ * just forwards the action and the resulting 403 if any.
  */
 export async function PATCH(
-  request: NextRequest,
+  request: Request,
   { params }: { params: Promise<{ venueId: string; shiftId: string }> }
 ) {
-  try {
-    const session = await getServerSession(authOptions)
-    if (!session?.user?.id) {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
-    }
-
-    const { venueId, shiftId } = await params
-
-    const venue = await prisma.venue.findFirst({
-      where: { OR: [{ id: venueId }, { slug: venueId }] },
-    })
-    if (!venue) {
-      return NextResponse.json({ error: "Venue not found" }, { status: 404 })
-    }
-
-    const membership = await prisma.membership.findFirst({
-      where: { userId: session.user.id, venueId: venue.id, status: "active" },
-    })
-    if (!membership) {
-      return NextResponse.json({ error: "Not a member of this venue" }, { status: 403 })
-    }
-
-    const isManager = ["OWNER", "MANAGER"].includes(membership.role)
-
-    const body = await request.json()
-    const parsed = patchSchema.safeParse(body)
-    if (!parsed.success) {
-      return NextResponse.json({ error: "action must be clock-in or clock-out" }, { status: 400 })
-    }
-
-    const shift = await prisma.shift.findFirst({
-      where: { id: shiftId, venueId: venue.id },
-    })
-    if (!shift) {
-      return NextResponse.json({ error: "Shift not found" }, { status: 404 })
-    }
-
-    // --- CLAIM ---
-    if (parsed.data.action === "claim") {
-      if (shift.status !== "OPEN") {
-        return NextResponse.json({ error: `Shift is already ${shift.status.toLowerCase()}` }, { status: 400 })
-      }
-      const claimResult = await claimShiftWithMerge(shift, membership.id)
-      if (claimResult === null) {
-        return NextResponse.json({ error: "This shift was just claimed by someone else" }, { status: 409 })
-      }
-      await logShiftAudit(claimResult.shift.id, "CLAIM", session.user.id, "web")
-      // Notify managers/owners that a claim needs approval (skip if merged
-      // into an already-approved shift — nothing for a manager to act on)
-      if (!claimResult.merged) {
-        Promise.all([
-          prisma.membership.findMany({
-            where: { venueId: venue.id, status: "active", role: { in: ["OWNER", "MANAGER"] } },
-            select: { userId: true },
-          }),
-          prisma.user.findUnique({
-            where: { id: session.user.id },
-            select: { displayName: true, name: true },
-          }),
-        ])
-          .then(([managers, claimant]) => {
-            const staffName = claimant?.displayName ?? claimant?.name ?? "A staff member"
-            const shiftDate = formatServerTime(shift.scheduledStart, "shiftdate")
-            return prisma.pendingNotification.createMany({
-              data: managers
-                .filter((m) => m.userId)
-                .map((m) => ({
-                  userId: m.userId!,
-                  type: "SHIFT_CLAIM_SUBMITTED" as const,
-                  title: "Shift claim pending",
-                  body: `${staffName} claimed the ${shiftDate} shift at ${venue.name}.`,
-                  data: { venueId: venue.id, shiftId: shift.id },
-                  scheduledFor: new Date(),
-                })),
-            })
-          })
-          .catch(() => {})
-      }
-      return NextResponse.json({
-        success: true,
-        shift: {
-          id: claimResult.shift.id,
-          status: claimResult.shift.status,
-          scheduledStart: claimResult.shift.scheduledStart.toISOString(),
-          scheduledEnd: claimResult.shift.scheduledEnd.toISOString(),
-        },
-        merged: claimResult.merged,
-      })
-    }
-
-    // --- APPROVE ---
-    if (parsed.data.action === "approve") {
-      if (!isManager) {
-        return NextResponse.json({ error: "Only managers can approve claims" }, { status: 403 })
-      }
-      if (shift.status !== "CLAIMED") {
-        return NextResponse.json({ error: `Shift is ${shift.status.toLowerCase()}, not claimed` }, { status: 400 })
-      }
-      const result = await prisma.shift.updateMany({
-        where: { id: shift.id, status: "CLAIMED" },
-        data: { status: "SCHEDULED" },
-      })
-      if (result.count === 0) {
-        return NextResponse.json({ error: "Shift status changed concurrently" }, { status: 409 })
-      }
-      await logShiftAudit(shift.id, "APPROVE", session.user.id, "web")
-      if (shift.membershipId) {
-        const claimant = await prisma.membership.findUnique({
-          where: { id: shift.membershipId },
-          select: { userId: true },
-        })
-        if (claimant?.userId) {
-          const now = new Date()
-          const shiftDate = formatServerTime(shift.scheduledStart, "shiftdate")
-          // Immediate approval notification
-          prisma.pendingNotification
-            .create({
-              data: {
-                userId: claimant.userId,
-                type: "SHIFT_CLAIM_APPROVED",
-                title: "Shift claim approved",
-                body: `Your claim for the ${shiftDate} shift at ${venue.name} was approved. You're on the schedule!`,
-                data: { venueId: venue.id, shiftId: shift.id },
-                scheduledFor: now,
-              },
-            })
-            .catch(() => {})
-          // Shift reminder 1 hour before start
-          const reminderAt = new Date(shift.scheduledStart.getTime() - 60 * 60 * 1000)
-          if (reminderAt > now) {
-            prisma.pendingNotification
-              .create({
-                data: {
-                  userId: claimant.userId,
-                  type: "SHIFT_REMINDER",
-                  title: "Shift starting soon",
-                  body: `Your shift at ${venue.name} starts in 1 hour.`,
-                  data: { venueId: venue.id, shiftId: shift.id },
-                  scheduledFor: reminderAt,
-                },
-              })
-              .catch(() => {})
-          }
-        }
-      }
-      return NextResponse.json({ success: true, shift: { id: shift.id, status: "SCHEDULED" } })
-    }
-
-    // --- REJECT ---
-    if (parsed.data.action === "reject") {
-      if (!isManager) {
-        return NextResponse.json({ error: "Only managers can reject claims" }, { status: 403 })
-      }
-      if (shift.status !== "CLAIMED") {
-        return NextResponse.json({ error: `Shift is ${shift.status.toLowerCase()}, not claimed` }, { status: 400 })
-      }
-      const result = await prisma.shift.updateMany({
-        where: { id: shift.id, status: "CLAIMED" },
-        data: { membershipId: null, status: "OPEN" },
-      })
-      if (result.count === 0) {
-        return NextResponse.json({ error: "Shift status changed concurrently" }, { status: 409 })
-      }
-      await logShiftAudit(shift.id, "REJECT", session.user.id, "web")
-      // Notify the claimant — shift.membershipId captured before the update cleared it
-      if (shift.membershipId) {
-        const claimant = await prisma.membership.findUnique({
-          where: { id: shift.membershipId },
-          select: { userId: true },
-        })
-        if (claimant?.userId) {
-          const shiftDate = formatServerTime(shift.scheduledStart, "shiftdate")
-          prisma.pendingNotification
-            .create({
-              data: {
-                userId: claimant.userId,
-                type: "SHIFT_CLAIM_REJECTED",
-                title: "Shift claim not approved",
-                body: `Your claim for the ${shiftDate} shift at ${venue.name} wasn't approved. The slot is still open.`,
-                data: { venueId: venue.id, shiftId: shift.id },
-                scheduledFor: new Date(),
-              },
-            })
-            .catch(() => {})
-        }
-      }
-      return NextResponse.json({ success: true, shift: { id: shift.id, status: "OPEN" } })
-    }
-
-    // Clock-in / clock-out — only the assigned member or a manager
-    if (!isManager && shift.membershipId !== membership.id) {
-      return NextResponse.json({ error: "This shift is not assigned to you" }, { status: 403 })
-    }
-
-    const now = new Date()
-
-    if (parsed.data.action === "clock-in") {
-      if (shift.status !== "SCHEDULED") {
-        return NextResponse.json(
-          { error: `Cannot clock in — shift is already ${shift.status.toLowerCase()}` },
-          { status: 400 }
-        )
-      }
-
-      if (!isManager) {
-        const earliest = new Date(shift.scheduledStart.getTime() - 30 * 60 * 1000)
-        const latest = new Date(shift.scheduledStart.getTime() + 60 * 60 * 1000)
-        if (now < earliest) {
-          return NextResponse.json({ error: "Too early to clock in (earliest 30 min before start)" }, { status: 400 })
-        }
-        if (now > latest) {
-          return NextResponse.json({ error: "Clock-in window has passed (60 min after start)" }, { status: 400 })
-        }
-      }
-
-      const writeResult = await prisma.shift.updateMany({
-        where: { id: shift.id, status: "SCHEDULED" },
-        data: { actualStart: now, status: "ACTIVE" },
-      })
-
-      if (writeResult.count === 0) {
-        return NextResponse.json({ error: "Shift status changed concurrently" }, { status: 409 })
-      }
-
-      queueOpenedNowNotifications(venue.id, venue.name, now).catch(() => {})
-      await logShiftAudit(shift.id, "CLOCK_IN", session.user.id, "web")
-      syncVenueOpenStatus(venue.id).catch(() => {})
-
-      return NextResponse.json({
-        success: true,
-        shift: { id: shift.id, status: "ACTIVE", actualStart: now.toISOString() },
-      })
-    }
-
-    if (shift.status !== "ACTIVE") {
-      return NextResponse.json(
-        { error: `Cannot clock out — shift is already ${shift.status.toLowerCase()}` },
-        { status: 400 }
-      )
-    }
-
-    const calculatedHours = shift.actualStart
-      ? Math.round(((now.getTime() - shift.actualStart.getTime()) / (1000 * 60 * 60)) * 100) / 100
-      : null
-
-    const writeResult = await prisma.shift.updateMany({
-      where: { id: shift.id, status: "ACTIVE" },
-      data: { actualEnd: now, status: "COMPLETED", hoursWorked: calculatedHours },
-    })
-
-    if (writeResult.count === 0) {
-      return NextResponse.json({ error: "Shift status changed concurrently" }, { status: 409 })
-    }
-
-    await logShiftAudit(shift.id, "CLOCK_OUT", session.user.id, "web")
-    syncVenueOpenStatus(venue.id).catch(() => {})
-
-    return NextResponse.json({
-      success: true,
-      shift: { id: shift.id, status: "COMPLETED", actualEnd: now.toISOString(), hoursWorked: calculatedHours },
-    })
-  } catch (error) {
-    console.error("Error updating shift:", error)
-    return NextResponse.json({ error: "Internal server error" }, { status: 500 })
+  const session = await getServerSession(authOptions)
+  if (!session?.user?.id) {
+    return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
   }
-}
 
-async function queueOpenedNowNotifications(venueId: string, venueName: string, now: Date) {
-  const recentlySent = await prisma.pendingNotification.findFirst({
-    where: {
-      type: "VENUE_OPENED_NOW",
-      data: { path: ["venueId"], equals: venueId },
-      createdAt: { gte: new Date(now.getTime() - 30 * 60 * 1000) },
-    },
-  })
-  if (recentlySent) return
+  const token = await getValidXvmApiToken(session.user.id)
+  if (!token) {
+    return NextResponse.json({ error: "xvm-api link not established yet" }, { status: 503 })
+  }
 
-  const follows = await prisma.venueFollow.findMany({
-    where: { venueId },
-    select: { userId: true },
-  })
-  if (follows.length === 0) return
+  const { venueId, shiftId: shiftIdParam } = await params
+  const shiftId = Number(shiftIdParam)
+  if (!Number.isInteger(shiftId)) {
+    return NextResponse.json({ error: "Shift not found" }, { status: 404 })
+  }
 
-  await prisma.pendingNotification.createMany({
-    data: follows.map((f) => ({
-      userId: f.userId,
-      type: "VENUE_OPENED_NOW" as const,
-      title: `${venueName} is open!`,
-      body: "A venue you follow just opened.",
-      data: { venueId },
-      scheduledFor: now,
-    })),
-  })
+  const gate = await requireXvmVenueId(venueId)
+  if (gate.error) return gate.error
+
+  const parsed = patchSchema.safeParse(await request.json())
+  if (!parsed.success) {
+    return NextResponse.json({ error: "Invalid action" }, { status: 400 })
+  }
+
+  try {
+    let shift: ShiftRow
+    switch (parsed.data.action) {
+      case "claim":
+        shift = await claimShift(token, gate.xvmApiVenueId!, shiftId)
+        break
+      case "approve":
+        shift = await approveShift(token, gate.xvmApiVenueId!, shiftId)
+        break
+      case "reject":
+        shift = await rejectShift(token, gate.xvmApiVenueId!, shiftId)
+        break
+      case "clock-in":
+        shift = await clockInShift(token, gate.xvmApiVenueId!, shiftId)
+        break
+      case "clock-out":
+        shift = await clockOutShift(token, gate.xvmApiVenueId!, shiftId)
+        break
+    }
+    return NextResponse.json({ success: true, shift: toShiftShape(shift) })
+  } catch (err) {
+    return xvmApiErrorResponse(err, session.user.id, `[shifts] PATCH ${parsed.data.action} error`)
+  }
 }
 
 /**
  * DELETE /api/venues/[venueId]/shifts/[shiftId]
- * Hard-deletes a shift and its linked payroll entry (if any).
- * OWNER/MANAGER only. Runs in a transaction so either both rows go or neither does.
+ * xvm-api has no hard delete for shifts, only an audited cancel (same delete->cancel
+ * mapping already used for Tasks) - this voids the slot rather than removing the row.
+ * Manager tier, enforced by xvm-api.
  */
 export async function DELETE(
-  request: NextRequest,
+  request: Request,
   { params }: { params: Promise<{ venueId: string; shiftId: string }> }
 ) {
+  const session = await getServerSession(authOptions)
+  if (!session?.user?.id) {
+    return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
+  }
+
+  const token = await getValidXvmApiToken(session.user.id)
+  if (!token) {
+    return NextResponse.json({ error: "xvm-api link not established yet" }, { status: 503 })
+  }
+
+  const { venueId, shiftId: shiftIdParam } = await params
+  const shiftId = Number(shiftIdParam)
+  if (!Number.isInteger(shiftId)) {
+    return NextResponse.json({ error: "Shift not found" }, { status: 404 })
+  }
+
+  const gate = await requireXvmVenueId(venueId)
+  if (gate.error) return gate.error
+
   try {
-    const session = await getServerSession(authOptions)
-    if (!session?.user?.id) {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
-    }
-
-    const { venueId, shiftId } = await params
-
-    const venue = await prisma.venue.findFirst({
-      where: { OR: [{ id: venueId }, { slug: venueId }] },
-    })
-    if (!venue) {
-      return NextResponse.json({ error: "Venue not found" }, { status: 404 })
-    }
-
-    const membership = await prisma.membership.findFirst({
-      where: { userId: session.user.id, venueId: venue.id, status: "active" },
-    })
-    if (!membership || !["OWNER", "MANAGER"].includes(membership.role)) {
-      return NextResponse.json({ error: "Only managers can delete shifts" }, { status: 403 })
-    }
-
-    const shift = await prisma.shift.findFirst({
-      where: { id: shiftId, venueId: venue.id },
-      select: { id: true, payrollEntryId: true },
-    })
-    if (!shift) {
-      return NextResponse.json({ error: "Shift not found" }, { status: 404 })
-    }
-
-    await prisma.$transaction(async (tx) => {
-      await tx.shift.delete({ where: { id: shift.id } })
-      if (shift.payrollEntryId) {
-        await tx.payrollEntry.delete({ where: { id: shift.payrollEntryId } })
-      }
-    })
-
-    return NextResponse.json({ success: true })
-  } catch (error) {
-    console.error("Error deleting shift:", error)
-    return NextResponse.json({ error: "Internal server error" }, { status: 500 })
+    const shift = await cancelShift(token, gate.xvmApiVenueId!, shiftId, null)
+    return NextResponse.json({ success: true, shift: toShiftShape(shift) })
+  } catch (err) {
+    return xvmApiErrorResponse(err, session.user.id, "[shifts] DELETE error")
   }
 }
