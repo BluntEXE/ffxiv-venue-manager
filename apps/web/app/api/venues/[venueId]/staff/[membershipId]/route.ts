@@ -180,6 +180,12 @@ export const DELETE = withRateLimit<{ params: Promise<{ venueId: string; members
         return NextResponse.json({ error: "Managers can only remove staff" }, { status: 403 })
       }
 
+      // Terminate first - xvm-api's own guards (last-owner protection, etc.)
+      // can still refuse this. Doing the cleanup below only after it succeeds
+      // means a refused termination never leaves tasks unassigned or API keys
+      // revoked for someone who's still an active member.
+      await terminateMembership(token, gate.xvmApiVenueId!, id)
+
       const tasks = await listTasks(token, gate.xvmApiVenueId!, {})
       const openAssignedTasks = tasks.filter(
         (t) => t.assigned_membership_id === id && !t.completed_at && !t.cancelled_at
@@ -204,8 +210,6 @@ export const DELETE = withRateLimit<{ params: Promise<{ venueId: string; members
           data: { revokedAt: new Date() },
         })
       }
-
-      await terminateMembership(token, gate.xvmApiVenueId!, id)
 
       return NextResponse.json({ success: true })
     } catch (err) {
