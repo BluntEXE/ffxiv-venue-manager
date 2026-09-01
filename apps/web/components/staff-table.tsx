@@ -1,6 +1,6 @@
 "use client"
 
-import { useState } from "react"
+import { useState, type CSSProperties } from "react"
 import Link from "next/link"
 import { LocalTime } from "@/components/server-time"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
@@ -19,18 +19,22 @@ import { resolveDisplayName } from "@/lib/display-name"
 import { DataTable } from "@/components/ui/data-table"
 
 export type StaffMember = {
-  id: string
+  id: number
   role: "OWNER" | "MANAGER" | "STAFF"
-  customRole: { name: string; color: string } | null
-  additionalRoles: { name: string; color: string }[]
-  joinedAt: string
+  // xvm-api's Position model has no primary/secondary distinction the way
+  // Prisma's customRole vs additionalRoles did - every assigned position
+  // renders the same way now (see rolePillStyle below).
+  additionalRoles: { name: string; color: number | null }[]
+  joinedAt: string | null
   isOnShift: boolean
   nickname: string | null
   user: {
-    id: string
+    id: number
     name: string | null
     displayName: string | null
     image: string | null
+    // xvm-api's MembershipPerson doesn't expose a character name yet
+    // (xvm-api#54) - always null until that lands.
     characterName: string | null
   } | null
   venueId: string
@@ -43,6 +47,13 @@ function memberDisplayName(member: Pick<StaffMember, "nickname" | "user">): stri
     displayName: member.user?.displayName,
     discordName: member.user?.name,
   })
+}
+
+const DEFAULT_ROLE_COLOR = 0x6c7086
+
+function rolePillStyle(color: number | null): CSSProperties {
+  const hex = "#" + (color ?? DEFAULT_ROLE_COLOR).toString(16).padStart(6, "0")
+  return { color: hex, borderColor: hex + "55", background: hex + "18" }
 }
 
 const ROLE_ORDER: Record<string, number> = { OWNER: 0, MANAGER: 1, STAFF: 2 }
@@ -67,7 +78,7 @@ export function StaffTable({
   const [members, setMembers] = useState(initialMembers)
   const [filter, setFilter] = useState<Filter>("all")
   const [search, setSearch] = useState("")
-  const [editingId, setEditingId] = useState<string | null>(null)
+  const [editingId, setEditingId] = useState<number | null>(null)
   const [editValue, setEditValue] = useState("")
   const [saving, setSaving] = useState(false)
 
@@ -94,8 +105,10 @@ export function StaffTable({
     setEditValue(member.nickname ?? "")
   }
 
-  // Extract unique custom role names for additional filter tabs
-  const customRoleNames = Array.from(new Set(members.map((m) => m.customRole?.name).filter(Boolean) as string[])).sort()
+  // Extract unique position names for additional filter tabs - xvm-api has
+  // no primary/secondary distinction, so this is the union of every
+  // assigned position across all members, not just a "custom role".
+  const customRoleNames = Array.from(new Set(members.flatMap((m) => m.additionalRoles.map((r) => r.name)))).sort()
 
   const counts = {
     all: members.length,
@@ -103,7 +116,10 @@ export function StaffTable({
     manager: members.filter((m) => m.role === "MANAGER").length,
     staff: members.filter((m) => m.role === "STAFF").length,
     ...Object.fromEntries(
-      customRoleNames.map((name) => [name, members.filter((m) => m.customRole?.name === name).length])
+      customRoleNames.map((name) => [
+        name,
+        members.filter((m) => m.additionalRoles.some((r) => r.name === name)).length,
+      ])
     ),
   }
 
@@ -112,8 +128,8 @@ export function StaffTable({
       if (filter === "owner" && m.role !== "OWNER") return false
       if (filter === "manager" && m.role !== "MANAGER") return false
       if (filter === "staff" && m.role !== "STAFF") return false
-      // Custom role filter
-      if (customRoleNames.includes(filter) && m.customRole?.name !== filter) return false
+      // Position filter
+      if (customRoleNames.includes(filter) && !m.additionalRoles.some((r) => r.name === filter)) return false
       if (search) {
         const q = search.toLowerCase()
         // Match on every name this member could be known by, not just the
@@ -124,7 +140,7 @@ export function StaffTable({
           !(m.nickname ?? "").toLowerCase().includes(q) &&
           !(m.user?.displayName ?? "").toLowerCase().includes(q) &&
           !(m.user?.name ?? "").toLowerCase().includes(q) &&
-          !(m.customRole?.name ?? "").toLowerCase().includes(q)
+          !m.additionalRoles.some((r) => r.name.toLowerCase().includes(q))
         )
           return false
       }
@@ -282,27 +298,11 @@ export function StaffTable({
                   <span className={`text-[0.7rem] font-medium px-2.5 py-0.5 rounded-full ${rolePill[member.role]}`}>
                     {member.role.charAt(0) + member.role.slice(1).toLowerCase()}
                   </span>
-                  {member.customRole && (
-                    <span
-                      className="text-[0.7rem] font-medium px-2.5 py-0.5 rounded-full border"
-                      style={{
-                        color: member.customRole.color,
-                        borderColor: member.customRole.color + "55",
-                        background: member.customRole.color + "18",
-                      }}
-                    >
-                      {member.customRole.name}
-                    </span>
-                  )}
                   {member.additionalRoles.map((role) => (
                     <span
                       key={role.name}
                       className="text-[0.7rem] font-medium px-2.5 py-0.5 rounded-full border"
-                      style={{
-                        color: role.color,
-                        borderColor: role.color + "55",
-                        background: role.color + "18",
-                      }}
+                      style={rolePillStyle(role.color)}
                     >
                       {role.name}
                     </span>
@@ -326,7 +326,11 @@ export function StaffTable({
 
               {/* Joined */}
               <td className="hide t-muted whitespace-nowrap">
-                <LocalTime date={member.joinedAt} formatStr="datewithyear" />
+                {member.joinedAt ? (
+                  <LocalTime date={member.joinedAt} formatStr="datewithyear" />
+                ) : (
+                  <span className="text-[var(--fg-faint)]">—</span>
+                )}
               </td>
 
               {/* Actions */}
