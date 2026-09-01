@@ -5,7 +5,8 @@
 import { NextRequest, NextResponse } from "next/server"
 import { prisma } from "@/lib/prisma"
 import { parseVenueSettings } from "@/lib/types/venue-settings"
-import { isOpenNow, resolveUpcomingOccurrences, type ScheduleEntry } from "@/lib/schedule-utils"
+import { xvmHoursToScheduleEntries } from "@/lib/schedule-utils"
+import { getPublicHoursForVenues, type PublicHours } from "@/lib/api/xvm-api"
 
 export async function GET(req: NextRequest) {
   const dc = req.nextUrl.searchParams.get("dc") ?? undefined
@@ -32,22 +33,7 @@ export async function GET(req: NextRequest) {
       bannerUrl: true,
       settings: true,
       ffxivVenueId: true,
-      scheduleEntries: {
-        select: {
-          id: true,
-          venueId: true,
-          day: true,
-          startHour: true,
-          startMin: true,
-          endHour: true,
-          endMin: true,
-          crossesMidnight: true,
-          interval: true,
-          weekOfMonth: true,
-          commencing: true,
-          label: true,
-        },
-      },
+      xvmApiVenueId: true,
       shifts: {
         where: {
           OR: [
@@ -73,11 +59,26 @@ export async function GET(req: NextRequest) {
     orderBy: { name: "asc" },
   })
 
+  // xvm-api is the source of truth for hours - Prisma's scheduleEntries and
+  // venueSchedule tables are retired from this contract entirely. No `take`
+  // cap on the venue query above, so this can batch well past 50 ids -
+  // getPublicHoursForVenues chunks and merges rather than truncating.
+  const xvmVenueIds = venues.map((v) => v.xvmApiVenueId).filter((id): id is string => id !== null)
+  let hoursByVenue: Record<string, PublicHours> = {}
+  if (xvmVenueIds.length > 0) {
+    try {
+      hoursByVenue = await getPublicHoursForVenues(xvmVenueIds, 14)
+    } catch {
+      hoursByVenue = {}
+    }
+  }
+
   const mapped = venues.map((v) => {
     const activeShift = v.shifts.find((s) => s.status === "ACTIVE")
     const tonightShift = v.shifts.find((s) => s.status === "SCHEDULED")
     const settings = parseVenueSettings(v.settings)
-    const scheduleEntries = v.scheduleEntries as ScheduleEntry[]
+    const xvmHours = v.xvmApiVenueId ? hoursByVenue[v.xvmApiVenueId] : undefined
+    const scheduleEntries = xvmHours ? xvmHoursToScheduleEntries(xvmHours.rules) : []
     return {
       id: v.id,
       name: v.name,
@@ -108,11 +109,23 @@ export async function GET(req: NextRequest) {
         commencing: e.commencing,
         label: e.label,
       })),
-      // Schedule-only by design, unlike the web UI's isVenueOpenNow: this contract
+      // Schedule-only by design, unlike the web UI's open-now checks: this contract
       // is driven by staff shifts (openSince/nextOpen above), not Event records.
-      openNow: isOpenNow(scheduleEntries),
-      // Next few resolved occurrences within the next 14 days, UTC start/end.
-      nextOpenings: resolveUpcomingOccurrences(scheduleEntries, { days: 14, limit: 5 }),
+      // xvm-api's own open_now.open is schedule-only too (no Event awareness),
+      // so this stays a clean drop-in rather than a semantic change.
+      // A venue with no xvmApiVenueId (not yet migrated) reports openNow: false,
+      // schedule: [], nextOpenings: [] rather than omitting the fields - external
+      // consumers should read that as "hours not set by owner," not "open never."
+      openNow: xvmHours?.open_now.open ?? false,
+      // Straight from xvm-api's own occurrence engine (upcoming = occurrences_in
+      // the requested window, in-progress ones included, sorted soonest-first) -
+      // not re-derived from scheduleEntries. That local re-derivation used to
+      // disagree with openNow for a monthly_by_date rule, which
+      // xvmHoursToScheduleEntries can't represent and drops (schedule/nextOpenings
+      // would go empty) but xvm-api's own openNow still honors. schedule above
+      // still needs the converter since the contract wants rule shapes - monthly_by_date
+      // rules are simply absent from it.
+      nextOpenings: (xvmHours?.upcoming ?? []).slice(0, 5).map((o) => ({ start: o.starts_at, end: o.ends_at })),
     }
   })
 
