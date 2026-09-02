@@ -19,7 +19,6 @@ interface InviteDetails {
   venue: {
     name: string
     slug: string
-    logoUrl?: string
   }
   role: string
   invitedName?: string
@@ -58,7 +57,7 @@ export default function InvitePage({ params }: { params: Promise<{ token: string
       }
 
       const data = await response.json()
-      setAcceptedVenueSlug(data.venue.slug)
+      setAcceptedVenueSlug(data.venue?.slug ?? null)
       setAcceptedRole(data.membership.role)
       setSuccess(true)
 
@@ -200,15 +199,6 @@ export default function InvitePage({ params }: { params: Promise<{ token: string
       <div className="container flex min-h-screen items-center justify-center">
         <Card className="w-full max-w-md">
           <CardHeader className="text-center">
-            {inviteDetails.venue.logoUrl && (
-              <div className="mx-auto mb-4 h-16 w-16 overflow-hidden rounded-full bg-muted">
-                <img
-                  src={inviteDetails.venue.logoUrl}
-                  alt={inviteDetails.venue.name}
-                  className="h-full w-full object-cover"
-                />
-              </div>
-            )}
             <CardTitle>You&apos;ve been invited!</CardTitle>
             <CardDescription>
               <strong>{inviteDetails.invitedBy.name || "A venue manager"}</strong> has invited you to join{" "}

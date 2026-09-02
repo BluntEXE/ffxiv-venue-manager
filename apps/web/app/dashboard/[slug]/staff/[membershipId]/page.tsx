@@ -180,12 +180,19 @@ export default function ManageStaffMemberPage({ params }: { params: Promise<{ sl
         method: "DELETE",
       })
 
+      const data = await response.json()
       if (!response.ok) {
-        const data = await response.json()
         throw new Error(data.error || "Failed to remove staff member")
       }
 
-      // Redirect to staff page
+      if (data.partial) {
+        // Termination succeeded - only cleanup (tasks/key revocation) failed.
+        // Worth a beat for the warning to register before leaving the page.
+        setError(data.error || "Removed, but some cleanup steps failed.")
+        setTimeout(() => router.push(`/dashboard/${slug}/staff`), 2000)
+        return
+      }
+
       router.push(`/dashboard/${slug}/staff`)
     } catch (error: unknown) {
       setError(error instanceof Error ? error.message : "Failed to remove staff member")

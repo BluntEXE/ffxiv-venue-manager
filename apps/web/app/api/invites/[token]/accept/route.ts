@@ -2,6 +2,8 @@ import { NextResponse } from "next/server"
 import { getServerSession } from "next-auth"
 import { authOptions } from "@/lib/auth"
 import { prisma } from "@/lib/prisma"
+import { getValidXvmApiToken, xvmApiErrorResponse } from "@/lib/api/xvm-api-store"
+import { acceptInvite, getMe } from "@/lib/api/xvm-api"
 import {
   sendDiscordWebhook,
   formatStaffJoinedEmbed,
@@ -12,115 +14,58 @@ import { notifyVenueOwners } from "@/lib/notify"
 import { resolveDisplayName } from "@/lib/display-name"
 
 export async function POST(request: Request, { params }: { params: Promise<{ token: string }> }) {
+  const session = await getServerSession(authOptions)
+  if (!session?.user?.id) {
+    return NextResponse.json({ error: "You must be signed in to accept an invite" }, { status: 401 })
+  }
+
+  const { token } = await params
+
+  const personToken = await getValidXvmApiToken(session.user.id)
+  if (!personToken) {
+    return NextResponse.json({ error: "xvm-api link not established yet" }, { status: 503 })
+  }
+
   try {
-    const session = await getServerSession(authOptions)
-    if (!session?.user?.id) {
-      return NextResponse.json({ error: "You must be signed in to accept an invite" }, { status: 401 })
-    }
+    const membership = await acceptInvite(personToken, token)
 
-    const { token } = await params
-
-    // Find membership by invite token
-    const membership = await prisma.membership.findUnique({
-      where: { inviteToken: token },
-      include: {
-        venue: {
-          select: {
-            id: true,
-            name: true,
-            slug: true,
-            discordWebhookUrl: true,
-            settings: true,
-          },
-        },
-      },
+    const venue = await prisma.venue.findFirst({
+      where: { xvmApiVenueId: membership.venue_id },
+      select: { id: true, name: true, slug: true, discordWebhookUrl: true, settings: true },
     })
-
-    if (!membership) {
-      return NextResponse.json({ error: "Invalid invite link" }, { status: 404 })
+    if (!venue) {
+      // The membership exists in xvm-api; the dashboard just doesn't know this
+      // venue yet. Still a success from the invitee's point of view.
+      return NextResponse.json({
+        success: true,
+        membership: { id: membership.id, role: membership.tier.toUpperCase() },
+        venue: null,
+      })
     }
 
-    // Check if invite has expired
-    if (membership.inviteExpiresAt && membership.inviteExpiresAt < new Date()) {
-      return NextResponse.json({ error: "This invite has expired" }, { status: 410 })
-    }
-
-    // Check if invite has already been accepted
-    if (membership.status === "active" && membership.userId) {
-      return NextResponse.json({ error: "This invite has already been accepted" }, { status: 410 })
-    }
-
-    // Check if user is already a member of this venue
-    const existingMembership = await prisma.membership.findFirst({
-      where: {
-        userId: session.user.id,
-        venueId: membership.venueId,
-        status: "active",
-      },
-    })
-
-    if (existingMembership) {
-      return NextResponse.json({ error: "You are already a member of this venue" }, { status: 409 })
-    }
-
-    // Update membership: link user and activate
-    const updatedMembership = await prisma.membership.update({
-      where: { id: membership.id },
-      data: {
-        userId: session.user.id,
-        status: "active",
-        inviteToken: null, // Clear token after use
-      },
-      include: {
-        venue: {
-          select: {
-            name: true,
-            slug: true,
-          },
-        },
-        user: {
-          select: {
-            name: true,
-            displayName: true,
-            characters: {
-              orderBy: [{ isPrimary: "desc" }, { createdAt: "asc" }],
-              take: 1,
-              select: { characterName: true },
-            },
-          },
-        },
-      },
-    })
-
-    // Web notification to venue owners
-    notifyVenueOwners(membership.venueId, {
+    notifyVenueOwners(venue.id, {
       type: "STAFF_JOINED",
       title: "New staff member",
-      body: `${session.user.name ?? "Someone"} joined ${membership.venue.name} as ${membership.role.toLowerCase()}.`,
-      link: `/dashboard/${membership.venue.slug}/staff`,
+      body: `${session.user.name ?? "Someone"} joined ${venue.name} as ${membership.tier}.`,
+      link: `/dashboard/${venue.slug}/staff`,
     }).catch(() => {})
 
-    // Send Discord webhook notification if configured
-    const venueSettings = membership.venue.settings as Record<string, unknown> | null
+    const venueSettings = venue.settings as Record<string, unknown> | null
     const webhookConfig: VenueWebhookConfig = {
       discordWebhooks: venueSettings?.discordWebhooks as VenueWebhookConfig["discordWebhooks"],
       webhooks: venueSettings?.webhooks as VenueWebhookConfig["webhooks"],
-      discordWebhookUrl: membership.venue.discordWebhookUrl,
+      discordWebhookUrl: venue.discordWebhookUrl,
     }
-
     const webhookUrl = getWebhookUrlForType(webhookConfig, "staffJoined")
     if (webhookUrl) {
+      const me = await getMe(personToken).catch(() => null)
       const embed = formatStaffJoinedEmbed({
         name: resolveDisplayName({
-          characterName: updatedMembership.user?.characters?.[0]?.characterName,
-          nickname: updatedMembership.nickname,
-          displayName: updatedMembership.user?.displayName,
-          discordName: updatedMembership.user?.name ?? session.user.name,
+          nickname: membership.nickname,
+          discordName: me?.person?.display_name ?? session.user.name,
         }),
-        role: membership.role,
+        role: membership.tier,
       })
-
-      // Send webhook asynchronously (don't wait for response)
       sendDiscordWebhook(webhookUrl, { embeds: [embed] }).catch((error) =>
         console.error("Failed to send Discord webhook:", error)
       )
@@ -128,14 +73,10 @@ export async function POST(request: Request, { params }: { params: Promise<{ tok
 
     return NextResponse.json({
       success: true,
-      membership: {
-        id: updatedMembership.id,
-        role: updatedMembership.role,
-      },
-      venue: updatedMembership.venue,
+      membership: { id: membership.id, role: membership.tier.toUpperCase() },
+      venue: { name: venue.name, slug: venue.slug },
     })
-  } catch (error) {
-    console.error("Error accepting invite:", error)
-    return NextResponse.json({ error: "Failed to accept invite" }, { status: 500 })
+  } catch (err) {
+    return xvmApiErrorResponse(err, session.user.id, "[invites/accept] POST error")
   }
 }

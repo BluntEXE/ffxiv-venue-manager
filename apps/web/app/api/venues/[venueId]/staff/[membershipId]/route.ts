@@ -204,29 +204,39 @@ export const DELETE = withRateLimit<{ params: Promise<{ venueId: string; members
       // revoked for someone who's still an active member.
       await terminateMembership(token, gate.xvmApiVenueId!, id)
 
-      const tasks = await listTasks(token, gate.xvmApiVenueId!, {})
-      const openAssignedTasks = tasks.filter(
-        (t) => t.assigned_membership_id === id && !t.completed_at && !t.cancelled_at
-      )
-      for (const task of openAssignedTasks) {
-        await assignTask(token, gate.xvmApiVenueId!, task.id, { membership_id: null })
-      }
+      // Once termination has landed, a cleanup failure must never surface as a
+      // plain error - the member really is terminated at that point, and a
+      // blanket error response would tell the caller otherwise while leaving
+      // tasks half-cleaned. Same partial-success shape PUT above uses.
+      try {
+        const tasks = await listTasks(token, gate.xvmApiVenueId!, {})
+        const openAssignedTasks = tasks.filter(
+          (t) => t.assigned_membership_id === id && !t.completed_at && !t.cancelled_at
+        )
+        await Promise.all(
+          openAssignedTasks.map((task) => assignTask(token, gate.xvmApiVenueId!, task.id, { membership_id: null }))
+        )
 
-      // API-key revocation: resolve the xvm-api person id back to a Prisma
-      // userId via XvmApiCredential.personId (the only linkage available -
-      // populated lazily on first getValidXvmApiPersonId call, see
-      // xvm-api-store.ts). A departing member who never triggered that
-      // lookup has no row here, so their venue-scoped API keys won't be
-      // revoked - see PR description.
-      const credential = await prisma.xvmApiCredential.findFirst({
-        where: { personId: targetMembership.person.id },
-        select: { userId: true },
-      })
-      if (credential) {
-        await prisma.apiKey.updateMany({
-          where: { userId: credential.userId, venueId: gate.prismaVenueId!, revokedAt: null },
-          data: { revokedAt: new Date() },
+        // API-key revocation: resolve the xvm-api person id back to a Prisma
+        // userId via XvmApiCredential.personId (the only linkage available -
+        // populated lazily on first getValidXvmApiPersonId call, see
+        // xvm-api-store.ts). A departing member who never triggered that
+        // lookup has no row here, so their venue-scoped API keys won't be
+        // revoked - see PR description.
+        const credential = await prisma.xvmApiCredential.findFirst({
+          where: { personId: targetMembership.person.id },
+          select: { userId: true },
         })
+        if (credential) {
+          await prisma.apiKey.updateMany({
+            where: { userId: credential.userId, venueId: gate.prismaVenueId!, revokedAt: null },
+            data: { revokedAt: new Date() },
+          })
+        }
+      } catch (cleanupErr) {
+        const message =
+          cleanupErr instanceof XvmApiError ? xvmErrorMessage(cleanupErr) : "Task/key cleanup failed after termination"
+        return NextResponse.json({ success: true, partial: true, error: message }, { status: 200 })
       }
 
       return NextResponse.json({ success: true })

@@ -631,6 +631,7 @@ export interface MembershipPerson {
 
 export interface MembershipRow {
   id: number
+  venue_id: string
   person: MembershipPerson
   nickname: string | null
   tier: string

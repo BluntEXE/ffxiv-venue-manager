@@ -1,63 +1,31 @@
 import { NextResponse } from "next/server"
-import { prisma } from "@/lib/prisma"
+import { getInvitePreview, XvmApiError, xvmErrorMessage } from "@/lib/api/xvm-api"
 
 export async function GET(request: Request, { params }: { params: Promise<{ token: string }> }) {
+  const { token } = await params
+
   try {
-    const { token } = await params
-
-    // Find membership by invite token
-    const membership = await prisma.membership.findUnique({
-      where: { inviteToken: token },
-      include: {
-        venue: {
-          select: {
-            name: true,
-            slug: true,
-            logoUrl: true,
-          },
-        },
-        user: {
-          select: {
-            name: true,
-          },
-        },
-      },
-    })
-
-    if (!membership) {
-      return NextResponse.json({ error: "Invalid invite link" }, { status: 404 })
-    }
-
-    // Check if invite has expired
-    if (membership.inviteExpiresAt && membership.inviteExpiresAt < new Date()) {
-      return NextResponse.json({ error: "This invite has expired" }, { status: 410 })
-    }
-
-    // Check if invite has already been accepted
-    if (membership.status === "active" && membership.userId) {
-      return NextResponse.json({ error: "This invite has already been accepted" }, { status: 410 })
-    }
-
-    // Get who invited them (the invitedBy user)
-    let invitedByUser = null
-    if (membership.invitedBy) {
-      invitedByUser = await prisma.user.findUnique({
-        where: { id: membership.invitedBy },
-        select: { name: true },
-      })
-    }
-
+    const preview = await getInvitePreview(token)
     return NextResponse.json({
       invite: {
-        venue: membership.venue,
-        role: membership.role,
-        invitedName: membership.invitedName,
-        expiresAt: membership.inviteExpiresAt,
-        invitedBy: invitedByUser || {},
+        venue: preview.venue,
+        role: preview.tier.toUpperCase(),
+        invitedName: preview.invited_name,
+        expiresAt: preview.expires_at,
+        invitedBy: { name: preview.invited_by_name ?? undefined },
       },
     })
-  } catch (error) {
-    console.error("Error fetching invite:", error)
+  } catch (err) {
+    if (err instanceof XvmApiError) {
+      if (err.status === 404) {
+        return NextResponse.json({ error: "Invalid invite link" }, { status: 404 })
+      }
+      if (err.status === 410) {
+        return NextResponse.json({ error: "This invite has expired" }, { status: 410 })
+      }
+      return NextResponse.json({ error: xvmErrorMessage(err) }, { status: err.status })
+    }
+    console.error("Error fetching invite:", err)
     return NextResponse.json({ error: "Failed to fetch invite details" }, { status: 500 })
   }
 }
