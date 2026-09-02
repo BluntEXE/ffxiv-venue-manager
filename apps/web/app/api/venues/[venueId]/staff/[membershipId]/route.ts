@@ -1,52 +1,75 @@
-import { NextRequest, NextResponse } from "next/server"
+import { NextResponse } from "next/server"
 import { getServerSession } from "next-auth"
 import { authOptions } from "@/lib/auth"
 import { prisma } from "@/lib/prisma"
 import { z } from "zod"
 import { withRateLimit } from "@/lib/middleware/with-rate-limit"
-import { validators } from "@/lib/validation"
-import { Prisma } from "@/generated/prisma/client"
+import { getValidXvmApiToken, getValidXvmApiPersonId, xvmApiErrorResponse } from "@/lib/api/xvm-api-store"
+import {
+  setNickname,
+  setTier,
+  setMembershipPositions,
+  terminateMembership,
+  listMemberships,
+  listTasks,
+  assignTask,
+  listPositions,
+  XvmApiError,
+  xvmErrorMessage,
+  type MembershipRow,
+  type PositionRow,
+} from "@/lib/api/xvm-api"
 
+// Dropped from the old Prisma-era body: roleId (xvm-api's Position model has
+// no primary/secondary distinction - all assigned positions are equivalent,
+// see PR description for the StaffTable chip-styling implication), status,
+// invitedName, invitedEmail, temporaryRole, temporaryRoleExpiresAt,
+// permanentRole, tipPooled (no xvm-api equivalent for any of these yet).
 const updateStaffSchema = z.object({
-  role: z.enum(["OWNER", "MANAGER", "STAFF"]).optional(),
-  roleId: z.string().nullable().optional(),
-  status: z.string().optional(),
-  invitedName: z.string().max(100, "Name too long (max 100 characters)").nullable().optional(),
-  invitedEmail: validators.email.nullable().optional(),
   nickname: z.string().max(50).nullable().optional(),
-  temporaryRole: z.enum(["OWNER", "MANAGER", "STAFF"]).nullable().optional(),
-  temporaryRoleExpiresAt: z.string().nullable().optional(),
-  permanentRole: z.enum(["OWNER", "MANAGER", "STAFF"]).nullable().optional(),
-  additionalRoleIds: z.array(z.string()).optional(),
-  tipPooled: z.boolean().nullable().optional(),
+  role: z.enum(["OWNER", "MANAGER", "STAFF"]).optional(),
+  additionalRoleIds: z.array(z.number()).optional(),
 })
 
-async function cleanupMemberData(
-  tx: Parameters<Parameters<typeof prisma.$transaction>[0]>[0],
-  userId: string,
-  venueId: string,
-  membershipId: string
-) {
-  // Revoke venue-scoped API keys for this user at this venue
-  await tx.apiKey.updateMany({
-    where: { userId, venueId, revokedAt: null },
-    data: { revokedAt: new Date() },
+async function requireXvmVenueId(venueId: string) {
+  const venue = await prisma.venue.findFirst({
+    where: { OR: [{ id: venueId }, { slug: venueId }] },
+    select: { id: true, xvmApiVenueId: true },
   })
+  if (!venue?.xvmApiVenueId) {
+    return {
+      error: NextResponse.json(
+        { error: "not_connected", message: "This venue hasn't been connected to xvm-api yet." },
+        { status: 409 }
+      ),
+    }
+  }
+  return { prismaVenueId: venue.id, xvmApiVenueId: venue.xvmApiVenueId }
+}
 
-  // Unassign pending tasks at this venue assigned to the departing member
-  await tx.task.updateMany({
-    where: {
-      venueId,
-      assignedTo: userId,
-      status: { in: ["PENDING", "IN_PROGRESS"] },
+// Mirrors staff/route.ts's toStaffShape (duplicated per this codebase's
+// per-route-file convention).
+function toStaffShape(member: MembershipRow, positionsById: Map<number, PositionRow>, venueId: string) {
+  return {
+    id: member.id,
+    role: member.effective_tier.toUpperCase(),
+    customRole: null,
+    additionalRoles: member.position_ids
+      .map((id) => positionsById.get(id))
+      .filter((p): p is PositionRow => Boolean(p))
+      .map((p) => ({ id: p.id, name: p.name, color: p.color })),
+    joinedAt: null,
+    isOnShift: false,
+    nickname: member.nickname,
+    user: {
+      id: member.person.id,
+      name: member.person.display_name,
+      displayName: member.person.display_name,
+      image: null,
+      characterName: null,
     },
-    data: { assignedTo: null },
-  })
-
-  // Delete the membership (Shift + PayrollEntry rows cascade via DB)
-  await tx.membership.delete({
-    where: { id: membershipId, venueId },
-  })
+    venueId,
+  }
 }
 
 export const PUT = withRateLimit<{ params: Promise<{ venueId: string; membershipId: string }> }>(
@@ -55,146 +78,77 @@ export const PUT = withRateLimit<{ params: Promise<{ venueId: string; membership
       return NextResponse.json({ error: "Invalid request" }, { status: 400 })
     }
 
+    const session = await getServerSession(authOptions)
+    if (!session?.user?.id) {
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
+    }
+
+    const token = await getValidXvmApiToken(session.user.id)
+    if (!token) {
+      return NextResponse.json({ error: "xvm-api link not established yet" }, { status: 503 })
+    }
+
+    const { venueId, membershipId } = await context.params
+    const id = Number(membershipId)
+    if (!Number.isInteger(id)) {
+      return NextResponse.json({ error: "Staff member not found" }, { status: 404 })
+    }
+
+    const gate = await requireXvmVenueId(venueId)
+    if (gate.error) return gate.error
+
+    let data: z.infer<typeof updateStaffSchema>
     try {
-      const session = await getServerSession(authOptions)
-      if (!session?.user?.id) {
-        return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
+      data = updateStaffSchema.parse(await request.json())
+    } catch (err) {
+      if (err instanceof z.ZodError) {
+        return NextResponse.json({ error: "Validation error", details: err.issues }, { status: 400 })
       }
+      return NextResponse.json({ error: "Invalid request" }, { status: 400 })
+    }
 
-      const { params } = context
-      const { venueId, membershipId } = await params
-
-      // Caller's own membership at this venue (used both for the permission gate below
-      // and to detect the self-service tip-pooling-only case)
-      const userMembership = await prisma.membership.findFirst({
-        where: {
-          userId: session.user.id,
-          venueId,
-          status: "active",
-        },
-      })
-
-      if (!userMembership) {
-        return NextResponse.json({ error: "You don't have permission to update staff" }, { status: 403 })
-      }
-
-      // Get the membership being updated
-      const targetMembership = await prisma.membership.findFirst({
-        where: { id: membershipId, venueId },
-      })
-
-      if (!targetMembership) {
-        return NextResponse.json({ error: "Staff member not found" }, { status: 404 })
-      }
-
-      const body = await request.json()
-
-      // A staff member may always update their own tip-pooling preference, regardless
-      // of their venue role — but only when the request touches nothing else.
-      const isSelfTipPreferenceOnly =
-        targetMembership.userId === session.user.id &&
-        Object.keys(body).length > 0 &&
-        Object.keys(body).every((k) => k === "tipPooled")
-
-      if (!isSelfTipPreferenceOnly) {
-        if (!["OWNER", "MANAGER"].includes(userMembership.role)) {
-          return NextResponse.json({ error: "You don't have permission to update staff" }, { status: 403 })
+    try {
+      let current: MembershipRow | undefined
+      // nickname/role/positions are three independent xvm-api calls for what the
+      // dashboard still submits as one form. If a later call fails after an
+      // earlier one already landed, a blanket error would hide that partial
+      // success from the caller - surface it instead, matching the pattern
+      // tasks/[taskId]/route.ts uses for its own descriptive-edit + assign split.
+      try {
+        if (data.nickname !== undefined) {
+          current = await setNickname(token, gate.xvmApiVenueId!, id, data.nickname)
         }
+        if (data.role !== undefined) {
+          current = await setTier(token, gate.xvmApiVenueId!, id, data.role.toLowerCase() as "owner" | "manager" | "staff")
+        }
+        if (data.additionalRoleIds !== undefined) {
+          current = await setMembershipPositions(token, gate.xvmApiVenueId!, id, data.additionalRoleIds)
+        }
+      } catch (stepErr) {
+        if (current && stepErr instanceof XvmApiError && stepErr.status !== 401) {
+          const positions = await listPositions(token, gate.xvmApiVenueId!)
+          const positionsById = new Map(positions.map((p) => [p.id, p]))
+          return NextResponse.json(
+            { ...toStaffShape(current, positionsById, venueId), partial: true, error: xvmErrorMessage(stepErr) },
+            { status: 200 }
+          )
+        }
+        throw stepErr
+      }
 
-        // Managers can only modify staff, not peer managers or owners
-        if (userMembership.role === "MANAGER" && targetMembership.role !== "STAFF") {
-          return NextResponse.json({ error: "Managers can only modify staff" }, { status: 403 })
+      if (!current) {
+        const memberships = await listMemberships(token, gate.xvmApiVenueId!)
+        current = memberships.find((m) => m.id === id)
+        if (!current) {
+          return NextResponse.json({ error: "Staff member not found" }, { status: 404 })
         }
       }
 
-      const validatedData = updateStaffSchema.parse(body)
-
-      // Only OWNERs can grant or change role to OWNER
-      if (userMembership.role !== "OWNER") {
-        if (validatedData.role === "OWNER") {
-          return NextResponse.json({ error: "Only owners can promote members to owner" }, { status: 403 })
-        }
-        if (validatedData.temporaryRole === "OWNER") {
-          return NextResponse.json({ error: "Only owners can grant temporary owner role" }, { status: 403 })
-        }
-        if (validatedData.permanentRole === "OWNER") {
-          return NextResponse.json({ error: "Only owners can set permanent owner role" }, { status: 403 })
-        }
-      }
-
-      // Prepare update data, converting date strings to Date objects
-      const updateData: Prisma.MembershipUncheckedUpdateInput = {}
-      if (validatedData.role !== undefined) updateData.role = validatedData.role
-      if (validatedData.roleId !== undefined) updateData.roleId = validatedData.roleId
-      if (validatedData.status !== undefined) updateData.status = validatedData.status
-      if (validatedData.invitedName !== undefined) updateData.invitedName = validatedData.invitedName
-      if (validatedData.invitedEmail !== undefined) updateData.invitedEmail = validatedData.invitedEmail
-      if (validatedData.nickname !== undefined) updateData.nickname = validatedData.nickname ?? null
-      if (validatedData.temporaryRole !== undefined) updateData.temporaryRole = validatedData.temporaryRole
-      if (validatedData.temporaryRoleExpiresAt !== undefined) {
-        updateData.temporaryRoleExpiresAt = validatedData.temporaryRoleExpiresAt
-          ? new Date(validatedData.temporaryRoleExpiresAt)
-          : null
-      }
-      if (validatedData.permanentRole !== undefined) updateData.permanentRole = validatedData.permanentRole
-      if (validatedData.tipPooled !== undefined) updateData.tipPooled = validatedData.tipPooled
-
-      let validAdditionalRoleIds: string[] | undefined
-      if (validatedData.additionalRoleIds !== undefined) {
-        const existingRoles = await prisma.role.findMany({
-          where: { venueId, id: { in: validatedData.additionalRoleIds } },
-          select: { id: true },
-        })
-        validAdditionalRoleIds = existingRoles.map((r) => r.id)
-      }
-
-      await prisma.membership.update({
-        where: { id: membershipId, venueId },
-        data: updateData,
-      })
-
-      if (validAdditionalRoleIds !== undefined) {
-        await prisma.$transaction([
-          prisma.membershipRoleAssignment.deleteMany({
-            where: { membershipId },
-          }),
-          ...(validAdditionalRoleIds.length > 0
-            ? [
-                prisma.membershipRoleAssignment.createMany({
-                  data: validAdditionalRoleIds.map((roleId) => ({ membershipId, roleId })),
-                }),
-              ]
-            : []),
-        ])
-      }
-
-      const updatedMembership = await prisma.membership.findUnique({
-        where: { id: membershipId },
-        include: {
-          user: {
-            select: {
-              id: true,
-              name: true,
-              image: true,
-            },
-          },
-          customRole: true,
-          additionalRoles: { include: { role: true } },
-        },
-      })
-
-      if (!updatedMembership) {
-        return NextResponse.json({ error: "Staff member not found" }, { status: 404 })
-      }
-
-      return NextResponse.json(updatedMembership)
-    } catch (error) {
-      if (error instanceof z.ZodError) {
-        return NextResponse.json({ error: "Validation error", details: error.issues }, { status: 400 })
-      }
-
-      console.error("Error updating staff:", error)
-      return NextResponse.json({ error: "Internal server error" }, { status: 500 })
+      const positions = await listPositions(token, gate.xvmApiVenueId!)
+      const positionsById = new Map(positions.map((p) => [p.id, p]))
+      return NextResponse.json(toStaffShape(current, positionsById, venueId))
+    } catch (err) {
+      return xvmApiErrorResponse(err, session.user.id, "[staff] PUT error")
     }
   },
   { requests: 20, window: "1 m" }
@@ -206,104 +160,88 @@ export const DELETE = withRateLimit<{ params: Promise<{ venueId: string; members
       return NextResponse.json({ error: "Invalid request" }, { status: 400 })
     }
 
+    const session = await getServerSession(authOptions)
+    if (!session?.user?.id) {
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
+    }
+
+    const token = await getValidXvmApiToken(session.user.id)
+    if (!token) {
+      return NextResponse.json({ error: "xvm-api link not established yet" }, { status: 503 })
+    }
+
+    const { venueId, membershipId } = await context.params
+    const id = Number(membershipId)
+    if (!Number.isInteger(id)) {
+      return NextResponse.json({ error: "Staff member not found" }, { status: 404 })
+    }
+
+    const gate = await requireXvmVenueId(venueId)
+    if (gate.error) return gate.error
+
     try {
-      const session = await getServerSession(authOptions)
-      if (!session?.user?.id) {
-        return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
-      }
+      const callerPersonId = await getValidXvmApiPersonId(session.user.id)
+      const memberships = await listMemberships(token, gate.xvmApiVenueId!)
 
-      const { params } = context
-      const { venueId, membershipId } = await params
-
-      // Check permissions
-      const userMembership = await prisma.membership.findFirst({
-        where: {
-          userId: session.user.id,
-          venueId,
-          status: "active",
-        },
-      })
-
-      if (!userMembership || !["OWNER", "MANAGER"].includes(userMembership.role)) {
-        return NextResponse.json({ error: "You don't have permission to remove staff" }, { status: 403 })
-      }
-
-      // Get the membership being deleted
-      const targetMembership = await prisma.membership.findFirst({
-        where: { id: membershipId, venueId },
-      })
-
+      const targetMembership = memberships.find((m) => m.id === id)
       if (!targetMembership) {
         return NextResponse.json({ error: "Staff member not found" }, { status: 404 })
       }
 
-      // Managers can only remove staff, not peer managers or owners
-      if (userMembership.role === "MANAGER" && targetMembership.role !== "STAFF") {
+      // Defense-in-depth only - xvm-api's terminate endpoint already enforces
+      // authority server-side. Not the sole guard.
+      const callerMembership = memberships.find((m) => m.person.id === callerPersonId)
+      if (!callerMembership || !["owner", "manager"].includes(callerMembership.effective_tier)) {
+        return NextResponse.json({ error: "You don't have permission to remove staff" }, { status: 403 })
+      }
+      if (callerMembership.effective_tier === "manager" && targetMembership.effective_tier !== "staff") {
         return NextResponse.json({ error: "Managers can only remove staff" }, { status: 403 })
       }
 
-      // Cannot remove the venue owner
-      const venue = await prisma.venue.findUnique({
-        where: { id: venueId },
-      })
+      // Terminate first - xvm-api's own guards (last-owner protection, etc.)
+      // can still refuse this. Doing the cleanup below only after it succeeds
+      // means a refused termination never leaves tasks unassigned or API keys
+      // revoked for someone who's still an active member.
+      await terminateMembership(token, gate.xvmApiVenueId!, id)
 
-      if (venue?.ownerId === targetMembership.userId) {
-        return NextResponse.json({ error: "Cannot remove the venue owner" }, { status: 400 })
-      }
+      // Once termination has landed, a cleanup failure must never surface as a
+      // plain error - the member really is terminated at that point, and a
+      // blanket error response would tell the caller otherwise while leaving
+      // tasks half-cleaned. Same partial-success shape PUT above uses.
+      try {
+        const tasks = await listTasks(token, gate.xvmApiVenueId!, {})
+        const openAssignedTasks = tasks.filter(
+          (t) => t.assigned_membership_id === id && !t.completed_at && !t.cancelled_at
+        )
+        await Promise.all(
+          openAssignedTasks.map((task) => assignTask(token, gate.xvmApiVenueId!, task.id, { membership_id: null }))
+        )
 
-      const userId = targetMembership.userId
-
-      // Pending invites have no userId - no API keys or tasks to clean up
-      if (userId === null) {
-        await prisma.membership.delete({ where: { id: membershipId, venueId } })
-        return NextResponse.json({ success: true })
-      }
-
-      // Use transaction with row-level locking to prevent race condition
-      // when deleting owners (ensures at least 1 owner remains)
-      if (targetMembership.role === "OWNER") {
-        try {
-          await prisma.$transaction(
-            async (tx) => {
-              const owners = await tx.membership.findMany({
-                where: {
-                  venueId,
-                  role: "OWNER",
-                  status: "active",
-                },
-                select: { id: true },
-              })
-
-              if (owners.length <= 1) {
-                throw new Error("LAST_OWNER")
-              }
-
-              await cleanupMemberData(tx, userId, venueId, membershipId)
-            },
-            {
-              isolationLevel: "Serializable",
-              timeout: 5000,
-            }
-          )
-        } catch (txError) {
-          if (txError instanceof Error && txError.message === "LAST_OWNER") {
-            return NextResponse.json(
-              { error: "Cannot remove the last owner. Promote another member to owner first." },
-              { status: 400 }
-            )
-          }
-          throw txError
-        }
-      } else {
-        await prisma.$transaction(async (tx) => {
-          await cleanupMemberData(tx, userId, venueId, membershipId)
+        // API-key revocation: resolve the xvm-api person id back to a Prisma
+        // userId via XvmApiCredential.personId (the only linkage available -
+        // populated lazily on first getValidXvmApiPersonId call, see
+        // xvm-api-store.ts). A departing member who never triggered that
+        // lookup has no row here, so their venue-scoped API keys won't be
+        // revoked - see PR description.
+        const credential = await prisma.xvmApiCredential.findFirst({
+          where: { personId: targetMembership.person.id },
+          select: { userId: true },
         })
+        if (credential) {
+          await prisma.apiKey.updateMany({
+            where: { userId: credential.userId, venueId: gate.prismaVenueId!, revokedAt: null },
+            data: { revokedAt: new Date() },
+          })
+        }
+      } catch (cleanupErr) {
+        const message =
+          cleanupErr instanceof XvmApiError ? xvmErrorMessage(cleanupErr) : "Task/key cleanup failed after termination"
+        return NextResponse.json({ success: true, partial: true, error: message }, { status: 200 })
       }
 
       return NextResponse.json({ success: true })
-    } catch (error) {
-      console.error("Error removing staff:", error)
-      return NextResponse.json({ error: "Internal server error" }, { status: 500 })
+    } catch (err) {
+      return xvmApiErrorResponse(err, session.user.id, "[staff] DELETE error")
     }
   },
   { requests: 5, window: "1 m" }

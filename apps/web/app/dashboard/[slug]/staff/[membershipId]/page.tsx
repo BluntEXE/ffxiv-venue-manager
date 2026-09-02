@@ -25,34 +25,28 @@ import { format } from "date-fns"
 import { PageLoading } from "@/components/ui/loading-spinner"
 import { VenueLayoutClient } from "@/components/venue-layout-client"
 
+// xvm-api's Position model has no primary/secondary distinction the way
+// Prisma's customRole vs additionalRoles did - every assigned position is
+// one flat, equally-weighted set (see Position Management below).
 interface StaffMember {
-  id: string
+  id: number
   role: "OWNER" | "MANAGER" | "STAFF"
-  roleId: string | null
-  createdAt: string
+  joinedAt: string | null
+  nickname: string | null
+  additionalRoles: { id: number; name: string; color: number | null }[]
   user: {
-    id: string
+    id: number
     name: string | null
-    email: string | null
+    displayName: string | null
     image: string | null
-    discordId: string | null
-  }
-  customRole: {
-    id: string
-    name: string
-    responsibilities: string | null
   } | null
-  additionalRoles: { role: CustomRole }[]
-  tipPooled: boolean | null
 }
 
-interface CustomRole {
-  id: string
+interface Position {
+  id: number
   name: string
+  color: string | null
   responsibilities: string | null
-  _count?: {
-    memberships: number
-  }
 }
 
 const roleColors = {
@@ -66,21 +60,16 @@ export default function ManageStaffMemberPage({ params }: { params: Promise<{ sl
   const [slug, setSlug] = useState<string>("")
   const [membershipId, setMembershipId] = useState<string>("")
   const [staffMember, setStaffMember] = useState<StaffMember | null>(null)
-  const [customRoles, setCustomRoles] = useState<CustomRole[]>([])
+  const [positions, setPositions] = useState<Position[]>([])
   const [isLoading, setIsLoading] = useState(true)
   const [error, setError] = useState("")
   const [success, setSuccess] = useState("")
 
   // Form state
   const [selectedRole, setSelectedRole] = useState<"OWNER" | "MANAGER" | "STAFF">("STAFF")
-  const [selectedCustomRole, setSelectedCustomRole] = useState<string | null>(null)
-  const [selectedAdditionalRoleIds, setSelectedAdditionalRoleIds] = useState<string[]>([])
+  const [selectedPositionIds, setSelectedPositionIds] = useState<number[]>([])
   const [isSaving, setIsSaving] = useState(false)
   const [isDeleting, setIsDeleting] = useState(false)
-  const [tipPooled, setTipPooled] = useState<boolean>(false)
-  const [potModeEnabled, setPotModeEnabled] = useState(false)
-  const [isSavingTipPooled, setIsSavingTipPooled] = useState(false)
-  const [tipPooledError, setTipPooledError] = useState("")
 
   // Unwrap params
   useEffect(() => {
@@ -90,7 +79,7 @@ export default function ManageStaffMemberPage({ params }: { params: Promise<{ sl
     })
   }, [params])
 
-  // Fetch staff member and custom roles
+  // Fetch staff member and positions
   useEffect(() => {
     if (!slug || !membershipId) return
 
@@ -99,20 +88,13 @@ export default function ManageStaffMemberPage({ params }: { params: Promise<{ sl
         setIsLoading(true)
         setError("")
 
-        // Get venue ID
-        const venueResponse = await fetch(`/api/venues?slug=${slug}`)
-        if (!venueResponse.ok) throw new Error("Failed to fetch venue")
-
-        const venues = await venueResponse.json()
-        const venue = venues.find((v: { slug: string }) => v.slug === slug)
-        if (!venue) throw new Error("Venue not found")
-
-        // Get staff member
-        const staffResponse = await fetch(`/api/venues/${venue.id}/staff`)
+        // The roster route resolves slug-or-id itself, no separate venue lookup needed.
+        const staffResponse = await fetch(`/api/venues/${slug}/staff`)
         if (!staffResponse.ok) throw new Error("Failed to fetch staff")
 
-        const staffData = await staffResponse.json()
-        const member = staffData.find((s: StaffMember) => s.id === membershipId)
+        const staffData: StaffMember[] = await staffResponse.json()
+        const targetId = Number(membershipId)
+        const member = staffData.find((s) => s.id === targetId)
 
         if (!member) {
           throw new Error("Staff member not found")
@@ -120,22 +102,21 @@ export default function ManageStaffMemberPage({ params }: { params: Promise<{ sl
 
         setStaffMember(member)
         setSelectedRole(member.role)
-        setSelectedCustomRole(member.roleId)
-        setSelectedAdditionalRoleIds(member.additionalRoles.map((ar: { role: CustomRole }) => ar.role.id))
-        setTipPooled(member.tipPooled ?? false)
+        setSelectedPositionIds(member.additionalRoles.map((r) => r.id))
 
-        // Get custom roles
-        const rolesResponse = await fetch(`/api/venues/${venue.id}/roles`)
-        if (rolesResponse.ok) {
-          const rolesData = await rolesResponse.json()
-          setCustomRoles(rolesData)
-        }
-
-        // Get pot settings
-        const potSettingsResponse = await fetch(`/api/venues/${venue.id}/pot-settings`)
-        if (potSettingsResponse.ok) {
-          const potSettingsData = await potSettingsResponse.json()
-          setPotModeEnabled(potSettingsData.settings?.enabled ?? false)
+        // Unlike the routes this plan rewrote, /roles predates this cutover and
+        // only resolves a plain venue id (no slug-or-id support) - needs the lookup.
+        const venueResponse = await fetch(`/api/venues?slug=${slug}`)
+        if (venueResponse.ok) {
+          const venues = await venueResponse.json()
+          const venue = venues.find((v: { slug: string }) => v.slug === slug)
+          if (venue) {
+            const positionsResponse = await fetch(`/api/venues/${venue.id}/roles`)
+            if (positionsResponse.ok) {
+              const positionsData = await positionsResponse.json()
+              setPositions(positionsData)
+            }
+          }
         }
       } catch (error: unknown) {
         setError(error instanceof Error ? error.message : "Failed to load staff member")
@@ -155,20 +136,12 @@ export default function ManageStaffMemberPage({ params }: { params: Promise<{ sl
     setSuccess("")
 
     try {
-      // Get venue ID
-      const venueResponse = await fetch(`/api/venues?slug=${slug}`)
-      const venues = await venueResponse.json()
-      const venue = venues.find((v: { slug: string }) => v.slug === slug)
-
-      const response = await fetch(`/api/venues/${venue.id}/staff/${membershipId}`, {
+      const response = await fetch(`/api/venues/${slug}/staff/${membershipId}`, {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           role: selectedRole,
-          roleId: selectedCustomRole,
-          // Excludes only the current primary role, not a running history of past selections.
-          // Recomputing from final state avoids the old effect's cumulative stripping across selection changes.
-          additionalRoleIds: selectedAdditionalRoleIds.filter((id) => id !== selectedCustomRole),
+          additionalRoleIds: selectedPositionIds,
         }),
       })
 
@@ -178,8 +151,12 @@ export default function ManageStaffMemberPage({ params }: { params: Promise<{ sl
       }
 
       const updatedMember = await response.json()
+      if (updatedMember.partial) {
+        setError(updatedMember.error || "Some changes were saved, but not all of them.")
+      } else {
+        setSuccess("Staff member updated successfully!")
+      }
       setStaffMember(updatedMember)
-      setSuccess("Staff member updated successfully!")
 
       // Refresh after 1.5 seconds
       setTimeout(() => {
@@ -199,53 +176,27 @@ export default function ManageStaffMemberPage({ params }: { params: Promise<{ sl
     setError("")
 
     try {
-      // Get venue ID
-      const venueResponse = await fetch(`/api/venues?slug=${slug}`)
-      const venues = await venueResponse.json()
-      const venue = venues.find((v: { slug: string }) => v.slug === slug)
-
-      const response = await fetch(`/api/venues/${venue.id}/staff/${membershipId}`, {
+      const response = await fetch(`/api/venues/${slug}/staff/${membershipId}`, {
         method: "DELETE",
       })
 
+      const data = await response.json()
       if (!response.ok) {
-        const data = await response.json()
         throw new Error(data.error || "Failed to remove staff member")
       }
 
-      // Redirect to staff page
+      if (data.partial) {
+        // Termination succeeded - only cleanup (tasks/key revocation) failed.
+        // Worth a beat for the warning to register before leaving the page.
+        setError(data.error || "Removed, but some cleanup steps failed.")
+        setTimeout(() => router.push(`/dashboard/${slug}/staff`), 2000)
+        return
+      }
+
       router.push(`/dashboard/${slug}/staff`)
     } catch (error: unknown) {
       setError(error instanceof Error ? error.message : "Failed to remove staff member")
       setIsDeleting(false)
-    }
-  }
-
-  const handleSaveTipPooled = async (newValue: boolean) => {
-    setIsSavingTipPooled(true)
-    setTipPooledError("")
-
-    try {
-      const venueResponse = await fetch(`/api/venues?slug=${slug}`)
-      const venues = await venueResponse.json()
-      const venue = venues.find((v: { slug: string }) => v.slug === slug)
-
-      const response = await fetch(`/api/venues/${venue.id}/staff/${membershipId}`, {
-        method: "PUT",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ tipPooled: newValue }),
-      })
-
-      if (!response.ok) {
-        const data = await response.json()
-        throw new Error(data.error || "Failed to update tip-pooling preference")
-      }
-
-      setTipPooled(newValue)
-    } catch (error: unknown) {
-      setTipPooledError(error instanceof Error ? error.message : "Failed to update tip-pooling preference")
-    } finally {
-      setIsSavingTipPooled(false)
     }
   }
 
@@ -284,8 +235,6 @@ export default function ManageStaffMemberPage({ params }: { params: Promise<{ sl
     )
   }
 
-  const additionalRoleOptions = customRoles.filter((role) => role.id !== selectedCustomRole)
-
   return (
     <VenueLayoutClient slug={slug}>
       <div className="page-inner max-w-3xl">
@@ -317,26 +266,20 @@ export default function ManageStaffMemberPage({ params }: { params: Promise<{ sl
           <CardContent>
             <div className="flex items-center gap-4">
               <Avatar className="h-16 w-16">
-                <AvatarImage src={staffMember.user.image || undefined} />
-                <AvatarFallback>{staffMember.user.name?.substring(0, 2).toUpperCase() || "??"}</AvatarFallback>
+                <AvatarImage src={staffMember.user?.image || undefined} />
+                <AvatarFallback>{staffMember.user?.name?.substring(0, 2).toUpperCase() || "??"}</AvatarFallback>
               </Avatar>
               <div className="flex-1">
-                <p className="text-xl font-semibold">{staffMember.user.name}</p>
-                {staffMember.user.discordId && (
-                  <p className="text-sm text-muted-foreground">Discord ID: {staffMember.user.discordId}</p>
-                )}
+                <p className="text-xl font-semibold">{staffMember.user?.name}</p>
               </div>
               <div>
                 <Badge className={roleColors[staffMember.role]}>{staffMember.role}</Badge>
-                {staffMember.customRole && (
-                  <Badge variant="outline" className="ml-2">
-                    {staffMember.customRole.name}
-                  </Badge>
-                )}
               </div>
             </div>
             <div className="mt-4 pt-4 border-t">
-              <p className="text-sm text-muted-foreground">Joined {format(new Date(staffMember.createdAt), "PPP")}</p>
+              <p className="text-sm text-muted-foreground">
+                Joined {staffMember.joinedAt ? format(new Date(staffMember.joinedAt), "PPP") : "—"}
+              </p>
             </div>
           </CardContent>
         </Card>
@@ -345,7 +288,7 @@ export default function ManageStaffMemberPage({ params }: { params: Promise<{ sl
         <Card className="mb-6">
           <CardHeader>
             <CardTitle>Role Management</CardTitle>
-            <CardDescription>Update this staff member&apos;s base role and custom role</CardDescription>
+            <CardDescription>Update this staff member&apos;s base role and assigned positions</CardDescription>
           </CardHeader>
           <CardContent className="space-y-6">
             {/* Base Role */}
@@ -378,54 +321,22 @@ export default function ManageStaffMemberPage({ params }: { params: Promise<{ sl
               </div>
             </div>
 
-            {/* Custom Role */}
+            {/* Positions */}
             <div className="space-y-2">
-              <Label htmlFor="custom-role">Custom Role (Optional)</Label>
-              <Select
-                value={selectedCustomRole || "none"}
-                onValueChange={(value) => setSelectedCustomRole(value === "none" ? null : value)}
-                disabled={isSaving}
-              >
-                <SelectTrigger id="custom-role">
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="none">No custom role</SelectItem>
-                  {customRoles.map((role) => (
-                    <SelectItem key={role.id} value={role.id}>
-                      {role.name}
-                      {role.responsibilities && ` - ${role.responsibilities}`}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-              {customRoles.length === 0 && (
-                <p className="text-sm text-muted-foreground">
-                  No custom roles available.{" "}
-                  <Link href={`/dashboard/${slug}/staff/roles`} className="text-blue-600 hover:underline">
-                    Create one
-                  </Link>
-                </p>
-              )}
-            </div>
-
-            {/* Additional Roles */}
-            <div className="space-y-2">
-              <Label>Additional Roles</Label>
+              <Label>Positions</Label>
               <p className="text-xs text-muted-foreground">
-                Lets this person provide services and fill shifts for these roles too, on top of their custom role
-                above.
+                Lets this person provide services and fill shifts for these positions.
               </p>
               <div className="flex flex-wrap gap-2">
-                {additionalRoleOptions.map((role) => {
-                  const checked = selectedAdditionalRoleIds.includes(role.id)
+                {positions.map((position) => {
+                  const checked = selectedPositionIds.includes(position.id)
                   return (
                     <button
-                      key={role.id}
+                      key={position.id}
                       type="button"
                       onClick={() =>
-                        setSelectedAdditionalRoleIds((prev) =>
-                          checked ? prev.filter((id) => id !== role.id) : [...prev, role.id]
+                        setSelectedPositionIds((prev) =>
+                          checked ? prev.filter((id) => id !== position.id) : [...prev, position.id]
                         )
                       }
                       className={`text-xs font-semibold px-2.5 py-1 rounded-full border transition-colors ${
@@ -434,14 +345,14 @@ export default function ManageStaffMemberPage({ params }: { params: Promise<{ sl
                           : "border-[var(--blue-015)] text-muted-foreground hover:border-[var(--blue-028)]"
                       }`}
                     >
-                      {role.name}
+                      {position.name}
                     </button>
                   )
                 })}
               </div>
-              {additionalRoleOptions.length === 0 && (
+              {positions.length === 0 && (
                 <p className="text-xs text-muted-foreground">
-                  Create more roles in Staff settings to assign additional roles.
+                  Create positions in Staff settings to assign them here.
                 </p>
               )}
             </div>
@@ -452,28 +363,6 @@ export default function ManageStaffMemberPage({ params }: { params: Promise<{ sl
             </Button>
           </CardContent>
         </Card>
-
-        {/* Tip Pooling */}
-        {potModeEnabled && (
-          <Card className="mb-6">
-            <CardHeader>
-              <CardTitle>Tip Pooling</CardTitle>
-              <CardDescription>Pool tips into the venue&apos;s pot, or keep them individually.</CardDescription>
-            </CardHeader>
-            <CardContent>
-              <label className="flex items-center gap-2 cursor-pointer">
-                <input
-                  type="checkbox"
-                  checked={tipPooled}
-                  onChange={(e) => handleSaveTipPooled(e.target.checked)}
-                  disabled={isSavingTipPooled}
-                />
-                <span>Pool my tips</span>
-              </label>
-              {tipPooledError && <p className="text-sm text-red-400 mt-2">{tipPooledError}</p>}
-            </CardContent>
-          </Card>
-        )}
 
         {/* Danger Zone */}
         <Card className="border-red-200">
@@ -497,7 +386,7 @@ export default function ManageStaffMemberPage({ params }: { params: Promise<{ sl
                   <AlertDialogHeader>
                     <AlertDialogTitle>Remove Staff Member?</AlertDialogTitle>
                     <AlertDialogDescription>
-                      Are you sure you want to remove {staffMember.user.name} from this venue? They will lose all access
+                      Are you sure you want to remove {staffMember.user?.name} from this venue? They will lose all access
                       immediately. This action cannot be undone.
                     </AlertDialogDescription>
                   </AlertDialogHeader>

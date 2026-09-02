@@ -12,11 +12,65 @@ import { prisma } from "@/lib/prisma"
 import { format } from "date-fns"
 import { Users, UserPlus, Shield, AlertTriangle } from "lucide-react"
 import { PendingInvites } from "@/components/pending-invites"
-import { StaffTable } from "@/components/staff-table"
+import { StaffTable, type StaffMember } from "@/components/staff-table"
 import { VenueLayout } from "@/components/venue-layout"
+import { getValidXvmApiToken, invalidateXvmApiCredential, isXvmAuthFailure } from "@/lib/api/xvm-api-store"
+import {
+  listMemberships,
+  listPositions,
+  listInvites,
+  type MembershipRow,
+  type PositionRow,
+  type InviteRow,
+} from "@/lib/api/xvm-api"
 
 import { RoleBadge } from "@/components/role-badge"
 import { StaffVisibilitySettings } from "@/components/staff-visibility-settings"
+
+// Mirrors staff/route.ts's toStaffShape (duplicated per this codebase's
+// per-file convention - the route files don't share it with each other either).
+function toStaffShape(member: MembershipRow, positionsById: Map<number, PositionRow>, venueId: string): StaffMember {
+  return {
+    id: member.id,
+    role: member.effective_tier.toUpperCase() as "OWNER" | "MANAGER" | "STAFF",
+    additionalRoles: member.position_ids
+      .map((id) => positionsById.get(id))
+      .filter((p): p is PositionRow => Boolean(p))
+      .map((p) => ({ name: p.name, color: p.color })),
+    joinedAt: null,
+    isOnShift: false,
+    nickname: member.nickname,
+    user: {
+      id: member.person.id,
+      name: member.person.display_name,
+      displayName: member.person.display_name,
+      image: null,
+      characterName: null,
+    },
+    venueId,
+  }
+}
+
+type PendingInviteShape = {
+  id: number
+  role: string
+  invitedName: string | null
+  inviteToken: string | null
+  inviteExpiresAt: Date | null
+}
+
+// list_invites returns no token (xvm-api only ever hands one out once, at
+// creation) - the "Invite Link" section in PendingInvites just won't render
+// for these, gracefully, via its existing invite.inviteToken guard.
+function toPendingInviteShape(invite: InviteRow): PendingInviteShape {
+  return {
+    id: invite.id,
+    role: invite.tier.toUpperCase(),
+    invitedName: invite.person.display_name,
+    inviteToken: null,
+    inviteExpiresAt: new Date(invite.expires_at),
+  }
+}
 
 export default async function StaffPage({ params }: { params: Promise<{ slug: string }> }) {
   const session = await getServerSession(authOptions)
@@ -45,40 +99,32 @@ export default async function StaffPage({ params }: { params: Promise<{ slug: st
 
   const userRole = venue.memberships[0].role
 
-  // Get all staff members
-  const staff = await prisma.membership.findMany({
-    where: { venueId: venue.id },
-    include: {
-      user: {
-        select: {
-          id: true,
-          name: true,
-          displayName: true,
-          image: true,
-          discordId: true,
-          characters: {
-            orderBy: [{ isPrimary: "desc" }, { createdAt: "asc" }],
-            take: 1,
-            select: { characterName: true },
-          },
-        },
-      },
-      customRole: true,
-      additionalRoles: { include: { role: { select: { name: true, color: true } } } },
-    },
-    orderBy: [
-      { role: "asc" }, // OWNER first, then MANAGER, then STAFF
-      { createdAt: "asc" },
-    ],
-  })
+  // xvm-api splits active memberships and pending invites into two separate
+  // tables/endpoints, unlike Prisma's unified Membership row with a
+  // status: "pending" filter - a real structural change, not a field rename.
+  let activeStaff: StaffMember[] = []
+  let pendingInvites: PendingInviteShape[] = []
 
-  // Separate by role and status
-  const activeStaff = staff.filter((s: (typeof staff)[number]) => s.status === "active" && s.user)
-  const pendingInvites = staff.filter((s: (typeof staff)[number]) => s.status === "pending")
-
-  const owners = activeStaff.filter((s: (typeof activeStaff)[number]) => s.role === "OWNER")
-  const managers = activeStaff.filter((s: (typeof activeStaff)[number]) => s.role === "MANAGER")
-  const regularStaff = activeStaff.filter((s: (typeof activeStaff)[number]) => s.role === "STAFF")
+  const token = await getValidXvmApiToken(session.user.id)
+  if (token && venue.xvmApiVenueId) {
+    try {
+      const [memberships, positions, invites] = await Promise.all([
+        listMemberships(token, venue.xvmApiVenueId),
+        listPositions(token, venue.xvmApiVenueId),
+        listInvites(token, venue.xvmApiVenueId),
+      ])
+      const positionsById = new Map(positions.map((p) => [p.id, p]))
+      // roster() returns every membership regardless of employment status -
+      // this page is the active roster, terminated members don't belong here.
+      activeStaff = memberships.filter((m) => m.is_employed).map((m) => toStaffShape(m, positionsById, slug))
+      pendingInvites = invites.map(toPendingInviteShape)
+    } catch (err) {
+      console.error("[staff page] xvm-api fetch error:", err)
+      if (isXvmAuthFailure(err)) {
+        await invalidateXvmApiCredential(session.user.id)
+      }
+    }
+  }
 
   const canManageStaff = ["OWNER", "MANAGER"].includes(userRole)
 
@@ -90,7 +136,7 @@ export default async function StaffPage({ params }: { params: Promise<{ slug: st
   const [activeShifts, weeklyShifts, weeklyTips] = await Promise.all([
     prisma.shift.findMany({
       where: { venueId: venue.id, status: "ACTIVE" },
-      select: { membershipId: true },
+      select: { id: true },
     }),
     prisma.shift.findMany({
       where: { venueId: venue.id, scheduledStart: { gte: weekAgo }, status: { in: ["COMPLETED", "ACTIVE"] } },
@@ -107,8 +153,6 @@ export default async function StaffPage({ params }: { params: Promise<{ slug: st
     return sum + (s.scheduledEnd.getTime() - s.scheduledStart.getTime()) / (1000 * 60 * 60)
   }, 0)
   const tipsThisWeek = Number(weeklyTips._sum.amount ?? 0)
-
-  const onShiftIds = new Set(activeShifts.map((s) => s.membershipId))
 
   return (
     <VenueLayout venueSlug={venue.slug} venueName={venue.name} userRole={userRole}>
@@ -201,48 +245,12 @@ export default async function StaffPage({ params }: { params: Promise<{ slug: st
         </div>
 
         {/* Staff table */}
-        <StaffTable
-          members={activeStaff.map((m) => ({
-            id: m.id,
-            role: m.role as "OWNER" | "MANAGER" | "STAFF",
-            customRole: m.customRole ? { name: m.customRole.name, color: m.customRole.color ?? "#9399b2" } : null,
-            additionalRoles: m.additionalRoles
-              .filter((ar) => ar.roleId !== m.roleId)
-              .map((ar) => ({ name: ar.role.name, color: ar.role.color ?? "#9399b2" })),
-            joinedAt: m.createdAt.toISOString(),
-            isOnShift: onShiftIds.has(m.id),
-            nickname: m.nickname ?? null,
-            user: m.user
-              ? {
-                  id: m.user.id,
-                  name: m.user.name,
-                  displayName: m.user.displayName,
-                  image: m.user.image,
-                  characterName: m.user.characters[0]?.characterName ?? null,
-                }
-              : null,
-            venueId: venue.id,
-          }))}
-          slug={slug}
-          canManage={canManageStaff}
-        />
+        <StaffTable members={activeStaff} slug={slug} canManage={canManageStaff} />
 
         {/* Pending + individual edit sections */}
         <div className="space-y-8 mt-6">
           {/* Pending Invites */}
-          <PendingInvites
-            invites={pendingInvites.map((invite: (typeof pendingInvites)[number]) => ({
-              id: invite.id,
-              role: invite.role,
-              invitedName: invite.invitedName,
-              invitedEmail: invite.invitedEmail,
-              inviteToken: invite.inviteToken,
-              inviteExpiresAt: invite.inviteExpiresAt,
-              createdAt: invite.createdAt,
-            }))}
-            slug={slug}
-            canManageStaff={canManageStaff}
-          />
+          <PendingInvites invites={pendingInvites} slug={slug} canManageStaff={canManageStaff} />
 
           {canManageStaff && <StaffVisibilitySettings venueId={venue.id} />}
         </div>
