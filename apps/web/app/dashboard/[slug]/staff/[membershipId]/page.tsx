@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation"
 import Link from "next/link"
 import { Button } from "@/components/ui/button"
 import { Label } from "@/components/ui/label"
+import { Input } from "@/components/ui/input"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import {
@@ -18,12 +19,14 @@ import {
   AlertDialogTitle,
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog"
+import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog"
 import { Alert, AlertDescription } from "@/components/ui/alert"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { Badge } from "@/components/ui/badge"
 import { format } from "date-fns"
 import { PageLoading } from "@/components/ui/loading-spinner"
 import { VenueLayoutClient } from "@/components/venue-layout-client"
+import { LocalTime } from "@/components/server-time"
 
 // xvm-api's Position model has no primary/secondary distinction the way
 // Prisma's customRole vs additionalRoles did - every assigned position is
@@ -31,6 +34,7 @@ import { VenueLayoutClient } from "@/components/venue-layout-client"
 interface StaffMember {
   id: number
   role: "OWNER" | "MANAGER" | "STAFF"
+  baseRole: "OWNER" | "MANAGER" | "STAFF"
   joinedAt: string | null
   nickname: string | null
   additionalRoles: { id: number; name: string; color: number | null }[]
@@ -40,6 +44,16 @@ interface StaffMember {
     displayName: string | null
     image: string | null
   } | null
+}
+
+interface TierGrant {
+  id: number
+  tier: string
+  granted_at: string
+  expires_at: string | null
+  granted_by_person_id: number | null
+  revoked_at: string | null
+  is_live: boolean
 }
 
 interface Position {
@@ -70,6 +84,14 @@ export default function ManageStaffMemberPage({ params }: { params: Promise<{ sl
   const [selectedPositionIds, setSelectedPositionIds] = useState<number[]>([])
   const [isSaving, setIsSaving] = useState(false)
   const [isDeleting, setIsDeleting] = useState(false)
+
+  // Tier grants
+  const [grants, setGrants] = useState<TierGrant[]>([])
+  const [deputiseOpen, setDeputiseOpen] = useState(false)
+  const [deputiseExpiresAt, setDeputiseExpiresAt] = useState("")
+  const [isDeputising, setIsDeputising] = useState(false)
+  const [deputiseError, setDeputiseError] = useState("")
+  const [revokingGrantId, setRevokingGrantId] = useState<number | null>(null)
 
   // Unwrap params
   useEffect(() => {
@@ -103,6 +125,11 @@ export default function ManageStaffMemberPage({ params }: { params: Promise<{ sl
         setStaffMember(member)
         setSelectedRole(member.role)
         setSelectedPositionIds(member.additionalRoles.map((r) => r.id))
+
+        const grantsResponse = await fetch(`/api/venues/${slug}/staff/${membershipId}/tier-grants`)
+        if (grantsResponse.ok) {
+          setGrants(await grantsResponse.json())
+        }
 
         // Unlike the routes this plan rewrote, /roles predates this cutover and
         // only resolves a plain venue id (no slug-or-id support) - needs the lookup.
@@ -197,6 +224,68 @@ export default function ManageStaffMemberPage({ params }: { params: Promise<{ sl
     } catch (error: unknown) {
       setError(error instanceof Error ? error.message : "Failed to remove staff member")
       setIsDeleting(false)
+    }
+  }
+
+  const refreshGrants = async () => {
+    const response = await fetch(`/api/venues/${slug}/staff/${membershipId}/tier-grants`)
+    if (response.ok) {
+      setGrants(await response.json())
+    }
+  }
+
+  const handleDeputise = async () => {
+    if (!deputiseExpiresAt) {
+      setDeputiseError("Pick an expiry.")
+      return
+    }
+
+    setIsDeputising(true)
+    setDeputiseError("")
+
+    try {
+      const response = await fetch(`/api/venues/${slug}/staff/${membershipId}/tier-grants`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ expiresAt: new Date(deputiseExpiresAt).toISOString() }),
+      })
+
+      if (!response.ok) {
+        const data = await response.json()
+        throw new Error(data.error || "Failed to grant temporary elevation")
+      }
+
+      setDeputiseOpen(false)
+      setDeputiseExpiresAt("")
+      await refreshGrants()
+      router.refresh()
+    } catch (error: unknown) {
+      setDeputiseError(error instanceof Error ? error.message : "Failed to grant temporary elevation")
+    } finally {
+      setIsDeputising(false)
+    }
+  }
+
+  const handleRevoke = async (grantId: number) => {
+    setRevokingGrantId(grantId)
+    setError("")
+
+    try {
+      const response = await fetch(`/api/venues/${slug}/staff/${membershipId}/tier-grants/${grantId}/revoke`, {
+        method: "POST",
+      })
+
+      if (!response.ok) {
+        const data = await response.json()
+        throw new Error(data.error || "Failed to revoke elevation")
+      }
+
+      await refreshGrants()
+      router.refresh()
+    } catch (error: unknown) {
+      setError(error instanceof Error ? error.message : "Failed to revoke elevation")
+    } finally {
+      setRevokingGrantId(null)
     }
   }
 
@@ -361,6 +450,96 @@ export default function ManageStaffMemberPage({ params }: { params: Promise<{ sl
             <Button onClick={handleSave} disabled={isSaving}>
               {isSaving ? "Saving..." : "Save Changes"}
             </Button>
+          </CardContent>
+        </Card>
+
+        {/* Temporary Elevation */}
+        <Card className="mb-6">
+          <CardHeader>
+            <CardTitle>Temporary Elevation</CardTitle>
+            <CardDescription>Deputise this member to Manager until a stated time, or review past grants.</CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            {(() => {
+              const liveGrant = grants.find((g) => g.is_live)
+              return liveGrant ? (
+                <Alert className="bg-blue-500/10 border-blue-500/20">
+                  <AlertDescription>
+                    Currently elevated to <strong>Manager</strong>
+                    {liveGrant.expires_at ? (
+                      <>
+                        {" "}
+                        until <LocalTime date={liveGrant.expires_at} formatStr="datetimelong" />
+                      </>
+                    ) : null}
+                    .{" "}
+                    <Button
+                      variant="link"
+                      className="h-auto p-0 text-destructive"
+                      disabled={revokingGrantId === liveGrant.id}
+                      onClick={() => handleRevoke(liveGrant.id)}
+                    >
+                      {revokingGrantId === liveGrant.id ? "Revoking..." : "Revoke now"}
+                    </Button>
+                  </AlertDescription>
+                </Alert>
+              ) : staffMember.baseRole === "STAFF" ? (
+                <Dialog open={deputiseOpen} onOpenChange={setDeputiseOpen}>
+                  <DialogTrigger asChild>
+                    <Button variant="outline">Deputise to Manager</Button>
+                  </DialogTrigger>
+                  <DialogContent>
+                    <DialogHeader>
+                      <DialogTitle>Deputise to Manager</DialogTitle>
+                      <DialogDescription>
+                        {staffMember.user?.name} will act as Manager until the time you pick, then automatically
+                        return to Staff.
+                      </DialogDescription>
+                    </DialogHeader>
+                    <div className="space-y-2">
+                      <Label htmlFor="deputise-expires">Elevated until</Label>
+                      <Input
+                        id="deputise-expires"
+                        type="datetime-local"
+                        value={deputiseExpiresAt}
+                        onChange={(e) => setDeputiseExpiresAt(e.target.value)}
+                      />
+                    </div>
+                    {deputiseError && (
+                      <Alert className="bg-destructive/10 border-destructive/20">
+                        <AlertDescription className="text-destructive">{deputiseError}</AlertDescription>
+                      </Alert>
+                    )}
+                    <DialogFooter>
+                      <Button onClick={handleDeputise} disabled={isDeputising}>
+                        {isDeputising ? "Granting..." : "Grant"}
+                      </Button>
+                    </DialogFooter>
+                  </DialogContent>
+                </Dialog>
+              ) : (
+                <p className="text-sm text-muted-foreground">
+                  Already {staffMember.baseRole === "OWNER" ? "an owner" : "a manager"} - nothing to deputise.
+                </p>
+              )
+            })()}
+
+            {grants.length > 0 && (
+              <div className="pt-4 border-t space-y-2">
+                <p className="text-sm font-medium">History</p>
+                {grants.map((grant) => (
+                  <div key={grant.id} className="flex items-center justify-between text-sm text-muted-foreground">
+                    <span>
+                      Manager, <LocalTime date={grant.granted_at} formatStr="datetime" /> →{" "}
+                      {grant.expires_at ? <LocalTime date={grant.expires_at} formatStr="datetime" /> : "—"}
+                    </span>
+                    <Badge variant={grant.is_live ? "default" : "outline"}>
+                      {grant.is_live ? "Live" : grant.revoked_at ? "Revoked" : "Expired"}
+                    </Badge>
+                  </div>
+                ))}
+              </div>
+            )}
           </CardContent>
         </Card>
 
