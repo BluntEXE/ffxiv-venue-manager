@@ -123,7 +123,7 @@ export default function ManageStaffMemberPage({ params }: { params: Promise<{ sl
         }
 
         setStaffMember(member)
-        setSelectedRole(member.role)
+        setSelectedRole(member.baseRole)
         setSelectedPositionIds(member.additionalRoles.map((r) => r.id))
 
         const grantsResponse = await fetch(`/api/venues/${slug}/staff/${membershipId}/tier-grants`)
