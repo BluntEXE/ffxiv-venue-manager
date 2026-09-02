@@ -37,6 +37,7 @@ function toStaffShape(member: MembershipRow, positionsById: Map<number, Position
   return {
     id: member.id,
     role: member.effective_tier.toUpperCase(),
+    baseRole: member.tier.toUpperCase(),
     customRole: null,
     additionalRoles: member.position_ids
       .map((id) => positionsById.get(id))

@@ -685,6 +685,56 @@ export async function setTier(
   )
 }
 
+export interface TierGrantRow {
+  id: number
+  tier: string
+  granted_at: string
+  expires_at: string | null
+  granted_by_person_id: number | null
+  revoked_at: string | null
+  is_live: boolean
+}
+
+// Deputise a member to manager until a stated moment. xvm-api hard-codes the
+// grantable tier to "manager" (Literal["manager"] server-side) and requires
+// expires_at - there is no untimed grant, that's just PUT tier.
+export async function grantTier(
+  personToken: string,
+  venueId: string,
+  membershipId: number,
+  expiresAt: string
+): Promise<TierGrantRow> {
+  if (!process.env.XVM_API_BASE_URL) throw new Error("XVM_API_BASE_URL is not set")
+  return xvmFetch<TierGrantRow>(
+    `/venues/${venueId}/memberships/${membershipId}/tier-grants`,
+    { method: "POST", body: JSON.stringify({ tier: "manager", expires_at: expiresAt }) },
+    personToken
+  )
+}
+
+export async function listTierGrants(
+  personToken: string,
+  venueId: string,
+  membershipId: number
+): Promise<TierGrantRow[]> {
+  if (!process.env.XVM_API_BASE_URL) throw new Error("XVM_API_BASE_URL is not set")
+  return xvmFetch<TierGrantRow[]>(`/venues/${venueId}/memberships/${membershipId}/tier-grants`, {}, personToken)
+}
+
+export async function revokeTierGrant(
+  personToken: string,
+  venueId: string,
+  membershipId: number,
+  grantId: number
+): Promise<TierGrantRow> {
+  if (!process.env.XVM_API_BASE_URL) throw new Error("XVM_API_BASE_URL is not set")
+  return xvmFetch<TierGrantRow>(
+    `/venues/${venueId}/memberships/${membershipId}/tier-grants/${grantId}/revoke`,
+    { method: "POST" },
+    personToken
+  )
+}
+
 export async function terminateMembership(
   personToken: string,
   venueId: string,
