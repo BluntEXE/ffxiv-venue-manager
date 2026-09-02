@@ -239,6 +239,10 @@ export default function ManageStaffMemberPage({ params }: { params: Promise<{ sl
       setDeputiseError("Pick an expiry.")
       return
     }
+    if (new Date(deputiseExpiresAt) <= new Date()) {
+      setDeputiseError("The expiry is already in the past.")
+      return
+    }
 
     setIsDeputising(true)
     setDeputiseError("")
@@ -501,6 +505,7 @@ export default function ManageStaffMemberPage({ params }: { params: Promise<{ sl
                       <Input
                         id="deputise-expires"
                         type="datetime-local"
+                        min={new Date().toISOString().slice(0, 16)}
                         value={deputiseExpiresAt}
                         onChange={(e) => setDeputiseExpiresAt(e.target.value)}
                       />
