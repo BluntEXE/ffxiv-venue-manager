@@ -505,7 +505,7 @@ export default function ManageStaffMemberPage({ params }: { params: Promise<{ sl
                       <Input
                         id="deputise-expires"
                         type="datetime-local"
-                        min={new Date().toISOString().slice(0, 16)}
+                        min={new Date(Date.now() - new Date().getTimezoneOffset() * 60000).toISOString().slice(0, 16)}
                         value={deputiseExpiresAt}
                         onChange={(e) => setDeputiseExpiresAt(e.target.value)}
                       />
