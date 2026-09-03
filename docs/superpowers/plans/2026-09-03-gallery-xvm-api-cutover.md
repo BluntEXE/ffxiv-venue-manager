@@ -483,6 +483,152 @@ cd apps/web && pnpm dev
 
 - [ ] **Step 6: If Task 4/5 made real changes, check the public venue page** (`/venues/<slug>`) still renders the gallery correctly for a venue with existing images.
 
+## Task 7: Backfill existing venues' galleries into xvm-api
+
+**Added after the final whole-implementation review flagged a real production consequence:** once Tasks 1-5b ship, the settings page's Gallery section reads exclusively from xvm-api (`GET /venues/{venue_id}/images` via the Task 5b route), which starts empty for every venue whose gallery images only ever lived in Prisma's `Venue.galleryImages` (the old `xiv-venues`-bucket URLs). Those images aren't deleted — they're still live on the public venue page (Task 4 correctly left that page Prisma-sourced) — but a venue owner opening Settings after this ships sees an empty gallery for a venue that visibly has photos on its public profile. This task migrates old images into xvm-api once, so the admin view and public view agree again.
+
+**Files:**
+- Create: `apps/web/backfill-gallery-images.js`
+
+- [ ] **Step 1: Understand the auth constraint before writing any code**
+
+xvm-api's `POST /venues/{venue_id}/images` requires a person credential with Manager tier at that venue (`deps.require_tier(MembershipTier.Manager)` — confirmed in Task 1's research). This script has no service/bot credential to fall back on, so for each venue it needs a **valid, unexpired xvm-api person token belonging to a Manager-or-above member** — in practice, the token stored for whichever member last signed into the dashboard while their `XvmApiCredential` row was still fresh (see `apps/web/lib/api/xvm-api-store.ts`'s `getValidXvmApiToken`, `REFRESH_MARGIN_MS = 24h`). Not every venue's owner/manager will have one — that's expected and must be handled as a per-venue skip, not a script failure.
+
+- [ ] **Step 2: Write the script**
+
+```javascript
+// One-time backfill: migrate existing venues' Prisma-stored gallery image URLs
+// (old xiv-venues MinIO bucket) into xvm-api's own image storage. Run once,
+// manually, via `node backfill-gallery-images.js` from apps/web. Non-destructive:
+// does not touch Prisma's Venue.galleryImages or delete anything from the old
+// bucket, so it's safe to inspect results before any later cleanup. Idempotent
+// per venue: skips any venue whose xvm-api image count already meets or exceeds
+// its Prisma gallery count, so a re-run after a partial failure won't duplicate
+// images for venues that already fully migrated.
+const { PrismaClient } = require("@prisma/client")
+const prisma = new PrismaClient()
+
+const XVM_API_BASE_URL = process.env.XVM_API_BASE_URL
+if (!XVM_API_BASE_URL) {
+  console.error("XVM_API_BASE_URL is not set")
+  process.exit(1)
+}
+
+async function getVenueImages(token, xvmApiVenueId) {
+  const res = await fetch(`${XVM_API_BASE_URL}/venues/${xvmApiVenueId}`, {
+    headers: { Authorization: `Bearer ${token}` },
+  })
+  if (!res.ok) throw new Error(`getVenue ${res.status}: ${await res.text()}`)
+  const detail = await res.json()
+  return detail.images
+}
+
+async function uploadVenueImage(token, xvmApiVenueId, blob, filename) {
+  const form = new FormData()
+  form.append("file", blob, filename)
+  const res = await fetch(`${XVM_API_BASE_URL}/venues/${xvmApiVenueId}/images`, {
+    method: "POST",
+    headers: { Authorization: `Bearer ${token}` },
+    body: form,
+  })
+  if (!res.ok) throw new Error(`upload ${res.status}: ${await res.text()}`)
+  return res.json()
+}
+
+async function backfill() {
+  const venues = await prisma.venue.findMany({
+    where: { xvmApiVenueId: { not: null }, galleryImages: { isEmpty: false } },
+    select: { id: true, slug: true, xvmApiVenueId: true, galleryImages: true, memberships: {
+      where: { role: { in: ["OWNER", "MANAGER"] }, status: "active" },
+      select: { userId: true },
+    } },
+  })
+
+  console.log(`Found ${venues.length} venue(s) with a Prisma gallery and an xvm-api link.`)
+
+  const results = { migrated: [], skippedNoToken: [], skippedAlreadyDone: [], partialFailures: [] }
+
+  for (const venue of venues) {
+    let token = null
+    for (const m of venue.memberships) {
+      const row = await prisma.xvmApiCredential.findUnique({ where: { userId: m.userId } })
+      if (row && row.expiresAt.getTime() - Date.now() > 24 * 60 * 60 * 1000) {
+        token = row.token
+        break
+      }
+    }
+    if (!token) {
+      results.skippedNoToken.push(venue.slug)
+      continue
+    }
+
+    let existingCount
+    try {
+      existingCount = (await getVenueImages(token, venue.xvmApiVenueId)).length
+    } catch (err) {
+      results.partialFailures.push({ slug: venue.slug, step: "list", error: String(err) })
+      continue
+    }
+    if (existingCount >= venue.galleryImages.length) {
+      results.skippedAlreadyDone.push(venue.slug)
+      continue
+    }
+
+    let migratedCount = 0
+    for (const url of venue.galleryImages) {
+      try {
+        const imgRes = await fetch(url)
+        if (!imgRes.ok) throw new Error(`fetch old image ${imgRes.status}`)
+        const blob = await imgRes.blob()
+        const filename = url.split("/").pop() || "image"
+        await uploadVenueImage(token, venue.xvmApiVenueId, blob, filename)
+        migratedCount++
+      } catch (err) {
+        results.partialFailures.push({ slug: venue.slug, step: `upload ${url}`, error: String(err) })
+      }
+    }
+    results.migrated.push({ slug: venue.slug, count: migratedCount, total: venue.galleryImages.length })
+  }
+
+  console.log("\n=== Backfill report ===")
+  console.log(`Migrated: ${results.migrated.length}`)
+  for (const m of results.migrated) console.log(`  ${m.slug}: ${m.count}/${m.total} images`)
+  console.log(`Already done (skipped): ${results.skippedAlreadyDone.length}`, results.skippedAlreadyDone)
+  console.log(`No valid manager token (skipped): ${results.skippedNoToken.length}`, results.skippedNoToken)
+  console.log(`Partial failures: ${results.partialFailures.length}`)
+  for (const f of results.partialFailures) console.log(`  ${f.slug} (${f.step}): ${f.error}`)
+
+  await prisma.$disconnect()
+}
+
+backfill()
+```
+
+Note: this script deliberately does NOT import `uploadVenueImage`/`getVenue` from `lib/api/xvm-api.ts` — that module is written for Next.js's server runtime (relies on `process.env.XVM_API_BASE_URL` being validated the same way, fine, but the existing helpers aren't exported for use by a bare Node CJS script outside the Next build, matching how `clean-pending-owner.js` and `apply-indexes.js` already use `require("@prisma/client")` directly rather than the app's `lib/prisma.ts` wrapper). Duplicating the two small HTTP calls inline keeps this a genuinely standalone, dependency-free ops script consistent with the sibling scripts already in this directory.
+
+- [ ] **Step 3: Confirm the script's ESLint ignore**
+
+This file needs to be added to `apps/web/eslint.config.mjs`'s existing `globalIgnores` list (which already excludes `apply-indexes.js` and `clean-pending-owner.js` as "Standalone CJS ops scripts"). Add `"backfill-gallery-images.js"` to that same array.
+
+Run: `cd apps/web && npx eslint backfill-gallery-images.js` — expect it to report nothing (ignored), confirming the config change took effect.
+
+- [ ] **Step 4: Dry-run against local dev data**
+
+```bash
+cd apps/web && node backfill-gallery-images.js
+```
+
+Read the report output. Confirm it runs without throwing, and that its counts make sense for whatever venues exist in the local dev database (the same one used for Task 6's live verification — likely 0-1 venues with pre-existing Prisma gallery images, since Task 6's testing used a fresh upload through the new flow, not old data). If local dev has no venues with old-style gallery data, this step still validates the script runs cleanly end-to-end with an empty result set — that's a legitimate pass, not a skip.
+
+- [ ] **Step 5: Commit**
+
+```bash
+git add apps/web/backfill-gallery-images.js apps/web/eslint.config.mjs
+git commit -m "chore: add one-time gallery backfill script for existing venues"
+```
+
+- [ ] **Step 6: Do NOT run this against the shared dev or prod xvm-api instance as part of this task.** Running it for real mutates live data other people (venue owners, other developers) can see — that's a decision for the person running this plan to make explicitly and separately, not something to execute automatically as part of implementing this task. Report back that the script is written, tested locally, and ready — and stop there.
+
 ## Explicitly out of scope for this plan
 
 - **Venue Settings** (`app/api/venues/[venueId]/settings/route.ts`) as a whole: roughly half of it (Discord webhooks, Partake team id, Frogge token, ffxivvenues.com sync, shift-bot config, room-manager Discord role ids, tagline/tags/defaultHours/openNights/isAdult) has **no xvm-api equivalent at all** and is dashboard-owned integration config — it's not clear any of that *should* move to xvm-api rather than staying dashboard-side permanently. The task/sales/revenue/event-visibility fields and `venueType` are **already migrated** (this route already proxies those to xvm-api, confirmed reading the current code). What remains unmigrated-but-plausibly-migratable is venue name/description/logo/banner/location fields — but those aren't edited through this route at all; a follow-up research pass needs to find where they *are* edited before a plan can be written for them.
