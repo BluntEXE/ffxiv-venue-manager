@@ -4,7 +4,7 @@ import { authOptions } from "@/lib/auth"
 import { prisma } from "@/lib/prisma"
 import { DiscoverClient, type DiscoverVenue } from "@/components/discover-client"
 import { ExploreLayout } from "@/components/explore-layout"
-import { getPublicHoursBatch, type PublicHours } from "@/lib/api/xvm-api"
+import { getPublicHoursBatch, getPublicVenuesForIds, type PublicHours, type PublicVenue } from "@/lib/api/xvm-api"
 
 export const metadata: Metadata = {
   title: "Discover Venues",
@@ -59,29 +59,32 @@ export default async function DiscoverPage() {
   // closed (unless a live event is running) - Prisma no longer computes hours.
   const xvmVenueIds = venues.map((v) => v.xvmApiVenueId).filter((id): id is string => id !== null)
   let hoursByVenue: Record<string, PublicHours> = {}
+  let profileByVenue: Record<string, PublicVenue> = {}
   if (xvmVenueIds.length > 0) {
     try {
       hoursByVenue = (await getPublicHoursBatch(xvmVenueIds)).venues
     } catch {
       hoursByVenue = {}
     }
+    profileByVenue = await getPublicVenuesForIds(xvmVenueIds)
   }
 
   const cards: DiscoverVenue[] = venues.map((v) => {
     const activeEvent = v.events.find((e) => e.status === "ACTIVE") ?? null
     const upcomingEvent = v.events.find((e) => e.status !== "ACTIVE") ?? null
     const xvmHoursEntry = v.xvmApiVenueId ? hoursByVenue[v.xvmApiVenueId] : undefined
+    const xvmProfile = v.xvmApiVenueId ? profileByVenue[v.xvmApiVenueId] : undefined
     return {
       id: v.id,
-      name: v.name,
+      name: xvmProfile?.name ?? v.slug,
       slug: v.slug,
       dataCenter: v.dataCenter,
       world: v.world,
-      district: v.district,
-      ward: v.ward,
-      plot: v.plot,
-      apartment: v.apartment,
-      description: v.description,
+      district: xvmProfile?.district ?? null,
+      ward: xvmProfile?.ward ?? null,
+      plot: xvmProfile?.plot ?? null,
+      apartment: xvmProfile?.room ?? null,
+      description: xvmProfile?.description ?? null,
       followCount: v._count.follows,
       isFollowed: followedIds.includes(v.id),
       isOpenNow: activeEvent !== null || (xvmHoursEntry?.open_now.open ?? false),

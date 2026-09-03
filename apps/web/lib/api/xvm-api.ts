@@ -567,6 +567,28 @@ export async function getPublicHoursForVenues(
   return merged
 }
 
+// No batch profile-fields endpoint exists yet (xvm-api#77) - unlike hours,
+// this is N individual getPublicVenue calls run concurrently, each already
+// cached/revalidated via its own fetch (see getPublicVenue). A venue that
+// fails or has no entry is simply absent from the result, matching the
+// no-Prisma-fallback pattern every caller of this already applies for hours.
+export async function getPublicVenuesForIds(venueIds: string[]): Promise<Record<string, PublicVenue>> {
+  const entries = await Promise.all(
+    venueIds.map(async (id): Promise<[string, PublicVenue] | null> => {
+      try {
+        return [id, await getPublicVenue(id)]
+      } catch {
+        return null
+      }
+    })
+  )
+  const merged: Record<string, PublicVenue> = {}
+  for (const entry of entries) {
+    if (entry) merged[entry[0]] = entry[1]
+  }
+  return merged
+}
+
 // ── Positions API ──────────────────────────────────────────────
 
 export interface PositionCreate {

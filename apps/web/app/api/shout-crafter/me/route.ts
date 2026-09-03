@@ -2,6 +2,7 @@ import { NextResponse } from "next/server"
 import { getServerSession } from "next-auth"
 import { authOptions } from "@/lib/auth"
 import { prisma } from "@/lib/prisma"
+import { getPublicVenuesForIds } from "@/lib/api/xvm-api"
 
 const SHOUT_ORIGIN = "https://shout.xivvenuemanager.com"
 
@@ -26,9 +27,20 @@ export async function GET() {
 
   const venues = await prisma.venue.findMany({
     where: { ownerId: session.user.id, isActive: true },
-    select: { id: true, name: true, slug: true },
-    orderBy: { name: "asc" },
+    select: { id: true, slug: true, xvmApiVenueId: true },
+    orderBy: { slug: "asc" },
   })
+
+  const xvmVenueIds = venues.map((v) => v.xvmApiVenueId).filter((id): id is string => id !== null)
+  const profileByVenue = xvmVenueIds.length > 0 ? await getPublicVenuesForIds(xvmVenueIds) : {}
+
+  const namedVenues = venues
+    .map((v) => ({
+      id: v.id,
+      slug: v.slug,
+      name: (v.xvmApiVenueId ? profileByVenue[v.xvmApiVenueId]?.name : undefined) ?? v.slug,
+    }))
+    .sort((a, b) => a.name.localeCompare(b.name))
 
   return cors(
     NextResponse.json({
@@ -37,7 +49,7 @@ export async function GET() {
         name: session.user.name,
         image: session.user.image,
       },
-      venues,
+      venues: namedVenues,
     })
   )
 }
