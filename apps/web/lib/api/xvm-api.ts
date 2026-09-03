@@ -1,3 +1,5 @@
+import { cache } from "react"
+
 const XVM_API_BASE_URL = process.env.XVM_API_BASE_URL
 const XVM_API_DASHBOARD_SERVICE_TOKEN = process.env.XVM_API_DASHBOARD_SERVICE_TOKEN
 
@@ -532,11 +534,15 @@ export interface PublicVenue {
   images: VenueImageRow[]
 }
 
-export async function getPublicVenue(venueId: string): Promise<PublicVenue> {
+// React's per-request cache() on top of the fetch-level revalidate: 60 below -
+// generateMetadata and the page component both call this for the same venue
+// in one render pass, and against a shared 60 req/min public rate limiter
+// (see xvm-api#77) a duplicate call within a single request is pure waste.
+export const getPublicVenue = cache(async (venueId: string): Promise<PublicVenue> => {
   if (!process.env.XVM_API_BASE_URL) throw new Error("XVM_API_BASE_URL is not set")
   // Same shared public rate limiter as getPublicHours - cached for the same reason.
   return xvmFetch<PublicVenue>(`/public/venues/${venueId}`, { next: { revalidate: 60 } })
-}
+})
 
 export interface PublicHoursBatch {
   venues: Record<string, PublicHours>
