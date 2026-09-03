@@ -60,8 +60,13 @@ export async function DELETE(req: NextRequest, { params }: { params: Promise<{ v
   const gate = await requireXvmVenueId(venueId)
   if (gate.error) return gate.error
 
-  const body = await req.json()
-  const imageId = Number(body?.imageId)
+  let imageId: number
+  try {
+    const body = await req.json()
+    imageId = Number(body?.imageId)
+  } catch {
+    return NextResponse.json({ error: "Invalid request" }, { status: 400 })
+  }
   if (!Number.isInteger(imageId)) {
     return NextResponse.json({ error: "imageId required" }, { status: 400 })
   }
