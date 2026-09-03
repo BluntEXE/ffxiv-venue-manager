@@ -169,7 +169,6 @@ model Venue {
   ward       Int?
   plot       Int? // mutually exclusive with apartment
   apartment  Int? // mutually exclusive with plot
-  location   String? @db.Text // legacy free-text fallback
 
   // Settings
   timezone     String @default("UTC")

@@ -265,7 +265,7 @@ export default function SettingsPage({ params }: { params: Promise<{ slug: strin
     try {
       if (!venueId) throw new Error("Venue not loaded")
 
-      // Save venue profile DB fields (name, description, location) via PATCH
+      // Save venue profile DB fields (name, description) via PATCH
       const profileRes = await fetch(`/api/venues/${venueId}`, {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },

@@ -81,7 +81,6 @@ export default async function DiscoverPage() {
       ward: v.ward,
       plot: v.plot,
       apartment: v.apartment,
-      location: v.location,
       description: v.description,
       followCount: v._count.follows,
       isFollowed: followedIds.includes(v.id),

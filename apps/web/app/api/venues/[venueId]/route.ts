@@ -14,7 +14,6 @@ const venueUpdateSchema = z.object({
   ward: validators.venueWard,
   plot: validators.venuePlot,
   apartment: validators.venueApartment,
-  location: validators.venueLocation,
   bannerUrl: validators.url,
   logoUrl: validators.url,
 })
@@ -50,7 +49,7 @@ export const PATCH = withRateLimit(
         }
         throw error
       }
-      const { name, description, location, district, ward, plot, apartment, bannerUrl, logoUrl } = parsed
+      const { name, description, district, ward, plot, apartment, bannerUrl, logoUrl } = parsed
 
       const updated = await prisma.venue.update({
         where: { id: venueId },
@@ -61,7 +60,6 @@ export const PATCH = withRateLimit(
           ...(ward !== undefined && { ward }),
           ...(plot !== undefined && { plot }),
           ...(apartment !== undefined && { apartment }),
-          ...(location !== undefined && { location: location ? location.trim() : null }),
           ...(bannerUrl !== undefined && { bannerUrl: bannerUrl ?? null }),
           ...(logoUrl !== undefined && { logoUrl: logoUrl ?? null }),
         },

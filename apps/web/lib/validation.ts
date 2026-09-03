@@ -7,7 +7,6 @@ import { z } from "zod"
 export const validators = {
   venueName: z.string().min(1, "Name is required").max(100, "Name too long (max 100 characters)"),
   venueDescription: z.string().max(2000, "Description too long (max 2000 characters)").optional().nullable(),
-  venueLocation: z.string().max(200, "Location too long (max 200 characters)").optional().nullable(),
   venueDistrict: z.string().max(50).optional().nullable(),
   venueWard: z.number().int().min(1).max(30).optional().nullable(),
   venuePlot: z.number().int().min(1).max(60).optional().nullable(),

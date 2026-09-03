@@ -434,13 +434,6 @@ export default async function VenueProfilePage({ params }: { params: Promise<{ s
                           : venue.apartment != null
                             ? [{ k: "Room", v: String(venue.apartment) }]
                             : []),
-                        ...(!venue.district &&
-                        venue.ward == null &&
-                        venue.plot == null &&
-                        venue.apartment == null &&
-                        venue.location
-                          ? [{ k: "Location", v: venue.location }]
-                          : []),
                       ].map(({ k, v }) => (
                         <div key={k} className="loc-line">
                           <span className="lk">{k}</span>

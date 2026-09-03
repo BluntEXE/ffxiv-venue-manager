@@ -32,7 +32,6 @@ export default async function FollowingPage() {
           ward: true,
           plot: true,
           apartment: true,
-          location: true,
           xvmApiVenueId: true,
           _count: { select: { follows: true } },
           events: {
@@ -73,7 +72,6 @@ export default async function FollowingPage() {
       ward: f.venue.ward,
       plot: f.venue.plot,
       apartment: f.venue.apartment,
-      location: f.venue.location,
       followCount: f.venue._count.follows,
       isOpenNow: f.venue.events.length > 0 || (xvmHoursEntry?.open_now.open ?? false),
       activeEvent: f.venue.events[0] ?? null,
