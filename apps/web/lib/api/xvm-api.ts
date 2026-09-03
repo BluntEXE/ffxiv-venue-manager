@@ -435,6 +435,28 @@ export async function deleteRoomImage(
   return xvmFetch<void>(`/venues/${venueId}/rooms/${roomId}/images/${imageId}`, { method: "DELETE" }, personToken)
 }
 
+export interface VenueImage {
+  id: number
+  image_url: string
+  sort_order: number
+}
+
+export async function uploadVenueImage(
+  personToken: string,
+  venueId: string,
+  file: File | Blob
+): Promise<VenueImage> {
+  if (!process.env.XVM_API_BASE_URL) throw new Error("XVM_API_BASE_URL is not set")
+  const form = new FormData()
+  form.append("file", file)
+  return xvmFetch<VenueImage>(`/venues/${venueId}/images`, { method: "POST", body: form }, personToken)
+}
+
+export async function deleteVenueImage(personToken: string, venueId: string, imageId: number): Promise<void> {
+  if (!process.env.XVM_API_BASE_URL) throw new Error("XVM_API_BASE_URL is not set")
+  return xvmFetch<void>(`/venues/${venueId}/images/${imageId}`, { method: "DELETE" }, personToken)
+}
+
 export async function createVenue(personToken: string, data: VenueCreate): Promise<VenueRow> {
   if (!process.env.XVM_API_BASE_URL) throw new Error("XVM_API_BASE_URL is not set")
   return xvmFetch<VenueRow>("/venues", { method: "POST", body: JSON.stringify(data) }, personToken)
