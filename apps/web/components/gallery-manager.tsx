@@ -37,6 +37,7 @@ export function GalleryManager({ venueId, initialImages }: GalleryManagerProps) 
   }
 
   const remove = async (imageId: number) => {
+    setError("")
     try {
       const res = await fetch(`/api/venues/${venueId}/gallery`, {
         method: "DELETE",
