@@ -573,24 +573,31 @@ export async function getPublicHoursForVenues(
   return merged
 }
 
-// No batch profile-fields endpoint exists yet (xvm-api#77) - unlike hours,
-// this is N individual getPublicVenue calls run concurrently, each already
-// cached/revalidated via its own fetch (see getPublicVenue). A venue that
-// fails or has no entry is simply absent from the result, matching the
-// no-Prisma-fallback pattern every caller of this already applies for hours.
+export interface PublicVenueBatch {
+  venues: Record<string, PublicVenue>
+}
+
+export async function getPublicVenueBatch(venueIds: string[]): Promise<PublicVenueBatch> {
+  if (!process.env.XVM_API_BASE_URL) throw new Error("XVM_API_BASE_URL is not set")
+  if (venueIds.length === 0) return { venues: {} }
+  const params = new URLSearchParams({ ids: venueIds.join(",") })
+  return xvmFetch<PublicVenueBatch>(`/public/venues?${params}`, { next: { revalidate: 60 } })
+}
+
+// Shares xvm-api's PUBLIC_HOURS_BATCH_MAX cap (xvm-api#78) - chunking and
+// merging so callers with more ids (Following is unbounded) don't silently
+// lose venues past the first batch. A venue that fails, doesn't exist, or is
+// deactivated is simply absent from the result, matching the no-Prisma-
+// fallback pattern every caller of this already applies for hours.
 export async function getPublicVenuesForIds(venueIds: string[]): Promise<Record<string, PublicVenue>> {
-  const entries = await Promise.all(
-    venueIds.map(async (id): Promise<[string, PublicVenue] | null> => {
-      try {
-        return [id, await getPublicVenue(id)]
-      } catch {
-        return null
-      }
-    })
-  )
   const merged: Record<string, PublicVenue> = {}
-  for (const entry of entries) {
-    if (entry) merged[entry[0]] = entry[1]
+  for (let i = 0; i < venueIds.length; i += PUBLIC_HOURS_BATCH_MAX) {
+    try {
+      const batch = await getPublicVenueBatch(venueIds.slice(i, i + PUBLIC_HOURS_BATCH_MAX))
+      Object.assign(merged, batch.venues)
+    } catch {
+      // whole chunk failed - those venues are simply absent, no partial retry
+    }
   }
   return merged
 }
