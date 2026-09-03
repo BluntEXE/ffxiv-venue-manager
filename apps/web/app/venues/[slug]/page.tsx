@@ -9,24 +9,26 @@ export async function generateMetadata({ params }: { params: Promise<{ slug: str
   const { slug } = await params
   const venue = await prisma.venue.findUnique({
     where: { slug, isActive: true },
-    select: { name: true, description: true, dataCenter: true, world: true, bannerUrl: true },
+    select: { xvmApiVenueId: true },
   })
   if (!venue) return { title: "Venue Not Found" }
-  const desc =
-    venue.description ??
-    `${venue.name} runs on ${venue.world}, ${venue.dataCenter}. Check opening hours and upcoming events.`
-  const ogImage = venue.bannerUrl ?? "/og-image.png"
+
+  const publicVenue = venue.xvmApiVenueId ? await getPublicVenue(venue.xvmApiVenueId).catch(() => null) : null
+  if (!publicVenue) return { title: slug }
+
+  const desc = publicVenue.description ?? `${publicVenue.name} is an FFXIV roleplay venue.`
+  const ogImage = publicVenue.banner_url ?? "/og-image.png"
   return {
-    title: venue.name,
+    title: publicVenue.name,
     description: desc,
     alternates: { canonical: `https://xivvenuemanager.com/venues/${slug}` },
     openGraph: {
       type: "website",
       siteName: "XIV Venue Manager",
-      title: `${venue.name} | XIV Venue Manager`,
+      title: `${publicVenue.name} | XIV Venue Manager`,
       description: desc,
       url: `https://xivvenuemanager.com/venues/${slug}`,
-      images: [{ url: ogImage, width: 1200, height: 630, alt: venue.name }],
+      images: [{ url: ogImage, width: 1200, height: 630, alt: publicVenue.name }],
     },
   }
 }
@@ -40,7 +42,7 @@ import { CopyAddressButton, CopyAddressInline } from "@/components/copy-address-
 import { SiteFooter } from "@/components/site-footer"
 import { VenueScheduleDisplay } from "@/components/venue-schedule-display"
 import { xvmHoursToScheduleEntries } from "@/lib/schedule-utils"
-import { getPublicHours, type PublicHours } from "@/lib/api/xvm-api"
+import { getPublicHours, getPublicVenue, type PublicHours, type PublicVenue } from "@/lib/api/xvm-api"
 
 export default async function VenueProfilePage({ params }: { params: Promise<{ slug: string }> }) {
   const session = await getServerSession(authOptions)
@@ -83,6 +85,35 @@ export default async function VenueProfilePage({ params }: { params: Promise<{ s
   }
   const scheduleEntries = xvmHours ? xvmHoursToScheduleEntries(xvmHours.rules) : []
 
+  // xvm-api is the only source for these now - no Prisma fallback. A venue
+  // not yet connected, or a failed request, gets a degraded page (these
+  // sections omitted) rather than silently serving Prisma's stale copy as
+  // current - same principle settings/route.ts already applies to visibility
+  // fields.
+  let publicVenue: PublicVenue | null = null
+  if (venue.xvmApiVenueId) {
+    try {
+      publicVenue = await getPublicVenue(venue.xvmApiVenueId)
+    } catch {
+      publicVenue = null
+    }
+  }
+  const displayName = publicVenue?.name ?? slug
+  const displayDescription = publicVenue?.description ?? null
+  const displayBannerUrl = publicVenue?.banner_url ?? null
+  const displayImages = publicVenue ? publicVenue.images.map((img) => img.image_url) : []
+  const displayLocation = publicVenue
+    ? {
+        dataCenter: publicVenue.data_center,
+        world: publicVenue.world,
+        district: publicVenue.district,
+        ward: publicVenue.ward,
+        plot: publicVenue.plot,
+        apartment: publicVenue.room,
+        location: null as string | null,
+      }
+    : null
+
   const [owner, isFollowing] = await Promise.all([
     prisma.user.findUnique({
       where: { id: venue.ownerId },
@@ -96,11 +127,11 @@ export default async function VenueProfilePage({ params }: { params: Promise<{ s
   const liveEvent = venue.events.find((e) => e.status === "ACTIVE")
   const upcomingEvents = venue.events.filter((e) => e.status === "PUBLISHED")
   const isOpen = !!liveEvent || (xvmHours?.open_now.open ?? false)
-  const tzLabel = getServerTimeLabel(venue.dataCenter)
+  const tzLabel = displayLocation ? getServerTimeLabel(displayLocation.dataCenter) : null
   const todayUTCDay = new Date().getUTCDay()
   const DAY_NAMES = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"]
-  const address = formatVenueAddress(venue)
-  const lifestreamCommand = formatLifestreamCommand(venue)
+  const address = displayLocation ? formatVenueAddress(displayLocation) : null
+  const lifestreamCommand = displayLocation ? formatLifestreamCommand(displayLocation) : null
 
   // Parse hours from settings
   const s = venue.settings as Record<string, unknown> | null
@@ -156,17 +187,20 @@ export default async function VenueProfilePage({ params }: { params: Promise<{ s
   const jsonLd = {
     "@context": "https://schema.org",
     "@type": "LocalBusiness",
-    name: venue.name,
-    description:
-      venue.description ?? `${venue.name} is an FFXIV roleplay venue on ${venue.dataCenter} - ${venue.world}.`,
+    name: displayName,
+    description: displayDescription ?? `${displayName} is an FFXIV roleplay venue.`,
     url: `https://xivvenuemanager.com/venues/${venue.slug}`,
-    ...(venue.bannerUrl ? { image: venue.bannerUrl } : {}),
-    address: {
-      "@type": "PostalAddress",
-      addressLocality: venue.world,
-      addressRegion: venue.dataCenter,
-      addressCountry: "Virtual",
-    },
+    ...(displayBannerUrl ? { image: displayBannerUrl } : {}),
+    ...(displayLocation
+      ? {
+          address: {
+            "@type": "PostalAddress",
+            addressLocality: displayLocation.world,
+            addressRegion: displayLocation.dataCenter,
+            addressCountry: "Virtual",
+          },
+        }
+      : {}),
   }
   // Escape HTML-unsafe chars so venue names can't break out of the JSON-LD block
   const safeJsonLd = JSON.stringify(jsonLd).replace(/</g, "\\u003c").replace(/>/g, "\\u003e").replace(/\//g, "\\u002f")
@@ -178,10 +212,10 @@ export default async function VenueProfilePage({ params }: { params: Promise<{ s
       {/* ── Hero banner ── */}
       <section className="profile-hero relative h-[340px] overflow-hidden border-b border-[var(--blue-008)]">
         {/* BG */}
-        {venue.bannerUrl ? (
+        {displayBannerUrl ? (
           // eslint-disable-next-line @next/next/no-img-element
           <img
-            src={venue.bannerUrl}
+            src={displayBannerUrl}
             alt=""
             className="absolute inset-0 w-full h-full object-cover scale-[1.05]"
             aria-hidden="true"
@@ -229,12 +263,14 @@ export default async function VenueProfilePage({ params }: { params: Promise<{ s
                 </span>
               )}
               <h1 className="font-cinzel font-bold text-[clamp(2.2rem,4vw,3.2rem)] tracking-[0.02em] leading-[1.05]">
-                {venue.name}
+                {displayName}
               </h1>
-              <div className="font-mono text-[0.86rem] text-[var(--xiv-blue)] mt-3 flex items-center gap-2">
-                <MapPin className="w-[15px] h-[15px]" />
-                {address}
-              </div>
+              {address && (
+                <div className="font-mono text-[0.86rem] text-[var(--xiv-blue)] mt-3 flex items-center gap-2">
+                  <MapPin className="w-[15px] h-[15px]" />
+                  {address}
+                </div>
+              )}
               {/* Tags from settings or eventType */}
               {/* Tags pulled from settings json if present */}
               {(() => {
@@ -285,7 +321,7 @@ export default async function VenueProfilePage({ params }: { params: Promise<{ s
               {" · "}open until {liveEvent.endTime ? <LocalTime date={liveEvent.endTime} formatStr="time" /> : "late"}
             </span>
             <div className="flex-1" />
-            <CopyAddressInline address={lifestreamCommand} />
+            {lifestreamCommand && <CopyAddressInline address={lifestreamCommand} />}
           </div>
         </div>
       )}
@@ -294,11 +330,7 @@ export default async function VenueProfilePage({ params }: { params: Promise<{ s
       <section className="prof-body pt-[44px] pb-[70px]">
         <div className="max-w-[1080px] mx-auto px-8">
           {(() => {
-            const hasMain = !!(
-              venue.description ||
-              upcomingEvents.length > 0 ||
-              (venue.galleryImages && venue.galleryImages.length > 0)
-            )
+            const hasMain = !!(displayDescription || upcomingEvents.length > 0 || displayImages.length > 0)
             return (
               <div
                 className={
@@ -311,12 +343,12 @@ export default async function VenueProfilePage({ params }: { params: Promise<{ s
                 {hasMain && (
                   <div className="prof-main flex flex-col gap-[34px]">
                     {/* About */}
-                    {venue.description && (
+                    {displayDescription && (
                       <div className="about">
                         <div className="block-title">
                           <Scroll /> About
                         </div>
-                        <p className="text-[0.96rem] text-[var(--fg-subtle)] leading-[1.7]">{venue.description}</p>
+                        <p className="text-[0.96rem] text-[var(--fg-subtle)] leading-[1.7]">{displayDescription}</p>
                       </div>
                     )}
 
@@ -354,19 +386,19 @@ export default async function VenueProfilePage({ params }: { params: Promise<{ s
                       </div>
                     )}
 
-                    {/* Gallery — real images from MinIO */}
-                    {venue.galleryImages && venue.galleryImages.length > 0 && (
+                    {/* Gallery */}
+                    {displayImages.length > 0 && (
                       <div className="gallery-block">
                         <div className="block-title">
                           <ImageIcon /> Gallery
                         </div>
                         <div className="gallery">
-                          {venue.galleryImages.map((url, i) => (
+                          {displayImages.map((url, i) => (
                             <a key={url} href={url} target="_blank" rel="noopener noreferrer" className="gtile">
                               {/* eslint-disable-next-line @next/next/no-img-element */}
                               <img
                                 src={url}
-                                alt={`${venue.name} gallery ${i + 1}`}
+                                alt={`${displayName} gallery ${i + 1}`}
                                 className="absolute inset-0 w-full h-full object-cover"
                               />
                             </a>
@@ -419,30 +451,32 @@ export default async function VenueProfilePage({ params }: { params: Promise<{ s
                   </div>
 
                   {/* Location */}
-                  <div className="dcard">
-                    <div className="dh">
-                      <MapPin /> Location
+                  {displayLocation && (
+                    <div className="dcard">
+                      <div className="dh">
+                        <MapPin /> Location
+                      </div>
+                      <div className="loc-block">
+                        {[
+                          { k: "Data Centre", v: displayLocation.dataCenter },
+                          { k: "World", v: displayLocation.world },
+                          ...(displayLocation.district ? [{ k: "District", v: displayLocation.district }] : []),
+                          ...(displayLocation.ward != null ? [{ k: "Ward", v: String(displayLocation.ward) }] : []),
+                          ...(displayLocation.plot != null
+                            ? [{ k: "Plot", v: String(displayLocation.plot) }]
+                            : displayLocation.apartment != null
+                              ? [{ k: "Room", v: String(displayLocation.apartment) }]
+                              : []),
+                        ].map(({ k, v }) => (
+                          <div key={k} className="loc-line">
+                            <span className="lk">{k}</span>
+                            <span className="lv">{v}</span>
+                          </div>
+                        ))}
+                        {lifestreamCommand && <CopyAddressButton address={lifestreamCommand} />}
+                      </div>
                     </div>
-                    <div className="loc-block">
-                      {[
-                        { k: "Data Centre", v: venue.dataCenter },
-                        { k: "World", v: venue.world },
-                        ...(venue.district ? [{ k: "District", v: venue.district }] : []),
-                        ...(venue.ward != null ? [{ k: "Ward", v: String(venue.ward) }] : []),
-                        ...(venue.plot != null
-                          ? [{ k: "Plot", v: String(venue.plot) }]
-                          : venue.apartment != null
-                            ? [{ k: "Room", v: String(venue.apartment) }]
-                            : []),
-                      ].map(({ k, v }) => (
-                        <div key={k} className="loc-line">
-                          <span className="lk">{k}</span>
-                          <span className="lv">{v}</span>
-                        </div>
-                      ))}
-                      <CopyAddressButton address={lifestreamCommand} />
-                    </div>
-                  </div>
+                  )}
 
                   {/* Hosted by */}
                   {owner && (

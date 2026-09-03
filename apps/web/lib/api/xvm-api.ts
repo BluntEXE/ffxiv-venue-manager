@@ -512,6 +512,32 @@ export async function getPublicHours(venueId: string, days?: number): Promise<Pu
   return xvmFetch<PublicHours>(`/public/venues/${venueId}/hours${params}`, { next: { revalidate: 60 } })
 }
 
+export interface PublicVenue {
+  id: string
+  slug: string
+  name: string
+  description: string | null
+  logo_url: string | null
+  banner_url: string | null
+  venue_type: string | null
+  data_center: string
+  world: string
+  district: string | null
+  ward: number | null
+  plot: number | null
+  apartment: number | null
+  room: number | null
+  subdivision: boolean | null
+  timezone: string
+  images: VenueImageRow[]
+}
+
+export async function getPublicVenue(venueId: string): Promise<PublicVenue> {
+  if (!process.env.XVM_API_BASE_URL) throw new Error("XVM_API_BASE_URL is not set")
+  // Same shared public rate limiter as getPublicHours - cached for the same reason.
+  return xvmFetch<PublicVenue>(`/public/venues/${venueId}`, { next: { revalidate: 60 } })
+}
+
 export interface PublicHoursBatch {
   venues: Record<string, PublicHours>
 }
