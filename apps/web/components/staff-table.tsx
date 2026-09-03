@@ -62,9 +62,9 @@ function DiscordMentionButton({ discordId }: { discordId: string }) {
         setCopied(true)
         setTimeout(() => setCopied(false), 2000)
       }}
-      className="opacity-0 group-hover:opacity-100 transition-opacity text-[var(--fg-faint)] hover:text-[var(--xiv-blue)]"
+      className="opacity-0 group-hover:opacity-100 focus-visible:opacity-100 transition-opacity text-[var(--fg-faint)] hover:text-[var(--xiv-blue)]"
       title={copied ? "Copied!" : "Copy Discord mention"}
-      aria-label="Copy Discord mention"
+      aria-label={copied ? "Copied!" : "Copy Discord mention"}
     >
       {copied ? <Check className="w-3 h-3" /> : <AtSign className="w-3 h-3" />}
     </button>
@@ -303,7 +303,7 @@ export function StaffTable({
                       {canManage && (
                         <button
                           onClick={() => startEdit(member)}
-                          className="opacity-0 group-hover:opacity-100 transition-opacity text-[var(--fg-faint)] hover:text-[var(--xiv-blue)]"
+                          className="opacity-0 group-hover:opacity-100 focus-visible:opacity-100 transition-opacity text-[var(--fg-faint)] hover:text-[var(--xiv-blue)]"
                           aria-label="Edit nickname"
                         >
                           <Pencil className="w-3 h-3" />
