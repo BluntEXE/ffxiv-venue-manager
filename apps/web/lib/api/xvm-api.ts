@@ -627,6 +627,7 @@ export async function deletePosition(personToken: string, venueId: string, posit
 export interface MembershipPerson {
   id: number
   display_name: string
+  discord_id: string | null
 }
 
 export interface MembershipRow {

@@ -14,7 +14,7 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
-import { ChevronDown, Check, Pencil, X } from "lucide-react"
+import { ChevronDown, Check, Pencil, X, AtSign } from "lucide-react"
 import { resolveDisplayName } from "@/lib/display-name"
 import { intColorToHex } from "@/lib/api/position-convert"
 import { DataTable } from "@/components/ui/data-table"
@@ -37,6 +37,9 @@ export type StaffMember = {
     // xvm-api's MembershipPerson doesn't expose a character name yet
     // (xvm-api#54) - always null until that lands.
     characterName: string | null
+    // Manager-only per xvm-api - null for a staff-tier reader or an
+    // unlinked Discord account.
+    discordId: string | null
   } | null
   venueId: string
 }
@@ -48,6 +51,24 @@ function memberDisplayName(member: Pick<StaffMember, "nickname" | "user">): stri
     displayName: member.user?.displayName,
     discordName: member.user?.name,
   })
+}
+
+function DiscordMentionButton({ discordId }: { discordId: string }) {
+  const [copied, setCopied] = useState(false)
+  return (
+    <button
+      onClick={() => {
+        navigator.clipboard?.writeText(`<@${discordId}>`).catch(() => {})
+        setCopied(true)
+        setTimeout(() => setCopied(false), 2000)
+      }}
+      className="opacity-0 group-hover:opacity-100 transition-opacity text-[var(--fg-faint)] hover:text-[var(--xiv-blue)]"
+      title={copied ? "Copied!" : "Copy Discord mention"}
+      aria-label="Copy Discord mention"
+    >
+      {copied ? <Check className="w-3 h-3" /> : <AtSign className="w-3 h-3" />}
+    </button>
+  )
 }
 
 const DEFAULT_ROLE_COLOR = "#6c7086"
@@ -287,6 +308,9 @@ export function StaffTable({
                         >
                           <Pencil className="w-3 h-3" />
                         </button>
+                      )}
+                      {canManage && member.user?.discordId && (
+                        <DiscordMentionButton discordId={member.user.discordId} />
                       )}
                     </div>
                   )}

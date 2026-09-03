@@ -52,6 +52,7 @@ function toStaffShape(member: MembershipRow, positionsById: Map<number, Position
       displayName: member.person.display_name,
       image: null,
       characterName: null,
+      discordId: member.person.discord_id,
     },
     venueId,
   }
