@@ -19,6 +19,7 @@ const eslintConfig = defineConfig([
     "clean-pending-owner.js",
     // Run via `tsx`, not node - tsx resolves the .ts prisma client import:
     "backfill-venue-profile.js",
+    // Run via `tsx`, not `node` - needs the generated TS Prisma client, see its own header comment.
     "backfill-gallery-images.js",
   ]),
 ])
