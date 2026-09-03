@@ -158,6 +158,13 @@ export const GET = withRateLimit<{ params: Promise<{ venueId: string }> }>(
             responseBody.revenueVisibility = detail.revenue_visibility
             responseBody.eventVisibility = detail.event_visibility
             responseBody.venueType = detail.venue_type
+            responseBody.name = detail.name
+            responseBody.description = detail.description
+            responseBody.bannerUrl = detail.banner_url
+            responseBody.logoUrl = detail.logo_url
+            responseBody.district = detail.district
+            responseBody.ward = detail.ward
+            responseBody.apartment = detail.room
             degraded = false
           } catch (err) {
             if (isXvmAuthFailure(err)) {
@@ -172,6 +179,13 @@ export const GET = withRateLimit<{ params: Promise<{ venueId: string }> }>(
           delete responseBody.revenueVisibility
           delete responseBody.eventVisibility
           delete responseBody.venueType
+          delete responseBody.name
+          delete responseBody.description
+          delete responseBody.bannerUrl
+          delete responseBody.logoUrl
+          delete responseBody.district
+          delete responseBody.ward
+          delete responseBody.apartment
           responseBody.visibilityDegraded = true
         }
       }
