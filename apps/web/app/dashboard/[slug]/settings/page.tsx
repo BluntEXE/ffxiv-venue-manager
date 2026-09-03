@@ -143,18 +143,9 @@ export default function SettingsPage({ params }: { params: Promise<{ slug: strin
 
         // Set venue profile DB fields
         setVenueId(venue.id)
-        setVenueName(venue.name ?? "")
-        setVenueDescription(venue.description ?? "")
-        setVenueDistrict(venue.district ?? "__none__")
-        setVenueWard(venue.ward != null ? String(venue.ward) : "")
-        setVenuePlot(venue.plot != null ? String(venue.plot) : "")
-        setVenueApartment(venue.apartment != null ? String(venue.apartment) : "")
-        setHousingType(venue.apartment != null ? "apartment" : "house")
         setVenueDataCenter(venue.dataCenter ?? "")
         setVenueWorld(venue.world ?? "")
         setGalleryImages(venue.galleryImages ?? [])
-        setBannerUrl(venue.bannerUrl ?? null)
-        setLogoUrl(venue.logoUrl ?? null)
         setXvmApiVenueId(venue.xvmApiVenueId ?? null)
         setXvmApiVenueLinkedAt(venue.xvmApiVenueLinkedAt ?? null)
         if (venue.memberships?.[0]) {
@@ -165,6 +156,15 @@ export default function SettingsPage({ params }: { params: Promise<{ slug: strin
         const settingsResponse = await fetch(`/api/venues/${venue.id}/settings`)
         if (settingsResponse.ok) {
           const settingsData = await settingsResponse.json()
+          setVenueName(settingsData.name ?? "")
+          setVenueDescription(settingsData.description ?? "")
+          setVenueDistrict(settingsData.district ?? "__none__")
+          setVenueWard(settingsData.ward != null ? String(settingsData.ward) : "")
+          setVenuePlot(settingsData.plot != null ? String(settingsData.plot) : "")
+          setVenueApartment(settingsData.apartment != null ? String(settingsData.apartment) : "")
+          setHousingType(settingsData.apartment != null ? "apartment" : "house")
+          setBannerUrl(settingsData.bannerUrl ?? null)
+          setLogoUrl(settingsData.logoUrl ?? null)
           setSettings({
             ...settingsData,
             // Ensure discordWebhookUrl is never null
