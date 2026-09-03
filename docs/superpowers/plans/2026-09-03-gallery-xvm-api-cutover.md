@@ -381,6 +381,84 @@ git add apps/web/app/dashboard/\[slug\]/settings/page.tsx
 git commit -m "feat: read settings-page gallery from xvm-api image rows"
 ```
 
+## Task 5b: Close the compile gap — add a gallery GET and wire the settings page to it
+
+**Added after execution found a real gap Task 5 didn't anticipate:** Task 5's investigation confirmed the settings page's `venue` (and its `galleryImages` field) comes from `GET /api/venues?slug=...`, a Prisma-only route serving many other fields alongside it — so Task 5 correctly made no change there (same reasoning as Task 4). But Task 2 already rewrote the gallery route's POST/DELETE to write exclusively to xvm-api, meaning `Prisma.Venue.galleryImages` is now permanently stale (nothing writes to it anymore) and Task 3 already changed `GalleryManager`'s `initialImages` prop to require `VenueImage[]`, not `string[]`. Left as-is, the settings page (still passing the stale Prisma `string[]`) fails to typecheck and would render actually-wrong data even if it did compile. This task closes that gap with the smallest fix: a `GET` on the gallery route itself, and a dedicated fetch on the settings page to populate `GalleryManager` from it — independent of the Prisma-sourced `venue` object entirely.
+
+**Files:**
+- Modify: `apps/web/app/api/venues/[venueId]/gallery/route.ts`
+- Modify: `apps/web/app/dashboard/[slug]/settings/page.tsx`
+
+- [ ] **Step 1: Add a GET handler to the gallery route**
+
+Add this to `apps/web/app/api/venues/[venueId]/gallery/route.ts`, alongside the existing `POST`/`DELETE` (same file, add the import and function — don't touch POST/DELETE):
+
+```typescript
+import { getValidXvmApiToken, xvmApiErrorResponse } from "@/lib/api/xvm-api-store"
+import { getVenue, uploadVenueImage, deleteVenueImage } from "@/lib/api/xvm-api"
+```
+
+(extends the existing `getValidXvmApiToken, xvmApiErrorResponse` import and the existing `uploadVenueImage, deleteVenueImage` import from `@/lib/api/xvm-api` — add `getVenue` to that second import rather than duplicating the import line)
+
+```typescript
+// GET: the venue's current gallery images
+export async function GET(req: NextRequest, { params }: { params: Promise<{ venueId: string }> }) {
+  const session = await getServerSession(authOptions)
+  if (!session?.user?.id) return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
+
+  const { venueId } = await params
+
+  const token = await getValidXvmApiToken(session.user.id)
+  if (!token) return NextResponse.json({ error: "xvm-api link not established yet" }, { status: 503 })
+
+  const gate = await requireXvmVenueId(venueId)
+  if (gate.error) return gate.error
+
+  try {
+    const detail = await getVenue(token, gate.xvmApiVenueId!)
+    return NextResponse.json(detail.images)
+  } catch (err) {
+    return xvmApiErrorResponse(err, session.user.id, "[gallery] GET error")
+  }
+}
+```
+
+No membership-tier check here — reading the gallery doesn't need Manager, any member should see it (matches every other read in this codebase; the write endpoints already enforce Manager server-side via xvm-api).
+
+- [ ] **Step 2: Typecheck and lint the route**
+
+Run: `cd apps/web && npx tsc --noEmit && npx eslint app/api/venues/\[venueId\]/gallery/route.ts`
+Expected: no errors.
+
+- [ ] **Step 3: Wire the settings page to fetch from it**
+
+In `apps/web/app/dashboard/[slug]/settings/page.tsx`, find where `venueId` becomes available (it's derived from the Prisma-sourced `venue.id` fetched earlier in the same effect/handler that currently sets `galleryImages` at line 155 — read the surrounding code to find the exact right spot, likely the same `useEffect` or a sibling one that runs once `venueId` is known). Add a fetch to the new endpoint and use its result instead of `venue.galleryImages`:
+
+```typescript
+fetch(`/api/venues/${venueId}/gallery`)
+  .then((res) => (res.ok ? res.json() : []))
+  .then((images: VenueImage[]) => setGalleryImages(images))
+  .catch(() => setGalleryImages([]))
+```
+
+Import `VenueImage` from `@/lib/api/xvm-api` and change the `galleryImages` state type from `useState<string[]>([])` to `useState<VenueImage[]>([])` (line ~81). Remove the old `setGalleryImages(venue.galleryImages ?? [])` line (~155) — it's now replaced by the new fetch, not supplemented by it (the old Prisma field is stale and must not be used, even as a fallback, since a stale-but-present value is worse than an empty list while loading).
+
+Then fix the two consumers:
+- Line ~646: this passes `galleryImages` (as `string[]`) into `LogoUpload`'s `galleryImages` prop — a **different, unrelated** component from `GalleryManager`, discovered during Task 5's investigation. Read what `LogoUpload` actually uses `galleryImages` for (check `apps/web/components/logo-upload.tsx`) before touching this line — if it just needs the list of URLs for some picker UI, pass `galleryImages.map(img => img.image_url)` instead of the raw array; don't guess, read the component first.
+- Line ~693: pass the new `VenueImage[]` state directly into `GalleryManager`'s `initialImages` prop (this now matches, since both sides are `VenueImage[]`).
+
+- [ ] **Step 4: Typecheck**
+
+Run: `cd apps/web && npx tsc --noEmit`
+Expected: no errors, including no more type mismatch between this page and `GalleryManager`'s prop type.
+
+- [ ] **Step 5: Commit**
+
+```bash
+git add apps/web/app/api/venues/\[venueId\]/gallery/route.ts apps/web/app/dashboard/\[slug\]/settings/page.tsx
+git commit -m "feat: add gallery GET endpoint and wire settings page to it"
+```
+
 ## Task 6: Live verification
 
 **Files:** none — verification only.
