@@ -4,6 +4,8 @@ import { useState, useRef } from "react"
 import { ImageIcon, Trash2, Upload, X } from "lucide-react"
 import type { VenueImage } from "@/lib/api/xvm-api"
 
+const MAX_UPLOAD_BYTES = 8 * 1024 * 1024
+
 interface GalleryManagerProps {
   venueId: string
   initialImages: VenueImage[]
@@ -17,6 +19,11 @@ export function GalleryManager({ venueId, initialImages }: GalleryManagerProps) 
 
   const upload = async (file: File) => {
     setError("")
+    if (file.size > MAX_UPLOAD_BYTES) {
+      setError("Image is too large - max 8 MB.")
+      if (inputRef.current) inputRef.current.value = ""
+      return
+    }
     setUploading(true)
     try {
       const form = new FormData()
