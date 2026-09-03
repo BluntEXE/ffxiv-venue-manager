@@ -4,7 +4,7 @@ import { authOptions } from "@/lib/auth"
 import { prisma } from "@/lib/prisma"
 import { invalidateCache, cacheKeys } from "@/lib/redis-cache"
 import { getValidXvmApiToken, xvmApiErrorResponse } from "@/lib/api/xvm-api-store"
-import { uploadVenueImage, deleteVenueImage } from "@/lib/api/xvm-api"
+import { getVenue, uploadVenueImage, deleteVenueImage } from "@/lib/api/xvm-api"
 
 async function requireXvmVenueId(venueId: string) {
   const venue = await prisma.venue.findUnique({ where: { id: venueId }, select: { xvmApiVenueId: true } })
@@ -17,6 +17,27 @@ async function requireXvmVenueId(venueId: string) {
     }
   }
   return { xvmApiVenueId: venue.xvmApiVenueId }
+}
+
+// GET: the venue's current gallery images
+export async function GET(req: NextRequest, { params }: { params: Promise<{ venueId: string }> }) {
+  const session = await getServerSession(authOptions)
+  if (!session?.user?.id) return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
+
+  const { venueId } = await params
+
+  const token = await getValidXvmApiToken(session.user.id)
+  if (!token) return NextResponse.json({ error: "xvm-api link not established yet" }, { status: 503 })
+
+  const gate = await requireXvmVenueId(venueId)
+  if (gate.error) return gate.error
+
+  try {
+    const detail = await getVenue(token, gate.xvmApiVenueId!)
+    return NextResponse.json(detail.images)
+  } catch (err) {
+    return xvmApiErrorResponse(err, session.user.id, "[gallery] GET error")
+  }
 }
 
 // POST: upload a new gallery image
