@@ -33,8 +33,8 @@ async function requireXvmVenueId(venueId: string) {
   return { xvmApiVenueId: venue.xvmApiVenueId, slug: venue.slug }
 }
 
-export const PATCH = withRateLimit(
-  async (request: NextRequest, context?: { params: Promise<{ venueId: string }> }) => {
+export const PATCH = withRateLimit<{ params: Promise<{ venueId: string }> }>(
+  async (request, context) => {
     if (!context?.params) {
       return NextResponse.json({ error: "Invalid request" }, { status: 400 })
     }
