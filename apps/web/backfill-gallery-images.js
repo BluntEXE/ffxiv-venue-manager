@@ -10,7 +10,10 @@
 // which source URLs have already been uploaded. A re-run after a partial
 // failure only retries the URLs that didn't succeed last time - it can't
 // duplicate images, and it isn't fooled by new uploads through the live UI
-// changing xvm-api's image count for a venue.
+// changing xvm-api's image count for a venue. That progress file is
+// machine-local - a re-run from a different box has no memory of a prior
+// run's successes, so it re-uploads (and duplicates) anything already
+// migrated there. Run this from one machine, or copy the progress file over.
 //
 // Note: this repo's schema.prisma emits a TS-native client to ../generated/prisma
 // (not the classic @prisma/client default location), and requires the same
