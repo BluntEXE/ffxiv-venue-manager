@@ -9,21 +9,16 @@ export interface VenueLocationFields {
   ward?: number | null
   plot?: number | null
   apartment?: number | null
-  location?: string | null
 }
 
-/** Returns a formatted "Datacenter · World · District · W# · P#/Apt#" string. Falls back to legacy location text. */
+/** Returns a formatted "Datacenter · World · District · W# · P#/Apt#" string. */
 export function formatVenueAddress(v: VenueLocationFields): string {
   const parts: string[] = [v.dataCenter, v.world]
 
-  if (v.district || v.ward || v.plot || v.apartment) {
-    if (v.district) parts.push(v.district)
-    if (v.ward != null) parts.push(`W${v.ward}`)
-    if (v.plot != null) parts.push(`P${v.plot}`)
-    else if (v.apartment != null) parts.push(`Apt${v.apartment}`)
-  } else if (v.location) {
-    parts.push(v.location)
-  }
+  if (v.district) parts.push(v.district)
+  if (v.ward != null) parts.push(`W${v.ward}`)
+  if (v.plot != null) parts.push(`P${v.plot}`)
+  else if (v.apartment != null) parts.push(`Apt${v.apartment}`)
 
   return parts.join(" · ")
 }
@@ -39,18 +34,15 @@ export function formatLifestreamCommand(v: VenueLocationFields): string {
 
 /** Short location string (district + ward + plot/apartment only, no DC/world). */
 export function formatVenueLocationShort(
-  v: Pick<VenueLocationFields, "district" | "ward" | "plot" | "apartment" | "location">
+  v: Pick<VenueLocationFields, "district" | "ward" | "plot" | "apartment">
 ): string | null {
-  if (v.district || v.ward || v.plot || v.apartment) {
-    return (
-      [
-        v.district ?? null,
-        v.ward != null ? `W${v.ward}` : null,
-        v.plot != null ? `P${v.plot}` : v.apartment != null ? `Apt${v.apartment}` : null,
-      ]
-        .filter(Boolean)
-        .join(" ") || null
-    )
-  }
-  return v.location ?? null
+  return (
+    [
+      v.district ?? null,
+      v.ward != null ? `W${v.ward}` : null,
+      v.plot != null ? `P${v.plot}` : v.apartment != null ? `Apt${v.apartment}` : null,
+    ]
+      .filter(Boolean)
+      .join(" ") || null
+  )
 }

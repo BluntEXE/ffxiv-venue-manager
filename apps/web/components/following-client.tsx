@@ -16,7 +16,6 @@ type FollowingVenue = {
   ward: number | null
   plot: number | null
   apartment: number | null
-  location: string | null
   followCount: number
   isOpenNow: boolean
   activeEvent: { title: string } | null
@@ -30,7 +29,7 @@ export function FollowingClient({ venues, followCount }: { venues: FollowingVenu
     if (tab === "open" && !v.isOpenNow) return false
     if (search) {
       const q = search.toLowerCase()
-      return [v.name, v.dataCenter, v.world, v.district ?? "", v.location ?? ""].join(" ").toLowerCase().includes(q)
+      return [v.name, v.dataCenter, v.world, v.district ?? ""].join(" ").toLowerCase().includes(q)
     }
     return true
   })

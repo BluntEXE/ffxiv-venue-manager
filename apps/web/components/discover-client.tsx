@@ -16,7 +16,6 @@ export type DiscoverVenue = {
   ward: number | null
   plot: number | null
   apartment: number | null
-  location: string | null
   description: string | null
   followCount: number
   isFollowed: boolean
@@ -48,7 +47,7 @@ export function DiscoverClient({
     if (tab === "tonight" && !v.isTonightOpen) return false
     if (search) {
       const q = search.toLowerCase()
-      return [v.name, v.dataCenter, v.world, v.district ?? "", v.location ?? ""].join(" ").toLowerCase().includes(q)
+      return [v.name, v.dataCenter, v.world, v.district ?? ""].join(" ").toLowerCase().includes(q)
     }
     return true
   })
