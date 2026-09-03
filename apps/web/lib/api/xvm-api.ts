@@ -1,3 +1,5 @@
+import { cache } from "react"
+
 const XVM_API_BASE_URL = process.env.XVM_API_BASE_URL
 const XVM_API_DASHBOARD_SERVICE_TOKEN = process.env.XVM_API_DASHBOARD_SERVICE_TOKEN
 
@@ -512,6 +514,36 @@ export async function getPublicHours(venueId: string, days?: number): Promise<Pu
   return xvmFetch<PublicHours>(`/public/venues/${venueId}/hours${params}`, { next: { revalidate: 60 } })
 }
 
+export interface PublicVenue {
+  id: string
+  slug: string
+  name: string
+  description: string | null
+  logo_url: string | null
+  banner_url: string | null
+  venue_type: string | null
+  data_center: string
+  world: string
+  district: string | null
+  ward: number | null
+  plot: number | null
+  apartment: number | null
+  room: number | null
+  subdivision: boolean | null
+  timezone: string
+  images: VenueImageRow[]
+}
+
+// React's per-request cache() on top of the fetch-level revalidate: 60 below -
+// generateMetadata and the page component both call this for the same venue
+// in one render pass, and against a shared 60 req/min public rate limiter
+// (see xvm-api#77) a duplicate call within a single request is pure waste.
+export const getPublicVenue = cache(async (venueId: string): Promise<PublicVenue> => {
+  if (!process.env.XVM_API_BASE_URL) throw new Error("XVM_API_BASE_URL is not set")
+  // Same shared public rate limiter as getPublicHours - cached for the same reason.
+  return xvmFetch<PublicVenue>(`/public/venues/${venueId}`, { next: { revalidate: 60 } })
+})
+
 export interface PublicHoursBatch {
   venues: Record<string, PublicHours>
 }
@@ -537,6 +569,35 @@ export async function getPublicHoursForVenues(
   for (let i = 0; i < venueIds.length; i += PUBLIC_HOURS_BATCH_MAX) {
     const batch = await getPublicHoursBatch(venueIds.slice(i, i + PUBLIC_HOURS_BATCH_MAX), days)
     Object.assign(merged, batch.venues)
+  }
+  return merged
+}
+
+export interface PublicVenueBatch {
+  venues: Record<string, PublicVenue>
+}
+
+export async function getPublicVenueBatch(venueIds: string[]): Promise<PublicVenueBatch> {
+  if (!process.env.XVM_API_BASE_URL) throw new Error("XVM_API_BASE_URL is not set")
+  if (venueIds.length === 0) return { venues: {} }
+  const params = new URLSearchParams({ ids: venueIds.join(",") })
+  return xvmFetch<PublicVenueBatch>(`/public/venues?${params}`, { next: { revalidate: 60 } })
+}
+
+// Shares xvm-api's PUBLIC_HOURS_BATCH_MAX cap (xvm-api#78) - chunking and
+// merging so callers with more ids (Following is unbounded) don't silently
+// lose venues past the first batch. A venue that fails, doesn't exist, or is
+// deactivated is simply absent from the result, matching the no-Prisma-
+// fallback pattern every caller of this already applies for hours.
+export async function getPublicVenuesForIds(venueIds: string[]): Promise<Record<string, PublicVenue>> {
+  const merged: Record<string, PublicVenue> = {}
+  for (let i = 0; i < venueIds.length; i += PUBLIC_HOURS_BATCH_MAX) {
+    try {
+      const batch = await getPublicVenueBatch(venueIds.slice(i, i + PUBLIC_HOURS_BATCH_MAX))
+      Object.assign(merged, batch.venues)
+    } catch {
+      // whole chunk failed - those venues are simply absent, no partial retry
+    }
   }
   return merged
 }

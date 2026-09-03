@@ -94,3 +94,4 @@ docs/superpowers/brainstorm/
 .superpowers/
 docker/minio/data/
 docs/superpowers/templates/architecture-notes-template.html
+apps/web/backfill-venue-profile.progress.json

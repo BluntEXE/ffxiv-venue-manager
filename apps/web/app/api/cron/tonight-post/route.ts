@@ -2,6 +2,7 @@ import { NextResponse } from "next/server"
 import { prisma } from "@/lib/prisma"
 import { verifyCronAuth } from "@/lib/cron-auth"
 import { postTonightList } from "@/lib/discord-feed"
+import { getPublicVenuesForIds, type PublicVenue } from "@/lib/api/xvm-api"
 
 export async function GET(request: Request) {
   const authError = verifyCronAuth(request)
@@ -25,13 +26,10 @@ export async function GET(request: Request) {
       },
     },
     select: {
-      name: true,
       slug: true,
       dataCenter: true,
       world: true,
-      district: true,
-      ward: true,
-      plot: true,
+      xvmApiVenueId: true,
       events: {
         where: {
           status: { in: ["PUBLISHED", "ACTIVE"] },
@@ -50,17 +48,24 @@ export async function GET(request: Request) {
     return NextResponse.json({ success: true, posted: false, venues: 0 })
   }
 
-  const payload = venues.map((v) => ({
-    name: v.name,
-    slug: v.slug,
-    dataCenter: v.dataCenter,
-    world: v.world,
-    district: v.district,
-    ward: v.ward,
-    plot: v.plot,
-    scheduledStart: v.events[0].startTime,
-    scheduledEnd: v.events[0].endTime,
-  }))
+  const xvmVenueIds = venues.map((v) => v.xvmApiVenueId).filter((id): id is string => id !== null)
+  const profileByVenue: Record<string, PublicVenue> =
+    xvmVenueIds.length > 0 ? await getPublicVenuesForIds(xvmVenueIds) : {}
+
+  const payload = venues.map((v) => {
+    const xvmProfile = v.xvmApiVenueId ? profileByVenue[v.xvmApiVenueId] : undefined
+    return {
+      name: xvmProfile?.name ?? v.slug,
+      slug: v.slug,
+      dataCenter: v.dataCenter,
+      world: v.world,
+      district: xvmProfile?.district ?? null,
+      ward: xvmProfile?.ward ?? null,
+      plot: xvmProfile?.plot ?? null,
+      scheduledStart: v.events[0].startTime,
+      scheduledEnd: v.events[0].endTime,
+    }
+  })
 
   postTonightList(payload)
 

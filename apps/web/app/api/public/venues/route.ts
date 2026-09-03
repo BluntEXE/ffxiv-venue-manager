@@ -6,7 +6,7 @@ import { NextRequest, NextResponse } from "next/server"
 import { prisma } from "@/lib/prisma"
 import { parseVenueSettings } from "@/lib/types/venue-settings"
 import { xvmHoursToScheduleEntries } from "@/lib/schedule-utils"
-import { getPublicHoursForVenues, type PublicHours } from "@/lib/api/xvm-api"
+import { getPublicHoursForVenues, getPublicVenuesForIds, type PublicHours, type PublicVenue } from "@/lib/api/xvm-api"
 
 export async function GET(req: NextRequest) {
   const dc = req.nextUrl.searchParams.get("dc") ?? undefined
@@ -21,16 +21,9 @@ export async function GET(req: NextRequest) {
     },
     select: {
       id: true,
-      name: true,
       slug: true,
       dataCenter: true,
       world: true,
-      district: true,
-      ward: true,
-      plot: true,
-      apartment: true,
-      logoUrl: true,
-      bannerUrl: true,
       settings: true,
       ffxivVenueId: true,
       xvmApiVenueId: true,
@@ -65,12 +58,14 @@ export async function GET(req: NextRequest) {
   // getPublicHoursForVenues chunks and merges rather than truncating.
   const xvmVenueIds = venues.map((v) => v.xvmApiVenueId).filter((id): id is string => id !== null)
   let hoursByVenue: Record<string, PublicHours> = {}
+  let profileByVenue: Record<string, PublicVenue> = {}
   if (xvmVenueIds.length > 0) {
     try {
       hoursByVenue = await getPublicHoursForVenues(xvmVenueIds, 14)
     } catch {
       hoursByVenue = {}
     }
+    profileByVenue = await getPublicVenuesForIds(xvmVenueIds)
   }
 
   const mapped = venues.map((v) => {
@@ -78,19 +73,20 @@ export async function GET(req: NextRequest) {
     const tonightShift = v.shifts.find((s) => s.status === "SCHEDULED")
     const settings = parseVenueSettings(v.settings)
     const xvmHours = v.xvmApiVenueId ? hoursByVenue[v.xvmApiVenueId] : undefined
+    const xvmProfile = v.xvmApiVenueId ? profileByVenue[v.xvmApiVenueId] : undefined
     const scheduleEntries = xvmHours ? xvmHoursToScheduleEntries(xvmHours.rules) : []
     return {
       id: v.id,
-      name: v.name,
+      name: xvmProfile?.name ?? v.slug,
       slug: v.slug,
       dataCenter: v.dataCenter,
       world: v.world,
-      district: v.district,
-      ward: v.ward,
-      plot: v.plot,
-      apartment: v.apartment,
-      logoUrl: v.logoUrl,
-      bannerUrl: v.bannerUrl,
+      district: xvmProfile?.district ?? null,
+      ward: xvmProfile?.ward ?? null,
+      plot: xvmProfile?.plot ?? null,
+      apartment: xvmProfile?.room ?? null,
+      logoUrl: xvmProfile?.logo_url ?? null,
+      bannerUrl: xvmProfile?.banner_url ?? null,
       isAdult: settings.isAdult ?? false,
       ffxivVenuesId: v.ffxivVenueId,
       openSince: activeShift ? (activeShift.actualStart ?? activeShift.scheduledStart) : null,

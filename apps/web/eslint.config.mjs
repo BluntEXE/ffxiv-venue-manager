@@ -17,6 +17,8 @@ const eslintConfig = defineConfig([
     // Standalone CJS ops scripts (run via `node <file>.js`, not part of ESM bundle):
     "apply-indexes.js",
     "clean-pending-owner.js",
+    // Run via `tsx`, not node - tsx resolves the .ts prisma client import:
+    "backfill-venue-profile.js",
   ]),
 ])
 

@@ -10,7 +10,7 @@ export const metadata: Metadata = {
 import { prisma } from "@/lib/prisma"
 import { FollowingClient } from "@/components/following-client"
 import { ExploreLayout } from "@/components/explore-layout"
-import { getPublicHoursForVenues, type PublicHours } from "@/lib/api/xvm-api"
+import { getPublicHoursForVenues, getPublicVenuesForIds, type PublicHours, type PublicVenue } from "@/lib/api/xvm-api"
 
 export const dynamic = "force-dynamic"
 
@@ -52,26 +52,29 @@ export default async function FollowingPage() {
   // (unless a live event is running) - Prisma no longer computes hours.
   const xvmVenueIds = follows.map((f) => f.venue.xvmApiVenueId).filter((id): id is string => id !== null)
   let hoursByVenue: Record<string, PublicHours> = {}
+  let profileByVenue: Record<string, PublicVenue> = {}
   if (xvmVenueIds.length > 0) {
     try {
       hoursByVenue = await getPublicHoursForVenues(xvmVenueIds)
     } catch {
       hoursByVenue = {}
     }
+    profileByVenue = await getPublicVenuesForIds(xvmVenueIds)
   }
 
   const venues = follows.map((f) => {
     const xvmHoursEntry = f.venue.xvmApiVenueId ? hoursByVenue[f.venue.xvmApiVenueId] : undefined
+    const xvmProfile = f.venue.xvmApiVenueId ? profileByVenue[f.venue.xvmApiVenueId] : undefined
     return {
       id: f.venue.id,
-      name: f.venue.name,
+      name: xvmProfile?.name ?? f.venue.slug,
       slug: f.venue.slug,
       dataCenter: f.venue.dataCenter,
       world: f.venue.world,
-      district: f.venue.district,
-      ward: f.venue.ward,
-      plot: f.venue.plot,
-      apartment: f.venue.apartment,
+      district: xvmProfile?.district ?? null,
+      ward: xvmProfile?.ward ?? null,
+      plot: xvmProfile?.plot ?? null,
+      apartment: xvmProfile?.room ?? null,
       followCount: f.venue._count.follows,
       isOpenNow: f.venue.events.length > 0 || (xvmHoursEntry?.open_now.open ?? false),
       activeEvent: f.venue.events[0] ?? null,

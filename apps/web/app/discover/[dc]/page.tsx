@@ -6,6 +6,7 @@ import { SiteFooter } from "@/components/site-footer"
 import { Button } from "@/components/ui/button"
 import { MapPin, ArrowRight, ChevronLeft } from "lucide-react"
 import { formatVenueLocationShort } from "@/lib/venue-location"
+import { getPublicVenuesForIds, type PublicVenue } from "@/lib/api/xvm-api"
 
 export const dynamic = "force-dynamic"
 
@@ -64,8 +65,25 @@ export default async function DataCentrePage({ params }: { params: Promise<{ dc:
     orderBy: { createdAt: "desc" },
   })
 
+  const xvmVenueIds = venues.map((v) => v.xvmApiVenueId).filter((id): id is string => id !== null)
+  const profileByVenue: Record<string, PublicVenue> =
+    xvmVenueIds.length > 0 ? await getPublicVenuesForIds(xvmVenueIds) : {}
+
+  const enriched = venues.map((v) => {
+    const xvmProfile = v.xvmApiVenueId ? profileByVenue[v.xvmApiVenueId] : undefined
+    return {
+      ...v,
+      name: xvmProfile?.name ?? v.slug,
+      description: xvmProfile?.description ?? null,
+      district: xvmProfile?.district ?? null,
+      ward: xvmProfile?.ward ?? null,
+      plot: xvmProfile?.plot ?? null,
+      apartment: xvmProfile?.room ?? null,
+    }
+  })
+
   // Sort: open now first, tonight second, rest alphabetical
-  const sorted = [...venues].sort((a, b) => {
+  const sorted = [...enriched].sort((a, b) => {
     const aOpen = a.events.some((e) => e.status === "ACTIVE")
     const bOpen = b.events.some((e) => e.status === "ACTIVE")
     if (aOpen !== bOpen) return aOpen ? -1 : 1
