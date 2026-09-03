@@ -2,14 +2,15 @@
 
 import { useState, useRef } from "react"
 import { ImageIcon, Trash2, Upload, X } from "lucide-react"
+import type { VenueImage } from "@/lib/api/xvm-api"
 
 interface GalleryManagerProps {
   venueId: string
-  initialImages: string[]
+  initialImages: VenueImage[]
 }
 
 export function GalleryManager({ venueId, initialImages }: GalleryManagerProps) {
-  const [images, setImages] = useState<string[]>(initialImages)
+  const [images, setImages] = useState<VenueImage[]>(initialImages)
   const [uploading, setUploading] = useState(false)
   const [error, setError] = useState("")
   const inputRef = useRef<HTMLInputElement>(null)
@@ -18,35 +19,15 @@ export function GalleryManager({ venueId, initialImages }: GalleryManagerProps) 
     setError("")
     setUploading(true)
     try {
-      // 1. Get a pre-signed upload URL
-      const res = await fetch("/api/upload", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ filename: file.name, contentType: file.type, size: file.size }),
-      })
+      const form = new FormData()
+      form.append("file", file)
+      const res = await fetch(`/api/venues/${venueId}/gallery`, { method: "POST", body: form })
       if (!res.ok) {
         const d = await res.json()
-        throw new Error(d.error || "Failed to get upload URL")
+        throw new Error(d.error || "Upload failed")
       }
-      const { uploadUrl, storedUrl } = await res.json()
-
-      // 2. PUT directly to MinIO
-      const put = await fetch(uploadUrl, { method: "PUT", body: file, headers: { "Content-Type": file.type } })
-      if (!put.ok) throw new Error("Upload failed")
-
-      // 3. Register the public URL (returned by the server, not derived from the presigned URL)
-      const publicUrl = storedUrl
-      const reg = await fetch(`/api/venues/${venueId}/gallery`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ url: publicUrl }),
-      })
-      if (!reg.ok) {
-        const d = await reg.json()
-        throw new Error(d.error || "Failed to save")
-      }
-      const { galleryImages } = await reg.json()
-      setImages(galleryImages)
+      const image: VenueImage = await res.json()
+      setImages((prev) => [...prev, image])
     } catch (e: unknown) {
       setError(e instanceof Error ? e.message : "Upload failed")
     } finally {
@@ -55,16 +36,15 @@ export function GalleryManager({ venueId, initialImages }: GalleryManagerProps) 
     }
   }
 
-  const remove = async (url: string) => {
+  const remove = async (imageId: number) => {
     try {
       const res = await fetch(`/api/venues/${venueId}/gallery`, {
         method: "DELETE",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ url }),
+        body: JSON.stringify({ imageId }),
       })
       if (!res.ok) throw new Error("Failed to remove image")
-      const { galleryImages } = await res.json()
-      setImages(galleryImages)
+      setImages((prev) => prev.filter((img) => img.id !== imageId))
     } catch (e: unknown) {
       setError(e instanceof Error ? e.message : "Failed to remove")
     }
@@ -79,15 +59,14 @@ export function GalleryManager({ venueId, initialImages }: GalleryManagerProps) 
         </div>
       )}
 
-      {/* Image grid */}
       {images.length > 0 && (
         <div className="gallery">
-          {images.map((url) => (
-            <div key={url} className="gtile group">
+          {images.map((img) => (
+            <div key={img.id} className="gtile group">
               {/* eslint-disable-next-line @next/next/no-img-element */}
-              <img src={url} alt="Gallery image" className="absolute inset-0 w-full h-full object-cover" />
+              <img src={img.image_url} alt="Gallery image" className="absolute inset-0 w-full h-full object-cover" />
               <button
-                onClick={() => remove(url)}
+                onClick={() => remove(img.id)}
                 className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity bg-[rgba(0,0,0,0.7)] border border-[rgba(243,139,168,0.3)] text-[var(--destructive)] p-1.5 rounded-lg hover:bg-[var(--destructive-soft)]"
                 title="Remove image"
               >
@@ -95,7 +74,6 @@ export function GalleryManager({ venueId, initialImages }: GalleryManagerProps) 
               </button>
             </div>
           ))}
-          {/* Add more slot */}
           {images.length < 9 && (
             <button
               onClick={() => inputRef.current?.click()}
@@ -108,7 +86,6 @@ export function GalleryManager({ venueId, initialImages }: GalleryManagerProps) 
         </div>
       )}
 
-      {/* Empty state upload button */}
       {images.length === 0 && (
         <button
           onClick={() => inputRef.current?.click()}
@@ -119,7 +96,7 @@ export function GalleryManager({ venueId, initialImages }: GalleryManagerProps) 
           <div className="text-sm">
             <span className="font-medium text-[var(--xiv-blue)]">Upload photos</span> of your venue
           </div>
-          <p className="text-xs opacity-60">JPEG, PNG or WebP · max 10 MB · up to 9 images</p>
+          <p className="text-xs opacity-60">JPEG, PNG or WebP · max 8 MB · up to 9 images</p>
         </button>
       )}
 
