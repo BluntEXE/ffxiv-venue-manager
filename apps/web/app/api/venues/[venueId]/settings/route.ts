@@ -164,6 +164,7 @@ export const GET = withRateLimit<{ params: Promise<{ venueId: string }> }>(
             responseBody.logoUrl = detail.logo_url
             responseBody.district = detail.district
             responseBody.ward = detail.ward
+            responseBody.plot = detail.plot
             responseBody.apartment = detail.room
             degraded = false
           } catch (err) {
@@ -185,6 +186,7 @@ export const GET = withRateLimit<{ params: Promise<{ venueId: string }> }>(
           delete responseBody.logoUrl
           delete responseBody.district
           delete responseBody.ward
+          delete responseBody.plot
           delete responseBody.apartment
           responseBody.visibilityDegraded = true
         }
