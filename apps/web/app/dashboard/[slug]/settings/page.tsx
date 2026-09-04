@@ -11,6 +11,7 @@ import { Input } from "@/components/ui/input"
 import { GalleryManager } from "@/components/gallery-manager"
 import { BannerUpload } from "@/components/banner-upload"
 import { LogoUpload } from "@/components/logo-upload"
+import type { VenueImage } from "@/lib/api/xvm-api"
 import { Checkbox } from "@/components/ui/checkbox"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
@@ -78,7 +79,7 @@ export default function SettingsPage({ params }: { params: Promise<{ slug: strin
   const [syncResult, setSyncResult] = useState("")
   const [venueId, setVenueId] = useState<string>("")
   const [userRole, setUserRole] = useState<string>("")
-  const [galleryImages, setGalleryImages] = useState<string[]>([])
+  const [galleryImages, setGalleryImages] = useState<VenueImage[]>([])
   const [bannerUrl, setBannerUrl] = useState<string | null>(null)
   const [logoUrl, setLogoUrl] = useState<string | null>(null)
   const [ffxivVenueId, setFfxivVenueId] = useState<string | null>(null)
@@ -145,7 +146,10 @@ export default function SettingsPage({ params }: { params: Promise<{ slug: strin
         setVenueId(venue.id)
         setVenueDataCenter(venue.dataCenter ?? "")
         setVenueWorld(venue.world ?? "")
-        setGalleryImages(venue.galleryImages ?? [])
+        fetch(`/api/venues/${venue.id}/gallery`)
+          .then((res) => (res.ok ? res.json() : []))
+          .then((images: VenueImage[]) => setGalleryImages(images))
+          .catch(() => setGalleryImages([]))
         setXvmApiVenueId(venue.xvmApiVenueId ?? null)
         setXvmApiVenueLinkedAt(venue.xvmApiVenueLinkedAt ?? null)
         if (venue.memberships?.[0]) {
@@ -643,7 +647,7 @@ export default function SettingsPage({ params }: { params: Promise<{ slug: strin
                     <LogoUpload
                       venueId={venueId}
                       initialUrl={logoUrl}
-                      galleryImages={galleryImages}
+                      galleryImages={galleryImages.map((img) => img.image_url)}
                       onUpdate={setLogoUrl}
                     />
                   )}

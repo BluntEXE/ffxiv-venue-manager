@@ -1,69 +1,124 @@
+import { NextResponse } from "next/server"
 import { getServerSession } from "next-auth"
 import { authOptions } from "@/lib/auth"
-import { NextResponse } from "next/server"
 import { prisma } from "@/lib/prisma"
-import { deleteObject, keyFromUrl } from "@/lib/storage"
+import { withRateLimit } from "@/lib/middleware/with-rate-limit"
 import { invalidateCache, cacheKeys } from "@/lib/redis-cache"
+import { getValidXvmApiToken, xvmApiErrorResponse } from "@/lib/api/xvm-api-store"
+import { getVenue, uploadVenueImage, deleteVenueImage } from "@/lib/api/xvm-api"
 
-// POST: add a new image URL to gallery
-export async function POST(req: Request, { params }: { params: Promise<{ venueId: string }> }) {
-  const session = await getServerSession(authOptions)
-  if (!session?.user?.id) return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
-
-  const { venueId } = await params
-  const { url } = await req.json()
-  if (!url || typeof url !== "string") return NextResponse.json({ error: "url required" }, { status: 400 })
-
-  // Only allow URLs from the configured MinIO bucket
-  const allowedBase = process.env.MINIO_PUBLIC_URL ?? process.env.MINIO_ENDPOINT ?? ""
-  const bucket = process.env.MINIO_BUCKET ?? "xiv-venues"
-  if (allowedBase && !url.startsWith(`${allowedBase}/${bucket}/`)) {
-    return NextResponse.json({ error: "Invalid image URL" }, { status: 400 })
+async function requireXvmVenueId(venueId: string) {
+  const venue = await prisma.venue.findUnique({ where: { id: venueId }, select: { xvmApiVenueId: true } })
+  if (!venue?.xvmApiVenueId) {
+    return {
+      error: NextResponse.json(
+        { error: "not_connected", message: "This venue hasn't been connected to xvm-api yet." },
+        { status: 409 }
+      ),
+    }
   }
-
-  const membership = await prisma.membership.findFirst({
-    where: { venueId, userId: session.user.id, role: { in: ["OWNER", "MANAGER"] } },
-  })
-  if (!membership) return NextResponse.json({ error: "Forbidden" }, { status: 403 })
-
-  const venue = await prisma.venue.update({
-    where: { id: venueId },
-    data: { galleryImages: { push: url } },
-    select: { galleryImages: true },
-  })
-
-  await invalidateCache(cacheKeys.userVenues(session.user.id))
-  return NextResponse.json({ galleryImages: venue.galleryImages })
+  return { xvmApiVenueId: venue.xvmApiVenueId }
 }
 
-// DELETE: remove an image URL from gallery and delete the object
-export async function DELETE(req: Request, { params }: { params: Promise<{ venueId: string }> }) {
-  const session = await getServerSession(authOptions)
-  if (!session?.user?.id) return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
+// GET: the venue's current gallery images
+export const GET = withRateLimit<{ params: Promise<{ venueId: string }> }>(
+  async (request, context) => {
+    if (!context?.params) {
+      return NextResponse.json({ error: "Invalid request" }, { status: 400 })
+    }
 
-  const { venueId } = await params
-  const { url } = await req.json()
-  if (!url) return NextResponse.json({ error: "url required" }, { status: 400 })
+    const session = await getServerSession(authOptions)
+    if (!session?.user?.id) return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
 
-  const membership = await prisma.membership.findFirst({
-    where: { venueId, userId: session.user.id, role: { in: ["OWNER", "MANAGER"] } },
-  })
-  if (!membership) return NextResponse.json({ error: "Forbidden" }, { status: 403 })
+    const { venueId } = await context.params
 
-  const venue = await prisma.venue.findUnique({ where: { id: venueId }, select: { galleryImages: true } })
-  if (!venue) return NextResponse.json({ error: "Not found" }, { status: 404 })
+    const token = await getValidXvmApiToken(session.user.id)
+    if (!token) return NextResponse.json({ error: "xvm-api link not established yet" }, { status: 503 })
 
-  const updated = venue.galleryImages.filter((img) => img !== url)
-  await prisma.venue.update({ where: { id: venueId }, data: { galleryImages: updated } })
+    const gate = await requireXvmVenueId(venueId)
+    if (gate.error) return gate.error
 
-  await invalidateCache(cacheKeys.userVenues(session.user.id))
+    try {
+      const detail = await getVenue(token, gate.xvmApiVenueId!)
+      return NextResponse.json(detail.images)
+    } catch (err) {
+      return xvmApiErrorResponse(err, session.user.id, "[gallery] GET error")
+    }
+  },
+  { requests: 60, window: "1 m" }
+)
 
-  // Delete from MinIO
-  try {
-    await deleteObject(keyFromUrl(url))
-  } catch {
-    /* best effort */
-  }
+// POST: upload a new gallery image
+export const POST = withRateLimit<{ params: Promise<{ venueId: string }> }>(
+  async (request, context) => {
+    if (!context?.params) {
+      return NextResponse.json({ error: "Invalid request" }, { status: 400 })
+    }
 
-  return NextResponse.json({ galleryImages: updated })
-}
+    const session = await getServerSession(authOptions)
+    if (!session?.user?.id) return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
+
+    const { venueId } = await context.params
+
+    const token = await getValidXvmApiToken(session.user.id)
+    if (!token) return NextResponse.json({ error: "xvm-api link not established yet" }, { status: 503 })
+
+    const gate = await requireXvmVenueId(venueId)
+    if (gate.error) return gate.error
+
+    const form = await request.formData()
+    const file = form.get("file")
+    if (!(file instanceof File)) {
+      return NextResponse.json({ error: "file required" }, { status: 400 })
+    }
+
+    try {
+      const image = await uploadVenueImage(token, gate.xvmApiVenueId!, file)
+      await invalidateCache(cacheKeys.userVenues(session.user.id))
+      return NextResponse.json(image, { status: 201 })
+    } catch (err) {
+      return xvmApiErrorResponse(err, session.user.id, "[gallery] POST error")
+    }
+  },
+  { requests: 30, window: "1 m" }
+)
+
+// DELETE: remove a gallery image by id
+export const DELETE = withRateLimit<{ params: Promise<{ venueId: string }> }>(
+  async (request, context) => {
+    if (!context?.params) {
+      return NextResponse.json({ error: "Invalid request" }, { status: 400 })
+    }
+
+    const session = await getServerSession(authOptions)
+    if (!session?.user?.id) return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
+
+    const { venueId } = await context.params
+
+    const token = await getValidXvmApiToken(session.user.id)
+    if (!token) return NextResponse.json({ error: "xvm-api link not established yet" }, { status: 503 })
+
+    const gate = await requireXvmVenueId(venueId)
+    if (gate.error) return gate.error
+
+    let imageId: number
+    try {
+      const body = await request.json()
+      imageId = Number(body?.imageId)
+    } catch {
+      return NextResponse.json({ error: "Invalid request" }, { status: 400 })
+    }
+    if (!Number.isInteger(imageId)) {
+      return NextResponse.json({ error: "imageId required" }, { status: 400 })
+    }
+
+    try {
+      await deleteVenueImage(token, gate.xvmApiVenueId!, imageId)
+      await invalidateCache(cacheKeys.userVenues(session.user.id))
+      return NextResponse.json({ success: true })
+    } catch (err) {
+      return xvmApiErrorResponse(err, session.user.id, "[gallery] DELETE error")
+    }
+  },
+  { requests: 30, window: "1 m" }
+)
