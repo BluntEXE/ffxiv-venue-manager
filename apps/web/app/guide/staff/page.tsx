@@ -163,9 +163,9 @@ export default function StaffGuidePage() {
                       , and select your venue.
                     </span>
                     <p className="text-muted-foreground">
-                      To find your API key: open your venue dashboard, click{" "}
-                      <span className="font-medium text-foreground">Settings</span> in the left sidebar (not the account
-                      menu in the top right), then <span className="font-medium text-foreground">API Keys</span>.
+                      To find your API key: open the account menu in the top right and go to{" "}
+                      <span className="font-medium text-foreground">Account Settings</span>, then generate a key under{" "}
+                      <span className="font-medium text-foreground">My API Keys</span>.
                     </p>
                   </div>
                 </li>
@@ -176,8 +176,8 @@ export default function StaffGuidePage() {
                   <div className="space-y-2 text-sm leading-relaxed">
                     <span>
                       <span className="font-medium">Add your character:</span> On the website, open the account menu in
-                      the top right and go to <span className="font-medium">Account Settings</span>, then{" "}
-                      <span className="font-medium">Characters</span>. Add your FFXIV character name and world. This
+                      the top right and go to <span className="font-medium">Profile</span>, then{" "}
+                      <span className="font-medium">My Characters</span>. Add your FFXIV character name and world. This
                       lets the plugin tell you apart from patrons so you are not counted as a visitor during your shift.
                     </span>
                     <p className="text-muted-foreground">

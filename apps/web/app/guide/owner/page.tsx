@@ -176,9 +176,9 @@ export default function OwnerManagerGuidePage() {
                         , go to Settings
                       </li>
                       <li>
-                        On the website, open your venue dashboard and click{" "}
-                        <span className="font-medium">Settings</span> in the left sidebar (not the account menu in the
-                        top right), then go to <span className="font-medium">API Keys</span> and generate a key
+                        On the website, open the account menu in the top right and go to{" "}
+                        <span className="font-medium">Account Settings</span>, then generate a key under{" "}
+                        <span className="font-medium">My API Keys</span>
                       </li>
                       <li>Paste the API key into the plugin</li>
                       <li>
@@ -204,10 +204,11 @@ export default function OwnerManagerGuidePage() {
                     <ol className="list-decimal list-inside space-y-1.5 pl-2 leading-relaxed">
                       <li>
                         On the website, open the account menu in the top right and go to{" "}
-                        <span className="font-medium">Account Settings</span>
+                        <span className="font-medium">Profile</span>
                       </li>
                       <li>
-                        Under <span className="font-medium">Characters</span>, add your FFXIV character name and world
+                        Under <span className="font-medium">My Characters</span>, add your FFXIV character name and
+                        world
                       </li>
                       <li>Ask your staff to do the same from their own accounts</li>
                     </ol>
